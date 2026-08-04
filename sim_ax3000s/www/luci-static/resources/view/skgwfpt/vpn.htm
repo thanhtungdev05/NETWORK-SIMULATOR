@@ -1,0 +1,125 @@
+<form>
+	<div class="page-content">
+		<div id="vpn_info">
+			<p class="sk-warning-info">
+				{{VPN_Note1}}<br>
+				{{VPN_Note2}}<br>
+			</p>
+			<p class="skpage-title">{{VPNText}}</p>
+			<div class="modset">
+				<div class="table-list" style="width: 100%;margin-bottom: 25px;">
+					<div class="table-list-head">
+						<button class="btn btn-add" type="button" name="btn_add" id="btn_add" onclick="add_vpn()">{{vpncfg_AddText}}</button>
+						<button class="btn btn-edit" type="button" name="btn_edit" id="btn_edit" onclick="edit_vpn()" disabled>{{vpncfg_EditText}}</button>
+						<button class="btn btn-del" type="button" name="btn_del" id="btn_del" onclick="removeClick()" disabled>{{vpncfg_DeleteText}}</button>
+					</div>
+					<table>
+						<colgroup>
+							<col style="width:5%"></col>
+							<col style="width:10%"></col>
+							<col style="width:35%"></col>
+							<col style="width:35%"></col>
+							<col style="width:15%"></col>
+						</colgroup>
+						<thead>
+							<tr>
+								<th>
+									<label class="skcheckbox">
+										<input type="checkbox" name="seletall" id="seletall" onClick='selectAll(this)' hidden/>
+										<label for="seletall" class="skcheckbox-label">
+										</label>
+									</label>
+								</th>
+								<th>{{VPNTypeText}}</th>
+								<th>{{TunnelNameText}}</th>
+								<th>{{ServerAddrText}}</th>
+								<th colspan="2">{{OperatorText}}</th>
+							</tr>
+						</thead>
+							<tbody id = "vpn_entry_list">
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+		<div id="vpn_config" style="display:none;">
+			<p class="skpage-title title-large" id="vpntittleinfo">{{vpncfg_EditText}}
+			 {{vpncfg_InterfaceConfiguration}}</p>
+			<p class="skpage-title">{{vpncfg_BasicInfo}}</p>
+			<div class="modset">
+				<div class="skform-group">
+					<label class="skform-tittle">{{vpncfg_Enable}}:</label>
+					<label class="skcheckbox skcheckbox-form">
+						<input type="checkbox" name="enableVPN" id="enableVPN" hidden/>
+						<label for="enableVPN" id="vpnEnble" class="skcheckbox-label"></label>
+					</label>
+				</div>
+				<div class="skform-group">
+					<label class="skform-tittle" for="vpnMode">{{vpncfg_Mode}}:</label>
+					<select size="1" class="skform-control" name="vpnMode" id="vpnMode" onChange="changeVpnMode(this.value)">
+							<option value="0">PPTP</option>
+							<option value="1" selected = "selected">L2TP</option>
+					</select>
+				</div>
+				<div class="skform-group">
+					<label class="skform-tittle" for="serverName">{{vpncfg_ServerName}}:</label>
+					<input type="text" class="skform-control" id="serverName" name="serverName" size="30" maxszie='260' />
+				</div>
+				<div class="skform-group">
+					<label class="skform-tittle" for="serverIpaddr">{{vpncfg_Ipaddr}}:</label>
+					<input type="text" class="skform-control" id="serverIpaddr" name="serverIpaddr" size="30" maxszie='260' />
+				</div>
+				<div class="skform-group">
+					<label class="skform-tittle" for="userName">{{vpncfg_Username}}:</label>
+					<input type="text" class="skform-control" id="userName" name="userName" size="30" maxszie='260' />
+				</div>
+				<div class="skform-group">
+					<label class="skform-tittle" for="uPsd">{{vpncfg_Uassword}}:</label>
+					<input type="password" class="skform-control" id="uPsd" name="uPsd" size="30" maxszie='260' />
+					<span class="bi bi-eye-slash-fill bi-password"></span>
+				</div>
+				<div class="skform-group" id="mppe_div">
+					<label class="skform-tittle">{{vpncfg_PPTP_MPPE}}:</label>
+					<label class="skcheckbox skcheckbox-form">
+						<input type="checkbox" name="enableMPPE" id="enableMPPE" hidden/>
+						<label for="enableMPPE" id="MPPEEnable" class="skcheckbox-label"></label>
+					</label>
+				</div>
+			</div>
+			<div id="L2tpAdvTable">
+				<p class="skpage-title">{{vpncfg_L2tpAdvInfo}}</p>
+				<div class="modset">
+					<div class="skform-group">
+						<label class="skform-tittle">{{vpncfg_EnableEncrypt}}:</label>
+						<label class="skcheckbox skcheckbox-form">
+							<input type="checkbox" name="enableencrypt" id="enableencrypt" onClick='enableEncrypt(this)' hidden/>
+							<label for="enableencrypt" id="encryptEnable" class="skcheckbox-label"></label>
+						</label>
+					</div>
+					<div id="encrypt_table" style="display:none;">
+						<div class="skform-group" style="display:none;">
+							<label class="skform-tittle" for="encryptMode">{{vpncfg_Mode}}:</label>
+							<select size="1" class="skform-control" name="encryptMode" id="encryptMode" onChange="changeVpnencryptMode(this.value)">
+									<option value="psk" selected = "selected">PSK</option>
+									<!-- <option value="ca">CA</option> -->
+							</select>
+						</div>
+						<div class="skform-group" id="psk_div">
+							<label class="skform-tittle" for="PreShareKey">{{vpncfg_PreShareKey}}:</label>
+							<input type="text" class="skform-control" id="PreShareKey" name="PreShareKey" size="40" maxszie='40' />
+						</div>
+						<!-- <div class="skform-group" id="ca_div" style="display:none;">
+							<label class="skform-tittle" for="filename1">{{vpncfg_CertificateAuthority}}:</label>
+							<input type="file" class="skform-control" id="filename1" name="filename1"/>
+							<input class="btn-apply" id="privKeyPaswd_upload" style="margin-left:20px" type='button' onClick='do_lcpk_upload()' value='{{acscfg_UploadText}}'>
+						</div> -->
+					</div>
+				</div>
+			</div>
+			<div class="sk-form-submit" id="fullapply">
+				<button class="btn-cancel" id="Sky_Cancel" type="button" onclick="btnCancel()">{{vpncfg_CancelText}}</button>
+				<button class="btn-apply" id="Sky_Apply" type="button" onclick="btnSave()" style="margin-left:1%;">{{vpncfg_SaveAndApplyText}}</button>
+			</div>
+		</div>
+	</div>	
+</form>

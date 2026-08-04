@@ -1,0 +1,53 @@
+{
+ "_ghichu": [
+  "Gia tri THUC DO tren thiet bi that (192.168.1.1), dung dien vao hop thoai Edit.",
+  "Doc truc tiep tu DOM cua hop thoai tren thiet bi ngay 22/7/2026 (chi doc, khong Apply).",
+  "Khong the boc tu ma nguon view: gia tri den tu ubus luc chay, ban chup tinh khong co.",
+  "Khoa: <trang>.<tieu de hop thoai>[chi so dong trong bang]. _chonThem: noi them muc chon."
+ ],
+ "admin__localnetwork__WLAN__WLANbasic": {
+  "WLAN Global Configuration": [
+   {
+    "_ten": "WLAN (2.4G)",
+    "Channel": "Auto",
+    "Standard": "b,g,n,ax",
+    "RegulatoryDomain": "VNI",
+    "BandWidth": "20MHz",
+    "SGI": "1",
+    "X_ZTE-COM_BeaconPeriod": "100",
+    "TransmitPower": "100",
+    "_chonThem": { "Standard": [{ "v": "b,g,n,ax", "n": "Mixed (802.11b/g/n/ax)" }] }
+   },
+   {
+    "_ten": "WLAN (5G)",
+    "Channel": "Auto",
+    "Standard": "a,n,ac,ax",
+    "RegulatoryDomain": "VNI",
+    "BandWidth": "160MHz",
+    "SGI": "1",
+    "X_ZTE-COM_BeaconPeriod": "100",
+    "TransmitPower": "100",
+    "_chonThem": {
+     "Standard": [{ "v": "a,n,ac,ax", "n": "Mixed (802.11a/n/ac/ax)" }],
+     "BandWidth": ["80MHz", "160MHz"]
+    }
+   }
+  ],
+  "WLAN SSID Configuration": [
+   { "_ten": "SSID1 (2.4G)", "Enable": "1", "SSID": "FPT-Telecom-A34C", "ForceWiFi5": "1", "SSIDAdvertisementEnabled": "0", "encryption": "WPA/WPA2-PSK-AES", "KeyPassphrase": "DA6BBED8", "X_ZTE-COM_SSIDIsolation": "0", "X_ZTE-COM_MaxUserNum": "32", "_chonThem": { "ForceWiFi5": [{ "v": "1", "n": "b/g/n" }] } },
+   { "_ten": "SSID2 (2.4G)", "Enable": "0", "SSID": "SSID2", "ForceWiFi5": "1", "SSIDAdvertisementEnabled": "0", "encryption": "WPA/WPA2-PSK-AES", "KeyPassphrase": "!@#$%12345", "X_ZTE-COM_SSIDIsolation": "0", "X_ZTE-COM_MaxUserNum": "32", "_chonThem": { "ForceWiFi5": [{ "v": "1", "n": "b/g/n" }] } },
+   { "_ten": "SSID3 (2.4G)", "Enable": "0", "SSID": "FPT-Telecom-A34C Guest 2.4G", "ForceWiFi5": "1", "SSIDAdvertisementEnabled": "0", "encryption": "WPA/WPA2-PSK-AES", "KeyPassphrase": "DA6BBED8", "X_ZTE-COM_SSIDIsolation": "0", "X_ZTE-COM_MaxUserNum": "32", "_chonThem": { "ForceWiFi5": [{ "v": "1", "n": "b/g/n" }] } },
+   { "_ten": "SSID4 (2.4G)", "Enable": "1", "SSID": "FPT-Telecom-A34C IOT", "ForceWiFi5": "1", "SSIDAdvertisementEnabled": "0", "encryption": "WPA/WPA2-PSK-AES", "KeyPassphrase": "DA6BBED8", "X_ZTE-COM_SSIDIsolation": "0", "X_ZTE-COM_MaxUserNum": "32", "_chonThem": { "ForceWiFi5": [{ "v": "1", "n": "b/g/n" }] } },
+   { "_ten": "SSID5 (5G)", "Enable": "1", "SSID": "FPT-Telecom-A34C", "ForceWiFi5": "1", "SSIDAdvertisementEnabled": "0", "encryption": "WPA/WPA2-PSK-AES", "KeyPassphrase": "DA6BBED8", "X_ZTE-COM_SSIDIsolation": "0", "X_ZTE-COM_MaxUserNum": "32", "_chonThem": { "ForceWiFi5": [{ "v": "1", "n": "b/g/n" }] } },
+   { "_ten": "SSID6 (5G)", "Enable": "0", "SSID": "SSID2", "ForceWiFi5": "1", "SSIDAdvertisementEnabled": "0", "encryption": "WPA/WPA2-PSK-AES", "KeyPassphrase": "!@#$%12345", "X_ZTE-COM_SSIDIsolation": "0", "X_ZTE-COM_MaxUserNum": "32", "_chonThem": { "ForceWiFi5": [{ "v": "1", "n": "b/g/n" }] } },
+   { "_ten": "SSID7 (5G)", "Enable": "0", "SSID": "FPT-Telecom-A34C Guest 5G", "ForceWiFi5": "1", "SSIDAdvertisementEnabled": "0", "encryption": "WPA/WPA2-PSK-AES", "KeyPassphrase": "DA6BBED8", "X_ZTE-COM_SSIDIsolation": "0", "X_ZTE-COM_MaxUserNum": "32", "_chonThem": { "ForceWiFi5": [{ "v": "1", "n": "b/g/n" }] } },
+   { "_ten": "SSID8 (5G)", "Enable": "1", "SSID": "FPT-Telecom-A34C IOT", "ForceWiFi5": "1", "SSIDAdvertisementEnabled": "0", "encryption": "WPA/WPA2-PSK-AES", "KeyPassphrase": "DA6BBED8", "X_ZTE-COM_SSIDIsolation": "0", "X_ZTE-COM_MaxUserNum": "32", "_chonThem": { "ForceWiFi5": [{ "v": "1", "n": "b/g/n" }] } }
+  ]
+ },
+ "admin__localnetwork__WLAN__wps": {
+  "WPS": [
+   { "_ten": "2.4GHz", "WPSChoose": "PBC", "_chonThem": { "WPSChoose": ["Disabled", "PBC"] } },
+   { "_ten": "5GHz", "WPSChoose": "PBC", "_chonThem": { "WPSChoose": ["Disabled", "PBC"] } }
+  ]
+ }
+}

@@ -1,0 +1,24 @@
+<div class="page-content">
+	<p class="sk-warning-info">
+		{{userAdmainHeadWaringText}}<br/>
+	</p>
+	<p class="skpage-title">{{passwdSettingTitle}}</p>
+	<div class="modset">
+		<div class="skform-group">
+			<label class="skform-tittle" for="pwdOld">{{oldPasswdText}}</label>
+			<input type="password" class="skform-control" id="pwdOld" name="pwdOld" maxlength="16"/>
+		</div>
+		<div class="skform-group">
+			<label class="skform-tittle" for="pwdNew">{{newPasswdText}}</label>
+			<input type="password" class="skform-control" id="pwdNew" name="pwdNew" maxlength="16"/>
+		</div>
+		<div class="skform-group">
+			<label class="skform-tittle" for="pwdCfm">{{confirmPasswdText}}</label>
+			<input type="password" class="skform-control" id="pwdCfm" name="pwdCfm" maxlength="16"/>
+		</div>
+	
+		<div class="sk-form-submit">
+			<input class="btn-apply" id="userManageSave_btn" type='button' onClick='btnApply()' value='{{saveApplyText}}'>
+		</div>
+	</div>
+</div>

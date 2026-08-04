@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="180px" height="30px" viewBox="0 0 180 30" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 60 (88103) - https://sketch.com -->
+    <title>断网</title>
+    <desc>Created with Sketch.</desc>
+    <g id="页面-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="首页" transform="translate(-1057.000000, -407.000000)">
+            <g id="编组-2" transform="translate(500.000000, 356.000000)">
+                <g id="断网" transform="translate(557.000000, 51.000000)">
+                    <rect id="矩形" fill="#D8D8D8" x="0" y="14" width="180" height="3"></rect>
+                    <g id="编组-3" transform="translate(75.000000, 0.000000)">
+                        <ellipse id="椭圆形" fill="#DB3232" cx="14.5874587" cy="15" rx="14.5874587" ry="15"></ellipse>
+                        <path d="M15.5759076,5 L15.575,13.625 L23.9636964,13.625 L23.9636964,15.875 L15.575,15.875 L15.5759076,24.5 L13.3877888,24.5 L13.387,15.875 L5,15.875 L5,13.625 L13.387,13.625 L13.3877888,5 L15.5759076,5 Z" id="形状结合" fill="#FFFFFF" transform="translate(14.481848, 14.750000) rotate(-315.000000) translate(-14.481848, -14.750000) "></path>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

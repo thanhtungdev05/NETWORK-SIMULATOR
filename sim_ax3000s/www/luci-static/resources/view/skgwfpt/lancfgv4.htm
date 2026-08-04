@@ -1,0 +1,145 @@
+<div class="page-content">
+	<p class="sk-warning-info">
+		{{On this page, you can configure router IP address and subnet mask interface for LAN, DHCP Server Configuration and DHCP Static IP Configuration. "Save & Apply" button to save configuration data.}}
+	</p>
+	<p class="skpage-title">{{Local Network Configuration}}</p>
+	<div class="modset">
+		<div class="skform-group">
+			<label class="skform-tittle" for="ethIpAddress">{{IP Address}}:</label>
+			<input type="text" class="skform-control" id="ethIpAddress" name="ethIpAddress" onChange="setDhcpAddresses(this.value)"/>
+		</div>
+		<div class="skform-group">
+			<label class="skform-tittle" for="ethSubnetMask">{{Subnet Mask}}:</label>
+			<input type="text" class="skform-control" id="ethSubnetMask" name="ethSubnetMask"/>
+		</div>
+	</div>
+	<p class="skpage-title">{{DHCP Server Configuration}}</p>
+	<div class="modset">
+		<div class="skform-group">
+			<label class="skform-tittle">{{DHCP Server}}:</label>
+			<div class="skform-content">
+				<ul>
+					<li>
+						<label class="skradio">
+							<input type="radio" name="dhcpSrvType" id="dhcpSrvType1" value="0" onClick='ShowDHCPCfg()' hidden/>
+							<label for="dhcpSrvType1" id="Sky_DHCP_Disable" class="skradio-label">
+							</label>
+						</label>
+						<label class="skradio-text" for="dhcpSrvType1">{{Disable}}</label>
+					</li>
+					<li>
+						<label class="skradio">
+							<input type="radio" name="dhcpSrvType" id="dhcpSrvType2" value="1" onClick='ShowDHCPCfg()' hidden/>
+							<label for="dhcpSrvType2" id="Sky_DHCP_Enable" class="skradio-label">
+							</label>
+						</label>
+						<label class="skradio-text" for="dhcpSrvType2">{{Enable}}</label>
+					</li>
+					<li>
+						<label class="skradio">
+							<input type="radio" name="dhcpSrvType" id="dhcpSrvType3" value="2" onClick='ShowDHCPCfg()' hidden/>
+							<label for="dhcpSrvType3" id="Sky_DHCP_Relay" class="skradio-label">
+							</label>
+						</label>
+						<label class="skradio-text" for="dhcpSrvType3">{{Relay}}</label>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<div id="lancfg_dhcpserver">
+			<div class="skform-group">
+				<label class="skform-tittle" for="dhcpEthStart">{{Start IP}}:</label>
+				<input type="text" class="skform-control" id="dhcpEthStart" name="dhcpEthStart"/>
+			</div>
+			<div class="skform-group">
+				<label class="skform-tittle" for="dhcpEthEnd">{{End IP}}:</label>
+				<input type="text" class="skform-control" id="dhcpEthEnd" name="dhcpEthEnd"/>
+			</div>
+			<div class="skform-group">
+				<label class="skform-tittle" for="dhcpLeasedTime">{{Lease}}:</label>
+				<select size="1" class="skform-control" id="dhcpLeasedTime" >
+					   <option value="120">2 {{minute}}</option>
+					   <option  value="3600" >1 {{hour}}</option>
+					   <option value="86400">1 {{day}}</option>
+					   <option value="604800">1 {{week}}</option>
+				 </select>
+			</div>
+			<div class="skform-group">
+				<label class="skform-tittle">{{IPv4 DNS Mode}}:</label>
+				<div class="skform-content">
+					<ul>
+						<li>
+							<label class="skradio">
+								<input type="radio" name="dnsmode" id="dnsmode3" value="2" checked onClick='dnsmodeClick()' hidden/>
+								<label for="dnsmode3" id="Sky_DHCP_Mode_Auto" class="skradio-label">
+								</label>
+							</label>
+							<label class="skradio-text" for="dnsmode3">{{DNSAutoMode}}</label>
+						</li>
+						<li>
+							<label class="skradio">
+								<input type="radio" name="dnsmode" id="dnsmode1" value="0" checked onClick='dnsmodeClick()' hidden/>
+								<label for="dnsmode1" id="Sky_DHCP_Mode_Proxy" class="skradio-label">
+								</label>
+							</label>
+							<label class="skradio-text" for="dnsmode1">{{Proxy}}</label>
+						</li>
+						<li>
+							<label class="skradio">
+								<input type="radio" name="dnsmode" id="dnsmode2" value="1" onClick='dnsmodeClick()' hidden/>
+								<label for="dnsmode2" id="Sky_DHCP_Mode_Static" class="skradio-label">
+								</label>
+							</label>
+							<label class="skradio-text" for="dnsmode2">{{Static}}</label>
+						</li>
+					</ul>
+				</div>
+			</div>
+			<div id="dnsv4Satic">
+				<div class="skform-group">
+					<label class="skform-tittle" for="dnsPrimary">{{Primary DNS}}:</label>
+					<input type="text" class="skform-control" id="dnsPrimary" name="dnsPrimary"/>
+				</div>
+
+				<div class="skform-group">
+					<label class="skform-tittle" for="dnsSecondary">{{Secondary DNS}}:</label>
+					<input type="text" class="skform-control" id="dnsSecondary" name="dnsSecondary"/>
+				</div>
+			</div>
+		</div>
+		<div class="skform-group" id="relayInfo">
+			<label class="skform-tittle" for="dhcpSrvAddr">{{DHCP Server}}:</label>
+			<input type="text" class="skform-control" id="dhcpSrvAddr" name="dhcpSrvAddr"/>
+		</div>
+	</div>
+	<p class="skpage-title" id="dhcpstaticTitle">{{DHCP Static IP Configuration}}</p>
+	<div class="modset" id="dhcpstaticContent">
+		<div class="table-list">
+			<div class="table-list-head">
+				<button class="btn btn-add" type="button" id="lancfg_StaticipAdd" onclick="dhcpStaticIpAdd()">{{Add}}</button>
+				<button class="btn btn-del" type="button" id="lancfg_StaticipDel" onclick="dhcpStaticIpDel()">{{Delete}}</button>
+			</div>
+			<table id="staticIp_Tbl">
+				<thead>
+					<tr>
+						<th>
+							<label class="skcheckbox">
+								<input type="checkbox" name="selectAll" id="staticIpAll_Sel" onClick='dhcpStaticIpSelectAll(this)' hidden/>
+								<label for="staticIpAll_Sel" class="skcheckbox-label">
+								</label>
+							</label>
+						</th>
+						<th>{{Hostname}}</th>
+						<th>{{MAC Address}}</th>
+						<th>{{IP Address}}</th>
+					</tr>
+				</thead>
+				<tbody id="dhcpstaticTBody">
+				</tbody>
+			</table>
+		</div>
+	</div>
+	<div class="sk-form-submit" id="savebtnId0">
+		<button class="btn-apply" id="Sky_Apply" type="button" onclick="lancfg_apply()">{{Save & Apply}}</button>
+	</div>
+</div>

@@ -1,0 +1,1 @@
+(window["webpackJsonp"]=window["webpackJsonp"]||[]).push([["chunk-2d20fe10"],{b606:function(n,t,e){"use strict";e.r(t),t["default"]={mounted:function(){this.$emit("mounted",this)}}}}]);

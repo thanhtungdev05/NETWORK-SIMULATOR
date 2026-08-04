@@ -1,0 +1,108 @@
+<div class="page-content">
+	<p class="sk-warning-info">
+		{{lancfgv6_LANIPv6Note1}}
+		{{lancfgv6_LANIPv6Note2}}
+	</p>
+	<p class="skpage-title">{{LANIPv6AddrConfig}}</p>
+	<div class="modset">
+		<div class="skform-group" style="display:flex;align-items:center;">
+			<label class="skform-tittle">{{LANIPv6Addr}}:</label>
+			<span style='border:0px; margin-left:2px; text-align:left;margin-left:12%;display:inline-block;' id="lladdrshow">fe80::1</span>
+		</div>
+	</div>
+	
+	 <p class="skpage-title" id="radvdTitle">{{RADVDConfig}}</p>
+	 <div class="modset" id="radvdId">
+		<div class="skform-group">
+			<label class="skform-tittle">{{EnableRADVD}}</label>
+			<label class="skcheckbox skcheckbox-form">
+				<input type="checkbox" name="enableRadvd" id="enableRadvd" onClick="radvdClick(this)" hidden disabled/>
+				<label for="enableRadvd" id="Sky_IPV6_Enable_RaDVD" class="skcheckbox-label">
+				</label>
+			</label>
+		</div>
+		<div id='radvdCfgTab'>
+			<div class="skform-group" style="display:none;">
+				<label class="skform-tittle" for="preferred_Life_Time">{{LANIP6PreferredTime}}:</label>
+				<input type="text" class="skform-control" id="preferred_Life_Time" name="preferred_Life_Time" />
+				<span class="skform-disc">[3600 - 31536000 S]</span>
+			</div>
+			
+			<div class="skform-group"  style="display:none;">
+				<label class="skform-tittle" for="valid_Life_Time">{{LANIP6ValidTime}}:</label>
+				<input type="text" class="skform-control" id="valid_Life_Time" name="valid_Life_Time" />
+				<span class="skform-disc">[7200 - 31536000 S]</span>
+			</div>
+			
+			<div class="skform-group">
+				<label class="skform-tittle" for="min_RA_Interval">{{LANIP6RAMintime}}:</label>
+				<input type="text" class="skform-control" id="min_RA_Interval" name="min_RA_Interval" />
+				<span class="skform-disc">[3 - 1350 S]</span>
+			</div>
+
+			<div class="skform-group">
+				<label class="skform-tittle" for="max_RA_Interval">{{LANIP6RAMaxtime}}:</label>
+				<input type="text" class="skform-control" id="max_RA_Interval" name="max_RA_Interval" />
+				<span class="skform-disc">[4 - 1800 S]</span>
+			</div>
+
+			<div class="skform-group">
+				<label class="skform-tittle">{{LANIP6ManagedFlag}}:</label>
+				<label class="skcheckbox skcheckbox-form">
+					<input type="checkbox" name="M_Flag" id="M_Flag" hidden/>
+					<label for="M_Flag" id="Sky_IPV6_Managed_Flag" class="skcheckbox-label">
+					</label>
+				</label>
+			</div>
+
+			<div class="skform-group">
+				<label class="skform-tittle">{{LANIP6OtherFlag}}:</label>
+				<label class="skcheckbox skcheckbox-form">
+					<input type="checkbox" name="O_Flag" id="O_Flag" hidden/>
+					<label for="O_Flag" id="Sky_IPV6_Other_Flag" class="skcheckbox-label">
+					</label>
+				</label>
+			</div>
+		</div>
+	 </div>
+	 
+	<p class="skpage-title" id="landhcpv6Title" hidden>{{LANDHCPv6Server}}</p>
+	<div class="modset" id="landhcpv6Id" hidden>
+		<div class="skform-group">
+			<label class="skform-tittle">{{EnableDHCPv6Server}}:</label>
+			<label class="skcheckbox skcheckbox-form">
+				<input type="checkbox" name="enableDhcp6s" id="enableDhcp6s" hidden/>
+				<label for="enableDhcp6s" id="Sky_IPV6_Enable_DHCPV6" class="skcheckbox-label">
+				</label>
+			</label>
+		</div>
+	 </div>
+	 
+	 <p class="skpage-title" id="landhcpv6Title">{{DNSDHCPServerConfig}}</p>
+	 <div class="modset">
+		<div class="skform-group">
+			<label class="skform-tittle" for="dnsv6ModeList">{{IPv6DNSMode}}:</label>
+			<select size="1" class="skform-control" name="dnsv6Mode" id="dnsv6Mode" onChange="dnsv6Mode_Change(this.value)">
+				<option value="WANConnection">{{DNSAutoMode}}</option>
+				<option value="HGWProxy">{{DNSProxyMode}}</option>
+				<option value="Static">{{DNSStaticMode}}</option>
+			</select>
+		</div>
+
+		<div id='dnsv6Satic'>
+			<div class="skform-group">
+				<label class="skform-tittle" for="dns6Primary">{{PriDNS}}:</label>
+				<input type="text" class="skform-control" id="dns6Primary" name="dns6Primary"/>
+			</div>
+
+			<div class="skform-group">
+				<label class="skform-tittle" for="dns6Secondary">{{SecDNS}}:</label>
+				<input type="text" class="skform-control" id="dns6Secondary" name="dns6Secondary"/>
+			</div>
+		</div>
+	 </div>
+	 
+	<div class="sk-form-submit" id="savebtnId">
+		<button class="btn-apply" id="Sky_Apply" type="button" onclick="lancfgv6_apply()">{{Save & Apply}}</button>
+	</div>
+<div>

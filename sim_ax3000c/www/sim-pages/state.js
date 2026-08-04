@@ -1,0 +1,67 @@
+/* Luu/khoi phuc trang thai cau hinh that cho moi trang sim (Muc 1).
+   - Khi tai trang: doc /sim-state?page=X roi dien lai vao cac o.
+   - Khi bam Apply: thu thap moi o -> POST /sim-state?page=X -> server ghi ra sim_state.json
+   Nho vay cau hinh ton tai qua reload va qua restart server. */
+(function () {
+  var PAGE = (location.pathname.split('/').pop() || '').replace('.html', '');
+
+  function fields() {
+    // thu tu on dinh: moi input/select/textarea trong body
+    return [].slice.call(document.querySelectorAll('input, select, textarea'))
+      .filter(function (e) { return e.type !== 'button' && e.type !== 'submit'; });
+  }
+
+  function collect() {
+    return fields().map(function (e) {
+      if (e.type === 'checkbox' || e.type === 'radio') return e.checked ? 1 : 0;
+      return e.value;
+    });
+  }
+
+  function restore(vals) {
+    if (!vals || !vals.length) return;
+    var f = fields();
+    for (var i = 0; i < f.length && i < vals.length; i++) {
+      var e = f[i], v = vals[i];
+      if (e.type === 'checkbox' || e.type === 'radio') e.checked = !!v;
+      else e.value = v;
+      // kich hoat lai logic hien/an cua trang (vd Connection Type, DMZ toggle)
+      try { e.dispatchEvent(new Event('change', { bubbles: true })); } catch (x) {}
+    }
+  }
+
+  window.simState = {
+    page: PAGE,
+    // so dong bang da them (de dung lai bang dong)
+    load: function (cb) {
+      fetch('/sim-state?page=' + encodeURIComponent(PAGE))
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (d && d.rows && window.simAdd) {
+            for (var i = 0; i < d.rows; i++) window.simAdd();
+          }
+          setTimeout(function () { restore(d && d.values); if (cb) cb(d); }, 30);
+        })
+        .catch(function () { if (cb) cb(null); });
+    },
+    save: function (okMsg) {
+      var tb = document.getElementById('tb');
+      var rows = tb ? tb.querySelectorAll('tr').length - (document.getElementById('empty') ? 1 : 0) : 0;
+      fetch('/sim-state?page=' + encodeURIComponent(PAGE), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ values: collect(), rows: rows })
+      }).then(function (r) {
+        if (r.ok) alert(okMsg || 'Configuration has been applied.');
+        else alert('Luu that bai.');
+      }).catch(function () { alert('Khong ket noi duoc server.'); });
+    },
+    reset: function () {
+      fetch('/sim-state?page=' + encodeURIComponent(PAGE), { method: 'DELETE' })
+        .then(function () { location.reload(); });
+    }
+  };
+
+  document.addEventListener('DOMContentLoaded', function () { window.simState.load(); });
+  if (document.readyState !== 'loading') window.simState.load();
+})();

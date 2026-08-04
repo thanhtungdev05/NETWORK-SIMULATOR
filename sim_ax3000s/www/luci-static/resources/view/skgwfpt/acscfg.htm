@@ -1,0 +1,135 @@
+<form id="mainForm">
+    <p class="sk-warning-info">{{acscfg_InfoAllText}}</p>
+
+    <p class="skpage-title">{{acscfg_Configuration}}</p>
+    
+    <div class="modset">
+		<!---
+		<div class="skform-group">
+            <label class="skform-tittle" for="interface">{{acscfg_Interface}}:</label>
+            <input type="text" class="skform-control" id="interface" name="interface"/>
+        </div>
+		--->
+        <div class="skform-group">
+            <label class="skform-tittle" for="tr069Enable">{{acscfg_CwmpEnable}}:</label>
+            <div class="skform-content">
+                <ul>
+                    <li>
+                        <label class="skradio">
+                            <input type="radio" name="tr069Enable" id="tr069Enable1"  hidden/>
+                            <label for="tr069Enable1" id="cwmp_disable" class="skradio-label">
+                            </label>
+                        </label>
+                        <label class="skradio-text" for="tr069Enable1">{{acscfg_Disable}}</label>
+                    </li>
+                    <li>
+                        <label class="skradio">
+                            <input type="radio" name="tr069Enable" id="tr069Enable2" hidden/>
+                            <label for="tr069Enable2" id="cwmp_enable" class="skradio-label">
+                            </label>
+                        </label>
+                        <label class="skradio-text" for="tr069Enable2">{{acscfg_Enable}}</label>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="skform-group">
+            <label class="skform-tittle" for="modelswitch">{{acscfg_DataModel}}:</label>
+            <select size="1" class="skform-control" name="modelswitch" id="modelswitch" onChange="SelChange_DataMode()">
+                <option value="TR098">{{acscfg_TR098Model}}</option>
+                 <option value="TR181">{{acscfg_TR181Model}}</option>
+            </select>
+           <!--<label class="skform-tittle" for="modelswitch1">{{acscfg_ChangeRebootNotice}}</label> --> 
+        </div>
+        <div class="skform-group">
+            <label class="skform-tittle" for="inform">{{acscfg_PeriodInform}}:</label>
+            <div class="skform-content">
+                <ul>
+                    <li>
+                        <label class="skradio">
+                            <input type="radio" name="inform" id="inform1"  hidden/>
+                            <label for="inform1" id="inform_disable" class="skradio-label">
+                            </label>
+                        </label>
+                        <label class="skradio-text" for="inform1">{{acscfg_Disable}}</label>
+                    </li>
+                    <li>
+                        <label class="skradio">
+                            <input type="radio" name="inform" id="inform2" hidden/>
+                            <label for="inform2" id="inform_enable" class="skradio-label">
+                            </label>
+                        </label>
+                        <label class="skradio-text" for="inform2">{{acscfg_Enable}}</label>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="skform-group">
+            <label class="skform-tittle" for="informInterval">{{acscfg_InformInterval}}:</label>
+            <input type="text" class="skform-control" id="informInterval" name="informInterval"/>
+        </div>
+        <div class="skform-group">
+            <label class="skform-tittle" for="acsURL">{{acscfg_ACSURL}}:</label>
+            <input type="text" class="skform-control" id="acsURL" name="acsURL"/>
+        </div>
+        <div class="skform-group">
+            <label class="skform-tittle" for="acsUser">{{acscfg_ACSName}}:</label>
+            <input type="text" class="skform-control" id="acsUser" name="acsUser" maxlength="64"/>
+        </div>
+        <div class="skform-group">
+            <label class="skform-tittle" for="acsPwd">{{acscfg_ACSPassword}}:</label>
+            <input type="password" class="skform-control" name="acsPwd" id="acsPwd" maxlength="64"/>
+            <span class="bi bi-eye-slash-fill bi-password"></span>
+        </div>
+        <div class="skform-group">
+            <label class="skform-tittle" for="debug">{{acscfg_SOAPDebug}}:</label>
+            <div class="skform-content">
+                <ul>
+                    <li>
+                        <label class="skradio">
+                            <input type="radio" name="debug" id="debug1"  hidden/>
+                            <label for="debug1" id="debug_disable" class="skradio-label">
+                            </label>
+                        </label>
+                        <label class="skradio-text" for="debug1">{{acscfg_Disable}}</label>
+                    </li>
+                    <li>
+                        <label class="skradio">
+                            <input type="radio" name="debug" id="debug2" hidden/>
+                            <label for="debug2" id="debug_enable" class="skradio-label">
+                            </label>
+                        </label>
+                        <label class="skradio-text" for="debug2">{{acscfg_Enable}}</label>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="skform-group">
+            <label class="skform-tittle">{{acscfg_ConnReqAuth}}:</label>
+            <label class="skcheckbox skcheckbox-form">
+                <input type="checkbox" name="connReqAuth" id="connReqAuth"  onClick='connAuthChange()' hidden/>
+                <label for="connReqAuth" class="skcheckbox-label">
+                </label>
+            </label>
+        </div>
+        
+        <div id="divConnAuth">
+            <div class="skform-group">
+                <label class="skform-tittle" for="connReqUser">{{acscfg_ConnReqUsername}}:</label>
+                <input type="text" class="skform-control" id="connReqUser" name="connReqUser" maxlength="64"/>
+            </div>
+            <div class="skform-group">
+                <label class="skform-tittle" for="connReqPwd">{{acscfg_ConnReqPassword}}:</label>
+                <input type="password" class="skform-control" name="connReqPwd" id="connReqPwd" maxlength="64"/>
+                <span class="bi bi-eye-slash-fill bi-password"></span>
+            </div>
+            <div class="skform-group">
+                <label class="skform-tittle" for="connReqUrl">{{acscfg_ConnReqURL}}:</label>
+                <input type="text" class="skform-control" id="connReqUrl" name="connReqUrl" disabled="disabled" value=''/>
+            </div>
+        </div>
+        
+    </div>	
+ </form>

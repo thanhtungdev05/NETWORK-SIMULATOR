@@ -1,0 +1,300 @@
+<form>
+	<div class="page-content">
+	<div id="waninfo_secition">
+	<p class="sk-warning-info" id = "waninfo_text" style="margin-left:0px; margin-bottom:24px">
+		{{waninfo_WanInfoAllText}}
+	</p>
+	<div id="wanform">
+	<p class="skpage-title">{{waninfo_WanBasicInfo}}</p>
+	<div class="table-list" style="margin-left:24px;margin-top:5px;">
+	<table cellpadding='4' cellspacing='0' width="100%">
+		<thead>
+		   <tr align='center'> 
+			  <th>{{waninfo_connName}}</th>
+			  <th>{{waninfo_connMode}}</th>
+			  <th>{{waninfo_ipMode}}</th>
+			  <th>{{waninfo_vlanPrio}}</th>
+			  <!-- <th>{{waninfo_NAT}}</th> -->
+			  <th>{{waninfo_MAC}}</th>
+		   </tr>
+	   </thead>
+	   <tbody id = "wan_basic_info_table">
+	   </tbody>
+	</table>
+	</div>
+
+	<p class="skpage-title">{{waninfo_Waninfo}}</p>
+	<div class="table-list" style="margin-left:24px;margin-top:5px;">
+	<table cellpadding='4' cellspacing='0' width="100%">
+		<thead>
+	   <tr align='center'> 
+		  <th>{{waninfo_connName}}</th>
+		  <th>{{waninfo_IP4Status}}</th>
+		  <th>{{waninfo_IPAddr}}</th>
+		  <th>{{waninfo_SubnetMask}}</th>
+		  <th>{{waninfo_IPGateway}}</th>
+		  <th>{{waninfo_priDNS}}<br>/{{waninfo_secDNS}}</th>
+		  <th>{{waninfo_Uptime}}</th>
+	   </tr>
+	   </thead>
+	   <tbody id = "wan_ipv4_info_table">
+	   </tbody>
+	</table>
+	</div>
+
+	<p class="skpage-title">{{waninfo_WanIP6info}}</p>
+	<div class="table-list" style="margin-left:24px;margin-top:5px;">
+	<table cellpadding='4' cellspacing='0' width="95%">
+		<thead>
+	   <tr align='center'> 
+		  <th>{{waninfo_connName}}</th>
+		  <th>{{waninfo_IP6Status}}</th>
+		  <th>{{waninfo_IP6Addr}}<br>/{{waninfo_Delegate_Prefix}}</th>
+		  <th>{{waninfo_IPGateway}}</th>
+		  <th>{{waninfo_priDNS}}<br>/{{waninfo_secDNS}}</th>
+		  <th>{{waninfo_Uptime}}</th>
+	   </tr>
+	   </thead>
+	   <tbody id = "wan_ipv6_info_table">
+	   </tbody>
+	</table>
+	</div>
+	</div>
+
+	<p class="skpage-title">{{waninfo_WanNatinfo}}</p>
+	<div class="modset" style="width:776px">
+		<div class="skform-group">
+			<label class="skform-tittle" for="tr069Enable">{{waninfo_NatConnections}}</label>
+			<input id="Btn_Show" name="Btn_Show" type="button" class="btn-apply" style="margin-left: inherit;margin-left:25%"
+				value="{{waninfo_NatConnectionsShowBtn}}" onClick="showNatSessionTable();">
+		</div>
+	</div>
+		
+    <div id="poninfotab" style="display:none;">
+	<p class="skpage-title">{{waninfo_PonInfo}}</p>
+	<div class="table-list" style="margin-left:24px;margin-top:5px;">
+		<table id = "idtable" style='width:800' cellpadding="4">
+		   <tr>
+				<td colspan="2"  class = 'hd' style='background-color: #e6f2fb;' >{{waninfo_Pon_Table_LinkInfo}}</td>
+		   </tr>
+		   <tr>
+				<td  class='hd' style='background-color: #e6f2fb;'>{{waninfo_Pon_LinkInfo}}</td>
+				<td id="waninfo_Pon_LinkInfoshow"></td>
+		   </tr>
+		   <tr>
+				<td class='hd' style='background-color: #e6f2fb;'>{{waninfo_Pon_ONu_State}}</td>
+				<td id="waninfo_Pon_ONu_Stateshow"></td>
+		   </tr>
+		   <tr>
+				<td class='hd' style='background-color: #e6f2fb;'>{{waninfo_Pon_FEC_Enable}}</td>
+				<td id="waninfo_Pon_FEC_Enableshow"></td>
+		   </tr>
+		   <tr>
+				<td class='hd' style='background-color: #e6f2fb;'>{{waninfo_Pon_Encrypt_Mode}}</td>
+				<td id="waninfo_Pon_Encrypt_Modeshow"></td>
+		   </tr>
+		   <tr>
+				<td class='hd' style='background-color: #e6f2fb;'>{{waninfo_Pon_GPON_Warn_Info}}</td>
+				<td id="waninfo_Pon_GPON_Warn_Infoshow"></td>
+		   </tr>
+		   <tr>
+				<td class='hd' style='background-color: #e6f2fb;'>{{waninfo_Pon_GPON_Up_Time}}</td>
+				<td id="waninfo_Pon_GPON_Up_Timeshow"></td>
+		   </tr>
+		   <tr>
+				<td colspan="2"  class = 'hd' style='background-color: #e6f2fb;' >{{waninfo_Pon_GPON_Capability}}</td>
+		   </tr>
+		   <tr>
+				<td class='hd' style='background-color: #e6f2fb;'>{{waninfo_Pon_PON_TX_Packages}}</td>
+				<td id="waninfo_Pon_PON_TX_Packagesshow"></td>
+		   </tr>
+		   <tr>
+				<td class='hd' style='background-color: #e6f2fb;'>{{waninfo_Pon_PON_RX_Packages}}</td>
+				<td id="waninfo_Pon_PON_RX_Packagesshow"></td>
+		   </tr>
+		   <tr>
+				<td colspan="2"  class = 'hd' style='background-color: #e6f2fb;' >{{waninfo_Pon_PON_Optical}}</td>
+		   </tr>
+		   <tr>
+				<td class='hd' style='background-color: #e6f2fb;'>{{waninfo_Pon_Send_Power}}</td>
+				<td id="waninfo_Pon_Send_Powershow"></td>
+		   </tr>
+		   <tr>
+				<td class='hd' style='background-color: #e6f2fb;'>{{waninfo_Pon_Recv_Power}}</td>
+				<td id="waninfo_Pon_Recv_Powershow"></td>
+		   </tr>
+		   <tr>
+				<td class='hd' style='background-color: #e6f2fb;'>{{waninfo_Pon_voltage}}</td>
+				<td id="waninfo_Pon_voltageshow"></td>
+		   </tr>
+		   <tr>
+				<td class='hd' style='background-color: #e6f2fb;'>{{waninfo_Pon_Current}}</td>
+				<td id="waninfo_Pon_Currentshow"></td>
+		   </tr>
+		   <tr>
+				<td class='hd' style='background-color: #e6f2fb;'>{{waninfo_Pon_Temperature}}</td>
+				<td id="waninfo_Pon_Temperatureshow"></td>
+		   </tr>
+		</table>
+	</div>
+	
+	<div class="table-list" style="margin-left:24px;margin-top:5px;">
+		<table id = "idtable" style='width:800' cellpadding="4">
+		   <tr>
+				<td colspan="2"  class = 'hd' style='background-color: #e6f2fb;' >{{waninfo_Pon_RX}}</td>
+				<td colspan="2"  class = 'hd' style='background-color: #e6f2fb;' >{{waninfo_Pon_TX}}</td>
+		   </tr>
+		   <tr>
+				<td  class='hd' style='background-color: #e6f2fb;'>{{waninfo_Pon_Rx_Bytes}}</td>
+				<td id="waninfo_Pon_Rx_Bytesshow"></td>
+				<td  class='hd' style='background-color: #e6f2fb;'>{{waninfo_Pon_Tx_Bytes}}</td>
+				<td id="waninfo_Pon_Tx_Bytesshow"></td>
+		   </tr>
+		   <tr>
+				<td  class='hd' style='background-color: #e6f2fb;'>{{waninfo_Pon_Rx_Packets}}</td>
+				<td id="waninfo_Pon_Rx_Packetsshow"></td>
+				<td  class='hd' style='background-color: #e6f2fb;'>{{waninfo_Pon_Tx_Packets}}</td>
+				<td id="waninfo_Pon_Tx_Packetsshow"></td>
+		   </tr>
+		   <tr>
+				<td  class='hd' style='background-color: #e6f2fb;'>{{waninfo_Pon_Rx_Unicast_Packets}}</td>
+				<td id="waninfo_Pon_Rx_Unicast_Packetsshow"></td>
+				<td  class='hd' style='background-color: #e6f2fb;'>{{waninfo_Pon_Tx_Unicast_Packets}}</td>
+				<td id="waninfo_Pon_Tx_Unicast_Packetsshow"></td>
+		   </tr>
+		   <tr>
+				<td  class='hd' style='background-color: #e6f2fb;'>{{waninfo_Pon_Rx_Broadcast_Packets}}</td>
+				<td id="waninfo_Pon_Rx_Broadcast_Packetsshow"></td>
+				<td  class='hd' style='background-color: #e6f2fb;'>{{waninfo_Pon_Tx_Broadcast_Packets}}</td>
+				<td id="waninfo_Pon_Tx_Broadcast_Packetsshow"></td>
+		   </tr>
+		   <tr>
+				<td  class='hd' style='background-color: #e6f2fb;'>{{waninfo_Pon_Rx_Multicast_Packets}}</td>
+				<td id="waninfo_Pon_Rx_Multicast_Packetsshow"></td>
+				<td  class='hd' style='background-color: #e6f2fb;'>{{waninfo_Pon_Tx_Multicast_Packets}}</td>
+				<td id="waninfo_Pon_Tx_Multicast_Packets"></td>
+		   </tr>
+		   <tr>
+				<td  class='hd' style='background-color: #e6f2fb;'>{{waninfo_Pon_Rx_Dropped_Packets}}</td>
+				<td id="waninfo_Pon_Rx_Dropped_Packetsshow"></td>
+				<td  class='hd' style='background-color: #e6f2fb;'>{{waninfo_Pon_Tx_Dropped_Packets}}</td>
+				<td id="waninfo_Pon_Tx_Dropped_Packetsshow"></td>
+		   </tr>
+		   <tr>
+				<td  class='hd' style='background-color: #e6f2fb;'>{{waninfo_Pon_Rx_FEC_Eror_Packets}}</td>
+				<td id="waninfo_Pon_Rx_FEC_Eror_Packetsshow"></td>
+		   </tr>
+		   <tr>
+				<td  class='hd' style='background-color: #e6f2fb;'>{{waninfo_Pon_Rx_HEC_Eror_Packets}}</td>
+				<td id="waninfo_Pon_Rx_HEC_Eror_Packetsshow"></td>
+		   </tr>
+
+		</table>
+	</div>
+	</div>
+
+    <br>
+	<div id="ipv6rdInfoTable" class="table-list" style="margin-left:24px;margin-top:5px;display:none;">
+		<b>{{waninfo_ipv6rdInfo2}}</b><br>
+		<br>
+		<table cellpadding='4' cellspacing='0' width="95%">
+			<thead>
+		   <tr align='center'> 
+			  <th>{{waninfo_Interface}}</th>
+			  <th>{{waninfo_Status}}</th>
+			  <th>{{waninfo_BRv4Addr}}</th>
+			  <th>{{waninfo_ipv6rdIPv4MaskLen}}</th>
+			  <th>{{waninfo_ipv6rdPrefix}}</th>
+		   </tr>
+		   </thead>
+		   <tbody id = "ipv6rd_table">
+		   </tbody>
+		</table>
+	</div>
+	<div id="dsliteInfoTable" class="table-list" style="margin-left:24px;margin-top:5px;display:none;">
+		<b>{{waninfo_dsliteInfo2}}</b><br>
+		<br>
+		<table cellpadding='4' cellspacing='0' width="95%">
+			<thead>
+		   <tr align='center'> 
+			  <th>{{waninfo_Interface}}</th>
+			  <th>{{waninfo_Status}}</th>
+			  <th>{{waninfo_AFTRDomainName}}</th>
+			  <th>{{waninfo_AFTRServerAddr}}</th>
+		   </tr>
+		   </thead>
+			<tbody id = "dslite_table">
+		   </tbody>
+		</table>
+	</div>
+
+    <br>
+	<div id="vpnInfoTable" class="table-list" style="margin-left:24px;margin-top:5px;display:none;">
+		<b>{{waninfo_vpninfo}}</b><br>
+		<br>
+		<table cellpadding='4' cellspacing='0' width="95%">
+			<thead>
+		   <tr align='center'> 
+			  <th>{{vpninfo_Interface}}</th>
+			  <th>{{vpninfo_Type}}</th>
+			  <th>{{vpninfo_Status}}</th>
+			  <th>{{vpninfo_Ipaddr}}</th>
+			  <th>{{vpninfo_Gateway}}</th>
+			  <th>{{waninfo_priDNS}}<br>/{{waninfo_secDNS}}</th>
+			  <th>{{waninfo_Uptime}}</th>
+		   </tr>
+		   </thead>
+			<tbody id = "vpn_table">
+		   </tbody>
+		</table>
+	</div>
+	</div>
+	<div id="nattable_section" style="display:none;">
+		<p class="skpage-title">{{waninfo_NatConnections}}</p>
+		<div class="modset">
+			<div class="table-list" id="resulttb" style="width: 850px;">
+				<table>
+					<thead>
+						<tr>
+							<td colspan="7" class="hd" style="background-color: #e6f2fb;text-align: left;">
+								<span style="margin-left:12px;">{{waninfo_NatTable_ConnectNum}}:</span>
+								<span id="nat_connect_num"></span>
+							</td>
+						</tr>
+						<tr>
+							<th>
+								{{waninfo_NatTable_Index}}
+							</th>
+							<th>
+								{{waninfo_NatTable_Protocol}}
+							</th>
+							<th>
+								{{waninfo_NatTable_Timeout}}
+							</th>
+							<th>
+								{{waninfo_NatTable_SrcAddr}}
+							</th>
+							<th>
+								{{waninfo_NatTable_DstAddr}}
+							</th>
+							<th>
+								{{waninfo_NatTable_ServicePort}}
+							</th>
+							<th>
+								{{waninfo_NatTable_State}}
+							</th>
+						</tr>
+					</thead>
+					<tbody id="NatTableBody">
+							
+					</tbody>
+				</table>				
+			</div>
+			<div class="skform-group"></div>
+				<input id="Btn_Refresh" name="Btn_Refresh"  type="button" class="btn-apply" value="{{waninfo_NatTable_NatConnectionsRefreshBtn}}" 
+					onClick="showNatSessionTable();">
+			</div>
+		</div>
+	</div>
+	</div>
+</form>

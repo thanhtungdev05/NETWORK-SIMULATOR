@@ -1,0 +1,27 @@
+<div class="page-content">
+	<p class="sk-warning-info">
+		{{This page allows you to enable or disable the IPTV proxy function.}}
+	</p>
+	<p class="skpage-title">{{IPTV Proxy Settings}}</p>
+	<div class="modset">
+		<div class="skform-group">
+			<label class="skform-tittle" for="selInterface">{{Interface}}</label>
+			<select size="1" class="skform-control" id="igmpproxy_selInterface" name="igmpproxy_selInterface" onchange="igmpproxy_selchange_wan(this)">
+	        </select>
+		</div>
+
+		<div class="skform-group">
+			<label class="skform-tittle">{{Enable Proxy}}</label>
+			<label class="skcheckbox skcheckbox-form">
+				<input type="checkbox" name="igmpproxy_chkProxy" id="igmpproxy_chkProxy"  hidden/>
+				<label for="igmpproxy_chkProxy" id="iptvProxyEnable_btn" class="skcheckbox-label">
+				</label>
+			</label>
+		</div>
+		
+		<div class="sk-form-submit">
+		<input class="btn-apply" id="iptvProxySave_btn" type='button' onClick='igmpproxy_btnSave()' value='{{Save & Apply}}'> 
+		</div>
+	</div>
+</div>
+

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<!-- ==========================================================================
+     KHUNG CHÍNH - FPT Mesh Router AX3000S (bản giả lập chạy trình duyệt)
+     Tái tạo giao diện LuCI gốc của thiết bị + backend ảo bằng JavaScript.
+     ========================================================================== -->
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AX3000S - Giả lập cấu hình</title>
+
+  <!-- CSS gốc của thiết bị (đúng như header.htm gốc: chỉ 2 file này) -->
+  <link href="/luci-static/skgwfpt/sk_181_form.css" rel="stylesheet">
+  <link href="/luci-static/skgwfpt/jquery.jOrgChart.css" rel="stylesheet">
+
+  <!-- 1) jQuery, 2) backend ảo, 3) lớp chặn mạng, 4) menu + envcar -->
+  <script src="/luci-static/resources/jquery-3.5.1.min.js"></script>
+  <script src="/sim/backend.js"></script>
+  <script src="/sim/backend-ext.js"></script>
+  <script src="/sim/net-mock.js"></script>
+  <script src="/menu.js"></script>
+  <script src="/sim/langs.js"></script>   <!-- 949 chuỗi dịch EN giải mã từ .lmo gốc -->
+
+  <!-- Biến toàn cục mà mã gốc cần -->
+  <script>
+    window.langs = window.langs || {};   // do langs.js nạp; phòng khi thiếu
+    var oldpath = "";                     // mã gốc dùng biến này khi đổi view
+    var ifkey = (window.SIM && SIM.DEV && SIM.DEV.key) || "";
+  </script>
+
+  <!-- Thư viện + mã gốc của thiết bị -->
+  <script src="/luci-static/resources/jquery.history.js"></script>
+  <script src="/luci-static/resources/jquery.jOrgChart.js"></script>
+  <script src="/luci-static/resources/sk_util.js"></script>
+  <script src="/luci-static/resources/common.js"></script>
+  <script src="/luci-static/resources/sk_gateway.js"></script>
+  <script src="/luci-static/resources/pureknob.js"></script>
+  <script src="/luci-static/resources/crypto-js.js"></script>
+  <script src="/luci-static/resources/echarts.min.js"></script>
+</head>
+
+<body>
+  <!-- Thanh tiêu đề -->
+  <div class="pagetittle">
+    <div class="container">
+      <div class="logo_text">
+        <img src="/luci-static/resources/cbi/logo_fpt.png" style="height:70px;" alt="FPT" onerror="this.style.display='none'">
+      </div>
+      <div class="logo-setup">
+        <input type="button" id="quickset" class="btn btn-large btn-default" value="Wizard"
+               onclick="alert('Trang Wizard sẽ được bổ sung ở mốc sau.')" />
+        <select name="language" id="language" class="btn btn-large btn-default" style="height:35px;" size="1">
+          <option value="vi">Tiếng Việt</option>
+          <option value="en" selected>English</option>
+        </select>
+        <input type="button" id="Sky_Logout" class="btn btn-large btn-default" value="Logout"
+               onclick="window.location.href='login.html'" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Menu cấp 1 -->
+  <div class="layer1-menu">
+    <div class="container">
+      <ul class="nav nav-layer1" id="nav-layer1"></ul>
+    </div>
+  </div>
+
+  <!-- Nội dung + menu cấp 2/3 -->
+  <div class="main-content">
+    <div class="container">
+      <div class="layer2-menu" id="layer2-menu"></div>
+      <div class="content-detail"></div>
+    </div>
+  </div>
+
+  <!-- ================= Kịch bản dựng menu + khởi động ================= -->
+  <script>
+    (function () {
+      var URLBASE = "/cgi-bin/luci/admin";
+
+      // Chỉ hiện các mục là trang (skview) hoặc thư mục chứa trang.
+      function isSkview(node) { return node.action && node.action.type === "skview"; }
+      function isFolder(node) {
+        if (!node.children) return false;
+        for (var k in node.children) if (visible(node.children[k])) return true;
+        return false;
+      }
+      // Một node "hiện được" nếu là skview hoặc là thư mục chứa skview (đệ quy).
+      function visible(node) {
+        if (isSkview(node)) return true;
+        if (node.children) for (var k in node.children) if (visible(node.children[k])) return true;
+        return false;
+      }
+      function tr(s) { return (typeof window._ === "function") ? window._(s) : s; }
+      function title(node, fallback) { return tr((node && node.title) ? node.title : fallback); }
+
+      function renderMenu() {
+        var nav = document.getElementById("nav-layer1");
+        var l2wrap = document.getElementById("layer2-menu");
+        var first = null;
+
+        Object.keys(treemenu).forEach(function (l1name) {
+          var l1 = treemenu[l1name];
+          if (l1name === "logout" || l1name === "wizard" || !visible(l1)) return;
+          if (!first) first = l1name;
+
+          // ----- Cấp 1 -----
+          var a1 = document.createElement("a");
+          a1.href = URLBASE + "/" + l1name;
+          a1.id = "Sky_" + (title(l1, l1name)).replace(/ /g, "_");
+          a1.innerHTML = "<li><span>" + title(l1, l1name) + "</span></li>";
+          nav.appendChild(a1);
+
+          // ----- Khối cấp 2 của l1 -----
+          var ul2 = document.createElement("ul");
+          ul2.id = "layer2-ul-" + l1name;
+          ul2.style.display = "none";
+
+          var ch2 = l1.children || {};
+          Object.keys(ch2).forEach(function (l2name) {
+            var l2 = ch2[l2name];
+            if (!visible(l2)) return;
+            var li = document.createElement("li");
+            li.id = "layer2-leaf-" + l2name;
+
+            if (isSkview(l2)) {
+              // Mục cấp 2 là trang
+              var a2 = document.createElement("a");
+              a2.href = URLBASE + "/" + l1name + "/" + l2name;
+              a2.id = "Sky_" + title(l2, l2name).replace(/ /g, "_");
+              a2.innerHTML = "<div class='dt'>" + title(l2, l2name) + "</div>";
+              li.appendChild(a2);
+            } else {
+              // Mục cấp 2 là thư mục -> có cấp 3
+              var dt = document.createElement("div");
+              dt.className = "dt";
+              dt.setAttribute("onclick", "select_layer2(this);");
+              dt.innerHTML = title(l2, l2name) + "<div class='menu-array'>+</div>";
+              li.appendChild(dt);
+
+              var l3menu = document.createElement("div");
+              l3menu.className = "layer3-menu";
+              l3menu.style.display = "none";
+              var ul3 = document.createElement("ul");
+              var ch3 = l2.children || {};
+              Object.keys(ch3).forEach(function (l3name) {
+                var l3 = ch3[l3name];
+                if (!isSkview(l3)) return;
+                var a3 = document.createElement("a");
+                a3.href = URLBASE + "/" + l1name + "/" + l2name + "/" + l3name;
+                a3.id = "Sky_" + title(l3, l3name).replace(/ /g, "_");
+                a3.innerHTML = "<li>" + title(l3, l3name) + "</li>";
+                ul3.appendChild(a3);
+              });
+              l3menu.appendChild(ul3);
+              li.appendChild(l3menu);
+            }
+            ul2.appendChild(li);
+          });
+          l2wrap.appendChild(ul2);
+        });
+
+        return first;
+      }
+
+      // Dựng menu ngay khi DOM sẵn sàng
+      document.addEventListener("DOMContentLoaded", function () {
+        renderMenu();
+
+        // QUAN TRỌNG: gắn lại sự kiện click cho menu, vì menu được dựng SAU khi
+        // sk_gateway.js đã chạy $(document).ready (lúc đó menu chưa tồn tại nên
+        // chưa gắn được). Không có bước này, bấm tab sẽ điều hướng thật -> 404.
+        // Giải view path từ href: drill thư mục (firstchild) tới trang skview đầu tiên.
+        function firstSkview(n) {
+          if (n && n.action && n.action.type === "skview") return n.action.path;
+          if (n && n.children) {
+            var ks = Object.keys(n.children).sort(function (a, b) {
+              return (n.children[a].order || 999) - (n.children[b].order || 999);
+            });
+            for (var i = 0; i < ks.length; i++) {
+              var p = firstSkview(n.children[ks[i]]);
+              if (p) return p;
+            }
+          }
+          return null;
+        }
+        function resolvePath(href) {
+          var p = href.split("/"), l1 = p[4], l2 = p[5], l3 = p[6], node = treemenu[l1];
+          if (!node) return null;
+          var target = node;
+          if (l2 && node.children && node.children[l2]) {
+            target = node.children[l2];
+            if (l3 && target.children && target.children[l3]) target = target.children[l3];
+          }
+          return firstSkview(target);
+        }
+        // Sửa sau khi nạp: một số trang gốc ẩn khối nội dung chính mặc định
+        // (vd wancfg ẩn #wanindex rồi không show lại). Hiện lại nếu form không mở.
+        function afterLoadFix() {
+          setTimeout(function () {
+            var wi = jQuery("#wanindex");
+            if (wi.length) {
+              var wf = jQuery("#wanform");
+              if (!wf.length || !wf.is(":visible")) wi.show();
+            }
+          }, 500);
+        }
+        // Điều hướng: chuyển submenu + highlight tab + nạp ĐÚNG view (trực tiếp, không qua statechange).
+        function navTo(href, el) {
+          var l1 = href.split("/")[4];
+          jQuery(".layer2-menu > ul").hide();
+          jQuery("#layer2-ul-" + l1).show();
+          jQuery("#nav-layer1 li").removeClass("selected");
+          jQuery("#nav-layer1 a[href$='/" + l1 + "'] li").addClass("selected");
+          // highlight mục đang chọn
+          jQuery(".layer2-menu .dt").removeClass("layer2-select");
+          jQuery(".layer3-menu li").removeClass("active");
+          if (el) {
+            jQuery(el).find(".dt").addClass("layer2-select");
+            jQuery(el).find("li").addClass("active");
+          }
+          var path = resolvePath(href);
+          if (path && typeof loadView === "function") {
+            // Nạp view MỘT lần, không đụng History.js (tránh statechange nạp đôi + xáo menu).
+            loadView(path);
+            afterLoadFix();
+          } else {
+            jQuery(".content-detail").html(
+              "<p style='padding:24px;color:#888'>Trang này chưa được mô phỏng ở mốc hiện tại.</p>");
+          }
+        }
+        if (window.jQuery) {
+          jQuery(".nav-layer1 a, .layer2-menu a").off("click").on("click", function (e) {
+            e.preventDefault();
+            navTo(jQuery(this).attr("href"), this);
+          });
+        }
+
+        // CHỐNG KẸT LOADING: bọc thẳng hàm hiện spinner của firmware. Backend ảo trả
+        // tức thì, nên mọi Loading tự tắt sau 2.5s (vd DDNS lỗi trước khi kịp hide_mode).
+        function forceHideLoading() {
+          try { if (typeof window.hide_mode === "function") window.hide_mode(); } catch (e) { }
+          document.querySelectorAll(".backimg, .panel.loading, .panel.warn").forEach(function (e) {
+            if (e.classList.contains("loading") || e.classList.contains("backimg")) e.remove();
+          });
+        }
+        if (typeof window.loading_show_data === "function") {
+          var _lsd = window.loading_show_data;
+          window.loading_show_data = function () {
+            _lsd.apply(this, arguments);
+            clearTimeout(window.__simLoadingTO);
+            window.__simLoadingTO = setTimeout(forceHideLoading, 2500);
+          };
+        }
+        // Lưới an toàn thứ 2: quét định kỳ, spinner sống quá 3.5s thì gỡ.
+        setInterval(function () {
+          var l = document.querySelector(".panel.loading");
+          if (!l) return;
+          if (!l.__simSeen) { l.__simSeen = Date.now(); return; }
+          if (Date.now() - l.__simSeen > 3500) forceHideLoading();
+        }, 1000);
+
+        function selectAndLoadView(targetPath) {
+          if (!targetPath) targetPath = "devinfo";
+          var links = document.querySelectorAll(".nav-layer1 a, .layer2-menu a");
+          var matchedEl = null;
+          for (var i = 0; i < links.length; i++) {
+            var href = links[i].getAttribute("href") || "";
+            if (typeof resolvePath === "function" && resolvePath(href) === targetPath) {
+              matchedEl = links[i];
+              break;
+            }
+          }
+          if (matchedEl) {
+            navTo(matchedEl.getAttribute("href"), matchedEl);
+          } else {
+            var statusUl = document.getElementById("layer2-ul-status");
+            if (statusUl) statusUl.style.display = "block";
+            var statusTab = document.querySelector("#nav-layer1 a[href$='/status'] li");
+            if (statusTab) statusTab.classList.add("selected");
+            if (typeof loadView === "function") {
+              loadView(targetPath);
+            } else {
+              document.querySelector(".content-detail").innerHTML =
+                "<p style='padding:20px;color:red'>Lỗi: mã gốc chưa nạp (loadView không tồn tại).</p>";
+            }
+          }
+        }
+
+        var initView = (window.location.hash || "").replace("#", "").trim();
+        if (!initView) {
+          var params = new URLSearchParams(window.location.search);
+          initView = params.get("view") || params.get("page") || "devinfo";
+        }
+        selectAndLoadView(initView);
+
+        window.addEventListener("hashchange", function () {
+          var newView = (window.location.hash || "").replace("#", "").trim();
+          if (newView) {
+            selectAndLoadView(newView);
+          }
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<div class="page-content">
+	<p class="sk-warning-info">
+		{{wlanWpsConfig2g_tips}}<br>
+	</p>
+	<div >
+		<div class="skform-group">
+			<p class="skpage-title">{{wlanWpsConfig2g_switch}}</p>
+			<div class="modset">
+				<div class="skform-group">
+					<input class="sk-btn-small" type="button" id="wps_switch" value="{{wlanWpsConfig2g_switchbutton}}" onclick="BntClick_PbcShow();">
+				</div>
+			</div>
+		</div>
+		<div id="wps_hide">
+			<p class="skpage-title">{{wlanWpsConfig2g_pbc}}</p>
+			<div class="modset">
+				<p>{{wlanWpsConfig2g_pbcTips}}</p>
+				<div class="skform-group">
+					<input class="sk-btn-small" type="button" value="{{wlanWpsConfig2g_pbcbutton}}" onclick="BntClick_PbcApply();">
+				</div>
+			</div>
+			<p class="skpage-title">{{wlanWpsConfig2g_pin}}</p>
+			<div class="modset">
+				<p>{{wlanWpsConfig2g_pinTips}}</p>
+					<div class="skform-group">
+					<label class="skform-tittle" for="Txt_WPSPIN">PIN:</label>
+					<input type="text" class="skform-control" id="Txt_WPSPIN" name="Txt_WPSPIN" />
+				</div>
+					<div class="skform-group">
+					<input class="sk-btn-small" type="button" value="{{wlanWpsConfig2g_pinbutton}}" onclick="BntClick_PinApply();" />  
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

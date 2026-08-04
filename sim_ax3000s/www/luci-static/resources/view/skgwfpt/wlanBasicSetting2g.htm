@@ -1,0 +1,177 @@
+﻿<div class="page-content">
+	<p class="sk-warning-info">
+	{{wlanBasicSetting2g_tips}}
+	</p>
+	<p class="skpage-title">2.4G {{basicSetting2g_basicSetting}}</p>
+	<div class="modset">
+	    <div class="skform-group">
+	        <label class="skform-tittle">2.4G {{basicSetting2g_radioEnable}}</label>
+	        <label class="skcheckbox skcheckbox-form">
+	            <input type="checkbox" name="Chk_RadioEnable" id="Chk_RadioEnable" onClick='onClickSwitchRadio()' hidden/>
+	            <label for="Chk_RadioEnable" class="skcheckbox-label">
+	            </label>
+	        </label>
+	    </div>
+	<div id="radio_hide">
+	    <div class="skform-group">
+	        <label class="skform-tittle">{{basicSetting2g_ssidEnable}}</label>
+	        <label class="skcheckbox skcheckbox-form">
+	            <input type="checkbox" name="Chk_SsidEnable" id="Chk_SsidEnable" hidden/>
+	            <label for="Chk_SsidEnable" class="skcheckbox-label">
+	            </label>
+	        </label>
+	    </div>
+
+	    <div class="skform-group">
+	        <label class="skform-tittle" for="Txt_SSID">{{basicSetting2g_ssid}}</label>
+			<input type="text" class="skform-control" id="Txt_SSID" name="Txt_SSID" maxlength="32">
+	    </div>
+
+	    <div class="skform-group">
+	        <label class="skform-tittle" for="Sel_AuthMode">{{basicSetting2g_auth}}</label>
+	        <select size="1" class="skform-control" name="Sel_AuthMode" id="Sel_AuthMode" onChange="SelChange_AuthMode(this)">
+	            <option value="Open System">Open System</option>
+	             <option value="WPA-PSK">WPA-PSK</option>
+	             <option value="WPA2-PSK">WPA2-PSK</option>
+	             <option value="WPA/WPA2-PSK">WPA/WPA2-PSK</option>
+	             <option value="WPA3-SAE">WPA3-SAE</option>
+	             <option value="WPA2-PSK/WPA3-SAE">WPA2-PSK/WPA3-SAE</option>
+	        </select>
+	    </div>
+
+	    <div class="skform-group" id="Tr_WpaPSK">
+	        <label class="skform-tittle" for="Pwd_WpaPsk">{{basicSetting2g_key}}</label>
+	        <input type="password" class="skform-control" name="Pwd_WpaPsk" id="Pwd_WpaPsk" maxlength="63" />
+	        <span class="bi bi-eye-slash-fill bi-password"></span>
+	    </div>
+
+	    <div class="skform-group" id="Tr_Encryption">
+	        <label class="skform-tittle" for="Sel_Encryption">{{basicSetting2g_encryption}}</label>
+	        <select size="1" class="skform-control" name="Sel_Encryption" id="Sel_Encryption">
+	             <option value="AESEncryption">AES</option>
+	             <option value="TKIPEncryption">TKIP</option>
+	             <option value="TKIPandAESEncryption">TKIP+AES</option>
+	             <option style="display:none" value="None">None</option>
+	         </select>
+	    </div>
+
+	    <div class="skform-group">
+	        <label class="skform-tittle">{{basicSetting2g_hide}}</label>
+	        <label class="skcheckbox skcheckbox-form">
+	            <input type="checkbox" name="Chk_HideEnable" id="Chk_HideEnable" hidden/>
+	            <label for="Chk_HideEnable" class="skcheckbox-label">
+	            </label>
+	        </label>
+	    </div>
+
+	    <div class="skform-group">
+	        <label class="skform-tittle" for="Sel_PhyMode">{{basicSetting2g_mode}}</label>
+	        <select size="1" class="skform-control" name="Sel_PhyMode" id="Sel_PhyMode" onChange="SelChange_PhyMode(this)">
+                     <option value ="b">IEEE 802.11b only</option>
+                     <option value ="g" style="display: none;">IEEE 802.11g only</option>
+                     <option value ="n" style="display: none;">IEEE 802.11n only</option>
+                     <option value ="ax" style="display: none;">IEEE 802.11ax only</option>
+                     <option value ="bg">IEEE 802.11b/g</option>
+                     <option value ="bgn">IEEE 802.11b/g/n</option>
+                     <option value ="bgnax">IEEE 802.11b/g/n/ax</option>
+                     <option value ="bgnaxbe" style="display: none;">IEEE 802.11b/g/n/ax/be</option>
+	        </select>
+	    </div>
+
+	    <div class="skform-group" id="11n_BandWidth">
+	        <label class="skform-tittle" for="Sel_BandWidth">{{basicSetting2g_bandwidth}}</label>
+	        <select size="1" class="skform-control" name="Sel_BandWidth" id="Sel_BandWidth" onChange="SelChange_BandWidth(this)">
+	            <option value ="Auto">Auto</option>
+	            <option value ="20Mhz">20Mhz</option>
+	            <option value ="40Mhz">40Mhz</option>
+	        </select>
+	    </div>
+
+	    <div class="skform-group">
+	        <label class="skform-tittle" for="Sel_Channel">{{basicSetting2g_channel}}</label>
+	        <select class="skform-control" name="Sel_Channel" id="Sel_Channel" onClick='SelChange_Channel(this)'>
+	        </select>
+	    </div>
+
+	    <div class="skform-group" id="11n_acsTime">
+	        <label class="skform-tittle" for="Txt_acsTime">{{basicSetting2g_acsTime}}</label>
+			<input type="text" class="skform-control" id="Txt_acsTime" name="Txt_acsTime">
+	    </div>
+
+	    <div class="skform-group" id="11n_guardInterval">
+	        <label class="skform-tittle" for="Sel_guardInterval">{{basicSetting2g_guardInterval}}</label>
+	        <select size="1" class="skform-control" name="Sel_guardInterval" id="Sel_guardInterval">
+	            <option value =1>Short</option>
+	            <option value =0>Long</option>
+	        </select>
+	    </div>
+
+	    <div id="Box_TxPower" class="skform-group">
+	        <label class="skform-tittle" for="Sel_TxPower">{{basicSetting2g_power}}</label>
+	        <select size="1" class="skform-control" name="Sel_TxPower" id="Sel_TxPower">
+	            <option value="100">High</option>
+	            <option value="80">Medium</option>
+	            <option value="60">Low</option>
+	        </select>
+	    </div>
+		<div class="skform-group">
+	        <label class="skform-tittle">Download MU-OFDMA:</label>
+	        <label class="skcheckbox skcheckbox-form">
+	            <input type="checkbox" name="DMUOFDMA_Enable" id="DMUOFDMA_Enable" hidden/>
+	            <label for="DMUOFDMA_Enable" class="skcheckbox-label">
+	            </label>
+	        </label>
+	    </div>	
+		<div class="skform-group">
+	        <label class="skform-tittle">Upload MU-OFDMA:</label>
+	        <label class="skcheckbox skcheckbox-form">
+	            <input type="checkbox" name="UMUOFDMA_Enable" id="UMUOFDMA_Enable" hidden/>
+	            <label for="UMUOFDMA_Enable" class="skcheckbox-label">
+	            </label>
+	        </label>
+	    </div>
+		<div class="skform-group" style="display:none">
+	        <label class="skform-tittle">Download MU-MIMO:</label>
+	        <label class="skcheckbox skcheckbox-form">
+	            <input type="checkbox" name="DMUMIMO_Enable" id="DMUMIMO_Enable" hidden/>
+	            <label for="DMUMIMO_Enable" class="skcheckbox-label">
+	            </label>
+	        </label>
+	    </div>	
+		<div class="skform-group" style="display:none" >
+	        <label class="skform-tittle">Upload MU-MIMO:</label>
+	        <label class="skcheckbox skcheckbox-form">
+	            <input type="checkbox" name="UMUMIMO_Enable" id="UMUMIMO_Enable" hidden/>
+	            <label for="UMUMIMO_Enable" class="skcheckbox-label">
+	            </label>
+	        </label>
+	    </div>
+		<div class="skform-group">
+	        <label class="skform-tittle">WMM:</label>
+	        <label class="skcheckbox skcheckbox-form">
+	            <input type="checkbox" name="WMM_Enable" id="WMM_Enable" hidden/>
+	            <label for="WMM_Enable" class="skcheckbox-label">
+	            </label>
+	        </label>
+	    </div>		
+	    <div class="skform-group" style="display:none">
+	        <label class="skform-tittle">Limit Enable</label>
+	        <label class="skcheckbox skcheckbox-form">
+	            <input type="checkbox" name="Control_Enable" id="Control_Enable" onClick='onClickSwitchControl()' hidden/>
+	            <label for="Control_Enable" class="skcheckbox-label">
+	            </label>
+	        </label>
+	    </div>	
+			
+
+	    <div class="skform-group" id="maximum_client" style="display:none">
+	        <label class="skform-tittle" for="client_num">Maximum Clients</label>
+			<input type="text" class="skform-control" id="client_num" name="client_num">
+	    </div>		
+	</div>
+
+	    <div class="sk-form-submit">
+	        <button class="btn-apply" type="button" name="button_apply" id="button_apply" onclick="BntClick_Apply()">{{Save & Apply}}</button>
+	    </div>
+	</div>
+</div>

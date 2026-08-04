@@ -1,0 +1,477 @@
+<form>
+	<div class="page-content">
+		<div id="wanindex" style="display:none;">
+			<p class="sk-warning-info">
+				{{wancfg_wanConfigNote}}
+			</p>
+			<p class="skpage-title">{{wancfg_WanConfiguration}}</p>
+			<div class="modset">
+				<div class="table-list" style="width: 100%;margin-bottom: 25px;">
+					<div class="table-list-head">
+						<button class="btn btn-add" type="button" name="btn_add" id="btn_add" onclick="addwan()">{{wancfg_AddText}}</button>
+						<button class="btn btn-edit" type="button" name="btn_edit" id="btn_edit" onclick="editwan()">{{wancfg_EditText}}</button>
+						<button class="btn btn-del" type="button" name="btn_del" id="btn_del" onclick="removeClick()">{{wancfg_DeleteText}}</button>
+					</div>
+					<table>
+						<thead>
+							<tr>
+								<th>
+									<label class="skcheckbox">
+										<input type="checkbox" name="seletall" id="seletall" onClick='selectAll(this)' hidden/>
+										<label for="seletall" class="skcheckbox-label">
+										</label>
+									</label>
+								</th>
+								<th>{{wancfg_connName}}</th>
+								<th>{{wancfg_connMode}}</th>
+								<th>{{wancfg_ipMode}}</th>
+								<th>{{wancfg_vlanPrio}}</th>
+								<th>{{wancfg_WanBindPort}}</th>
+							</tr>
+						</thead>
+						<tbody id = "wan_entry_list">
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+		<div id="wanform" style="display:none;">
+			<p class="skpage-title title-large" id="wantittleinfo">{{wancfg_EditText}}
+			<i>bbb</i> {{wancfg_interfaceConfiguration}}</p>
+			<p class="skpage-title">{{wancfg_basicInfo}}</p>
+			<div class="modset">
+				<div class="hidden-div">
+				<div class="skform-group">
+					<label class="skform-tittle">{{wancfg_Enable}}:</label>
+					<label class="skcheckbox skcheckbox-form">
+						<input type="checkbox" name="enable" id="enable" hidden/>
+						<label for="enable" id="Enable" class="skcheckbox-label"></label>
+					</label>
+				</div>
+				</div>
+				<div class="hidden-div">
+				<div class="skform-group" id="default_route" style="display:none;">
+					<label class="skform-tittle">{{wancfg_Defaultroute}}:</label>
+					<label class="skcheckbox skcheckbox-form">
+						<input type="checkbox" name="defaultroute" id="defaultroute" hidden/>
+						<label for="defaultroute" id="Defaultroute" class="skcheckbox-label"></label>
+					</label>
+				</div>
+				</div>
+				<div class="skform-group">
+					<label class="skform-tittle" for="connMode">{{wancfg_Mode}}:</label>
+					<select size="1" class="skform-control" name="connMode" id="connMode" onChange="changeConnMode(this.value)">
+							<option value="bridge">Bridge</option>
+							<option value="route" selected = "selected">Route</option>
+							<!--
+							<option value="ipv6rd">6RD</option>
+							<option value="dslite">DS-Lite</option>
+							-->
+					</select>
+				</div>
+				<div class="hidden-div">
+				<div class="skform-group">
+					<label class="skform-tittle" for="serviceMode">{{wancfg_WanServiceMode}}:</label>
+					<select size="1" class="skform-control" name="serviceMode" id="serviceMode" onChange="changeServiceMode(this.value)">
+							<option value=8>TR069_VOIP_INTERNET</option>
+							<option value=1>TR069</option>
+							<option value=6>TR069_VOIP</option>
+							<option value=5>TR069_INTERNET</option>
+							<option value=3>VOIP</option>
+							<option value=7>VOIP_INTERNET</option>
+							<option value=2>INTERNET</option>
+							<option value=4>IPTV</option>
+					</select>
+				</div>
+				</div>
+
+				<div class="skform-group" id="ipversionmode">
+					<label class="skform-tittle" for="IpVersion">{{wancfg_IPVersion}}:</label>
+					<select size="1" class="skform-control" name="IpVersion" id="IpVersion" onChange="changeIPVersion(this.value)">
+							<option value=0>IPv4</option>
+							<option value=1>IPv6</option>
+							<option value=2 selected = "selected">IPv4 & IPv6</option>
+					</select>
+				</div>
+				
+				<div class="hidden-div">
+				<div class="skform-group" style="height:90px;" id="portbindtable">
+					<label class="skform-tittle" for="Chk_WanBindPort">{{wancfg_WanBindPort}}:</label>
+
+					<div class="skform-content-list" id="lan_port_list">
+					</div>
+				</div>
+				</div>
+				<div class="skform-group">
+					<label class="skform-tittle" for="vlanMode">{{wancfg_VLANMode}}:</label>
+					<select size="1" class="skform-control" name="vlanMode" id="vlanMode" onChange="enableVlan(this.value)">
+							<option value=2 selected = "selected">TAG</option>
+							<option value=1>UNTAG</option>
+							<!--
+								<option value="3">TRANSPARENT</option>
+							-->
+					</select>
+				</div>
+				<div id="vlanvfg" style="display:none;">
+					<div class="skform-group">
+						<label class="skform-tittle" for="vlanID">{{wancfg_VlanID}}:</label>
+						<input type="text" class="skform-control" id="vlanID" name="vlanID"/><span class="skform-disc">(1-4094)</span>
+					</div>
+					<div class="skform-group">
+						<label class="skform-tittle" for="multiVID">{{wancfg_multiVID}}:</label>
+						<input type="text" class="skform-control" id="multiVID" name="multiVID"/><span class="skform-disc">(1-4094)</span>
+					</div>
+					<div class="skform-group">
+						<label class="skform-tittle" for="d8021">{{wancfg_Vlan8021p}}:</label>
+						<select size="1" class="skform-control" name="d8021" id="d8021">
+							<option value=0>0</option>
+							<option value=1>1</option>
+							<option value=2>2</option>
+							<option value=3>3</option>
+							<option value=4>4</option>
+							<option value=5>5</option>
+							<option value=6>6</option>
+							<option value=7>7</option>
+						</select>
+					</div>
+				</div>
+				<div class="skform-group">
+					<label class="skform-tittle" for="mtu">{{wancfg_MTUValue}}:</label>
+					<input type="text" class="skform-control" id="mtu" name="mtu" value="1492" size="4" maxsize='4'/><span class="skform-disc" id="span_mtu"></span>
+				</div>
+				
+				<div class="sk-form-submit" id="bridgeapply" style="display:none;">
+				<!--
+					<button class="btn-cancel" type="button" onclick="btnCancel()">Cancel</button>
+					<button class="btn-apply" type="button" onclick="btnSave()" style="margin-left:1%;">Save & Apply</button>
+				-->
+				</div>
+			</div>
+			
+			<div id="Networkconfigid">
+				<p class="skpage-title">{{wancfg_networkInfo}}</p>
+				<div class="modset">
+						<div class="skform-group">
+						<label class="skform-tittle">{{wancfg_ipAcquisitionMode}}:</label>
+						<div class="skform-content">
+							<ul>
+								<div class="hidden-div">
+								<li>
+									<label class="skradio">
+										<input type="radio" name="ipproto" id="ipprotostatic" value="static" onClick='selectipproto()' hidden/>
+										<label for="ipprotostatic" id="staticMode" class="skradio-label">
+										</label>
+									</label>
+									<label class="skradio-text" for="ipprotostatic">Static</label>
+								</li>
+								</div>
+								<li>
+									<label class="skradio">
+										<input type="radio" name="ipproto" id="ipprotodhcp" value="dhcp" checked onClick='selectipproto()' hidden/>
+										<label for="ipprotodhcp" id="dhcpMode" class="skradio-label">
+										</label>
+									</label>
+									<label class="skradio-text" for="ipprotodhcp">DHCP</label>
+								</li>
+								<li>
+									<label class="skradio">
+										<input type="radio" name="ipproto" id="ipprotopppoe" value="pppoe" onClick='selectipproto()' hidden/>
+										<label for="ipprotopppoe" id="pppoeMode" class="skradio-label">
+										</label>
+									</label>
+									<label class="skradio-text" for="ipprotopppoe">PPPoE</label>
+								</li>
+								<button class="btn-apply" id="Sky_Cancel" type="button" onclick="restartwan()" style="margin-left: 150px;">{{wancfg_RestartText}}</button>
+							</ul>
+						</div>
+					</div>
+					<div id="ipAddrTable" style="display:none;">
+						<div class="skform-group">
+							<label class="skform-tittle" for="ipAddr">{{wancfg_IPAddr}}:</label>
+							<input type="text" class="skform-control" id="ipAddr" name="ipAddr" size="15" maxszie='18' />
+						</div>
+						<div class="skform-group">
+							<label class="skform-tittle" for="netMask">{{wancfg_SubnetMask}}:</label>
+							<input type="text" class="skform-control" id="netMask" name="netMask" size="15" maxszie='18' />
+						</div>
+						<div class="skform-group">
+							<label class="skform-tittle" for="defGW">{{wancfg_IPGateway}}:</label>
+							<input type="text" class="skform-control" id="defGW" name="defGW" size="15" maxszie='18' />
+						</div>
+						<div class="skform-group">
+							<label class="skform-tittle" for="firstDns">{{wancfg_PriDNS}}:</label>
+							<input type="text" class="skform-control" id="firstDns" name="firstDns" size="15" maxszie='18' />
+						</div>
+						<div class="skform-group">
+							<label class="skform-tittle" for="secondDns">{{wancfg_SecDNS}}:</label>
+							<input type="text" class="skform-control" id="secondDns" name="secondDns" size="15" maxszie='18' />
+						</div>
+					</div>
+					<div id="dialTable" style="display:none;">
+						<div class="skform-group">
+							<label class="skform-tittle" for="userName">{{wancfg_PPPoEUsrName}}:</label>
+							<input type="text" class="skform-control" id="userName" name="userName" size="30" maxszie='260' />
+						</div>
+						<div class="skform-group">
+							<label class="skform-tittle" for="uPsd">{{wancfg_PPPoEPassword}}:</label>
+							<input type="password" class="skform-control" id="uPsd" name="uPsd" size="30" maxszie='260' />
+							<span class="bi bi-eye-slash-fill bi-password"></span>
+						</div>
+
+						<div class="hidden-div">
+						<div class="skform-group">
+							<label class="skform-tittle" for="dialMode">{{wancfg_dialMode}}:</label>
+							<select size="1" class="skform-control" name="dialMode" id="dialMode" onChange="enableDialMode(this.value)">
+									<option value=1 selected = "selected">AlwaysOn</option>
+									<option value=2>OnDemand</option>
+							</select>
+						</div>
+						</div>
+
+						<div id="OnDemandTable"  class="skform-group" style="display:none;">
+							<label class="skform-tittle" for="uPsd">{{wancfg_Noflow}}:</label>
+							<input type="text" class="skform-control" id="idleTime" name="idleTime" value="30" size="4" maxsize='4'/>
+							<span class="skform-disc">Disconnect after minutes. (30-9999)</span>
+						</div>
+		<!--			</div> style="display:none;"-->
+					<div class="hidden-div">
+					<div id="pppStaticIPEnableTable"  class="skform-group">
+						<label class="skform-tittle" for="EnableStaticIp">{{wancfg_PPPStaticIpEnable}}:</label>
+						<label class="skcheckbox skcheckbox-form">
+							<input type="checkbox" name="EnableStaticIp" id="EnableStaticIp" onClick="PPPUseStaticIP()" hidden/>
+							<label for="EnableStaticIp" class="skcheckbox-label"></label>
+						</label>
+						<div id="pppStaticIPTable" style="display:none;" class="skform-group">
+							<div class="skform-group">
+								<label class="skform-tittle" for="pppStaticIPAddress">{{wancfg_PPPStaticIpAddr}}:</label>
+								<input type="text" class="skform-control" id="pppStaticIPAddress" name="pppStaticIPAddress" size="30" maxszie='260' />
+							</div>
+							<div class="skform-group">
+								<label class="skform-tittle" for="pppStaticSubnetMask">{{wancfg_PPPStaticIpSubMask}}:</label>
+								<input type="txt" class="skform-control" id="pppStaticSubnetMask" name="pppStaticSubnetMask" size="30" maxszie='260' />
+							</div>
+							<div class="skform-group">
+								<label class="skform-tittle" for="pppStaticStartAddress">{{wancfg_PPPStaticIpStartAddr}}:</label>
+								<input type="text" class="skform-control" id="pppStaticStartAddress" name="pppStaticStartAddress" size="30" maxszie='260' />
+							</div>
+							<div class="skform-group">
+								<label class="skform-tittle" for="pppStaticEndAddress">{{wancfg_PPPStaticIpEndAddr}}:</label>
+								<input type="text" class="skform-control" id="pppStaticEndAddress" name="pppStaticEndAddress" size="30" maxszie='260' />
+							</div>
+						</div>
+					</div>
+					</div>
+					</div>
+					<div class="skform-group" id="nattable">
+						<label class="skform-tittle">{{wancfg_natEnable}}:</label>
+						<label class="skcheckbox skcheckbox-form">
+							<input type="checkbox" name="nat" id="nat" hidden/>
+							<label for="nat" id="natEnble" class="skcheckbox-label"></label>
+						</label>
+					</div>
+					<div class="skform-group" style="display:none;">
+						<label class="skform-tittle" for="fullConeNat">FullConeNAT:</label>
+						<label class="skcheckbox skcheckbox-form">
+							<input type="checkbox" name="fullConeNat" id="fullConeNat" onClick='enableNat(this)' hidden/>
+							<label for="fullConeNat" class="skcheckbox-label"></label>
+						</label>
+					</div>
+					<div class="sk-form-submit" id="noipv6apply" style="display:none;">
+					<!--
+						<button class="btn-cancel" type="button" onclick="btnCancel()">Cancel</button>
+						<button class="btn-apply" type="button" onclick="btnSave()" style="margin-left:1%;">Save & Apply</button>
+					 -->
+					</div>
+				</div>
+			</div>
+			
+			<div id="ipv6Table">
+				<p class="skpage-title">{{wancfg_ipv6Info}}</p>
+				<div class="modset">
+					<div class="skform-group" id="IANATable">
+						<label class="skform-tittle" for="enblIANA">{{wancfg_ipv6WANMode}}:</label>
+						<select size="1" class="skform-control" name="enblIANA" id="enblIANA">
+							<option value="0">SLAAC</option>
+							<option value="1">DHCP</option>
+						</select>
+					</div>
+					<div class="hidden-div">
+					<div class="skform-group" id="default_routev6">
+						<label class="skform-tittle">{{wancfg_Defaultroute_v6}}:</label>
+						<label class="skcheckbox skcheckbox-form">
+							<input type="checkbox" name="defaultroutev6" id="defaultroutev6" hidden/>
+							<label for="defaultroutev6" id="Defaultroutev6" class="skcheckbox-label"></label>
+						</label>
+					</div>
+					</div>
+					<div id="static6Table" style="display:none;">
+						<div class="skform-group">
+							<label class="skform-tittle" for="wanAddress6">{{wancfg_IP6Addr}}/{{wancfg_PrefixLength}}:</label>
+							<input type="text" class="skform-control" id="wanAddress6" name="wanAddress6" size="40" maxszie='40' />
+							/<input type="text" class="skform-control" id="wanAddress6prefix" name="wanAddress6prefix" style="margin-left: 5px;width: 40px;" size="40" maxszie='40' />
+						</div>
+						<div class="skform-group">
+							<label class="skform-tittle" for="wanGateway6">{{wancfg_IP6Gateway}}:</label>
+							<input type="text" class="skform-control" id="wanGateway6" name="wanGateway6" size="40" maxszie='40' />
+						</div>
+					</div>
+					<div class="hidden-div">
+					<div class="skform-group" id="PDTable">
+						<label class="skform-tittle">{{wancfg_enablePD}}:</label>
+						<label class="skcheckbox skcheckbox-form">
+							<input type="checkbox" name="enblPD" id="enblPD"  onclick="enblPDClick(this)" hidden/>
+							<label for="enblPD" id="pdEnable" class="skcheckbox-label">
+							</label>
+						</label>
+
+						<div class="skform-group" id="PDTableStatic" style="display:none;">
+							<label class="skform-tittle" for="delegatePrefix">{{wancfg_delegatePrefix}}/{{wancfg_delegatePrefixLength}}:</label>
+							<input type="text" class="skform-control" id="delegatePrefix" name="delegatePrefix" size="40" maxszie='40' />
+							/<input type="text" class="skform-control" id="delegatePrefixLen" name="delegatePrefixLen" style="margin-left: 5px;width: 40px;" size="40" maxszie='40' />
+						</div>
+					</div>
+					</div>
+				</div>
+				<p class="skpage-title">{{Set DNS server information}}</p>
+				<div class="modset">
+					<div class="skform-group">
+						<label class="skform-tittle">{{User Specify IPv6 DNS Servers}}:</label>
+						<div class="skform-content">
+							<ul>
+								<li>
+									<label class="skradio">
+										<input type="radio" name="dnsv6mode" id="dnsv6enable" value="enable" onClick='selectdnsv6mode()' hidden/>
+										<label for="dnsv6enable" id="dnsv6enable" class="skradio-label">
+										</label>
+									</label>
+									<label class="skradio-text" for="dnsv6enable">Enable</label>
+								</li>
+								<li>
+									<label class="skradio">
+										<input type="radio" name="dnsv6mode" id="dnsv6disable" value="disable" checked onClick='selectdnsv6mode()' hidden/>
+										<label for="dnsv6disable" id="dnsv6disable" class="skradio-label">
+										</label>
+									</label>
+									<label class="skradio-text" for="dnsv6disable">Disable</label>
+								</li>
+							</ul>
+						</div>
+						<span class="skform-disc" style="float:right;padding-right:65px">(Disable means use automatically assigned DNS server)</span>
+					</div>
+					<div id="dnsv6Table" style="display: none;">
+					<div class="skform-group">
+							<label class="skform-tittle" for="dns6Primary">IPV6 {{wancfg_PriDNS}}:</label>
+							<input type="text" class="skform-control" id="dns6Primary" name="dns6Primary" size="40" maxszie='40' />
+						</div>
+					<div class="skform-group">
+						<label class="skform-tittle" for="dns6Secondary">IPV6 {{wancfg_SecDNS}}:</label>
+						<input type="text" class="skform-control" id="dns6Secondary" name="dns6Secondary" size="40" maxszie='40' />
+					</div>
+					</div>
+				</div>
+			</div>
+
+			<div id="ipv6rdTable" style="display:none;">
+				<p class="skpage-title">{{wancfg_ipv6rdInfo}}</p>
+				<div class="modset">
+					<div class="skform-group" id="ipv6RDEnableTable">
+						<label class="skform-tittle">{{wancfg_enable6rd}}:</label>
+						<label class="skcheckbox skcheckbox-form">
+							<input type="checkbox" name="enbl6RD" id="enbl6RD"  onclick="enbl6RDClick()" hidden/>
+							<label for="enbl6RD" id="6RDEnable" class="skcheckbox-label">
+							</label>
+						</label>
+					</div>
+					<div class="skform-group" id="ipv6RDModeTable">
+						<label class="skform-tittle">{{wancfg_ipv6RDMode}}:</label>
+						<div class="skform-content">
+							<ul>
+								<li>
+									<label class="skradio">
+										<input type="radio" name="ipv6RDMode" id="ipv6RDModeAuto" value="ipv6RDAuto" onClick='selectipv6RDMode()' hidden/>
+										<label for="ipv6RDModeAuto" class="skradio-label">
+										</label>
+									</label>
+									<label class="skradio-text" for="ipv6RDModeAuto">{{wancfg_ipv6RDAuto}}</label>
+								</li>
+								<li>
+									<label class="skradio">
+										<input type="radio" name="ipv6RDMode" id="ipv6RDModeManual" value="ipv6RDManual" checked onClick='selectipv6RDMode()' hidden/>
+										<label for="ipv6RDModeManual" class="skradio-label">
+										</label>
+									</label>
+									<label class="skradio-text" for="ipv6RDModeManual">{{wancfg_ipv6RDManual}}</label>
+								</li>
+							</ul>
+						</div>
+					</div>
+					<div id="ipv6rdManualTable">
+						<div class="skform-group">
+							<label class="skform-tittle" for="ipv6rdBrAddr">{{wancfg_ipv6rdBRV4Addr}}:</label>
+							<input type="text" class="skform-control" id="ipv6rdBrAddr" name="ipv6rdBrAddr" size="40" maxszie='40' />
+						</div>
+						<div class="skform-group">
+							<label class="skform-tittle" for="ipv6rdIpv4MaskLen">{{wancfg_ipv6rdV4MaskLen}}:</label>
+							<input type="text" class="skform-control" id="ipv6rdIpv4MaskLen" name="ipv6rdIpv4MaskLen" size="40" maxszie='40' /><span class="skform-disc">(0-31)</span>
+						</div>
+						<div class="skform-group">
+							<label class="skform-tittle" for="ipv6rdPrefix">{{wancfg_ipv6rdPrefix}}:</label>
+							<input type="text" class="skform-control" id="ipv6rdPrefix" name="ipv6rdPrefix" size="40" maxszie='40' />
+						</div>
+						<div class="skform-group">
+							<label class="skform-tittle" for="ipv6rdPrefixLen">{{wancfg_ipv6rdPrefixLen}}:</label>
+							<input type="text" class="skform-control" id="ipv6rdPrefixLen" name="ipv6rdPrefixLen" size="16" maxszie='16' /><span class="skform-disc">(1-32)</span>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div id="dsliteTable" style="display:none;">
+				<div class="modset">
+					<div class="skform-group" id="DSLiteEnableTable">
+						<label class="skform-tittle">{{wancfg_enableDSLite}}:</label>
+						<label class="skcheckbox skcheckbox-form">
+							<input type="checkbox" name="enblDSLite" id="enblDSLite"  onclick="enblDSLiteClick()" hidden/>
+							<label for="enblDSLite" id="DSLiteEnable" class="skcheckbox-label">
+							</label>
+						</label>
+					</div>
+					<div class="skform-group" id="DSLiteModeTable">
+					<label class="skform-tittle">{{wancfg_dsliteMode}}:</label>
+					<div class="skform-content">
+						<ul>
+							<li>
+								<label class="skradio">
+									<input type="radio" name="dsliteMode" id="dsliteModeAuto" value="dsliteAuto" onClick='selectdsliteMode()' hidden/>
+									<label for="dsliteModeAuto" class="skradio-label">
+									</label>
+								</label>
+								<label class="skradio-text" for="dsliteModeAuto">{{wancfg_dsliteAuto}}</label>
+							</li>
+							<li>
+								<label class="skradio">
+									<input type="radio" name="dsliteMode" id="dsliteModeManual" value="dsliteManual" checked onClick='selectdsliteMode()' hidden/>
+									<label for="dsliteModeManual" class="skradio-label">
+									</label>
+								</label>
+								<label class="skradio-text" for="dsliteModeManual">{{wancfg_dsliteManual}}</label>
+							</li>
+						</ul>
+					</div>
+					</div>
+
+					<div id="dsliteManualTable" style="display:none;">
+						<div class="skform-group">
+							<label class="skform-tittle" for="dsLiteServer">{{wancfg_dsliteServer}}:</label>
+							<input type="text" class="skform-control" id="dsLiteServer" name="dsLiteServer" size="40" maxszie='40' />
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="sk-form-submit" style="text-align: center; margin-bottom: 12px;" id="fullapply">
+				<button class="btn-apply" id="Sky_Apply" type="button" onclick="btnSave()" style="margin-left: inherit;">{{wancfg_SaveAndApplyText}}</button>
+			</div>
+		</div>
+	</div>
+</form>

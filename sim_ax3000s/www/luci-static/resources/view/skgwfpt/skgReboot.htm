@@ -1,0 +1,53 @@
+<div class="page-content">
+	<p class="sk-warning-info">
+		{{rebootWarningText}}<br/>
+	</p>
+	<div class="modset">	
+		<div class="sk-form-submit">
+			<input class="btn-apply" id="reboot_btn" type='button' onClick='confirm_reboot()' value='{{performRebootText}}'>
+		</div>
+	</div>
+	<p class="skpage-title">{{scheRebootTitleText}}</p>
+	<div class="modset">
+		<div class="skform-group" style="margin-top: 12px;">
+			<label class="skform-tittle" for="scheRebootEnable" style="margin-top: 3px;">{{enableText}}</label>
+			<div class="skform-content">
+				<label class="skcheckbox skcheckbox-form">
+					<input name="scheRebootEnable" id="scheRebootEnable" type="checkbox" hidden disabled />
+					<label for="scheRebootEnable" id="scheduleReboot_enable" class="skcheckbox-label"></label>
+				</label>
+			</div>
+		</div>
+		<div class="skform-group" style="margin-top: 12px;">
+			<label class="skform-tittle" style="margin-top: 6px;">{{rebootTimeText}}</label>
+			<div class="skform-content">
+				<select name="scheRebootHour" id="scheRebootHour" class="skform-control"
+					style="width: 60px!important;height: 25px;padding: 2px;margin-left: 0;" disabled>
+				</select>
+				&nbsp;:&nbsp;
+				<select name="scheRebootMinutes" id="scheRebootMinutes" class="skform-control"
+					style="width: 60px!important;height: 25px;padding: 2px;margin-left: 0;" disabled>
+				</select>
+			</div>
+		</div>
+		<div class="skform-group" style="margin-top: 12px;">
+			<label class="skform-tittle" style="margin-top: 6px;">{{repeatPeriodText}}</label>
+			<div class="skform-content">
+				<input type="checkbox" name="rebootWeekMon" class="region" id="rebootWeekMon" hidden="" disabled>
+				<label for="rebootWeekMon" id="rebootWeekMon_btn"><span>Mon</span></label>
+				<input type="checkbox" name="rebootWeekTue" class="region" id="rebootWeekTue" hidden="" disabled>
+				<label for="rebootWeekTue" id="rebootWeekTue_btn"><span>Tue</span></label>
+				<input type="checkbox" name="rebootWeekWed" class="region" id="rebootWeekWed" hidden="" disabled>
+				<label for="rebootWeekWed" id="rebootWeekWed_btn"><span>Wed</span></label>
+				<input type="checkbox" name="rebootWeekThur" class="region" id="rebootWeekThur" hidden="" disabled>
+				<label for="rebootWeekThur" id="rebootWeekThur_btn"><span>Thur</span></label>
+				<input type="checkbox" name="rebootWeekFri" class="region" id="rebootWeekFri" hidden="" disabled>
+				<label for="rebootWeekFri" id="rebootWeekFri_btn"><span>Fri</span></label>
+				<input type="checkbox" name="rebootWeekSat" class="region" id="rebootWeekSat" hidden="" disabled>
+				<label for="rebootWeekSat" id="rebootWeekSat_btn"><span>Sat</span></label>
+				<input type="checkbox" name="rebootWeekSun" class="region" id="rebootWeekSun" hidden="" disabled>
+				<label for="rebootWeekSun" id="rebootWeekSun_btn"><span>Sun</span></label>
+			</div>
+		</div>
+	</div>
+</div>

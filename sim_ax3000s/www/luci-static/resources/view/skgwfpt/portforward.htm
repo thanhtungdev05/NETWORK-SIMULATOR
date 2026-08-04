@@ -1,0 +1,150 @@
+<form>
+    <div class="page-content">
+        <div id="vir_info">
+            <p class="sk-warning-info">
+                {{Port Forwarding allows you to direct incoming traffic from WAN side (identified by Protocol and External port)}}
+                    {{to the Internal server with private IP address on the LAN side. }}<br /><br />
+                {{The Internal port is required only if the external port needs to be converted to a different port number used}}
+                    {{ by the server on the LAN side. A maximum 32 entries can be configured.}}
+            <p class="skpage-title">{{Port Forwarding Setup}}</p>
+            <div class="modset">
+                <div class="table-list" style="margin-bottom:20px;width:auto;">
+                    <div class="table-list-head">
+                        <button class="btn btn-add" type="button" onclick="add_vircfg()">{{Add}}</button>
+                        <button class="btn btn-edit" type="button" name="btn_edit" id="btn_edit" onclick="edit_vircfg()" disabled>{{Edit}}</button>
+                        <button class="btn btn-del" type="button" id="btn_del" onclick="removeClick()">{{Delete}}</button>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>
+                                    <label class="skcheckbox">
+                                        <input type="checkbox" name="seletall" id="seletall" onClick='selectAll(this)' hidden />
+                                        <label for="seletall" class="skcheckbox-label">
+                                        </label>
+                                    </label>
+                                </th>
+                                <th>{{Index}}</th>
+                                <th>{{Server Name}}</th>
+                                <th>{{External Port Range}}</th>
+                                <th>{{Protocol}}</th>
+                                <th>{{Internal Port Range}}</th>
+                                <th>{{Server IP Address}}</th>
+                                <th>{{WAN Interface}}</th>
+                            </tr>
+                        </thead>
+                        <tbody id="at-portforward-tbody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div id="vir_cfg" style="display: none;">
+        <!-- <div id="vir_cfg" style="display: none;"></div> -->
+            <p class="sk-warning-info">
+                {{Select the service name, and enter the server IP address and click "Save & Apply" to forward IP packets}}
+                {{for this service to the specified server.}}
+                <br /><b>
+                    {{Note: The mapping of external ports to internal ports is usually 1:1. Of course, you can also configure 1: N, N: N rules. }}
+                    {{For specific format requirements, please refer to the prompts on the right side of the text box.}}
+                </b>
+            </p>
+    
+            <p class="skpage-title">
+                {{Port Forwarding Rule Configuration}}
+            </p>
+            <div class="modset">
+                <div class="skform-group">
+                    <label class="skform-tittle">{{Enable}}:</label>
+                    <label class="skcheckbox skcheckbox-form">
+                        <input type="checkbox" name="enableVir" id="enableVir" checked  hidden/>
+                        <label for="enableVir" id="VirEnable" class="skcheckbox-label"></label>
+                    </label>
+                </div>
+                <div class="skform-group" id="custsername">
+                    <label class="skform-tittle" for="cusSrvName">
+                        {{Service Name:}}
+                    </label>
+                    <input type="text" class="skform-control" id="cusSrvName" name="cusSrvName" size="15" maxlength="256" />
+                </div>
+                <div class="skform-group">
+                    <label class="skform-tittle" for="dstWanIf">
+                        {{WAN Interface:}}
+                    </label>
+                    <select size="1" class="skform-control" name="dstWanIf" id="dstWanIf">
+                    </select>
+                </div>
+                <div class="skform-group" id="ipversion">
+                    <label class="skform-tittle" for="ipversion">
+                        {{ipversion:}}
+                    </label>
+                    <select size="1" class="skform-control" name="ipver" id="ipver" onChange="changeIPVer(this.value)">
+                        <option value='1' selected>IPv4</option>
+                        <option value='2'>IPv6</option>
+                        <!-- <option value='3'>IPv4/IPv6</option> -->
+                    </select>
+                </div>
+                <div class="skform-group" id="serveripaddr">
+                    <label class="skform-tittle" for="sIp">
+                        {{Internal Server IP Address:}}
+                    </label>
+                    <input type="text" class="skform-control" id="sIp" name="sIp" size="15" />
+                    <select size="1" class="skform-control" id="dmzOpt" name="dmzOpt" style="margin-left:20px; width:100px;"
+                        onchange="select_dev(this.value)"></select>
+                </div>
+                <div class="skform-group" id="remoteipaddr">
+                    <label class="skform-tittle" for="rIp">
+                        {{Remote IP Address:}}
+                    </label>
+                    <input type="text" class="skform-control" id="rIp" name="rIp" size="15" />
+                </div>
+                <div class="skform-group" id="leaseduration">
+                    <label class="skform-tittle" for="leasetime">
+                        {{Lease Duration:}}
+                    </label>
+                    <input type="number" class="skform-control" id="leasetime" name="leasetime" size="15" min="0" max="86400"/>
+                    <span class="skform-disc">(0-86400s)</span>
+                </div>
+                <div class="skform-group" id="Protocol">
+                    <label class="skform-tittle" for="Proto">
+                        {{Protocol:}}
+                    </label>
+                    <select size="1" class="skform-control" name="Proto" id="Proto">
+                        <option value='0'>TCP/UDP</option>
+                        <option value='1' selected>TCP</option>
+                        <option value='2'>UDP</option>
+                    </select>
+                </div>
+                <div class="skform-group" id="custsername">
+                    <label class="skform-tittle" for="ex_port">
+                        {{External Port:}}
+                    </label>
+                    <input type="text" class="skform-control" id="ex_port" name="ex_port" size="15" maxlength="256" />
+                    <span class="skform-disc">(xx or xx-xx or xx,xx-xx)</span>
+                </div>
+                <div class="skform-group" id="custsername">
+                    <label class="skform-tittle" for="in_port">
+                        {{Internal Port:}}
+                    </label>
+                    <input type="text" class="skform-control" id="in_port" name="in_port" size="15" maxlength="256" />
+                    <span class="skform-disc">(xx or xx-xx)</span>
+                </div>
+                <div class="skform-group">
+                    <label class="skform-tittle" for="srvName">
+                        {{Template Service:}}
+                    </label>
+                    <select size="1" class="skform-control" name="srvName" id="srvName" onChange='appSelect(this.value)'>
+                    </select>
+                </div>
+            </div>
+            <div class="sk-form-submit">
+                <button class="btn-cancel" id="addPortCancel_btn" type="button" onclick="btnCancel()">
+                    {{Cancel}}
+                </button>
+                <button class="btn-apply" id="addPortApply_btn" type="button" onclick="btnSave()" style="margin-left:1%;">
+                    {{Save & Apply}}
+                </button>
+            </div>
+        </div>
+    </div>
+</form>

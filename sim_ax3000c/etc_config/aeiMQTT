@@ -1,0 +1,2 @@
+config MQTT
+        option State '1' 

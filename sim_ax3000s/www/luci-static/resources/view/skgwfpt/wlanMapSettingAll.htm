@@ -1,0 +1,457 @@
+﻿<style>
+	.collapsible {
+	  /* border: 1px solid #ccc; */
+	  border: 1px solid #cccccc8e;
+	  margin: 10px 0;
+	  border-radius: 4px;
+	  overflow: hidden;
+	}
+	.collapsible-header {
+	  /* background-color: #f1f1f1; */
+	  background-color: #e7e7e7;
+	  padding: 10px;
+	  cursor: pointer;
+	  font-weight: bold;
+	}
+	.collapsible-content {
+	  padding: 0 10px;
+	  max-height: 0;
+	  overflow: hidden;
+	  transition: max-height 0.3s ease-out;
+	}
+	.config-group {
+	  margin: 10px 0;
+	  /* display:flex; */
+	}
+	/* .config-group label {
+	  display: block;
+	  margin: 5px 0;
+	} */
+	.active + .collapsible-content {
+	  max-height: 500px; /* Adjust based on content */
+	}
+</style>
+
+
+<div class="page-content">
+	<p class="sk-warning-info">
+		{{wlanMapSetting5g_tip}}
+	</p>
+	<!-- <p class="skpage-title">{{wlanMapSetting5g_title}}</p> -->
+		<div class="collapsible">
+			<div class="collapsible-header" onclick="toggleCollapsible(this)">
+				Wi-Fi Network_2(Guest WiFi)
+			</div>
+			<div class="collapsible-content">
+			 <div class="config-group">
+				<div>
+					<div class="modset">
+						<div class="skform-group" >
+							<label class="skform-tittle">{{Band Steering:}}</label>
+							<label class="skcheckbox skcheckbox-form">
+								<input type="checkbox" name="Chk_BandSteeringEnable_2" id="Chk_BandSteeringEnable_2" onClick="BandSteering_Enable(1)" hidden/>
+								<label for="Chk_BandSteeringEnable_2" class="skcheckbox-label">
+								</label>
+							</label>
+						</div>
+					</div>
+					<p class="skpage-title">2.4G</p>
+					<div class="modset">
+						<div class="skform-group" >
+							<label class="skform-tittle">{{SSID Enable:}}</label>
+							<label class="skcheckbox skcheckbox-form">
+								<input type="checkbox" name="Chk_SsidEnable_2G_2" id="Chk_SsidEnable_2G_2" onClick="SelChange_Enable(1, '2.4G')" hidden/>
+								<label for="Chk_SsidEnable_2G_2" class="skcheckbox-label">
+								</label>
+							</label>
+						</div>
+						<div class="skform-group">
+							<label class="skform-tittle" for="Txt_SSID_2G_2">{{SSID:}}</label>
+							<input type="text" class="skform-control" id="Txt_SSID_2G_2" name="Txt_SSID_2G_2" onchange="reload_BandSteeringBss(1)" maxlength="32">
+						</div>
+						<div class="skform-group">
+							<label class="skform-tittle" for="Sel_AuthMode_2G_2">{{Network Authentication:}}</label>
+							<select size="1" class="skform-control" name="Sel_AuthMode_2G_2" id="Sel_AuthMode_2G_2" onChange="SelChange_AuthMode(1, '2.4G')">
+								<option value="Open System">Open System</option>
+								<option value="WPA-PSK">WPA-PSK</option>
+								<option value="WPA2-PSK">WPA2-PSK</option>
+								<option value="WPA/WPA2-PSK">WPA/WPA2-PSK</option>
+								<option value="WPA3-SAE">WPA3-SAE</option>
+								<option value="WPA2-PSK/WPA3-SAE">WPA2-PSK/WPA3-SAE</option>
+							</select>
+						</div>
+						<div class="skform-group" id="Tr_WpaPSK_2G_2">
+							<label class="skform-tittle" for="Pwd_WpaPsk_2G_2">{{WPA Passphrase:}}</label>
+							<input type="password" class="skform-control" name="Pwd_WpaPsk_2G_2" id="Pwd_WpaPsk_2G_2" onchange="reload_BandSteeringBss(1)" maxlength="63" />
+							<span class="bi bi-eye-slash-fill bi-password"></span>
+						</div>
+					</div>
+					<p class="skpage-title">5G</p>
+					<div class="modset">
+						<div class="skform-group">
+							<label class="skform-tittle">{{SSID Enable:}}</label>
+							<label class="skcheckbox skcheckbox-form">
+								<input type="checkbox" name="Chk_SsidEnable_5G_2" id="Chk_SsidEnable_5G_2" onClick="SelChange_Enable(1, '5G')" hidden/>
+								<label for="Chk_SsidEnable_5G_2" class="skcheckbox-label">
+								</label>
+							</label>
+						</div>
+						<div class="skform-group">
+							<label class="skform-tittle" for="Txt_SSID_5G_2">{{SSID:}}</label>
+							<input type="text" class="skform-control" id="Txt_SSID_5G_2" name="Txt_SSID_5G_2" maxlength="32">
+						</div>
+						<div class="skform-group">
+							<label class="skform-tittle" for="Sel_AuthMode_5G_2">{{Network Authentication:}}</label>
+							<select size="1" class="skform-control" name="Sel_AuthMode_5G_2" id="Sel_AuthMode_5G_2" onChange="SelChange_AuthMode(1, '5G')">
+								<option value="Open System">Open System</option>
+								<option value="WPA-PSK">WPA-PSK</option>
+								<option value="WPA2-PSK">WPA2-PSK</option>
+								<option value="WPA/WPA2-PSK">WPA/WPA2-PSK</option>
+								<option value="WPA3-SAE">WPA3-SAE</option>
+								<option value="WPA2-PSK/WPA3-SAE">WPA2-PSK/WPA3-SAE</option>
+							</select>
+						</div>
+						<div class="skform-group" id="Tr_WpaPSK_5G_2">
+							<label class="skform-tittle" for="Pwd_WpaPsk_5G_2">{{WPA Passphrase:}}</label>
+							<input type="password" class="skform-control" name="Pwd_WpaPsk_5G_2" id="Pwd_WpaPsk_5G_2" maxlength="63" />
+							<span class="bi bi-eye-slash-fill bi-password"></span>
+						</div>
+					</div>
+					<div class="sk-form-submit">
+						<button class="btn-apply" type="button" name="button_apply" id="button_apply" onclick="BntClick_Apply(1)">{{Save & Apply}}</button>
+					</div>
+				</div>
+			 </div>
+			</div>
+		</div>
+
+	  <div class="collapsible">
+		<div class="collapsible-header" onclick="toggleCollapsible(this)">
+			Wi-Fi Network_3(IOT WiFi)
+		</div>
+		<div class="collapsible-content">
+			<div class="config-group">
+				<div>
+					<div class="modset">
+						<div class="skform-group" >
+							<label class="skform-tittle">{{Band Steering:}}</label>
+							<label class="skcheckbox skcheckbox-form">
+								<input type="checkbox" name="Chk_BandSteeringEnable_3" id="Chk_BandSteeringEnable_3" onClick="BandSteering_Enable(2)" hidden/>
+								<label for="Chk_BandSteeringEnable_3" class="skcheckbox-label">
+								</label>
+							</label>
+						</div>
+					</div>
+					<p class="skpage-title">2.4G</p>
+					<div class="modset">
+						<div class="skform-group" >
+							<label class="skform-tittle">{{SSID Enable:}}</label>
+							<label class="skcheckbox skcheckbox-form">
+								<input type="checkbox" name="Chk_SsidEnable_2G_3" id="Chk_SsidEnable_2G_3" onClick="SelChange_Enable(2, '2.4G')" hidden/>
+								<label for="Chk_SsidEnable_2G_3" class="skcheckbox-label">
+								</label>
+							</label>
+						</div>
+						<div class="skform-group">
+							<label class="skform-tittle" for="Txt_SSID_2G_3">{{SSID:}}</label>
+							<input type="text" class="skform-control" id="Txt_SSID_2G_3" name="Txt_SSID_2G_3" onchange="reload_BandSteeringBss(2)" maxlength="32">
+						</div>
+						<div class="skform-group">
+							<label class="skform-tittle" for="Sel_AuthMode">{{Network Authentication:}}</label>
+							<select size="1" class="skform-control" name="Sel_AuthMode_2G_3" id="Sel_AuthMode_2G_3" onChange="SelChange_AuthMode(2, '2.4G')">
+								<option value="Open System">Open System</option>
+								<option value="WPA-PSK">WPA-PSK</option>
+								<option value="WPA2-PSK">WPA2-PSK</option>
+								<option value="WPA/WPA2-PSK">WPA/WPA2-PSK</option>
+								<option value="WPA3-SAE">WPA3-SAE</option>
+								<option value="WPA2-PSK/WPA3-SAE">WPA2-PSK/WPA3-SAE</option>
+							</select>
+						</div>
+						<div class="skform-group" id="Tr_WpaPSK_2G_3">
+							<label class="skform-tittle" for="Pwd_WpaPsk_2G_3">{{WPA Passphrase:}}</label>
+							<input type="password" class="skform-control" name="Pwd_WpaPsk_2G_3" id="Pwd_WpaPsk_2G_3" onchange="reload_BandSteeringBss(2)" maxlength="63" />
+							<span class="bi bi-eye-slash-fill bi-password"></span>
+						</div>
+					</div>
+					<p class="skpage-title">5G</p>
+					<div class="modset">
+						<div class="skform-group">
+							<label class="skform-tittle">{{SSID Enable:}}</label>
+							<label class="skcheckbox skcheckbox-form">
+								<input type="checkbox" name="Chk_SsidEnable_5G_3" id="Chk_SsidEnable_5G_3" onClick="SelChange_Enable(2, '5G')" hidden/>
+								<label for="Chk_SsidEnable_5G_3" class="skcheckbox-label">
+								</label>
+							</label>
+						</div>
+						<div class="skform-group">
+							<label class="skform-tittle" for="Txt_SSID_5G_3">{{SSID:}}</label>
+							<input type="text" class="skform-control" id="Txt_SSID_5G_3" name="Txt_SSID_5G_3" maxlength="32">
+						</div>
+						<div class="skform-group">
+							<label class="skform-tittle" for="Sel_AuthMode_5G_3">{{Network Authentication:}}</label>
+							<select size="1" class="skform-control" name="Sel_AuthMode_5G_3" id="Sel_AuthMode_5G_3" onChange="SelChange_AuthMode(2, '5G')">
+								<option value="Open System">Open System</option>
+								<option value="WPA-PSK">WPA-PSK</option>
+								<option value="WPA2-PSK">WPA2-PSK</option>
+								<option value="WPA/WPA2-PSK">WPA/WPA2-PSK</option>
+								<option value="WPA3-SAE">WPA3-SAE</option>
+								<option value="WPA2-PSK/WPA3-SAE">WPA2-PSK/WPA3-SAE</option>
+							</select>
+						</div>
+						<div class="skform-group" id="Tr_WpaPSK_5G_3">
+							<label class="skform-tittle" for="Pwd_WpaPsk_5G_3">{{WPA Passphrase:}}</label>
+							<input type="password" class="skform-control" name="Pwd_WpaPsk_5G_3" id="Pwd_WpaPsk_5G_3" maxlength="63" />
+							<span class="bi bi-eye-slash-fill bi-password"></span>
+						</div>
+					</div>
+					<div class="sk-form-submit">
+						<button class="btn-apply" type="button" name="button_apply" id="button_apply" onclick="BntClick_Apply(2)">{{Save & Apply}}</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	  </div>
+
+	  <div style="display:none" class="collapsible">
+		<div class="collapsible-header" onclick="toggleCollapsible(this)">
+			Wi-Fi Network_4
+		</div>
+		<div class="collapsible-content">
+			<div class="config-group">
+				<div>
+					<div class="modset">
+						<div class="skform-group" >
+							<label class="skform-tittle">{{Band Steering:}}</label>
+							<label class="skcheckbox skcheckbox-form">
+								<input type="checkbox" name="Chk_BandSteeringEnable_4" id="Chk_BandSteeringEnable_4" onClick="BandSteering_Enable(3)" hidden/>
+								<label for="Chk_BandSteeringEnable_4" class="skcheckbox-label">
+								</label>
+							</label>
+						</div>
+					</div>
+					<p class="skpage-title">2.4G</p>
+					<div class="modset">
+						<div class="skform-group" >
+							<label class="skform-tittle">{{SSID Enable:}}</label>
+							<label class="skcheckbox skcheckbox-form">
+								<input type="checkbox" name="Chk_SsidEnable_2G_4" id="Chk_SsidEnable_2G_4" onClick="SelChange_Enable(3, '2.4G')" hidden/>
+								<label for="Chk_SsidEnable_2G_4" class="skcheckbox-label">
+								</label>
+							</label>
+						</div>
+						<div class="skform-group">
+							<label class="skform-tittle" for="Txt_SSID_2G_4">{{SSID:}}</label>
+							<input type="text" class="skform-control" id="Txt_SSID_2G_4" name="Txt_SSID_2G_4" onchange="reload_BandSteeringBss(3)" maxlength="32">
+						</div>
+						<div class="skform-group">
+							<label class="skform-tittle" for="Sel_AuthMode_2G_4">{{Network Authentication:}}</label>
+							<select size="1" class="skform-control" name="Sel_AuthMode_2G_4" id="Sel_AuthMode_2G_4" onChange="SelChange_AuthMode(3, '2.4G')">
+								<option value="Open System">Open System</option>
+								<option value="WPA-PSK">WPA-PSK</option>
+								<option value="WPA2-PSK">WPA2-PSK</option>
+								<option value="WPA/WPA2-PSK">WPA/WPA2-PSK</option>
+								<option value="WPA3-SAE">WPA3-SAE</option>
+								<option value="WPA2-PSK/WPA3-SAE">WPA2-PSK/WPA3-SAE</option>
+							</select>
+						</div>
+						<div class="skform-group" id="Tr_WpaPSK_2G_4">
+							<label class="skform-tittle" for="Pwd_WpaPsk_2G_4">{{WPA Passphrase:}}</label>
+							<input type="password" class="skform-control" name="Pwd_WpaPsk_2G_4" id="Pwd_WpaPsk_2G_4" onchange="reload_BandSteeringBss(3)" maxlength="63" />
+							<span class="bi bi-eye-slash-fill bi-password"></span>
+						</div>
+					</div>
+					<p class="skpage-title">5G</p>
+					<div class="modset">
+						<div class="skform-group">
+							<label class="skform-tittle">{{SSID Enable:}}</label>
+							<label class="skcheckbox skcheckbox-form">
+								<input type="checkbox" name="Chk_SsidEnable_5G_4" id="Chk_SsidEnable_5G_4" onClick="SelChange_Enable(3, '5G')" hidden/>
+								<label for="Chk_SsidEnable_5G_4" class="skcheckbox-label">
+								</label>
+							</label>
+						</div>
+						<div class="skform-group">
+							<label class="skform-tittle" for="Txt_SSID_5G_4">{{SSID:}}</label>
+							<input type="text" class="skform-control" id="Txt_SSID_5G_4" name="Txt_SSID_5G_4" maxlength="32">
+						</div>
+						<div class="skform-group">
+							<label class="skform-tittle" for="Sel_AuthMode_5G_4">{{Network Authentication:}}</label>
+							<select size="1" class="skform-control" name="Sel_AuthMode_5G_4" id="Sel_AuthMode_5G_4" onChange="SelChange_AuthMode(3, '5G')">
+								<option value="Open System">Open System</option>
+								<option value="WPA-PSK">WPA-PSK</option>
+								<option value="WPA2-PSK">WPA2-PSK</option>
+								<option value="WPA/WPA2-PSK">WPA/WPA2-PSK</option>
+								<option value="WPA3-SAE">WPA3-SAE</option>
+								<option value="WPA2-PSK/WPA3-SAE">WPA2-PSK/WPA3-SAE</option>
+							</select>
+						</div>
+						<div class="skform-group" id="Tr_WpaPSK_5G_4">
+							<label class="skform-tittle" for="Pwd_WpaPsk_5G_4">{{WPA Passphrase:}}</label>
+							<input type="password" class="skform-control" name="Pwd_WpaPsk_5G_4" id="Pwd_WpaPsk_5G_4" maxlength="63" />
+							<span class="bi bi-eye-slash-fill bi-password"></span>
+						</div>
+					</div>
+					<div class="sk-form-submit">
+						<button class="btn-apply" type="button" name="button_apply" id="button_apply" onclick="BntClick_Apply(3)">{{Save & Apply}}</button>
+					</div>
+				</div>
+			</div>
+		  </div>
+	  </div>
+
+	</div>
+	<!-- <div class="modset">
+		<div class="table-list">
+			<table>
+				<colgroup>
+					<col style="width:12%">
+					<col style="width:8%">
+					<col style="width:26%">
+					<col style="width:16%">
+					<col style="width:26%">
+					<col style="width:12%">
+				</colgroup>
+				<thead>
+					<tr>
+						<th>{{wlanMapSetting5g_ifname}}</th>
+						<th>{{wlanMapSetting5g_enable}}</th>
+						<th>{{wlanMapSetting5g_ssid}}</th>
+						<th>{{wlanMapSetting5g_auth}}</th>
+						<th>{{wlanMapSetting5g_password}}</th>
+						<th>{{wlanMapSetting5g_hide}}</th>
+						<th>Limit Enable</th>
+						<th>Maximum</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>Wi-Fi 5G_2</td>
+						 <td>
+							<label class="skcheckbox">
+								<input type="checkbox" name="Chk_ABandEnable_1" id="Chk_ABandEnable_1" value="ON" onClick="SelChange_Enable(1)"  hidden />
+								<label for="Chk_ABandEnable_1" class="skcheckbox-label">
+							</label>
+						</td>
+						<td>
+							<input type="text" class="sktable-control" name="Txt_ABandSSID_1" id="Txt_ABandSSID_1" size="19" maxlength="32" value="" style="width :140px">
+						</td>
+						<td>
+							<select name='Sel_ABandAuth_1' id='Sel_ABandAuth_1' class="sktable-control" style="width: 110px;" onchange="SelChange_AuthMode(1)">
+								<option value="Open System">Open System</option>
+								<option value="WPA-PSK">WPA-PSK</option>
+								<option value="WPA2-PSK">WPA2-PSK</option>
+								<option value="WPA/WPA2-PSK">WPA/WPA2-PSK</option>
+								<option value="WPA3-SAE">WPA3-SAE</option>
+								<option value="WPA2-PSK/WPA3-SAE">WPA2-PSK/WPA3-SAE</option>
+							</select>
+						</td>
+						<td>
+							<input type="password" class="sktable-control" name="Txt_ABandPSK_1" id="Txt_ABandPSK_1" size="20" maxlength="63" value="" style="width :130px">
+							<span class="bi bi-eye-slash-fill bi-password bi-password-table"></span>
+						</td>
+						<td>
+							<select name='Sel_ABandHide_1' id='Sel_ABandHide_1' class="sktable-control" style="width: 78px;">
+								<option value=0>{{wlanMapSetting5g_disabled}}</option>
+								<option value=1>{{wlanMapSetting5g_enabled}}</option>
+							</select>
+						</td>
+						 <td>
+							<label class="skcheckbox">
+								<input type="checkbox" name="AccessEnable_1" id="AccessEnable_1" value="ON" onClick="AccessChange_Enable(1)"  hidden />
+								<label for="AccessEnable_1" class="skcheckbox-label">
+							</label>
+						</td>	
+						<td>
+							<input type="text" class="sktable-control" name="maxClient_1" id="maxClient_1" size="4" maxlength="4" value="64" style="width :40px">
+						</td>						
+					</tr>
+					<tr>
+						<td>Wi-Fi 5G_3</td>
+						<td>
+							<label class="skcheckbox">
+								<input type="checkbox" name="Chk_ABandEnable_2" id="Chk_ABandEnable_2" value="ON" onClick="SelChange_Enable(2)" hidden />
+								<label for="Chk_ABandEnable_2" class="skcheckbox-label">
+							</label>
+						</td>
+						<td>
+							<input type="text" class="sktable-control" name="Txt_ABandSSID_2" id="Txt_ABandSSID_2" size="19" maxlength="32" value="" style="width :140px">
+						</td>
+						<td>
+							<select name='Sel_ABandAuth_2' id='Sel_ABandAuth_2' class="sktable-control" style="width: 110px;" onchange="SelChange_AuthMode(2)">
+								<option value="Open System">Open System</option>
+								<option value="WPA-PSK">WPA-PSK</option>
+								<option value="WPA2-PSK">WPA2-PSK</option>
+								<option value="WPA/WPA2-PSK">WPA/WPA2-PSK</option>
+								<option value="WPA3-SAE">WPA3-SAE</option>
+								<option value="WPA2-PSK/WPA3-SAE">WPA2-PSK/WPA3-SAE</option>
+							</select>
+						</td>
+						 <td>
+							<input type="password" class="sktable-control" name="Txt_ABandPSK_2" id="Txt_ABandPSK_2" size="20" maxlength="63" value="" style="width :130px">
+							<span class="bi bi-eye-slash-fill bi-password bi-password-table"></span>
+						</td>
+						<td>
+							<select name='Sel_ABandHide_2' id='Sel_ABandHide_2' class="sktable-control" style="width: 78px;">
+								<option value=0>{{wlanMapSetting5g_disabled}}</option>
+								<option value=1>{{wlanMapSetting5g_enabled}}</option>
+							</select>
+						</td>
+						 <td>
+							<label class="skcheckbox">
+								<input type="checkbox" name="AccessEnable_2" id="AccessEnable_2" value="ON" onClick="AccessChange_Enable(2)"  hidden />
+								<label for="AccessEnable_2" class="skcheckbox-label">
+							</label>
+						</td>	
+						<td>
+							<input type="text" class="sktable-control" name="maxClient_2" id="maxClient_2" size="4" maxlength="4" value="64" style="width :40px">
+						</td>						
+					</tr>
+					<tr>
+						<td>Wi-Fi 5G_4</td>
+						<td>
+							<label class="skcheckbox">
+								<input type="checkbox" name="Chk_ABandEnable_3" id="Chk_ABandEnable_3" value="ON" onClick="SelChange_Enable(3)" hidden />
+								<label for="Chk_ABandEnable_3" class="skcheckbox-label">
+							</label>
+						</td>
+						<td>
+							<input type="text" class="sktable-control" name="Txt_ABandSSID_3" id="Txt_ABandSSID_3" size="19" maxlength="32" value="" style="width :140px">
+						</td>
+						 <td>
+							<select name='Sel_ABandAuth_3' id='Sel_ABandAuth_3' class="sktable-control" style="width: 110px;" onchange="SelChange_AuthMode(3)">
+								<option value="Open System">Open System</option>
+								<option value="WPA-PSK">WPA-PSK</option>
+								<option value="WPA2-PSK">WPA2-PSK</option>
+								<option value="WPA/WPA2-PSK">WPA/WPA2-PSK</option>
+								<option value="WPA3-SAE">WPA3-SAE</option>
+								<option value="WPA2-PSK/WPA3-SAE">WPA2-PSK/WPA3-SAE</option>
+							</select>
+						</td>
+						<td>
+							<input type="password" class="sktable-control" name="Txt_ABandPSK_3" id="Txt_ABandPSK_3" size="20" maxlength="63" value="" style="width :130px">
+							<span class="bi bi-eye-slash-fill bi-password bi-password-table"></span>
+						</td>
+						<td>
+							<select name='Sel_ABandHide_3' id='Sel_ABandHide_3' class="sktable-control" style="width: 78px;">
+								<option value=0>{{wlanMapSetting5g_disabled}}</option>
+								<option value=1>{{wlanMapSetting5g_enabled}}</option>
+							</select>
+						</td>
+						 <td>
+							<label class="skcheckbox">
+								<input type="checkbox" name="AccessEnable_3" id="AccessEnable_3" value="ON" onClick="AccessChange_Enable(3)"  hidden />
+								<label for="AccessEnable_3" class="skcheckbox-label">
+							</label>
+						</td>	
+						<td>
+							<input type="text" class="sktable-control" name="maxClient_3" id="maxClient_3" size="4" maxlength="4" value="64" style="width :40px">
+						</td>						
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<div class="sk-form-submit">
+			<button class="btn-apply" type="button" name="button_apply" id="button_apply" onclick="BntClick_Apply(document.MultipleAP);">{{wlanMapSetting5g_save}}</button>
+		</div>
+	</div> -->
+</div>

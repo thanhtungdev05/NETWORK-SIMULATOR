@@ -1,0 +1,53 @@
+<div class="page-content">
+	<p class="sk-warning-info">
+		{{This page is used to track the path to the destination host.}}<br/>
+		{{Timeout is the time wait for response of every probe in every hop.}}<br/>
+	</p>
+    <p class="skpage-title">{{Tracert Test}}</p>
+	<div class="modset">
+		<div class="skform-group">
+			<label class="skform-tittle" for="diag_tracert_url">{{IP/Domain Address:}}</label>
+			<input type="text" class="skform-control" id="diag_tracert_url" name="diag_tracert_url"/>
+		</div>
+
+		<div class="skform-group">
+			<label class="skform-tittle" for="diag_tracert_maxhops">{{Max Hops(1 ~ 64):}}</label>
+			<input type="text" class="skform-control" id="diag_tracert_maxhops" name="diag_tracert_maxhops"/>
+		</div>
+	
+		<div class="skform-group">
+			<label class="skform-tittle" for="diag_tracert_timeout">{{Timeout(1-10s):}}</label>
+			<input type="text" class="skform-control" id="diag_tracert_timeout" name="diag_tracert_timeout"/>
+		</div>
+	
+		<div class="skform-group">
+			<label class="skform-tittle" for="diag_tracert_numoftries">{{NumOfTries:}}</label>
+			<input type="text" class="skform-control" id="diag_tracert_numoftries" name="diag_tracert_numoftries"/>
+		</div>
+	
+		<div class="skform-group">
+			<label class="skform-tittle" for="diag_tracert_protocol">{{Protocol:}}</label>
+            <select size="1" class="skform-control" id="diag_tracert_protocol" name="diag_tracert_protocol" diag_tracert_protocol_change="(this)">
+                <option value="-4">IPv4</option>
+                <option value="-6">IPv6</option>
+            </select>
+		</div>
+
+		<div class="skform-group">
+			<label class="skform-tittle" for="diag_tracert_interface">{{Interface:}}</label>
+            <select size="1" class="skform-control" id="diag_tracert_interface" name="diag_tracert_interface" diag_tracert_interface_change="(this)">
+            </select>
+		</div>
+
+		 <div class="skform-group">
+                        <textarea id="diag_tracert_result" style="height: 300px; width:640px;" readonly></textarea>
+                </div>
+
+        <div class="sk-form-submit">
+            <button class="btn-apply" type="button" name="button_start" id="button_start" onclick="btn_Start()">{{Start}}</button>
+            <button class="btn-apply" type="button" name="button_stop" id="button_stop" style="margin-left: inherit;" onclick="btn_Stop()">{{Stop}}</button>
+        </div>
+
+	
+	</div>
+</div>

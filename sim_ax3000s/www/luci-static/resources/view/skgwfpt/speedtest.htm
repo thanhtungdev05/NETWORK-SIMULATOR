@@ -1,0 +1,38 @@
+<div class="page-content">
+	<p class="sk-warning-info">
+		{{On this page, you can test speed from this device to Internet.}}<br />
+	</p>
+	<p class="skpage-title">{{Speed Test}}</p>
+	<div class="modset">
+		<div class="skform-group">
+			<label class="skform-tittle" for="diag_speedtest_interface">{{Interface:}}</label>
+            <select size="1" class="skform-control" id="diag_speedtest_interface" name="diag_speedtest_interface" diag_speedtest_interface_change="(this)">
+            </select>
+		</div>
+
+		<div class="skform-group">
+			<label class="skform-tittle" for="diag_speedtest_direction">{{Direction:}}</label>
+            <select size="1" class="skform-control" id="diag_speedtest_direction" name="diag_speedtest_direction" diag_speedtest_direction_change="(this)">
+                <option value=1>Upload</option>
+                <option value=2>Download</option>
+            </select>
+		</div>
+		
+		<div class="skform-group">
+			<label class="skform-tittle" for="diag_speedtest_targeturl">{{Target Url:}}</label>
+			<input type="text" class="skform-control" id="diag_speedtest_targeturl" name="diag_speedtest_targeturl"/>
+		</div>
+	
+		<div class="skform-group">
+			<textarea id="diag_speedtest_result" name="diag_speedtest_result" style="height: 250px; width:650px;" readonly></textarea>
+		</div>
+		<div class="sk-form-submit">
+			<button class="btn-apply" type="button" name="button_start" id="button_start"
+				onclick="btn_start()">{{Start}}</button>
+		</div>
+		<div class="sk-form-submit">
+			<button class="btn-apply" type="button" name="button_stop" id="button_stop"
+				onclick="btn_stop()">{{Stop}}</button>
+		</div>
+	</div>
+</div>

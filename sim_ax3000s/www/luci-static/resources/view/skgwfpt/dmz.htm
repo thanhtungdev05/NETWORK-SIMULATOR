@@ -1,0 +1,43 @@
+<div class="page-content">
+    <p class="sk-warning-info">
+        {{This page is used to configure DMZ host.}}<br /><br />
+    
+        {{The device will forward IP packets from the WAN that do not}}
+        {{belong to any of the applications configured in the Port Forwarding table to the DMZ host computer.}}<br /><br />
+    
+        {{Enter the computer's IP address and click "Save & Apply" to activate the DMZ host.}}<br /><br />
+    
+        {{Clear the IP address field and click "Save & Apply" to deactivate the DMZ host.}}<br /><br />
+    </p>
+    <p class="skpage-title">{{DMZ}}</p>
+    <div class="modset">
+        <div class="skform-group">
+            <label class="skform-tittle" for="at-dmz-enable">{{Enable}}:</label>
+            <label class="skcheckbox skcheckbox-form">
+                <input type="checkbox" name="at-dmz-enable" id="at-dmz-enable" onclick="dmzEnableClick(this)" hidden />
+                <label for="at-dmz-enable" id="dmzEnable_btn" class="skcheckbox-label">
+                </label>
+            </label>
+        </div>
+        <div class="skform-group">
+            <label class="skform-tittle" for="at-dmz-selectLan">{{DMZ Host Select}}:</label>
+            <select size="1" class="skform-control" id="at-dmz-selectLan" name="at-dmz-selectLan"
+                onchange="dmzSelectClick(this)">
+            </select>
+        </div>
+        <div class="skform-group">
+            <label class="skform-tittle" for="at-lan-addr">{{DMZ Host IP Address}}:</label>
+            <input type="text" class="skform-control" id="at-lan-addr" name="at-lan-addr" disabled />
+        </div>
+        <div class="skform-group">
+            <label class="skform-tittle" for="skg_dmz_selectWan">{{DMZ WAN Select}}:</label>
+            <select size="1" class="skform-control" id="skg_dmz_selectWan" name="skg_dmz_selectWan"
+                onchange="dmzSelectWANClick(this)">
+            </select>
+        </div>
+        <div class="sk-form-submit">
+            <button class="btn-apply" type="button" name="at-dmz-button-apply" id="at-dmz-button-apply"
+                onclick="dmzButtonApplyClick()">{{Save}} & {{Apply}}</button>
+        </div>
+    </div>
+</div>

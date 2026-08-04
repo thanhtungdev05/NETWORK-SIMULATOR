@@ -1,0 +1,32 @@
+<div class="page-content">
+	<p class="sk-warning-info">
+		{{On this page, you can capture packet on the specified interface and download to local PC.}}<br/>
+	</p>
+    <p class="skpage-title">{{Packet Capture}}</p>
+	<div class="modset">
+		<div class="skform-group">
+			<label class="skform-tittle" for="diag_pktcapture_interface">{{Capture On Interface:}}</label>
+            <select size="1" class="skform-control" id="diag_pktcapture_interface" name="diag_pktcapture_interface" onChange="diag_pktcapture_interface_change(this)">
+            </select>
+		</div>
+		
+		<div class="skform-group">
+			<label class="skform-tittle" for="diag_pktcapture_direction">{{Capture Direction:}}</label>
+            <select size="1" class="skform-control" id="diag_pktcapture_direction" name="diag_pktcapture_direction" onChange="diag_pktcapture_direction_change(this)">
+				<option value=0>Double</option>
+				<option value=1>In</option>
+				<option value=2>Out</option>
+            </select>
+		</div>
+
+        <div class="sk-form-submit">
+            <button class="btn-apply" type="button" name="button_start" id="button_start" onclick="btn_start()">{{Start}}</button>
+        </div>
+
+        <div class="sk-form-submit">
+            <button class="btn-apply" type="button" name="button_save" id="button_save" onclick="btn_save()">{{Save to Local}}</button>
+        </div>
+
+	
+	</div>
+</div>

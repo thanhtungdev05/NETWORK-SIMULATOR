@@ -1,0 +1,35 @@
+<div class="page-content">
+    <p class="sk-warning-info">
+        {{Firewall_antidos_note}}
+    </p>
+    <p class="skpage-title">{{Firewall_antidos_title}}</p>
+    <div class="modset">
+        <div class="skform-group">
+                <label class="skform-tittle" for="dosprotect">{{Firewall_antidos_setting}}:</label>
+                <div class="skform-content">
+                    <ul>
+                        <li>
+                            <label class="skradio">
+                                <input type="radio" name="dosprotect" id="dosprotect0"  hidden/>
+                                <label for="dosprotect0" id="dosprotect_disable" class="skradio-label">
+                                </label>
+                            </label>
+                            <label class="skradio-text" for="dosprotect0">{{Disable}}</label>
+                        </li>
+                        <li>
+                            <label class="skradio">
+                                <input type="radio" name="dosprotect" id="dosprotect1" hidden/>
+                                <label for="dosprotect1" id="dosprotect_enable" class="skradio-label">
+                                </label>
+                            </label>
+                            <label class="skradio-text" for="dosprotect1">{{Enable}}</label>
+                        </li>
+                    </ul>
+                </div>
+        </div>
+        
+        <div class="sk-form-submit">
+                <button class="btn-apply" id="dosprotect_save" name='apply' type="button" onclick="antidos_btnApply()">{{Save_And_Apply}}</button>
+        </div>
+    </div>
+</div>

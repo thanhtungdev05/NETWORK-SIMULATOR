@@ -1,0 +1,437 @@
+
+<style>
+	.icon-connected {
+	  width: 150px;
+	  height: 25px;
+  }
+
+  .icon-disconnected {
+	  width: 150px;
+	  height: 25px;
+  }
+
+  .icon-router {
+	  width: 105px;
+	  height: 100px;
+  }
+
+  .icon-pc{
+	  width: 125px;
+	  height: 100px;
+  }
+
+  .topology-row-y{
+	  
+	  margin-top: 20px;
+	  
+	  flex: 1;
+  }
+  .card {
+	  margin-left: 12px;
+	  margin-top: 12px;
+	  border: 1px solid #f1f1f1;
+	  border-radius: 12px;
+	  /* display: inline-block;
+	  float: left; */
+	  width: 290px;
+	  min-height: 220px;
+	  background-color: #fff;
+  }
+  .progress-fail-status {
+	  width: 0%;
+	  height: 7px;
+	  background-color: red;
+  }
+  .progress-success-status {
+	  width: 0%;
+	  height: 7px;
+	  background-color: #21d34b;
+  }
+  .row {
+	  display: -ms-flexbox;
+	  display: flex;
+	  -ms-flex-wrap: wrap;
+	  flex-wrap: wrap;
+	  margin-right: -15px;
+	  margin-left: -15px;
+  }
+  .card-progress-bar {
+	  width: 75%;
+	  padding-left: 2rem;
+	  margin-top: 0.3rem;
+  }
+  .icon-svg {
+	  margin-left: 0.5rem;
+	  margin-right: 0.5rem;
+  }
+
+</style>
+
+<div id="homepagestatus" >
+<div class="topology-row" style="margin-left:35px; margin-top:35px; width:900px;background-color:white; border-radius:10px">
+
+<div class="topology-row-y topology-row-1">
+  <a href=""><div class="icon-internert" style="cursor:pointer;" onclick="sk_redirect('/cgi-bin/luci/admin/network/wancfg');" ></div></a>
+ <div class="topology-row-mini">
+   <div class="topology-row-1" style="cursor:default;">
+	 <span>{{Internet}}</span>
+	 <!--modify by liwei for support multi-language 20230227-->
+   </div>
+ </div>
+</div>
+<div class="topology-row-y topology-row-2">
+  <div class="topology-row-status"></div>
+	  <div class="topology-row-status"><div id="NetStatus" class="icon-connected"></div></div>
+  <div class="topology-row-status"></div>
+</div>
+
+<div class="topology-row-y topology-row-1">
+   <a href=""><div class="icon-router" style="cursor:pointer;" onclick="sk_redirect('/cgi-bin/luci/admin/wlan/wlanaband');"></div></a>
+<div class="topology-row-mini">
+   <div class="topology-row-1" style="cursor:default;">
+	 <span id="onutpye">{{Router}}</span>
+	 <!--modify by liwei for support multi-language 20230227-->
+   </div>
+ </div>
+ <div class="topology-row-mini">
+  <div class="topology-row-1" style="cursor:default;" id="toposhow_mode">
+	  <div class="bd">
+		  <div id="toposhow"></div>
+	  </div>
+  </div>
+</div>
+</div>
+
+<div class="topology-row-y topology-row-2">
+  <div class="topology-row-status"></div>
+	  <div class="topology-row-status"><div class="icon-connected"></div></div>
+  <div class="topology-row-status"></div>
+</div>
+
+<!-- �¹��豸�����ֶ� -->
+<div class="topology-row-y topology-row-1">
+  <a href=""><div class="icon-pc" style="cursor:pointer;" onclick="sk_redirect('/cgi-bin/luci/admin/status/laninfo/lanStaInfo');"></div></a>
+ <div class="topology-row-mini">
+   <div class="topology-row-1" style="cursor:default;">
+	 <span id="DevNum">{{Devices}}: <b id="DeviceNum">1</b>
+	 </span>
+	 <!--modify by liwei for support multi-language 20230227-->
+   </div>
+ </div>
+</div> 
+</div>
+
+</div>
+
+<div class="card-list">
+<div class="card" style="width:335px;height: 450;">
+  <div class="card-head" >
+	  <span>{{Device Info}}</span>
+  </div>
+  <div class="card-content" id="basic_info" >
+	  <ul>
+		  <li>
+			  <span>{{Device Model:}}</span>
+			  <span id="ModelName"></span>
+		  </li>
+		  <li>
+			  <span>{{Device SN:}}</span>
+			  <span id="DevSn"></span>
+		  </li>
+		  <!-- <li>
+			  <span>{{ManufacturerOUI:}}</span>
+			  <span id="Manufac"></span>
+		  </li> -->
+		  <li>
+			  <span>{{Hardware Version:}}</span>
+			  <span id="HardwareVer"></span>
+		  </li>
+		  <li>
+			  <span>{{Software Version:}}</span>
+			  <span id="SoftwareVer"></span>
+		  </li>
+		  <!--<li id="ponsntab">
+			  <span>{{GPON SN:}}</span>
+			  <span id="GponSn"></span>
+		  </li>-->
+		  <li>
+			  <span>{{Compile Time:}}</span>
+			  <span id="Compiletime"></span>
+		  </li>
+		  <li>
+			  <span>{{System Up-time:}}</span>
+			  <span id="SysUpTime"></span>
+		  </li>
+		  <li>
+			  <span>{{WAN MAC Address:}}</span>
+			  <span id="WanMacAddr"></span>
+		  </li>
+		  <li>
+			<span>{{Last Reboot Reason:}}</span>
+			<span id="LastRebootType"></span>
+		</li>
+	  </ul>
+  </div>
+</div>
+
+<div class="card" style="width:575px;">
+  <div class="card-head">
+	  <span>{{CPU & Memory Usage:}}</span>
+  </div>
+  <div class="card-content">
+		<!-- <canvas id="myChart" width="600" height="400"></canvas> -->
+		<div id="myChart" style="width:580px;height:330px"></div>
+  </div>
+</div>
+
+
+<div class="card" id="easyDiag-card" style="width:575px;">
+  <div class="card-head">
+	  <span>{{EasyDiagnosticTitle}}</span>
+  </div>
+  <div style="display:flex;">
+  <div style="width:290px;">
+  <div class="card-content">
+	  <ul><li style="width: 75%;">
+		  <span style="color:#888888;">{{WlanCheckText}}</span>
+	  </ul></li>
+  </div>
+  <div class="row">
+	  <div class="card-progress-bar">
+	  <div id="progress-bar">
+		  <div id="WlanCheck" class="progress-success-status"></div>
+	  </div>
+	  </div>
+	  <img id="WlanImg" src="/luci-static/resources/cbi/cancel.svg" width="15" height="15" class="icon-svg">
+  </div>
+
+  <div class="card-content">
+	  <ul><li style="width: 75%;">
+		  <span style="color:#888888;" id="2GfemText">{{2GfemText}}</span>
+		  <span style="color:#888888;" id="2GfemStatus"></span>
+	  </ul></li>
+  </div>
+  <div class="row">
+	  <div class="card-progress-bar">
+	  <div id="progress-bar">
+		  <div id="2GfemCheck" class="progress-success-status"></div>
+	  </div>
+	  </div>
+	  <img id="2GfemImg" src="/luci-static/resources/cbi/cancel.svg" width="15" height="15" class="icon-svg">
+  </div>
+  
+  <div class="card-content">
+	  <ul><li style="width: 75%;">
+		  <span style="color:#888888;" id="5GfemText">{{5GfemText}}</span>
+		  <span style="color:#888888;" id="5GfemStatus"></span>
+	  </ul></li>
+  </div>
+  <div class="row">
+	  <div class="card-progress-bar">
+	  <div id="progress-bar">
+		  <div id="5GfemCheck" class="progress-success-status"></div>
+	  </div>
+	  </div>
+	  <img id="5GfemImg" src="/luci-static/resources/cbi/cancel.svg" width="15" height="15" class="icon-svg">
+  </div>  
+  
+  <div class="card-content">
+	  <ul><li style="width: 75%;">
+		  <span style="color:#888888;">{{DnsCheckText}}</span>
+		  <span style="color:#888888;" id=DnsIP></span>
+	  </ul></li>
+  </div>
+  <div class="row">
+	  <div class="card-progress-bar">
+	  <div id="progress-bar">
+		  <div id="DnsCheck" class="progress-success-status"></div>
+	  </div>
+	  </div>
+	  <img id="DnsImg" src="/luci-static/resources/cbi/cancel.svg" width="15" height="15" class="icon-svg">
+  </div>
+
+  <div class="card-content">
+	  <ul><li style="width: 75%;">
+		  <span style="color:#888888;">{{InternetCheckText}}</span>
+	  </ul></li>
+  </div>
+  <div class="row">
+	  <div class="card-progress-bar">
+	  <div id="progress-bar">
+		  <div id="InternetCheck" class="progress-success-status"></div>
+	  </div>
+	  </div>
+	  <img id="InternetImg" src="/luci-static/resources/cbi/cancel.svg" width="15" height="15" class="icon-svg">
+  </div>
+
+  <div class="card-content">
+	  <ul><li style="width: 75%;">
+		  <span style="color:#888888;">{{NatCheckText}}</span>
+	  </ul></li>
+  </div>
+  <div class="row">
+	  <div class="card-progress-bar">
+	  <div id="progress-bar">
+		  <div id="NatCheck" class="progress-success-status"></div>
+	  </div>
+	  </div>
+	  <img id="NatImg" src="/luci-static/resources/cbi/cancel.svg" width="15" height="15" class="icon-svg">
+  </div>
+
+  <div class="card-content">
+	  <ul><li style="width: 75%;">
+		  <span style="color:#888888;">{{LanCheckText}}</span>
+		  <span style="color:#888888;" id=LanIP></span>
+	  </ul></li>
+  </div>
+  <div class="row">
+	  <div class="card-progress-bar">
+	  <div id="progress-bar">
+		  <div id="LanCheck" class="progress-success-status"></div>
+	  </div>
+	  </div>
+	  <img id="LanImg" src="/luci-static/resources/cbi/cancel.svg" width="15" height="15" class="icon-svg">
+  </div>
+
+  <div class="card-content">
+	  <ul><li style="width: 75%;">
+		  <span style="color:#888888;">{{DhcpCheckText}}</span>
+	  </ul></li>
+  </div>
+  <div class="row">
+	  <div class="card-progress-bar">
+	  <div id="progress-bar">
+		  <div id="DhcpCheck" class="progress-success-status"></div>
+	  </div>
+	  </div>
+	  <img id="DhcpImg" src="/luci-static/resources/cbi/cancel.svg" width="15" height="15" class="icon-svg">
+  </div>
+
+</div>
+<div style="width:290px;">
+  <div class="card-content">
+	  <ul><li style="width: 75%;">
+		  <span style="color:#888888;" id="Lan1Text">{{LAN1}}</span>
+		  <span style="color:#888888;" id="Lan1Status"></span>
+	  </ul></li>
+  </div>
+  <div class="row">
+	  <div class="card-progress-bar">
+	  <div id="progress-bar">
+		  <div id="Lan1Check" class="progress-success-status"></div>
+	  </div>
+	  </div>
+	  <img id="Lan1Img" src="/luci-static/resources/cbi/cancel.svg" width="15" height="15" class="icon-svg">
+  </div>
+
+  <div class="card-content">
+	  <ul><li style="width: 75%;">
+		  <span style="color:#888888;" id="Lan2Text">{{LAN2}}</span>
+		  <span style="color:#888888;" id="Lan2Status"></span>
+	  </ul></li>
+  </div>
+  <div class="row">
+	  <div class="card-progress-bar">
+	  <div id="progress-bar">
+		  <div id="Lan2Check" class="progress-success-status"></div>
+	  </div>
+	  </div>
+	  <img id="Lan2Img" src="/luci-static/resources/cbi/cancel.svg" width="15" height="15" class="icon-svg">
+  </div>
+
+  <div class="card-content">
+	  <ul><li style="width: 75%;">
+		  <span style="color:#888888;" id="Lan3Text">{{LAN3}}</span>
+		  <span style="color:#888888;" id="Lan3Status"></span>
+	  </ul></li>
+  </div>
+  <div class="row">
+	  <div class="card-progress-bar">
+	  <div id="progress-bar">
+		  <div id="Lan3Check" class="progress-success-status"></div>
+	  </div>
+	  </div>
+	  <img id="Lan3Img" src="/luci-static/resources/cbi/cancel.svg" width="15" height="15" class="icon-svg">
+  </div>
+
+  <div class="card-content">
+	  <ul><li style="width: 75%;">
+		  <span style="color:#888888;" id="Lan4Text">{{LAN4}}</span>
+		  <span style="color:#888888;" id="Lan4Status"></span>
+	  </ul></li>
+  </div>
+  <div class="row">
+	  <div class="card-progress-bar">
+	  <div id="progress-bar">
+		  <div id="Lan4Check" class="progress-success-status"></div>
+	  </div>
+	  </div>
+	  <img id="Lan4Img" src="/luci-static/resources/cbi/cancel.svg" width="15" height="15" class="icon-svg">
+  </div>
+
+  <div class="card-content">
+	  <ul><li style="width: 75%;">
+		  <span style="color:#888888;">{{RAMSizeCheckText}}</span>
+		  <span style="color:#888888;" id="RAMSize"></span>
+	  </ul></li>
+  </div>
+  <div class="row">
+	  <div class="card-progress-bar">
+	  <div id="progress-bar">
+		  <div id="RAMSizeCheck" class="progress-success-status"></div>
+	  </div>
+	  </div>
+	  <img id="RAMSizeImg" src="/luci-static/resources/cbi/cancel.svg" width="15" height="15" class="icon-svg">
+  </div>
+
+  <div class="card-content">
+	  <ul><li style="width: 75%;">
+		  <span style="color:#888888;">{{ROMSizeCheckText}}</span>
+		  <span style="color:#888888;" id="ROMSize"></span>
+	  </ul></li>
+  </div>
+  <div class="row">
+	  <div class="card-progress-bar">
+	  <div id="progress-bar">
+		  <div id="ROMSizeCheck" class="progress-success-status"></div>
+	  </div>
+	  </div>
+	  <img id="ROMSizeImg" src="/luci-static/resources/cbi/cancel.svg" width="15" height="15" class="icon-svg">
+  </div>
+
+  <div class="card-content">
+	  <ul><li style="width: 75%;">
+		  <span style="color:#888888;">{{WanCheckText}}</span>
+	  </ul></li>
+  </div>
+  <div class="row">
+	  <div class="card-progress-bar">
+	  <div id="progress-bar">
+		  <div id="WanCheck" class="progress-success-status"></div>
+	  </div>
+	  </div>
+	  <img id="WanImg" src="/luci-static/resources/cbi/cancel.svg" width="15" height="15" class="icon-svg">
+  </div>
+  
+    <!--<div class="card-content">
+	  <ul><li style="width: 75%;">
+		  <span style="color:#888888;" >{{LedCheckText}}</span>
+		  <span style="color:#888888;"></span>
+	  </ul></li>
+  </div>
+ <div class="row">
+	  <div class="card-progress-bar">
+	  <div id="progress-bar">
+		  <div id="LedCheck" class="progress-success-status"></div>
+	  </div>
+	  </div>
+	  <img id="LedImg" src="/luci-static/resources/cbi/cancel.svg" width="15" height="15" class="icon-svg">
+  </div> -->
+</div>
+</div>
+<div class="sk-home-submit">
+  <input class="btn-apply" id="easyDiag_btn" type='button' style="margin-left: 40%;margin-top: 10px;margin-bottom: 10px;" onClick='easyDiagBtnApply()' value='{{EasyDiagnosticBtnText}}'>
+</div>
+</div>
+
+</div>

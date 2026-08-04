@@ -1,0 +1,13 @@
+window.__FIRSTCHILD={
+ "/admin": "/admin/home",
+ "/admin/internet": "/admin/internet/status/poninform",
+ "/admin/internet/status": "/admin/internet/status/poninform",
+ "/admin/internet/ddns": "/admin/internet/ddns/ddns",
+ "/admin/internet/poninformation": "/admin/internet/poninformation/pon_loid",
+ "/admin/localnetwork": "/admin/localnetwork/status",
+ "/admin/localnetwork/lan": "/admin/localnetwork/lan/dhcpv4_status",
+ "/admin/localnetwork/WLAN": "/admin/localnetwork/WLAN/WLANbasic",
+ "/admin/localnetwork/dns": "/admin/localnetwork/dns/domainame",
+ "/admin/management": "/admin/management/deviceinfo",
+ "/admin/network": "/admin/network/wireless"
+};

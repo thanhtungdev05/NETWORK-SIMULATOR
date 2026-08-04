@@ -1,0 +1,86 @@
+<div class="page-content">
+	<p class="sk-warning-info">
+		{{sysLogWarningText}}
+	</p>
+	<p class="skpage-title">{{sysLogConfigTitle}}</p>
+	<div class="modset">
+		<div class="skform-group">
+			<label class="skform-tittle" for="at-log-enable">{{logEnableText}}:</label>
+			<div class="skform-content">
+				<ul>
+					<li>
+						<label class="skradio">
+							<input type="radio" name="at-log-enable" id="at-log-enable0" onclick="dis_mode_set(true)" hidden />
+							<label for="at-log-enable0" id="logDisable" class="skradio-label">
+							</label>
+						</label>
+						<label class="skradio-text" for="at-log-enable0">{{logEnableDisText}}</label>
+					</li>
+					<li>
+						<label class="skradio">
+							<input type="radio" name="at-log-enable" id="at-log-enable1" onclick="dis_mode_set(false)" hidden />
+							<label for="at-log-enable1" id="logEnable" class="skradio-label">
+							</label>
+						</label>
+						<label class="skradio-text" for="at-log-enable1">{{logEnableEnaText}}</label>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<div class="skform-group">
+			<label class="skform-tittle" for="levelLog">{{logLevelText}}:</label>
+			<select size="1" class="skform-control" name="levelLog" id="Frm_LogLevel">
+				<option value="0">{{logLevelEmergencyText}}</option>
+				<option value="1">{{logLevelAlertText}}</option>
+				<option value="2">{{logLevelCriticalText}}</option>
+				<option value="3">{{logLevelErrorText}}</option>
+				<option value="4">{{logLevelWarningText}}</option>
+				<option value="5">{{logLevelNoticeText}}</option>
+				<option value="6">{{logLevelInformationalText}}</option>
+				<option value="7">{{logLevelDebugText}}</option>
+			</select>
+		</div>
+		<div class="skform-group">
+			<label class="skform-tittle" for="levelMode">{{logModeText}}:</label>
+			<select size="1" class="skform-control" name="levelMode" id="Frm_LogMode" onchange="select_logmode(this.value);">
+				<option value="1">{{logModeLoaclText}}</option>
+				<option value="2">{{logModeRemoteText}}</option>
+				<option value="3">{{logModeBothText}}</option>
+			</select>
+		</div>
+		<div id="logRemoteDiv" style="display: none;">
+			<div class="skform-group">
+				<label class="skform-tittle" for="levelRemoteProto">{{logModeProtoText}}:</label>
+				<select size="1" class="skform-control" name="levelRemoteProto" id="Frm_LogModeProto"
+					onchange="select_logmode(this.value);">
+					<option value="tcp">{{logModeProtoTcp}}</option>
+					<option value="udp">{{logModeProtoUdp}}</option>
+				</select>
+			</div>
+			<div class="skform-group">
+				<label class="skform-tittle" for="levelModeIPAddr">{{logModeIPAddrText}}:</label>
+				<input type="text" size=128 maxlength=128 class="skform-control" id="levelModeIPAddr" name="levelModeIPAddr" />
+			</div>
+			<div class="skform-group">
+				<label class="skform-tittle" for="levelModePort">{{logModePortText}}:</label>
+				<input type="text" size=6 maxlength=6 class="skform-control" id="levelModePort" name="levelModePort" />
+			</div>
+		</div>
+		<div class="sk-form-submit" style="text-align: center;">
+			<input class="btn-apply" type="button" name="logBtn_Apply" id="logBtn_Apply" style="margin-left: inherit;"
+				value="{{configBtnText}}" onclick="sysLogBtnApply();">&nbsp;
+		</div>
+	</div>
+	<p class="skpage-title">{{sysLogViewTitle}}</p>
+	<div class="modset">
+		<div class="skform-group">
+			<textarea id="Frm_LogText" style="height: 300px; width:870px;"></textarea>
+		</div>
+		<div class="skform-submit" style="text-align: center; margin-bottom: 12px;">
+			<input class="btn-apply" type="button" name="Btn_download" id="Btn_download" style="margin-left: inherit;"
+				value="{{logViewDownloadText}}" onclick="myDownloadFile();">&nbsp;
+			<input id="Btn_Refresh" name="Btn_Refresh" type="button" class="btn-apply" style="margin-left: inherit;"
+				value="{{logViewRefreshText}}" onClick="get_loginfo();">
+		</div>
+	</div>
+</div>

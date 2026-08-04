@@ -1,0 +1,41 @@
+<form>
+	<div class="page-content">
+		<p class="sk-warning-info">
+			{{schedulerTitle}}<br />
+		</p>
+		<div class="modset">
+			<div class="skform-group">
+				<label class="skform-tittle">{{SystemTime}}:</label>
+				<span id="curSystime"></span>
+				<span id="syncStatus"></span>
+			</div>
+		</div>
+		<p class="skpage-title">{{wifiScheTab}}</p>
+		<div class="modset">
+			<div class="table-list" style="width: auto;">
+				<div class="table-list-head">
+				</div>
+				<table id="at-sche-timer-table" style="margin-bottom: 20px;">
+					<thead>
+						<tr>
+							<th>
+								{{Staus}}
+							</th>
+							<th>
+								{{On Time}}
+							</th>
+							<th>
+								{{Off Time}}
+							</th>
+							<th>
+								{{RepeatPeriod}}
+							</th>
+						</tr>
+					</thead>
+					<tbody id="at-schetimer-tbody">
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</form>

@@ -1,0 +1,28 @@
+﻿<div class="page-content">
+	<p class="sk-warning-info">
+	{{wlanbandsteering_tips}}
+	</p>
+	<p class="skpage-title">{{band_steering}}</p>
+	<div class="modset">
+	    <div class="skform-group">
+	        <label class="skform-tittle">{{bandsteering_radioEnable}}</label>
+	        <label class="skcheckbox skcheckbox-form">
+	            <input type="checkbox" name="Chk_RadioEnable" id="Chk_RadioEnable" hidden/>
+	            <label for="Chk_RadioEnable" class="skcheckbox-label">
+	            </label>
+	        </label>
+	    </div>
+	    <div class="skform-group">
+			<label class="skform-tittle" for="rssi2g">{{bandsteering_rssi2g}}:</label>
+			<input type="text" class="skform-control" id="rssi2g" name="rssi2g"/><span class="skform-disc">(-110 ~ -20)dBm</span>
+		</div>
+		<div class="skform-group">
+			<label class="skform-tittle" for="rssi5g">{{bandsteering_rssi5g}}:</label>
+			<input type="text" class="skform-control" id="rssi5g" name="rssi5g"/><span class="skform-disc">(-110 ~ -20)dBm</span>
+		</div>
+
+	    <div class="sk-form-submit">
+	        <button class="btn-apply" type="button" name="button_apply" id="button_apply" onclick="BntClick_Apply()">{{Save & Apply}}</button>
+	    </div>
+	</div>
+</div>

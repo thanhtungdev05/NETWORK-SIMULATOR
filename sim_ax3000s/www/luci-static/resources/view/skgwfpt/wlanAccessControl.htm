@@ -1,0 +1,48 @@
+<div class="page-content">
+	<p class="sk-warning-info">
+		{{wlanAccessControl_tipsDeny}}
+		<br>
+		{{wlanAccessControl_tipsAllow}}
+	</p>
+	<p class="skpage-title">{{wlanAccessControl_acl}}</p>
+	<div class="modset">
+		<div class="skform-group">
+			<label class="skform-tittle" for="Sel_AccessMode">{{wlanAccessControl_mode}}</label>
+			<select size="1" class="skform-control" name="Sel_AccessMode" id="Sel_AccessMode" >
+				<option value=0>{{wlanAccessControl_disabled}}</option>
+				<option value=1>{{wlanAccessControl_deny}}</option>
+				<option value=2>{{wlanAccessControl_allow}}</option>
+			</select>
+		</div>
+		</div>
+		<div class="sk-form-submit">
+				<button class="btn-apply" type="button" onclick="BntClick_Apply()">{{wlanAccessControl_save}}</button>
+		</div>
+		
+		</div>
+	<p class="skpage-title">{{wlanAccessControl_macTable}}</p>
+	<div class="modset">
+		<div class="table-list" style="margin-bottom:20px;">
+			<div class="table-list-head">
+				<button class="btn btn-add" type="button" id="Btn_Add" onclick="BtnClick_AccessAdd()">{{wlanAccessControl_add}}</button>
+				<button class="btn btn-del" type="button" id="Btn_Remove" onclick="BtnClick_AccessDel(this.rml)">{{wlanAccessControl_delete}}</button>
+			</div>
+			<table id="wlanacl_MAC_Table" name="wlanacl_MAC_Table">
+				<thead>
+					<tr>
+						<th>
+							<label class="skcheckbox">
+								<input type="checkbox" name="seletall" id="seletall" onClick='selectAll(this)' hidden/>
+								<label for="seletall" class="skcheckbox-label">
+								</label>
+							</label>
+						</th>
+						<th>{{wlanAccessControl_devname}}</th>
+						<th>{{wlanAccessControl_mac}}</th>
+					</tr>
+				</thead>
+				<tbody>
+				</tbody>
+			</table>
+		</div>
+</div>

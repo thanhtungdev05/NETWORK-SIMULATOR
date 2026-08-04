@@ -1,0 +1,26 @@
+<div class="page-content">
+	<p class="sk-warning-info">
+		{{speedLimitCfg_StatsStaText}}
+	</p>
+	<p class="skpage-title">{{speedLimitCfg_StaInfo}}</p>
+	<br>
+	<div class="table-list" style="margin-left:24px;" >
+		<table>
+			<thead>
+				<tr>
+					<th>{{Hostname}}</th>
+					<th>{{MAC_Address}}</th>
+					<th>{{IP_Address}}</th>
+					<th>{{Up_kbps}}</th>
+					<th>{{Down_kbps}}</th>
+					<th>{{Speed_Limit}}</th>
+				</tr>
+			</thead>
+			<tbody id="speedLimitCfg_devlist">
+			</tbody>
+		</table>
+	</div>
+	<div class="sk-form-submit">
+		<button class="btn-apply" id="Sky_Apply" type="button" onclick="speedLimit_cfg_apply();">{{speedLimitCfg_SaveAndApplyText}}</button>
+	</div>
+</div>

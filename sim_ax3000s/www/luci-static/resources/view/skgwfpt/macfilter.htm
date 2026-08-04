@@ -1,0 +1,93 @@
+<div class="page-content">
+    <p class="sk-warning-info">
+        {{MacFilter_Note1}}<br>
+        {{MacFilter_Note2}}<br>
+    </p>
+    <p class="skpage-title">{{MacFilter_Title}}</p>
+    <div class="modset">
+        <div class="skform-group">
+            <label class="skform-tittle" for="Chk_Dhcpv4Enable">{{Enable:}}</label>
+            <div class="skform-content">
+                <ul>
+                    <li>
+                        <label class="skradio">
+                            <input type="radio" name="mcfilterswitch" id="macf_switchType0" onclick="fucoff()" hidden/>
+                            <label for="macf_switchType0" id="macFilter_disable" class="skradio-label">
+                            </label>
+                        </label>
+                        <label class="skradio-text" for="macf_switchType0">{{Disable}}</label>
+                    </li>
+                    <li>
+                        <label class="skradio">
+                            <input type="radio" name="mcfilterswitch" id="macf_switchType1" onClick="fucon()" hidden/>
+                            <label for="macf_switchType1" id="macFilter_enable" class="skradio-label">
+                            </label>
+                        </label>
+                        <label class="skradio-text" for="macf_switchType1">{{Enable}}</label>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="skform-group">
+            <label class="skform-tittle" for="Chk_Dhcpv4Enable">{{Filter_Mode}}</label>
+            <div class="skform-content">
+                <ul>
+                    <li>
+                        <label class="skradio">
+                            <input type="radio" name="mcfilterpolicy" id="macf_policyType0" onclick="chgPolicy(0)" hidden/>
+                            <label for="macf_policyType0" id="macFilterMode_deny" class="skradio-label">
+                            </label>
+                        </label>
+                        <label class="skradio-text" for="macf_policyType0">{{Deny_List}}</label>
+                    </li>
+                    <!-- <li>
+                        <label class="skradio">
+                            <input type="radio" name="mcfilterpolicy" id="macf_policyType1" onClick="chgPolicy(1)" hidden/>
+                            <label for="macf_policyType1" id="macFilterMode_allow" class="skradio-label">
+                            </label>
+                        </label>
+                        <label class="skradio-text" for="macf_policyType1">{{Allow_List}}</label>
+                    </li> -->
+                </ul>
+            </div>
+        </div>
+        <div class="sk-form-submit">
+            <button class="btn-apply" id="Sky_MacfApply" type="button" onclick="Macf_BntClick_Apply()">{{Save_And_Apply}}</button>
+        </div>
+    </div>
+
+    <div id='macFilterList'>
+        <p class="skpage-title">{{MAC_Filter_Table}}</p>
+        <div class="modset">
+            <div class="table-list">
+                <div class="table-list-head">
+                    <button class="btn btn-add" id="Macf_btnAdd" type="button" onclick="Macf_btnAdd()">{{Add}}</button>
+                    <button class="btn btn-del" id="Macf_remove" type="button" onclick="Macf_removeClick(this.rml)">{{Delete}}</button>
+                </div>
+                <table id="macf_MAC_Table">
+                    <thead>
+                        <tr>
+                            <th>
+                                <label class="skcheckbox">
+                                    <input type="checkbox" name="seletall" id="seletall" onClick='selectAll(this)' hidden/>
+                                    <label for="seletall" class="skcheckbox-label">
+                                    </label>
+                                </label>
+                            </th>
+                            <th>{{Filter_Name}}</th>
+                            <th>{{MAC_Address}}</th>
+                            <!-- <th>{{Schedule}}</th> -->
+                            <th>{{Repeat Period}}</th>
+                            <th>{{Start Time}}</th>
+                            <th>{{End Time}}</th>
+                            <th>{{Enable}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>

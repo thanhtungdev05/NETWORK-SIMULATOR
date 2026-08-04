@@ -1,0 +1,212 @@
+<div id="at-acl-page-div" class="page-content">
+    <p class="skpage-title">{{IPv4 Access Control}}</p>
+    <div class="modset">
+        <div class="table-list">
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">{{Service Name}}</th>
+                        <th scope="col">{{LAN}}</th>
+                        <th scope="col">{{LAN Port}}</th>
+                        <th class="acl_wan" scope="col">{{WAN}}</th>
+                        <th class="acl_wan" scope="col">{{WAN Port}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th>HTTPS</th>
+                        <th scope="col">
+                            <div class="skform-group" style="margin-bottom: 0px;">
+                                <label class="skcheckbox skcheckbox-form">
+                                    <input type="checkbox" name="at-ipv4-https-lan" id="at-ipv4-https-lan" hidden />
+                                    <label for="at-ipv4-https-lan" id="lb-at-ipv4-https-lan" class="skcheckbox-label">
+                                    </label>
+                                </label>
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="skform-group" style="margin-bottom: 0px;">
+                                <input type="text" class="skform-control" id="at-lan-ipv4-https-port"
+                                    name="at-lan-ipv4-https-port" style="margin-left: 0px;" />
+                            </div>
+                        </th>
+                        <th class="acl_wan" scope="col">
+                            <div class="skform-group" style="margin-bottom: 0px;">
+                                <label class="skcheckbox skcheckbox-form">
+                                    <input type="checkbox" name="at-ipv4-https-wan" id="at-ipv4-https-wan" hidden />
+                                    <label for="at-ipv4-https-wan" id="lb-at-ipv4-https-wan" class="skcheckbox-label">
+                                    </label>
+                                </label>
+                            </div>
+                        </th>
+                        <th class="acl_wan" scope="col">
+                            <div class="skform-group" style="margin-bottom: 0px;">
+                                <input type="text" class="skform-control" id="at-ipv4-https-port"
+                                    name="at-ipv4-https-port" style="margin-left: 0px;" />
+                            </div>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>HTTP</th>
+                        <th scope="col">
+                            <div class="skform-group" style="margin-bottom: 0px;">
+                                <label class="skcheckbox skcheckbox-form">
+                                    <input type="checkbox" name="at-ipv4-http-lan" id="at-ipv4-http-lan" hidden />
+                                    <label for="at-ipv4-http-lan" id="lb-at-ipv4-http-lan" class="skcheckbox-label">
+                                    </label>
+                                </label>
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="skform-group" style="margin-bottom: 0px;">
+                                <input type="text" class="skform-control" id="at-lan-ipv4-http-port"
+                                    name="at-lan-ipv4-http-port" style="margin-left: 0px;" />
+                            </div>
+                        </th>
+                        <th class="acl_wan" scope="col">
+                            <div class="skform-group" style="margin-bottom: 0px;">
+                                <label class="skcheckbox skcheckbox-form">
+                                    <input type="checkbox" name="at-ipv4-http-wan" id="at-ipv4-http-wan" hidden />
+                                    <label for="at-ipv4-http-wan" id="lb-at-ipv4-http-wan" class="skcheckbox-label">
+                                    </label>
+                                </label>
+                            </div>
+                        </th>
+                        <th class="acl_wan" scope="col">
+                            <div class="skform-group" style="margin-bottom: 0px;">
+                                <input type="text" class="skform-control" id="at-ipv4-http-port"
+                                    name="at-ipv4-http-port" style="margin-left: 0px;" />
+                            </div>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>Ping</th>
+                        <th scope="col">
+                            <div class="skform-group" style="margin-bottom: 0px;">
+                                <label class="skcheckbox skcheckbox-form">
+                                    <input type="checkbox" name="at-ipv4-ping-lan" id="at-ipv4-ping-lan" hidden />
+                                    <label for="at-ipv4-ping-lan" id="lb-at-ipv4-ping-lan" class="skcheckbox-label">
+                                    </label>
+                                </label>
+                            </div>
+                        </th>
+                        <th scope="col">
+                        <th class="acl_wan" scope="col">
+                            <div class="skform-group" style="margin-bottom: 0px;">
+                                <label class="skcheckbox skcheckbox-form">
+                                    <input type="checkbox" name="at-ipv4-ping-wan" id="at-ipv4-ping-wan" hidden />
+                                    <label for="at-ipv4-ping-wan" id="lb-at-ipv4-ping-wan" class="skcheckbox-label">
+                                    </label>
+                                </label>
+                            </div>
+                        </th>
+                        <th class="acl_wan" scope="col">
+                        </th>
+                    </tr>
+                    <tr style="display:none;">
+                        <th style="display:none;">Telnet</th>
+                        <th scope="col">
+                            <div class="skform-group" style="margin-bottom: 0px;">
+                                <label class="skcheckbox skcheckbox-form">
+                                    <input type="checkbox" name="at-ipv4-telnet-lan" id="at-ipv4-telnet-lan" hidden />
+                                    <label for="at-ipv4-telnet-lan" id="lb-at-ipv4-telnet-lan" class="skcheckbox-label">
+                                    </label>
+                                </label>
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="skform-group" style="margin-bottom: 0px;">
+                                <input type="text" class="skform-control" id="at-lan-ipv4-telnet-port"
+                                    name="at-lan-ipv4-telnet-port" style="margin-left: 0px;" />
+                            </div>
+                        </th>
+                        <th class="acl_wan" scope="col">
+                            <div class="skform-group" style="margin-bottom: 0px;">
+                                <label class="skcheckbox skcheckbox-form">
+                                    <input type="checkbox" name="at-ipv4-telnet-wan" id="at-ipv4-telnet-wan" hidden />
+                                    <label for="at-ipv4-telnet-wan" id="lb-at-ipv4-telnet-wan" class="skcheckbox-label">
+                                    </label>
+                                </label>
+                            </div>
+                        </th>
+                        <th class="acl_wan" scope="col">
+                            <div class="skform-group" style="margin-bottom: 0px;">
+                                <input type="text" class="skform-control" id="at-ipv4-telnet-port"
+                                    name="at-ipv4-telnet-port" style="margin-left: 0px;" />
+                            </div>
+                        </th>
+                    </tr>
+                    <tr style="display:none;">
+                        <th>SSH</th>
+                        <th scope="col">
+                            <div class="skform-group" style="margin-bottom: 0px;">
+                                <label class="skcheckbox skcheckbox-form">
+                                    <input type="checkbox" name="at-ipv4-ssh-lan" id="at-ipv4-ssh-lan" hidden />
+                                    <label for="at-ipv4-ssh-lan" id="lb-at-ipv4-ssh-lan" class="skcheckbox-label">
+                                    </label>
+                                </label>
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="skform-group" style="margin-bottom: 0px;">
+                                <input type="text" class="skform-control" id="at-lan-ipv4-ssh-port"
+                                    name="at-lan-ipv4-ssh-port" style="margin-left: 0px;" />
+                            </div>
+                        </th>
+                        <th class="acl_wan" scope="col">
+                            <div class="skform-group" style="margin-bottom: 0px;">
+                                <label class="skcheckbox skcheckbox-form">
+                                    <input type="checkbox" name="at-ipv4-ssh-wan" id="at-ipv4-ssh-wan" hidden />
+                                    <label for="at-ipv4-ssh-wan" id="lb-at-ipv4-ssh-wan" class="skcheckbox-label">
+                                    </label>
+                                </label>
+                            </div>
+                        </th>
+                        <th class="acl_wan" scope="col">
+                            <div class="skform-group" style="margin-bottom: 0px;">
+                                <input type="text" class="skform-control" id="at-ipv4-ssh-port"
+                                    name="at-ipv4-ssh-port" style="margin-left: 0px;" />
+                            </div>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>FTP</th>
+                        <th scope="col">
+                            <div class="skform-group" style="margin-bottom: 0px;">
+                                <label class="skcheckbox skcheckbox-form">
+                                    <input type="checkbox" name="at-ipv4-ftp-lan" id="at-ipv4-ftp-lan" hidden />
+                                    <label for="at-ipv4-ftp-lan" id="lb-at-ipv4-ftp-lan" class="skcheckbox-label">
+                                    </label>
+                                </label>
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="skform-group" style="margin-bottom: 0px;">
+                                <input type="text" class="skform-control" id="at-lan-ipv4-ftp-port"
+                                    name="at-lan-ipv4-ftp-port" style="margin-left: 0px;" />
+                            </div>
+                        </th>
+                        <th class="acl_wan" scope="col">
+                            <div class="skform-group" style="margin-bottom: 0px;">
+                                <label class="skcheckbox skcheckbox-form">
+                                    <input type="checkbox" name="at-ipv4-ftp-wan" id="at-ipv4-ftp-wan" hidden />
+                                    <label for="at-ipv4-ftp-wan" id="lb-at-ipv4-ftp-wan" class="skcheckbox-label">
+                                    </label>
+                                </label>
+                            </div>
+                        </th>
+                        <th class="acl_wan" scope="col">
+                            <div class="skform-group" style="margin-bottom: 0px;">
+                                <input type="text" class="skform-control" id="at-ipv4-ftp-port"
+                                    name="at-ipv4-ftp-port" style="margin-left: 0px;" />
+                            </div>
+                        </th>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="sk-form-submit">
+            <button class="btn-apply" id="aclIpv6Save_btn" type="button" onclick="aclBtnApply('ipv4')">{{Save}} & {{Apply}}</button>
+        </div>
+    </div>
+</div>

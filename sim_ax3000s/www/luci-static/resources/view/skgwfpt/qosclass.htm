@@ -1,0 +1,245 @@
+<div class="page-content">
+    <p class="sk-warning-info">
+        {{Qos_value_description}}
+    </p>
+<div class="modset" style="display: none;">
+	<title>QoS-Edit</title>
+	<p></p>
+	<div id = 'AppTable'></div>
+	<table width="100%" border="0">  
+	<tr>
+	<td width="92">
+		<input type="hidden" name="Wanvalue" value="">
+		<input type="hidden" name="Lanvalue" value="">
+		<input type="hidden" name="DSCPRangevalue" value=""> 
+		<input type="hidden" name="Dotpvalue" value="">
+		<input type="hidden" name="SIPRangevalue" value="">
+		<input type="hidden" name="DIPRangevalue" value="">
+		<input type="hidden" name="SPORTvalue" value="">
+		<input type="hidden" name="DPORTvalue" value="">
+		<input type="hidden" name="TOSvalue" value="">
+		<input type="hidden" name="SMACvalue" value="">
+		<input type="hidden" name="DMACvalue" value="">
+
+		<input type="hidden" name="TypeDelFlag0" value="No">
+		<input type="hidden" name="TypeDelFlag1" value="No">
+		<input type="hidden" name="TypeDelFlag2" value="No">
+		<input type="hidden" name="TypeDelFlag3" value="No">
+		<input type="hidden" name="TypeDelFlag4" value="No">
+		<input type="hidden" name="TypeDelFlag5" value="No">
+		<input type="hidden" name="TypeDelFlag6" value="No">
+		<input type="hidden" name="TypeDelFlag7" value="No">
+		<input type="hidden" name="TypeDelFlag8" value="No">
+		<input type="hidden" name="TypeDelFlag9" value="No">
+		<input type="hidden" name="DelNULLFlag" value="N/A">
+		<input type="hidden" name="TypeRuleFlag" value="typeRule">
+		<input type="hidden" name="AppRuleFlag" value="appRule">
+		<input type="hidden" name="TypeModifyID" value="-1"></td>
+	</tr>
+	</table>
+</div>
+<div class="modset">
+	<div id = 'ClsTable'></div>
+	<table width="100%" border="0">
+	<tr>
+	<td width="92">
+		<input type="hidden" name="QoS_Flag" value="-1">
+		<input type="hidden" name="Del_Flag" value="0">
+		<input type="hidden" name="curAppIdx" value="">
+		<input type="hidden" name="curSubTypeIdx" value="">
+		<input type="hidden" name="curTypeIdx" value="">
+		<input type="hidden" name="App_Flag" value="Yes">
+		<input type="hidden" name="DiscplineFlag" value="">
+		<input type="hidden" name="LanFlag0" value="No">
+		<input type="hidden" name="LanFlag1" value="No">
+		<input type="hidden" name="LanFlag2" value="No">
+		<input type="hidden" name="LanFlag3" value="No">
+		<input type="hidden" name="LanFlag4" value="No">
+		<input type="hidden" name="LanFlag5" value="No">
+		<input type="hidden" name="LanFlag6" value="No">
+		<input type="hidden" name="LanFlag7" value="No">
+		<input type="hidden" name="WanFlag0" value="No">
+		<input type="hidden" name="WanFlag1" value="No">
+		<input type="hidden" name="WanFlag2" value="No">
+		<input type="hidden" name="WanFlag3" value="No">
+		<input type="hidden" name="WanFlag4" value="No">
+		<input type="hidden" name="WanFlag5" value="No">
+		<input type="hidden" name="WanFlag6" value="No">
+		<input type="hidden" name="WanFlag7" value="No"> 
+		<script language="JavaScript" type="text/JavaScript">
+		</script>
+		&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	</td>
+	</tr>
+	</table>
+</div>
+<div class="modset">
+	<div id = 'ClsTypeTable'></div>
+	<div id="AddBtn">
+	<table width="100%" border="0">
+	<tr>
+	</tr>
+	</table>
+	</div>
+	<td width="10">&nbsp;</td>
+	</tr>
+	<tr>
+	<td width="10">&nbsp;</td>
+	<td>
+	<table border="0" class="tblList" >
+	</table>
+	<div id="Cls">
+	<div id="AppEdit">
+ 	<table  width="100%" border="0">
+	<tr>
+	<td width="30%" height="30">{{Appname_Is}}</td>
+	<td colspan="6">
+	<select size="1" id="AppName" name="AppName" onChange="QoSChangeAppName()" style="width:160px;height:25px">
+		<option value="TR069" >TR069</option>
+		<option value="VOIP" >VOIP</option>
+		<option value="" ></option>
+	</select>
+	<input type="hidden" name="AppDelNo10" value="No">
+	<input type="hidden" name="AppDelNo11" value="No">
+	<input type="hidden" name="AppDelNo12" value="No">
+	<input type="hidden" name="AppDelNo13" value="No">
+	<input type="hidden" name="ClsDelNo0" value="No">
+	<input type="hidden" name="ClsDelNo1" value="No">
+	<input type="hidden" name="ClsDelNo2" value="No">
+	<input type="hidden" name="ClsDelNo3" value="No">
+	<input type="hidden" name="ClsDelNo4" value="No">
+	<input type="hidden" name="ClsDelNo5" value="No">
+	<input type="hidden" name="ClsDelNo6" value="No">
+	<input type="hidden" name="ClsDelNo7" value="No">
+	<input type="hidden" name="ClsDelNo8" value="No">
+	<input type="hidden" name="ClsDelNo9" value="No">
+	</td>
+	</tr>
+	</table>
+	<table id = 'CarQueue' width="100%" border="0">  <tr>
+	<td width="30%">{{Class_Queue_Is}}</td>
+	<td colspan="6" style="width:150px;height:25px">
+	<select size="1" id="ClassQueue" name="ClassQueue" style="width:160px;height:25px">
+	<option value="1">1</option>
+	<option value="2">2</option>
+	<option value="3">3</option>
+	<option value="4">4</option>
+	</select>
+	<input type="hidden" name="AppQueueFlag" value="1"> </td>
+	</tr>
+	</table>
+	<table width="100%" border="0">
+	<tr>
+	<td width="92">
+	<input name="AddConfirm" type="button" id="AddConfirm" onClick="QoSAppSubmit()" value={{Submit}}>      </td>
+	</tr>
+	</table>
+	</div>
+	<div id="ClsEdit">
+	<table id = 'CarQueue1' width="100%" border="0">  
+	<tr>
+	<td width="30%">{{Class_Queue_Is}}</td>
+	<td  colspan="6">
+	<select size="1" id="ClassQueue" name="ClassQueue" style="width:160px;height:25px">
+	<option value="1" selected>1</option>
+	<option value="2">2</option>
+	<option value="3">3</option>
+	<option value="4">4</option>
+	</select>
+		<input type="hidden" name="ClsQueueValueFlag" value="1"> </td>
+	</tr>
+	</table>
+	<table width="100%" border="0">  
+	<tr>
+	<td width="30%">{{Value_DSCPTC_Is}}</td>
+	<td colspan="6"><input name="DSCPMarkValue" type="text" id="DSCPMarkValue" value="0" size="10" maxlength="8" style="width:150px;height:20px"> </td>
+	</tr>
+	</table>
+	<table width="100%" border="0">  
+	<tr>
+	<td width="30%">{{Value_8021P_Is}}</td>
+	<td colspan="6"><input name="v8021pValue" type="text" id="v8021pValue" value="0" size="10" maxlength="8" style="width:150px;height:20px"> </td>
+	</tr>
+	</table>
+	<table width="100%" border="0">
+	<tr>
+	<td width="92">
+	<input name="AddConfirm" type="button" id="AddConfirm" onClick="QoSClsSubmit()" value={{Submit}}>      </td>
+	</tr>
+	</table>
+	</div>
+	<div id="ClsTypeEdit">
+	<table width="100%" border="0">  
+	<tr>
+	<td width="30%">{{Class_Type_Is}}</td>
+	<td colspan="6">
+	<select size="1" id="Type" name="Type" onChange="QoSChangeClassType()" style="width:160px;height:25px">
+	<option value="NullType"></option>
+	<option value="SMAC">SMAC</option>
+	<option value="DMAC">DMAC</option>
+	<option value="8021P">8021P</option>
+	<option value="SIP">SIP</option>
+	<option value="DIP">DIP</option>
+	<option value="SPORT">SPORT</option>
+	<option value="DPORT">DPORT</option>
+	<option value="DSCP">DSCP/TC</option>
+	<option value="TOS">TOS</option>
+	<option value="WANInterface">WANInterface</option>
+	<option value="LANInterface">LANInterface</option>
+	<option value="EtherType">EtherType</option>
+	</select>
+	</td>
+	</tr>
+	</table>
+	<div id="wan">        </div>
+	<div id="lan">        </div>
+	<div id="TypeTos">        </div>
+	<div id="ethertype"> </div>
+	<div id="TypeCommon">
+	<table width="100%" border="0">
+	<tr><td width="30%">{{Min_Is}}</td>
+	<TD colspan="6"><INPUT id="Min" maxLength="40" value="" size="10" name="Min" style="width:150px;height:20px"></TD>
+	</tr>
+	</table>
+	<table width="100%" border="0">  
+	<tr>
+	<td width="30%">{{Max_Is}}</td>
+	<TD colspan="6"><INPUT id="Max" maxLength="40" value="" size="10" name="Max" style="width:150px;height:20px"></TD>
+	</tr>
+	</table>
+	</div>
+	<table width="104%" border="0">  
+	<tr>
+	<td width="30%">{{Protocol_Type_Is}}</td>
+	<td colspan="6">
+	<select size="1" id="ProtocolList" name="ProtocolList" onClick="QoSChangeProtocolList()" style="width:160px;height:25px">
+	<option value="TCP" >TCP</option>
+	<option value="UDP" >UDP</option>
+	<option value="TCP,UDP" >TCP,UDP</option>
+	<option value="ICMP" >ICMP</option>
+	<option value="ICMPv6" >ICMPv6</option>
+	<option value="ALL" >ALL</option>
+	</select>	</td>
+	</tr>
+	</table>
+	<table width="100%" border="0">
+	<tr>
+	<td width="92">
+	<input name="AddConfirm" type="button" id="AddConfirm" onClick="QoSTypeSubmit()" value={{Submit}}></td>
+	</tr>
+	</table>
+	</div>
+	</div>
+</div>
+<div class="modset">
+	<table width="100%" border="0">
+	<tr>
+	<td >
+	<input name="ReturnQoS" type="button" id="ReturnQoS" onClick="btnReturnQoS()" value={{Return_Queue_Edit_Page}}></td>
+	</tr>
+	</table>
+	<td width="10">&nbsp;</td>
+	</tr>
+
+</div>
+</div>

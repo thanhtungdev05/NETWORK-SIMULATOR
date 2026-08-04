@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en" data-darkmode="false">
+<head>
+	<meta charset="utf-8">
+	<title>F6201B</title>
+	<meta name="viewport" content="initial-scale=1.0">
+	<link rel="stylesheet" href="/luci-static/bootstrap/cascade.css">
+	<link rel="stylesheet" media="only screen and (max-device-width: 854px)" href="/luci-static/bootstrap/mobile.css">
+	<link rel="icon" href="/luci-static/bootstrap/favicon.ico" sizes="48x48">
+</head>
+<body class="lang_en">
+	<!-- Cau truc lay DUNG tu trang login that (F6201B/LuCI), do truc tiep tren
+	     thiet bi 22/7/2026:
+	       #page_container (960px, site_holder.gif, can giua)
+	         #page_header  -> chua logo FPT (float trai)
+	         #page_content (text-align:center) -> #loginWrapper can giua,
+	                        .loginTitle thua huong center nen chu tieu de nam
+	                        GIUA, khong bi icon khoa de len (loi truoc do). -->
+	<div id="page_container">
+		<div id="page_header" style="height:94px">
+			<div class="logo_fpt"></div>
+		</div>
+		<div id="page_content">
+			<div id="loginWrapper">
+				<div class="emFont loginTitle">Welcome to F6201B. Please login.</div>
+				<form id="login-form" class="cbi-map loginContainer">
+					<div class="cbi-section">
+						<div class="cbi-section-node">
+							<div class="cbi-value">
+								<label class="cbi-value-title">Username</label>
+								<div class="cbi-value-field">
+									<input class="cbi-input-text" id="luci_username" name="luci_username" type="text" autocomplete="username">
+								</div>
+							</div>
+							<div class="cbi-value">
+								<label class="cbi-value-title">Password</label>
+								<div class="cbi-value-field">
+									<input class="cbi-input-password" id="luci_password" name="luci_password" type="password" autocomplete="current-password">
+								</div>
+							</div>
+						</div>
+					</div>
+				</form>
+				<div id="loginBtn">
+					<button id="login-button" class="btn button login" type="button">Log in</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script>
+	/* Ban gia lap: chi can user va pass KHONG rong la vao trang chu. */
+	(function () {
+		function dangNhap() {
+			var u = document.getElementById('luci_username').value.trim();
+			var p = document.getElementById('luci_password').value.trim();
+			if (!u || !p) { alert('Please enter username and password.'); return; }
+			location.href = '/cgi-bin/luci/admin/home';
+		}
+		document.getElementById('login-button').addEventListener('click', dangNhap);
+		['luci_username', 'luci_password'].forEach(function (id) {
+			document.getElementById(id).addEventListener('keydown', function (e) {
+				if (e.key === 'Enter') { e.preventDefault(); dangNhap(); }
+			});
+		});
+		document.getElementById('luci_username').focus();
+	})();
+	</script>
+</body>
+</html>

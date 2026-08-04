@@ -1,0 +1,33 @@
+<div class="page-content">
+    <p class="sk-warning-info">
+        {{Firewall_Schedule_Note}}<br>
+    </p>
+    <p class="skpage-title">{{Schedule_Table_for_Parental_Control}}</p>
+    <div class="modset">
+        <div class="table-list">
+            <div class="table-list-head">
+                <button class="btn btn-add" type="button" id="Btn_Add" onclick="BtnClick_SchedulerAdd()">{{Add}}</button>
+                <button class="btn btn-del" type="button" id="Btn_Remove" onclick="BtnClick_SchedulerRemoveApply(this.rml)">{{Delete}}</button>
+            </div>
+            <table id="Tbl_Scheduler" style="margin-bottom: 20px;" >
+                <thead>
+                    <tr>
+                        <th>
+                            <label class="skcheckbox">
+                                <input type="checkbox" name="schedule_seletall" id="schedule_seletall" onClick='schedule_selectAll(this)' hidden/>
+                                <label for="schedule_seletall" class="skcheckbox-label">
+                                </label>
+                            </label>
+                        </th>
+                        <th>{{Schedule_Name}}</th>
+                        <th>{{Repeat_Period}}</th>
+                        <th>{{Start_Time}}</th>
+                        <th>{{End_Time}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

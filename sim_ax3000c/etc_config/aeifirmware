@@ -1,0 +1,8 @@
+config history 'swver'
+    option max_entries '20'
+
+config history 'reboot'
+    option max_entries '20'
+
+config app 'ssh'
+    option DisableOnBoot '0'

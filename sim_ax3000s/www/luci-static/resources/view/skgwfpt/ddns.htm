@@ -1,0 +1,37 @@
+
+<div class="page-content">
+<p class="sk-warning-info">
+	{{DDNS_Note}}
+</p>
+<p class="skpage-title">{{DDNS_Config}}</p>
+<div class="modset">
+
+	<div class="table-list" style="margin-bottom: 20px;">
+		<div class="table-list-head">
+			<button id="ddns_add_btn" class="btn btn-add" type="button" onclick="ddns_addList()">{{DDNS_AddText}}</button>
+			<button id="ddns_del_btn" class="btn btn-del" type="button" onclick="ddns_removeClick()">{{DDNS_DeleteText}}</button>
+		</div>
+		<table>
+			<thead>
+				<tr>
+					<th>
+						<label class="skcheckbox">
+							<input type="checkbox" name="seletall" id="ddns_seletAll" onClick='ddns_selectAll(this)' hidden/>
+							<label for="ddns_seletAll" class="skcheckbox-label">
+							</label>
+						</label>
+					</th>
+					<th>{{DDNS_Name}}</th>
+					<th>{{DDNS_Service}}</th>
+					<th>{{DDNS_Hostname}}</th>
+					<th>{{DDNS_IF}}</th>
+					<th>{{DDNS_Status}}</th>
+					<th>{{DDNS_Enable}}</th>
+				</tr>
+			</thead>
+			<tbody id="ddns_Body">
+			</tbody>
+		</table>
+	</div>
+</div>
+

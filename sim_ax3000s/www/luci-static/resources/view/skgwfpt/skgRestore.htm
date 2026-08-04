@@ -1,0 +1,46 @@
+<div class="page-content">
+	<div id="conftab">
+	<p class="sk-warning-info">
+		{{restoreWaringHeaderText}}
+	</p>
+	<p class="skpage-title" style="margin: 10px 24px 0px;">{{downConfigFileTitle}}</p>
+	<div class="modset">
+		<div class="sk-form-submit" style="margin-top: 15px; margin-bottom: 25px;">
+			<button class="btn-apply" type="button" name="download" id="download" onclick="myDownloadConfigFile();">
+				{{backConfigFileTitle}}</button>
+		</div>
+	</div>
+	<p class="sk-warning-info" style="margin: 35px 24px 0px;">
+		{{noteText}}<br />
+		{{noteFirstText}}<br />
+		{{noteSecondText}}<br />
+	</p>
+	<p class="skpage-title" style="margin: 10px 24px 0px;">{{upgradeConfigFileText}}</p>
+	<div class="modset">
+		<div class="skform-group">
+			<label class="skform-tittle" id="Fnt_Enable" for="Frm_Enable">{{selectFileText}}</label>
+			<div id="ftable" class="skform-content" style="margin-left:0px;">
+				<input name="ConfigUpload" type="file" id="ConfigUpload" style="width:5px; display:none;"
+					onchange="filepath.value=this.value">
+				<input type="textfield" id="filepath">
+				<input class="sk-btn-small" type="button" id="filebutton" value="Browse" onclick="ConfigUpload.click()">
+			</div>
+		</div>
+		<div class="sk-form-submit">
+			<input class="btn-apply" type="button" name="upload" id="upload" value="Load Configure File"
+				onclick="myUploadConfigFile();">
+		</div>
+	</div>
+	</div>
+
+	<p class="sk-warning-info" style="margin: 35px 24px 0px;">
+		{{defaultWaringHeaderText}}
+	</p>
+	<p class="skpage-title" style="margin: 10px 24px 0px;">{{restoreDefaultText}}</p>
+	<div class="modset">
+		<div class="sk-form-submit" style="margin-top: 15px; margin-bottom: 25px;">
+			<button name="Submit3" id="Submit3" style="letter-spacing: 2px;" class="btn-apply"
+				onclick="DevRestoreRemoteSubmit();">{{defaultBtnText}}</button>
+		</div>
+	</div>
+</div>

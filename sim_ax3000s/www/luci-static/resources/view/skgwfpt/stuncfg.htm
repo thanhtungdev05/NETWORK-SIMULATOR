@@ -1,0 +1,61 @@
+<p class="sk-warning-info">
+    {{stuncfg_InfoAllText}}
+</p>
+    <p class="skpage-title">{{stuncfg_ClientCFG}}</p>
+    
+    <div class="modset">
+        <div class="skform-group">
+            <label class="skform-tittle" for="enable">{{stuncfg_STUNEnable}}:</label>
+            <div class="skform-content">
+                <ul>
+                    <li>
+                        <label class="skradio">
+                            <input type="radio" name="enable" id="enable1"  hidden/>
+                            <label for="enable1" id="stun_disable" class="skradio-label">
+                            </label>
+                        </label>
+                        <label class="skradio-text" for="enable1">{{stuncfg_Disable}}</label>
+                    </li>
+                    <li>
+                        <label class="skradio">
+                            <input type="radio" name="enable" id="enable2" hidden/>
+                            <label for="enable2" id="stun_enable" class="skradio-label">
+                            </label>
+                        </label>
+                        <label class="skradio-text" for="enable2">{{stuncfg_Enable}}</label>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="skform-group">
+            <label class="skform-tittle" for="stunServerAddress">{{stuncfg_ServerAddr}}:</label>
+            <input type="text" class="skform-control" id="stunServerAddress" name="stunServerAddress"/>
+        </div>
+        <div class="skform-group">
+            <label class="skform-tittle" for="stunServerPort">{{stuncfg_ServerPort}}:</label>
+            <input type="text" class="skform-control" id="stunServerPort" name="stunServerPort"/>
+        </div>
+        <div class="skform-group">
+            <label class="skform-tittle" for="stunUser">{{stuncfg_Username}}:</label>
+            <input type="text" class="skform-control" id="stunUser" name="stunUser"/>
+        </div>
+        <div class="skform-group">
+            <label class="skform-tittle" for="stunPwd">{{stuncfg_Password}}:</label>
+            <input type="password" class="skform-control" name="stunPwd" id="stunPwd" maxlength="63"/>
+            <span class="bi bi-eye-slash-fill bi-password"></span>
+        </div>
+        
+        <div class="skform-group">
+            <label class="skform-tittle" for="stunMaxKeepAlivePeriod">{{stuncfg_MaxKeepAlive}}:</label>
+            <input type="text" class="skform-control" id="stunMaxKeepAlivePeriod" name="stunMaxKeepAlivePeriod"/>
+        </div>
+        <div class="skform-group">
+            <label class="skform-tittle" for="stunMinKeepAlivePeriod">{{stuncfg_MinKeepAlive}}:</label>
+            <input type="text" class="skform-control" id="stunMinKeepAlivePeriod" name="stunMinKeepAlivePeriod"/>
+        </div>
+        
+        <div class="sk-form-submit">
+              <input class="btn-apply" id="stun_save" type='button' onClick='btnApply()' value='{{stuncfg_SaveAndApplyText}}'>
+        </div>
+    </div>

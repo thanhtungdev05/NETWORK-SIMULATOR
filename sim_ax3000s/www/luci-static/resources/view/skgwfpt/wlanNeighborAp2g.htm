@@ -1,0 +1,43 @@
+<div class="page-content">
+    <p class="sk-warning-info">
+        {{wlanNeighborAp2g_tips}}
+    </p>
+    <p class="skpage-title">{{wlanNeighborAp2g_info}}</p>
+    <div class="modset">
+        <div class="skform-group">
+            <input class="sk-btn-small" type="button" value="Scan" onclick="BntClick_ScanNeighbor();"><span style="margin-left:12px;">{{wlanNeighborAp2g_text}}</span>
+        </div>
+        <div class="table-list" id="resulttb" style="display:none;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>
+                            {{wlanNeighborAp2g_ssid}}
+                        </th>
+                        <th>
+                            {{wlanNeighborAp2g_addr}}
+                        </th>
+                        <th>
+                            {{wlanNeighborAp2g_channel}}
+                        </th>
+                        <th>
+                            {{wlanNeighborAp2g_sec}}
+                        </th>
+                        <th>
+                            {{wlanNeighborAp2g_Encryption}}
+                        </th>
+                        <!--th>
+                            {{wlanNeighborAp2g_bw}}
+                        </th-->
+                        <th>
+                            {{wlanNeighborAp2g_rssi}}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="NeighborTbody">
+                    
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

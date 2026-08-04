@@ -1,0 +1,80 @@
+
+<div class="page-content">
+	<p class="sk-warning-info">{{HIDEPAGE_Note}}</p>
+
+	<!--<p class="skpage-title">{{SSH_Configuration}}</p>!-->
+	<div class="modset"  style="display:none;">
+
+		<div class="skform-group">
+			<label class="skform-tittle">{{ssh_enable}}</label>
+			<label class="skcheckbox skcheckbox-form">
+				<input type="checkbox" name="ssh_enable" id="ssh_enable" onClick="ssh_click(this)" hidden/>
+				<label for="ssh_enable" class="skcheckbox-label">
+				</label>
+			</label>
+		</div>
+
+		<div id='sshCfgTab' style="display:none;">
+			<div class="skform-group">
+				<label class="skform-tittle" for="userName">{{sshcfg_usrName}}:</label>
+				<input type="text" class="skform-control" id="ssh_username" name="ssh_username" size="30" maxszie='64' />
+			</div>
+			<div class="skform-group">
+				<label class="skform-tittle" for="uPsd">{{sshcfg_password}}:</label>
+				<input type="password" class="skform-control" id="ssh_upsd" name="ssh_upsd" size="30" maxszie='64' />
+				<span class="bi bi-eye-slash-fill bi-password"></span>
+			</div>
+		</div>
+
+		<div class="sk-form-submit">
+			<button class="btn-apply" type="button" name="ssh_button_apply" id="ssh_button_apply" onclick="ssh_apply()">{{Save & Apply}}</button>
+		</div>
+
+	</div>
+
+	<!--<p class="skpage-title">{{Telnet_Configuration}}</p>!-->
+	<div class="modset" style="display:none;">
+		<div class="skform-group">
+			<label class="skform-tittle">{{telnet_enable}}</label>
+			<label class="skcheckbox skcheckbox-form">
+				<input type="checkbox" name="telnet_enable" id="telnet_enable" onClick="telnet_click(this)" hidden/>
+				<label for="telnet_enable" class="skcheckbox-label">
+				</label>
+			</label>
+		</div>
+
+		<div id='telnetCfgTab' style="display:none;">
+			<div class="skform-group">
+				<label class="skform-tittle" for="userName">{{telnetcfg_usrname}}:</label>
+				<input type="text" class="skform-control" id="telnet_username" name="telnet_username" size="30" maxszie='64' />
+			</div>
+			<div class="skform-group">
+				<label class="skform-tittle" for="uPsd">{{telnetcfg_password}}:</label>
+				<input type="password" class="skform-control" id="telnet_upsd" name="telnet_upsd" size="30" maxszie='64' />
+				<span class="bi bi-eye-slash-fill bi-password"></span>
+			</div>
+		</div>
+
+		<div class="sk-form-submit">
+			<button class="btn-apply" type="button" name="telnet_button_apply" id="telnet_button_apply" onclick="telnet_apply()">{{Save & Apply}}</button>
+		</div>
+	</div>
+	
+	<p class="skpage-title">PSQ Configuration</p>
+	<div class="modset">
+		<div class="skform-group">
+			<label class="skform-tittle">Enable PSQLimit</label>
+			<select class="skform-control" name="Sel_PSQLimit" id="Sel_PSQLimit" style="width:100px;height:22px" onClick='SelChange_PSQLimit(this)'>
+	        </select>
+			<label class="skcheckbox skcheckbox-form" style="margin-left:5%">
+				<input type="checkbox" name="psqlimit_enable" id="psqlimit_enable" hidden/>
+				<label for="psqlimit_enable" class="skcheckbox-label">
+				</label>
+			</label>
+		</div>
+
+		<div class="sk-form-submit">
+			<button class="btn-apply" type="button" name="psq_apply" id="psq_apply" onclick="psq_apply()">{{Save & Apply}}</button>
+		</div>
+	</div>
+</div>

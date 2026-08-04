@@ -1,0 +1,196 @@
+<div class="page-content">
+    <p class="sk-warning-info">
+        {{Qos_Config_Note}}<br />
+        {{Qos_UplinkBand_Desc}}<br />
+    </p>
+    <p class="skpage-title"></p>
+    <div class="modset">
+        <div class="skform-group" style="display:none;">
+			<label class="skform-tittle" for="dosprotect">{{Rule_Template}}</label>
+			<select id="QosMode" onChange="QoSChangeMode()" size=1 name="QosMode" class="skform-control">
+				   <option value="OTHER">{{OTHER}}</option>
+			</select>
+			<input type="hidden" name="QoS_Flag" value="0">
+        </div>
+
+        <div class="skform-group">
+            <label class="skform-tittle" for="QosEnable">{{Qos_Enable}}</label>
+            <label class="skcheckbox skcheckbox-form">
+                <input type="checkbox" name="QosEnable" id="QosEnable" onclick="QoSEnableChange()" hidden />
+                <label for="QosEnable" id="Lb_QosEnable" class="skcheckbox-label">
+                </label>
+            </label>
+        </div>
+
+	<DIV id=QOSGlobe>
+        <div class="skform-group">
+            <label class="skform-tittle" for="QosUpBandwidth">{{Uplink_Bandwidth_Is}}</label>
+			<input type="text" class="skform-control" id="QosUpBandwidth" name="QosUpBandwidth" maxlength=10 size=16 value="" />
+			<label class="skform-text" for="QosUpBandwidth">{{UplinkBandwidth_Range}}</label>
+        </div>
+
+        <div class="skform-group">
+			<label class="skform-tittle" for="QosPlan">{{Scheduling_Strategy}}</label>
+			<div class="skform-content">
+				<ul>
+					<li>
+						<label class="skradio">
+							<input type="radio" name="QosPlan" id="QosPlanPQ" onclick="QosPlanChange()" hidden />
+							<label for="QosPlanPQ" class="skradio-label">
+							</label>
+						</label>
+						<label class="skradio-text" for="QosPlanPQ">{{PQ}}</label>
+					</li>
+					<li>
+						<label class="skradio">
+							<input type="radio" name="QosPlan" id="QosPlanWRR" onclick="QosPlanChange()" hidden />
+							<label for="QosPlanWRR" class="skradio-label">
+							</label>
+						</label>
+						<label class="skradio-text" for="QosPlanWRR">{{WRR}}</label>
+					</li>
+				</ul>
+			</div>
+        </div>
+
+        <div class="skform-group">
+            <label class="skform-tittle" for="QosEnableDSCPMark">{{Mark_DscpTc_Enable}}</label>
+            <label class="skcheckbox skcheckbox-form">
+                <input type="checkbox" name="QosEnableDSCPMark" id="QosEnableDSCPMark" hidden />
+                <label for="QosEnableDSCPMark" class="skcheckbox-label">
+                </label>
+            </label>
+        </div>
+
+        <div class="skform-group">
+			<label class="skform-tittle" for="QosEnable8021P">{{Mark_8021P_Enable}}</label>
+			<select id="QosEnable8021P" onChange="QoSChange8021P()" size=1 name="QosEnable8021P" class="skform-control">
+				   <option value="0">{{Zero_Mark}}</option>
+				   <option value="1">{{Pass_Through}}</option>
+				   <option value="2">{{Remark}}</option>
+			 </select>
+        </div>
+	</DIV>
+
+        <div class="skform-group">
+		<div id=QueueEdit>
+			<div id=PQEdit>
+				<TABLE class="tblList" border=1>
+				<TBODY>
+				<THEAD><TR>
+					<TH class=table_title align=middle width=100>{{Queue}}</TH>
+					<TH class=table_title align=middle>{{Enable}}</TH>
+                    <TH class=table_title align=middle>{{Priority}}</TH>
+				</TR></THEAD>
+				<TR>
+					<TD align=middle>Q1</TD>
+					<TD align=middle><INPUT id=Q1Enable name=Q1Enable type=checkbox value="0" ></TD>
+					<TD align=middle>{{Priority_Highest}}</TD>
+				</TR>
+				<TR>
+					<TD align=middle>Q2</TD>
+					<TD align=middle><INPUT id=Q2Enable name=Q2Enable type=checkbox value=0 ></TD>
+					<TD align=middle>{{Priority_High}}</TD>
+				</TR>
+				<TR>
+					<TD align=middle>Q3</TD>
+					<TD align=middle><INPUT id=Q3Enable name=Q3Enable type=checkbox value=0 ></TD>
+					<TD align=middle>{{Priority_Medium}}</TD>
+				</TR>
+				<TR>
+					<TD align=middle>Q4</TD>
+					<TD align=middle><INPUT id=Q4Enable name=Q4Enable type=checkbox value=0 ></TD>
+					<TD align=middle>{{Priority_Low}}</TD>
+				</TR>
+				</TBODY>
+				</TABLE>
+			</div>
+			<div id=WRREdit style="display:none;">
+				<TABLE class="tblList" border=1>
+				<TBODY>
+				<THEAD><TR>
+					<TH class=table_title align=middle width=100>{{Queue}}</TH>
+					<TH class=table_title align=middle>{{Enable}}</TH>
+					<TH class=table_title align=middle>{{Weight}}</TH>
+				</TR></THEAD>
+				<TR>
+					<TD align=middle>Q1</TD>
+					<TD align=middle><INPUT id=Q5Enable type=checkbox value=0 ></TD>
+					<TD align=middle><INPUT id=Q1Weight name="Q1Weight" size=3 value=""></TD>
+				</TR>
+				<TR>
+					<TD align=middle>Q2</TD>
+					<TD align=middle><INPUT id=Q6Enable type=checkbox value=0 ></TD>
+					<TD align=middle><INPUT id=Q2Weight name="Q2Weight" size=3 value="">
+				</TR>
+				<TR>
+					<TD align=middle>Q3</TD>
+					<TD align=middle><INPUT id=Q7Enable type=checkbox value=0 ></TD>
+					<TD align=middle><INPUT id=Q3Weight  name="Q3Weight" size=3 value="">
+				</TR>
+				<TR>
+					<TD align=middle>Q4</TD>
+					<TD align=middle><INPUT id=Q8Enable type=checkbox value=0 ></TD>
+					<TD align=middle><INPUT id=Q4Weight name="Q4Weight" size=3 value="">
+				</TR>
+				</TBODY>
+				</TABLE>
+			</div>
+			<div id=CAREdit style="display:none;">
+				<TABLE class="tblList" border=1>
+				<TBODY>
+				<THEAD><TR>
+					<TH class=table_title align=middle width=100>{{Queue}}</TH>
+					<TH class=table_title align=middle>{{Bandwidth_Unit}}</TH>
+					<TH class=table_title align=middle>{{Enable}}</TH>
+				</TR></THEAD>
+				<TR>
+					<TD align=middle>Q1</TD>
+					<TD align=middle><INPUT id=Q1Car size=3 name="Q1Car" value=""></TD>
+					<TD align=middle><INPUT id=Q9Enable type=checkbox name="Q9Enable" ></TD>
+				</TR>
+				<TR>
+					<TD align=middle>Q2</TD>
+					<TD align=middle><INPUT id=Q2Car size=3 name="Q2Car" value=""> 
+					<TD align=middle><INPUT id=Q10Enable type=checkbox name="Q10Enable" ></TD>
+				</TR>
+				<TR>
+					<TD align=middle>Q3</TD>
+					<TD align=middle><INPUT id=Q3Car size=3 name="Q3Car" value=""> 
+					<TD align=middle><INPUT id=Q11Enable type=checkbox name="Q11Enable" ></TD>
+				</TR>
+				<TR>
+					<TD align=middle>Q4</TD>
+					<TD align=middle><INPUT id=Q4Car size=3 name="Q4Car" value=""> 
+					<TD align=middle><INPUT id=Q12Enable type=checkbox name="Q12Enable" ></TD>
+				</TR>
+				<TR>
+					<TD align=middle>Q5</TD>
+					<TD align=middle><INPUT id=Q5Car size=3 name="Q5Car" value=""> 
+					<TD align=middle><INPUT id=Q13Enable type=checkbox name="Q13Enable" ></TD>
+				</TR>
+				<TR>
+					<TD align=middle>Q6</TD>
+					<TD align=middle><INPUT id=Q6Car size=3 name="Q6Car" value=""> 
+					<TD align=middle><INPUT id=Q14Enable type=checkbox name="Q14Enable" ></TD>
+				</TR>
+				</TBODY>
+				</TABLE>
+			</div>
+		</div>
+		<div id=AddBtn>
+		<TABLE width="100%" border=0>
+		<TBODY>
+		<TR>
+		  <TD ><INPUT id=AddCls name=AddCls onclick="btnJumpQosEdit()" type=button value={{Enter_Class_Edit_Page}} ></TD>
+		</TR>
+		</TBODY>
+		</TABLE>
+		</div>
+        </div>
+
+        <div class="sk-form-submit">
+                <button class="btn-apply" id="QosSave" name='apply' type="button" onclick="QosBtnSave()">{{Save & Apply}}</button>
+        </div>
+    </div>
+</div>

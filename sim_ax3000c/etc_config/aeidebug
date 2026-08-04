@@ -1,0 +1,2 @@
+config aeinet 'aeinet'
+        option max_ping_check_time '300'

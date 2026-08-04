@@ -1,0 +1,40 @@
+<div class="page-content">
+    <p class="sk-warning-info">
+        {{On this page, you can configure UPnP functions.}}<br />
+    </p>
+    <p class="skpage-title">{{UPnP Setting}}</p>
+    <div class="modset">
+        <div class="skform-group">
+            <label class="skform-tittle" for="at-upnp-enable">{{Enable UPnP}}:</label>
+            <label class="skcheckbox skcheckbox-form">
+                <input type="checkbox" name="at-upnp-enable" id="at-upnp-enable" hidden />
+                <label for="at-upnp-enable" id="upnpEnable_btn" class="skcheckbox-label">
+                </label>
+            </label>
+        </div>
+        <div class="sk-form-submit">
+            <button class="btn-apply" type="button" name="at-upnp-button-apply" id="at-upnp-button-apply"
+                onclick="upnpButtonApplyClick()">{{Save}} & {{Apply}}</button>
+        </div>
+    </div>
+    <p class="skpage-title">{{UPnP Port Mapping}}</p>
+    <div class="modset">
+        <div class="table-list" style="width: auto;">
+            <table id="at-upnp-table" style="margin-bottom: 20px;">
+                <thead>
+                    <tr>
+                        <th>{{Service Name}}</th>
+                        <th>{{External Port}}</th>
+                        <th>{{Portocol}}</th>
+                        <th>{{Internal Host}}</th>
+                        <th>{{Internal Port}}</th>
+                    </tr>
+                </thead>
+                <tbody id="at-upnp-tbody">
+                </tbody>
+                <tbody id="at-upnp-nodata-tbody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,52 @@
+<div class="page-content">
+	<p class="sk-warning-info">
+		{{lanEthInfo_StatsLanText}}
+	</p>
+	<p class="skpage-title">{{lanEthInfo_LANInfo}}</p>
+	<div class="table-list" style="margin-left:24px;margin-top: 5px;">
+		<table id = "idtable" style='width:800' cellpadding="4">
+		   <tr>
+				<td rowspan="2"  class = 'hd' style='background-color: #e6f2fb;' >{{lanEthInfo_IPAddress}}</td>
+				<td  class='hd' style='background-color: #e6f2fb;'>{{lanEthInfo_LANIPv4Address}}</td>
+				<td id="lanEthInfo_ipv4show"></td>
+		   </tr>
+		   <tr>
+				<td class='hd' style='background-color: #e6f2fb;'>{{lanEthInfo_LANIPv6Address}}</td>
+				<td id="lanEthInfo_ipv6show">fe80::1</td>
+		   </tr>
+		   <tr>
+				<td colspan="2"  class = 'hd' style='background-color: #e6f2fb;' >{{lanEthInfo_LANMACAddress}}</td>
+				<td id="lanEthInfo_lanmacshow"></td>
+		   </tr>
+		</table>
+	</div>
+	
+	<p class="skpage-title">{{lanEthInfo_StatisticsEthernet}}</p>
+	<div class="table-list" style='width:800;margin-left:24px;margin-top: 5px;' cellpadding="4">
+		<table>
+			<thead>
+				<tr>
+					<th rowspan="2">{{lanEthInfo_RoutingInterf}}</th>
+					<th rowspan="2">{{lanEthInfo_Status}}</th>
+					<th rowspan="2">{{lanEthInfo_DuplexMode}}</th>
+					<th rowspan="2">{{lanEthInfo_BitRate}}</th>
+					<th colspan="4">{{lanEthInfo_Received}}</th>
+					<th colspan="4">{{lanEthInfo_Transmitted}}</th>
+				</tr>
+				<tr>
+					<th class='hd'>{{lanEthInfo_Bytes}}</th>
+					<th class='hd'>{{lanEthInfo_Pkts}}</th>
+					<th class='hd'>{{lanEthInfo_Errs}}</th>
+					<th class='hd'>{{lanEthInfo_Drops}}</th>
+					<th class='hd'>{{lanEthInfo_Bytes}}</th>
+					<th class='hd'>{{lanEthInfo_Pkts}}</th>
+					<th class='hd'>{{lanEthInfo_Errs}}</th>
+					<th class='hd'>{{lanEthInfo_Drops}}</th>
+				</tr>
+			</thead>
+			<tbody id="lanEthInfo_Statistics">
+				
+			</tbody>
+		</table>
+	</div>
+</div>

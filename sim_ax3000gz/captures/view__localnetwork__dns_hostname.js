@@ -1,0 +1,5 @@
+'use strict';'require view';'require ui';'require rpc';'require uci';'require form';return view.extend({load:function(){uci.load('dhcp');},render:function(data){return this.renderRules(data);},renderRules:function(data){var m,s,o;m=new form.Map('dhcp',_('Host Name'));s=m.section(form.GridSection,'domain');s.addremove=true;s.anonymous=true;s.sortable=false;s.cloneable=false;const name=s.option(form.Value,'name',_('Host Name'))
+name.rmempty=false;name.datatype='and(minlength(1),maxlength(255))';name.validate=function(section_id,value){if(!value){return _('Empty field not allowed');}
+if(!value.match(/^[\x00-\x7F]+$/)){return _('Please enter only ASCII characters.');}
+return true;}
+const ip=s.option(form.Value,'ip',_('IP Address'));ip.datatype='or(ipaddr,ip6addr)';ip.rmempty=false;return m.render();},handleSave:null,handleSaveApply:null,handleSaveInst:null,handleReset:null,});

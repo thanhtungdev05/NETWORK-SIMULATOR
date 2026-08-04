@@ -1,0 +1,2765 @@
+{
+ "admin__internet__parentCtrl": [
+  {
+   "tieuDe": "Parental Controls",
+   "muc": null,
+   "tabs": [],
+   "truong": [
+    {
+     "tab": null,
+     "kieu": "ListValue",
+     "ten": "enabled",
+     "nhan": "Enable",
+     "mota": null,
+     "chon": [
+      {
+       "v": "1",
+       "n": "On"
+      },
+      {
+       "v": "0",
+       "n": "Off"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": true,
+     "macdinh": "0"
+    },
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "name",
+     "nhan": "Name",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": null
+    },
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "src_mac",
+     "nhan": "User Identity",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": null
+    },
+    {
+     "tab": null,
+     "kieu": "DummyValue",
+     "ten": "week_days",
+     "nhan": "Days",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": true
+    },
+    {
+     "tab": null,
+     "kieu": "DummyValue",
+     "ten": "TimeRange",
+     "nhan": "Duration",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": true
+    },
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "_name",
+     "nhan": "URL",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": null
+    }
+   ]
+  }
+ ],
+ "admin__internet__rateLimit__ipLimit": [
+  {
+   "tieuDe": "IP Rate Limit",
+   "muc": "InstID",
+   "tabs": [],
+   "truong": [
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "IpAddress",
+     "nhan": "IP Address",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": null
+    },
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "UpBW",
+     "nhan": "UpBandWidth(Kbps)",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": null
+    },
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "DsBW",
+     "nhan": "DownBandWidth(Kbps)",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": null
+    }
+   ]
+  }
+ ],
+ "admin__internet__security__filterCriteria": [
+  {
+   "tieuDe": "IP Filter",
+   "muc": null,
+   "tabs": [],
+   "truong": [
+    {
+     "tab": null,
+     "kieu": "ListValue",
+     "ten": "enabled",
+     "nhan": "Enable",
+     "mota": null,
+     "chon": [
+      {
+       "v": "1",
+       "n": "On"
+      },
+      {
+       "v": "0",
+       "n": "Off"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": true,
+     "macdinh": "0"
+    },
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "name",
+     "nhan": "Name",
+     "mota": null,
+     "chon": [],
+     "goiy": "Unnamed rule",
+     "batbuoc": true,
+     "chiModal": null
+    },
+    {
+     "tab": null,
+     "kieu": "fwtool.CBIProtocolSelect",
+     "ten": "proto",
+     "nhan": "Protocol",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": null,
+     "macdinh": "tcp udp"
+    },
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "src_ip",
+     "nhan": "Source address",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": null
+    },
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "src_port",
+     "nhan": "Source port",
+     "mota": null,
+     "chon": [],
+     "goiy": "any",
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "dest_ip",
+     "nhan": "Destination address",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": null
+    },
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "dest_port",
+     "nhan": "Destination port",
+     "mota": null,
+     "chon": [],
+     "goiy": "any",
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": null,
+     "kieu": "ListValue",
+     "ten": "target",
+     "nhan": "Action",
+     "mota": null,
+     "chon": [
+      {
+       "v": "DROP",
+       "n": "drop"
+      },
+      {
+       "v": "ACCEPT",
+       "n": "accept"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": true,
+     "macdinh": "ACCEPT"
+    }
+   ]
+  },
+  {
+   "tieuDe": "MAC Filter",
+   "muc": null,
+   "tabs": [],
+   "truong": [
+    {
+     "tab": null,
+     "kieu": "ListValue",
+     "ten": "enabled",
+     "nhan": "Enable",
+     "mota": null,
+     "chon": [
+      {
+       "v": "1",
+       "n": "On"
+      },
+      {
+       "v": "0",
+       "n": "Off"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": true,
+     "macdinh": "0"
+    },
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "name",
+     "nhan": "Name",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": null
+    },
+    {
+     "tab": null,
+     "kieu": "ListValue",
+     "ten": "proto",
+     "nhan": "Protocol",
+     "mota": null,
+     "chon": [
+      {
+       "v": "all",
+       "n": "Any"
+      },
+      {
+       "v": "tcp",
+       "n": "TCP"
+      },
+      {
+       "v": "udp",
+       "n": "UDP"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": true,
+     "macdinh": "all"
+    },
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "src_mac",
+     "nhan": "Source MAC Address",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": null
+    },
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "start_time",
+     "nhan": "Start Time",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "stop_time",
+     "nhan": "End Time",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": null,
+     "kieu": "MultiValue",
+     "ten": "weekdays",
+     "nhan": "Week Days",
+     "mota": null,
+     "chon": [
+      {
+       "v": "ALL",
+       "n": "All Days"
+      },
+      {
+       "v": "Mon",
+       "n": "Monday"
+      },
+      {
+       "v": "Tue",
+       "n": "Tuesday"
+      },
+      {
+       "v": "Wed",
+       "n": "Wednesday"
+      },
+      {
+       "v": "Thu",
+       "n": "Thursday"
+      },
+      {
+       "v": "Fri",
+       "n": "Friday"
+      },
+      {
+       "v": "Sat",
+       "n": "Saturday"
+      },
+      {
+       "v": "Sun",
+       "n": "Sunday"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": null
+    }
+   ]
+  },
+  {
+   "tieuDe": "URL Filter",
+   "muc": null,
+   "tabs": [],
+   "truong": [
+    {
+     "tab": null,
+     "kieu": "ListValue",
+     "ten": "enabled",
+     "nhan": "Enable",
+     "mota": null,
+     "chon": [
+      {
+       "v": "1",
+       "n": "On"
+      },
+      {
+       "v": "0",
+       "n": "Off"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": true,
+     "macdinh": "0"
+    },
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "name",
+     "nhan": "Name",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": null
+    },
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "_name",
+     "nhan": "URL",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": null
+    }
+   ]
+  }
+ ],
+ "admin__internet__security__forwards": [
+  {
+   "tieuDe": "Port Forwards",
+   "muc": null,
+   "tabs": [],
+   "truong": [
+    {
+     "tab": null,
+     "kieu": "ListValue",
+     "ten": "enabled",
+     "nhan": "Enable",
+     "mota": null,
+     "chon": [
+      {
+       "v": "1",
+       "n": "On"
+      },
+      {
+       "v": "0",
+       "n": "Off"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": true,
+     "macdinh": "0"
+    },
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "name",
+     "nhan": "Name",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": null
+    },
+    {
+     "tab": null,
+     "kieu": "ListValue",
+     "ten": "proto",
+     "nhan": "Protocol",
+     "mota": null,
+     "chon": [
+      {
+       "v": "",
+       "n": "Any"
+      },
+      {
+       "v": "tcp",
+       "n": "TCP"
+      },
+      {
+       "v": "udp",
+       "n": "UDP"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": true,
+     "macdinh": ""
+    },
+    {
+     "tab": null,
+     "kieu": "ListValue",
+     "ten": "src",
+     "nhan": "WAN Connection",
+     "mota": null,
+     "chon": [
+      {
+       "v": "wan",
+       "n": "wan"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": true,
+     "macdinh": "wan"
+    },
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "src_ip",
+     "nhan": "WAN Host IP Address",
+     "mota": "Expecting: IP or IP/mask or Start IP–End IP.",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": null
+    },
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "dest_ip",
+     "nhan": "LAN Host",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": null
+    },
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "src_dport",
+     "nhan": "WAN Port",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": null
+    },
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "dest_port",
+     "nhan": "LAN Host Port",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": null
+    }
+   ]
+  }
+ ],
+ "admin__internet__security__service": [
+  {
+   "tieuDe": "Service Control - IPv4/IPv6",
+   "muc": null,
+   "tabs": [],
+   "truong": [
+    {
+     "tab": null,
+     "kieu": "ListValue",
+     "ten": "enabled",
+     "nhan": "Enable",
+     "mota": null,
+     "chon": [
+      {
+       "v": "1",
+       "n": "On"
+      },
+      {
+       "v": "0",
+       "n": "Off"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": true,
+     "macdinh": "0"
+    },
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "name",
+     "nhan": "Name",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": null
+    },
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "src_ip",
+     "nhan": "Source IP",
+     "mota": "Expecting: IP or Start IP–End IP.",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": null
+    },
+    {
+     "tab": null,
+     "kieu": "ListValue",
+     "ten": "target",
+     "nhan": "Target",
+     "mota": null,
+     "chon": [
+      {
+       "v": "ACCEPT",
+       "n": "Accept"
+      },
+      {
+       "v": "DROP",
+       "n": "Drop"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null,
+     "macdinh": "ACCEPT"
+    },
+    {
+     "tab": null,
+     "kieu": "ListValue",
+     "ten": "dest_port",
+     "nhan": "Service Type",
+     "mota": null,
+     "chon": [
+      {
+       "v": "80",
+       "n": "HTTP"
+      },
+      {
+       "v": "21",
+       "n": "FTP"
+      },
+      {
+       "v": "22",
+       "n": "SSH"
+      },
+      {
+       "v": "443",
+       "n": "HTTPS"
+      },
+      {
+       "v": "0",
+       "n": "PING"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": true,
+     "macdinh": "80"
+    },
+    {
+     "tab": null,
+     "kieu": "ListValue",
+     "ten": "family",
+     "nhan": "Family",
+     "mota": null,
+     "chon": [
+      {
+       "v": "ipv4",
+       "n": "IPv4"
+      },
+      {
+       "v": "ipv6",
+       "n": "IPv6"
+      },
+      {
+       "v": "any",
+       "n": "Any"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null,
+     "macdinh": "ipv4"
+    }
+   ]
+  }
+ ],
+ "admin__localnetwork__Routing__routingRule": [
+  {
+   "tieuDe": "Routing",
+   "muc": "Static IPv4 Routes",
+   "tabs": [
+    {
+     "id": "general",
+     "ten": "General Settings"
+    }
+   ],
+   "truong": [
+    {
+     "tab": "general",
+     "kieu": "ListValue",
+     "ten": "interface",
+     "nhan": "Interface",
+     "mota": "Specifies the logical interface name of the parent (or master) interface this route belongs to",
+     "chon": [
+      {
+       "v": "lan",
+       "n": "LAN"
+      },
+      {
+       "v": "wan",
+       "n": "WAN"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": true,
+     "macdinh": "lan"
+    },
+    {
+     "tab": "general",
+     "kieu": "Value",
+     "ten": "target",
+     "nhan": "Target",
+     "mota": "Network address",
+     "chon": [],
+     "goiy": "0.0.0.0",
+     "batbuoc": true,
+     "chiModal": null
+    },
+    {
+     "tab": "general",
+     "kieu": "Value",
+     "ten": "gateway",
+     "nhan": "Gateway",
+     "mota": "Specifies the network gateway. If omitted, the gateway from the parent interface is taken if any, otherwise creates a link scope route. If set to 0.0.0.0 no gateway will be specified for the route",
+     "chon": [],
+     "goiy": "192.168.0.1",
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "general",
+     "kieu": "Value",
+     "ten": "netmask",
+     "nhan": "Subnet Mask",
+     "mota": "Used to distinguish between the network and device parts in an IP address",
+     "chon": [],
+     "goiy": "255.255.255.0",
+     "batbuoc": false,
+     "chiModal": null
+    }
+   ]
+  },
+  {
+   "tieuDe": "Routing",
+   "muc": "Static IPv6 Routes",
+   "tabs": [
+    {
+     "id": "general",
+     "ten": "General Settings"
+    }
+   ],
+   "truong": [
+    {
+     "tab": "general",
+     "kieu": "ListValue",
+     "ten": "interface",
+     "nhan": "Interface",
+     "mota": "Specifies the logical interface name of the parent (or master) interface this route belongs to",
+     "chon": [
+      {
+       "v": "lan",
+       "n": "LAN"
+      },
+      {
+       "v": "wan",
+       "n": "WAN"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": true,
+     "macdinh": "lan"
+    },
+    {
+     "tab": "general",
+     "kieu": "Value",
+     "ten": "target",
+     "nhan": "Target",
+     "mota": "Network address",
+     "chon": [],
+     "goiy": "::/0",
+     "batbuoc": true,
+     "chiModal": null
+    },
+    {
+     "tab": "general",
+     "kieu": "Value",
+     "ten": "gateway",
+     "nhan": "Gateway",
+     "mota": "Specifies the network gateway. If omitted, the gateway from the parent interface is taken if any, otherwise creates a link scope route. If set to 0.0.0.0 no gateway will be specified for the route",
+     "chon": [],
+     "goiy": "fe80::1",
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "general",
+     "kieu": "Value",
+     "ten": "netmask",
+     "nhan": "Subnet Mask",
+     "mota": "Used to distinguish between the network and device parts in an IP address",
+     "chon": [],
+     "goiy": "fe80::1",
+     "batbuoc": false,
+     "chiModal": null
+    }
+   ]
+  }
+ ],
+ "admin__localnetwork__WLAN__WLANAdvanced": [
+  {
+   "tieuDe": "Access Control-Rule Configuration",
+   "muc": "Name",
+   "tabs": [],
+   "truong": [
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "Name",
+     "nhan": "Name",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": null
+    },
+    {
+     "tab": null,
+     "kieu": "ListValue",
+     "ten": "Interface",
+     "nhan": "SSID",
+     "mota": null,
+     "chon": [
+      {
+       "v": "IGD.LD.WLAN1",
+       "n": "SSID1"
+      },
+      {
+       "v": "IGD.LD.WLAN2",
+       "n": "SSID2"
+      },
+      {
+       "v": "IGD.LD.WLAN3",
+       "n": "SSID3"
+      },
+      {
+       "v": "IGD.LD.WLAN4",
+       "n": "SSID4"
+      },
+      {
+       "v": "IGD.LD.WLAN5",
+       "n": "SSID5"
+      },
+      {
+       "v": "IGD.LD.WLAN6",
+       "n": "SSID6"
+      },
+      {
+       "v": "IGD.LD.WLAN7",
+       "n": "SSID7"
+      },
+      {
+       "v": "IGD.LD.WLAN8",
+       "n": "SSID8"
+      }
+     ],
+     "goiy": "placeholder",
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "MACAddress",
+     "nhan": "MACAddress",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    }
+   ]
+  }
+ ],
+ "admin__localnetwork__WLAN__WLANbasic": [
+  {
+   "tieuDe": "WLAN Global Configuration",
+   "muc": "InstID",
+   "tabs": [],
+   "truong": [
+    {
+     "tab": null,
+     "kieu": "ListValue",
+     "ten": "Channel",
+     "nhan": "Channel",
+     "mota": null,
+     "chon": [
+      {
+       "v": "Auto",
+       "n": "Auto"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": true
+    },
+    {
+     "tab": null,
+     "kieu": "ListValue",
+     "ten": "Standard",
+     "nhan": "Mode",
+     "mota": null,
+     "chon": [
+      {
+       "v": "ax",
+       "n": "IEEE 802.11ax Only"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": true,
+     "khoa": true
+    },
+    {
+     "tab": null,
+     "kieu": "ListValue",
+     "ten": "RegulatoryDomain",
+     "nhan": "Country/Region",
+     "mota": null,
+     "chon": [
+      {
+       "v": "CNI",
+       "n": "China"
+      },
+      {
+       "v": "AUI",
+       "n": "Australia"
+      },
+      {
+       "v": "BRI",
+       "n": "Brazil"
+      },
+      {
+       "v": "CAI",
+       "n": "Canada"
+      },
+      {
+       "v": "EGI",
+       "n": "Egypt"
+      },
+      {
+       "v": "FRI",
+       "n": "France"
+      },
+      {
+       "v": "DEI",
+       "n": "Germany"
+      },
+      {
+       "v": "GRI",
+       "n": "Greece"
+      },
+      {
+       "v": "HKI",
+       "n": "China Hongkong"
+      },
+      {
+       "v": "ITI",
+       "n": "Italy"
+      },
+      {
+       "v": "KRI",
+       "n": "Korea"
+      },
+      {
+       "v": "ESI",
+       "n": "Spain"
+      },
+      {
+       "v": "GBI",
+       "n": "United Kingdom"
+      },
+      {
+       "v": "USI",
+       "n": "United States of America"
+      },
+      {
+       "v": "VNI",
+       "n": "Vietnam"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": true,
+     "khoa": true
+    },
+    {
+     "tab": null,
+     "kieu": "ListValue",
+     "ten": "BandWidth",
+     "nhan": "Band Width",
+     "mota": null,
+     "chon": [
+      {
+       "v": "Auto",
+       "n": "Auto"
+      },
+      {
+       "v": "20MHz",
+       "n": "20MHz"
+      },
+      {
+       "v": "40MHz",
+       "n": "40MHz"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": true
+    },
+    {
+     "tab": null,
+     "kieu": "Flag",
+     "ten": "SGI",
+     "nhan": "SGI",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": true
+    },
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "X_ZTE-COM_BeaconPeriod",
+     "nhan": "Beacon Interval",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": true
+    },
+    {
+     "tab": null,
+     "kieu": "ListValue",
+     "ten": "TransmitPower",
+     "nhan": "Transmitting Power",
+     "mota": null,
+     "chon": [
+      {
+       "v": "100",
+       "n": "100%"
+      },
+      {
+       "v": "80",
+       "n": "80%"
+      },
+      {
+       "v": "60",
+       "n": "60%"
+      },
+      {
+       "v": "40",
+       "n": "40%"
+      },
+      {
+       "v": "20",
+       "n": "20%"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": true
+    }
+   ]
+  },
+  {
+   "tieuDe": "WLAN SSID Configuration",
+   "muc": null,
+   "tabs": [],
+   "truong": [
+    {
+     "tab": null,
+     "kieu": "Flag",
+     "ten": "Enable",
+     "nhan": "SSID Enable",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": true
+    },
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "SSID",
+     "nhan": "SSID Name",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": true
+    },
+    {
+     "tab": null,
+     "kieu": "ListValue",
+     "ten": "ForceWiFi5",
+     "nhan": "Mode",
+     "mota": null,
+     "chon": [
+      {
+       "v": "1",
+       "n": "b/g/n"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": true
+    },
+    {
+     "tab": null,
+     "kieu": "Flag",
+     "ten": "SSIDAdvertisementEnabled",
+     "nhan": "SSID Hide",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": true
+    },
+    {
+     "tab": null,
+     "kieu": "ListValue",
+     "ten": "encryption",
+     "nhan": "Encryption Type",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": true
+    },
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "KeyPassphrase",
+     "nhan": "WPA Passphrase",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": true
+    },
+    {
+     "tab": null,
+     "kieu": "Flag",
+     "ten": "X_ZTE-COM_SSIDIsolation",
+     "nhan": "SSID Isolation",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": true
+    },
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "X_ZTE-COM_MaxUserNum",
+     "nhan": "Maximum Clients",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": true
+    }
+   ]
+  }
+ ],
+ "admin__localnetwork__WLAN__wps": [
+  {
+   "tieuDe": "WPS",
+   "muc": "name",
+   "tabs": [],
+   "truong": [
+    {
+     "tab": null,
+     "kieu": "ListValue",
+     "ten": "WPSChoose",
+     "nhan": "WPS Mode",
+     "mota": null,
+     "chon": [
+      {
+       "v": "Disabled",
+       "n": "Disabled"
+      },
+      {
+       "v": "PBC",
+       "n": "PBC"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": null
+    }
+   ]
+  }
+ ],
+ "admin__localnetwork__dns__hostname": [
+  {
+   "tieuDe": "Host Name",
+   "muc": "Host Name",
+   "tabs": [],
+   "truong": [
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "name",
+     "nhan": "Host Name",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": null
+    },
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "ip",
+     "nhan": "IP Address",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": null
+    }
+   ]
+  }
+ ],
+ "admin__localnetwork__lan__dhcpv4_status": [
+  {
+   "tieuDe": "DHCP Binding",
+   "muc": "Name",
+   "tabs": [],
+   "truong": [
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "alias",
+     "nhan": "Name",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": null
+    },
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "mac",
+     "nhan": "MAC Address",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": null
+    },
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "ip",
+     "nhan": "IP Address",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": null
+    }
+   ]
+  }
+ ],
+ "admin__network__switch": [
+  {
+   "tieuDe": "Switch",
+   "muc": "Add VLAN",
+   "tabs": [],
+   "truong": [
+    {
+     "tab": null,
+     "kieu": "Value",
+     "ten": "vlan",
+     "nhan": "VLAN ID",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": null
+    }
+   ]
+  }
+ ],
+ "admin__network__wireless": [
+  {
+   "tieuDe": "Wireless Overview",
+   "muc": "Wireless Overview",
+   "tabs": [
+    {
+     "id": "general",
+     "ten": "General Setup"
+    },
+    {
+     "id": "advanced",
+     "ten": "Advanced Settings"
+    },
+    {
+     "id": "general",
+     "ten": "General Setup"
+    },
+    {
+     "id": "encryption",
+     "ten": "Wireless Security"
+    },
+    {
+     "id": "macfilter",
+     "ten": "MAC-Filter"
+    },
+    {
+     "id": "advanced",
+     "ten": "Advanced Settings"
+    },
+    {
+     "id": "roaming",
+     "ten": "WLAN roaming"
+    }
+   ],
+   "truong": [
+    {
+     "tab": "general",
+     "kieu": "DummyValue",
+     "ten": "_wifistat_modal",
+     "nhan": "Status",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "general",
+     "kieu": "Button",
+     "ten": "_toggle",
+     "nhan": "Wireless network is disabled",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "general",
+     "kieu": "CBIWifiFrequencyValue",
+     "ten": "_freq",
+     "nhan": "<br />",
+     "mota": "Some channels may be restricted to Indoor Only use by your Regulatory Domain. Make sure to follow this advice if a channel is reported as such.",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "general",
+     "kieu": "Flag",
+     "ten": "legacy_rates",
+     "nhan": "Allow legacy 802.11b rates",
+     "mota": "Legacy or badly behaving devices may require legacy 802.11b rates to interoperate. Airtime efficiency may be significantly reduced where these are used. It is recommended to not allow 802.11b rates where possible.",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "general",
+     "kieu": "CBIWifiTxPowerValue",
+     "ten": "txpower",
+     "nhan": "Maximum transmit power",
+     "mota": "Specifies the maximum transmit power the wireless radio may use. Depending on regulatory requirements and wireless usage, the actual transmit power may be reduced by the driver.",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "general",
+     "kieu": "CBIWifiCountryValue",
+     "ten": "country",
+     "nhan": "Country Code",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "advanced",
+     "kieu": "ListValue",
+     "ten": "cell_density",
+     "nhan": "Coverage cell density",
+     "mota": "Configures data rates based on the coverage cell density. Normal configures basic rates to 6, 12, 24 Mbps if legacy 802.11b rates are not used else to 5.5, 11 Mbps. High configures basic rates to 12, 24 Mbps if legacy 802.11b rates are not used else to the 11 Mbps rate. Very High configures 24 Mbps as the basic rate. Supported rates lower than the minimum basic rate are not offered.",
+     "chon": [
+      {
+       "v": "0",
+       "n": "Disabled"
+      },
+      {
+       "v": "1",
+       "n": "Normal"
+      },
+      {
+       "v": "2",
+       "n": "High"
+      },
+      {
+       "v": "3",
+       "n": "Very High"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "advanced",
+     "kieu": "Value",
+     "ten": "distance",
+     "nhan": "Distance Optimization",
+     "mota": "Distance to farthest network member in meters. Set only for distances above one kilometer; otherwise it is harmful.",
+     "chon": [],
+     "goiy": "auto",
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "advanced",
+     "kieu": "Value",
+     "ten": "frag",
+     "nhan": "Fragmentation Threshold",
+     "mota": null,
+     "chon": [],
+     "goiy": "off",
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "advanced",
+     "kieu": "Value",
+     "ten": "rts",
+     "nhan": "RTS/CTS Threshold",
+     "mota": null,
+     "chon": [],
+     "goiy": "off",
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "advanced",
+     "kieu": "Flag",
+     "ten": "noscan",
+     "nhan": "Force 40MHz mode",
+     "mota": "Always use 40MHz channels even if the secondary channel overlaps. Using this option does not comply with IEEE 802.11n-2009!",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "advanced",
+     "kieu": "Value",
+     "ten": "beacon_int",
+     "nhan": "Beacon Interval",
+     "mota": null,
+     "chon": [],
+     "goiy": "100",
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "general",
+     "kieu": "ListValue",
+     "ten": "mode",
+     "nhan": "Mode",
+     "mota": null,
+     "chon": [
+      {
+       "v": "ap",
+       "n": "Access Point"
+      },
+      {
+       "v": "sta",
+       "n": "Client"
+      },
+      {
+       "v": "adhoc",
+       "n": "Ad-Hoc"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "general",
+     "kieu": "Value",
+     "ten": "mesh_id",
+     "nhan": "Mesh Id",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "advanced",
+     "kieu": "Flag",
+     "ten": "mesh_fwding",
+     "nhan": "Forward mesh peer traffic",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": null,
+     "macdinh": "1"
+    },
+    {
+     "tab": "advanced",
+     "kieu": "Value",
+     "ten": "mesh_rssi_threshold",
+     "nhan": "RSSI threshold for joining",
+     "mota": "0 = not using RSSI threshold, 1 = do not change driver default",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": null,
+     "macdinh": "0"
+    },
+    {
+     "tab": "general",
+     "kieu": "Value",
+     "ten": "ssid",
+     "nhan": "<abbr title=\"Extended Service Set Identifier\">ESSID</abbr>",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "general",
+     "kieu": "Value",
+     "ten": "bssid",
+     "nhan": "<abbr title=\"Basic Service Set Identifier\">BSSID</abbr>",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "general",
+     "kieu": "widgets.NetworkSelect",
+     "ten": "network",
+     "nhan": "Network",
+     "mota": "Choose the network(s) you want to attach to this wireless interface or fill out the <em>custom</em> field to define a new network.",
+     "chon": [
+      {
+       "v": "mesh",
+       "n": "802.11s"
+      },
+      {
+       "v": "ahdemo",
+       "n": "Pseudo Ad-Hoc (ahdemo)"
+      },
+      {
+       "v": "monitor",
+       "n": "Monitor"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "macfilter",
+     "kieu": "ListValue",
+     "ten": "macfilter",
+     "nhan": "MAC Address Filter",
+     "mota": null,
+     "chon": [
+      {
+       "v": "",
+       "n": "disable"
+      },
+      {
+       "v": "allow",
+       "n": "Allow listed only"
+      },
+      {
+       "v": "deny",
+       "n": "Allow all except listed"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "macfilter",
+     "kieu": "DynamicList",
+     "ten": "maclist",
+     "nhan": "MAC-List",
+     "mota": null,
+     "chon": [
+      {
+       "v": "ap-wds",
+       "n": "%s (%s)"
+      },
+      {
+       "v": "sta-wds",
+       "n": "%s (%s)"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "general",
+     "kieu": "Flag",
+     "ten": "hidden",
+     "nhan": "Hide <abbr title=\"Extended Service Set Identifier\">ESSID</abbr>",
+     "mota": "Where the ESSID is hidden, clients may fail to roam and airtime efficiency may be significantly reduced.",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "general",
+     "kieu": "Flag",
+     "ten": "wmm",
+     "nhan": "WMM Mode",
+     "mota": "Where Wi-Fi Multimedia (WMM) Mode QoS is disabled, clients may be limited to 802.11a/802.11g rates.",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "advanced",
+     "kieu": "Flag",
+     "ten": "multicast_to_unicast_all",
+     "nhan": "Multi To Unicast",
+     "mota": "ARP, IPv4 and IPv6 (even 802.1Q) with multicast destination MACs are unicast to the STA MAC address. Note: This is not Directed Multicast Service (DMS) in 802.11v. Note: might break receiver STA multicast expectations.",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "advanced",
+     "kieu": "Flag",
+     "ten": "isolate",
+     "nhan": "Isolate Clients",
+     "mota": "Prevents client-to-client communication",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "advanced",
+     "kieu": "Flag",
+     "ten": "bridge_isolate",
+     "nhan": "Isolate Bridge Port",
+     "mota": "Prevents communication only with targets on isolated bridge ports (while allowing it with targets on non-isolated ones). This also prevents client-to-client communication on the same interface when the WiFi device is in AP mode.",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "advanced",
+     "kieu": "Value",
+     "ten": "ifname",
+     "nhan": "Interface name",
+     "mota": "Override default interface name",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "advanced",
+     "kieu": "Value",
+     "ten": "macaddr",
+     "nhan": "MAC address",
+     "mota": "Override default MAC address - the range of usable addresses might be limited by the driver",
+     "chon": [
+      {
+       "v": "",
+       "n": "driver default (%s)"
+      },
+      {
+       "v": "random",
+       "n": "randomly generated"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "advanced",
+     "kieu": "Flag",
+     "ten": "short_preamble",
+     "nhan": "Short Preamble",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "advanced",
+     "kieu": "Value",
+     "ten": "dtim_period",
+     "nhan": "DTIM Interval",
+     "mota": "Delivery Traffic Indication Message Interval",
+     "chon": [],
+     "goiy": "2",
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "advanced",
+     "kieu": "Value",
+     "ten": "wpa_group_rekey",
+     "nhan": "Time interval for rekeying GTK",
+     "mota": "sec",
+     "chon": [],
+     "goiy": "600",
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "advanced",
+     "kieu": "Flag",
+     "ten": "skip_inactivity_poll",
+     "nhan": "Disable Inactivity Polling",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "advanced",
+     "kieu": "Value",
+     "ten": "max_inactivity",
+     "nhan": "Station inactivity limit",
+     "mota": "802.11v: BSS Max Idle. Units: seconds.",
+     "chon": [],
+     "goiy": "300",
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "advanced",
+     "kieu": "Value",
+     "ten": "max_listen_interval",
+     "nhan": "Maximum allowed Listen Interval",
+     "mota": null,
+     "chon": [],
+     "goiy": "65535",
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "advanced",
+     "kieu": "Flag",
+     "ten": "disassoc_low_ack",
+     "nhan": "Disassociate On Low Acknowledgement",
+     "mota": "Allow AP mode to disconnect STAs based on low ACK condition",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "ListValue",
+     "ten": "encryption",
+     "nhan": "Encryption",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "ListValue",
+     "ten": "cipher",
+     "nhan": "Cipher",
+     "mota": null,
+     "chon": [
+      {
+       "v": "auto",
+       "n": "auto"
+      },
+      {
+       "v": "ccmp",
+       "n": "Force CCMP (AES)"
+      },
+      {
+       "v": "ccmp256",
+       "n": "Force CCMP-256 (AES)"
+      },
+      {
+       "v": "gcmp",
+       "n": "Force GCMP (AES)"
+      },
+      {
+       "v": "gcmp256",
+       "n": "Force GCMP-256 (AES)"
+      },
+      {
+       "v": "tkip",
+       "n": "Force TKIP"
+      },
+      {
+       "v": "tkip+ccmp",
+       "n": "Force TKIP and CCMP (AES)"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "Flag",
+     "ten": "ppsk",
+     "nhan": "Enable Private PSK (PPSK)",
+     "mota": "Private Pre-Shared Key (PPSK) allows the use of different Pre-Shared Key for each STA MAC address. Private MAC PSKs are stored on the RADIUS server.",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "Value",
+     "ten": "auth_server",
+     "nhan": "RADIUS Authentication Server",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "Value",
+     "ten": "auth_port",
+     "nhan": "RADIUS Authentication Port",
+     "mota": null,
+     "chon": [],
+     "goiy": "1812",
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "Value",
+     "ten": "auth_secret",
+     "nhan": "RADIUS Authentication Secret",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "Value",
+     "ten": "acct_server",
+     "nhan": "RADIUS Accounting Server",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "Value",
+     "ten": "acct_port",
+     "nhan": "RADIUS Accounting Port",
+     "mota": null,
+     "chon": [],
+     "goiy": "1813",
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "Value",
+     "ten": "acct_secret",
+     "nhan": "RADIUS Accounting Secret",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "DynamicList",
+     "ten": "radius_auth_req_attr",
+     "nhan": "RADIUS Access-Request attributes",
+     "mota": "Attributes to add/replace in each request.",
+     "chon": [],
+     "goiy": "126:s:Operator",
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "DynamicList",
+     "ten": "radius_acct_req_attr",
+     "nhan": "RADIUS Accounting-Request attributes",
+     "mota": "Attributes to add/replace in each request.",
+     "chon": [],
+     "goiy": "77:x:74657374696e67",
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "ListValue",
+     "ten": "dynamic_vlan",
+     "nhan": "RADIUS Dynamic VLAN Assignment",
+     "mota": "Required: Rejects auth if RADIUS server does not provide appropriate VLAN attributes.",
+     "chon": [
+      {
+       "v": "0",
+       "n": "Disabled"
+      },
+      {
+       "v": "1",
+       "n": "Optional"
+      },
+      {
+       "v": "2",
+       "n": "Required"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "Flag",
+     "ten": "per_sta_vif",
+     "nhan": "RADIUS Per STA VLAN",
+     "mota": "Each STA is assigned its own AP_VLAN interface.",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "Flag",
+     "ten": "vlan_naming",
+     "nhan": "RADIUS VLAN Naming",
+     "mota": "Off: <code>vlanXXX</code>, e.g., <code>vlan1</code>. On: <code>vlan_tagged_interface.XXX</code>, e.g. <code>eth0.1</code>.",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "widgets.DeviceSelect",
+     "ten": "vlan_tagged_interface",
+     "nhan": "RADIUS VLAN Tagged Interface",
+     "mota": "E.g. eth0, eth1",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "Value",
+     "ten": "vlan_bridge",
+     "nhan": "RADIUS VLAN Bridge Naming Scheme",
+     "mota": "E.g. <code>br-vlan</code> or <code>brvlan</code>.",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "Value",
+     "ten": "dae_client",
+     "nhan": "DAE-Client",
+     "mota": "Dynamic Authorization Extension client.",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "Value",
+     "ten": "dae_port",
+     "nhan": "DAE-Port",
+     "mota": "Dynamic Authorization Extension port.",
+     "chon": [],
+     "goiy": "3799",
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "Value",
+     "ten": "dae_secret",
+     "nhan": "DAE-Secret",
+     "mota": "Dynamic Authorization Extension secret.",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "Flag",
+     "ten": "rsn_preauth",
+     "nhan": "RSN Preauth",
+     "mota": "Robust Security Network (RSN): Allow roaming preauth for WPA2-EAP networks (and advertise it in WLAN beacons). Only works if the specified network interface is a bridge. Shortens the time-critical reassociation process.",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "Value",
+     "ten": "_wpa_key",
+     "nhan": "Key",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "ListValue",
+     "ten": "_wep_key",
+     "nhan": "Used Key Slot",
+     "mota": null,
+     "chon": [
+      {
+       "v": "1",
+       "n": "Key #%d"
+      },
+      {
+       "v": "2",
+       "n": "Key #%d"
+      },
+      {
+       "v": "3",
+       "n": "Key #%d"
+      },
+      {
+       "v": "4",
+       "n": "Key #%d"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "Value",
+     "ten": "key%d",
+     "nhan": "Key #%d",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "roaming",
+     "kieu": "Flag",
+     "ten": "ieee80211r",
+     "nhan": "802.11r Fast Transition",
+     "mota": "Enables fast roaming among access points that belong to the same Mobility Domain",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "roaming",
+     "kieu": "Value",
+     "ten": "nasid",
+     "nhan": "NAS ID",
+     "mota": "Used for two different purposes: RADIUS NAS ID and 802.11r R0KH-ID. Not needed with normal WPA(2)-PSK.",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "roaming",
+     "kieu": "Value",
+     "ten": "mobility_domain",
+     "nhan": "Mobility Domain",
+     "mota": "4-character hexadecimal ID",
+     "chon": [],
+     "goiy": "4f57",
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "roaming",
+     "kieu": "Value",
+     "ten": "reassociation_deadline",
+     "nhan": "Reassociation Deadline",
+     "mota": "time units (TUs / 1.024 ms) [1000-65535]",
+     "chon": [],
+     "goiy": "1000",
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "roaming",
+     "kieu": "ListValue",
+     "ten": "ft_over_ds",
+     "nhan": "FT protocol",
+     "mota": null,
+     "chon": [
+      {
+       "v": "0",
+       "n": "FT over the Air"
+      },
+      {
+       "v": "1",
+       "n": "FT over DS"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "roaming",
+     "kieu": "Flag",
+     "ten": "ft_psk_generate_local",
+     "nhan": "Generate PMK locally",
+     "mota": "When using a PSK, the PMK can be automatically generated. When enabled, the R0/R1 key options below are not applied. Disable this to use the R0 and R1 key options.",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": true,
+     "chiModal": null
+    },
+    {
+     "tab": "roaming",
+     "kieu": "Value",
+     "ten": "r0_key_lifetime",
+     "nhan": "R0 Key Lifetime",
+     "mota": "minutes",
+     "chon": [],
+     "goiy": "10000",
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "roaming",
+     "kieu": "Value",
+     "ten": "r1_key_holder",
+     "nhan": "R1 Key Holder",
+     "mota": "6-octet identifier as a hex string - no colons",
+     "chon": [],
+     "goiy": "00004f577274",
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "roaming",
+     "kieu": "Flag",
+     "ten": "pmk_r1_push",
+     "nhan": "PMK R1 Push",
+     "mota": null,
+     "chon": [],
+     "goiy": "0",
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "roaming",
+     "kieu": "DynamicList",
+     "ten": "r0kh",
+     "nhan": "External R0 Key Holder List",
+     "mota": "List of R0KHs in the same Mobility Domain.  Format: MAC-address,NAS-Identifier,256-bit key as hex string.  This list is used to map R0KH-ID (NAS Identifier) to a destination MAC address when requesting PMK-R1 key from the R0KH that the STA used during the Initial Mobility Domain Association.",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "roaming",
+     "kieu": "DynamicList",
+     "ten": "r1kh",
+     "nhan": "External R1 Key Holder List",
+     "mota": "List of R1KHs in the same Mobility Domain.  Format: MAC-address,R1KH-ID as 6 octets with colons,256-bit key as hex string.  This list is used to map R1KH-ID to a destination MAC address when sending PMK-R1 key from the R0KH. This is also the list of authorized R1KHs in the MD that can request PMK-R1 keys.",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "roaming",
+     "kieu": "Flag",
+     "ten": "ieee80211k",
+     "nhan": "802.11k RRM",
+     "mota": "Radio Resource Measurement - Sends beacons to assist roaming. Not all clients support this.",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "roaming",
+     "kieu": "Flag",
+     "ten": "rrm_neighbor_report",
+     "nhan": "Neighbour Report",
+     "mota": "802.11k: Enable neighbor report via radio measurements.",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "roaming",
+     "kieu": "Flag",
+     "ten": "rrm_beacon_report",
+     "nhan": "Beacon Report",
+     "mota": "802.11k: Enable beacon report via radio measurements.",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "roaming",
+     "kieu": "ListValue",
+     "ten": "time_advertisement",
+     "nhan": "Time advertisement",
+     "mota": "802.11v: Time Advertisement in management frames.",
+     "chon": [
+      {
+       "v": "0",
+       "n": "Disabled"
+      },
+      {
+       "v": "2",
+       "n": "Enabled"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "roaming",
+     "kieu": "Value",
+     "ten": "time_zone",
+     "nhan": "Time zone",
+     "mota": "802.11v: Local Time Zone Advertisement in management frames.",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "roaming",
+     "kieu": "Flag",
+     "ten": "wnm_sleep_mode",
+     "nhan": "WNM Sleep Mode",
+     "mota": "802.11v: Wireless Network Management (WNM) Sleep Mode (extended sleep mode for stations).",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "roaming",
+     "kieu": "Flag",
+     "ten": "wnm_sleep_mode_no_keys",
+     "nhan": "WNM Sleep Mode Fixes",
+     "mota": "802.11v: Wireless Network Management (WNM) Sleep Mode Fixes: Prevents reinstallation attacks.",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "roaming",
+     "kieu": "Flag",
+     "ten": "bss_transition",
+     "nhan": "BSS Transition",
+     "mota": "802.11v: Basic Service Set (BSS) transition management.",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "roaming",
+     "kieu": "Flag",
+     "ten": "proxy_arp",
+     "nhan": "ProxyARP",
+     "mota": "802.11v: Proxy ARP enables non-AP STA to remain in power-save for longer.",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "ListValue",
+     "ten": "eap_type",
+     "nhan": "EAP-Method",
+     "mota": null,
+     "chon": [
+      {
+       "v": "tls",
+       "n": "TLS"
+      },
+      {
+       "v": "ttls",
+       "n": "TTLS"
+      },
+      {
+       "v": "peap",
+       "n": "PEAP"
+      },
+      {
+       "v": "fast",
+       "n": "FAST"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "Flag",
+     "ten": "ca_cert_usesystem",
+     "nhan": "Use system certificates",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "FileUpload",
+     "ten": "ca_cert",
+     "nhan": "Path to CA-Certificate",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "Value",
+     "ten": "subject_match",
+     "nhan": "Certificate constraint (Subject)",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "DynamicList",
+     "ten": "altsubject_match",
+     "nhan": "Certificate constraint (SAN)",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "DynamicList",
+     "ten": "domain_match",
+     "nhan": "Certificate constraint (Domain)",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "DynamicList",
+     "ten": "domain_suffix_match",
+     "nhan": "Certificate constraint (Wildcard)",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "FileUpload",
+     "ten": "client_cert",
+     "nhan": "Path to Client-Certificate",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "FileUpload",
+     "ten": "priv_key",
+     "nhan": "Path to Private Key",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "Value",
+     "ten": "priv_key_pwd",
+     "nhan": "Password of Private Key",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "ListValue",
+     "ten": "auth",
+     "nhan": "Authentication",
+     "mota": null,
+     "chon": [
+      {
+       "v": "PAP",
+       "n": "PAP"
+      },
+      {
+       "v": "CHAP",
+       "n": "CHAP"
+      },
+      {
+       "v": "MSCHAP",
+       "n": "MSCHAP"
+      },
+      {
+       "v": "MSCHAPV2",
+       "n": "MSCHAPv2"
+      },
+      {
+       "v": "EAP-GTC",
+       "n": "EAP-GTC"
+      },
+      {
+       "v": "EAP-MD5",
+       "n": "EAP-MD5"
+      },
+      {
+       "v": "EAP-MSCHAPV2",
+       "n": "EAP-MSCHAPv2"
+      },
+      {
+       "v": "EAP-TLS",
+       "n": "EAP-TLS"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "Flag",
+     "ten": "ca_cert2_usesystem",
+     "nhan": "Use system certificates for inner-tunnel",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "FileUpload",
+     "ten": "ca_cert2",
+     "nhan": "Path to inner CA-Certificate",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "Value",
+     "ten": "subject_match2",
+     "nhan": "Inner certificate constraint (Subject)",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "DynamicList",
+     "ten": "altsubject_match2",
+     "nhan": "Inner certificate constraint (SAN)",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "DynamicList",
+     "ten": "domain_match2",
+     "nhan": "Inner certificate constraint (Domain)",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "DynamicList",
+     "ten": "domain_suffix_match2",
+     "nhan": "Inner certificate constraint (Wildcard)",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "FileUpload",
+     "ten": "client_cert2",
+     "nhan": "Path to inner Client-Certificate",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "FileUpload",
+     "ten": "priv_key2",
+     "nhan": "Path to inner Private Key",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "Value",
+     "ten": "priv_key2_pwd",
+     "nhan": "Password of inner Private Key",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "Value",
+     "ten": "identity",
+     "nhan": "Identity",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "Value",
+     "ten": "anonymous_identity",
+     "nhan": "Anonymous Identity",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "Value",
+     "ten": "password",
+     "nhan": "Password",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "ListValue",
+     "ten": "ieee80211w",
+     "nhan": "802.11w Management Frame Protection",
+     "mota": null,
+     "chon": [
+      {
+       "v": "0",
+       "n": "Disabled"
+      },
+      {
+       "v": "1",
+       "n": "Optional"
+      },
+      {
+       "v": "2",
+       "n": "Required"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "Value",
+     "ten": "ieee80211w_max_timeout",
+     "nhan": "802.11w maximum timeout",
+     "mota": "802.11w Association SA Query maximum timeout",
+     "chon": [],
+     "goiy": "1000",
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "Value",
+     "ten": "ieee80211w_retry_timeout",
+     "nhan": "802.11w retry timeout",
+     "mota": "802.11w Association SA Query retry timeout",
+     "chon": [],
+     "goiy": "201",
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "ListValue",
+     "ten": "ocv",
+     "nhan": "Operating Channel Validation",
+     "mota": null,
+     "chon": [
+      {
+       "v": "0",
+       "n": "Disabled"
+      },
+      {
+       "v": "1",
+       "n": "Enabled"
+      },
+      {
+       "v": "2",
+       "n": "Enabled (workaround mode)"
+      }
+     ],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null,
+     "macdinh": "0"
+    },
+    {
+     "tab": "encryption",
+     "kieu": "Flag",
+     "ten": "wpa_disable_eapol_key_retries",
+     "nhan": "Enable key reinstallation (KRACK) countermeasures",
+     "mota": "Complicates key reinstallation attacks on the client side by disabling retransmission of EAPOL-Key frames that are used to install keys. This workaround might cause interoperability issues and reduced robustness of key negotiation especially in environments with heavy traffic load.",
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    },
+    {
+     "tab": "encryption",
+     "kieu": "Flag",
+     "ten": "wps_pushbutton",
+     "nhan": "Enable WPS pushbutton, requires WPA(2)-PSK/WPA3-SAE",
+     "mota": null,
+     "chon": [],
+     "goiy": null,
+     "batbuoc": false,
+     "chiModal": null
+    }
+   ]
+  }
+ ]
+}

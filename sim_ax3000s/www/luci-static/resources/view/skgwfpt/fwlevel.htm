@@ -1,0 +1,21 @@
+<div class="page-content">
+    <p class="sk-warning-info">
+        {{Firewall_level_note}}<br>
+        {{Firewall_level_note_low}}<br>
+        {{Firewall_level_note_high}}<br>
+    </p>
+    <p class="skpage-title">{{Firewall_level}}</p>
+    <div class="modset">
+        <div class="skform-group">
+            <label class="skform-tittle" for="fwlevel">{{Firewall_level}}:</label>
+            <select name="fwlevel" id="fwlevel" class="skform-control" onchange='fwlevel_SelChange(this.value)' >
+                   <option value="0">{{Firewall_level_low}}</option>
+                   <option value="2">{{Firewall_level_high}}</option>
+             </select>
+        </div>
+
+        <div class="sk-form-submit">
+            <button class="btn-apply" id="fwlevel_btnApply" name='apply' type="button" onclick="fwlevel_btnApply()">{{Save_And_Apply}}</button>
+        </div>
+    </div>
+ </div>

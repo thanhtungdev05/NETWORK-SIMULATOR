@@ -1,0 +1,101 @@
+<form>
+<div class="page-content">
+    <p class="sk-warning-info">
+        {{Warning_Ipfilter_Note1}}.<br>
+        {{Warning_Ipfilter_Note2}}.<br>
+    </p>
+    <p class="skpage-title">{{IP_Filter_Title}}</p>
+    <div class="modset">
+        <div class="skform-group">
+            <label class="skform-tittle" for="at-ipfilter-enable">{{Enable}}:</label>
+            <div class="skform-content">
+                <ul>
+                    <li>
+                        <label class="skradio">
+                            <input type="radio" name="at-ipfilter-enable" id="at-ipfilter-enable0" onclick="enableSwitchClick(this)" hidden />
+                            <label for="at-ipfilter-enable0" id="IPFilter_disable" class="skradio-label">
+                            </label>
+                        </label>
+                        <label class="skradio-text" for="at-ipfilter-enable0">{{Disable}}</label>
+                    </li>
+                    <li>
+                        <label class="skradio">
+                            <input type="radio" name="at-ipfilter-enable" id="at-ipfilter-enable1" onclick="enableSwitchClick(this)" hidden />
+                            <label for="at-ipfilter-enable1" id="IPFilter_enable" class="skradio-label">
+                            </label>
+                        </label>
+                        <label class="skradio-text" for="at-ipfilter-enable1">{{Enable}}</label>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="skform-group">
+            <label class="skform-tittle" for="at-ipfilter-mode">{{Filter_Mode}}:</label>
+            <div class="skform-content">
+                <ul>
+                    <li>
+                        <label class="skradio">
+                            <input type="radio" name="at-ipfilter-mode" id="at-ipfilter-mode0" onclick="modeSwitchClick(this)" hidden />
+                            <label for="at-ipfilter-mode0" id="IPFilterMode_deny" class="skradio-label">
+                            </label>
+                        </label>
+                        <label class="skradio-text" for="at-ipfilter-mode0">{{Deny_List}}</label>
+                    </li>
+                    <li>
+                        <label class="skradio">
+                            <input type="radio" name="at-ipfilter-mode" id="at-ipfilter-mode1" onclick="modeSwitchClick(this)" hidden />
+                            <label for="at-ipfilter-mode1" id="IPFilterMode_allow" class="skradio-label">
+                            </label>
+                        </label>
+                        <label class="skradio-text" for="at-ipfilter-mode1">{{Allow_List}}</label>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="sk-form-submit">
+            <button class="btn-apply" id="IPFSave_btn" type="button" onclick="ipBasicBtnClickApply()">{{Save_And_Apply}}</button>
+        </div>
+    </div>
+
+    <div>
+        <p class="skpage-title">{{IP_Filter_Table}}</p>
+        <div class="modset">
+            <div class="table-list" style="width: auto;">
+                <div class="table-list-head">
+                    <button id="at-ip-filter-addbtn" class="btn btn-add" type="button" onclick="ipFilterBtnAdd()">{{Add}}</button>
+                    <button id="at-ip-filter-delbtn" class="btn btn-del" type="button" onclick="ipFilterBtnDel()">{{Delete}}</button>
+                </div>
+                <table id="at-ipfilter-table" style="margin-bottom: 20px;">
+                    <thead>
+                        <tr>
+                            <th>
+                                <label class="skcheckbox">
+                                    <input type="checkbox" name="at-ipfilter-selectall" id="at-ipfilter-selectall"
+                                        onClick="ipFilterSelectAllClick(this)" hidden />
+                                    <label for="at-ipfilter-selectall" class="skcheckbox-label">
+                                    </label>
+                                </label>
+                            </th>
+                            <th>{{Filter_Name}}</th>
+                            <th>{{Protocol}}</th>
+                            <th>{{Source_Address}}</th>
+                            <th>{{Source_Port}}</th>
+                            <th>{{Destination_Address}}</th>
+                            <th>{{Destination_Port}}</th>
+                                <!-- <th>{{Schedule}}</th> -->
+                                <th>{{Repeat Period}}</th>
+                                <th>{{Start Time}}</th>
+                                <th>{{End Time}}</th>
+                        </tr>
+                    </thead>
+                    <tbody id="at-ipfilter-tbody">
+					</tbody>
+					<tbody id="at-ipfilter-nodata-tbody">
+					</tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+</form>

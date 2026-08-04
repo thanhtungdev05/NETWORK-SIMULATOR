@@ -1,0 +1,125 @@
+<div class="page-content" id="wlanInfo">
+    <p class="sk-warning-info">
+        {{wlanInfo_tips}}
+    </p>
+    <p class="skpage-title">{{wlanInfo_2g}}</p>
+    <div class="table-list" style="margin-left:24px;margin-top: 5px;">
+        <table width="100%" cellpadding="4">
+            <tr> 
+                <td class='hd' style="width: 30%;background-color: #e6f2fb;">2.4G {{wlanInfo_status}}</td>
+                <td id="Txt_GbandStatus"></td>
+            </tr>
+            <tr>
+                <td class='hd' style="width: 30%;background-color: #e6f2fb;">2.4G {{wlanInfo_channel}}</td>
+                <td id="Txt_GbandChannel"></td>
+           </tr>
+        </table>
+    </div>
+
+    <p class="skpage-title">{{wlanInfo_5g}}</p>
+    <div class="table-list" style="margin-left:24px;margin-top: 5px;">
+        <table width="100%" cellpadding="4">
+            <tr> 
+                <td class='hd' style="width: 30%;background-color: #e6f2fb;">5G {{wlanInfo_status}}</td>
+                <td id="Txt_AbandStatus"></td>
+            </tr>
+            <tr>
+                <td class='hd' style="width: 30%;background-color: #e6f2fb;">5G {{wlanInfo_channel}}</td>
+                <td id="Txt_AbandChannel"></td>
+           </tr>
+        </table>
+    </div>
+    
+    <p class="skpage-title">{{wlanInfo_mesh}}</p>
+    <div class="table-list" style="margin-left:24px;margin-top: 5px;">
+        <table width="100%" cellpadding="4">
+            <tr> 
+                <td class='hd' style="width: 30%;background-color: #e6f2fb;">{{wlanInfo_role}}</td>
+                <td id="Txt_meshRole"></td>
+            </tr>
+            <tr>
+                <td id="Txt_meshType" class='hd' style=\"width: 30%;background-color: #e6f2fb;\"></td>
+                <td id="Txt_meshInfo"></td>
+            </tr>
+        </table>
+    </div>
+    
+    <p class="skpage-title">{{wlanInfo_ssidInfo}}</p>
+    <div class="table-list" style="margin-left:24px;margin-top: 5px;">
+        <table>
+            <thead>
+                <tr>
+                    <th>{{wlanInfo_interface}}</th>
+                    <th>{{wlanInfo_ssid}}</th>
+                    <th>{{wlanInfo_bf}}</th>
+                    <th>{{wlanInfo_auth}}</th>
+                    <th>{{wlanInfo_encryption}}</th>
+                    <th>{{wlanInfo_view}}</th>
+                </tr>
+            </thead>
+            <tbody id="Tab_SsidInfo">
+            </tbody>
+        </table>
+    </div>
+
+    <p class="skpage-title">{{wlanInfo_sta}}</p>
+    <div class="table-list" style="margin-left:24px;margin-top: 5px;">
+        <table>
+            <thead>
+                <tr>
+                    <th rowspan="2">{{wlanInfo_interface}}</th>
+                    <!--    <th rowspan="2"><%ejGetString(SSID)%></th> -->
+                    <th colspan="4">{{wlanInfo_recv}}</th>
+                    <th colspan="4">{{wlanInfo_tr}}</th>
+                </tr>
+                <tr>
+                    <th class='hd'>{{wlanInfo_bytes}}</th>
+                    <th class='hd'>{{wlanInfo_pkts}}</th>
+                    <th class='hd'>{{wlanInfo_errs}}</th>
+                    <th class='hd'>{{wlanInfo_drops}}</th>
+                    <th class='hd'>{{wlanInfo_bytes}}</th>
+                    <th class='hd'>{{wlanInfo_pkts}}</th>
+                    <th class='hd'>{{wlanInfo_errs}}</th>
+                    <th class='hd'>{{wlanInfo_drops}}</th>
+                </tr>
+            </thead>
+            <tbody id="Tab_SsidStatistics">
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<div class="page-content" id="staInfo" style="display:none;" disabled>
+    <p class="sk-warning-info">
+        {{wlanInfo_stas}}
+    </p>
+    <p class="skpage-title">{{wlanInfo_staInfo}}</p>
+
+    <div class="modset">
+        <div class="table-list">
+            <p><b id = "radio"></b>&nbsp   SSID:
+            <span id="ssid"></span>
+            </p>
+            <p>{{wlanInfo_staNum}}
+            <span id="STANum"></span>
+            </p>
+            <table id="STAInfoTable">
+                <thead>
+                    <tr>
+                        <th>{{wlanInfo_staMac}}</th>
+                        <th>{{wlanInfo_staDur}}</th>
+                        <th>{{wlanInfo_staTxRate}}</th>
+                        <th>{{wlanInfo_staRxRate}}</th>
+                        <th>{{wlanInfo_staStd}}</th>
+                        <th>{{wlanInfo_bw}}</th>
+                        <th>{{wlanInfo_rssi}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

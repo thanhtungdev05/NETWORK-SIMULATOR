@@ -1,0 +1,35 @@
+<div class="page-content">
+	<p class="sk-warning-info">
+		{{This page is used to check dns services.}}<br/>
+	</p>
+    <p class="skpage-title">{{DNSLookup Test}}</p>
+	<div class="modset">
+		<div class="skform-group">
+			<label class="skform-tittle" for="diag_dns_lookup_url">{{IP/Domain Address:}}</label>
+			<input type="text" class="skform-control" id="diag_dns_lookup_url" name="diag_dns_lookup_url"/>
+		</div>
+
+        <div class="skform-group">
+			<label class="skform-tittle" for="diag_dns_lookup_time">{{Timeout:}}</label>
+			<input type="text" class="skform-control" id="diag_dns_lookup_time" name="diag_dns_lookup_time"/>
+		</div>
+
+		<div class="skform-group">
+			<label class="skform-tittle" for="diag_dns_lookup_protocol">{{Protocol:}}</label>
+            <select size="1" class="skform-control" id="diag_dns_lookup_protocol" name="diag_dns_lookup_protocol" onChange="diag_dns_lookup_protocol_change(this)">
+                <option value="-4">IPv4</option>
+                <option value="-6">IPv6</option>
+            </select>
+		</div>
+	
+		<div class="skform-group">
+            <textarea id="diag_dns_lookup_result" style="height: 150px; width:580px;" readonly></textarea>
+        </div>
+
+        <div class="sk-form-submit">
+            <button class="btn-apply" type="button" name="button_start" id="button_start" onclick="btn_Start()">{{Start}}</button>
+        </div>
+
+	
+	</div>
+</div>

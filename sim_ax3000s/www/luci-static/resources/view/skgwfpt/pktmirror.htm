@@ -1,0 +1,33 @@
+<div class="page-content">
+	<p class="sk-warning-info">
+		{{On this page, you can select WAN and LAN to mirror the packet through WAN or LAN to LAN.}}<br/>
+	</p>
+    <p class="skpage-title">{{Packet Mirror}}</p>
+	<div class="modset">
+		<div class="skform-group">
+			<label class="skform-tittle" for="diag_pktmirror_srcintf">{{Source Interface:}}</label>
+            <select size="1" class="skform-control" id="diag_pktmirror_srcintf" name="diag_pktmirror_srcintf" onChange="diag_pktmirror_srcintf_change(this)">
+            </select>
+		</div>
+		
+		<div class="skform-group" style="display: none;">
+			<label class="skform-tittle" for="diag_pktmirror_direction">{{Direction:}}</label>
+            <select size="1" class="skform-control" id="diag_pktmirror_direction" name="diag_pktmirror_direction" onChange="diag_pktmirror_direction_change(this)">
+				<option value=0>Double</option>
+            </select>
+		</div>
+		
+		<div class="skform-group">
+			<label class="skform-tittle" for="diag_pktmirror_dstintf">{{Destion Interface:}}</label>
+			<div class="skform-content">
+				<ul id="diag_pktmirror_dstintflist">
+				</ul>
+			</div>
+		</div>
+
+        <div class="sk-form-submit">
+            <button class="btn-apply" type="button" name="button_start" id="button_start" onclick="btn_start()">{{Start}}</button>
+        </div>
+	
+	</div>
+</div>

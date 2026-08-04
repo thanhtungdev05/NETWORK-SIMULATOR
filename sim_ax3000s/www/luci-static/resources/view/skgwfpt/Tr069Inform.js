@@ -1,0 +1,6 @@
+
+var gDiagInformTimerFlag;var cpeInformStatus=0;function getObj(id){return(document.getElementById(id));}
+function getValue(id){return(getObj(id).value);}
+function pageLoad(){}
+function DiagInformResultQuery(){var ubusparam=new Array("gwweb.tr069","get_tr069_status",{});var jsonparam={"id":1,"params":ubusparam};sk_auth_post(jsonparam,function(result){console.log(result.result[1].status);cpeInformStatus=result.result[1].status;switch(cpeInformStatus){case 0:getObj("Ta_DiagInformResult").innerHTML=_("tr69inform_TermStarting");break;case 1:getObj("Ta_DiagInformResult").innerHTML=_("tr69inform_ConnEffective");break;case 2:getObj("Ta_DiagInformResult").innerHTML=_("tr69inform_NoDNSInfo");break;case 3:getObj("Ta_DiagInformResult").innerHTML=_("tr69inform_Interrupted");break;case 4:getObj("Ta_DiagInformResult").innerHTML=_("tr69inform_Succeeded");break;default:getObj("Ta_DiagInformResult").innerHTML=_("tr69inform_Failed");break;}});clearInterval(gDiagInformTimerFlag);}
+function DiagInformStart(){var ubusparam=new Array("tr069","inform",{"event":"2 periodic"});var jsonparam={"id":1,"params":ubusparam};sk_auth_post(jsonparam,function(result){});getObj("Tr_diagTipInform").style.display="";getObj("Ta_DiagInformResult").innerHTML="";gDiagInformTimerFlag=setInterval("DiagInformResultQuery()",10000);}

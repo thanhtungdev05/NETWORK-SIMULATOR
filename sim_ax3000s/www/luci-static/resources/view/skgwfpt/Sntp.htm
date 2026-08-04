@@ -1,0 +1,60 @@
+<div class="page-content">
+    <p class="sk-warning-info">
+		{{sntpWarningText}}<br/>
+	</p>
+	<p class="skpage-title">{{sntpServerTitleText}}</p>
+    <div class="modset">
+        <div class="skform-group">
+            <label class="skform-tittle" for="at-synctime-enable">{{syncEnableText}}</label>
+            <label class="skcheckbox skcheckbox-form">
+                <input type="checkbox" name="at-synctime-enable" id="at-synctime-enable" hidden />
+                <label for="at-synctime-enable" id="lb-at-synctime-enable" class="skcheckbox-label">
+                </label>
+            </label>
+        </div>
+        <div class="skform-group">
+            <label class="skform-tittle" for="at-system-time">{{systemTimeText}}</label>
+			<input type="text" class="skform-control" id="at-system-time" name="at-system-time" disabled/>
+        </div>
+        <div class="skform-group">
+            <label class="skform-tittle" for="at-prim-sntp-server">{{primSntpServerText}}</label>
+            <select size="1" class="skform-control" id="at-prim-sntp-server" name="at-prim-sntp-server" onchange="serverSelectClick(this)">
+                <option value="0.pool.ntp.org">0.pool.ntp.org</option>
+                <option value="1.pool.ntp.org">1.pool.ntp.org</option>
+                <option value="time.nist.gov">time.nist.gov</option>
+                <option value="Other">Other</option>
+            </select>
+            <input type="text" class="skform-control" style="margin-left: 5px;" id="at-prim-sntp-serverother"
+                name="at-prim-sntp-serverother" hidden />
+        </div>
+		<div class="skform-group">
+            <label class="skform-tittle" for="at-secd-sntp-server">{{secSntpServerText}}</label>
+            <select size="1" class="skform-control" id="at-secd-sntp-server" name="at-secd-sntp-server" onchange="serverSelectClick(this)">
+                <option value="None">None</option>
+                <option value="0.pool.ntp.org">0.pool.ntp.org</option>
+                <option value="1.pool.ntp.org">1.pool.ntp.org</option>
+                <option value="time.nist.gov">time.nist.gov</option>
+                <option value="Other">Other</option>
+            </select>
+            <input type="text" class="skform-control" style="margin-left: 5px;" id="at-secd-sntp-serverother"
+                name="at-secd-sntp-serverother" hidden />
+        </div>
+        <div class="skform-group">
+            <label class="skform-tittle" for="skg_sntp_daylight_enable">{{SkgSntpDatlightEnable}}</label>
+            <label class="skcheckbox skcheckbox-form">
+                <input type="checkbox" name="skg_sntp_daylight_enable" id="skg_sntp_daylight_enable" hidden />
+                <label for="skg_sntp_daylight_enable" id="lb_skg_sntp_daylight_enable" class="skcheckbox-label">
+                </label>
+            </label>
+        </div>
+		<div class="skform-group">
+            <label class="skform-tittle" for="at-time-zone">{{timeZoneText}}</label>
+			<select size="1" class="skform-control" id="at-time-zone" name="at-time-zone">
+            </select>
+        </div>
+		<div class="sk-form-submit">
+			<button class="btn-apply" type="button" name="at-sntp-button-apply" id="at-sntp-button-apply"
+				onclick="buttonApplyClick()">{{sntpBtnText}}</button>
+		</div>
+    </div>
+</div>

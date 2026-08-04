@@ -1,0 +1,33 @@
+<div class="page-content">
+	<p class="sk-warning-info">
+		{{Page description of static route}}
+	</p>
+	<p class="skpage-title" id="staticRouteTitle">{{Static Route Table}}</p>
+	<div class="modset" id="staticRouteContent">
+		<div class="table-list">
+			<div class="table-list-head">
+				<button class="btn btn-add" type="button" id="Btn_Route_Add" onclick="staticRouteAdd()">{{Add}}</button>
+				<button class="btn btn-del" type="button" id="Btn_Route_Del" onclick="staticRouteDel()">{{Delete}}</button>
+			</div>
+			<table id="staticRouteTbl" style="margin-bottom: 20px;" >
+				<thead>
+					<tr>
+						<th>
+							<label class="skcheckbox">
+								<input type="checkbox" name="selectAll" id="staticRouteAll_Sel" onClick='staticRouteSelectAll(this)' hidden/>
+								<label for="staticRouteAll_Sel" class="skcheckbox-label">
+								</label>
+							</label>
+						</th>
+						<th>{{IP Version}}</th>
+						<th>{{DstIP/PrefixLength}}</th>
+						<th>{{Gateway}}</th>
+						<th>{{Interface}}</th>
+						<th>{{Metric}}</th>
+					</tr>
+				</thead>
+				<tbody id="staticRouteTBody"></tbody>
+			</table>
+		</div>
+	</div>
+</div>

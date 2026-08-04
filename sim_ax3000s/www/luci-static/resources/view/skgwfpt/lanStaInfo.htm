@@ -1,0 +1,32 @@
+<div class="page-content">
+	<p class="sk-warning-info">
+		{{lanStaInfo_StatsStaText}}
+	</p>
+	<p class="skpage-title">{{wlanStaInfo_RSSIHistorySave}}</p>
+	<div class="modset" style="text-align: center; margin: 12px;">
+		<!-- <input class="btn-apply" type="button" name="Btn_download" id="Btn_download" style="margin-left: inherit;" value="{{lanStaInfo_SaveAndApplyText}}" onclick="sta_cfg_apply();">&nbsp; -->
+		<input id="Btn_Save" name="Btn_Save" type="button" class="btn-apply" style="margin: inherit;" value="{{wlanStaInfo_RSSIHistorySave}}" onclick="save();">
+	</div>
+	<p class="skpage-title">{{lanStaInfo_StaInfo}}</p>
+	<br>
+	<div class="table-list" style="margin-left:24px;width:900px;" >
+		<table>
+			<thead>
+				<tr>
+					<th>{{lanStaInfo_Index}}</th>
+					<th>{{lanStaInfo_DevName}}</th>
+					<th>{{lanStaInfo_IPAddr}}</th>
+					<th>{{lanStaInfo_MACAddress}}</th>
+					<th>{{lanStaInfo_Port}}</th>
+					<!-- <th>{{lanStaInfo_Status}}</th> -->
+					<th>{{lanStaInfo_DhcpTime}}</th>
+					<th>{{lanStaInfo_PhyRate}}</th>
+					<th>{{wlanStaInfo_Standard}}</th>
+					<th>{{wlanStaInfo_RSSI}}</th>
+				</tr>
+			</thead>
+			<tbody id="lanStaInfo_devlist">
+			</tbody>
+		</table>
+	</div>
+</div>

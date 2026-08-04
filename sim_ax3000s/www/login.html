@@ -45,8 +45,42 @@
   </div>
 
   <script>
+    let TRACKING_SESSION_START_URL = "/tracking/sessions/start";
+    let TRACKING_STATUS_LOGIN = "login";
+    let TRACKING_TECHNICIAN_ID = "DEV_TECH_001";
+    let TRACKING_LAB_ID = "LAB_VIRTUAL_ONT_AX3000S";
+    let TRACKING_MODE = "Thực hành";
+    let TRACKING_SESSION_ID = "";
+
+    window.TRACKING_SESSION_START_URL = TRACKING_SESSION_START_URL;
+    window.TRACKING_STATUS_LOGIN = TRACKING_STATUS_LOGIN;
+    window.TRACKING_TECHNICIAN_ID = TRACKING_TECHNICIAN_ID;
+    window.TRACKING_LAB_ID = TRACKING_LAB_ID;
+    window.TRACKING_MODE = TRACKING_MODE;
+    window.TRACKING_SESSION_ID = TRACKING_SESSION_ID;
+
+    function sendTrackingSessionStart(status) {
+      const body = {
+        technician_id: TRACKING_TECHNICIAN_ID,
+        lab_id: TRACKING_LAB_ID,
+        mode: TRACKING_MODE,
+        session_id: TRACKING_SESSION_ID || undefined,
+        status: status,
+      };
+
+      fetch(TRACKING_SESSION_START_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+        keepalive: true,
+      }).catch(function () {});
+    }
+
     function doLogin(e) {
       e.preventDefault();
+      sendTrackingSessionStart(TRACKING_STATUS_LOGIN);
       // Bản giả lập: không kiểm tra mật khẩu thật, chuyển thẳng vào trang quản trị.
       window.location.href = "app.html";
       return false;

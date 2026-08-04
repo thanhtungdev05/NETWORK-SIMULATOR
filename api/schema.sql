@@ -1,0 +1,9 @@
+-- Deprecated compatibility file.
+--
+-- Runtime requests must never execute schema changes. Apply the versioned,
+-- checksum-protected migrations with:
+--
+--   php api/migrate.php --status
+--   php api/migrate.php
+--
+-- Migration source of truth: api/migrations/*.sql

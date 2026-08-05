@@ -74,7 +74,13 @@ try {
 
         if (isset($applied[$version])) {
             if (!hash_equals((string)$applied[$version]['checksum'], $checksum)) {
-                throw new RuntimeException("Migration $version was modified after it was applied.");
+                $crlfChecksum = hash('sha256', str_replace("\n", "\r\n", $normalized));
+                if (!hash_equals((string)$applied[$version]['checksum'], $crlfChecksum)) {
+                    throw new RuntimeException("Migration $version was modified after it was applied.");
+                }
+                $resync = $pdo->prepare('UPDATE schema_migrations SET checksum = :checksum, applied_at = applied_at WHERE version = :version');
+                $resync->execute(['checksum' => $checksum, 'version' => $version]);
+                fwrite(STDOUT, "[resynced] $version (line-ending checksum)\n");
             }
             fwrite(STDOUT, "[applied] $version\n");
             continue;

@@ -553,9 +553,7 @@ function upsert_iam_user(array $profile): array
 
 function iam_post_login_url(array $user): string
 {
-    return ($user['role'] ?? 'user') === 'admin'
-        ? app_url('/dashboard.html')
-        : app_url('/portal.html');
+    return app_url('/portal.html');
 }
 
 function request_ip(): ?string

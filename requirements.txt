@@ -1,0 +1,5 @@
+# Python dependencies for FTC Virtual Devices
+# The project uses only standard library modules in this repository,
+# so no external Python packages are required by default.
+
+# Add package requirements here if you install any extras.

@@ -3,13 +3,45 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="refresh" content="0; url=login/">
   <title>FTC - Giả lập Thiết bị</title>
   <script>
-    window.location.replace('login/');
+    const query = new URLSearchParams(window.location.search);
+    const isIamCallback = query.has('code') || query.has('state') || query.has('error');
+    const state = query.get('state') || '';
+
+    function decodeBase64Url(value) {
+      const base64 = value.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
+      return atob(padded);
+    }
+
+    function localCallbackUrl() {
+      if (!state.startsWith('ftc-local-dev.')) {
+        return null;
+      }
+
+      try {
+        const originPart = state.split('.')[1] || '';
+        const origin = new URL(decodeBase64Url(originPart));
+        const isLocalHost = ['localhost', '127.0.0.1', '::1'].includes(origin.hostname);
+        if (origin.protocol !== 'http:' || !isLocalHost) {
+          return null;
+        }
+        return `${origin.origin}/api/index.php/iam/callback${window.location.search}`;
+      } catch (error) {
+        return null;
+      }
+    }
+
+    const localTarget = localCallbackUrl();
+    const target = isIamCallback
+      ? localTarget || `api/index.php/iam/callback${window.location.search}`
+      : 'login/index.html';
+
+    window.location.replace(target);
   </script>
 </head>
 <body>
-  <p>Đang chuyển đến trang đăng nhập… <a href="login/">Tiếp tục</a></p>
+  <p>Đang chuyển hướng… <a href="login/index.html">Tiếp tục</a></p>
 </body>
 </html>

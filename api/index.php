@@ -111,6 +111,35 @@ function is_https_request(): bool
     return $forwardedProto === 'https';
 }
 
+function is_local_request(): bool
+{
+    $host = strtolower((string)($_SERVER['HTTP_HOST'] ?? ''));
+    $host = explode(':', $host)[0] ?? $host;
+
+    return in_array($host, ['localhost', '127.0.0.1', '::1'], true);
+}
+
+function dev_bypass_enabled(): bool
+{
+    return is_local_request() || env_bool('AUTH_BYPASS_DEV', false);
+}
+
+function request_origin(): string
+{
+    $scheme = is_https_request() ? 'https' : 'http';
+    return $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
+}
+
+function base64url_encode(string $value): string
+{
+    return rtrim(strtr(base64_encode($value), '+/', '-_'), '=');
+}
+
+function should_use_secure_session_cookie(): bool
+{
+    return env_bool('SESSION_COOKIE_SECURE', is_https_request()) && is_https_request();
+}
+
 function initialize_session(string $root): void
 {
     $ttlSeconds = env_int('SESSION_TTL_SECONDS', 3600, 300, 86400);
@@ -119,7 +148,9 @@ function initialize_session(string $root): void
     ini_set('session.gc_maxlifetime', (string)$ttlSeconds);
     session_name(env_value('SESSION_COOKIE_NAME', 'ftc_session'));
 
-    $driver = strtolower(env_value('SESSION_DRIVER', 'files'));
+    $driver = strtolower(is_local_request()
+        ? env_value('SESSION_DRIVER_LOCAL', 'files')
+        : env_value('SESSION_DRIVER', 'files'));
     if ($driver === 'database') {
         session_set_save_handler(new PostgresSessionHandler(fn(): PDO => db(), $ttlSeconds), true);
     } elseif ($driver === 'files') {
@@ -140,12 +171,21 @@ function initialize_session(string $root): void
         'path' => '/',
         'httponly' => true,
         'samesite' => 'Lax',
-        'secure' => env_bool('SESSION_COOKIE_SECURE', is_https_request()),
+        'secure' => should_use_secure_session_cookie(),
     ]);
     session_start();
 }
 
-if (api_resource_requires_session($resource)) {
+function is_root_iam_callback(string $resource, string $method): bool
+{
+    return $resource === ''
+        && $method === 'GET'
+        && (isset($_GET['code']) || isset($_GET['error']) || isset($_GET['state']));
+}
+
+$requiresSession = api_resource_requires_session($resource) || $resource === 'dev' || is_root_iam_callback($resource, $method);
+
+if ($requiresSession) {
     try {
         initialize_session($root);
     } catch (Throwable $exception) {
@@ -170,6 +210,11 @@ function mock_bypass_user(): array
     ];
 }
 
+function is_dev_bypass_session(): bool
+{
+    return dev_bypass_enabled() && (($_SESSION['iam_subject'] ?? null) === 'dev-bypass-admin');
+}
+
 function current_email(): ?string
 {
     return $_SESSION['user_email'] ?? null;
@@ -182,10 +227,14 @@ function current_user_id(): ?string
 
 function require_user(): array
 {
+    if (is_dev_bypass_session()) {
+        return mock_bypass_user();
+    }
+
     $userId = current_user_id();
     $email = current_email();
     if (!$userId && !$email) {
-        if (env_bool('AUTH_BYPASS_DEV', false)) {
+        if (dev_bypass_enabled()) {
             return mock_bypass_user();
         }
         fail(401, 'auth/unauthenticated', 'You must sign in first.');
@@ -193,7 +242,7 @@ function require_user(): array
 
     $user = $userId ? find_user_by_id($userId) : find_user((string)$email);
     if (!$user) {
-        if (env_bool('AUTH_BYPASS_DEV', false)) {
+        if (dev_bypass_enabled()) {
             return mock_bypass_user();
         }
         unset($_SESSION['user_id'], $_SESSION['user_email'], $_SESSION['iam_subject']);
@@ -204,9 +253,13 @@ function require_user(): array
 
 function require_admin(): array
 {
+    if (is_dev_bypass_session()) {
+        return mock_bypass_user();
+    }
+
     $user = require_user();
     if (($user['role'] ?? 'user') !== 'admin') {
-        if (env_bool('AUTH_BYPASS_DEV', false)) {
+        if (dev_bypass_enabled()) {
             return mock_bypass_user();
         }
         fail(403, 'permission-denied', 'Admin permission is required.');
@@ -374,7 +427,7 @@ function iam_provider(): Keycloak
     $realm = env_value('IAM_REALM');
     $clientId = env_value('IAM_CLIENT_ID');
     $clientSecret = env_value('IAM_CLIENT_SECRET');
-    $redirectUri = env_value('IAM_REDIRECT_URI', app_url('/api/index.php/iam/callback'));
+    $redirectUri = env_value('IAM_REDIRECT_URI', app_url('/'));
 
     if (!$authServerUrl || !$realm || !$clientId || !$clientSecret || !$redirectUri) {
         fail(500, 'iam-config-error', 'IAM config is missing. Set IAM_AUTH_SERVER_URL, IAM_REALM, IAM_CLIENT_ID, IAM_CLIENT_SECRET and IAM_REDIRECT_URI.');
@@ -557,12 +610,14 @@ function handle_auth(array $segments, string $method): void
 
     if ($action === 'session' && $method === 'GET') {
         $user = null;
-        if (current_user_id()) {
+        if (is_dev_bypass_session()) {
+            $user = mock_bypass_user();
+        } elseif (current_user_id()) {
             $user = find_user_by_id((string)current_user_id());
         } elseif (current_email()) {
             $user = find_user((string)current_email());
         }
-        if (!$user && env_bool('AUTH_BYPASS_DEV', false)) {
+        if (!$user && dev_bypass_enabled()) {
             $user = mock_bypass_user();
         }
         respond(['user' => user_response($user)]);
@@ -570,7 +625,9 @@ function handle_auth(array $segments, string $method): void
 
     if ($action === 'logout' && $method === 'POST') {
         $user = null;
-        if (current_user_id()) {
+        if (is_dev_bypass_session()) {
+            $user = null;
+        } elseif (current_user_id()) {
             $user = find_user_by_id((string)current_user_id());
         } elseif (current_email()) {
             $user = find_user((string)current_email());
@@ -601,44 +658,53 @@ function handle_iam(array $segments, string $method): void
     if ($action === 'login' && $method === 'GET') {
         $provider = iam_provider();
         $scope = preg_split('/\s+/', trim(env_value('IAM_SCOPE', 'openid profile email'))) ?: ['openid', 'profile', 'email'];
-        $authUrl = $provider->getAuthorizationUrl(['scope' => $scope]);
+        $authOptions = ['scope' => $scope];
+        if (is_local_request() && (string)($_GET['local'] ?? '') === '1') {
+            $authOptions['state'] = 'ftc-local-dev.' . base64url_encode(request_origin()) . '.' . bin2hex(random_bytes(16));
+        }
+        $authUrl = $provider->getAuthorizationUrl($authOptions);
         $_SESSION['oauth2state'] = $provider->getState();
         redirect_to($authUrl);
     }
 
     if ($action === 'callback' && $method === 'GET') {
-        if (!empty($_GET['error'])) {
-            $message = (string)($_GET['error_description'] ?? $_GET['error']);
-            fail(401, 'iam/login-failed', $message);
-        }
-
-        $state = (string)($_GET['state'] ?? '');
-        if ($state === '' || empty($_SESSION['oauth2state']) || $state !== $_SESSION['oauth2state']) {
-            unset($_SESSION['oauth2state']);
-            fail(400, 'iam/invalid-state', 'Invalid IAM state. Please start login again.');
-        }
-        unset($_SESSION['oauth2state']);
-
-        $code = (string)($_GET['code'] ?? '');
-        if ($code === '') {
-            fail(400, 'iam/missing-code', 'IAM callback is missing authorization code.');
-        }
-
-        $provider = iam_provider();
-        $token = $provider->getAccessToken('authorization_code', ['code' => $code]);
-        $owner = $provider->getResourceOwner($token);
-        $profile = $owner->toArray();
-        $user = upsert_iam_user($profile);
-
-        session_regenerate_id(true);
-        $_SESSION['user_id'] = $user['user_id'];
-        $_SESSION['user_email'] = $user['email'];
-        $_SESSION['iam_subject'] = $user['iam_subject'] ?? null;
-        record_login_log($user);
-        redirect_to(iam_post_login_url($user));
+        process_iam_callback();
     }
 
     fail(404, 'not-found', 'IAM endpoint not found.');
+}
+
+function process_iam_callback(): void
+{
+    if (!empty($_GET['error'])) {
+        $message = (string)($_GET['error_description'] ?? $_GET['error']);
+        fail(401, 'iam/login-failed', $message);
+    }
+
+    $state = (string)($_GET['state'] ?? '');
+    if ($state === '' || empty($_SESSION['oauth2state']) || $state !== $_SESSION['oauth2state']) {
+        unset($_SESSION['oauth2state']);
+        fail(400, 'iam/invalid-state', 'Invalid IAM state. Please start login again.');
+    }
+    unset($_SESSION['oauth2state']);
+
+    $code = (string)($_GET['code'] ?? '');
+    if ($code === '') {
+        fail(400, 'iam/missing-code', 'IAM callback is missing authorization code.');
+    }
+
+    $provider = iam_provider();
+    $token = $provider->getAccessToken('authorization_code', ['code' => $code]);
+    $owner = $provider->getResourceOwner($token);
+    $profile = $owner->toArray();
+    $user = upsert_iam_user($profile);
+
+    session_regenerate_id(true);
+    $_SESSION['user_id'] = $user['user_id'];
+    $_SESSION['user_email'] = $user['email'];
+    $_SESSION['iam_subject'] = $user['iam_subject'] ?? null;
+    record_login_log($user);
+    redirect_to(iam_post_login_url($user));
 }
 
 function query_limit(int $default = 100, int $maximum = 500): int
@@ -963,7 +1029,7 @@ function handle_activity_logs(array $segments, string $method): void
         );
 
         // In development bypass mode, avoid writing activity logs to DB to prevent FK errors
-        if (env_bool('AUTH_BYPASS_DEV', false)) {
+        if (dev_bypass_enabled()) {
             $now = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
             $fake = [
                 'id' => 0,
@@ -1111,13 +1177,45 @@ function handle_dev(array $segments, string $method): void
 {
     $action = $segments[1] ?? '';
     if ($action === 'bypass' && $method === 'GET') {
-        if (!env_bool('AUTH_BYPASS_DEV', false)) {
+        if (!dev_bypass_enabled()) {
             fail(404, 'not-found', 'Dev endpoint not available.');
         }
+
+        $user = mock_bypass_user();
+        session_regenerate_id(true);
+        $_SESSION['user_id'] = $user['user_id'];
+        $_SESSION['user_email'] = $user['email'];
+        $_SESSION['iam_subject'] = $user['iam_subject'] ?? null;
+
+        if ((string)($_GET['format'] ?? '') === 'json') {
+            respond([
+                'ok' => true,
+                'bypass' => true,
+                'user' => user_response($user),
+            ]);
+        }
+
+        $next = (string)($_GET['next'] ?? '/portal.html');
+        if ($next === '' || !str_starts_with($next, '/') || str_starts_with($next, '//')) {
+            $next = '/portal.html';
+        }
+        redirect_to($next);
+    }
+    if ($action === 'bypass' && $method === 'POST') {
+        if (!dev_bypass_enabled()) {
+            fail(404, 'not-found', 'Dev endpoint not available.');
+        }
+
+        $user = mock_bypass_user();
+        session_regenerate_id(true);
+        $_SESSION['user_id'] = $user['user_id'];
+        $_SESSION['user_email'] = $user['email'];
+        $_SESSION['iam_subject'] = $user['iam_subject'] ?? null;
+
         respond([
             'ok' => true,
             'bypass' => true,
-            'user' => user_response(mock_bypass_user()),
+            'user' => user_response($user),
         ]);
     }
     fail(404, 'not-found', 'Dev endpoint not found.');
@@ -1144,6 +1242,8 @@ try {
         handle_dev($segments, $method);
     } elseif ($resource === 'health') {
         handle_health($method);
+    } elseif (is_root_iam_callback($resource, $method)) {
+        process_iam_callback();
     } elseif ($resource === '') {
         respond([
             'ok' => true,

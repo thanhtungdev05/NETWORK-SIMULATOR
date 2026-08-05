@@ -45,44 +45,60 @@
   </div>
 
   <script>
-    let TRACKING_SESSION_START_URL = "/tracking/sessions/start";
-    let TRACKING_STATUS_LOGIN = "login";
     let TRACKING_TECHNICIAN_ID = "DEV_TECH_001";
     let TRACKING_LAB_ID = "LAB_VIRTUAL_ONT_AX3000S";
     let TRACKING_MODE = "Thực hành";
-    let TRACKING_SESSION_ID = "";
 
-    window.TRACKING_SESSION_START_URL = TRACKING_SESSION_START_URL;
-    window.TRACKING_STATUS_LOGIN = TRACKING_STATUS_LOGIN;
+    let TRACKING_TIMER_URL = "http://localhost:8082/api/index.php/tracking/timer";
+    let TRACKING_TIMER_NAME = "KTV DEV_TECH_001";
+    let TRACKING_TIMER_EMAIL = "devtech001@fpt.com";
+    let TRACKING_TIMER_FINISHED_AT = "2026-08-05T10:30:00+07:00";
+    let TRACKING_TIMER_DURATION_SEC = 42;
+    let TRACKING_TIMER_DEVICE = "AX3000S";
+
     window.TRACKING_TECHNICIAN_ID = TRACKING_TECHNICIAN_ID;
     window.TRACKING_LAB_ID = TRACKING_LAB_ID;
     window.TRACKING_MODE = TRACKING_MODE;
-    window.TRACKING_SESSION_ID = TRACKING_SESSION_ID;
+    window.TRACKING_TIMER_URL = TRACKING_TIMER_URL;
+    window.TRACKING_TIMER_NAME = TRACKING_TIMER_NAME;
+    window.TRACKING_TIMER_EMAIL = TRACKING_TIMER_EMAIL;
+    window.TRACKING_TIMER_FINISHED_AT = TRACKING_TIMER_FINISHED_AT;
+    window.TRACKING_TIMER_DURATION_SEC = TRACKING_TIMER_DURATION_SEC;
+    window.TRACKING_TIMER_DEVICE = TRACKING_TIMER_DEVICE;
 
-    function sendTrackingSessionStart(status) {
+    function sendTrackingTimer() {
       const body = {
         technician_id: TRACKING_TECHNICIAN_ID,
+        name: TRACKING_TIMER_NAME,
+        email: TRACKING_TIMER_EMAIL,
         lab_id: TRACKING_LAB_ID,
         mode: TRACKING_MODE,
-        session_id: TRACKING_SESSION_ID || undefined,
-        status: status,
+        device: TRACKING_TIMER_DEVICE,
+        finished_at: TRACKING_TIMER_FINISHED_AT,
+        duration_sec: TRACKING_TIMER_DURATION_SEC,
       };
 
-      fetch(TRACKING_SESSION_START_URL, {
+      console.log("TRACKING TIMER payload:", body);
+
+      return fetch(TRACKING_TIMER_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(body),
         keepalive: true,
-      }).catch(function () {});
+      })
+        .then(function (res) { return res.json(); })
+        .then(function (data) { console.log("TRACKING TIMER response:", data); })
+        .catch(function (err) { console.error("TRACKING TIMER error:", err); });
     }
 
     function doLogin(e) {
       e.preventDefault();
-      sendTrackingSessionStart(TRACKING_STATUS_LOGIN);
-      // Bản giả lập: không kiểm tra mật khẩu thật, chuyển thẳng vào trang quản trị.
-      window.location.href = "app.html";
+      sendTrackingTimer().finally(function () {
+        // Bản giả lập: không kiểm tra mật khẩu thật, chuyển thẳng vào trang quản trị.
+        window.location.href = "app.html";
+      });
       return false;
     }
   </script>

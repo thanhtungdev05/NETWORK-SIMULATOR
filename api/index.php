@@ -16,8 +16,16 @@ $GLOBALS['request_id'] = bin2hex(random_bytes(8));
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 header('X-Request-ID: ' . $GLOBALS['request_id']);
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Tracking-Key');
+header('Access-Control-Max-Age: 86400');
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+
+if ($method === 'OPTIONS') {
+    respond([], 204);
+}
 $path = $_SERVER['PATH_INFO'] ?? '';
 if ($path === '') {
     $requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';

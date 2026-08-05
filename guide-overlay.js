@@ -219,12 +219,28 @@
     } catch (e) {}
   }
 
+  // Auto-clear prefilled input values (text and password) so user fields start empty
+  function autoClearFormInputs() {
+    try {
+      const inputs = document.querySelectorAll('input[type="text"]:not([readonly]):not([disabled]), input[type="password"]:not([readonly]):not([disabled]), input:not([type]):not([readonly]):not([disabled])');
+      inputs.forEach(function(inp) {
+        if (!inp.getAttribute('data-ftc-cleared')) {
+          inp.value = '';
+          inp.setAttribute('data-ftc-cleared', '1');
+        }
+      });
+    } catch(e) {}
+  }
+
   function init() {
     injectStyles();
+    autoClearFormInputs();
     requestPopupsFromTop();
 
-    // Loop interval to maintain popup positioning
+    // Loop interval to maintain popup positioning and auto-clear dynamically added inputs
     setInterval(() => {
+      autoClearFormInputs();
+
       // If parent has cached popups, sync
       try {
         if (window.parent && window.parent.__cachedGuidePopups) {

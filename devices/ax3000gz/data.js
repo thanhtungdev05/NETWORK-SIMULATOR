@@ -6,11 +6,11 @@ window.DEVICE_AX3000GZ = {
   id: 'ax3000gz',
   name: 'AX3000GZ',
   shortName: 'AX3000GZ',
-  port: 8094,
+  port: 8080,
   folder: 'sim_ax3000gz',
   serverBat: 'chay_server.bat',
   needsServer: false,
-  loginUrl: 'http://127.0.0.1:8094/cgi-bin/luci/login',
+  loginUrl: '/sim_ax3000gz/cgi-bin/luci/login',
   categories: [
     {
       title: 'HỌC TẬP',
@@ -20,14 +20,14 @@ window.DEVICE_AX3000GZ = {
           title: 'Bài 1 - Cấu hình WAN Interface',
           subtitle: 'Thiết lập kết nối Internet WAN cho AX3000GZ',
           instructions: [
-            'Truy cập <b>http://127.0.0.1:8094</b> và đăng nhập',
+            'Truy cập <b>/sim_ax3000gz</b> và đăng nhập',
             'Chọn <b>Internet → WAN → Interface</b>',
             '- Connection Type: <span class="val">PPPoE hoặc DHCP</span>',
             '- PPPoE User: <span class="val">Theo thông tin nhà mạng</span>',
             '- VLAN ID: <span class="val">Theo thông số kỹ thuật</span>',
             'Bấm <b>Apply</b> để lưu',
           ],
-          practiceUrl: 'http://127.0.0.1:8094/cgi-bin/luci/admin/internet/wan/interface',
+          practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/internet/wan/interface',
           grading: {
             description: 'Kiểm tra WAN Interface trên AX3000GZ',
             rules: []
@@ -45,7 +45,7 @@ window.DEVICE_AX3000GZ = {
             '- Passphrase: <span class="val">Nhập mật khẩu mạnh</span>',
             'Bấm <b>Apply</b>',
           ],
-          practiceUrl: 'http://127.0.0.1:8094/cgi-bin/luci/admin/localnetwork/WLAN/WLANbasic',
+          practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/localnetwork/WLAN/WLANbasic',
           grading: {
             description: 'Kiểm tra cấu hình WLAN Basic',
             rules: []
@@ -64,7 +64,7 @@ window.DEVICE_AX3000GZ = {
             '- TX Power: <span class="val">100%</span>',
             'Bấm <b>Apply</b>',
           ],
-          practiceUrl: 'http://127.0.0.1:8094/cgi-bin/luci/admin/localnetwork/WLAN/WLANAdvanced',
+          practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/localnetwork/WLAN/WLANAdvanced',
           grading: {
             description: 'Kiểm tra WLAN Advanced settings',
             rules: []
@@ -83,7 +83,7 @@ window.DEVICE_AX3000GZ = {
             '- LAN Port: <span class="val">80</span>',
             'Bấm <b>Apply</b>',
           ],
-          practiceUrl: 'http://127.0.0.1:8094/cgi-bin/luci/admin/internet/security/forwards',
+          practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/internet/security/forwards',
           grading: {
             description: 'Kiểm tra Forwards NAT rules',
             rules: []
@@ -100,7 +100,7 @@ window.DEVICE_AX3000GZ = {
             '- Account/Password: <span class="val">Tài khoản No-IP</span>',
             'Bấm <b>Apply</b> và kiểm tra trạng thái cập nhật',
           ],
-          practiceUrl: 'http://127.0.0.1:8094/cgi-bin/luci/admin/internet/ddns/dynamicDDNS',
+          practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/internet/ddns/dynamicDDNS',
           grading: {
             description: 'Kiểm tra Dynamic DDNS configuration',
             rules: []
@@ -118,7 +118,7 @@ window.DEVICE_AX3000GZ = {
             'Chỉ dùng cho máy chủ chuyên dụng, không phải PC thường',
             'Bấm <b>Apply</b>',
           ],
-          practiceUrl: 'http://127.0.0.1:8094/cgi-bin/luci/admin/internet/security/DMZ',
+          practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/internet/security/DMZ',
           grading: {
             description: 'Kiểm tra DMZ Host IP',
             rules: []
@@ -136,7 +136,7 @@ window.DEVICE_AX3000GZ = {
             'Band Steering giúp thiết bị 5GHz không bị "dính" ở 2.4GHz',
             'Bấm <b>Apply</b>',
           ],
-          practiceUrl: 'http://127.0.0.1:8094/cgi-bin/luci/admin/localnetwork/WLAN/BandSteering',
+          practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/localnetwork/WLAN/BandSteering',
           grading: {
             description: 'Kiểm tra Band Steering enablement',
             rules: []
@@ -152,7 +152,7 @@ window.DEVICE_AX3000GZ = {
             '<b>Import:</b> Chọn file → Bấm <b>Restore</b>',
             '<b>Reset:</b> Bấm <b>Factory Default</b>',
           ],
-          practiceUrl: 'http://127.0.0.1:8094/cgi-bin/luci/admin/management/system/backuprestore',
+          practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/management/system/backuprestore',
           grading: {
             description: 'Kiểm tra Backup/Restore operations',
             rules: []
@@ -170,7 +170,7 @@ window.DEVICE_AX3000GZ = {
             '- Time: <span class="val">03:00 AM</span>',
             'Bấm <b>Apply</b>',
           ],
-          practiceUrl: 'http://127.0.0.1:8094/cgi-bin/luci/admin/management/system/schedulereboot',
+          practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/management/system/schedulereboot',
           grading: {
             description: 'Kiểm tra Schedule Reboot configuration',
             rules: []
@@ -188,7 +188,7 @@ window.DEVICE_AX3000GZ = {
             '- Schedule: <span class="val">Always Active</span>',
             'Bấm <b>Apply</b>',
           ],
-          practiceUrl: 'http://127.0.0.1:8094/cgi-bin/luci/admin/internet/security/filterCriteria',
+          practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/internet/security/filterCriteria',
           grading: {
             description: 'Kiểm tra URL Filter Criteria',
             rules: []

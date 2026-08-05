@@ -34,7 +34,7 @@ Mở **Command Prompt (CMD)** hoặc **PowerShell** tại thư mục dự án v�
 .\CHAY-TAT-CA.bat
 ```
 
-> **Mô tả**: Lệnh này sẽ tự động bật 7 cửa sổ CMD tương ứng với 7 server dịch vụ và tự động mở trình duyệt truy cập địa chỉ `http://127.0.0.1:8080`.
+> **Mô tả**: Lệnh này sẽ tự động khởi chạy Master Server duy nhất và tự động mở trình duyệt truy cập địa chỉ `http://localhost:8080`. Không còn hiện tượng bật nhiều cửa sổ CMD rác như trước.
 
 ---
 
@@ -45,33 +45,29 @@ Chạy lệnh Python trực tiếp từ thư mục gốc dự án:
 python run_all.py
 ```
 
-> **Mô tả**: Script Python sẽ khởi tạo tất cả các server giả lập trên từng cổng tương ứng và tự động mở trình duyệt tại `http://localhost:8080`.
+> **Mô tả**: Script Python sẽ khởi tạo Master Dispatcher để gánh toàn bộ hệ thống trên duy nhất 1 cổng, tự động mở trình duyệt tại `http://localhost:8080`.
 
 ---
 
-## 🌐 3. Danh Sách Các Server & Cổng Dịch Vụ (Ports)
+## 🌐 3. Cổng Dịch Vụ (Ports)
 
-Khi hệ thống khởi chạy, các dịch vụ sẽ hoạt động tại các địa chỉ sau:
+Hệ thống đã được tối ưu hóa theo kiến trúc Master Dispatcher, vì vậy **toàn bộ Portal và các Thiết bị giả lập đều chạy chung trên 1 cổng duy nhất**.
 
 | STT | Dịch Vụ / Thiết Bị | Địa Chỉ Truy Cập | Cổng (Port) |
 |---|---|---|---|
-| 1 | **Portal Trung Tâm** | `http://localhost:8080` | `8080` |
-| 2 | **Server AC1000F** | `http://localhost:8081` | `8081` |
-| 3 | **Server AX3000C** | `http://localhost:8090` | `8090` |
-| 4 | **Server AX3000Hv2** | `http://localhost:8092` | `8092` |
-| 5 | **Server AX3000GZ** | `http://localhost:8094` | `8094` |
-| 6 | **Server BE15000** | `http://localhost:8096` | `8096` |
-| 7 | **Server AX3000S** | `http://localhost:8098` | `8098` |
+| 1 | **Toàn bộ hệ thống** | `http://localhost:8080` | `8080` |
+
+*Lưu ý: Các thiết bị như AC1000F, AX3000C... sẽ được truy cập thông qua các đường dẫn con (Ví dụ: `http://localhost:8080/sim_ac1000f/`) thay vì mở thêm cổng riêng.*
 
 ---
 
 ## 🛑 4. Hướng Dẫn Dừng Hệ Thống
 
-- **Windows (mở nhiều cửa sổ)**: Đóng tất cả các cửa sổ Command Prompt (`CMD`) được tạo ra khi chạy script.
+- **Windows**: Đóng cửa sổ Command Prompt (`CMD`) duy nhất đang chạy.
 - **Terminal**: Nhấn `Ctrl + C` tại cửa sổ Terminal đang chạy script để dừng dịch vụ.
 
 ---
 
 ## 📝 Ghi Chú
-- Giữ nguyên các cửa sổ terminal/CMD trong suốt quá trình sử dụng và thực hành.
-- Nếu gặp lỗi cổng bị chiếm dụng (Address already in use), hãy đảm bảo không có ứng dụng nào khác đang sử dụng các cổng từ `8080` đến `8098`.
+- Giữ nguyên cửa sổ terminal/CMD duy nhất đó trong suốt quá trình sử dụng và thực hành.
+- Nếu gặp lỗi cổng bị chiếm dụng (Address already in use), hãy đảm bảo không có ứng dụng nào khác đang sử dụng cổng `8080`.

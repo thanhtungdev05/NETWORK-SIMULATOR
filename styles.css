@@ -816,3 +816,104 @@ html, body {
   .hero-image-wrap { max-width: 100%; }
   #lesson-screen { padding: 16px; }
 }
+
+/* ── GUIDE POPUP TOOLTIPS (HƯỚNG DẪN BÀI HỌC) ───────────── */
+.guide-tooltip-bubble {
+  position: absolute;
+  z-index: 99999;
+  background-color: #e50019;
+  color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+  padding: 6px 12px;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(229, 0, 25, 0.35), 0 2px 4px rgba(0, 0, 0, 0.2);
+  white-space: nowrap;
+  pointer-events: none;
+  animation: guidePopupFadeIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.guide-tooltip-bubble::before {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-style: solid;
+}
+
+/* Mũi tên trỏ SANG TRÁI (Tooltip đặt bên PHẢI phần tử) */
+.guide-tooltip-bubble.pos-right::before {
+  top: 50%;
+  left: -7px;
+  transform: translateY(-50%);
+  border-width: 6px 7px 6px 0;
+  border-color: transparent #e50019 transparent transparent;
+}
+
+/* Mũi tên trỏ SANG PHẢI (Tooltip đặt bên TRÁI phần tử) */
+.guide-tooltip-bubble.pos-left::before {
+  top: 50%;
+  right: -7px;
+  transform: translateY(-50%);
+  border-width: 6px 0 6px 7px;
+  border-color: transparent transparent transparent #e50019;
+}
+
+/* Mũi tên trỏ LÊN TRÊN (Tooltip đặt PHÍA DƯỚI phần tử) */
+.guide-tooltip-bubble.pos-bottom::before {
+  left: 50%;
+  top: -7px;
+  transform: translateX(-50%);
+  border-width: 0 6px 7px 6px;
+  border-color: transparent transparent #e50019 transparent;
+}
+
+/* Mũi tên trỏ XUỐNG DƯỚI (Tooltip đặt PHÍA TRÊN phần tử) */
+.guide-tooltip-bubble.pos-top::before {
+  left: 50%;
+  bottom: -7px;
+  transform: translateX(-50%);
+  border-width: 7px 6px 0 6px;
+  border-color: #e50019 transparent transparent transparent;
+}
+
+@keyframes guidePopupFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.btn-toggle-guide {
+  background: #e50019;
+  color: #ffffff;
+  border: none;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(229, 0, 25, 0.3);
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-right: 10px;
+}
+.btn-toggle-guide:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(229, 0, 25, 0.5);
+}
+.btn-toggle-guide.off {
+  background: #6c757d;
+  box-shadow: none;
+  opacity: 0.8;
+}
+
+

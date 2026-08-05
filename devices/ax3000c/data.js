@@ -6,12 +6,12 @@ window.DEVICE_AX3000C = {
   id: 'ax3000c',
   name: 'AX3000C',
   shortName: 'AX3000C',
-  port: 8090,
+  port: 8080,
   folder: 'sim_ax3000c',
   serverBat: 'chay_server.bat',
   needsServer: false,
-  loginUrl: 'http://127.0.0.1:8090/#/login',
-  resetSessionUrl: 'http://127.0.0.1:8090/sim-reset-session',
+  loginUrl: '/sim_ax3000c/#/login',
+  resetSessionUrl: '/sim_ax3000c/sim-reset-session',
   categories: [
     {
       title: 'HỌC TẬP',
@@ -21,14 +21,14 @@ window.DEVICE_AX3000C = {
           title: 'Bài 1 - Cấu hình WAN/Internet',
           subtitle: 'Thiết lập kết nối Internet cho AX3000C',
           instructions: [
-            'Truy cập <b>http://127.0.0.1:8090</b> và đăng nhập',
+            'Truy cập <b>/sim_ax3000c</b> và đăng nhập',
             'Chọn <b>Network → Internet → WAN Interface</b>',
             '- WAN Mode: <span class="val">PPPoE / DHCP tùy yêu cầu</span>',
             '- VLAN ID: <span class="val">Theo thông số nhà mạng</span>',
             'Điền đầy đủ thông tin PPPoE nếu được yêu cầu',
             'Bấm <b>Apply</b> để lưu',
           ],
-          practiceUrl: 'http://127.0.0.1:8090/#/network/wan',
+          practiceUrl: '/sim_ax3000c/#/network/wan',
           grading: {
             description: 'Kiểm tra cấu hình WAN Interface trên AX3000C',
             rules: []
@@ -39,7 +39,7 @@ window.DEVICE_AX3000C = {
           title: 'Bài 2 - Cấu hình WiFi',
           subtitle: 'Thiết lập SSID, bảo mật WiFi 2.4G/5G',
           instructions: [
-            'Truy cập <b>http://127.0.0.1:8090</b> và đăng nhập',
+            'Truy cập <b>/sim_ax3000c</b> và đăng nhập',
             'Chọn <b>Local Network → WLAN → WLAN Basic</b>',
             '- SSID 2.4G: <span class="val">FPT_Nha_Toi_2G</span>',
             '- SSID 5G: <span class="val">FPT_Nha_Toi_5G</span>',
@@ -47,7 +47,7 @@ window.DEVICE_AX3000C = {
             '- Password: <span class="val">Tối thiểu 8 ký tự</span>',
             'Bấm <b>Apply</b> để kích hoạt',
           ],
-          practiceUrl: 'http://127.0.0.1:8090/#/network/wifi',
+          practiceUrl: '/sim_ax3000c/#/network/wifi',
           grading: {
             description: 'Kiểm tra SSID và WPA Key 2.4G/5G',
             rules: []
@@ -58,7 +58,7 @@ window.DEVICE_AX3000C = {
           title: 'Bài 3 - Cấu hình LAN & DHCP',
           subtitle: 'Quản lý dải IP LAN và máy chủ DHCP',
           instructions: [
-            'Truy cập <b>http://127.0.0.1:8090</b> và đăng nhập',
+            'Truy cập <b>/sim_ax3000c</b> và đăng nhập',
             'Chọn <b>Local Network → LAN → DHCP Status</b>',
             '- LAN IP: <span class="val">192.168.1.1</span>',
             '- DHCP Pool Start: <span class="val">192.168.1.100</span>',
@@ -66,7 +66,7 @@ window.DEVICE_AX3000C = {
             '- Lease Time: <span class="val">24 giờ</span>',
             'Bấm <b>Apply</b> để lưu',
           ],
-          practiceUrl: 'http://127.0.0.1:8090/#/network/dhcp',
+          practiceUrl: '/sim_ax3000c/#/network/dhcp',
           grading: {
             description: 'Kiểm tra cấu hình DHCP Pool',
             rules: []
@@ -85,7 +85,7 @@ window.DEVICE_AX3000C = {
             '- LAN Port: <span class="val">443</span>',
             'Bấm <b>Apply</b>',
           ],
-          practiceUrl: 'http://127.0.0.1:8090/#/network/portfwd',
+          practiceUrl: '/sim_ax3000c/#/network/portfwd',
           grading: {
             description: 'Kiểm tra Port Forwarding Rules',
             rules: []
@@ -103,7 +103,7 @@ window.DEVICE_AX3000C = {
             '- Update Interval: <span class="val">30 phút</span>',
             'Bấm <b>Apply</b> để kích hoạt',
           ],
-          practiceUrl: 'http://127.0.0.1:8090/#/network/ddns',
+          practiceUrl: '/sim_ax3000c/#/network/ddns',
           grading: {
             description: 'Kiểm tra thiết lập DDNS',
             rules: []
@@ -120,7 +120,7 @@ window.DEVICE_AX3000C = {
             '- Allow Source: <span class="val">Any / Specific IP</span>',
             'Bấm <b>Apply</b> để lưu cấu hình',
           ],
-          practiceUrl: 'http://127.0.0.1:8090/#/system/remote',
+          practiceUrl: '/sim_ax3000c/#/system/remote',
           grading: {
             description: 'Kiểm tra Remote Service HTTP',
             rules: []
@@ -137,7 +137,7 @@ window.DEVICE_AX3000C = {
             '<b>Factory Reset:</b> Bấm <b>Restore Default</b>',
             '- Thiết bị sẽ reboot tự động sau khi restore',
           ],
-          practiceUrl: 'http://127.0.0.1:8090/#/system/upgrade',
+          practiceUrl: '/sim_ax3000c/#/system/upgrade',
           grading: {
             description: 'Kiểm tra thao tác System Backup/Restore',
             rules: []
@@ -155,7 +155,7 @@ window.DEVICE_AX3000C = {
             'Cấu hình thêm trong tab <b>Filter Criteria</b> nếu cần',
             'Bấm <b>Apply</b> để áp dụng',
           ],
-          practiceUrl: 'http://127.0.0.1:8090/#/network/firewall',
+          practiceUrl: '/sim_ax3000c/#/network/firewall',
           grading: {
             description: 'Kiểm tra Firewall Settings',
             rules: []
@@ -175,7 +175,7 @@ window.DEVICE_AX3000C = {
             '- Host: <span class="val">google.com</span>',
             '- Bấm <b>Start</b> và xem kết quả',
           ],
-          practiceUrl: 'http://127.0.0.1:8090/#/network/diagnostics',
+          practiceUrl: '/sim_ax3000c/#/network/diagnostics',
           grading: {
             description: 'Kiểm tra thao tác Chẩn đoán mạng',
             rules: []
@@ -192,7 +192,7 @@ window.DEVICE_AX3000C = {
             '- Export log: Bấm <b>Download</b> để lưu file',
             '- Xóa log: Bấm <b>Clear All</b>',
           ],
-          practiceUrl: 'http://127.0.0.1:8090/#/network/systemlog',
+          practiceUrl: '/sim_ax3000c/#/network/systemlog',
           grading: {
             description: 'Kiểm tra System Log management',
             rules: []

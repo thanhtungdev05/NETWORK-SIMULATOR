@@ -6,11 +6,11 @@ window.DEVICE_AX3000HV2 = {
   id: 'ax3000hv2',
   name: 'AX3000H v2',
   shortName: 'AX3000Hv2',
-  port: 8092,
+  port: 8080,
   folder: 'sim_ax3000hv2',
   serverBat: 'Chay-server.bat',
   needsServer: false,
-  loginUrl: 'http://127.0.0.1:8092/cgi-bin/login.asp',
+  loginUrl: '/sim_ax3000hv2/cgi-bin/login.asp',
   categories: [
     {
       title: 'HỌC TẬP',
@@ -28,7 +28,7 @@ window.DEVICE_AX3000HV2 = {
             '- Always On: <span class="val">Enable</span>',
             'Bấm <b>Apply</b>',
           ],
-          practiceUrl: 'http://127.0.0.1:8092/cgi-bin/home_wan.asp',
+          practiceUrl: '/sim_ax3000hv2/cgi-bin/index.asp?page=home_wan.asp',
           grading: {
             description: 'Kiểm tra cấu hình PPPoE trên AX3000H v2',
             rules: []
@@ -47,7 +47,7 @@ window.DEVICE_AX3000HV2 = {
             '- Repeat cho băng tần 5GHz',
             'Bấm <b>Apply</b>',
           ],
-          practiceUrl: 'http://127.0.0.1:8092/cgi-bin/home_wireless.asp',
+          practiceUrl: '/sim_ax3000hv2/cgi-bin/index.asp?page=home_wireless.asp',
           grading: {
             description: 'Kiểm tra Wireless dual-band settings',
             rules: []
@@ -65,7 +65,7 @@ window.DEVICE_AX3000HV2 = {
             '- DNS: <span class="val">8.8.8.8, 8.8.4.4</span>',
             'Bấm <b>Apply</b>',
           ],
-          practiceUrl: 'http://127.0.0.1:8092/cgi-bin/home_lan.asp',
+          practiceUrl: '/sim_ax3000hv2/cgi-bin/index.asp?page=home_lan.asp',
           grading: {
             description: 'Kiểm tra LAN Router IP & DHCP Range',
             rules: []
@@ -84,7 +84,7 @@ window.DEVICE_AX3000HV2 = {
             '- LAN Port: <span class="val">3389</span> (RDP)',
             'Bấm <b>Apply</b>',
           ],
-          practiceUrl: 'http://127.0.0.1:8092/cgi-bin/adv_nat_top.asp',
+          practiceUrl: '/sim_ax3000hv2/cgi-bin/index.asp?page=adv_nat_top.asp',
           grading: {
             description: 'Kiểm tra Virtual Server NAT settings',
             rules: []
@@ -102,7 +102,7 @@ window.DEVICE_AX3000HV2 = {
             '- Credentials: Nhập tài khoản dịch vụ',
             'Bấm <b>Apply</b>',
           ],
-          practiceUrl: 'http://127.0.0.1:8092/cgi-bin/access_ddns.asp',
+          practiceUrl: '/sim_ax3000hv2/cgi-bin/index.asp?page=access_ddns.asp',
           grading: {
             description: 'Kiểm tra DDNS Configuration',
             rules: []
@@ -120,7 +120,7 @@ window.DEVICE_AX3000HV2 = {
             '⚠️ Lưu ý bảo mật: chỉ cho phép IP tin cậy',
             'Bấm <b>Apply</b>',
           ],
-          practiceUrl: 'http://127.0.0.1:8092/cgi-bin/access_cwmp.asp',
+          practiceUrl: '/sim_ax3000hv2/cgi-bin/index.asp?page=access_cwmp.asp',
           grading: {
             description: 'Kiểm tra Remote Management settings',
             rules: []
@@ -136,7 +136,7 @@ window.DEVICE_AX3000HV2 = {
             '<b>Restore:</b> Browse → chọn file → Bấm <b>Restore</b>',
             '<b>Reset:</b> Bấm <b>Factory Defaults</b>',
           ],
-          practiceUrl: 'http://127.0.0.1:8092/cgi-bin/tools_system.asp',
+          practiceUrl: '/sim_ax3000hv2/cgi-bin/index.asp?page=tools_system.asp',
           grading: {
             description: 'Kiểm tra thao tác Backup/Restore',
             rules: []
@@ -153,7 +153,7 @@ window.DEVICE_AX3000HV2 = {
             '- Filter Multicast: <span class="val">Enable</span>',
             'Bấm <b>Apply</b>',
           ],
-          practiceUrl: 'http://127.0.0.1:8092/cgi-bin/adv_firewall.asp',
+          practiceUrl: '/sim_ax3000hv2/cgi-bin/index.asp?page=adv_firewall.asp',
           grading: {
             description: 'Kiểm tra SPI Firewall & Filter rules',
             rules: []
@@ -172,7 +172,7 @@ window.DEVICE_AX3000HV2 = {
             '- Destination: <span class="val">google.com</span>',
             '- Bấm <b>Start</b>',
           ],
-          practiceUrl: 'http://127.0.0.1:8092/cgi-bin/tools_test.asp',
+          practiceUrl: '/sim_ax3000hv2/cgi-bin/index.asp?page=tools_test.asp',
           grading: {
             description: 'Kiểm tra Network Diagnostics tool usage',
             rules: []
@@ -190,7 +190,7 @@ window.DEVICE_AX3000HV2 = {
             '⚠️ Không tắt nguồn trong quá trình nâng cấp',
             '- Thiết bị tự reboot sau khi hoàn tất',
           ],
-          practiceUrl: 'http://127.0.0.1:8092/cgi-bin/tools_update.asp',
+          practiceUrl: '/sim_ax3000hv2/cgi-bin/index.asp?page=tools_update.asp',
           grading: {
             description: 'Kiểm tra Firmware Upgrade process',
             rules: []

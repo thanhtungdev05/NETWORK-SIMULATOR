@@ -6,11 +6,11 @@ window.DEVICE_AX3000S = {
   id: 'ax3000s',
   name: 'AX3000S',
   shortName: 'AX3000S',
-  port: 8098,
+  port: 8080,
   folder: 'sim_ax3000s',
   serverBat: 'Chay-server-8098.bat',
   needsServer: false,
-  loginUrl: 'http://127.0.0.1:8098/login.html',
+  loginUrl: '/sim_ax3000s/login.html',
   categories: [
     {
       title: 'HỌC TẬP',
@@ -27,7 +27,7 @@ window.DEVICE_AX3000S = {
             '- VLAN ID: <span class="val">Nhập ID VLAN (mặc định 33)</span>',
             'Bấm <b>Save & Apply</b>',
           ],
-          practiceUrl: 'http://127.0.0.1:8098/app.html#wancfg',
+          practiceUrl: '/sim_ax3000s/app.html#wancfg',
           grading: {
             description: 'Kiểm tra WAN Configuration trên AX3000S',
             rules: []
@@ -44,7 +44,7 @@ window.DEVICE_AX3000S = {
             '- Pre-Shared Key: <span class="val">Nhập mật khẩu WiFi (≥ 8 ký tự)</span>',
             'Bấm <b>Save & Apply</b>',
           ],
-          practiceUrl: 'http://127.0.0.1:8098/app.html#wlanBasicSetting2g',
+          practiceUrl: '/sim_ax3000s/app.html#wlanBasicSetting2g',
           grading: {
             description: 'Kiểm tra WLAN Basic Setting 2.4G/5G',
             rules: []
@@ -62,7 +62,7 @@ window.DEVICE_AX3000S = {
             '- Start IP / End IP: <span class="val">192.168.1.100 - 192.168.1.200</span>',
             'Bấm <b>Save & Apply</b>',
           ],
-          practiceUrl: 'http://127.0.0.1:8098/app.html#lancfgv4',
+          practiceUrl: '/sim_ax3000s/app.html#lancfgv4',
           grading: {
             description: 'Kiểm tra LAN Configuration IPv4',
             rules: []
@@ -82,7 +82,7 @@ window.DEVICE_AX3000S = {
             '- Internal Port: <span class="val">80</span>',
             'Bấm <b>Save & Apply</b>',
           ],
-          practiceUrl: 'http://127.0.0.1:8098/app.html#portforward',
+          practiceUrl: '/sim_ax3000s/app.html#portforward',
           grading: {
             description: 'Kiểm tra Port Forwarding rule',
             rules: []
@@ -100,7 +100,7 @@ window.DEVICE_AX3000S = {
             '- Username/Password: <span class="val">Tài khoản DDNS</span>',
             'Bấm <b>Save & Apply</b>',
           ],
-          practiceUrl: 'http://127.0.0.1:8098/app.html#ddns',
+          practiceUrl: '/sim_ax3000s/app.html#ddns',
           grading: {
             description: 'Kiểm tra Dynamic DNS settings',
             rules: []
@@ -117,7 +117,7 @@ window.DEVICE_AX3000S = {
             '- Interface: <span class="val">WAN</span>',
             'Bấm <b>Save & Apply</b>',
           ],
-          practiceUrl: 'http://127.0.0.1:8098/app.html#acl',
+          practiceUrl: '/sim_ax3000s/app.html#acl',
           grading: {
             description: 'Kiểm tra ACL Remote Web Access',
             rules: []
@@ -133,7 +133,7 @@ window.DEVICE_AX3000S = {
             '<b>Restore:</b> Chọn file cấu hình → Bấm <b>Restore Settings</b>',
             '<b>Reset:</b> Bấm <b>Restore Defaults</b> để đưa thiết bị về mặc định',
           ],
-          practiceUrl: 'http://127.0.0.1:8098/app.html#skgRestore',
+          practiceUrl: '/sim_ax3000s/app.html#skgRestore',
           grading: {
             description: 'Kiểm tra thao tác Backup & Restore',
             rules: []
@@ -150,7 +150,7 @@ window.DEVICE_AX3000S = {
             '- Time Range: <span class="val">07:00 - 23:00</span>',
             'Bấm <b>Save & Apply</b>',
           ],
-          practiceUrl: 'http://127.0.0.1:8098/app.html#scheduler',
+          practiceUrl: '/sim_ax3000s/app.html#scheduler',
           grading: {
             description: 'Kiểm tra WLAN Scheduler settings',
             rules: []
@@ -167,7 +167,7 @@ window.DEVICE_AX3000S = {
             '- Time: <span class="val">03:00 AM</span>',
             'Bấm <b>Save & Apply</b>',
           ],
-          practiceUrl: 'http://127.0.0.1:8098/app.html#skgReboot',
+          practiceUrl: '/sim_ax3000s/app.html#skgReboot',
           grading: {
             description: 'Kiểm tra Scheduled Reboot settings',
             rules: []
@@ -183,7 +183,7 @@ window.DEVICE_AX3000S = {
             '- URL / Keyword: <span class="val">facebook.com, tiktok.com</span>',
             'Bấm <b>Add</b> → <b>Save & Apply</b>',
           ],
-          practiceUrl: 'http://127.0.0.1:8098/app.html#urlfilter',
+          practiceUrl: '/sim_ax3000s/app.html#urlfilter',
           grading: {
             description: 'Kiểm tra Parental Control URL Filter',
             rules: []

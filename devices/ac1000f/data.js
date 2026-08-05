@@ -6,11 +6,11 @@ window.DEVICE_AC1000F = {
   id: 'ac1000f',
   name: 'ONT AC1000F',
   shortName: 'AC1000F',
-  port: 8081,
+  port: 8080,
   folder: 'sim_ac1000f',
   serverBat: 'Chay-server-8081.bat',
   needsServer: false, // server2.py chạy riêng trên cổng 8081
-  loginUrl: 'http://127.0.0.1:8081/cgi-bin/login.asp',
+  loginUrl: '/sim_ac1000f/cgi-bin/login.asp',
   categories: [
     {
       title: 'HỌC TẬP',
@@ -32,7 +32,7 @@ window.DEVICE_AC1000F = {
             '- TCP MTU Option: <span class="val">0</span>',
             '- Add Client Mac Option: <span class="val">Disable</span>',
           ],
-          practiceUrl: 'http://127.0.0.1:8081/cgi-bin/home_wan.asp',
+          practiceUrl: '/sim_ac1000f/cgi-bin/index.asp?page=home_wan.asp',
           grading: {
             description: 'Kiểm tra cấu hình PPPoE trên AC1000F',
             rules: []
@@ -51,7 +51,7 @@ window.DEVICE_AC1000F = {
             '- Pre-Shared Key: <span class="val">Nhập mật khẩu ≥ 8 ký tự</span>',
             'Bấm <b>Apply</b> để lưu cấu hình',
           ],
-          practiceUrl: 'http://127.0.0.1:8081/cgi-bin/home_wireless.asp',
+          practiceUrl: '/sim_ac1000f/cgi-bin/index.asp?page=home_wireless.asp',
           grading: {
             description: 'Kiểm tra SSID và WPA2-PSK key',
             rules: []
@@ -71,7 +71,7 @@ window.DEVICE_AC1000F = {
             '- End IP: <span class="val">192.168.10.200</span>',
             'Bấm <b>Apply</b> — thiết bị sẽ reboot sau khi đổi IP',
           ],
-          practiceUrl: 'http://127.0.0.1:8081/cgi-bin/home_lan.asp',
+          practiceUrl: '/sim_ac1000f/cgi-bin/index.asp?page=home_lan.asp',
           grading: {
             description: 'Kiểm tra IP LAN và dải DHCP Pool',
             rules: []
@@ -93,7 +93,7 @@ window.DEVICE_AC1000F = {
             '- LAN Port: <span class="val">80</span>',
             'Bấm <b>Apply</b> để lưu',
           ],
-          practiceUrl: 'http://127.0.0.1:8081/cgi-bin/adv_nat_top.asp',
+          practiceUrl: '/sim_ac1000f/cgi-bin/index.asp?page=adv_nat_top.asp',
           grading: {
             description: 'Kiểm tra Port Forwarding Virtual Servers',
             rules: []
@@ -113,7 +113,7 @@ window.DEVICE_AC1000F = {
             '- Password: <span class="val">Mật khẩu DynDNS</span>',
             'Bấm <b>Apply</b> để kích hoạt',
           ],
-          practiceUrl: 'http://127.0.0.1:8081/cgi-bin/access_ddns.asp',
+          practiceUrl: '/sim_ac1000f/cgi-bin/index.asp?page=access_ddns.asp',
           grading: {
             description: 'Kiểm tra cấu hình DDNS',
             rules: []
@@ -133,7 +133,7 @@ window.DEVICE_AC1000F = {
             '- Interface: <span class="val">WAN</span>',
             'Bấm <b>Apply</b> để lưu quy tắc',
           ],
-          practiceUrl: 'http://127.0.0.1:8081/cgi-bin/access_cwmp.asp',
+          practiceUrl: '/sim_ac1000f/cgi-bin/index.asp?page=access_cwmp.asp',
           grading: {
             description: 'Kiểm tra quy tắc ACL Remote Web',
             rules: []
@@ -151,7 +151,7 @@ window.DEVICE_AC1000F = {
             '- Thiết bị sẽ tự khởi động lại sau khi restore',
             '<b>Factory Reset:</b> Bấm <b>Restore Default Settings</b>',
           ],
-          practiceUrl: 'http://127.0.0.1:8081/cgi-bin/tools_system.asp',
+          practiceUrl: '/sim_ac1000f/cgi-bin/index.asp?page=tools_system.asp',
           grading: {
             description: 'Kiểm tra thao tác Backup/Restore',
             rules: []
@@ -170,7 +170,7 @@ window.DEVICE_AC1000F = {
             '- Off Time: <span class="val">23:00</span>',
             'Bấm <b>Apply</b> để kích hoạt lịch WiFi',
           ],
-          practiceUrl: 'http://127.0.0.1:8081/cgi-bin/tools_wifitimer.asp',
+          practiceUrl: '/sim_ac1000f/cgi-bin/index.asp?page=tools_wifitimer.asp',
           grading: {
             description: 'Kiểm tra WiFi Timer schedule',
             rules: []
@@ -188,7 +188,7 @@ window.DEVICE_AC1000F = {
             '- Time: <span class="val">03:00</span>',
             'Bấm <b>Apply</b> để lên lịch tự động reboot',
           ],
-          practiceUrl: 'http://127.0.0.1:8081/cgi-bin/tools_reboottimer.asp',
+          practiceUrl: '/sim_ac1000f/cgi-bin/index.asp?page=tools_reboottimer.asp',
           grading: {
             description: 'Kiểm tra Reboot Timer settings',
             rules: []
@@ -207,7 +207,7 @@ window.DEVICE_AC1000F = {
             '- Schedule: <span class="val">Always</span>',
             'Bấm <b>Add</b> → <b>Apply</b> để lưu',
           ],
-          practiceUrl: 'http://127.0.0.1:8081/cgi-bin/access_URLfilter.asp',
+          practiceUrl: '/sim_ac1000f/cgi-bin/index.asp?page=access_URLfilter.asp',
           grading: {
             description: 'Kiểm tra URL Filter rules',
             rules: []

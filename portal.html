@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<!-- FTC device simulator portal. The public entry page lives in login/. -->
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Hệ thống giả lập mạng FPT — Thực hành cấu hình 6 thiết bị mạng AC1000F, AX3000C, AX3000GZ, AX3000H v2, AX3000S, BE15000">
+  <title>NETWORK SIMULATOR — Hệ Thống Giả Lập Mạng FPT</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════
+     MOBILE WARNING OVERLAY
+════════════════════════════════════════════ -->
+<div id="mobile-warning" aria-live="polite">
+  <div class="mw-icon">📱↔️</div>
+  <div class="mw-title">Xoay ngang thiết bị</div>
+  <p class="mw-text">
+    Vui lòng xoay ngang điện thoại để có trải nghiệm<br>thực hành tốt nhất trên hệ thống giả lập mạng.
+  </p>
+</div>
+
+<!-- ════════════════════════════════════════════
+     LOADING OVERLAY
+════════════════════════════════════════════ -->
+<div id="loading-overlay" role="status" aria-label="Đang tải">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loading-msg">Đang tải...</div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     APP SHELL
+════════════════════════════════════════════ -->
+<div id="app">
+
+  <!-- ── SIDEBAR ──────────────────────────────── -->
+  <aside id="sidebar" role="navigation" aria-label="Menu điều hướng">
+
+    <!-- Header -->
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-icon">🌐</div>
+        <div class="logo-text">NETWORK<br>SIMULATOR</div>
+      </div>
+      <button id="btn-collapse"
+              class="btn-collapse"
+              title="Thu gọn menu"
+              aria-label="Thu gọn/mở rộng menu">
+        <span class="arrow">‹</span>
+      </button>
+    </div>
+
+    <!-- Device Selector -->
+    <div class="sidebar-device-select">
+      <label for="device-select">CHỌN THIẾT BỊ GIẢ LẬP:</label>
+      <select id="device-select"
+              class="device-select"
+              aria-label="Chọn thiết bị giả lập">
+        <!-- Populated by app.js -->
+      </select>
+    </div>
+
+    <!-- Navigation List -->
+    <nav class="sidebar-nav" id="nav-list" aria-label="Danh sách bài học">
+      <!-- Populated by app.js -->
+    </nav>
+
+  </aside>
+
+  <!-- ── MAIN CONTENT ──────────────────────────── -->
+  <div id="main">
+
+    <!-- Topbar -->
+    <header id="topbar">
+      <button class="topbar-toggle-btn"
+              onclick="document.getElementById('sidebar').classList.toggle('collapsed')"
+              aria-label="Mở menu">
+        ☰
+      </button>
+
+      <!-- Breadcrumb / Status -->
+      <div id="breadcrumb" aria-live="polite">
+        <span>Đang tải hệ thống...</span>
+      </div>
+
+      <!-- Right side -->
+      <div class="topbar-right">
+        <div class="status-indicator">
+          <div class="status-dot" id="status-dot"></div>
+          <span id="status-text">Đang tải hệ thống...</span>
+        </div>
+
+        <!-- Action Dropdown -->
+        <div class="action-dropdown">
+          <button id="action-btn"
+                  class="action-btn"
+                  aria-haspopup="true"
+                  aria-expanded="false"
+                  aria-label="Thao tác">
+            Thao tác
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.5">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+
+          <div id="action-menu"
+               class="action-dropdown-menu"
+               role="menu">
+            <div id="menu-dashboard"
+                 class="action-menu-item"
+                 role="menuitem"
+                 tabindex="0">
+              <span class="item-icon">🖥️</span>
+              Quản lý Dashboard
+            </div>
+            <div id="menu-logout"
+                 class="action-menu-item"
+                 role="menuitem"
+                 tabindex="0">
+              <span class="item-icon">🚪</span>
+              Đăng Xuất
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content Area -->
+    <main id="content">
+
+      <!-- ── HERO SCREEN ── -->
+      <section id="hero-screen" aria-label="Màn hình chào">
+        <div class="hero-image-wrap">
+          <img src="assets/server-hero.png"
+               alt="Mạng lưới máy chủ giả lập"
+               loading="eager">
+        </div>
+        <h1 class="hero-title">HỆ THỐNG GIẢ LẬP MẠNG</h1>
+        <p class="hero-subtitle">
+          Vui lòng chọn bài thực hành từ menu bên trái để bắt đầu
+        </p>
+      </section>
+
+      <!-- ── LESSON CARD SCREEN ── -->
+      <section id="lesson-screen" aria-label="Chi tiết bài học">
+        <div class="lesson-card">
+          <!-- Card Header -->
+          <div class="lesson-card-header">
+            <h2 class="lesson-card-title" id="lc-title">BÀI 1 - CẤU HÌNH PPPOE</h2>
+            <p class="lesson-card-subtitle" id="lc-subtitle">Chọn phương thức bắt đầu thực hành</p>
+          </div>
+
+          <!-- Card Body -->
+          <div class="lesson-card-body">
+            <div class="instruction-box" id="lc-instructions">
+              <!-- Populated by app.js -->
+            </div>
+          </div>
+
+          <!-- Card Footer -->
+          <div class="lesson-card-footer">
+            <button id="btn-guide" class="btn-guide yellow" aria-label="Xem hướng dẫn">
+              Hướng dẫn
+            </button>
+            <button id="btn-practice" class="btn-guide teal" aria-label="Bắt đầu thực hành">
+              Thực hành
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── PRACTICE IFRAME SCREEN ── -->
+      <section id="practice-screen" aria-label="Giao diện thực hành thiết bị">
+        <!-- Server warning (shown if device needs separate server) -->
+        <div id="server-warning" class="server-warning" style="display:none">
+          <span class="sw-icon">⚠️</span>
+          <span id="server-warning-text">Thiết bị này cần khởi động server riêng trước.</span>
+        </div>
+
+        <!-- iframe container -->
+        <div class="iframe-wrap">
+          <div class="iframe-loading" id="iframe-loading">
+            <div class="iframe-spinner"></div>
+            <p>Đang tải giao diện thiết bị...</p>
+          </div>
+          <iframe id="device-iframe"
+                  name="device-frame"
+                  title="Giao diện thiết bị"
+                  allowfullscreen>
+          </iframe>
+        </div>
+      </section>
+
+    </main>
+  </div><!-- /#main -->
+
+</div><!-- /#app -->
+
+<!-- Device Modules & Grading Scripts -->
+<script src="devices/ac1000f/data.js"></script>
+<script src="devices/ax3000c/data.js"></script>
+<script src="devices/ax3000gz/data.js"></script>
+<script src="devices/ax3000hv2/data.js"></script>
+<script src="devices/ax3000s/data.js"></script>
+<script src="devices/be15000/data.js"></script>
+<script src="devices/index.js"></script>
+<script src="data.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>

@@ -502,7 +502,7 @@ function iam_post_login_url(array $user): string
 {
     return ($user['role'] ?? 'user') === 'admin'
         ? app_url('/dashboard.html')
-        : app_url('/index.html');
+        : app_url('/portal.html');
 }
 
 function request_ip(): ?string

@@ -29,10 +29,10 @@ def start_servers():
     print("=" * 65)
     print()
 
-    # 1. Main Portal (Port 8080)
-    print("[1/7] Dang mo cua so Portal Trung Tam (Port 8080)...")
+    # 1. Main Portal / Login (Port 8000)
+    print("[1/7] Dang mo cua so Portal Trung Tam (Port 8000)...")
     subprocess.Popen(
-        [PYTHON_EXE, "-m", "http.server", "8080"],
+        [PYTHON_EXE, "-m", "http.server", "8000"],
         cwd=BASE_DIR,
         creationflags=CREATE_NEW_CONSOLE
     )
@@ -100,11 +100,11 @@ def start_servers():
     print()
     print("=" * 65)
     print("   TAT CA SERVER DA DUOC KHOI CHAY THANH CONG TRONG CAC CUA SO RIENG!")
-    print("   Dang mo trinh duyet: http://localhost:8080")
+    print("   Dang mo trinh duyet: http://localhost:8000")
     print("=" * 65)
 
     time.sleep(2)
-    webbrowser.open("http://localhost:8080")
+    webbrowser.open("http://localhost:8000")
 
 if __name__ == "__main__":
     start_servers()

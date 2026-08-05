@@ -34,7 +34,7 @@ Mở **Command Prompt (CMD)** hoặc **PowerShell** tại thư mục dự án v�
 .\CHAY-TAT-CA.bat
 ```
 
-> **Mô tả**: Lệnh này sẽ tự động bật 7 cửa sổ CMD tương ứng với 7 server dịch vụ và tự động mở trình duyệt truy cập địa chỉ `http://127.0.0.1:8080`.
+> **Mô tả**: Lệnh này sẽ tự động bật 7 cửa sổ CMD tương ứng với 7 server dịch vụ và tự động mở trình duyệt truy cập địa chỉ `http://127.0.0.1:8000`.
 
 ---
 
@@ -45,7 +45,7 @@ Chạy lệnh Python trực tiếp từ thư mục gốc dự án:
 python run_all.py
 ```
 
-> **Mô tả**: Script Python sẽ khởi tạo tất cả các server giả lập trên từng cổng tương ứng và tự động mở trình duyệt tại `http://localhost:8080`.
+> **Mô tả**: Script Python sẽ khởi tạo tất cả các server giả lập trên từng cổng tương ứng và tự động mở trình duyệt tại `http://localhost:8000`.
 
 ---
 
@@ -55,7 +55,7 @@ Khi hệ thống khởi chạy, các dịch vụ sẽ hoạt động tại các 
 
 | STT | Dịch Vụ / Thiết Bị | Địa Chỉ Truy Cập | Cổng (Port) |
 |---|---|---|---|
-| 1 | **Portal Trung Tâm** | `http://localhost:8080` | `8080` |
+| 1 | **Portal Trung Tâm / Đăng nhập** | `http://localhost:8000` | `8000` |
 | 2 | **Server AC1000F** | `http://localhost:8081` | `8081` |
 | 3 | **Server AX3000C** | `http://localhost:8090` | `8090` |
 | 4 | **Server AX3000Hv2** | `http://localhost:8092` | `8092` |
@@ -74,4 +74,4 @@ Khi hệ thống khởi chạy, các dịch vụ sẽ hoạt động tại các 
 
 ## 📝 Ghi Chú
 - Giữ nguyên các cửa sổ terminal/CMD trong suốt quá trình sử dụng và thực hành.
-- Nếu gặp lỗi cổng bị chiếm dụng (Address already in use), hãy đảm bảo không có ứng dụng nào khác đang sử dụng các cổng từ `8080` đến `8098`.
+- Nếu gặp lỗi cổng bị chiếm dụng (Address already in use), hãy đảm bảo không có ứng dụng nào khác đang sử dụng các cổng `8000`, `8081`, `8090`, `8092`, `8094`, `8096`, `8098`.

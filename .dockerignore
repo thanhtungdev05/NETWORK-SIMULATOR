@@ -1,0 +1,13 @@
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+__pycache__
+*.py[cod]
+vendor
+scratch
+sim_state.json
+*.log
+*.tmp
+*.bak

@@ -69,7 +69,8 @@ try {
     foreach ($migrationFiles as $file) {
         $version = basename($file, '.sql');
         $sql = (string)file_get_contents($file);
-        $checksum = hash('sha256', $sql);
+        $normalized = str_replace(["\r\n", "\r"], "\n", $sql);
+        $checksum = hash('sha256', $normalized);
 
         if (isset($applied[$version])) {
             if (!hash_equals((string)$applied[$version]['checksum'], $checksum)) {

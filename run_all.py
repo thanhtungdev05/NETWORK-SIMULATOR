@@ -29,7 +29,7 @@ def start_servers():
     print("=" * 65)
     print()
 
-    # 1. Main Portal / Login (Port 8000)
+    # 1. Main Portal / Login (Port 8080)
     print("[1/7] Dang mo cua so Portal Trung Tam (Port 8080)...")
     subprocess.Popen(
         [PYTHON_EXE, "-m", "http.server", "8080"],

@@ -3,7 +3,7 @@ set -e
 
 cd /app
 
-PORT="${PORT:-${PORTAL_PORT:-8000}}"
+PORT="${PORT:-${PORTAL_PORT:-8080}}"
 
 echo "Starting FTC Virtual Devices servers (web/API on port ${PORT})..."
 

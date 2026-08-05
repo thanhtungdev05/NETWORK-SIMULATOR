@@ -24,8 +24,8 @@ if %errorlevel% neq 0 (
     )
 )
 
-echo [1/7] Dang mo cua so: Portal Trung Tam (Cổng 8000)...
-start "Portal 8000" cmd /k "cd /d "%ROOT%" && %PY_CMD% -m http.server 8000"
+echo [1/7] Dang mo cua so: Portal Trung Tam (Cổng 8080)...
+start "Portal 8080" cmd /k "cd /d "%ROOT%" && %PY_CMD% -m http.server 8080"
 
 echo [2/7] Dang mo cua so: Server AC1000F (Cổng 8081)...
 start "Server AC1000F 8081" cmd /k "cd /d "%ROOT%sim_ac1000f" && %PY_CMD% server2.py 8081"
@@ -49,9 +49,9 @@ echo.
 echo ====================================================================
 echo    ĐÃ MỞ DỦ 7 CỬA SỔ SERVER NỔI TRÊN MÀN HÌNH!
 echo    Vui lòng GIỮ NGUYÊN các cửa sổ CMD đó khi thực hành.
-echo    Đang mở trình duyệt: http://127.0.0.1:8000
+echo    Đang mở trình duyệt: http://127.0.0.1:8080
 echo ====================================================================
 echo.
 timeout /t 2 >nul
-start http://127.0.0.1:8000
+start http://127.0.0.1:8080
 

@@ -199,6 +199,12 @@
 
     // Switch view to show lesson card
     showLesson();
+
+    // Auto collapse sidebar on mobile portrait so content is immediately visible
+    if (window.innerWidth <= 768) {
+      const sidebar = document.getElementById('sidebar');
+      if (sidebar) sidebar.classList.add('collapsed');
+    }
   }
 
   // ── Render Lesson Card ───────────────────────────────────────────
@@ -285,6 +291,12 @@
 
     // Switch to practice screen
     showPractice();
+
+    // Auto collapse sidebar on mobile
+    if (window.innerWidth <= 768) {
+      const sidebar = document.getElementById('sidebar');
+      if (sidebar) sidebar.classList.add('collapsed');
+    }
 
     // Load URL into iframe
     setTimeout(() => {

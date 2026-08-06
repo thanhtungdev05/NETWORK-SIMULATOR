@@ -1,5 +1,5 @@
 /**
- * devices/ax3000gz/data.js — Dữ liệu & Kịch bản chấm thao tác cho AX3000GZ
+ * devices/ax3000gz/data.js — Dữ liệu & Kịch bản đề bài cho AX3000GZ
  */
 
 window.DEVICE_AX3000GZ = {
@@ -17,88 +17,94 @@ window.DEVICE_AX3000GZ = {
       lessons: [
         {
           id: 'ax3gz-bai1',
-          title: 'Bài 1 - Cấu hình WAN Interface',
-          subtitle: 'Thiết lập kết nối Internet WAN cho AX3000GZ',
+          title: 'Bài 1: Cấu hình ONT',
+          subtitle: 'Thiết lập kết nối WAN/ONT trên AX3000GZ',
           instructions: [
-            'Truy cập <b>/sim_ax3000gz</b> và đăng nhập',
-            'Chọn <b>Internet → WAN → Interface</b>',
-            '- Connection Type: <span class="val">PPPoE hoặc DHCP</span>',
-            '- PPPoE User: <span class="val">Theo thông tin nhà mạng</span>',
-            '- VLAN ID: <span class="val">Theo thông số kỹ thuật</span>',
-            'Bấm <b>Apply</b> để lưu',
+            '<b>Yêu cầu:</b>',
+            'Thực hiện cấu hình kết nối WAN/ONT trên thiết bị và thiết lập kết nối PPPoE theo các thông số được cung cấp dưới đây:',
+            '- Username: <span class="val">fpt</span>',
+            '- Password: <span class="val">fpt12345</span>',
           ],
           practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/internet/wan/interface',
           grading: {
-            description: 'Kiểm tra WAN Interface trên AX3000GZ',
+            description: 'Kiểm tra WAN/ONT Interface trên AX3000GZ',
             rules: []
           }
         },
         {
           id: 'ax3gz-bai2',
-          title: 'Bài 2 - Cấu hình WiFi',
-          subtitle: 'Thiết lập WiFi 2.4GHz và 5GHz cho AX3000GZ',
+          title: 'Bài 2: Cấu hình WiFi',
+          subtitle: 'Thiết lập Wi-Fi 2.4GHz và 5GHz cho AX3000GZ',
           instructions: [
-            'Chọn <b>Local Network → WLAN → WLAN Basic</b>',
-            '- SSID 2.4GHz: <span class="val">FPT_Home_2.4G</span>',
-            '- SSID 5GHz: <span class="val">FPT_Home_5G</span>',
-            '- Security: <span class="val">WPA2-Personal</span>',
-            '- Passphrase: <span class="val">Nhập mật khẩu mạnh</span>',
-            'Bấm <b>Apply</b>',
+            '<b>Yêu cầu:</b>',
+            'Thực hiện cấu hình các thông số mạng Wi-Fi theo đúng yêu cầu dưới đây:',
+            '- SSID Name: <span class="val">FPT Telecom</span>',
+            '- WPA Key: <span class="val">fpt12345</span>',
           ],
           practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/localnetwork/WLAN/WLANbasic',
           grading: {
-            description: 'Kiểm tra cấu hình WLAN Basic',
+            description: 'Kiểm tra SSID và WPA Key',
             rules: []
           }
         },
         {
           id: 'ax3gz-bai3',
-          title: 'Bài 3 - WLAN Advanced',
-          subtitle: 'Cấu hình nâng cao cho WiFi (kênh, băng thông)',
+          title: 'Bài 3: Tính năng BandSteering',
+          subtitle: 'Kích hoạt và cấu hình tính năng Band Steering',
           instructions: [
-            'Chọn <b>Local Network → WLAN → WLAN Advanced</b>',
-            '- Channel 2.4GHz: <span class="val">1, 6 hoặc 11</span>',
-            '- Channel Width 2.4GHz: <span class="val">40MHz</span>',
-            '- Channel 5GHz: <span class="val">Auto</span>',
-            '- Channel Width 5GHz: <span class="val">80MHz / 160MHz</span>',
-            '- TX Power: <span class="val">100%</span>',
-            'Bấm <b>Apply</b>',
+            '<b>Yêu cầu:</b>',
+            'Thực hiện cấu hình tính năng Band Steering tự động phân bổ băng tần:',
+            '- RSSI Threshold(2.4g): <span class="val">-65</span>',
+            '- RSSI Threshold(5g): <span class="val">-65</span>',
           ],
-          practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/localnetwork/WLAN/WLANAdvanced',
+          practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/localnetwork/WLAN/BandSteering',
           grading: {
-            description: 'Kiểm tra WLAN Advanced settings',
+            description: 'Kiểm tra Band Steering',
             rules: []
           }
         },
         {
           id: 'ax3gz-bai4',
-          title: 'Bài 4 - Port Forwarding',
-          subtitle: 'Mở cổng NAT để máy trong LAN nhận kết nối từ ngoài',
+          title: 'Bài 4: Cấu hình Mesh WiFi',
+          subtitle: 'Thiết lập và quản lý mạng Mesh WiFi',
           instructions: [
-            'Chọn <b>Internet → Security → Forwards</b>',
-            'Bấm <b>Add Rule</b>',
-            '- Protocol: <span class="val">TCP</span>',
-            '- WAN Port: <span class="val">8080</span>',
-            '- LAN IP: <span class="val">192.168.1.100</span>',
-            '- LAN Port: <span class="val">80</span>',
-            'Bấm <b>Apply</b>',
+            '<b>Yêu cầu:</b>',
+            'Thực hiện cấu hình tính năng Mesh WiFi liên kết các thiết bị trong hệ thống:',
+            '- Roaming Limit(2.4G): <span class="val">-65</span>',
+            '- Roaming Limit(5G): <span class="val">-65</span>',
           ],
-          practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/internet/security/forwards',
+          practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/localnetwork/WLAN/WLANbasic',
           grading: {
-            description: 'Kiểm tra Forwards NAT rules',
+            description: 'Kiểm tra Mesh WiFi settings',
             rules: []
           }
         },
         {
           id: 'ax3gz-bai5',
-          title: 'Bài 5 - Cấu hình DDNS',
+          title: 'Bài 5: Cấu hình IGMP',
+          subtitle: 'Cấu hình IGMP Snooping / Proxy cho truyền hình IPTV',
+          instructions: [
+            '<b>Yêu cầu:</b>',
+            'Thực hiện cấu hình IGMP Proxy/Snooping hỗ trợ dịch vụ truyền hình:',
+            '- Enable: <span class="val">On</span>',
+          ],
+          practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/internet/wan/interface',
+          grading: {
+            description: 'Kiểm tra cấu hình IGMP',
+            rules: []
+          }
+        },
+        {
+          id: 'ax3gz-bai6',
+          title: 'Bài 6: Cấu hình DDNS',
           subtitle: 'Đăng ký tên miền động để truy cập từ Internet',
           instructions: [
-            'Chọn <b>Internet → DDNS → Dynamic DDNS</b>',
+            '<b>Yêu cầu:</b>',
+            'Thực hiện cấu hình dịch vụ tên miền động DDNS theo các thông số:',
             '- Provider: <span class="val">No-IP</span>',
-            '- Domain: <span class="val">myrouter.ddns.net</span>',
-            '- Account/Password: <span class="val">Tài khoản No-IP</span>',
-            'Bấm <b>Apply</b> và kiểm tra trạng thái cập nhật',
+            '- Username: <span class="val"> binhnt3@fpt.net</span>',
+            '- Password: <span class="val">fpt12345</span>',
+            '- Host Name: <span class="val">test23122021.ddns.net</span>',
           ],
           practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/internet/ddns/dynamicDDNS',
           grading: {
@@ -107,90 +113,53 @@ window.DEVICE_AX3000GZ = {
           }
         },
         {
-          id: 'ax3gz-bai6',
-          title: 'Bài 6 - DMZ Configuration',
-          subtitle: 'Cấu hình vùng DMZ cho máy chủ công khai',
-          instructions: [
-            'Chọn <b>Internet → Security → DMZ</b>',
-            '- DMZ: <span class="val">Enable</span>',
-            '- DMZ Host IP: <span class="val">192.168.1.200</span>',
-            '⚠️ Máy DMZ sẽ nhận toàn bộ traffic từ WAN',
-            'Chỉ dùng cho máy chủ chuyên dụng, không phải PC thường',
-            'Bấm <b>Apply</b>',
-          ],
-          practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/internet/security/DMZ',
-          grading: {
-            description: 'Kiểm tra DMZ Host IP',
-            rules: []
-          }
-        },
-        {
           id: 'ax3gz-bai7',
-          title: 'Bài 7 - Band Steering',
-          subtitle: 'Tự động phân bổ thiết bị sang băng tần tối ưu',
+          title: 'Bài 7: Cấu hình SNTP',
+          subtitle: 'Đồng bộ thời gian hệ thống qua máy chủ SNTP',
           instructions: [
-            'Chọn <b>Local Network → WLAN → Band Steering</b>',
-            '- Band Steering: <span class="val">Enable</span>',
-            '- RSSI Threshold: <span class="val">-70 dBm</span>',
-            '- Steering Method: <span class="val">Auto</span>',
-            'Band Steering giúp thiết bị 5GHz không bị "dính" ở 2.4GHz',
-            'Bấm <b>Apply</b>',
+            '<b>Yêu cầu:</b>',
+            'Thực hiện cấu hình máy chủ đồng bộ thời gian SNTP:',
+            '- Server IP/Domain: <span class="val">pool.ntp.org</span>',
+            '- Time Zone: <span class="val">GMT+07:00</span>',
           ],
-          practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/localnetwork/WLAN/BandSteering',
+          practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/management/system/backuprestore',
           grading: {
-            description: 'Kiểm tra Band Steering enablement',
+            description: 'Kiểm tra cấu hình SNTP',
             rules: []
           }
         },
         {
           id: 'ax3gz-bai8',
-          title: 'Bài 8 - Backup/Restore',
-          subtitle: 'Sao lưu và khôi phục cấu hình thiết bị',
+          title: 'Bài 8: Cấu hình Port Forwarding',
+          subtitle: 'Mở cổng NAT để máy trong LAN nhận kết nối từ ngoài',
           instructions: [
-            'Chọn <b>Management → System → Backup/Restore</b>',
-            '<b>Export:</b> Bấm <b>Backup Configuration</b>',
-            '<b>Import:</b> Chọn file → Bấm <b>Restore</b>',
-            '<b>Reset:</b> Bấm <b>Factory Default</b>',
+            '<b>Yêu cầu:</b>',
+            'Thực hiện cấu hình Mở Port trên thiết bị theo các thông số được cung cấp dưới đây:',
+            '- Start External Port: <span class="val">3389</span>',
+            '- End External Port: <span class="val">3389</span>',
+            '- IP Address: <span class="val">192.168.1.254</span>',
+            '- Start Internal Port: <span class="val">3389</span>',
+            '- End Internal Port: <span class="val">3389</span>',
           ],
-          practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/management/system/backuprestore',
+          practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/internet/security/forwards',
           grading: {
-            description: 'Kiểm tra Backup/Restore operations',
+            description: 'Kiểm tra Port Forwarding rules',
             rules: []
           }
         },
         {
           id: 'ax3gz-bai9',
-          title: 'Bài 9 - Schedule Reboot',
-          subtitle: 'Lên lịch tự động khởi động lại định kỳ',
+          title: 'Bài 9: Cấu hình Chặn MAC',
+          subtitle: 'Lọc và quản lý quyền truy cập qua địa chỉ MAC',
           instructions: [
-            'Chọn <b>Management → System → Schedule Reboot</b>',
-            '- Enable: <span class="val">Bật</span>',
-            '- Frequency: <span class="val">Weekly</span>',
-            '- Day: <span class="val">Sunday</span>',
-            '- Time: <span class="val">03:00 AM</span>',
-            'Bấm <b>Apply</b>',
-          ],
-          practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/management/system/schedulereboot',
-          grading: {
-            description: 'Kiểm tra Schedule Reboot configuration',
-            rules: []
-          }
-        },
-        {
-          id: 'ax3gz-bai10',
-          title: 'Bài 10 - Chặn Web (URL Filter)',
-          subtitle: 'Lọc và hạn chế truy cập website cho người dùng',
-          instructions: [
-            'Chọn <b>Internet → Security → Filter Criteria</b>',
-            'Bấm <b>Add</b> để thêm quy tắc lọc',
-            '- Filter Type: <span class="val">URL Keyword</span>',
-            '- Keyword: <span class="val">Nhập từ khóa cần chặn</span>',
-            '- Schedule: <span class="val">Always Active</span>',
-            'Bấm <b>Apply</b>',
+            '<b>Yêu cầu:</b>',
+            'Thực hiện cấu hình chặn/cho phép địa chỉ MAC truy cập mạng:',
+            '- MAC Filter Mode: <span class="val">Blacklist / Deny</span>',
+            '- MAC Address: <span class="val">AA:BB:CC:DD:EE:FF</span>',
           ],
           practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/internet/security/filterCriteria',
           grading: {
-            description: 'Kiểm tra URL Filter Criteria',
+            description: 'Kiểm tra MAC Filter configuration',
             rules: []
           }
         },
@@ -198,3 +167,4 @@ window.DEVICE_AX3000GZ = {
     },
   ],
 };
+

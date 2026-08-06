@@ -56,6 +56,10 @@ class MasterDispatcher(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=BASE_DIR, **kwargs)
 
+    def end_headers(self):
+        self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+        super().end_headers()
+
     def detect_simulator(self):
         # 1. Kiểm tra prefix trong URL path
         path = self.path.split('?')[0]
@@ -152,6 +156,7 @@ class MasterDispatcher(SimpleHTTPRequestHandler):
                 def custom_end_headers():
                     # Đảm bảo Cookie lưu ở thư mục gốc / để toàn bộ trang đều gửi
                     original_send_header('Set-Cookie', f'current_sim={sim_id}; Path=/')
+                    original_send_header('Cache-Control', 'no-cache, must-revalidate')
                     original_end_headers()
                 self.end_headers = custom_end_headers
                 # -------------------------------------------------------------

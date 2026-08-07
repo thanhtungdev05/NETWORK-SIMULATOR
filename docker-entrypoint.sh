@@ -4,8 +4,9 @@ set -e
 cd /app
 
 PORT="${PORT:-${PORTAL_PORT:-8080}}"
+API_PORT="${API_PORT:-8081}"
 
-echo "Starting FTC Virtual Devices servers (web/API on port ${PORT})..."
+echo "Starting FTC Virtual Devices (dispatcher on ${PORT}, API on ${API_PORT})..."
 
 # 1. Database migrations (idempotent; only if a database is configured)
 if [ -n "$DATABASE_URL" ] || [ -n "$PGHOST" ]; then
@@ -27,28 +28,15 @@ else
     echo "No database configured (DATABASE_URL/PG*); skipping migrations."
 fi
 
-# 2. Web server: Apache + PHP (portal, API, device static pages)
-printf 'Listen %s\n' "$PORT" > /etc/apache2/ports.conf
-sed "s/{{PORT}}/${PORT}/g" /etc/apache2/sites-available/ftc.conf > /etc/apache2/sites-enabled/000-ftc.conf
-apache2ctl -DFOREGROUND &
+# 2. PHP API server (built-in, PATH_INFO routing: /api/index.php/<resource>).
+#    Chi lang nghe noi bo 127.0.0.1 — dispatcher proxy /api/* ra single-port 8080.
+php -S 127.0.0.1:${API_PORT} -t /app > /dev/null 2>&1 &
 
-# 3. Device simulator servers
-(cd /app/sim_ac1000f  && python3 server2.py 8081) &
-(cd /app/sim_ax3000c  && python3 server.py 8090) &
-(cd /app/sim_ax3000hv2 && python3 server2.py 8092) &
-(cd /app/sim_ax3000gz  && python3 server.py 8094) &
-(cd /app/sim_be15000  && python3 server.py 8096) &
-(cd /app/sim_ax3000s  && python3 server.py 8098) &
+# 3. Master Dispatcher: portal + all device simulators + proxy /api/* tren 1 cong
+START_PHP=0 API_PORT=${API_PORT} python3 run_all.py &
 
 echo "============================================================="
-echo "  Portal:          http://localhost:${PORT}"
-echo "  API:             http://localhost:${PORT}/api/index.php"
-echo "  AC1000F:         http://localhost:8081"
-echo "  AX3000C:         http://localhost:8090"
-echo "  AX3000Hv2:       http://localhost:8092"
-echo "  AX3000GZ:        http://localhost:8094"
-echo "  BE15000:         http://localhost:8096"
-echo "  AX3000S:         http://localhost:8098"
+echo "  Portal + Devices + API: http://localhost:${PORT}  (single-port)"
 echo "============================================================="
 
 trap 'echo "Stopping servers..."; kill 0 2>/dev/null' EXIT INT TERM

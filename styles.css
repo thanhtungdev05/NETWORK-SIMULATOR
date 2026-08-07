@@ -182,6 +182,36 @@ html, body {
   border-color: var(--accent-teal);
   background-color: rgba(0,184,212,0.1);
 }
+
+/* Dashboard link */
+.sidebar-dashboard-link {
+  padding: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+
+.sidebar-dashboard-link a {
+  display: block;
+  padding: 9px 10px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: var(--transition);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-dashboard-link a:hover,
+.sidebar-dashboard-link a:focus {
+  border-color: var(--accent-teal);
+  background-color: rgba(0,184,212,0.12);
+  color: var(--text-primary);
+}
 .device-select option { background: #1a1d2e; color: var(--text-primary); }
 
 /* Sidebar Nav */

@@ -1,0 +1,22 @@
+{
+ "ten": "ParentCtrl-apply",
+ "ben": "that",
+ "khoMan": "post",
+ "sanitized": false,
+ "captured": [
+  {
+   "method": "GET",
+   "url": "/?_type=hiddenData&_tag=sntp_data&_=1785986054610",
+   "reqBody": "",
+   "status": 200,
+   "respBody": "<ajax_response_xml_root><IF_ERRORPARAM>SUCC</IF_ERRORPARAM><IF_ERRORTYPE>SUCC</IF_ERRORTYPE><IF_ERRORSTR>SUCC</IF_ERRORSTR><IF_ERRORID>0</IF_ERRORID><OBJ_SNTP_ID><Instance><ParaName>_InstID</ParaName><ParaValue>IGD</ParaValue><ParaName>Enable</ParaName><ParaValue>1</ParaValue><ParaName>SntpBindWanName</ParaName><ParaValue></ParaValue><ParaName>NtpServer5</ParaName><ParaValue></ParaValue><ParaName>NtpServer4</ParaName><ParaValue></ParaValue><ParaName>NtpConfigPermission</ParaName><ParaValue>0</ParaValue><ParaName>AutoSetTzname</ParaName><ParaValue>0</ParaValue><ParaName>CurrentLocalTime</ParaName><ParaValue>1970-01-01T02:12:19</ParaValue><ParaName>NtpServer2</ParaName><ParaValue>asia.pool.ntp.org</ParaValue><ParaName>ZoneIndex</ParaName><ParaValue>24</ParaValue><ParaName>Dscp</ParaName><ParaValue>-1</ParaValue><ParaName>PollTimeInterval</ParaName><ParaValue>86400</ParaValue><ParaName>NtpServer3</ParaName><ParaValue></ParaValue><ParaName>NtpServer1</ParaName><ParaValue>vn.pool.ntp.org</ParaValue><ParaName>DaylightSavingsUsed</ParaName><ParaValue>0</ParaValue></Instance></OBJ_SNTP_ID></ajax_response_xml_root>"
+  },
+  {
+   "method": "POST",
+   "url": "/?_type=menuData&_tag=firewall_parentctrl_lua.lua",
+   "reqBody": "IF_ACTION=Apply&Enable=0&_InstID=-1&ChildId=00%3A11%3A22%3A33%3A44%3A55&Week=64&Name=TestParent&StartHour=0&StartMin=0&EndHour=23&EndMin=59&FilterMode=NotAllowed&Btn_apply_ParentCtrl=&Btn_cancel_ParentCtrl=&_sessionTOKEN=WgfNkFgyYTXR0bslmRBLRnXk",
+   "status": 200,
+   "respBody": "<ajax_response_xml_root><INSTIDENTITY>DEV.PCUser1</INSTIDENTITY><IF_ERRORID>0</IF_ERRORID><IF_ERRORTYPE>SUCC</IF_ERRORTYPE><IF_ERRORSTR>SUCC</IF_ERRORSTR><IF_ERRORPARAM>SUCC</IF_ERRORPARAM><_InstID>DEV.PCUser1</_InstID></ajax_response_xml_root>"
+  }
+ ]
+}

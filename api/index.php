@@ -1202,7 +1202,8 @@ function handle_dev(array $segments, string $method): void
         }
 
         $next = (string)($_GET['next'] ?? '/portal.html');
-        if ($next === '' || !str_starts_with($next, '/') || str_starts_with($next, '//')) {
+        $isLocalAbsolute = (bool)preg_match('#^https?://(?:localhost|127\.0\.0\.1|\[::1\])(?::\d+)?/.*$#i', $next);
+        if ($next === '' || (!$isLocalAbsolute && (!str_starts_with($next, '/') || str_starts_with($next, '//')))) {
             $next = '/portal.html';
         }
         redirect_to($next);
@@ -1227,6 +1228,84 @@ function handle_dev(array $segments, string $method): void
     fail(404, 'not-found', 'Dev endpoint not found.');
 }
 
+function handle_dashboard(array $segments, string $method): void
+{
+    if ($method !== 'GET') {
+        fail(405, 'method-not-allowed', 'Dashboard endpoint only supports GET.');
+    }
+
+    require_user();
+
+    $action = $segments[1] ?? '';
+    if ($action !== 'all') {
+        fail(404, 'not-found', 'Dashboard endpoint not found.');
+    }
+
+    $rows = db()
+        ->query(
+            'SELECT
+                id AS session_id,
+                technician_id,
+                name AS full_name,
+                email,
+                COALESCE(started_at, finished_at) AS started_at,
+                COALESCE(duration_sec, 0) AS duration_sec,
+                mode,
+                device AS device_name,
+                lab_id,
+                lab_name,
+                finished_at
+             FROM timer_sessions
+             ORDER BY COALESCE(started_at, finished_at) DESC'
+        )
+        ->fetchAll();
+
+    $sessions = [];
+    $deviceMap = [];
+    $labMap = [];
+    foreach ($rows as $row) {
+        $sessions[] = [
+            'session_id' => (string)$row['session_id'],
+            'technician_id' => (string)($row['technician_id'] ?? ''),
+            'full_name' => (string)($row['full_name'] ?? ''),
+            'email' => (string)($row['email'] ?? ''),
+            'started_at' => $row['started_at'] ? (new DateTimeImmutable($row['started_at']))->format(DateTimeInterface::ATOM) : null,
+            'duration_sec' => (int)$row['duration_sec'],
+            'mode' => (string)($row['mode'] ?? 'Thực hành'),
+            'device_name' => (string)($row['device_name'] ?? ''),
+            'lab_id' => (string)($row['lab_id'] ?? ''),
+            'lab_name' => (string)($row['lab_name'] ?? ''),
+            'status' => 'completed',
+            'completed_first_try' => true,
+        ];
+
+        $device = (string)($row['device_name'] ?? '');
+        if ($device !== '' && !isset($deviceMap[$device])) {
+            $deviceMap[$device] = [
+                'device_id' => 'DEV_' . count($deviceMap),
+                'model' => $device,
+                'device_name' => $device,
+            ];
+        }
+
+        $labKey = (string)($row['lab_id'] ?? '');
+        $labName = (string)($row['lab_name'] ?? $labKey);
+        if ($labKey !== '' && !isset($labMap[$labKey])) {
+            $labMap[$labKey] = [
+                'lab_id' => $labKey,
+                'lab_name' => $labName,
+                'device_id' => $deviceMap[$device]['device_id'] ?? 'DEV_0',
+            ];
+        }
+    }
+
+    respond(['data' => [
+        'sessions' => $sessions,
+        'devices' => array_values($deviceMap),
+        'labs' => array_values($labMap),
+    ]]);
+}
+
 try {
     if ($resource === 'auth') {
         handle_auth($segments, $method);
@@ -1246,6 +1325,8 @@ try {
         }
     } elseif ($resource === 'dev') {
         handle_dev($segments, $method);
+    } elseif ($resource === 'dashboard') {
+        handle_dashboard($segments, $method);
     } elseif ($resource === 'health') {
         handle_health($method);
     } elseif (is_root_iam_callback($resource, $method)) {

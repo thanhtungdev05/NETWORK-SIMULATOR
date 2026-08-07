@@ -1,0 +1,28 @@
+{
+  "page": "Local Network > LAN > IPv6 > DHCPv6 Server",
+  "url": "/",
+  "method": "POST",
+  "dataTag": "dhcp6s_dhcpserver_lua.lua",
+  "ngayThu": "2026-08-05",
+  "reqBody": {
+    "IF_ACTION": "Apply",
+    "_InstID": "DEV.DHCP6SPool1",
+    "_InstID_DNS": "IGD",
+    "IANAEnable": "1",
+    "IsPrefixAutoMode": "1",
+    "Enable": "1",
+    "ManualDNSEnable": "0",
+    "DNSAddr1": "",
+    "DNSAddr2": "",
+    "DNSAddr3": "",
+    "Ipv6DnsOrigin": "0",
+    "DnsRefreshTime": "86400",
+    "Btn_SelfUpd_IPv6DHCPServer": "",
+    "Btn_PrefixUpd_IPv6DHCPServer": "",
+    "Btn_apply_IPv6DHCPServer": "",
+    "Btn_cancel_IPv6DHCPServer": "",
+    "_sessionTOKEN": "(bo qua)"
+  },
+  "respBody": "<ajax_response_xml_root><INSTIDENTITY>IGD</INSTIDENTITY><IF_ERRORID>0</IF_ERRORID><IF_ERRORTYPE>SUCC</IF_ERRORTYPE><IF_ERRORSTR>SUCC</IF_ERRORSTR><IF_ERRORPARAM>SUCC</IF_ERRORPARAM><_InstID>DEV.DHCP6SPool1</_InstID><OBJ_DHCP6S_ID><Instance><ParaName>_InstID</ParaName><ParaValue>DEV.DHCP6SPool1</ParaValue><ParaName>DNSAddr2</ParaName><ParaValue></ParaValue><ParaName>DNSAddr1</ParaName><ParaValue></ParaValue><ParaName>IANAManualPrefixes</ParaName><ParaValue></ParaValue><ParaName>Enable</ParaName><ParaValue>1</ParaValue><ParaName>IsPrefixAutoMode</ParaName><ParaValue>1</ParaValue><ParaName>ManualDNSEnable</ParaName><ParaValue>0</ParaValue><ParaName>DnsRefreshTime</ParaName><ParaValue>86400</ParaValue><ParaName>DNSAddr3</ParaName><ParaValue></ParaValue><ParaName>IANAEnable</ParaName><ParaValue>1</ParaValue></Instance></OBJ_DHCP6S_ID></ajax_response_xml_root>",
+  "ghiChu": "PHAT HIEN DANG GHI THU 7 MOI: 'day_du_co_instidentity_va_instid'. Co CA BA: <INSTIDENTITY> dau tien, <_InstID> ngay sau header loi (echo top-level _InstID=DEV.DHCP6SPool1), VA du lieu object DAY DU nhung CHI echo OBJ_DHCP6S_ID (khong echo OBJ_LANDNS_ID - object thu 2 cua dataTag). INSTIDENTITY = _InstID_DNS gui len (IGD), KHONG PHAI top-level _InstID - them 1 truong hop tu_truong nua."
+}

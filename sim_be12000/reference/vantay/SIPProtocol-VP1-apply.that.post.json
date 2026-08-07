@@ -1,0 +1,33 @@
+{
+  "page": "VoIP > SIP Protocol > VP1",
+  "url": "/",
+  "method": "POST",
+  "dataTag": "voip_voipsip_lua.lua",
+  "ngayThu": "2026-08-05",
+  "reqBody": {
+    "IF_ACTION": "Apply",
+    "_InstID": "IGD.SV.VS1.VP1.PS",
+    "_InstIDTIMER": "IGD.SV.VS1.VP1.DM",
+    "_InstIDBEARINFO": "IGD",
+    "CodecList": "-1",
+    "UserAgentPort": "5060",
+    "RegistrarServer1": "0.0.0.0",
+    "ProxyServer1": "0.0.0.0",
+    "OutboundProxy1": "0.0.0.0",
+    "ProxyServerPort1": "5060",
+    "RegistrarServer2": "0.0.0.0",
+    "ProxyServer2": "0.0.0.0",
+    "OutboundProxy2": "0.0.0.0",
+    "ProxyServerPort2": "5060",
+    "RegisterExpires": "3600",
+    "DeRegister": "0",
+    "LinkTest": "0",
+    "LinkTestInterval": "20",
+    "EventSubscription": "0",
+    "Btn_cancel": "",
+    "Btn_apply": "",
+    "_sessionTOKEN": "(bo qua)"
+  },
+  "respBody": "<ajax_response_xml_root><INSTIDENTITY>IGD</INSTIDENTITY><IF_ERRORID>0</IF_ERRORID><IF_ERRORTYPE>SUCC</IF_ERRORTYPE><IF_ERRORSTR>SUCC</IF_ERRORSTR><IF_ERRORPARAM>SUCC</IF_ERRORPARAM></ajax_response_xml_root>",
+  "ghiChu": "Dang xac_nhan_trong. instidentity: tu_truong:_InstIDBEARINFO - INSTIDENTITY echo gia tri cua truong _InstIDBEARINFO (IGD), KHONG PHAI _InstID top-level (IGD.SV.VS1.VP1.PS). Request co 3 truong ID khac nhau (_InstID, _InstIDTIMER, _InstIDBEARINFO) tuong ung 3 object OBJ_VOIPSIP_ID/OBJ_VOIPSIPSERVER_ID, OBJ_VOIPDMTIMER_ID, OBJ_VOIPBEARINFO_ID cua dataTag nay - INSTIDENTITY chon echo truong cua object 'phu' cuoi cung (BEARINFO), tuong tu mau da thay o voip_voipbasic_lua.lua (_InstIDVP)."
+}

@@ -1,0 +1,18 @@
+{
+  "page": "Local Network > UPnP",
+  "url": "/",
+  "method": "POST",
+  "dataTag": "upnp_upnp_lua.lua",
+  "ngayThu": "2026-08-05",
+  "reqBody": {
+    "IF_ACTION": "Apply",
+    "_InstID": "IGD",
+    "EnableUPnPIGD": "1",
+    "ADPeriod": "30",
+    "TTL": "4",
+    "LimitEnable": "0",
+    "_sessionTOKEN": "(bo qua)"
+  },
+  "respBody": "<ajax_response_xml_root><INSTIDENTITY>IGD</INSTIDENTITY><IF_ERRORID>0</IF_ERRORID><IF_ERRORTYPE>SUCC</IF_ERRORTYPE><IF_ERRORSTR>SUCC</IF_ERRORSTR><IF_ERRORPARAM>SUCC</IF_ERRORPARAM><_InstID>IGD</_InstID></ajax_response_xml_root>",
+  "ghiChu": "Dang rut_gon (mau 2, giong EnergyMode). Khong doi gia tri. UPnP Port Mapping la danh sach CHI DOC (nut Refresh, khong Apply)."
+}

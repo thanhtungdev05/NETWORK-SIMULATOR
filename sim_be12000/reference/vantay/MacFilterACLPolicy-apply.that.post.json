@@ -1,0 +1,29 @@
+{
+  "page": "Local Network > WLAN > WLAN Advanced > Access Control-Mode Configuration",
+  "url": "/",
+  "method": "POST",
+  "dataTag": "wlan_macfilteraclpolicy_lua.lua",
+  "ngayThu": "2026-08-05",
+  "reqBody": {
+    "IF_ACTION": "Apply",
+    "_InstNum": "12",
+    "_InstID_0": "DEV.WIFI.AP1", "ACLPolicy_0": "Disabled",
+    "_InstID_1": "DEV.WIFI.AP2", "ACLPolicy_1": "Disabled",
+    "_InstID_2": "DEV.WIFI.AP3", "ACLPolicy_2": "Disabled",
+    "_InstID_3": "DEV.WIFI.AP4", "ACLPolicy_3": "Disabled",
+    "_InstID_4": "DEV.WIFI.AP5", "ACLPolicy_4": "Disabled",
+    "_InstID_5": "DEV.WIFI.AP6", "ACLPolicy_5": "Disabled",
+    "_InstID_6": "DEV.WIFI.AP7", "ACLPolicy_6": "Disabled",
+    "_InstID_7": "DEV.WIFI.AP8", "ACLPolicy_7": "Disabled",
+    "_InstID_8": "DEV.WIFI.AP9", "ACLPolicy_8": "Disabled",
+    "_InstID_9": "DEV.WIFI.AP10", "ACLPolicy_9": "Disabled",
+    "_InstID_10": "DEV.WIFI.AP11", "ACLPolicy_10": "Disabled",
+    "_InstID_11": "DEV.WIFI.AP12", "ACLPolicy_11": "Disabled",
+    "_InstID": "",
+    "Btn_apply_MACFilterACLPolicy": "",
+    "Btn_cancel_MACFilterACLPolicy": "",
+    "_sessionTOKEN": "(bo qua, chi de minh hoa vi tri truong)"
+  },
+  "respBody": "<ajax_response_xml_root><INSTIDENTITY>DEV.WIFI.AP12</INSTIDENTITY><IF_ERRORID>0</IF_ERRORID><IF_ERRORTYPE>SUCC</IF_ERRORTYPE><IF_ERRORSTR>SUCC</IF_ERRORSTR><IF_ERRORPARAM>SUCC</IF_ERRORPARAM></ajax_response_xml_root>",
+  "ghiChu": "Dang xac_nhan_trong. Truong top-level _InstID gui rong (''), nhung INSTIDENTITY tra ve = _InstID_11 (truong index CUOI CUNG, ung voi SSID12/AP12). Xac nhan lai dung mo hinh tu_truong da phat hien o wlan_wlanbasiconoff_lua.lua: echo TRUONG INDEX CUOI, khong phai top-level _InstID. instidentity = 'tu_truong:_InstID_11'."
+}

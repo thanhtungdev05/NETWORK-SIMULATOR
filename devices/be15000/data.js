@@ -6,11 +6,11 @@ window.DEVICE_BE15000 = {
   id: 'be15000',
   name: 'BE15000',
   shortName: 'BE15000',
-  port: 8096,
+  port: 8080,
   folder: 'sim_be15000',
   serverBat: 'chay_server.bat',
   needsServer: false,
-  loginUrl: 'http://127.0.0.1:8096/login',
+  loginUrl: '/sim_be15000/login',
   categories: [
     {
       title: 'HỌC TẬP',
@@ -20,7 +20,7 @@ window.DEVICE_BE15000 = {
           title: 'Bài 1 - Quản lý LAN IPv4',
           subtitle: 'Cấu hình địa chỉ IP LAN và DHCP Server',
           instructions: [
-            'Truy cập <b>http://127.0.0.1:8096</b> và đăng nhập',
+            'Truy cập <b>/sim_be15000</b> và đăng nhập',
             'Chọn menu <b>LAN IPv4 Management</b>',
             '- IP Address: <span class="val">192.168.1.1</span>',
             '- Subnet Mask: <span class="val">255.255.255.0</span>',
@@ -29,7 +29,7 @@ window.DEVICE_BE15000 = {
             '- End IP: <span class="val">192.168.1.200</span>',
             'Bấm <b>Apply</b> để lưu',
           ],
-          practiceUrl: 'http://127.0.0.1:8096/page/lanMgrIpv4',
+          practiceUrl: '/sim_be15000/page/lanMgrIpv4',
           grading: {
             description: 'Kiểm tra LAN IPv4 Management',
             rules: []
@@ -46,7 +46,7 @@ window.DEVICE_BE15000 = {
             '- Xem trạng thái cổng LAN (tốc độ, duplex)',
             '- Xem traffic in/out từng interface',
           ],
-          practiceUrl: 'http://127.0.0.1:8096/page/localNetStatus',
+          practiceUrl: '/sim_be15000/page/localNetStatus',
           grading: {
             description: 'Kiểm tra Local Network Status check',
             rules: []
@@ -66,7 +66,7 @@ window.DEVICE_BE15000 = {
             '- Target: <span class="val">google.com</span>',
             '- Bấm <b>Trace</b> và xem đường đi gói tin',
           ],
-          practiceUrl: 'http://127.0.0.1:8096/page/networkDiag',
+          practiceUrl: '/sim_be15000/page/networkDiag',
           grading: {
             description: 'Kiểm tra thao tác Network Diagnostics',
             rules: []
@@ -84,7 +84,7 @@ window.DEVICE_BE15000 = {
             'Bấm <b>Apply</b>',
             '⚠️ Sau khi đổi sẽ cần đăng nhập lại',
           ],
-          practiceUrl: 'http://127.0.0.1:8096/page/accountMgr',
+          practiceUrl: '/sim_be15000/page/accountMgr',
           grading: {
             description: 'Kiểm tra thao tác đổi mật khẩu Account Management',
             rules: []
@@ -101,7 +101,7 @@ window.DEVICE_BE15000 = {
             '- Phát hiện xung đột IP (IP Conflict)',
             '- Bấm <b>Refresh</b> để cập nhật danh sách',
           ],
-          practiceUrl: 'http://127.0.0.1:8096/page/arpTable',
+          practiceUrl: '/sim_be15000/page/arpTable',
           grading: {
             description: 'Kiểm tra ARP Table inspection',
             rules: []
@@ -118,7 +118,7 @@ window.DEVICE_BE15000 = {
             '- Aging time: <span class="val">300 giây mặc định</span>',
             '- Bấm <b>Refresh</b> để cập nhật',
           ],
-          practiceUrl: 'http://127.0.0.1:8080/sim_be15000/www/pages/macTable.html',
+          practiceUrl: '/sim_be15000/sim_be15000/www/pages/macTable.html',
           grading: {
             description: 'Kiểm tra MAC Table inspection',
             rules: []
@@ -136,7 +136,7 @@ window.DEVICE_BE15000 = {
             '⚠️ Không ngắt nguồn trong lúc nâng cấp!',
             '- Thiết bị tự khởi động lại sau khi xong',
           ],
-          practiceUrl: 'http://127.0.0.1:8080/sim_be15000/www/pages/firmwareUpgr.html',
+          practiceUrl: '/sim_be15000/sim_be15000/www/pages/firmwareUpgr.html',
           grading: {
             description: 'Kiểm tra Firmware Upgrade process',
             rules: []
@@ -154,7 +154,7 @@ window.DEVICE_BE15000 = {
             '- Download log: Bấm <b>Export</b>',
             '- Xóa log cũ: Bấm <b>Clear</b>',
           ],
-          practiceUrl: 'http://127.0.0.1:8080/sim_be15000/www/pages/logMgr.html',
+          practiceUrl: '/sim_be15000/sim_be15000/www/pages/logMgr.html',
           grading: {
             description: 'Kiểm tra Log Management',
             rules: []
@@ -172,7 +172,7 @@ window.DEVICE_BE15000 = {
             '⚠️ Toàn bộ cấu hình sẽ bị xóa!',
             '- Sau reset: IP mặc định, tài khoản mặc định',
           ],
-          practiceUrl: 'http://127.0.0.1:8080/sim_be15000/www/pages/rebootAndReset.html',
+          practiceUrl: '/sim_be15000/sim_be15000/www/pages/rebootAndReset.html',
           grading: {
             description: 'Kiểm tra Reboot & Reset operations',
             rules: []
@@ -191,7 +191,7 @@ window.DEVICE_BE15000 = {
             '- Sync Interval: <span class="val">24 giờ</span>',
             'Bấm <b>Apply</b>',
           ],
-          practiceUrl: 'http://127.0.0.1:8080/sim_be15000/www/pages/sntp_lan.html',
+          practiceUrl: '/sim_be15000/sim_be15000/www/pages/sntp_lan.html',
           grading: {
             description: 'Kiểm tra SNTP Configuration',
             rules: []

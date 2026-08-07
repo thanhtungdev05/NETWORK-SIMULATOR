@@ -1,0 +1,1081 @@
+{
+  "device": "BE12000",
+  "capturedAt": "2026-08-03",
+  "note": "Thiet bi KHONG dung file .asp/.cgi rieng. Moi request deu ve '/' voi tham so _type va _tag.",
+  "transport": {
+    "base": "http://192.168.1.1/",
+    "params": {
+      "_type": "menuView | menuData | loginData | hiddenData",
+      "_tag": "dinh danh trang (menuView) hoac dinh danh nguon du lieu (menuData, dang *_lua.lua)",
+      "Menu3Location": "chi so tab cap 3 dang duoc chon (quan sat thay gia tri 0)",
+      "_": "timestamp chong cache do jQuery them vao"
+    },
+    "observedMethods": [
+      "GET",
+      "POST"
+    ],
+    "writeMethodStatus": "DA CO BANG CHUNG - reference/har/sntp-apply.har"
+  },
+  "clientLibs": [
+    "/jquery/jquery.min.js",
+    "/jquery/crypto-js.min.js",
+    "/jquery/jsencrypt.min.js",
+    "/jquery/common_lib.js"
+  ],
+  "cryptoNote": "XAC MINH 2026-08-04: Localnet_LanMgrIpv4_DHCPBasicCfg_lua.lua tra ve them the <encode>IPAddr,MinAddress,MaxAddress,DNSServer1,DNSServer2</encode> ben canh cac OBJ_*_ID, danh dau nhung ParaValue bi ma hoa (dang base64, vd v+gRyWEsI6fw+S5uQBexYw==). config_store.xml_cho() HIEN CHUA sinh lai the <encode> nay - xem missing-evidence.md.",
+  "dataTagsByRoute": {
+    "homePage": {
+      "menuPath": [
+        "Home",
+        "Home"
+      ],
+      "defaultViewTag": "homePage",
+      "observedDataTags": [
+        "firewall_homepage_lua.lua",
+        "wlan_homepage_lua.lua"
+      ],
+      "note": "chi la cac _tag quan sat duoc khi MO trang cap 2. Cac tab cap 3 chua bam het."
+    },
+    "mmTopology": {
+      "menuPath": [
+        "Topology",
+        "Topology"
+      ],
+      "defaultViewTag": "mmTopology",
+      "observedDataTags": [
+        "topo_lua.lua"
+      ],
+      "note": "chi la cac _tag quan sat duoc khi MO trang cap 2. Cac tab cap 3 chua bam het."
+    },
+    "internetStatus": {
+      "menuPath": [
+        "Internet",
+        "Status"
+      ],
+      "defaultViewTag": "ponopticalinfo",
+      "observedDataTags": [
+        "optical_info_lua.lua"
+      ],
+      "note": "chi la cac _tag quan sat duoc khi MO trang cap 2. Cac tab cap 3 chua bam het."
+    },
+    "ethWanConfig": {
+      "menuPath": [
+        "Internet",
+        "WAN",
+        "WAN"
+      ],
+      "defaultViewTag": "ethWanConfig",
+      "observedDataTags": [
+        "wan_internet_lua.lua"
+      ],
+      "note": "PHAI truyen them tham so TypeUplink va pageType (vd &TypeUplink=2&pageType=0), goi thieu se 404 (xem ISSUES 2026-08-03). Response co WorkIFMac (MAC that) va UserName ma hoa (da SANITIZE truoc khi luu - xem missing-evidence.md). UserName giai ma la 'fpt' (tai khoan mac dinh cua FPT Telecom, KHONG phai thong tin ca nhan)."
+    },
+    "Wan3gConfig": {
+      "menuPath": [
+        "Internet",
+        "WAN",
+        "3G/4G"
+      ],
+      "defaultViewTag": "Wan3gConfig",
+      "observedDataTags": [
+        "wwan_pin_lua.lua",
+        "wan_3gLTE_config_lua.lua",
+        "wwan_backup_lua.lua"
+      ],
+      "note": "Khong co dongle 3G/4G cam vao (DongleStatus=Dev_FAILURE). wwan_pin_lua.lua va wan_3gLTE_config_lua.lua tra THE VO HUONG xen ke OBJ (vd <DongleStatus>...) - config_store.py da them co che scalarTags/renderOrder de xu ly."
+    },
+    "tunnel4in6Config": {
+      "menuPath": [
+        "Internet",
+        "WAN",
+        "DSLite"
+      ],
+      "defaultViewTag": "tunnel4in6Config",
+      "observedDataTags": [
+        "tunnel_4in6_config_lua.lua"
+      ],
+      "note": "Response RONG hoan toan (khong OBJ nao) - chua cau hinh DSLite tunnel nao."
+    },
+    "l2tpConfig": {
+      "menuPath": [
+        "Internet",
+        "WAN",
+        "L2TP"
+      ],
+      "defaultViewTag": "l2tpConfig",
+      "observedDataTags": [
+        "l2tp_lua.lua"
+      ],
+      "note": "Chua cau hinh L2TP nao (UserName rong, cac IP deu 0.0.0.0)."
+    },
+    "security": {
+      "menuPath": [
+        "Internet",
+        "Security"
+      ],
+      "defaultViewTag": "firewall",
+      "observedDataTags": [
+        "firewall_config_lua.lua"
+      ],
+      "note": "chi la cac _tag quan sat duoc khi MO trang cap 2. Cac tab cap 3 chua bam het."
+    },
+    "parentCtrl": {
+      "menuPath": [
+        "Internet",
+        "Parental Controls"
+      ],
+      "defaultViewTag": "parentCtrl",
+      "observedDataTags": [
+        "firewall_parentctrl_lua.lua"
+      ],
+      "note": "Khong tham so phu. Chua co rule nao (object rong)."
+    },
+    "ddns": {
+      "menuPath": [
+        "Internet",
+        "DDNS"
+      ],
+      "defaultViewTag": "ddns",
+      "observedDataTags": [
+        "ddns_lua.lua",
+        "fpt_ddns_status_model.lua"
+      ],
+      "note": "fpt_ddns_status_model.lua goi khi mo accordion Dynamic DNS Reporting (nut DdnsStatusBar), tra JSON THUAN (khong boc ajax_response_xml_root), giong wlan_mlo_model.lua. Chua cau hinh DDNS nen deu rong/mac dinh. Password khong bao gio tra ve (encode tag, field vang mat)."
+    },
+    "sntp": {
+      "menuPath": [
+        "Internet",
+        "SNTP"
+      ],
+      "defaultViewTag": "sntp",
+      "observedDataTags": [
+        "sntp_lua.lua"
+      ],
+      "note": "chi la cac _tag quan sat duoc khi MO trang cap 2. Cac tab cap 3 chua bam het."
+    },
+    "portBinding": {
+      "menuPath": [
+        "Internet",
+        "Port Binding"
+      ],
+      "defaultViewTag": "portBinding",
+      "observedDataTags": [
+        "portbinding_lua.lua"
+      ],
+      "note": "Khong tham so phu. OBJ_WANLAN_ID liet ke ten cong LAN/SSID tinh (LAN1-4, SSID1-8), khong phai du lieu nhay cam."
+    },
+    "rip": {
+      "menuPath": [
+        "Internet",
+        "Dynamic Routing"
+      ],
+      "defaultViewTag": "rip",
+      "observedDataTags": [
+        "rip_lua.lua",
+        "route_ripng_m.lua"
+      ],
+      "note": "route_ripng_m.lua goi khi mo accordion RIPng (nut RIPngBar). RipAuthKey co encode tag, gia tri dang rong (RIP dang tat). ParaName cua OBJ_RIPNG_ID co dang \"OBJ_RIPNG_ID.TenTruong\" (co tien to lap lai ten object + dau cham) - da xac nhan dung nguyen van tu bang chung, KHONG phai loi go."
+    },
+    "multicast": {
+      "menuPath": [
+        "Internet",
+        "Multicast"
+      ],
+      "defaultViewTag": "multicastmode",
+      "observedDataTags": [
+        "multicast_mode_lua.lua"
+      ],
+      "note": "chi la cac _tag quan sat duoc khi MO trang cap 2. Cac tab cap 3 chua bam het."
+    },
+    "portlocate": {
+      "menuPath": [
+        "Internet",
+        "Port Locating"
+      ],
+      "defaultViewTag": "portlocate",
+      "observedDataTags": [
+        "Internet_PortLocate_lua.lua"
+      ],
+      "note": "Khong tham so phu."
+    },
+    "ponInfo": {
+      "menuPath": [
+        "Internet",
+        "PON Information"
+      ],
+      "defaultViewTag": "ponLoid",
+      "observedDataTags": [
+        "poninfo_loid_lua.lua"
+      ],
+      "note": "chi la cac _tag quan sat duoc khi MO trang cap 2. Cac tab cap 3 chua bam het."
+    },
+    "localNetStatus": {
+      "menuPath": [
+        "Local Network",
+        "Status"
+      ],
+      "defaultViewTag": "localNetStatus",
+      "observedDataTags": [
+        "status_lan_info_lua.lua",
+        "wlan_client_stat_lua.lua",
+        "accessdev_landevs_lua.lua",
+        "usb_usbdevs_lua.lua",
+        "wlan_wlanstatus_lua.lua"
+      ],
+      "note": "Day du 5 tag quan sat duoc khi mo va bung het cac muc thu gon (WLAN Status, WLAN Client Status, LAN Client Status, USB Storage Status). Chup 2026-08-03 qua Claude in Chrome."
+    },
+    "wlanConfig": {
+      "menuPath": [
+        "Local Network",
+        "WLAN"
+      ],
+      "defaultViewTag": "wlanBasic",
+      "observedDataTags": [
+        "wlan_wlanbasiconoff_lua.lua"
+      ],
+      "note": "chi la cac _tag quan sat duoc khi MO trang cap 2. Cac tab cap 3 chua bam het."
+    },
+    "lanMgrIpv4": {
+      "menuPath": [
+        "Local Network",
+        "LAN",
+        "IPv4"
+      ],
+      "defaultViewTag": "lanMgrIpv4",
+      "observedDataTags": [
+        "Localnet_LanMgrIpv4_DHCPHostInfo_lua.lua",
+        "Localnet_LanMgrIpv4_DHCPBasicCfg_lua.lua",
+        "Localnet_LanMgrIpv4_DHCPStaticRule_lua.lua",
+        "Localnet_LanDevDHCPSource_lua.lua"
+      ],
+      "note": "Day du 4 tag: Allocated Address(DHCP) tu dong nap, DHCP Server/DHCP Binding/DHCP Port Control chi goi khi bung muc thu gon. DHCPBasicCfg co field ma hoa client-side (xem note duoi)."
+    },
+    "lanMgrIpv6": {
+      "menuPath": [
+        "Local Network",
+        "LAN",
+        "IPv6"
+      ],
+      "defaultViewTag": "lanMgrIpv6",
+      "observedDataTags": [
+        "dhcp6s_hostinfo_lua.lua",
+        "addr6_lanaddr_lua.lua",
+        "prefix_staticprefix_lua.lua",
+        "dhcp6s_dhcpserver_lua.lua",
+        "prefix_prefixpool_lua.lua",
+        "ra_raservice_lua.lua"
+      ],
+      "note": "Day du 6 tag. prefix_prefixpool_lua.lua dung chung boi ca muc DHCPv6 Server va RA Service."
+    },
+    "routeIpv4": {
+      "menuPath": [
+        "Local Network",
+        "Routing",
+        "IPv4"
+      ],
+      "defaultViewTag": "routeIpv4",
+      "observedDataTags": [
+        "route_routedefault_lua.lua",
+        "route_routetableipv4_lua.lua",
+        "route_routestaticipv4_lua.lua"
+      ],
+      "note": "Day du 3 tag: Default Routing tu dong nap, Routing Table/Static Routing chi goi khi bung muc thu gon."
+    },
+    "routeIpv6": {
+      "menuPath": [
+        "Local Network",
+        "Routing",
+        "IPv6"
+      ],
+      "defaultViewTag": "routeIpv6",
+      "observedDataTags": [
+        "route_routedefaultipv6_lua.lua",
+        "route_routetableipv6_lua.lua",
+        "route_routestaticipv6_lua.lua"
+      ],
+      "note": "Day du 3 tag, cau truc song song voi routeIpv4."
+    },
+    "ftp": {
+      "menuPath": [
+        "Local Network",
+        "FTP"
+      ],
+      "defaultViewTag": "ftp",
+      "observedDataTags": [
+        "Localnet_ftp_lua.lua"
+      ],
+      "note": "Day du 1 tag, khong co accordion phu. OBJ_FMFTPUSER_ID khong tra Password (kem the <encode>Password</encode> - mat khau khong bao gio duoc gui ve, kha nang chi ghi khi Apply)."
+    },
+    "upnp": {
+      "menuPath": [
+        "Local Network",
+        "UPnP"
+      ],
+      "defaultViewTag": "upnp",
+      "observedDataTags": [
+        "upnp_upnp_lua.lua",
+        "upnp_portmap_lua.lua"
+      ],
+      "note": "upnp_portmap_lua.lua (muc UPnP Port Mapping) chi goi khi bung muc thu gon; thiet bi that dang rong (khong co port mapping nao)."
+    },
+    "bpdu": {
+      "menuPath": [
+        "Local Network",
+        "BPDU"
+      ],
+      "defaultViewTag": "bpdu",
+      "observedDataTags": [
+        "bpdu_lua.lua"
+      ],
+      "note": "Day du 1 tag, khong co accordion phu."
+    },
+    "dms": {
+      "menuPath": [
+        "Local Network",
+        "DMS/DLNA"
+      ],
+      "defaultViewTag": "dms",
+      "observedDataTags": [
+        "dms_dms_lua.lua"
+      ],
+      "note": "Day du 1 tag, khong co accordion phu."
+    },
+    "samba": {
+      "menuPath": [
+        "Local Network",
+        "Samba Service"
+      ],
+      "defaultViewTag": "samba",
+      "observedDataTags": [
+        "Samba_lua.lua"
+      ],
+      "note": "Day du 1 tag. OBJ_SAMBAUSER_ID khong tra PassWord (kem the <encode>PassWord</encode>, giong mau FTP)."
+    },
+    "dns": {
+      "menuPath": [
+        "Local Network",
+        "DNS"
+      ],
+      "defaultViewTag": "dns",
+      "observedDataTags": [
+        "dns_localdns_lua.lua",
+        "dns_hostname_lua.lua"
+      ],
+      "note": "Muc 'Domain Name' va 'DNS' (2 accordion) dung CHUNG 1 tag dns_localdns_lua.lua (OBJ_DNS_ID). Muc 'Host Name' dung dns_hostname_lua.lua, tra ve object ten ALLDNSHOST (NGOAI LE - khong co tien to OBJ_). Thiet bi that dang rong (khong co host name nao)."
+    },
+    "usbfunccfg": {
+      "menuPath": [
+        "Local Network",
+        "USB"
+      ],
+      "defaultViewTag": "usbfunccfg",
+      "observedDataTags": [
+        "usb_usbfunccfg_lua.lua"
+      ],
+      "note": "Day du 1 tag, khong co accordion phu."
+    },
+    "voipStatus": {
+      "menuPath": [
+        "VoIP",
+        "Status"
+      ],
+      "defaultViewTag": "voipStatus",
+      "observedDataTags": [
+        "voipRegStatus_lua.lua",
+        "voipVpPhyinterface_lua.lua"
+      ],
+      "note": "voipVpPhyinterface_lua.lua goi khi mo accordion VoIP Phone Status (nut VOIPPhoneStatusBar). Line chua dang ky (Inactive)."
+    },
+    "voipBasic": {
+      "menuPath": [
+        "VoIP",
+        "Basic"
+      ],
+      "defaultViewTag": "voipBasic",
+      "observedDataTags": [
+        "voip_voipbasic_lua.lua"
+      ],
+      "note": "Khong tham so phu. AuthUserName/AuthPassword deu rong (chua cau hinh tai khoan SIP), Password khong bao gio tra ve (encode tag)."
+    },
+    "voipServices": {
+      "menuPath": [
+        "VoIP",
+        "VoIP Services"
+      ],
+      "defaultViewTag": "voipServices",
+      "observedDataTags": [
+        "Voip_SipService_lua.lua",
+        "voipDmtTimer_lua.lua"
+      ],
+      "note": "Khong tham so phu."
+    },
+    "sipIf": {
+      "menuPath": [
+        "VoIP",
+        "Network Interface"
+      ],
+      "defaultViewTag": "sipIf",
+      "observedDataTags": [
+        "Voip_SipIf_lua.lua"
+      ],
+      "note": "Khong tham so phu."
+    },
+    "sipAdvanced": {
+      "menuPath": [
+        "VoIP",
+        "Advanced"
+      ],
+      "defaultViewTag": "sipAdvanced",
+      "observedDataTags": [
+        "voip_sipadvanced_lua.lua",
+        "voip_voiceproc_lua.lua"
+      ],
+      "note": "voip_voiceproc_lua.lua goi khi mo accordion Echo Cancellation (nut VOICEPROCBar)."
+    },
+    "sip": {
+      "menuPath": [
+        "VoIP",
+        "SIP Protocol"
+      ],
+      "defaultViewTag": "sip",
+      "observedDataTags": [
+        "voip_voipsip_lua.lua"
+      ],
+      "note": "Khong tham so phu. SipServer = \"vIMS GMA\" (gia tri that cua nha mang, khong phai thong tin ca nhan nguoi dung, khong sanitize)."
+    },
+    "sipDigitmap": {
+      "menuPath": [
+        "VoIP",
+        "Digital Map"
+      ],
+      "defaultViewTag": "sipDigitmap",
+      "observedDataTags": [
+        "Voip_sipdigitmap_lua.lua"
+      ],
+      "note": "Khong tham so phu."
+    },
+    "sipMedia": {
+      "menuPath": [
+        "VoIP",
+        "Media"
+      ],
+      "defaultViewTag": "sipMedia",
+      "observedDataTags": [
+        "voip_sipmedia_lua.lua"
+      ],
+      "note": "Khong tham so phu. OBJ_VOIPLINEVMEDAI_ID co 3 Instance (codec uu tien 1-3)."
+    },
+    "sipslc": {
+      "menuPath": [
+        "VoIP",
+        "SLIC configuration"
+      ],
+      "defaultViewTag": "sipslc",
+      "observedDataTags": [
+        "voip_sipslc_lua.lua"
+      ],
+      "note": "Khong tham so phu."
+    },
+    "sipCallerID": {
+      "menuPath": [
+        "VoIP",
+        "Caller ID"
+      ],
+      "defaultViewTag": "sipCallerID",
+      "observedDataTags": [
+        "voip_cid_sip_lua.lua"
+      ],
+      "note": "Khong tham so phu."
+    },
+    "fax": {
+      "menuPath": [
+        "VoIP",
+        "FAX"
+      ],
+      "defaultViewTag": "fax",
+      "observedDataTags": [
+        "voip_fax_lua.lua"
+      ],
+      "note": "Khong tham so phu."
+    },
+    "voipqos": {
+      "menuPath": [
+        "VoIP",
+        "QoS"
+      ],
+      "defaultViewTag": "voipqos",
+      "observedDataTags": [
+        "Voip_Voip_QoS_lua.lua",
+        "Voip_Voip_QoS_Media_lua.lua"
+      ],
+      "note": "Voip_Voip_QoS_Media_lua.lua goi khi mo accordion QOS of Media (nut VoIPQoSConf_MediaBar)."
+    },
+    "statusMgr": {
+      "menuPath": [
+        "Management & Diagnosis",
+        "Status"
+      ],
+      "defaultViewTag": "statusMgr",
+      "observedDataTags": [
+        "devmgr_statusmgr_lua.lua"
+      ],
+      "note": "Trang mot cap, 1 dataTag duy nhat. Da xac nhan."
+    },
+    "devMgr": {
+      "menuPath": [
+        "Management & Diagnosis",
+        "System Management"
+      ],
+      "defaultViewTag": "rebootAndReset",
+      "observedDataTags": [],
+      "note": "chi la cac _tag quan sat duoc khi MO trang cap 2. Cac tab cap 3 chua bam het."
+    },
+    "accountMgr": {
+      "menuPath": [
+        "Management & Diagnosis",
+        "Account Management"
+      ],
+      "defaultViewTag": "accountMgr",
+      "observedDataTags": [
+        "devauth_accountmgr_lua.lua",
+        "web_login_timeout_lua.lua"
+      ],
+      "note": "devauth_accountmgr_lua.lua: danh sach tai khoan (Username=admin/user, Keyword rong). web_login_timeout_lua.lua: OBJ_USERIF_ID.Timeout (phut). Password/NewPassword danh dau <encode>, khong bao gio xuat hien trong GET."
+    },
+    "logMgr": {
+      "menuPath": [
+        "Management & Diagnosis",
+        "Log Management"
+      ],
+      "defaultViewTag": "logMgr",
+      "observedDataTags": [
+        "log_syslogmgr2_lua.lua",
+        "LogManag_Syslog_lua.lua",
+        "log_seclogmgr_lua.lua",
+        "log_wifilogmgr_lua.lua"
+      ],
+      "note": "4 dataTag dung chung ten object OBJ_LOG_ID (tru LogManag_Syslog_lua.lua dung OBJ_SYSLOG_ID) nhung khac tap truong: log_syslogmgr2 (Device Log: LogEnable/LogLevel/logStr), LogManag_Syslog (System Log: SysLogEnable/SysLogLevel/SysLogTimeout/SysLogTarget/SysLogPort/SysLogServer), log_seclogmgr (Security Log: SecLogEnable/logStr), log_wifilogmgr (WiFi Log: chi logStr). log_syslogmgr2_lua.lua va log_seclogmgr_lua.lua co dac diem la XML tra ve 1 cap ParaName/ParaValue nam TRUC TIEP duoi root (ngoai Instance) truoc khi lap lai dung cau truc trong OBJ_LOG_ID - day la hanh vi that cua thiet bi (giu nguyen). do_download_syslog/seclog/wifilog.lua va updownload_prevent_ctl.lua la tag POST khi bam Download, KHONG kich hoat."
+    },
+    "diagnosis": {
+      "menuPath": [
+        "Management & Diagnosis",
+        "Diagnosis"
+      ],
+      "defaultViewTag": "networkDiag",
+      "observedDataTags": [
+        "networkdiag_ping_lua.lua",
+        "networkdiag_traceroute_lua.lua",
+        "networkdiag_svcsimulation_lua.lua"
+      ],
+      "note": "chi la cac _tag quan sat duoc khi MO trang cap 2. Cac tab cap 3 chua bam het."
+    },
+    "IPv6SwitchMgr": {
+      "menuPath": [
+        "Management & Diagnosis",
+        "IPv6 Switch"
+      ],
+      "defaultViewTag": "IPv6SwitchMgr",
+      "observedDataTags": [
+        "ipv6_enable_lua.lua"
+      ],
+      "note": "chi la cac _tag quan sat duoc khi MO trang cap 2. Cac tab cap 3 chua bam het."
+    },
+    "Ethconfig": {
+      "menuPath": [
+        "Management & Diagnosis",
+        "Uplink Mode Switch"
+      ],
+      "defaultViewTag": "Ethconfig",
+      "observedDataTags": [
+        "devmgr_uplink_mode_lua.lua"
+      ],
+      "note": "chi la cac _tag quan sat duoc khi MO trang cap 2. Cac tab cap 3 chua bam het."
+    },
+    "Energy": {
+      "menuPath": [
+        "Management & Diagnosis",
+        "Energy Conservation"
+      ],
+      "defaultViewTag": "EnergyMode",
+      "observedDataTags": [
+        "energy_config_lua.lua"
+      ],
+      "note": "chi la cac _tag quan sat duoc khi MO trang cap 2. Cac tab cap 3 chua bam het."
+    },
+    "wlanBasic": {
+      "menuPath": [
+        "Local Network",
+        "WLAN",
+        "WLAN Basic"
+      ],
+      "defaultViewTag": "wlanBasic",
+      "observedDataTags": [
+        "wlan_wlanbasiconoff_lua.lua",
+        "wlan_wlanbasicadconf_lua.lua",
+        "wlan_wlansssidconf_lua.lua"
+      ],
+      "note": "Day du. wlan_wlanbasicadconf/wlansssidconf chi ban dau AN, chi goi khi bung 2 muc thu gon."
+    },
+    "wlanAdvanced": {
+      "menuPath": [
+        "Local Network",
+        "WLAN",
+        "WLAN Advanced"
+      ],
+      "defaultViewTag": "wlanAdvanced",
+      "observedDataTags": [
+        "wlan_macfilteraclpolicy_lua.lua",
+        "wlan_macfilterrule_lua.lua"
+      ],
+      "note": "wlan_macfilterrule chi goi khi bung muc Access Control-Rule Configuration."
+    },
+    "wps": {
+      "menuPath": [
+        "Local Network",
+        "WLAN",
+        "WPS"
+      ],
+      "defaultViewTag": "wps",
+      "observedDataTags": [
+        "wlan_wps_lua.lua"
+      ],
+      "note": "Ca 2.4GHz va 5GHz dung chung 1 tag."
+    },
+    "wlanStaScanAP": {
+      "menuPath": [
+        "Local Network",
+        "WLAN",
+        "Surrounding WiFi"
+      ],
+      "defaultViewTag": "wlanStaScanAP",
+      "observedDataTags": [
+        "wlan_sta_wlan_profile_lua.lua"
+      ],
+      "note": "Tai trang: tra rong (khong OBJ). Bam nut Scan: goi LAI CUNG TAG voi them tham so APGetFrom=ScanAP&_sessionTOKEN=... tra danh sach mang lan can (OBJ_WLANGETNEBAP_ID). Da SANITIZE SSID/MAC that truoc khi luu bang chung."
+    },
+    "wifibandsteer": {
+      "menuPath": [
+        "Local Network",
+        "WLAN",
+        "WLAN Band Steering"
+      ],
+      "defaultViewTag": "wifibandsteer",
+      "observedDataTags": [
+        "wlan_BandSteering_lua.lua"
+      ],
+      "note": ""
+    },
+    "WLANMLO": {
+      "menuPath": [
+        "Local Network",
+        "WLAN",
+        "MLO"
+      ],
+      "defaultViewTag": "WLANMLO",
+      "observedDataTags": [
+        "wlan_mlo_model.lua"
+      ],
+      "note": "NGOAI LE dinh dang: response la JSON thuan (vd {\"IF_ERRORID\":0,\"OBJ_WLANMLO_ID\":{\"Instance\":[{\"MloEnable\":\"0\"}]},...}), KHONG boc trong <ajax_response_xml_root> nhu moi tag khac. Da xac minh qua body thuc te; content-type header CHUA xac minh (bi loc boi cong cu khi thu doc header) - xem missing-evidence.md."
+    },
+    "smNetSphereMAP": {
+      "menuPath": [
+        "Local Network",
+        "WLAN",
+        "Mesh Wi-Fi"
+      ],
+      "defaultViewTag": "smNetSphereMAP",
+      "observedDataTags": [
+        "Localnet_NetSphere_Mode_lua.lua"
+      ],
+      "note": ""
+    },
+    "ponopticalinfo": {
+      "menuPath": [
+        "Internet",
+        "Status",
+        "PON Inform"
+      ],
+      "defaultViewTag": "ponopticalinfo",
+      "observedDataTags": [
+        "optical_info_lua.lua"
+      ],
+      "note": "Doc trang thai quang PON, khong tham so phu."
+    },
+    "ethWanStatus": {
+      "menuPath": [
+        "Internet",
+        "Status",
+        "WAN"
+      ],
+      "defaultViewTag": "ethWanStatus",
+      "observedDataTags": [
+        "wan_internetstatus_lua.lua"
+      ],
+      "note": "PHAI truyen them TypeUplink=2&pageType=1 (luu y pageType=1 o day, KHAC voi pageType=0 cua ethWanConfig). Cung object ID_WAN_COMFIG voi ethWanConfig nhung dataTag rieng. Co WorkIFMac (MAC that) - da SANITIZE."
+    },
+    "Wan3gStatus": {
+      "menuPath": [
+        "Internet",
+        "Status",
+        "3G/4G"
+      ],
+      "defaultViewTag": "Wan3gStatus",
+      "observedDataTags": [
+        "wwan_mobile_status_lua.lua",
+        "wan_3g_status_lua.lua"
+      ],
+      "note": "Khong co dongle cam (DongleStatus=Dev_FAILURE). wan_3g_status_lua.lua KHONG duoc trang tu goi khi khong co dongle (chi thu goi thu cong de co bang chung)."
+    },
+    "tunnel4in6Status": {
+      "menuPath": [
+        "Internet",
+        "Status",
+        "DSLite"
+      ],
+      "defaultViewTag": "tunnel4in6Status",
+      "observedDataTags": [
+        "tunnel_4in6_status_lua.lua"
+      ],
+      "note": "Response rong (chua cau hinh DSLite), khong tham so phu."
+    },
+    "l2tpStatus": {
+      "menuPath": [
+        "Internet",
+        "Status",
+        "L2TP"
+      ],
+      "defaultViewTag": "l2tpStatus",
+      "observedDataTags": [
+        "l2tp_lua.lua"
+      ],
+      "note": "DUNG CHUNG dataTag l2tp_lua.lua voi l2tpConfig (Internet>WAN) - object OBJ_L2TP_ID doc boi ca 2 view. Khong tham so phu."
+    },
+    "conntracks": {
+      "menuPath": [
+        "Internet",
+        "Status",
+        "NAT entries/conntracks"
+      ],
+      "defaultViewTag": "conntracks",
+      "observedDataTags": [
+        "firewall_conntrack_lua.lua"
+      ],
+      "note": "Doc so luong conntrack hien dung, khong tham so phu."
+    },
+    "filterCriteria": {
+      "menuPath": [
+        "Internet",
+        "Security",
+        "Filter Criteria"
+      ],
+      "defaultViewTag": "filterCriteria",
+      "observedDataTags": [
+        "firewall_filterglobal_lua.lua",
+        "firewall_ipfilter_lua.lua",
+        "firewall_macfilterv3_lua.lua",
+        "firewall_urlfilter_m.lua"
+      ],
+      "note": "Trang co 3 accordion con (IP Filter/MAC Filter/URL Filter), moi accordion goi 1 dataTag rieng. Chua co rule nao cau hinh nen 3/4 tag tra object rong (khong Instance)."
+    },
+    "localServiceCtrl": {
+      "menuPath": [
+        "Internet",
+        "Security",
+        "Local Service Control"
+      ],
+      "defaultViewTag": "localServiceCtrl",
+      "observedDataTags": [
+        "firewall_ipv4service_lua.lua",
+        "firewall_ipv6service_lua.lua",
+        "firewall_portservice_lua.lua"
+      ],
+      "note": "3 accordion con (Service Control IPv4/IPv6, Remote Service Port Control). IPv4/IPv6 rong (chua co rule); portservice co san 5 dich vu mac dinh (HTTP/FTP/SSH/TELNET/HTTPS)."
+    },
+    "alg": {
+      "menuPath": [
+        "Internet",
+        "Security",
+        "ALG"
+      ],
+      "defaultViewTag": "alg",
+      "observedDataTags": [
+        "firewall_alg_lua.lua"
+      ],
+      "note": "Khong tham so phu."
+    },
+    "dmz": {
+      "menuPath": [
+        "Internet",
+        "Security",
+        "DMZ"
+      ],
+      "defaultViewTag": "dmz",
+      "observedDataTags": [
+        "firewall_dmz_lua.lua"
+      ],
+      "note": "Khong tham so phu. DMZ dang tat (Enable=0), InternalClient rong."
+    },
+    "portForwarding": {
+      "menuPath": [
+        "Internet",
+        "Security",
+        "Port Forwarding"
+      ],
+      "defaultViewTag": "portForwarding",
+      "observedDataTags": [
+        "firewall_portforwarding_lua.lua"
+      ],
+      "note": "Khong tham so phu. Chua co rule nao (object rong)."
+    },
+    "portTrigger": {
+      "menuPath": [
+        "Internet",
+        "Security",
+        "Port Trigger"
+      ],
+      "defaultViewTag": "portTrigger",
+      "observedDataTags": [
+        "firewall_porttrigger_m.lua"
+      ],
+      "note": "Khong tham so phu. Chua co rule nao (object rong)."
+    },
+    "multicastmode": {
+      "menuPath": [
+        "Internet",
+        "Multicast",
+        "Multicast Mode"
+      ],
+      "defaultViewTag": "multicastmode",
+      "observedDataTags": [
+        "multicast_mode_lua.lua"
+      ],
+      "note": "Khong tham so phu."
+    },
+    "igmp": {
+      "menuPath": [
+        "Internet",
+        "Multicast",
+        "IGMP"
+      ],
+      "defaultViewTag": "igmp",
+      "observedDataTags": [
+        "multicast_igmpwan_lua.lua"
+      ],
+      "note": "Khong tham so phu."
+    },
+    "mld": {
+      "menuPath": [
+        "Internet",
+        "Multicast",
+        "MLD"
+      ],
+      "defaultViewTag": "mld",
+      "observedDataTags": [
+        "multicast_mldwan_lua.lua"
+      ],
+      "note": "Khong tham so phu."
+    },
+    "multicastbasic": {
+      "menuPath": [
+        "Internet",
+        "Multicast",
+        "Basic"
+      ],
+      "defaultViewTag": "multicastbasic",
+      "observedDataTags": [
+        "igmp_lua.lua"
+      ],
+      "note": "Khong tham so phu."
+    },
+    "IgmpWLANCONF": {
+      "menuPath": [
+        "Internet",
+        "Multicast",
+        "Multicast on Wi-Fi"
+      ],
+      "defaultViewTag": "IgmpWLANCONF",
+      "observedDataTags": [
+        "multicast_model.lua"
+      ],
+      "note": "multicast_model.lua tra JSON thuan (nhu WLANMLO, fpt_ddns_status_model.lua). Khong tham so phu."
+    },
+    "ponLoid": {
+      "menuPath": [
+        "Internet",
+        "PON Information",
+        "LOID"
+      ],
+      "defaultViewTag": "ponLoid",
+      "observedDataTags": [
+        "poninfo_loid_lua.lua"
+      ],
+      "note": "PonLoid la ma dinh danh that (LOID GPON, gan voi tai khoan ISP) - DA SANITIZE (00000000). LoidPasswd khong bao gio tra ve (encode tag)."
+    },
+    "ponSn": {
+      "menuPath": [
+        "Internet",
+        "PON Information",
+        "SN"
+      ],
+      "defaultViewTag": "ponSn",
+      "observedDataTags": [
+        "poninfo_sn_lua.lua"
+      ],
+      "note": "Sn la so serial that cua thiet bi - DA SANITIZE (ZTEGFAKE0000). Object OBJ_SN_INFO_ID dung chung voi devmgr_statusmgr_lua.lua (Management&Diagnosis > Status, chua lam). Ridpw khong bao gio tra ve (encode tag)."
+    },
+    "rebootAndReset": {
+      "menuPath": [
+        "Management & Diagnosis",
+        "System Management",
+        "Device Management"
+      ],
+      "defaultViewTag": "rebootAndReset",
+      "observedDataTags": [
+        "devmgr_restartmgr_lua.lua",
+        "devmgr_ScheReboot_lua.lua",
+        "db_resetmgr_lua.lua"
+      ],
+      "note": "devmgr_restartmgr_lua.lua va db_resetmgr_lua.lua tra ve OBJECT RONG (khong Instance) khi GET - day la tag thuan hanh dong (Reboot Now / Factory Reset), khong co du lieu hien thi. devmgr_ScheReboot_lua.lua moi la config that (Enable/TimeWeek/TimeMin). KHONG bam nut Reboot/Reset that su tren thiet bi that vi se lam gian doan dich vu - chi lay du lieu qua GET tren view da mo."
+    },
+    "firmwareUpgr": {
+      "menuPath": [
+        "Management & Diagnosis",
+        "System Management",
+        "Software Upgrade"
+      ],
+      "defaultViewTag": "firmwareUpgr",
+      "observedDataTags": [
+        "upgrade_firmware_query_lua.lua"
+      ],
+      "note": "do_firmware_upgrade.lua la tag POST khi bam Upgrade (an toan bo qua, KHONG kich hoat tren thiet bi that). upgrade_firmware_query_lua.lua tra ve OBJ_FAKE_UPGR_ID (ten object goc cua thiet bi, khong phai loi danh may) - la object polling trang thai upload/upgrade."
+    },
+    "usrCfgMgr": {
+      "menuPath": [
+        "Management & Diagnosis",
+        "System Management",
+        "User Configuration Management"
+      ],
+      "defaultViewTag": "usrCfgMgr",
+      "observedDataTags": [
+        "db_usrcfg_upgrade_query_lua.lua"
+      ],
+      "note": "do_download_usercfg.lua / do_restore_usrcfg.lua / updownload_prevent_ctl.lua la cac tag POST khi bam Backup/Restore, KHONG kich hoat tren thiet bi that (backup chua toan bo cau hinh, co the co du lieu nhay cam). db_usrcfg_upgrade_query_lua.lua cung tra ve OBJ_FAKE_UPGR_ID nhu firmwareUpgr."
+    },
+    "networkDiag": {
+      "menuPath": [
+        "Management & Diagnosis",
+        "Diagnosis",
+        "Network Diagnosis"
+      ],
+      "defaultViewTag": "networkDiag",
+      "observedDataTags": [
+        "networkdiag_ping_lua.lua",
+        "networkdiag_traceroute_lua.lua",
+        "networkdiag_svcsimulation_lua.lua"
+      ],
+      "note": "Ca 3 la config/ket qua rong (chua chay diagnosis lan nao). PassWord/UserName trong networkdiag_svcsimulation_lua.lua da duoc thiet bi tu che thanh ****** (khong phai gia lap tu che). KHONG bam nut Start (Ping/Traceroute/Simulation That) tren thiet bi that."
+    },
+    "mirror": {
+      "menuPath": [
+        "Management & Diagnosis",
+        "Diagnosis",
+        "Mirror Configuration"
+      ],
+      "defaultViewTag": "mirror",
+      "observedDataTags": [
+        "mirror_mirrormgr_lua.lua"
+      ],
+      "note": "OBJ_MIRROR_ID: MirrorEnable/MirrorDest/MirrorSrc."
+    },
+    "loopbackDetect": {
+      "menuPath": [
+        "Management & Diagnosis",
+        "Diagnosis",
+        "Loopback Detection"
+      ],
+      "defaultViewTag": "loopbackDetect",
+      "observedDataTags": [
+        "loopback_basic_lua.lua",
+        "loopback_enable_lua.lua",
+        "loopback_vlan_lua.lua"
+      ],
+      "note": "loopback_enable_lua.lua tra ve 4 Instance (ETH1-4 = LAN1-4). loopback_vlan_lua.lua tra ve OBJ_LOOPBACK_VLAN_ID RONG (lap lai 4 lan, khong Instance) vi chua tao VLAN nao - object rong hop le theo quy uoc OBJ_*_ID."
+    },
+    "arpTable": {
+      "menuPath": [
+        "Management & Diagnosis",
+        "Diagnosis",
+        "ARP Table"
+      ],
+      "defaultViewTag": "arpTable",
+      "observedDataTags": [
+        "arp_arptable_lua.lua"
+      ],
+      "note": "OBJ_GETARPINST_ID: 1 Instance (DestIP/MACAddr/Status/Interface). MACAddr THAT cua thiet bi client tren LAN da duoc sanitize thanh aa:bb:cc:00:00:01 truoc khi luu (khong phai MAC cua chinh BE12000, ma la thiet bi dang ket noi vao no - van la du lieu ca nhan can bao ve)."
+    },
+    "macTable": {
+      "menuPath": [
+        "Management & Diagnosis",
+        "Diagnosis",
+        "MAC Table"
+      ],
+      "defaultViewTag": "macTable",
+      "observedDataTags": [
+        "macinfo_mactable_lua.lua"
+      ],
+      "note": "OBJ_GETMACINST_ID: 1 Instance (AgingTm/MACAddr/LanName). Cung MAC that nhu arpTable, da sanitize giong het (aa:bb:cc:00:00:01) vi la cung 1 thiet bi client."
+    },
+    "EnergyMode": {
+      "menuPath": [
+        "Management & Diagnosis",
+        "Energy Conservation"
+      ],
+      "defaultViewTag": "EnergyMode",
+      "observedDataTags": [
+        "energy_config_lua.lua"
+      ],
+      "note": "OBJ_ENERGYMODE_ID: PowerMode/PowerEnable."
+    }
+  },
+  "updatedAt": "2026-08-04",
+  "write": {
+    "nguyenTac": "GHI dung CUNG endpoint voi DOC. Phan biet bang HTTP method: GET = doc, POST = ghi.",
+    "endpoint": "POST /?_type=menuData&_tag=<dataTag>",
+    "viDuDaXacMinh": "POST /?_type=menuData&_tag=sntp_lua.lua",
+    "requestHeaders": {
+      "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+      "X-Requested-With": "XMLHttpRequest",
+      "Referer": "http://192.168.1.1/"
+    },
+    "khongCoCookie": true,
+    "thamSoBatBuoc": {
+      "IF_ACTION": "co hanh dong, quan sat duoc gia tri 'Apply'",
+      "_InstID": "dinh danh thuc the, quan sat duoc gia tri 'IGD'",
+      "_sessionTOKEN": "bat buoc, lay tu phien dang nhap"
+    },
+    "quyTacGuiTruong": [
+      "Gui TOAN BO truong cua form, khong chi truong da doi.",
+      "Truong AN cung duoc gui, gia tri rong: NtpServer3, NtpServer4, NtpServer5.",
+      "CA HAI nut deu duoc gui voi gia tri rong: Btn_apply=, Btn_cancel=.",
+      "Co truong khong hien tren man hinh nhung van gui: ZoneIndex, AutoSetTzname, LocalTimeZoneandName.",
+      "O trong kieu so gui -1 chu khong gui rong: Dscp=-1."
+    ],
+    "response": {
+      "contentType": "text/xml; charset=utf-8",
+      "goc": "<ajax_response_xml_root>",
+      "truongBaoKetQua": [
+        "IF_ERRORPARAM",
+        "IF_ERRORTYPE",
+        "IF_ERRORSTR",
+        "IF_ERRORID"
+      ],
+      "giaTriThanhCong": "IF_ERRORSTR=SUCC, IF_ERRORID=0",
+      "ghiChuQuanTrong": "Response tra ve LUON trang thai MOI cua doi tuong (OBJ_SNTP_ID/Instance/ParaName/ParaValue). Client khong can goi lai menuData sau khi ghi."
+    },
+    "chuaCoBangChung": [
+      "Response khi ghi THAT BAI (validate sai, token het han)",
+      "Cac IF_ACTION khac ngoai 'Apply' (vi du Delete, Add)",
+      "Trang co nhieu nhom Apply rieng (vi du logMgr co 3 cap Apply/Cancel)"
+    ]
+  }
+}

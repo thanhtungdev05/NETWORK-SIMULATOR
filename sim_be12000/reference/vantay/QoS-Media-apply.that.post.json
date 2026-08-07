@@ -1,0 +1,18 @@
+{
+  "page": "VoIP > QoS > QOS of Media > VP1",
+  "url": "/",
+  "method": "POST",
+  "dataTag": "Voip_Voip_QoS_Media_lua.lua",
+  "ngayThu": "2026-08-05",
+  "reqBody": {
+    "IF_ACTION": "Apply",
+    "_InstID": "IGD.SV.VS1.VP1.VR",
+    "DSCPMarkMedia": "0",
+    "RTPEthernetPriorityMark": "-1",
+    "Btn_cancel_VoIPQoSConf_Media": "",
+    "Btn_apply_VoIPQoSConf_Media": "",
+    "_sessionTOKEN": "(bo qua)"
+  },
+  "respBody": "<ajax_response_xml_root><INSTIDENTITY>IGD.SV.VS1.VP1.VR</INSTIDENTITY><IF_ERRORID>0</IF_ERRORID><IF_ERRORTYPE>SUCC</IF_ERRORTYPE><IF_ERRORSTR>SUCC</IF_ERRORSTR><IF_ERRORPARAM>SUCC</IF_ERRORPARAM></ajax_response_xml_root>",
+  "ghiChu": "Dang xac_nhan_trong, instidentity mac dinh (echo _InstID=IGD.SV.VS1.VP1.VR). Khong doi gia tri (DSCP=0, 802.1p=-1). LAN DAU tien Apply bi loi -1452 (token cu do vua Apply thanh cong o QOS of Signal, chua tai lai /) - reload lai / va thu lai thanh cong."
+}

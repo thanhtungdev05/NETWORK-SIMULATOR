@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard giám sát thực hành KTV | FTC</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+    <div class="dashboard-loading" id="dashboardLoading" role="status" aria-live="polite">
+        <div class="dashboard-loading-spinner"></div>
+        <div class="dashboard-loading-text">Đang tải dữ liệu từ timer_sessions...</div>
+    </div>
+    <div class="page" id="appPage">
+        <aside class="sidebar" aria-label="Điều hướng dashboard">
+            <div class="sidebar-brand">
+                <div class="sidebar-logo">FTC</div>
+                <div class="sidebar-brand-copy">
+                    <strong>KTV Supervisor</strong>
+                    <span>Internal Portal</span>
+                </div>
+                <button class="sidebar-toggle" type="button" id="sidebarToggle" aria-label="Thu gọn thanh điều hướng" aria-expanded="true">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <span class="sidebar-nav-label">Dashboard</span>
+                <a class="sidebar-link active" href="?view=overview" data-dashboard-view="overview" aria-label="Tổng quan">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h6V4H4v9zm0 7h6v-4H4v4zm10 0h6v-9h-6v9zm0-16v4h6V4h-6z" /></svg>
+                    <span>Tổng quan</span>
+                </a>
+                <a class="sidebar-link" href="?view=instructors" data-dashboard-view="instructors" aria-label="Không gian giảng viên">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18V9m5 9V5m5 13v-7m5 7V3" /></svg>
+                    <span>Giảng viên</span>
+                </a>
+
+                <span class="sidebar-nav-label">Phân tích</span>
+                <a class="sidebar-link" href="?view=analytics" data-dashboard-view="analytics" aria-label="Báo cáo chi tiết">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9m5 10V5m5 14v-6m5 6V8M3 19h18" /></svg>
+                    <span>Báo cáo chi tiết</span>
+                </a>
+                <a class="sidebar-link" href="?view=technicians" data-dashboard-view="technicians" aria-label="Kỹ thuật viên">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm13 10v-2a4 4 0 0 0-3-3.87M16 2.13a4 4 0 0 1 0 7.75" /></svg>
+                    <span>Kỹ thuật viên</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <span class="sidebar-status-dot"></span>
+                <span id="dataSourceLabel">Dữ liệu thực từ timer_sessions</span>
+            </div>
+        </aside>
+
+        <div class="app-main">
+        <header class="topbar">
+            <div class="brand">
+                <div class="brand-mark">FTC</div>
+                <div>
+                    <div class="page-eyebrow" id="pageEyebrow">Dashboard home</div>
+                    <h1 id="pageTitle">Dashboard giám sát thực hành KTV</h1>
+                    <div class="subtitle" id="pageSubtitle">Theo dõi hoạt động, tiến độ và chất lượng thực hành</div>
+                </div>
+            </div>
+            <div class="top-actions">
+                <button class="button" type="button" id="exportBtn">Xuất báo cáo</button>
+            </div>
+        </header>
+
+        <main class="content">
+            <div class="dashboard-master-container">
+                <!-- Tổng quan hoạt động -->
+                <section class="section dashboard-page-view" id="overview" data-page-view="overview">
+                    <div class="section-title">
+                        <div>
+                            <h2>Tổng quan hoạt động</h2>
+                            <span>Các chỉ số giúp quản lý nắm nhanh tình hình thực hành toàn hệ thống.</span>
+                        </div>
+                        <div class="date-range-picker overview-month-picker" id="dateRangePicker">
+                            <div class="overview-month-field">
+                                <span>Tháng báo cáo</span>
+                                <input type="hidden" id="overviewMonthSelect">
+                                <button type="button" class="overview-month-trigger" id="overviewMonthTrigger"
+                                    aria-label="Chọn tháng báo cáo" aria-haspopup="dialog" aria-expanded="false">
+                                    <span>Tháng <strong id="overviewMonthLabel">08/2026</strong></span>
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+                                </button>
+                                <div class="overview-month-panel" id="overviewMonthPanel" role="dialog"
+                                    aria-label="Bộ lọc tháng báo cáo">
+                                    <select class="overview-year-select" id="overviewYearSelect"
+                                        aria-label="Chọn năm báo cáo"></select>
+                                    <div class="overview-month-grid" id="overviewMonthGrid"></div>
+                                    <button type="button" class="overview-current-month" id="overviewMonthToday">Tháng này</button>
+                                </div>
+                            </div>
+                            <input type="hidden" id="startDate">
+                            <input type="hidden" id="endDate">
+                            <button type="button" class="date-range-trigger" id="dateRangeTrigger"
+                                aria-expanded="false">
+                                <span class="date-range-meta">
+                                    <span class="date-range-value" id="dateRangeText">Tất cả thời gian</span>
+                                </span>
+                                <span>⌄</span>
+                            </button>
+                            <div class="date-range-panel" id="dateRangePanel">
+                                <div class="date-range-header">
+                                    <button type="button" class="calendar-nav" id="dateRangePrev"
+                                        aria-label="Tháng trước">‹</button>
+                                    <div class="date-range-jump">
+                                        <select class="calendar-select" id="dateRangeMonthSelect"
+                                            aria-label="Chọn tháng"></select>
+                                        <select class="calendar-select" id="dateRangeYearSelect"
+                                            aria-label="Chọn năm"></select>
+                                    </div>
+                                    <button type="button" class="calendar-nav" id="dateRangeNext"
+                                        aria-label="Tháng sau">›</button>
+                                </div>
+                                <div class="date-range-weekdays">
+                                    <span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span><span>CN</span>
+                                </div>
+                                <div class="date-range-days" id="dateRangeDays"></div>
+                                <div class="date-range-summary">
+                                    <div>
+                                        <span>Bắt đầu</span>
+                                        <strong id="dateRangeStartText">Chưa chọn</strong>
+                                    </div>
+                                    <div>
+                                        <span>Kết thúc</span>
+                                        <strong id="dateRangeEndText">Chưa chọn</strong>
+                                    </div>
+                                </div>
+                                <div class="date-range-actions">
+                                    <button type="button" class="button secondary" id="dateRangeClear">Xóa
+                                        lọc</button>
+                                    <button type="button" class="button" id="dateRangeApply">Áp dụng</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-label">Phiên làm lab trong kỳ</div>
+                            <div class="kpi-value blue" id="kpiSessions">0</div>
+                            <div class="kpi-comparison" id="kpiSessionsComparison"></div>
+                            <div class="kpi-note" id="kpiSessionsContext">Đang tính dữ liệu so sánh</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">KTV tham gia trong kỳ</div>
+                            <div class="kpi-value green" id="kpiLearners">0</div>
+                            <div class="kpi-comparison" id="kpiLearnersComparison"></div>
+                            <div class="kpi-note" id="kpiLearnersContext">Đang tính dữ liệu so sánh</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">Lab hoàn thành trong kỳ</div>
+                            <div class="kpi-value violet" id="kpiCompleted">0</div>
+                            <div class="kpi-comparison" id="kpiCompletedComparison"></div>
+                            <div class="kpi-note" id="kpiCompletedContext">Đang tính dữ liệu so sánh</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">Tỷ lệ hoàn thành</div>
+                            <div class="kpi-value cyan" id="kpiCompletionRate">0%</div>
+                            <div class="kpi-comparison" id="kpiCompletionRateComparison"></div>
+                            <div class="kpi-note" id="kpiCompletionRateContext">Đang tính dữ liệu so sánh</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">Hoàn thành lần đầu</div>
+                            <div class="kpi-value green" id="kpiFirstTryRate">0%</div>
+                            <div class="kpi-comparison" id="kpiFirstTryRateComparison"></div>
+                            <div class="kpi-note" id="kpiFirstTryRateContext">Đang tính dữ liệu so sánh</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">Thời gian trung bình</div>
+                            <div class="kpi-value blue" id="kpiAvgDuration">0m</div>
+                            <div class="kpi-comparison" id="kpiAvgDurationComparison"></div>
+                            <div class="kpi-note" id="kpiAvgDurationContext">Đang tính dữ liệu so sánh</div>
+                        </div>
+                    </div>
+
+                    <div class="detail-section-card ktv-monthly-card overview-monthly-card">
+                        <div class="detail-section-header ktv-monthly-header">
+                            <div>
+                                <h4>Xu hướng hoạt động theo tháng</h4>
+                                <span>Số phiên và tỷ lệ hoàn thành toàn hệ thống trong 12 tháng của năm báo cáo</span>
+                            </div>
+                            <div class="ktv-monthly-summary" id="overviewMonthlySummary"></div>
+                        </div>
+                        <div class="ktv-monthly-trend" id="overviewMonthlyTrend"></div>
+                    </div>
+
+                </section>
+
+                <!-- Theo dõi bài nộp lab -->
+                <section class="section dashboard-page-view" id="realtime" data-page-view="instructors">
+                    <div class="instructor-class-manager">
+                        <div class="instructor-class-manager-copy">
+                            <span class="instructor-section-eyebrow">Quản lý đào tạo</span>
+                            <h2>Quản lý lớp học</h2>
+                            <p>Tạo lớp và nhập danh sách KTV để theo dõi tiến độ thực hành tập trung.</p>
+                        </div>
+                        <div class="instructor-class-create">
+                            <label class="sr-only" for="instructorClassName">Tên lớp mới</label>
+                            <input type="text" id="instructorClassName" placeholder="Nhập tên lớp mới (VD: K15)..." maxlength="80">
+                            <input type="file" id="instructorClassFile" accept=".csv,.txt,.xlsx,.xls" hidden>
+                            <button type="button" class="instructor-button secondary" id="instructorClassFileButton">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h7l2 2h9v10H3V6zm9 5v5m-2-2 2 2 2-2" /></svg>
+                                Chọn file CSV/Excel
+                            </button>
+                            <button type="button" class="instructor-button primary" id="instructorClassCreate">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+                                Tạo lớp
+                            </button>
+                        </div>
+                        <div class="instructor-class-feedback" id="instructorClassFeedback" aria-live="polite"></div>
+                    </div>
+
+                    <div class="instructor-progress-card">
+                        <div class="instructor-progress-header">
+                            <div>
+                                <div class="instructor-progress-title-row">
+                                    <h2>Ma trận tiến độ lab theo lớp</h2>
+                                </div>
+                                <p>Đối chiếu số bài đã hoàn thành trên tổng số bài của từng thiết bị.</p>
+                            </div>
+                            <div class="instructor-progress-tools">
+                                <label class="instructor-select-field">
+                                    <span>Lớp học</span>
+                                    <select id="instructorClassSelect" aria-label="Chọn lớp học"></select>
+                                </label>
+                                <button type="button" class="instructor-button danger" id="instructorClassDelete">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13M10 11v5m4-5v5" /></svg>
+                                    Xóa lớp
+                                </button>
+                                <label class="instructor-select-field">
+                                    <span>Thiết bị</span>
+                                    <select id="instructorDeviceSelect" aria-label="Lọc thiết bị">
+                                        <option value="">Tất cả thiết bị</option>
+                                    </select>
+                                </label>
+                                <button type="button" class="instructor-button export" id="instructorClassExport">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M5 19h14" /></svg>
+                                    Xuất CSV
+                                </button>
+                            </div>
+                        </div>
+                        <div class="instructor-progress-summary" id="instructorProgressSummary"></div>
+                        <div class="instructor-progress-scroll" id="instructorProgressScroll" tabindex="0" aria-label="Ma trận tiến độ lab theo lớp, có thể cuộn ngang">
+                            <table class="instructor-progress-table">
+                                <thead id="instructorProgressHead"></thead>
+                                <tbody id="instructorProgressBody"></tbody>
+                            </table>
+                        </div>
+                        <div class="instructor-progress-empty" id="instructorProgressEmpty" hidden></div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div>
+                                <h3 style="display: flex; align-items: center; gap: 10px;">
+                                    Danh sách bài nộp lab
+                                </h3>
+                                <span
+                                    style="font-size: 12.5px; color: var(--muted); margin-top: 4px; display: block;">Các
+                                    phiên làm lab đã nộp từ KTV toàn hệ thống.</span>
+                            </div>
+                            <div class="panel-tools">
+                                <span class="status-pill status-running" id="realtimeSubmissionBadge">0 bài nộp</span>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 18%;">
+                                            <button class="sort-button" type="button" id="realtimeTimeSort"
+                                                data-table="realtime" data-key="dateTime">
+                                                Thời gian nộp <span class="sort-mark"></span>
+                                            </button>
+                                        </th>
+                                        <th style="width: 22%;">
+                                            <div class="popover-filter-wrapper" id="realtimeKtvPopoverWrapper">
+                                                <button class="popover-trigger-btn" type="button">KTV</button>
+                                                <div class="popover-dropdown" id="realtimeKtvDropdown">
+                                                    <input type="text" class="popover-search" id="realtimeKtvSearch"
+                                                        placeholder="Tìm KTV...">
+                                                    <div class="popover-options" id="realtimeKtvOptions"></div>
+                                                    <div class="popover-footer">
+                                                        <button type="button" class="popover-btn-clear"
+                                                            id="realtimeKtvClear">Xóa lọc</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </th>
+                                        <th style="width: 14%;">
+                                            <div class="popover-filter-wrapper" id="realtimeModePopoverWrapper">
+                                                <button class="popover-trigger-btn" type="button">Chế độ</button>
+                                                <div class="popover-dropdown" id="realtimeModeDropdown">
+                                                    <div class="popover-options" id="realtimeModeOptions">
+                                                        <label class="popover-option"><input type="checkbox"
+                                                                value="Thực hành" checked> Thực hành</label>
+                                                        <label class="popover-option"><input type="checkbox"
+                                                                value="Hướng dẫn" checked> Hướng dẫn</label>
+                                                    </div>
+                                                    <div class="popover-footer">
+                                                        <button type="button" class="popover-btn-clear"
+                                                            id="realtimeModeClear">Xóa lọc</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </th>
+                                        <th style="width: 18%;">
+                                            <div class="popover-filter-wrapper" id="realtimeDevicePopoverWrapper">
+                                                <button class="popover-trigger-btn" type="button">Thiết bị</button>
+                                                <div class="popover-dropdown" id="realtimeDeviceDropdown">
+                                                    <input type="text" class="popover-search" id="realtimeDeviceSearch"
+                                                        placeholder="Tìm thiết bị...">
+                                                    <div class="popover-options" id="realtimeDeviceOptions"></div>
+                                                    <div class="popover-footer">
+                                                        <button type="button" class="popover-btn-clear"
+                                                            id="realtimeDeviceClear">Xóa lọc</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </th>
+                                        <th style="width: 16%;">Bài Lab</th>
+                                        <th style="width: 12%;">
+                                            <div class="popover-filter-wrapper" id="realtimeStatusPopoverWrapper">
+                                                <button class="popover-trigger-btn" type="button">Trạng thái</button>
+                                                <div class="popover-dropdown" id="realtimeStatusDropdown">
+                                                    <div class="popover-options" id="realtimeStatusOptions">
+                                                        <label class="popover-option"><input type="checkbox"
+                                                                value="Hoàn thành" checked> Hoàn thành</label>
+                                                        <label class="popover-option"><input type="checkbox"
+                                                                value="Đang làm" checked> Đang làm</label>
+                                                    </div>
+                                                    <div class="popover-footer">
+                                                        <button type="button" class="popover-btn-clear"
+                                                            id="realtimeStatusClear">Xóa lọc</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="realtimeSubmissionsBody"></tbody>
+                            </table>
+                            <div class="table-meta" id="realtimeSubmissionsMeta"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Báo cáo ma trận thiết bị và bài lab theo Khu vực/CNx -->
+                <section class="section detail-report-page dashboard-page-view" id="analytics" data-page-view="analytics">
+                    <div class="detail-report-shell">
+                        <div class="detail-report-header">
+                            <div>
+                                <span class="detail-report-eyebrow">Báo cáo vận hành</span>
+                                <h2>Chi tiết thiết bị và bài lab theo khu vực</h2>
+                                <p>Đối chiếu lượt thực hiện và tỷ lệ hoàn thành của từng bài lab tại mỗi Khu vực/CNx.</p>
+                            </div>
+                            <div class="detail-report-period">
+                                <span>Kỳ báo cáo</span>
+                                <strong id="detailReportPeriod">Tháng hiện tại</strong>
+                                <small>Dữ liệu cập nhật theo bộ lọc thời gian</small>
+                            </div>
+                        </div>
+
+                        <div class="detail-report-summary" aria-label="Tóm tắt báo cáo chi tiết">
+                            <div class="detail-report-stat report-stat-blue">
+                                <span>Tổng lượt làm</span>
+                                <strong id="detailReportSessions">0</strong>
+                            </div>
+                            <div class="detail-report-stat report-stat-purple">
+                                <span>Khu vực/CNx hoạt động</span>
+                                <strong id="detailReportRegions">0</strong>
+                            </div>
+                            <div class="detail-report-stat report-stat-cyan">
+                                <span>Bài lab có lượt thực hiện</span>
+                                <strong id="detailReportLabs">0</strong>
+                            </div>
+                            <div class="detail-report-stat report-stat-green">
+                                <span>Tỷ lệ hoàn thành</span>
+                                <strong id="detailReportCompletion">0%</strong>
+                            </div>
+                        </div>
+
+                        <div class="detail-report-table-card">
+                            <div class="detail-report-table-header">
+                                <div>
+                                    <h3>Ma trận thực hành theo Khu vực/CNx</h3>
+                                    <span>Thiết bị được nhóm ở hàng đầu, các bài lab nằm ở hàng tiêu đề thứ hai.</span>
+                                </div>
+                                <div class="detail-report-legend" aria-label="Chú thích màu tỷ lệ hoàn thành">
+                                    <span><i class="legend-high"></i> Từ 80%</span>
+                                    <span><i class="legend-medium"></i> 50–79%</span>
+                                    <span><i class="legend-low"></i> Dưới 50%</span>
+                                </div>
+                            </div>
+                            <div class="detail-report-scroll" id="detailReportScroll" tabindex="0"
+                                aria-label="Bảng báo cáo chi tiết, có thể cuộn ngang">
+                                <table class="detail-report-table">
+                                    <thead id="detailReportHead"></thead>
+                                    <tbody id="detailReportBody"></tbody>
+                                    <tfoot id="detailReportFoot"></tfoot>
+                                </table>
+                            </div>
+                            <div class="detail-report-hint">Giữ Shift và lăn chuột hoặc kéo thanh cuộn để xem thêm thiết bị và bài lab.</div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Chi tiết theo KTV (Không áp dụng bộ lọc thời gian tổng quát) -->
+            <section class="section dashboard-page-view" id="technicians" data-page-view="technicians">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3>Chi tiết theo KTV</h3>
+                        <div class="panel-tools">
+                            <span class="status-pill status-running" id="sessionCountBadge">0 phiên</span>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="learner-table-toolbar" aria-label="Bộ lọc bảng chi tiết KTV">
+                            <label class="learner-search-field" for="learnerKtvSearch">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 5 5"></path></svg>
+                                <input type="search" id="learnerKtvSearch" placeholder="Tìm theo email KTV..." autocomplete="off">
+                            </label>
+                            <button type="button" class="learner-filter-reset" id="learnerFilterReset">Xóa bộ lọc</button>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 30%;">
+                                        <div class="popover-filter-wrapper" id="learnerKtvPopoverWrapper">
+                                            <button class="popover-trigger-btn" type="button" aria-label="Lọc theo KTV">KTV</button>
+                                            <div class="popover-dropdown" id="learnerKtvDropdown">
+                                                <div class="popover-options" id="learnerKtvOptions"></div>
+                                                <div class="popover-footer">
+                                                    <button type="button" class="popover-btn-clear" id="learnerKtvClear">Xóa lọc</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </th>
+                                    <th style="width: 14%;"><button class="sort-button" type="button"
+                                            data-table="sessions" data-key="total">Số phiên <span
+                                                class="sort-mark"></span></button></th>
+                                    <th style="width: 20%;">
+                                        <div class="popover-filter-wrapper" id="learnerDevicePopoverWrapper">
+                                            <button class="popover-trigger-btn" type="button" aria-label="Lọc theo thiết bị">Thiết bị</button>
+                                            <div class="popover-dropdown" id="learnerDeviceDropdown">
+                                                <div class="popover-options" id="learnerDeviceOptions"></div>
+                                                <div class="popover-footer">
+                                                    <button type="button" class="popover-btn-clear" id="learnerDeviceClear">Xóa lọc</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </th>
+                                    <th style="width: 20%;">
+                                        <div class="popover-filter-wrapper" id="learnerLabPopoverWrapper">
+                                            <button class="popover-trigger-btn" type="button" aria-label="Lọc theo bài lab">Lab</button>
+                                            <div class="popover-dropdown" id="learnerLabDropdown">
+                                                <div class="popover-options" id="learnerLabOptions"></div>
+                                                <div class="popover-footer">
+                                                    <button type="button" class="popover-btn-clear" id="learnerLabClear">Xóa lọc</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </th>
+                                    <th style="width: 16%;"><button class="sort-button" type="button"
+                                            data-table="sessions" data-key="lastDate">Thời gian <span
+                                                class="sort-mark"></span></button></th>
+                                </tr>
+                            </thead>
+                            <tbody id="sessionsBody"></tbody>
+                        </table>
+                        <div class="table-meta" id="learnerTableMeta"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        </div>
+    </div>
+
+    <!-- Modal chi tiết KTV khi click vào dòng KTV -->
+    <section class="section learner-detail-card" id="learnerDetailCard" role="dialog" aria-modal="true"
+        aria-hidden="true">
+        <div class="detail-header">
+            <div>
+                <h3 id="learnerDetailTitle">Chi tiết KTV</h3>
+                <div class="detail-subtitle" id="learnerDetailSubtitle"></div>
+            </div>
+            <button class="detail-close" type="button" id="learnerDetailClose" aria-label="Đóng chi tiết">×</button>
+        </div>
+
+        <div class="detail-metric-grid">
+            <div class="detail-metric">
+                <div class="detail-metric-label">Số phiên</div>
+                <div class="detail-metric-value-group">
+                    <span class="detail-metric-value" id="detailTotalSessions">0</span>
+                    <div class="detail-metric-vertical-sub" id="detailTotalSessionsSub">
+                        <div>0 Thực hành</div>
+                        <div>0 Hướng dẫn</div>
+                    </div>
+                </div>
+            </div>
+            <div class="detail-metric">
+                <div class="detail-metric-label">Bài lab đã làm</div>
+                <div class="detail-metric-value" id="detailUniqueLabs">0/0</div>
+            </div>
+            <div class="detail-metric">
+                <div class="detail-metric-label">Thiết bị đã làm</div>
+                <div class="detail-metric-value" id="detailUniqueDevices">0/0</div>
+            </div>
+            <div class="detail-metric">
+                <div class="detail-metric-label">Lần gần nhất</div>
+                <div class="detail-metric-value small" id="detailLastTime">N/A</div>
+            </div>
+        </div>
+
+        <div class="detail-two-col-grid">
+            <div class="detail-section-card">
+                <h4>Thiết bị đã làm</h4>
+                <div class="device-donut-wrapper">
+                    <div class="donut-chart-container" id="learnerDeviceDonut"></div>
+                    <div class="donut-legend" id="learnerDeviceLegend"></div>
+                </div>
+            </div>
+
+            <div class="detail-section-card">
+                <div class="detail-section-header">
+                    <h4>Tần suất làm bài theo khung giờ</h4>
+                    <div class="date-range-picker" id="hourlyDatePicker">
+                        <button type="button" class="date-range-trigger" id="hourlyDateTrigger"
+                            aria-label="Bộ lọc thời gian">
+                            <span class="date-range-meta">
+                                <span class="date-range-value" id="hourlyDateText">Tất cả thời gian</span>
+                            </span>
+                            <span>⌄</span>
+                        </button>
+                        <div class="date-range-panel" id="hourlyDatePanel" style="z-index: 1000;">
+                            <div class="date-range-header">
+                                <button type="button" class="calendar-nav" id="hourlyPrevMonth"
+                                    aria-label="Tháng trước">‹</button>
+                                <div class="date-range-jump">
+                                    <select class="calendar-select" id="hourlyMonthSelect"
+                                        aria-label="Chọn tháng"></select>
+                                    <select class="calendar-select" id="hourlyYearSelect"
+                                        aria-label="Chọn năm"></select>
+                                </div>
+                                <button type="button" class="calendar-nav" id="hourlyNextMonth"
+                                    aria-label="Tháng sau">›</button>
+                            </div>
+                            <div class="date-range-weekdays">
+                                <span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span><span>CN</span>
+                            </div>
+                            <div class="date-range-days" id="hourlyDays"></div>
+                            <div class="date-range-summary">
+                                <div>
+                                    <span>Bắt đầu</span>
+                                    <strong id="hourlyStartText">Chưa chọn</strong>
+                                </div>
+                                <div>
+                                    <span>Kết thúc</span>
+                                    <strong id="hourlyEndText">Chưa chọn</strong>
+                                </div>
+                            </div>
+                            <div class="date-range-actions">
+                                <button type="button" class="button secondary" id="hourlyClearDate">Xóa lọc</button>
+                                <button type="button" class="button" id="hourlyApplyDate">Áp dụng</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="hourly-bar-chart-container" id="hourlyBarChartContainer"></div>
+            </div>
+        </div>
+
+        <div class="detail-section">
+            <h4>Nhật ký phiên làm bài</h4>
+            <div class="learner-history">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 22%;">
+                                <button class="sort-button popover-trigger-btn" type="button" id="detailTimeSort">
+                                    Thời gian <span class="sort-mark"></span>
+                                </button>
+                            </th>
+                            <th style="width: 14%;">
+                                <div class="popover-filter-wrapper" id="detailModePopoverWrapper">
+                                    <button class="popover-trigger-btn" type="button">Chế độ</button>
+                                    <div class="popover-dropdown" id="detailModeDropdown">
+                                        <div class="popover-options" id="detailModeOptions">
+                                            <label class="popover-option"><input type="checkbox" value="Thực hành"
+                                                    checked> Thực hành</label>
+                                            <label class="popover-option"><input type="checkbox" value="Hướng dẫn"
+                                                    checked> Hướng dẫn</label>
+                                        </div>
+                                        <div class="popover-footer">
+                                            <button type="button" class="popover-btn-clear" id="detailModeClear">Xóa
+                                                lọc</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </th>
+                            <th style="width: 20%;">
+                                <div class="popover-filter-wrapper" id="detailDevicePopoverWrapper">
+                                    <button class="popover-trigger-btn" type="button">Thiết bị</button>
+                                    <div class="popover-dropdown" id="detailDeviceDropdown">
+                                        <input type="text" class="popover-search" id="detailDeviceSearch"
+                                            placeholder="Tìm thiết bị...">
+                                        <div class="popover-options" id="detailDeviceOptions"></div>
+                                        <div class="popover-footer">
+                                            <button type="button" class="popover-btn-clear" id="detailDeviceClear">Xóa
+                                                lọc</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </th>
+                            <th style="width: 20%;">Lab</th>
+                            <th style="width: 14%;">
+                                <div class="popover-filter-wrapper" id="detailStatusPopoverWrapper">
+                                    <button class="popover-trigger-btn" type="button">Trạng thái</button>
+                                    <div class="popover-dropdown" id="detailStatusDropdown">
+                                        <div class="popover-options" id="detailStatusOptions">
+                                            <label class="popover-option"><input type="checkbox" value="Hoàn thành"
+                                                    checked> Hoàn thành</label>
+                                            <label class="popover-option"><input type="checkbox" value="Đang làm"
+                                                    checked> Đang làm</label>
+                                            <label class="popover-option"><input type="checkbox" value="Chưa thực hiện"
+                                                    checked> Chưa thực hiện</label>
+                                        </div>
+                                        <div class="popover-footer">
+                                            <button type="button" class="popover-btn-clear" id="detailStatusClear">Xóa
+                                                lọc</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </th>
+                            <th style="width: 10%;">
+                                <button class="sort-button popover-trigger-btn" type="button" id="detailDurationSort">
+                                    Thời gian làm <span class="sort-mark"></span>
+                                </button>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="learnerHistoryBody"></tbody>
+                </table>
+            </div>
+            <div class="table-meta" id="learnerHistoryMeta"></div>
+        </div>
+    </section>
+
+    <div class="donut-tooltip" id="donutTooltip"></div>
+
+    <!-- Sub modal chi tiết bài lab của thiết bị -->
+    <div class="sub-modal-backdrop" id="deviceSubModal" aria-hidden="true">
+        <div class="sub-modal-card">
+            <div class="sub-modal-header">
+                <div>
+                    <h3 id="subModalDeviceTitle">Chi tiết thiết bị</h3>
+                    <div class="sub-modal-subtitle" id="subModalDeviceSubtitle"></div>
+                </div>
+                <button type="button" class="detail-close" id="subModalClose" aria-label="Đóng chi tiết">×</button>
+            </div>
+            <div class="sub-modal-body">
+                <div class="sub-modal-metrics">
+                    <div class="mini-kpi blue-bg" id="kpiTotalLabsBox">
+                        <span class="mini-kpi-label">Tổng bài lab</span>
+                        <strong class="mini-kpi-val blue" id="subModalTotalLabs">0</strong>
+                    </div>
+                    <div class="mini-kpi green-bg" id="kpiCompletedBox">
+                        <span class="mini-kpi-label">Đã hoàn thành</span>
+                        <strong class="mini-kpi-val green" id="subModalCompletedCount">0</strong>
+                    </div>
+                    <div class="mini-kpi amber-bg" id="kpiUncompletedBox">
+                        <span class="mini-kpi-label">Đang làm</span>
+                        <strong class="mini-kpi-val amber" id="subModalUncompletedCount">0</strong>
+                    </div>
+                    <div class="mini-kpi gray-bg" id="kpiUnattemptedBox">
+                        <span class="mini-kpi-label">Chưa thực hiện</span>
+                        <strong class="mini-kpi-val gray" id="subModalUnattemptedCount">0</strong>
+                    </div>
+                </div>
+
+                <div class="sub-modal-filter-bar">
+                    <button type="button" class="sub-filter-btn active" data-sub-filter="all">Tất cả bài lab (<span
+                            id="cntAll">0</span>)</button>
+                    <button type="button" class="sub-filter-btn" data-sub-filter="done">Đã hoàn thành (<span
+                            id="cntDone">0</span>)</button>
+                    <button type="button" class="sub-filter-btn" data-sub-filter="pending">Đang làm (<span
+                            id="cntPending">0</span>)</button>
+                    <button type="button" class="sub-filter-btn" data-sub-filter="not_started">Chưa làm (<span
+                            id="cntNotStarted">0</span>)</button>
+                </div>
+
+                <div class="sub-modal-list" id="subModalLabList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal so sánh 2 khoảng thời gian -->
+    <div class="sub-modal-backdrop compare-modal-backdrop" id="compareModal" aria-hidden="true">
+        <div class="sub-modal-card compare-modal-card">
+            <div class="sub-modal-header">
+                <div>
+                    <h3>So sánh chỉ số giữa 2 khoảng thời gian</h3>
+                    <div class="sub-modal-subtitle">Đối chiếu hiệu suất thực hành giữa 2 khoảng thời gian cụ thể</div>
+                </div>
+                <button type="button" class="detail-close" id="compareModalClose" aria-label="Đóng so sánh">×</button>
+            </div>
+            <div class="sub-modal-body">
+                <div class="compare-period-picker">
+                    <div class="compare-period-box period-a">
+                        <div class="compare-period-label">
+                            <span class="period-dot dot-a"></span>
+                            <strong>Tháng trước (Kỳ cơ sở)</strong>
+                        </div>
+                        <div class="compare-date-inputs">
+                            <div>
+                                <label>Từ ngày</label>
+                                <input type="date" id="compareStartA" class="compare-input-date">
+                            </div>
+                            <div>
+                                <label>Đến ngày</label>
+                                <input type="date" id="compareEndA" class="compare-input-date">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="compare-vs-badge">VS</div>
+
+                    <div class="compare-period-box period-b">
+                        <div class="compare-period-label">
+                            <span class="period-dot dot-b"></span>
+                            <strong>Tháng hiện tại (Kỳ so sánh)</strong>
+                        </div>
+                        <div class="compare-date-inputs">
+                            <div>
+                                <label>Từ ngày</label>
+                                <input type="date" id="compareStartB" class="compare-input-date">
+                            </div>
+                            <div>
+                                <label>Đến ngày</label>
+                                <input type="date" id="compareEndB" class="compare-input-date">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="compare-action-bar">
+                    <button type="button" class="button" id="compareApplyBtn">Áp dụng so sánh</button>
+                    <button type="button" class="button secondary" id="compareResetBtn">Đặt lại mặc định</button>
+                </div>
+
+                <div class="compare-data-notice" id="compareDataNotice" hidden></div>
+
+                <div class="compare-results-container" id="compareResultsContainer">
+                    <!-- Phần 1: Thẻ chỉ số & Biểu đồ đối chiếu -->
+                    <div class="compare-section-header">
+                        <h4>1. Thẻ chỉ số KPI (3x3) & Biểu đồ đối chiếu</h4>
+                        <span class="compare-legend" id="compareLegend">
+                            <span class="legend-item"><span class="period-dot dot-a"></span> <span id="legendTextA">Kỳ A (Kỳ cơ sở)</span></span>
+                            <span class="legend-item"><span class="period-dot dot-b"></span> <span id="legendTextB">Kỳ B (Kỳ so sánh)</span></span>
+                        </span>
+                    </div>
+
+                    <!-- 3x3 Stat Cards (Hiển thị đồng thời) -->
+                    <div class="compare-cards-grid grid-3x3" id="compareCardsGrid"></div>
+
+                    <!-- Biểu đồ Bar đối chiếu (Hiển thị đồng thời) -->
+                    <div class="compare-bars-container" style="margin-top: 18px;">
+                        <h5 class="compare-sub-title">Biểu đồ so sánh trực quan từng chỉ số</h5>
+                        <div class="compare-bars-grid" id="compareBarsGrid"></div>
+                    </div>
+
+                    <!-- Phần 2: Bảng chi tiết chênh lệch -->
+                    <div class="compare-section-header" style="margin-top: 32px;">
+                        <h4>2. Bảng tổng hợp chênh lệch chi tiết giữa 2 kỳ</h4>
+                        <div class="compare-table-tabs" id="compareTableTabs">
+                            <button type="button" class="compare-table-tab-btn active" data-table-tab="overview">Theo Chỉ số</button>
+                            <button type="button" class="compare-table-tab-btn" data-table-tab="region">Theo Vùng</button>
+                            <button type="button" class="compare-table-tab-btn" data-table-tab="learner">Theo KTV</button>
+                        </div>
+                    </div>
+
+                    <div class="compare-table-wrapper" id="compareTableWrapper">
+                        <table class="compare-detail-table">
+                            <thead id="compareTableHead"></thead>
+                            <tbody id="compareTableBody"></tbody>
+                            <tfoot id="compareTableFoot"></tfoot>
+                        </table>
+                    </div>
+                    <div class="compare-bottom-space"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+
+</html>

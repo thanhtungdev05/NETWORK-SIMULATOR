@@ -45,42 +45,34 @@
   </div>
 
   <script>
-    let TRACKING_TECHNICIAN_ID = "DEV_TECH_001";
-    let TRACKING_LAB_ID = "LAB_VIRTUAL_ONT_AX3000S";
-    let TRACKING_MODE = "Thực hành";
-
-    let TRACKING_TIMER_URL = "http://localhost:8082/api/index.php/tracking/timer";
-    let TRACKING_TIMER_NAME = "KTV DEV_TECH_001";
-    let TRACKING_TIMER_EMAIL = "devtech001@fpt.com";
-    let TRACKING_TIMER_FINISHED_AT = "2026-08-05T10:30:00+07:00";
-    let TRACKING_TIMER_DURATION_SEC = 42;
-    let TRACKING_TIMER_DEVICE = "AX3000S";
-
-    window.TRACKING_TECHNICIAN_ID = TRACKING_TECHNICIAN_ID;
-    window.TRACKING_LAB_ID = TRACKING_LAB_ID;
-    window.TRACKING_MODE = TRACKING_MODE;
-    window.TRACKING_TIMER_URL = TRACKING_TIMER_URL;
-    window.TRACKING_TIMER_NAME = TRACKING_TIMER_NAME;
-    window.TRACKING_TIMER_EMAIL = TRACKING_TIMER_EMAIL;
-    window.TRACKING_TIMER_FINISHED_AT = TRACKING_TIMER_FINISHED_AT;
-    window.TRACKING_TIMER_DURATION_SEC = TRACKING_TIMER_DURATION_SEC;
-    window.TRACKING_TIMER_DEVICE = TRACKING_TIMER_DEVICE;
+    const TRACKING = {
+      TECHNICIAN_ID: "DEV_TECH_002",
+      LAB_ID: "LAB_VIRTUAL_ONT_AX3000S",
+      MODE: "Thực hành",
+      TIMER_URL: "/api/index.php/tracking/timer",
+      TIMER_NAME: "KTV DEV_TECH_002",
+      TIMER_EMAIL: "devtech002@fpt.com",
+      TIMER_FINISHED_AT: "2026-08-05T12:30:00+07:00",
+      TIMER_DURATION_SEC: 55,
+      TIMER_DEVICE: "AX3000S",
+    };
+    window.TRACKING = TRACKING;
 
     function sendTrackingTimer() {
       const body = {
-        technician_id: TRACKING_TECHNICIAN_ID,
-        name: TRACKING_TIMER_NAME,
-        email: TRACKING_TIMER_EMAIL,
-        lab_id: TRACKING_LAB_ID,
-        mode: TRACKING_MODE,
-        device: TRACKING_TIMER_DEVICE,
-        finished_at: TRACKING_TIMER_FINISHED_AT,
-        duration_sec: TRACKING_TIMER_DURATION_SEC,
+        technician_id: TRACKING.TECHNICIAN_ID,
+        name: TRACKING.TIMER_NAME,
+        email: TRACKING.TIMER_EMAIL,
+        lab_id: TRACKING.LAB_ID,
+        mode: TRACKING.MODE,
+        device: TRACKING.TIMER_DEVICE,
+        finished_at: TRACKING.TIMER_FINISHED_AT,
+        duration_sec: TRACKING.TIMER_DURATION_SEC,
       };
 
       console.log("TRACKING TIMER payload:", body);
 
-      return fetch(TRACKING_TIMER_URL, {
+      return fetch(TRACKING.TIMER_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

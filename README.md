@@ -34,7 +34,7 @@ Mở **Command Prompt (CMD)** hoặc **PowerShell** tại thư mục dự án v�
 .\CHAY-TAT-CA.bat
 ```
 
-> **Mô tả**: Lệnh này sẽ tự động bật 7 cửa sổ CMD tương ứng với 7 server dịch vụ và tự động mở trình duyệt truy cập địa chỉ `http://127.0.0.1:8080`.
+> **Mô tả**: Lệnh này tự động bật **Master Dispatcher** chạy toàn bộ hệ thống trên **1 cổng duy nhất `8080`** và tự động mở trình duyệt truy cập `http://localhost:8080`.
 
 ---
 
@@ -45,33 +45,30 @@ Chạy lệnh Python trực tiếp từ thư mục gốc dự án:
 python run_all.py
 ```
 
-> **Mô tả**: Script Python sẽ khởi tạo tất cả các server giả lập trên từng cổng tương ứng và tự động mở trình duyệt tại `http://localhost:8080`.
+> **Mô tả**: Master Dispatcher gộp Portal + toàn bộ thiết bị giả lập + proxy `/api/*` sang PHP nội bộ trên **1 cổng duy nhất `8080`**, tự động mở trình duyệt tại `http://localhost:8080`.
 
 ---
 
-## 🌐 3. Danh Sách Các Server & Cổng Dịch Vụ (Ports)
+## 🌐 3. Cổng Dịch Vụ (Single-Port)
 
-Khi hệ thống khởi chạy, các dịch vụ sẽ hoạt động tại các địa chỉ sau:
+Toàn bộ hệ thống hoạt động trên **1 cổng duy nhất `8080`**:
 
-| STT | Dịch Vụ / Thiết Bị | Địa Chỉ Truy Cập | Cổng (Port) |
-|---|---|---|---|
-| 1 | **Portal Trung Tâm / Đăng nhập** | `http://localhost:8080` | `8080` |
-| 2 | **Server AC1000F** | `http://localhost:8081` | `8081` |
-| 3 | **Server AX3000C** | `http://localhost:8090` | `8090` |
-| 4 | **Server AX3000Hv2** | `http://localhost:8092` | `8092` |
-| 5 | **Server AX3000GZ** | `http://localhost:8094` | `8094` |
-| 6 | **Server BE15000** | `http://localhost:8096` | `8096` |
-| 7 | **Server AX3000S** | `http://localhost:8098` | `8098` |
+| Thành phần | Địa chỉ |
+|---|---|
+| **Portal Trung Tâm / Đăng nhập / Hướng dẫn (tooltips)** | `http://localhost:8080` |
+| **API PHP (IAM, tracking)** | `http://localhost:8080/api/index.php` |
+
+Các thiết bị giả lập: **AC1000F, AX3000C, AX3000Hv2, AX3000GZ, BE15000, AX3000S, BE12000** — truy cập từ Portal Trung Tâm.
 
 ---
 
 ## 🛑 4. Hướng Dẫn Dừng Hệ Thống
 
-- **Windows (mở nhiều cửa sổ)**: Đóng tất cả các cửa sổ Command Prompt (`CMD`) được tạo ra khi chạy script.
-- **Terminal**: Nhấn `Ctrl + C` tại cửa sổ Terminal đang chạy script để dừng dịch vụ.
+- **Windows**: Đóng cửa sổ CMD đang chạy (hoặc nhấn `Ctrl + C`).
+- **Terminal**: Nhấn `Ctrl + C` tại cửa sổ Terminal đang chạy script để dừng toàn bộ dịch vụ (kèm theo PHP nội bộ).
 
 ---
 
 ## 📝 Ghi Chú
-- Giữ nguyên các cửa sổ terminal/CMD trong suốt quá trình sử dụng và thực hành.
-- Nếu gặp lỗi cổng bị chiếm dụng (Address already in use), hãy đảm bảo không có ứng dụng nào khác đang sử dụng các cổng `8080`, `8081`, `8090`, `8092`, `8094`, `8096`, `8098`.
+- Giữ nguyên cửa sổ terminal/CMD trong suốt quá trình sử dụng và thực hành.
+- Nếu gặp lỗi cổng bị chiếm dụng (Address already in use), hãy đảm bảo không có ứng dụng nào khác đang sử dụng cổng `8080`.

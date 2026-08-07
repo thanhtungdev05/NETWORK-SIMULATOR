@@ -6,7 +6,9 @@
   const isLocalHost = ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
 
   if (isLocalHost) {
-    loginButton.href = '/api/index.php/dev/bypass?next=/portal.html';
+    const apiBase = (window.API_BASE_URL || '').replace(/\/+$/, '');
+    const portalOrigin = window.location.origin;
+    loginButton.href = apiBase + '/api/index.php/dev/bypass?next=' + encodeURIComponent(portalOrigin + '/portal.html');
     label.textContent = 'Vào local (bypass IAM)';
   }
 

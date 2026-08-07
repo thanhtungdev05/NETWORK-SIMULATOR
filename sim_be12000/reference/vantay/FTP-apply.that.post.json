@@ -1,0 +1,24 @@
+{
+  "page": "Local Network > FTP",
+  "url": "/",
+  "method": "POST",
+  "dataTag": "Localnet_ftp_lua.lua",
+  "ngayThu": "2026-08-05",
+  "sanitized": true,
+  "sanitizedNote": "Password la mat khau FTP that (da ma hoa client-side qua truong encode) - thay bang placeholder, khong dung gia tri that.",
+  "reqBody": {
+    "IF_ACTION": "Apply",
+    "DataHasBeenGot": "1",
+    "_InstID": "IGD.FTPUSER0",
+    "FtpEnable": "0",
+    "FtpAnon": "0",
+    "Username": "admin",
+    "Password": "***SANITIZED***",
+    "Btn_apply": "",
+    "Btn_cancel": "",
+    "encode": "(sanitized - ciphertext base64 dai, chua ro khoa giai ma)",
+    "_sessionTOKEN": "(bo qua)"
+  },
+  "respBody": "<ajax_response_xml_root><INSTIDENTITY>IGD.FTPUSER0</INSTIDENTITY><IF_ERRORID>0</IF_ERRORID><IF_ERRORTYPE>SUCC</IF_ERRORTYPE><IF_ERRORSTR>SUCC</IF_ERRORSTR><IF_ERRORPARAM>SUCC</IF_ERRORPARAM></ajax_response_xml_root>",
+  "ghiChu": "Dang xac_nhan_trong, instidentity mac dinh (echo _InstID=IGD.FTPUSER0). Khong doi gia tri (FTP Server van Off). Response nay KHONG echo du lieu nen khong co van de <encode> nhu DHCPBasicCfg/SSID Config."
+}

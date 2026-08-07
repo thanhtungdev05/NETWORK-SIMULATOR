@@ -8,9 +8,9 @@ text/html de trinh duyet render (khong tai xuong).
 
 Chay: python server2.py [port]   (mac dinh 8092)
 """
-import os, sys, socket
+import os, sys, socket, re
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import urlparse, unquote
+from urllib.parse import urlparse, unquote, parse_qs
 
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8092
 BASE = os.path.dirname(os.path.abspath(__file__))
@@ -63,6 +63,7 @@ class H(BaseHTTPRequestHandler):
     def do_GET(self):
         parsed = urlparse(self.path)
         p = unquote(parsed.path)
+
         if p in ("/", "/index.html", "/cgi-bin/login.html"):
             return self._redirect("/cgi-bin/login.asp")
 
@@ -94,12 +95,40 @@ class H(BaseHTTPRequestHandler):
                     html = re.sub(r'src=["\']/cgi-bin/navigation-status\.asp["\']', f'src="{final_nav}"', html)
                     html = re.sub(r'src=["\']/cgi-bin/status_deviceinfo\.asp["\']', f'src="{clean_page}"', html)
 
-                # Inject overlay script
-                inject_script = '<script src="/guide-overlay.js"></script>'
-                if '</head>' in html:
-                    html = html.replace('</head>', inject_script + '</head>')
-                elif '</body>' in html:
-                    html = html.replace('</body>', inject_script + '</body>')
+                return self._send(html.encode("utf-8"), "text/html; charset=utf-8")
+
+        # Xu ly dac biet cho /cgi-bin/status.asp de active tab truyen qua URL (?tab=Network)
+        if p == "/cgi-bin/status.asp":
+            qs = parse_qs(parsed.query)
+            tab_val = qs.get("tab", [""])[0]
+
+            f = os.path.join(WWW, "cgi-bin", "status.asp")
+            if os.path.isfile(f):
+                with open(f, "r", encoding="utf-8", errors="replace") as fh:
+                    html = fh.read()
+
+                if tab_val:
+                    tab_script = f"""
+                    <script type="text/javascript">
+                    window.addEventListener('DOMContentLoaded', function() {{
+                        var tabTarget = '{tab_val}'.toLowerCase();
+                        var menu = document.getElementById('menu');
+                        if (menu) {{
+                            var links = menu.getElementsByTagName('a');
+                            for (var i = 0; i < links.length; i++) {{
+                                if (links[i].textContent.trim().toLowerCase() === tabTarget) {{
+                                    links[i].className = 'current';
+                                }} else {{
+                                    links[i].className = 'other';
+                                }}
+                            }}
+                        }}
+                    }});
+                    </script>
+                    """
+                    html = html.replace('</head>', tab_script + '</head>')
+
+                return self._send(html.encode("utf-8"), "text/html; charset=utf-8")
 
         # Duong dan file trong www2
         f = os.path.join(WWW, p.lstrip("/"))
@@ -107,18 +136,6 @@ class H(BaseHTTPRequestHandler):
             ext = os.path.splitext(f)[1].lower()
             with open(f, "rb") as fh:
                 content = fh.read()
-
-            # Tu dong inject guide-overlay.js vao cac trang ASP va HTML
-            if ext in (".asp", ".html", ".htm") and p != "/cgi-bin/blank.asp":
-                inject_script = b'<script src="/guide-overlay.js"></script>'
-                if b'</head>' in content:
-                    content = content.replace(b'</head>', inject_script + b'</head>')
-                elif b'</body>' in content:
-                    content = content.replace(b'</body>', inject_script + b'</body>')
-                elif b'</html>' in content:
-                    content = content.replace(b'</html>', inject_script + b'</html>')
-                else:
-                    content = content + inject_script
 
             return self._send(content, CT.get(ext, "application/octet-stream"))
 

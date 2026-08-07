@@ -1,0 +1,23 @@
+{
+  "page": "Local Network > WLAN > Mesh Wi-Fi",
+  "url": "/",
+  "method": "POST",
+  "dataTag": "Localnet_NetSphere_Mode_lua.lua",
+  "ngayThu": "2026-08-05",
+  "reqBody": {
+    "IF_ACTION": "Apply",
+    "_InstID": "MULTIAPDOMAIN1",
+    "CurrentMode": "",
+    "CurrentEnable": "0",
+    "Enable": "0",
+    "EnLegacyStaRoam": "0",
+    "RoamRssiLmt24G": "-60",
+    "RoamRssiLmt5G": "-70",
+    "Btn_apply_Mode_Confirm": "",
+    "Btn_apply_Mode": "",
+    "Btn_cancel_Mode": "",
+    "_sessionTOKEN": "(bo qua, chi de minh hoa vi tri truong)"
+  },
+  "respBody": "<ajax_response_xml_root><INSTIDENTITY>MULTIAPDOMAIN1</INSTIDENTITY><IF_ERRORID>0</IF_ERRORID><IF_ERRORTYPE>SUCC</IF_ERRORTYPE><IF_ERRORSTR>SUCC</IF_ERRORSTR><IF_ERRORPARAM>SUCC</IF_ERRORPARAM></ajax_response_xml_root>",
+  "ghiChu": "Dang xac_nhan_trong, instidentity mac dinh (echo _InstID gui len). Khong doi gia tri (Mesh Wi-Fi van Off)."
+}

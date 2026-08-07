@@ -1,0 +1,15 @@
+{
+ "ten": "WlanBasicAdvanced2G-apply",
+ "ben": "that",
+ "khoMan": "post",
+ "captured": [
+  {
+   "method": "POST",
+   "url": "/?_type=menuData&_tag=wlan_wlanbasicadconf_lua.lua",
+   "reqBody": "IF_ACTION=Apply&_InstID=DEV.WIFI.RD1&_InstID_WIFIBLOCK=&Wifi1Block=&Wifi2Block=&Wifi3Block=&BasicDataRates=1,2,5.5,11&OpDataRates=1,2,5.5,11,6,9,12,18,24,36,48,54&11nMode=1&GreenField=0&MUMIMOEnable=&AutoChannelEnabled=1&Band=2.4GHz&Channel=NULL&Standard=b,g,n,ax,be&BandWidth=20MHz&CountryCode=VNI&SGIEnabled=1&BeaconInterval=100&TxPower=100%&PreambleType=0&_sessionTOKEN=byTr9ZOWcqSR0XMX633jYDKt",
+   "status": 200,
+   "respBody": "<ajax_response_xml_root><IF_ERRORPARAM>SUCC</IF_ERRORPARAM><IF_ERRORTYPE>SUCC</IF_ERRORTYPE><IF_ERRORSTR>SUCC</IF_ERRORSTR><IF_ERRORID>0</IF_ERRORID><OBJ_WLANMLO_ID><Instance><ParaName>_InstID</ParaName><ParaValue>IGD</ParaValue><ParaName>MloEnable</ParaName><ParaValue>0</ParaValue></Instance></OBJ_WLANMLO_ID></ajax_response_xml_root>"
+  }
+ ],
+ "ghiChu": "Dang MOI, khac han 4 dang da biet (day_du/rut_gon/xac_nhan_trong + bien the). Header dung THU TU day_du (PARAM,TYPE,STR,ID) nhung KHONG co INSTIDENTITY, KHONG co the _InstID, va thay vi echo du lieu CUA CHINH dataTag nay (OBJ_WLANSETTING_ID/OBJ_CHANNEL_ID) thi lai echo OBJ_WLANMLO_ID (trang thai MLO — mot doi tuong KHONG lien quan truc tiep) VOI CHI 2/3 truong (_InstID, MloEnable — thieu MLOSSID so voi dinh nghia object day du). Co the la loi/hanh vi phu cua firmware that (kiem tra trang thai MLO sau khi doi radio setting). Lan thu dau bi loi -1452 (token cu) - da tai lai / roi thu lai thanh cong."
+}

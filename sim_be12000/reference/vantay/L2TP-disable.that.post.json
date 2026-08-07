@@ -1,0 +1,29 @@
+{
+ "ten": "L2TP-disable",
+ "ben": "that",
+ "khoMan": "post",
+ "sanitized": false,
+ "captured": [
+  {
+   "method": "GET",
+   "url": "/?_type=hiddenData&_tag=sntp_data&_=1785987915398",
+   "reqBody": "",
+   "status": 200,
+   "respBody": "<ajax_response_xml_root><IF_ERRORPARAM>SUCC</IF_ERRORPARAM><IF_ERRORTYPE>SUCC</IF_ERRORTYPE><IF_ERRORSTR>SUCC</IF_ERRORSTR><IF_ERRORID>0</IF_ERRORID><OBJ_SNTP_ID><Instance><ParaName>_InstID</ParaName><ParaValue>IGD</ParaValue><ParaName>Enable</ParaName><ParaValue>1</ParaValue><ParaName>SntpBindWanName</ParaName><ParaValue></ParaValue><ParaName>NtpServer5</ParaName><ParaValue></ParaValue><ParaName>NtpServer4</ParaName><ParaValue></ParaValue><ParaName>NtpConfigPermission</ParaName><ParaValue>0</ParaValue><ParaName>AutoSetTzname</ParaName><ParaValue>0</ParaValue><ParaName>CurrentLocalTime</ParaName><ParaValue>1970-01-01T02:22:30</ParaValue><ParaName>NtpServer2</ParaName><ParaValue>asia.pool.ntp.org</ParaValue><ParaName>ZoneIndex</ParaName><ParaValue>24</ParaValue><ParaName>Dscp</ParaName><ParaValue>-1</ParaValue><ParaName>PollTimeInterval</ParaName><ParaValue>86400</ParaValue><ParaName>NtpServer3</ParaName><ParaValue></ParaValue><ParaName>NtpServer1</ParaName><ParaValue>vn.pool.ntp.org</ParaValue><ParaName>DaylightSavingsUsed</ParaName><ParaValue>0</ParaValue></Instance></OBJ_SNTP_ID></ajax_response_xml_root>"
+  },
+  {
+   "method": "GET",
+   "url": "/?_type=hiddenData&_tag=sntp_data&_=1785987915399",
+   "reqBody": "",
+   "status": 200,
+   "respBody": "<ajax_response_xml_root><IF_ERRORPARAM>SUCC</IF_ERRORPARAM><IF_ERRORTYPE>SUCC</IF_ERRORTYPE><IF_ERRORSTR>SUCC</IF_ERRORSTR><IF_ERRORID>0</IF_ERRORID><OBJ_SNTP_ID><Instance><ParaName>_InstID</ParaName><ParaValue>IGD</ParaValue><ParaName>Enable</ParaName><ParaValue>1</ParaValue><ParaName>SntpBindWanName</ParaName><ParaValue></ParaValue><ParaName>NtpServer5</ParaName><ParaValue></ParaValue><ParaName>NtpServer4</ParaName><ParaValue></ParaValue><ParaName>NtpConfigPermission</ParaName><ParaValue>0</ParaValue><ParaName>AutoSetTzname</ParaName><ParaValue>0</ParaValue><ParaName>CurrentLocalTime</ParaName><ParaValue>1970-01-01T02:23:00</ParaValue><ParaName>NtpServer2</ParaName><ParaValue>asia.pool.ntp.org</ParaValue><ParaName>ZoneIndex</ParaName><ParaValue>24</ParaValue><ParaName>Dscp</ParaName><ParaValue>-1</ParaValue><ParaName>PollTimeInterval</ParaName><ParaValue>86400</ParaValue><ParaName>NtpServer3</ParaName><ParaValue></ParaValue><ParaName>NtpServer1</ParaName><ParaValue>vn.pool.ntp.org</ParaValue><ParaName>DaylightSavingsUsed</ParaName><ParaValue>0</ParaValue></Instance></OBJ_SNTP_ID></ajax_response_xml_root>"
+  },
+  {
+   "method": "POST",
+   "url": "/?_type=menuData&_tag=l2tp_lua.lua",
+   "reqBody": "IF_ACTION=Apply&_InstID=DEV.L2TP.TUNNEL1&SessionName=l2tp_internet&Enable=0&Method=1&LowIFID=&L2tpServer1=l2tp.test.example.com&UserName=testuser&Password=XAw1fzS18e9w8dbVWR5jng%3D%3D&AuthType=0&encode=LxruNGNIc9Hoateerdi98eSoovLbtbOzFWmsfbuyLW10U%2FFfBKFLgF%2Fwiubg75PWTBw9%2BoFjPKbdMnxwUKjFoZ%2F7IeWKgIAHv8VerBdNgmrYTlLVh5a9onUdKGXVBBeH7Sg2pWRPFp7AkSBPlNqt7NRThj1uYQyLLM3T4%2BIbwR8Xb%2ByR%2FkN3zXmqJI%2F%2BHFWKs9cM24ZfsXfHLLa60lKUPvqQCYuxhdsZt%2FrnlCEKzI%2B6AgdiT3sbq1xor1rVqUPYheB7JFhVcMSnj0ZB5yoD6CftcJizZhEsWVsHONihRJBepM6gerIAKQfcKaAypOv2n6r9BffIa5lFf6jhPt%2FS9jjXRFBDfAtWiKqOEaU0IwjUcyDcFjgm%2FPxhpC8wYMKAV%2FVrE23rKn13gH43N64oGvYzn6iaCzl4IpS7mctBOi7VPPQSp%2Fe6WMIt8d1gFOMk5byQ9xwkyCq69MqV%2BgNltsrqBh1Du0TjyhzBVxvY7vxLNgFYz3kgCdS1D1Cfy%2B1Vi6PT%2FdwAXV9s1SMMKE%2B%2FHqboktgVNJ9Hc%2BVddcvoTC66xxRpFD2iDISkUlKeNiBJgodloMT0dHthyeA9MLI2LeXIMQTZ61jfd9rhvb550ax3wQ%2F3zAUtfgU5UEyWMISGa4B%2B3PHCGS6GtdJLd5veHrFHQ%2B90hdkWrvPbCqW2dZc%3D&_sessionTOKEN=3bVBGnOaTy8lG5FglsBYv9Qj",
+   "status": 200,
+   "respBody": "<ajax_response_xml_root><INSTIDENTITY>DEV.L2TP.TUNNEL1</INSTIDENTITY><IF_ERRORID>0</IF_ERRORID><IF_ERRORTYPE>SUCC</IF_ERRORTYPE><IF_ERRORSTR>SUCC</IF_ERRORSTR><IF_ERRORPARAM>SUCC</IF_ERRORPARAM><_InstID>DEV.L2TP.TUNNEL1</_InstID></ajax_response_xml_root>"
+  }
+ ]
+}

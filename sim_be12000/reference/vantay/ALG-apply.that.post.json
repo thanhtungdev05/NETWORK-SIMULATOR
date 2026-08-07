@@ -1,0 +1,14 @@
+{
+ "ten": "ALG-apply",
+ "ben": "that",
+ "khoMan": "post",
+ "captured": [
+  {
+   "method": "POST",
+   "url": "/?_type=menuData&_tag=firewall_alg_lua.lua",
+   "reqBody": "IF_ACTION=Apply&_InstID=IGD&IsFTPAlg=1&IsH323Alg=1&IsIPSECAlg=1&IsL2TPAlg=1&IsPPTPAlg=1&IsRTSPAlg=1&IsSIPAlg=1&IsTFTPAlg=1&Btn_apply_Alg=&Btn_cancel_Alg=&_sessionTOKEN=ppSSIwPWvS6Q1sEdDOuk1jiO",
+   "status": 200,
+   "respBody": "<ajax_response_xml_root><INSTIDENTITY>IGD</INSTIDENTITY><IF_ERRORID>0</IF_ERRORID><IF_ERRORTYPE>SUCC</IF_ERRORTYPE><IF_ERRORSTR>SUCC</IF_ERRORSTR><IF_ERRORPARAM>SUCC</IF_ERRORPARAM><_InstID>IGD</_InstID></ajax_response_xml_root>"
+  }
+ ]
+}

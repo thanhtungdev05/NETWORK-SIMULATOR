@@ -112,7 +112,7 @@ window.DEVICE_AC1000F = {
             '- Username: <span class="val">admin99</span>',
             '- Password: <span class="val">ftc12345</span>',
           ],
-          practiceUrl: '/sim_ac1000f/cgi-bin/index.asp?page=access_cwmp.asp',
+          practiceUrl: '/sim_ac1000f/cgi-bin/index.asp?page=adv_firewall.asp',
           grading: {
             description: 'Kiểm tra quy tắc Remote Web',
             rules: []
@@ -128,7 +128,7 @@ window.DEVICE_AC1000F = {
             '- Chọn Maintenance => Firmware => Download',
             '- Chọn Maintenance => Firmware => Browse => Restore',
           ],
-          practiceUrl: '/sim_ac1000f/cgi-bin/index.asp?page=tools_system.asp',
+          practiceUrl: '/sim_ac1000f/cgi-bin/index.asp?page=tools_update.asp',
           grading: {
             description: 'Kiểm tra thao tác Backup/Restore',
             rules: []
@@ -175,7 +175,7 @@ window.DEVICE_AC1000F = {
             '<b>Thực hiện Cấu hình chặn Web trên thiết bị theo các thông số được cung cấp dưới đây:</b>',
             '- URL(host): <span class="val">facebook.com</span>',
           ],
-          practiceUrl: '/sim_ac1000f/cgi-bin/index.asp?page=access_URLfilter.asp',
+          practiceUrl: '/sim_ac1000f/cgi-bin/index.asp?page=access_ipfilter.asp',
           grading: {
             description: 'Kiểm tra URL Filter rules',
             rules: []

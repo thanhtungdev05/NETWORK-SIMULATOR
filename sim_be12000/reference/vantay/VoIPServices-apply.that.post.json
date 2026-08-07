@@ -1,0 +1,27 @@
+{
+  "page": "VoIP > VoIP Services",
+  "url": "/",
+  "method": "POST",
+  "dataTag": "voip_voipbasic_lua.lua",
+  "ngayThu": "2026-08-05",
+  "sanitized": true,
+  "sanitizedNote": "AuthPassword/encode la ma hoa client-side cua mat khau SIP (rong, chua cau hinh) - da rut gon/thay placeholder do do dai lon, khong dung gia tri that.",
+  "reqBody": {
+    "IF_ACTION": "Apply",
+    "_InstID": "IGD.SV.VS1.VP1.VL1.LS",
+    "_InstIDVP": "IGD.SV.VS1.VP1.VL1",
+    "Enable": "2",
+    "AuthUserName": "",
+    "DirectoryNumber": "",
+    "DigestUserName": "",
+    "Digesttmp": "",
+    "UserNameSuffix": "",
+    "AuthPassword": "***SANITIZED***",
+    "Btn_apply_VOIPSipAccountConf": "",
+    "Btn_cancel_VOIPSipAccountConf": "",
+    "encode": "***SANITIZED (rat dai, ciphertext base64)***",
+    "_sessionTOKEN": "(bo qua)"
+  },
+  "respBody": "<ajax_response_xml_root><INSTIDENTITY>IGD.SV.VS1.VP1.VL1</INSTIDENTITY><IF_ERRORID>0</IF_ERRORID><IF_ERRORTYPE>SUCC</IF_ERRORTYPE><IF_ERRORSTR>SUCC</IF_ERRORSTR><IF_ERRORPARAM>SUCC</IF_ERRORPARAM></ajax_response_xml_root>",
+  "ghiChu": "Dang xac_nhan_trong. instidentity: tu_truong:_InstIDVP - INSTIDENTITY echo gia tri cua truong _InstIDVP (IGD.SV.VS1.VP1.VL1), KHONG PHAI _InstID top-level (IGD.SV.VS1.VP1.VL1.LS). Day la mau hinh moi: 2 truong ID khac ten (_InstID va _InstIDVP) cung xuat hien, INSTIDENTITY echo truong 'phu' chu khong phai truong chinh. SIP Account chua duoc cau hinh (Basic bi chan client-side do SIP Account rong) nen cac gia tri deu rong/mac dinh."
+}

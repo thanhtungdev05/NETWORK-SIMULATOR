@@ -1,0 +1,28 @@
+{
+  "page": "Local Network > LAN > IPv6 > RA Service",
+  "url": "/",
+  "method": "POST",
+  "dataTag": "ra_raservice_lua.lua",
+  "ngayThu": "2026-08-05",
+  "reqBody": {
+    "IF_ACTION": "Apply",
+    "_InstID": "DEV.RA.RAIS1",
+    "IsPrefixAutoMode": "1",
+    "Enable": "1",
+    "AdvLinkMTUEnable": "0",
+    "S_AdvLinkMTU": "",
+    "AdvPreferredRouterFlag": "0",
+    "MinRtrAdvInterval": "200",
+    "MaxRtrAdvInterval": "600",
+    "AdvManagedFlag": "0",
+    "AdvOtherConfigFlag": "1",
+    "PrefixMode": "Auto",
+    "Btn_SelfUpd_RAService": "",
+    "Btn_PrefixUpd_RAService": "",
+    "Btn_apply_RAService": "",
+    "Btn_cancel_RAService": "",
+    "_sessionTOKEN": "(bo qua)"
+  },
+  "respBody": "<ajax_response_xml_root><IF_ERRORPARAM>SUCC</IF_ERRORPARAM><IF_ERRORTYPE>SUCC</IF_ERRORTYPE><IF_ERRORSTR>SUCC</IF_ERRORSTR><IF_ERRORID>0</IF_ERRORID><_InstID>DEV.RA.RAIS1</_InstID><OBJ_RAIS_ID><Instance><ParaName>_InstID</ParaName><ParaValue>DEV.RA.RAIS1</ParaValue><ParaName>AdvOtherConfigFlag</ParaName><ParaValue>1</ParaValue><ParaName>AdvManagedFlag</ParaName><ParaValue>0</ParaValue><ParaName>IsPrefixAutoMode</ParaName><ParaValue>1</ParaValue><ParaName>AdvLinkMTUEnable</ParaName><ParaValue>0</ParaValue><ParaName>ManualPrefixes</ParaName><ParaValue></ParaValue><ParaName>MaxRtrAdvInterval</ParaName><ParaValue>600</ParaValue><ParaName>S_AdvLinkMTU</ParaName><ParaValue></ParaValue><ParaName>AdvPreferredRouterFlag</ParaName><ParaValue>0</ParaValue><ParaName>MinRtrAdvInterval</ParaName><ParaValue>200</ParaValue><ParaName>AdvLinkMTU</ParaName><ParaValue>0</ParaValue><ParaName>Enable</ParaName><ParaValue>1</ParaValue></Instance></OBJ_RAIS_ID></ajax_response_xml_root>",
+  "ghiChu": "Dang day_du (mac dinh) - header kieu PARAM,TYPE,STR,ID, the _InstID, du lieu object day du. Khong doi gia tri."
+}

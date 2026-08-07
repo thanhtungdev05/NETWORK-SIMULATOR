@@ -160,12 +160,4 @@ function isValidUrlName(url)
 	return true;
 }
 
-// Fallback auto-loader for guide overlay
-(function() {
-	if (typeof window !== 'undefined' && !window.__ftcGuide && document.head) {
-		var s = document.createElement('script');
-		s.src = '/guide-overlay.js';
-		s.async = true;
-		document.head.appendChild(s);
-	}
-})();
+

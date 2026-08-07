@@ -30,6 +30,7 @@ import sim_ax3000c.server as ax3000c
 import sim_ax3000gz.server as ax3000gz
 import sim_ax3000hv2.server2 as ax3000hv2
 import sim_ax3000s.server as ax3000s
+import sim_be12000.src.server as be12000
 import sim_be15000.server as be15000
 
 # Mapping từ device id sang module
@@ -39,6 +40,7 @@ SIM_MODULES = {
     'sim_ax3000gz': ax3000gz,
     'sim_ax3000hv2': ax3000hv2,
     'sim_ax3000s': ax3000s,
+    'sim_be12000': be12000,
     'sim_be15000': be15000
 }
 
@@ -49,6 +51,7 @@ SIM_HANDLERS = {
     'sim_ax3000gz': ax3000gz.H,
     'sim_ax3000hv2': ax3000hv2.H,
     'sim_ax3000s': ax3000s.H,
+    'sim_be12000': be12000.Handler,
     'sim_be15000': be15000.H
 }
 
@@ -98,8 +101,8 @@ class MasterDispatcher(SimpleHTTPRequestHandler):
                 if sim_id in SIM_MODULES:
                     # Chống cướp quyền (hijacking) Portal:
                     # Nếu request đang yêu cầu rõ ràng các file của Portal, ta bỏ qua Cookie
-                    portal_paths = ['/', '/index.html', '/styles.css', '/app.js', '/favicon.ico', '/guide-overlay.js']
-                    portal_prefixes = ['/step_by_step/', '/devices/', '/assets/']
+                    portal_paths = ['/', '/index.html', '/styles.css', '/app.js', '/favicon.ico']
+                    portal_prefixes = ['/devices/', '/assets/']
                     
                     is_portal = False
                     if path in portal_paths:
@@ -146,13 +149,14 @@ class MasterDispatcher(SimpleHTTPRequestHandler):
                 # MONKEY PATCH ĐỂ FIX LỖI MẤT PREFIX KHI REDIRECT VÀ GIỮ COOKIE
                 # -------------------------------------------------------------
                 original_send_header = self.send_header
+                original_end_headers = self.end_headers
+
                 def custom_send_header(keyword, value):
                     if keyword.lower() == 'location' and value.startswith('/'):
                         value = '/' + sim_id + value
                     original_send_header(keyword, value)
                 self.send_header = custom_send_header
                 
-                original_end_headers = self.end_headers
                 def custom_end_headers():
                     # Đảm bảo Cookie lưu ở thư mục gốc / để toàn bộ trang đều gửi
                     original_send_header('Set-Cookie', f'current_sim={sim_id}; Path=/')
@@ -181,6 +185,8 @@ class MasterDispatcher(SimpleHTTPRequestHandler):
                 self.send_error(500, "Internal Server Error")
                 return
             finally:
+                self.send_header = original_send_header
+                self.end_headers = original_end_headers
                 self.__class__ = original_class
                 if original_directory is not None:
                     self.directory = original_directory
@@ -197,14 +203,6 @@ class MasterDispatcher(SimpleHTTPRequestHandler):
             self.send_error(404, "Not Found")
 
     def do_GET(self):
-        if self.path.split('?')[0] == '/guide-overlay.js':
-            original_directory = getattr(self, 'directory', None)
-            self.directory = BASE_DIR
-            try:
-                return super().do_GET()
-            finally:
-                if original_directory is not None:
-                    self.directory = original_directory
         self.dispatch('GET')
 
     def do_POST(self):

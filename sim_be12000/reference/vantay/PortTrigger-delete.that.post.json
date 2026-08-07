@@ -1,0 +1,29 @@
+{
+ "ten": "PortTrigger-delete",
+ "ben": "that",
+ "khoMan": "post",
+ "sanitized": false,
+ "captured": [
+  {
+   "method": "GET",
+   "url": "/?_type=hiddenData&_tag=sntp_data&_=1785986054584",
+   "reqBody": "",
+   "status": 200,
+   "respBody": "<ajax_response_xml_root><IF_ERRORPARAM>SUCC</IF_ERRORPARAM><IF_ERRORTYPE>SUCC</IF_ERRORTYPE><IF_ERRORSTR>SUCC</IF_ERRORSTR><IF_ERRORID>0</IF_ERRORID><OBJ_SNTP_ID><Instance><ParaName>_InstID</ParaName><ParaValue>IGD</ParaValue><ParaName>Enable</ParaName><ParaValue>1</ParaValue><ParaName>SntpBindWanName</ParaName><ParaValue></ParaValue><ParaName>NtpServer5</ParaName><ParaValue></ParaValue><ParaName>NtpServer4</ParaName><ParaValue></ParaValue><ParaName>NtpConfigPermission</ParaName><ParaValue>0</ParaValue><ParaName>AutoSetTzname</ParaName><ParaValue>0</ParaValue><ParaName>CurrentLocalTime</ParaName><ParaValue>1970-01-01T01:51:49</ParaValue><ParaName>NtpServer2</ParaName><ParaValue>asia.pool.ntp.org</ParaValue><ParaName>ZoneIndex</ParaName><ParaValue>24</ParaValue><ParaName>Dscp</ParaName><ParaValue>-1</ParaValue><ParaName>PollTimeInterval</ParaName><ParaValue>86400</ParaValue><ParaName>NtpServer3</ParaName><ParaValue></ParaValue><ParaName>NtpServer1</ParaName><ParaValue>vn.pool.ntp.org</ParaValue><ParaName>DaylightSavingsUsed</ParaName><ParaValue>0</ParaValue></Instance></OBJ_SNTP_ID></ajax_response_xml_root>"
+  },
+  {
+   "method": "GET",
+   "url": "/?_type=hiddenData&_tag=sntp_data&_=1785986054585",
+   "reqBody": "",
+   "status": 200,
+   "respBody": "<ajax_response_xml_root><IF_ERRORPARAM>SUCC</IF_ERRORPARAM><IF_ERRORTYPE>SUCC</IF_ERRORTYPE><IF_ERRORSTR>SUCC</IF_ERRORSTR><IF_ERRORID>0</IF_ERRORID><OBJ_SNTP_ID><Instance><ParaName>_InstID</ParaName><ParaValue>IGD</ParaValue><ParaName>Enable</ParaName><ParaValue>1</ParaValue><ParaName>SntpBindWanName</ParaName><ParaValue></ParaValue><ParaName>NtpServer5</ParaName><ParaValue></ParaValue><ParaName>NtpServer4</ParaName><ParaValue></ParaValue><ParaName>NtpConfigPermission</ParaName><ParaValue>0</ParaValue><ParaName>AutoSetTzname</ParaName><ParaValue>0</ParaValue><ParaName>CurrentLocalTime</ParaName><ParaValue>1970-01-01T01:52:19</ParaValue><ParaName>NtpServer2</ParaName><ParaValue>asia.pool.ntp.org</ParaValue><ParaName>ZoneIndex</ParaName><ParaValue>24</ParaValue><ParaName>Dscp</ParaName><ParaValue>-1</ParaValue><ParaName>PollTimeInterval</ParaName><ParaValue>86400</ParaValue><ParaName>NtpServer3</ParaName><ParaValue></ParaValue><ParaName>NtpServer1</ParaName><ParaValue>vn.pool.ntp.org</ParaValue><ParaName>DaylightSavingsUsed</ParaName><ParaValue>0</ParaValue></Instance></OBJ_SNTP_ID></ajax_response_xml_root>"
+  },
+  {
+   "method": "POST",
+   "url": "/?_type=menuData&_tag=firewall_porttrigger_m.lua",
+   "reqBody": "IF_ACTION=Delete&OBJ_FWPT_ID.Enable=1&OBJ_FWPT_ID._OBJ_InstID=IGD.FWPT1&OBJ_FWPT_ID.Name=TestPT&OBJ_FWPT_ID.TriggleIpAddress=0.0.0.0&OBJ_FWPT_ID.TriggleProtocol=0&OBJ_FWPT_ID.TriggleDestPort=8082&OBJ_FWPT_ID.IncomeProtocol=0&OBJ_FWPT_ID.IncomeMinPort=8083&OBJ_FWPT_ID.IncomeMaxPort=8083&OBJ_FWPT_ID.Timeout=1200&_sessionTOKEN=tDCcNUmCaAU38pTsd5QpeYi9",
+   "status": 200,
+   "respBody": "<ajax_response_xml_root><IF_ERRORID>0</IF_ERRORID><IF_ERRORPARAM>SUCC</IF_ERRORPARAM><IF_ERRORTYPE>SUCC</IF_ERRORTYPE><IF_ERRORSTR>SUCC</IF_ERRORSTR><OBJ_FWPT_ID._OBJ_InstID></OBJ_FWPT_ID._OBJ_InstID></ajax_response_xml_root>"
+  }
+ ]
+}

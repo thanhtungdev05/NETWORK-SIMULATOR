@@ -1,0 +1,18 @@
+{
+  "page": "VoIP > Advanced > VP1",
+  "url": "/",
+  "method": "POST",
+  "dataTag": "voip_sipadvanced_lua.lua",
+  "ngayThu": "2026-08-05",
+  "reqBody": {
+    "IF_ACTION": "Apply",
+    "_InstID": "IGD.SV.VS1.VP1",
+    "DTMFMethod": "1",
+    "JitMode": "1",
+    "AdaptJitMin": "20",
+    "AdaptJitMax": "200",
+    "_sessionTOKEN": "(bo qua)"
+  },
+  "respBody": "<ajax_response_xml_root><INSTIDENTITY>IGD.SV.VS1.VP1</INSTIDENTITY><IF_ERRORID>0</IF_ERRORID><IF_ERRORTYPE>SUCC</IF_ERRORTYPE><IF_ERRORSTR>SUCC</IF_ERRORSTR><IF_ERRORPARAM>SUCC</IF_ERRORPARAM></ajax_response_xml_root>",
+  "ghiChu": "Dang xac_nhan_trong, instidentity mac dinh (echo _InstID=IGD.SV.VS1.VP1). Khong doi gia tri (DTMF RFC2833, Jitter Adaptive 20-200ms)."
+}

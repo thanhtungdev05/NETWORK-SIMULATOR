@@ -231,7 +231,7 @@
       if (resetUrl) {
         const cacheBustUrl = resetUrl + (resetUrl.includes('?') ? '&' : '?') + '_t=' + Date.now();
         fetch(cacheBustUrl, { cache: 'no-store' })
-          .catch(() => {})
+          .catch(() => { })
           .finally(() => {
             openInFrame(device, lesson, loginUrl, '💡 Hướng dẫn', true);
           });
@@ -248,7 +248,7 @@
       if (resetUrl) {
         const cacheBustUrl = resetUrl + (resetUrl.includes('?') ? '&' : '?') + '_t=' + Date.now();
         fetch(cacheBustUrl, { cache: 'no-store' })
-          .catch(() => {})
+          .catch(() => { })
           .finally(() => {
             openInFrame(device, lesson, loginUrl, '⚡ Thực hành', false);
           });
@@ -392,7 +392,32 @@
 
   // ── Step By Step Guide Popups Logic ──────────────────────────────
   function getLessonPopups(deviceId, lesson) {
+    return getLessonPopupsForDoc(deviceId, lesson, null);
+  }
+
+  function getLessonPopupsForDoc(deviceId, lesson, doc) {
     if (!deviceId || !lesson) return [];
+
+    const storeKey = 'TOOLTIPS_' + deviceId.toUpperCase();
+    const store = window[storeKey];
+
+    // Check xem iframe/doc hiện tại có đang ở màn hình Đăng Nhập (login.asp / #/login) không
+    const href = (doc && doc.location && doc.location.href) ? doc.location.href.toLowerCase() : '';
+    const hash = (doc && doc.location && doc.location.hash) ? doc.location.hash.toLowerCase() : '';
+    const isMainConfigPage = hash.includes('#/home') || hash.includes('#/network') || hash.includes('#/system') || hash.includes('#/status') || hash.includes('#/device');
+
+    const isLoginPage = !isMainConfigPage && (href.includes('login') || hash.includes('login') || (doc && doc.querySelector('.login-fpt, form[action*="login"]')));
+
+    if (isLoginPage && store && store._common_login && store._common_login.length > 0) {
+      return store._common_login;
+    }
+
+    // Nếu đã đăng nhập vào trang cấu hình bài học: lấy tooltip từ file bài tương ứng (ví dụ: bai1.js)
+    if (store && store[lesson.id]) {
+      return store[lesson.id];
+    }
+
+    // Fallback nếu dùng getStepByStepPopups hoặc lesson.guidePopups
     if (window.getStepByStepPopups) {
       const steps = window.getStepByStepPopups(deviceId, lesson.id);
       if (steps && steps.length > 0) return steps;
@@ -404,14 +429,14 @@
     if (!win) return;
     try {
       win.postMessage(msg, '*');
-    } catch (e) {}
+    } catch (e) { }
     try {
       if (win.frames && win.frames.length > 0) {
         for (let i = 0; i < win.frames.length; i++) {
           broadcastToWindowTree(win.frames[i], msg);
         }
       }
-    } catch (e) {}
+    } catch (e) { }
   }
 
   function clearGuidePopups() {
@@ -423,15 +448,18 @@
       if (deviceIframe && deviceIframe.contentWindow) {
         broadcastToWindowTree(deviceIframe.contentWindow, { type: 'CLEAR_GUIDE_POPUPS' });
       }
-    } catch (e) {}
+    } catch (e) { }
 
     // Direct DOM cleanup if accessible
     try {
       const allDocs = getAllAccessibleDocuments(deviceIframe.contentWindow);
       allDocs.forEach(doc => {
         doc.querySelectorAll('.ftc-guide-bubble, .guide-tooltip-bubble').forEach(el => el.remove());
+        doc.querySelectorAll('.ftc-guide-target-highlight').forEach(el => {
+          el.classList.remove('ftc-guide-target-highlight');
+        });
       });
-    } catch (e) {}
+    } catch (e) { }
   }
 
   function getCurrentLesson() {
@@ -454,32 +482,19 @@
     const lesson = getCurrentLesson();
     if (!lesson) return;
 
-    const popups = getLessonPopups(currentDeviceId, lesson);
-    if (!popups || popups.length === 0) return;
-
-    // 1. Save to localStorage
-    localStorage.setItem('ftc_guide_popups', JSON.stringify(popups));
-    localStorage.setItem('ftc_guide_enabled', '1');
-
-    // 2. Broadcast postMessage to deviceIframe and ALL subframes recursively
-    try {
-      if (deviceIframe && deviceIframe.contentWindow) {
-        const msg = {
-          type: 'SET_GUIDE_POPUPS',
-          popups: popups,
-          enabled: true
-        };
-        broadcastToWindowTree(deviceIframe.contentWindow, msg);
-      }
-    } catch (e) {}
-
-    // 3. Direct DOM injection fallback for accessible frames
+    // 1. Direct DOM injection cho từng document trong iframe (xử lý linh hoạt login vs bài học)
     try {
       const allDocs = getAllAccessibleDocuments(deviceIframe.contentWindow);
       allDocs.forEach(doc => {
-        injectGuidePopupsIntoDoc(doc, popups);
+        const popups = getLessonPopupsForDoc(currentDeviceId, lesson, doc);
+        if (popups && popups.length > 0) {
+          injectGuidePopupsIntoDoc(doc, popups);
+        } else {
+          doc.querySelectorAll('.ftc-guide-bubble').forEach(el => el.remove());
+          doc.querySelectorAll('.ftc-guide-target-highlight').forEach(el => el.classList.remove('ftc-guide-target-highlight'));
+        }
       });
-    } catch (e) {}
+    } catch (e) { }
   }
 
   function getAllAccessibleDocuments(rootWin) {
@@ -494,10 +509,10 @@
               if (win.frames[i] && win.frames[i] !== win) {
                 traverse(win.frames[i]);
               }
-            } catch (e) {}
+            } catch (e) { }
           }
         }
-      } catch (e) {}
+      } catch (e) { }
     }
     traverse(rootWin);
     return docs;
@@ -506,7 +521,7 @@
   function injectGuidePopupsIntoDoc(doc, popups) {
     if (!doc || !doc.body) return;
 
-    // Inject styles (no border on target element)
+    // Inject styles
     if (!doc.getElementById('ftc-guide-injected-style')) {
       const styleTag = doc.createElement('style');
       styleTag.id = 'ftc-guide-injected-style';
@@ -514,19 +529,19 @@
         .ftc-guide-bubble {
           position: absolute !important;
           z-index: 2147483647 !important;
-          background: #e50019 !important;
+          background: #ff0000 !important;
           color: #ffffff !important;
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
           font-size: 13px !important;
           font-weight: 700 !important;
-          line-height: 1.4 !important;
-          padding: 7px 14px !important;
-          border-radius: 5px !important;
-          box-shadow: 0 4px 16px rgba(229, 0, 25, 0.45), 0 2px 5px rgba(0, 0, 0, 0.3) !important;
+          line-height: 1.2 !important;
+          padding: 8px 14px !important;
+          border-radius: 4px !important;
+          box-shadow: 0 4px 12px rgba(255, 0, 0, 0.4) !important;
           white-space: nowrap !important;
           pointer-events: none !important;
           user-select: none !important;
-          animation: ftcGuidePopIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+          animation: ftcGuidePopIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
         }
         .ftc-guide-bubble::before {
           content: '' !important;
@@ -540,28 +555,28 @@
           left: -8px !important;
           transform: translateY(-50%) !important;
           border-width: 6px 8px 6px 0 !important;
-          border-color: transparent #e50019 transparent transparent !important;
+          border-color: transparent #ff0000 transparent transparent !important;
         }
         .ftc-guide-bubble.pos-left::before {
           top: 50% !important;
           right: -8px !important;
           transform: translateY(-50%) !important;
           border-width: 6px 0 6px 8px !important;
-          border-color: transparent transparent transparent #e50019 !important;
+          border-color: transparent transparent transparent #ff0000 !important;
         }
         .ftc-guide-bubble.pos-bottom::before {
           left: 50% !important;
           top: -8px !important;
           transform: translateX(-50%) !important;
           border-width: 0 6px 8px 6px !important;
-          border-color: transparent transparent #e50019 transparent !important;
+          border-color: transparent transparent #ff0000 transparent !important;
         }
         .ftc-guide-bubble.pos-top::before {
           left: 50% !important;
           bottom: -8px !important;
           transform: translateX(-50%) !important;
           border-width: 8px 6px 0 6px !important;
-          border-color: #e50019 transparent transparent transparent !important;
+          border-color: #ff0000 transparent transparent transparent !important;
         }
         @keyframes ftcGuidePopIn {
           0% { opacity: 0; transform: scale(0.88) translateY(3px); }
@@ -571,26 +586,117 @@
       (doc.head || doc.documentElement).appendChild(styleTag);
     }
 
+  function findGuideElements(doc, selectorStr) {
+    if (!doc || !selectorStr) return [];
+    const parts = selectorStr.split(',').map(s => s.trim());
+    const results = [];
+    for (const sel of parts) {
+      if (sel.includes(':contains(')) {
+        const match = sel.match(/^(.*?):contains\(["']?(.*?)["']?\)$/);
+        if (match) {
+          const baseSel = match[1] || '*';
+          const textToMatch = match[2].trim().toLowerCase();
+          try {
+            const candidates = doc.querySelectorAll(baseSel);
+            candidates.forEach(el => {
+              const txt = (el.textContent || el.innerText || '').trim().toLowerCase();
+              if (txt.includes(textToMatch)) {
+                results.push(el);
+              }
+            });
+          } catch (e) { }
+          continue;
+        }
+      }
+      try {
+        const els = doc.querySelectorAll(sel);
+        els.forEach(el => results.push(el));
+      } catch (e) { }
+    }
+    return results;
+  }
+
+    function isPageActiveInTree(rootWin, pageName) {
+      if (!rootWin || !pageName) return false;
+      const p = pageName.toLowerCase();
+      try {
+        const docs = getAllAccessibleDocuments(rootWin);
+        for (const d of docs) {
+          const h = (d.location && d.location.href) ? d.location.href.toLowerCase() : '';
+          const ha = (d.location && d.location.hash) ? d.location.hash.toLowerCase() : '';
+          if (h.includes(p) || ha.includes(p)) return true;
+          if (p === 'lan' && (h.includes('dhcp') || ha.includes('dhcp'))) return true;
+        }
+      } catch (e) { }
+      return false;
+    }
+
+    const href = (doc && doc.location && doc.location.href) ? doc.location.href.toLowerCase() : '';
+    const hash = (doc && doc.location && doc.location.hash) ? doc.location.hash.toLowerCase() : '';
+    const topHref = (window.location && window.location.href) ? window.location.href.toLowerCase() : '';
+    const fullUrl = href + ' ' + hash + ' ' + topHref;
+
     // Render popups
     popups.forEach((pop, idx) => {
+      // Filter by page / hideOnPage if specified
+      if (pop.page) {
+        const pName = pop.page.toLowerCase();
+        const active = isPageActiveInTree(deviceIframe.contentWindow, pName) || fullUrl.includes(pName);
+        if (!active) {
+          const oldBubble = doc.querySelector(`.ftc-guide-bubble[data-guide-index="${idx}"]`);
+          if (oldBubble) oldBubble.remove();
+          return;
+        }
+      }
+      if (pop.hideOnPage) {
+        const hName = pop.hideOnPage.toLowerCase();
+        const hidden = isPageActiveInTree(deviceIframe.contentWindow, hName) || fullUrl.includes(hName);
+        if (hidden) {
+          const oldBubble = doc.querySelector(`.ftc-guide-bubble[data-guide-index="${idx}"]`);
+          if (oldBubble) oldBubble.remove();
+          return;
+        }
+      }
+
       let target = null;
       try {
-        target = doc.querySelector(pop.selector);
-      } catch (e) {}
+        const elements = findGuideElements(doc, pop.selector);
+        for (let i = 0; i < elements.length; i++) {
+          const el = elements[i];
+          const r = el.getBoundingClientRect();
+          if (r.width > 0 || r.height > 0 || el.offsetParent !== null) {
+            target = el;
+            break;
+          }
+        }
+        if (!target && elements.length > 0) {
+          target = elements[0];
+        }
+      } catch (e) { }
 
-      if (!target) return;
+      if (!target) {
+        const oldBubble = doc.querySelector(`.ftc-guide-bubble[data-guide-index="${idx}"]`);
+        if (oldBubble) oldBubble.remove();
+        return;
+      }
 
       const rect = target.getBoundingClientRect();
-      if (rect.width === 0 && rect.height === 0 && target.offsetParent === null) return;
+      if (rect.width === 0 && rect.height === 0 && target.offsetParent === null) {
+        const oldBubble = doc.querySelector(`.ftc-guide-bubble[data-guide-index="${idx}"]`);
+        if (oldBubble) oldBubble.remove();
+        return;
+      }
 
       let bubble = doc.querySelector(`.ftc-guide-bubble[data-guide-index="${idx}"]`);
       if (!bubble) {
         bubble = doc.createElement('div');
         const pos = pop.position || 'right';
         bubble.className = `ftc-guide-bubble pos-${pos}`;
-        bubble.textContent = pop.text;
+        bubble.innerHTML = pop.text;
         bubble.dataset.guideIndex = idx;
         doc.body.appendChild(bubble);
+      } else if (bubble.innerHTML !== pop.text) {
+        bubble.innerHTML = pop.text;
       }
 
       const win = doc.defaultView || window;
@@ -601,20 +707,48 @@
       const targetLeft = rect.left + scrollX;
       const bWidth = bubble.offsetWidth || 180;
       const bHeight = bubble.offsetHeight || 30;
-      const pos = pop.position || 'right';
+      const winW = win.innerWidth || doc.documentElement.clientWidth || 1024;
+      const winH = win.innerHeight || doc.documentElement.clientHeight || 768;
+      let pos = pop.position || 'right';
+
+      if (pos === 'right' && (targetLeft + rect.width + bWidth + 16) > winW) {
+        if (targetLeft - bWidth - 12 >= 10) {
+          pos = 'left';
+        }
+      }
+
+      bubble.className = `ftc-guide-bubble pos-${pos}`;
+
+      let calcLeft = 0;
+      let calcTop = 0;
 
       if (pos === 'right') {
-        bubble.style.left = (targetLeft + rect.width + 12) + 'px';
-        bubble.style.top = (targetTop + (rect.height / 2) - (bHeight / 2)) + 'px';
+        calcLeft = targetLeft + rect.width + 10;
+        calcTop = targetTop + (rect.height / 2) - (bHeight / 2);
       } else if (pos === 'left') {
-        bubble.style.left = (targetLeft - bWidth - 12) + 'px';
-        bubble.style.top = (targetTop + (rect.height / 2) - (bHeight / 2)) + 'px';
+        calcLeft = targetLeft - bWidth - 10;
+        calcTop = targetTop + (rect.height / 2) - (bHeight / 2);
       } else if (pos === 'bottom') {
-        bubble.style.left = (targetLeft + (rect.width / 2) - (bWidth / 2)) + 'px';
-        bubble.style.top = (targetTop + rect.height + 10) + 'px';
+        calcLeft = targetLeft + (rect.width / 2) - (bWidth / 2);
+        calcTop = targetTop + rect.height + 8;
       } else if (pos === 'top') {
-        bubble.style.left = (targetLeft + (rect.width / 2) - (bWidth / 2)) + 'px';
-        bubble.style.top = (targetTop - bHeight - 10) + 'px';
+        calcLeft = targetLeft + (rect.width / 2) - (bWidth / 2);
+        calcTop = targetTop - bHeight - 8;
+      }
+
+      // Giữ vị trí chính xác sát target, tránh đè lên ô nhập
+      calcLeft = Math.max(5, calcLeft);
+      calcTop = Math.max(5, calcTop);
+
+      bubble.style.left = Math.round(calcLeft) + 'px';
+      bubble.style.top = Math.round(calcTop) + 'px';
+    });
+
+    // Dọn dẹp các bubble thừa khi danh sách popups ngắn hơn
+    doc.querySelectorAll('.ftc-guide-bubble').forEach(b => {
+      const gIndex = parseInt(b.dataset.guideIndex, 10);
+      if (isNaN(gIndex) || gIndex >= popups.length) {
+        b.remove();
       }
     });
   }

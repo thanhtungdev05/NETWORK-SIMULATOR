@@ -1,0 +1,21 @@
+{
+  "page": "Local Network > DMS/DLNA",
+  "url": "/",
+  "method": "POST",
+  "dataTag": "dms_dms_lua.lua",
+  "ngayThu": "2026-08-05",
+  "reqBody": {
+    "IF_ACTION": "Apply",
+    "DataHasBeenGot": "1",
+    "_InstID": "IGD",
+    "ContentList": "/mnt|",
+    "Enable": "0",
+    "DmsName": "Media Server",
+    "RescanTime": "0",
+    "Btn_apply": "",
+    "Btn_cancel": "",
+    "_sessionTOKEN": "(bo qua)"
+  },
+  "respBody": "<ajax_response_xml_root><INSTIDENTITY>IGD</INSTIDENTITY><IF_ERRORID>0</IF_ERRORID><IF_ERRORTYPE>SUCC</IF_ERRORTYPE><IF_ERRORSTR>SUCC</IF_ERRORSTR><IF_ERRORPARAM>SUCC</IF_ERRORPARAM></ajax_response_xml_root>",
+  "ghiChu": "Dang xac_nhan_trong, instidentity mac dinh (echo _InstID=IGD). Khong doi gia tri (DMS van Off)."
+}

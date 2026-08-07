@@ -1,248 +1,210 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Hệ thống giả lập mạng FPT — Thực hành cấu hình 6 thiết bị mạng AC1000F, AX3000C, AX3000GZ, AX3000H v2, AX3000S, BE15000">
+  <meta name="description"
+    content="Hệ thống giả lập mạng FPT — Thực hành cấu hình các thiết bị mạng AC1000F, AX3000C, AX3000GZ, AX3000H v2, AX3000S, BE12000, BE15000">
   <title>NETWORK SIMULATOR — Hệ Thống Giả Lập Mạng FPT</title>
-  <link rel="stylesheet" href="styles.css?v=2">
+  <link rel="stylesheet" href="styles.css?v=250">
 </head>
+
 <body>
 
-<!-- ════════════════════════════════════════════
+  <!-- ════════════════════════════════════════════
      LOADING OVERLAY
 ════════════════════════════════════════════ -->
-<div id="loading-overlay" role="status" aria-label="Đang tải">
-  <div class="spinner"></div>
-  <div class="loading-text" id="loading-msg">Đang tải...</div>
-</div>
+  <div id="loading-overlay" role="status" aria-label="Đang tải">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loading-msg">Đang tải...</div>
+  </div>
 
-<!-- ════════════════════════════════════════════
+  <!-- ════════════════════════════════════════════
      APP SHELL
 ════════════════════════════════════════════ -->
-<div id="app">
+  <div id="app">
 
-  <!-- ── SIDEBAR ──────────────────────────────── -->
-  <aside id="sidebar" role="navigation" aria-label="Menu điều hướng">
+    <!-- ── SIDEBAR ──────────────────────────────── -->
+    <aside id="sidebar" role="navigation" aria-label="Menu điều hướng">
 
-    <!-- Header -->
-    <div class="sidebar-header">
-      <div class="sidebar-logo">
-        <div class="logo-icon">🌐</div>
-        <div class="logo-text">NETWORK<br>SIMULATOR</div>
+      <!-- Header -->
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <div class="logo-icon">🌐</div>
+          <div class="logo-text">NETWORK<br>SIMULATOR</div>
+        </div>
+        <button id="btn-collapse" class="btn-collapse" title="Thu gọn menu" aria-label="Thu gọn/mở rộng menu">
+          <span class="arrow">‹</span>
+        </button>
       </div>
-      <button id="btn-collapse"
-              class="btn-collapse"
-              title="Thu gọn menu"
-              aria-label="Thu gọn/mở rộng menu">
-        <span class="arrow">‹</span>
-      </button>
-    </div>
 
-    <!-- Device Selector -->
-    <div class="sidebar-device-select">
-      <label for="device-select">CHỌN THIẾT BỊ GIẢ LẬP:</label>
-      <select id="device-select"
-              class="device-select"
-              aria-label="Chọn thiết bị giả lập">
+      <!-- Device Selector -->
+      <div class="sidebar-device-select">
+        <label for="device-select">CHỌN THIẾT BỊ GIẢ LẬP:</label>
+        <select id="device-select" class="device-select" aria-label="Chọn thiết bị giả lập">
+          <!-- Populated by app.js -->
+        </select>
+      </div>
+
+      <!-- Navigation List -->
+      <nav class="sidebar-nav" id="nav-list" aria-label="Danh sách bài học">
         <!-- Populated by app.js -->
-      </select>
-    </div>
+      </nav>
 
-    <!-- Navigation List -->
-    <nav class="sidebar-nav" id="nav-list" aria-label="Danh sách bài học">
-      <!-- Populated by app.js -->
-    </nav>
+    </aside>
 
-  </aside>
+    <!-- ── MAIN CONTENT ──────────────────────────── -->
+    <div id="main">
 
-  <!-- ── MAIN CONTENT ──────────────────────────── -->
-  <div id="main">
+      <!-- Topbar -->
+      <header id="topbar">
+        <button class="topbar-toggle-btn" onclick="document.getElementById('sidebar').classList.toggle('collapsed')"
+          aria-label="Mở menu">
+          ☰
+        </button>
 
-    <!-- Topbar -->
-    <header id="topbar">
-      <button class="topbar-toggle-btn"
-              onclick="document.getElementById('sidebar').classList.toggle('collapsed')"
-              aria-label="Mở menu">
-        ☰
-      </button>
-
-      <!-- Breadcrumb / Status -->
-      <div id="breadcrumb" aria-live="polite">
-        <span>Đang tải hệ thống...</span>
-      </div>
-
-      <!-- Right side -->
-      <div class="topbar-right">
-        <div class="status-indicator">
-          <div class="status-dot" id="status-dot"></div>
-          <span id="status-text">Đang tải hệ thống...</span>
+        <!-- Breadcrumb / Status -->
+        <div id="breadcrumb" aria-live="polite">
+          <span>Đang tải hệ thống...</span>
         </div>
 
-        <!-- Action Dropdown -->
-        <div class="action-dropdown">
-          <button id="action-btn"
-                  class="action-btn"
-                  aria-haspopup="true"
-                  aria-expanded="false"
-                  aria-label="Thao tác">
-            Thao tác
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2.5">
-              <polyline points="6 9 12 15 18 9"/>
-            </svg>
-          </button>
-
-          <div id="action-menu"
-               class="action-dropdown-menu"
-               role="menu">
-            <div id="menu-dashboard"
-                 class="action-menu-item"
-                 role="menuitem"
-                 tabindex="0">
-              <span class="item-icon">🖥️</span>
-              Quản lý Dashboard
-            </div>
-            <div id="menu-logout"
-                 class="action-menu-item"
-                 role="menuitem"
-                 tabindex="0">
-              <span class="item-icon">🚪</span>
-              Đăng Xuất
-            </div>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <!-- Content Area -->
-    <main id="content">
-
-      <!-- ── HERO SCREEN ── -->
-      <section id="hero-screen" aria-label="Màn hình chào">
-        <div class="hero-image-wrap">
-          <img src="assets/server-hero.png"
-               alt="Mạng lưới máy chủ giả lập"
-               loading="eager">
-        </div>
-        <h1 class="hero-title">HỆ THỐNG GIẢ LẬP MẠNG</h1>
-        <p class="hero-subtitle">
-          Vui lòng chọn bài thực hành từ menu bên trái để bắt đầu
-        </p>
-      </section>
-
-      <!-- ── LESSON CARD SCREEN ── -->
-      <section id="lesson-screen" aria-label="Chi tiết bài học">
-        <div class="lesson-card">
-          <!-- Card Header -->
-          <div class="lesson-card-header">
-            <h2 class="lesson-card-title" id="lc-title">BÀI 1 - CẤU HÌNH PPPOE</h2>
-            <p class="lesson-card-subtitle" id="lc-subtitle">Chọn phương thức bắt đầu thực hành</p>
+        <!-- Right side -->
+        <div class="topbar-right">
+          <div class="status-indicator">
+            <div class="status-dot" id="status-dot"></div>
+            <span id="status-text">Đang tải hệ thống...</span>
           </div>
 
-          <!-- Card Body -->
-          <div class="lesson-card-body">
-            <div class="instruction-box" id="lc-instructions">
-              <!-- Populated by app.js -->
-            </div>
-          </div>
-
-          <!-- Card Footer -->
-          <div class="lesson-card-footer">
-            <button id="btn-guide" class="btn-guide yellow" aria-label="Xem hướng dẫn">
-              Hướng dẫn
+          <!-- Action Dropdown -->
+          <div class="action-dropdown">
+            <button id="action-btn" class="action-btn" aria-haspopup="true" aria-expanded="false" aria-label="Thao tác">
+              Thao tác
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
             </button>
-            <button id="btn-practice" class="btn-guide teal" aria-label="Bắt đầu thực hành">
-              Thực hành
-            </button>
+
+            <div id="action-menu" class="action-dropdown-menu" role="menu">
+              <div id="menu-dashboard" class="action-menu-item" role="menuitem" tabindex="0">
+                <span class="item-icon">🖥️</span>
+                Quản lý Dashboard
+              </div>
+              <div id="menu-logout" class="action-menu-item" role="menuitem" tabindex="0">
+                <span class="item-icon">🚪</span>
+                Đăng Xuất
+              </div>
+            </div>
           </div>
         </div>
-      </section>
+      </header>
 
-      <!-- ── PRACTICE IFRAME SCREEN ── -->
-      <section id="practice-screen" aria-label="Giao diện thực hành thiết bị">
-        <!-- Server warning (shown if device needs separate server) -->
-        <div id="server-warning" class="server-warning" style="display:none">
-          <span class="sw-icon">⚠️</span>
-          <span id="server-warning-text">Thiết bị này cần khởi động server riêng trước.</span>
-        </div>
+      <!-- Content Area -->
+      <main id="content">
 
-        <!-- iframe container -->
-        <div class="iframe-wrap">
-          <div class="iframe-loading" id="iframe-loading">
-            <div class="iframe-spinner"></div>
-            <p>Đang tải giao diện thiết bị...</p>
+        <!-- ── HERO SCREEN ── -->
+        <section id="hero-screen" aria-label="Màn hình chào">
+          <div class="hero-image-wrap">
+            <img src="assets/server-hero.png" alt="Mạng lưới máy chủ giả lập" loading="eager">
           </div>
-          <iframe id="device-iframe"
-                  name="device-frame"
-                  title="Giao diện thiết bị"
-                  allowfullscreen>
-          </iframe>
-        </div>
-      </section>
+          <h1 class="hero-title">HỆ THỐNG GIẢ LẬP MẠNG</h1>
+          <p class="hero-subtitle">
+            Vui lòng chọn bài thực hành từ menu bên trái để bắt đầu
+          </p>
+        </section>
 
-    </main>
-  </div><!-- /#main -->
+        <!-- ── LESSON CARD SCREEN ── -->
+        <section id="lesson-screen" aria-label="Chi tiết bài học">
+          <div class="lesson-card">
+            <!-- Card Header -->
+            <div class="lesson-card-header">
+              <h2 class="lesson-card-title" id="lc-title">BÀI 1 - CẤU HÌNH PPPOE</h2>
+              <p class="lesson-card-subtitle" id="lc-subtitle">Chọn phương thức bắt đầu thực hành</p>
+            </div>
 
-</div><!-- /#app -->
+            <!-- Card Body -->
+            <div class="lesson-card-body">
+              <div class="instruction-box" id="lc-instructions">
+                <!-- Populated by app.js -->
+              </div>
+            </div>
 
-<!-- Step by Step Modules per Device -->
-<!-- AC1000F -->
-<script src="step_by_step/ac1000f/index.js"></script>
-<script src="step_by_step/ac1000f/login.js"></script>
-<script src="step_by_step/ac1000f/bai1.js"></script>
-<script src="step_by_step/ac1000f/bai2.js"></script>
-<script src="step_by_step/ac1000f/bai3.js"></script>
-<script src="step_by_step/ac1000f/bai4.js"></script>
-<script src="step_by_step/ac1000f/bai5.js"></script>
-<script src="step_by_step/ac1000f/bai6.js"></script>
-<script src="step_by_step/ac1000f/bai7.js"></script>
-<script src="step_by_step/ac1000f/bai8.js"></script>
-<script src="step_by_step/ac1000f/bai9.js"></script>
-<script src="step_by_step/ac1000f/bai10.js"></script>
+            <!-- Card Footer -->
+            <div class="lesson-card-footer">
+              <button id="btn-guide" class="btn-guide yellow" aria-label="Xem hướng dẫn">
+                Hướng dẫn
+              </button>
+              <button id="btn-practice" class="btn-guide teal" aria-label="Bắt đầu thực hành">
+                Thực hành
+              </button>
+            </div>
+          </div>
+        </section>
 
-<!-- AX3000C -->
-<script src="step_by_step/ax3000c/index.js"></script>
-<script src="step_by_step/ax3000c/bai1.js"></script>
-<script src="step_by_step/ax3000c/bai2.js"></script>
-<script src="step_by_step/ax3000c/bai3.js"></script>
-<script src="step_by_step/ax3000c/bai4.js"></script>
-<script src="step_by_step/ax3000c/bai5.js"></script>
-<script src="step_by_step/ax3000c/bai6.js"></script>
-<script src="step_by_step/ax3000c/bai7.js"></script>
-<script src="step_by_step/ax3000c/bai8.js"></script>
-<script src="step_by_step/ax3000c/bai9.js"></script>
-<script src="step_by_step/ax3000c/bai10.js"></script>
+        <!-- ── PRACTICE IFRAME SCREEN ── -->
+        <section id="practice-screen" aria-label="Giao diện thực hành thiết bị">
+          <!-- Server warning (shown if device needs separate server) -->
+          <div id="server-warning" class="server-warning" style="display:none">
+            <span class="sw-icon">⚠️</span>
+            <span id="server-warning-text">Thiết bị này cần khởi động server riêng trước.</span>
+          </div>
 
-<!-- AX3000GZ -->
-<script src="step_by_step/ax3000gz/index.js"></script>
-<script src="step_by_step/ax3000gz/bai1.js"></script>
+          <!-- iframe container -->
+          <div class="iframe-wrap">
+            <div class="iframe-loading" id="iframe-loading">
+              <div class="iframe-spinner"></div>
+              <p>Đang tải giao diện thiết bị...</p>
+            </div>
+            <iframe id="device-iframe" name="device-frame" title="Giao diện thiết bị" allowfullscreen>
+            </iframe>
+          </div>
+        </section>
 
-<!-- AX3000HV2 -->
-<script src="step_by_step/ax3000hv2/index.js"></script>
-<script src="step_by_step/ax3000hv2/bai1.js"></script>
+      </main>
+    </div><!-- /#main -->
 
-<!-- AX3000S -->
-<script src="step_by_step/ax3000s/index.js"></script>
-<script src="step_by_step/ax3000s/bai1.js"></script>
+  </div><!-- /#app -->
 
-<!-- BE15000 -->
-<script src="step_by_step/be15000/index.js"></script>
-<script src="step_by_step/be15000/bai1.js"></script>
 
-<!-- Step by Step Global Index -->
-<script src="step_by_step/index.js"></script>
-
-<!-- Device Modules & Grading Scripts -->
-<script src="devices/ac1000f/data.js?v=7"></script>
-<script src="devices/ax3000c/data.js?v=7"></script>
-<script src="devices/ax3000gz/data.js?v=7"></script>
-<script src="devices/ax3000hv2/data.js?v=7"></script>
-<script src="devices/ax3000s/data.js?v=7"></script>
-<script src="devices/be15000/data.js?v=7"></script>
-<script src="devices/index.js?v=7"></script>
-<script src="data.js?v=7"></script>
-<script src="app.js?v=7"></script>
+  <!-- Device Modules & Grading Scripts -->
+  <script src="devices/ac1000f/data.js?v=99"></script>
+  <script src="devices/ac1000f/tooltips/common_login.js?v=1"></script>
+  <script src="devices/ac1000f/tooltips/bai1.js?v=1"></script>
+  <script src="devices/ac1000f/tooltips/bai2.js?v=1"></script>
+  <script src="devices/ac1000f/tooltips/bai3.js?v=1"></script>
+  <script src="devices/ac1000f/tooltips/bai4.js?v=1"></script>
+  <script src="devices/ac1000f/tooltips/bai5.js?v=1"></script>
+  <script src="devices/ac1000f/tooltips/bai6.js?v=1"></script>
+  <script src="devices/ac1000f/tooltips/bai7.js?v=1"></script>
+  <script src="devices/ac1000f/tooltips/bai8.js?v=1"></script>
+  <script src="devices/ac1000f/tooltips/bai9.js?v=1"></script>
+  <script src="devices/ac1000f/tooltips/bai10.js?v=1"></script>
+  <script src="devices/ax3000c/data.js?v=115"></script>
+  <script src="devices/ax3000c/tooltips/common_login.js?v=1"></script>
+  <script src="devices/ax3000c/tooltips/bai1.js?v=1"></script>
+  <script src="devices/ax3000c/tooltips/bai2.js?v=1"></script>
+  <script src="devices/ax3000c/tooltips/bai3.js?v=1"></script>
+  <script src="devices/ax3000c/tooltips/bai4.js?v=1"></script>
+  <script src="devices/ax3000c/tooltips/bai5.js?v=1"></script>
+  <script src="devices/ax3000c/tooltips/bai6.js?v=1"></script>
+  <script src="devices/ax3000c/tooltips/bai7.js?v=1"></script>
+  <script src="devices/ax3000c/tooltips/bai8.js?v=1"></script>
+  <script src="devices/ax3000c/tooltips/bai9.js?v=1"></script>
+  <script src="devices/ax3000c/tooltips/bai10.js?v=1"></script>
+  <script src="devices/ax3000gz/data.js?v=7"></script>
+  <script src="devices/ax3000gz/tooltips.js?v=1"></script>
+  <script src="devices/ax3000hv2/data.js?v=7"></script>
+  <script src="devices/ax3000hv2/tooltips.js?v=1"></script>
+  <script src="devices/ax3000s/data.js?v=7"></script>
+  <script src="devices/ax3000s/tooltips.js?v=1"></script>
+  <script src="devices/be15000/data.js?v=7"></script>
+  <script src="devices/be15000/tooltips.js?v=1"></script>
+  <script src="devices/be12000/data.js?v=1"></script>
+  <script src="devices/be12000/tooltips.js?v=1"></script>
+  <script src="devices/index.js?v=7"></script>
+  <script src="data.js?v=7"></script>
+  <script src="app.js?v=999"></script>
 
 </body>
+
 </html>

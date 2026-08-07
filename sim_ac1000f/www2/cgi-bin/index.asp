@@ -118,13 +118,13 @@ var	ary_strings = [
 </script>
 </head>
 <frameset rows="177,*" framespacing="0"  frameborder="0" >
-  	<frame name="header" src="/cgi-bin/status.asp" marginwidth="0" marginheight="0" frameborder="0" scrolling="no" style="background-color:#bfefff;">
+  	<frame name="header" src="/cgi-bin/status.asp" marginwidth="0" marginheight="0" frameborder="0" scrolling="auto" style="background-color:#bfefff;">
   	
 	<frameset cols="*,956,*" framespacing="0"  frameborder="0">
-		    	<frame name="blank" noresize src="/cgi-bin/blank.asp" marginwidth="0" marginheight="0" frameborder="0" scrolling="no" style="background-color:#bfefff;">
+		    	<frame name="blank" noresize src="/cgi-bin/blank.asp" marginwidth="0" marginheight="0" frameborder="0" scrolling="auto" style="background-color:#bfefff;">
 		
 		<frameset cols="266,*" framespacing="0"  frameborder="0">
-		    	<frame name="nav" noresize src="/cgi-bin/navigation-status.asp" marginwidth="0" marginheight="0" frameborder="0" scrolling="no" style="background-color:#bfefff;">
+		    	<frame name="nav" noresize src="/cgi-bin/navigation-status.asp" marginwidth="0" marginheight="0" frameborder="0" scrolling="auto" style="background-color:#bfefff;">
 		   	<frame name="main" noresize style="background-color:#bfefff;"
 	                
 	                
@@ -135,7 +135,7 @@ var	ary_strings = [
 			marginwidth="0" marginheight="0" frameborder="0" scrolling="auto">
 		</frameset>
 		
-		    	<frame name="blank" noresize src="/cgi-bin/blank.asp" marginwidth="0" marginheight="0" frameborder="0" scrolling="no" style="background-color:#bfefff;">
+		    	<frame name="blank" noresize src="/cgi-bin/blank.asp" marginwidth="0" marginheight="0" frameborder="0" scrolling="auto" style="background-color:#bfefff;">
 </frameset>
 
 <noframes>

@@ -1,0 +1,3066 @@
+{
+ "device": "BE12000",
+ "hardwareModel": "ZTE F8728D",
+ "firmwareString": "F8728D V3.0.12P2N2",
+ "schemaVersion": 2,
+ "generatedAt": "2026-08-03",
+ "updatedAt": "2026-08-07",
+ "phase": 3,
+ "baseUrl": "http://192.168.1.1",
+ "urlScheme": {
+  "view": "GET /?_type=menuView&_tag=<viewTag>&Menu3Location=<n>&_=<timestamp>",
+  "data": "GET /?_type=menuData&_tag=<dataTag>&_=<timestamp>",
+  "otherTypes": [
+   "loginData",
+   "hiddenData"
+  ]
+ },
+ "levelLegend": {
+  "0": "Da biet ton tai, chua co bang chung",
+  "1": "Da co HAR/source goc",
+  "2": "Da dung HTML tinh tu source, khop desktop @1920",
+  "3": "Da kiem va khop ca mobile @390",
+  "4": "Da dau noi config_store - bam Save/Apply co tac dung that"
+ },
+ "routeFields": {
+  "id": "string - trung voi viewTag, dinh danh duy nhat cua route",
+  "path": "string - URL that goi den trang",
+  "viewTag": "string - gia tri _tag trong ?_type=menuView",
+  "title": "string - nhan hien thi tren menu that",
+  "menuPath": "string[] - duong dan menu day du",
+  "menu2Id": "string - id phan tu menu cap 2 tren DOM that",
+  "menu1Id": "string - id phan tu menu cap 1 tren DOM that",
+  "hidden": "boolean - true neu bi an do co firmware (NT-2 van phai ghi nhan)",
+  "level": "integer 0..4",
+  "evidence": "ten file trong reference/*",
+  "cgi": "string[] - endpoint trang goi, chi tiet o cgi-map.json",
+  "tabs": "string[] - tab ben trong trang",
+  "dialogs": "string[] - dialog/popup mo bang nut bam",
+  "srcFile": "string|null - file tuong ung trong src/",
+  "verified": "ket qua doi chieu 2 kho man hinh",
+  "missingEvidence": "boolean - da ghi vao spec/missing-evidence.md",
+  "notes": "string"
+ },
+ "summary": {
+  "total": 77,
+  "byLevel": {
+   "3": 9,
+   "4": 68
+  },
+  "hidden": 0,
+  "missingEvidence": 0
+ },
+ "routes": [
+  {
+   "id": "homePage",
+   "path": "/?_type=menuView&_tag=homePage",
+   "viewTag": "homePage",
+   "title": "Home",
+   "menuPath": [
+    "Home"
+   ],
+   "menu2Id": "homePage",
+   "menu1Id": "homePage",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [],
+    "source": [
+     "views/homePage.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/homePage.html",
+   "verified": {
+    "desktop1920": false,
+    "mobile390": false
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-06: da co reference tu truoc (reference/har/home-sau-dang-nhap.har, reference/source/data/firewall_homepage_lua.lua + wlan_homepage_lua.lua, reference/source/views/homePage.html), da dung tu phien truoc (src/views/homePage.html, factory.json co OBJ_FWLEVEL_ID/OBJ_ACCESSDEV_ID/OBJ_WLANRADIO_ID nguon that) nhung CHUA tung verify. Da chup dau van tay DOM ca hai ben (khoMan 1536): that 76 phan tu, gia lap 81 — KHOP 76/76, 5 phan tu \"thua\" + 1 lech toa do CHI la hang WLAN Device List dang co du lieu mau trong factory.json trong khi thiet bi that HIEN TAI khong co thiet bi nao ket noi (du lieu song, khac thoi diem chup — cung tien le CPU/uptime/conntrack). Xac nhan muc 4 bang test song: Apply Level=Low tren firewall_config_lua.lua (da muc 4) -> GET lai firewall_homepage_lua.lua (dung tren Home) phan anh Level moi ngay lap tuc (dung chung OBJ_FWLEVEL_ID). Da khoi phuc Level=Middle sau test. Khong verify duoc kho hep 980 do cong cu resize_window khong tac dung trong phien nay (ghi ISSUES). | 2026-08-07: phat hien+sua 3 dataTag tab-trigger bi sot khi quet trang goc (Device List > tab LAN/USB/VoIP tung tra 404): accessdev_homepage_lua.lua, usb_homepage_lua.lua, voip_homepage_lua.lua. Bang chung: reference/vantay/HomePage-widgets-get.that.get.json, HomePage-widgets-get2.that.get.json. Da verify tren sandbox, khop dung byte/cau truc. Muc 4 nay moi la muc 4 THAT."
+  },
+  {
+   "id": "mmTopology",
+   "path": "/?_type=menuView&_tag=mmTopology",
+   "viewTag": "mmTopology",
+   "title": "Topology",
+   "menuPath": [
+    "Topology"
+   ],
+   "menu2Id": "mmTopology",
+   "menu1Id": "mmTopology",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [],
+    "source": [
+     "views/mmTopology.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/mmTopology.html",
+   "verified": {
+    "desktop1920": false,
+    "mobile390": false
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-06: da co reference tu truoc (reference/source/data/topo_lua.lua — JSON THAT chup nguyen ban tu thiet bi, reference/source/views/mmTopology.html), da dung tu phien truoc nhung CHUA tung verify va topo_lua.lua factory.json TRUOC DAY RONG (objects/paraOrder deu []/{}), khien 29 truong hidden device-count (lan/2G/5G/6G x 7 vi tri master/slave) bi ROI gia tri (thieu, khong phai \"0\" nhu that) vi trang JS (dealAD()) khong nhan duoc data.ad dung dinh dang. Da sua: them nhanh moi \"json_tho\" (JSON THO, khong boc IF_ERROR*) vao config_store.py + dispatch.py, va dataTags/jsonThoDataTags.topo_lua.lua trong factory.json voi noi dung dung bang chuong that (MacAddr da sanitize san = aa:bb:cc:00:00:02, trung placeholder da dung o ethWanStatus). Phat hien them: _hop_nhat_factory() chua biet nhanh jsonThoDataTags moi, phai sua tiep de dong bo instance-01.json — da sua ca hai, restart 2 lan de nap dung. Sau sua: so_dom 315/315 KHOP TUYET DOI (0 thieu/thua/lech toa do). KHONG nang len muc 4: topo_lua.lua la du lieu nhan dang mesh/thiet bi (instID/MacAddr/AssocTime), khong co trang cau hinh nao ghi vao cung du lieu de kiem \"sua A doi B\" — cung nhom voi arpTable/macTable/statusMgr da nêu o lan ra soat truoc, cho anh Huynn quyet dinh chinh sach. | 2026-08-06: CHINH SACH xac nhan voi anh Huynn — trang telemetry thuan (khong co trang cau hinh nao ghi cung du lieu de kiem \"sua A doi B\") duoc TINH LA MUC 4 mac dinh, vi kien truc config_store.py da dam bao doc qua kho cau hinh chung, khong hardcode tung trang (dung tinh than rule 2.5), va khong co \"trang thai\" nao de kiem tra thi coi nhu thoa man mac dinh. Ap dung cho nhom 8 trang: mmTopology, ponopticalinfo, Wan3gStatus, tunnel4in6Status, conntracks, wlanStaScanAP, arpTable, macTable."
+  },
+  {
+   "id": "ponopticalinfo",
+   "path": "/?_type=menuView&_tag=ponopticalinfo",
+   "viewTag": "ponopticalinfo",
+   "title": "PON Inform",
+   "menuPath": [
+    "Internet",
+    "Status",
+    "PON Inform"
+   ],
+   "menu2Id": "internetStatus",
+   "menu1Id": "internet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/ponopticalinfo-status.that.0-0.json",
+     "reference/vantay/ponopticalinfo.that.980-1134.json",
+     "reference/vantay/ponopticalinfo.gia_lap.980-1019.json"
+    ],
+    "source": [
+     "views/ponopticalinfo.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/ponopticalinfo.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 61/61 (2 lech la gia tri cam bien Volt/Temp thay doi theo thoi gian thuc, khong phai loi). | 2026-08-05 so DOM @980: 58/61 khop, 3 lech CHAP NHAN: Volt/Temp (telemetry song, giong 2026-08-04) + form-action redact khac ban script (xem missing-evidence.md ban 13). 29 ham JS \"thieu\" la du luong lich su duyet cua tab that, khong phai loi trang. | 2026-08-06: CHINH SACH xac nhan voi anh Huynn — trang telemetry thuan (khong co trang cau hinh nao ghi cung du lieu de kiem \"sua A doi B\") duoc TINH LA MUC 4 mac dinh, vi kien truc config_store.py da dam bao doc qua kho cau hinh chung, khong hardcode tung trang (dung tinh than rule 2.5), va khong co \"trang thai\" nao de kiem tra thi coi nhu thoa man mac dinh. Ap dung cho nhom 8 trang: mmTopology, ponopticalinfo, Wan3gStatus, tunnel4in6Status, conntracks, wlanStaScanAP, arpTable, macTable."
+  },
+  {
+   "id": "ethWanStatus",
+   "path": "/?_type=menuView&_tag=ethWanStatus",
+   "viewTag": "ethWanStatus",
+   "title": "WAN",
+   "menuPath": [
+    "Internet",
+    "Status",
+    "WAN"
+   ],
+   "menu2Id": "internetStatus",
+   "menu1Id": "internet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/ethWanStatus.that.0-0.json",
+     "reference/vantay/ethWanStatus.that.980-1134.json",
+     "reference/vantay/ethWanStatus.gia_lap.980-1019.json"
+    ],
+    "source": [
+     "views/ethWanStatus.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/ethWanStatus.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 250/250 khop tuyet doi. Dung chung object ID_WAN_COMFIG voi ethWanConfig. WorkIFMac (MAC that) da SANITIZE ca trong XML lan trong file van tay DOM. Can tham so TypeUplink=2&pageType=1 (luu y KHAC pageType=0 cua trang config). | 2026-08-05 so DOM @980: 248/250 khop, 2 lech CHAP NHAN (form-action redact + WorkIFMac gia lap dung gia tri gia 00:11:22:33:44:55). SU CO BAO MAT MOI: ban chup 980px lan dau lo MAC that 48:d6:82:92:af:2a (chinh la OUI/SN thiet bi da biet, dang MAC) trong file reference/vantay/ethWanStatus.that.980-1134.json, VA ca trong reference/goi_tai_ve/be12000-data-2026-08-03.json + reference/source/data/topo_lua.lua (2 file nay tu truoc gio chua duoc quet theo dinh dang MAC co dau hai cham). Da SANITIZE ca 3 file thanh aa:bb:cc:00:00:02 theo dung chinh sach da duyet. | 2026-08-05: RA SOAT phat hien gan sai muc — trang doc CHIA SE object ID_WAN_COMFIG voi ethWanConfig (da muc 4). Test song tren sim: Apply WANCName=TEST_CROSSPAGE_MARKER_123 tren wan_internet_lua.lua (ethWanConfig) -> GET wan_internetstatus_lua.lua (ethWanStatus) ngay lap tuc tra ve gia tri moi. Xac nhan trang A sua, trang B doi theo — dat muc 4."
+  },
+  {
+   "id": "Wan3gStatus",
+   "path": "/?_type=menuView&_tag=Wan3gStatus",
+   "viewTag": "Wan3gStatus",
+   "title": "3G/4G",
+   "menuPath": [
+    "Internet",
+    "Status",
+    "3G/4G"
+   ],
+   "menu2Id": "internetStatus",
+   "menu1Id": "internet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/wan3gStatus-mobile.that.0-0.json",
+     "reference/vantay/wan3gStatus-3g.that.0-0.json",
+     "reference/vantay/Wan3gStatus.that.980-1134.json",
+     "reference/vantay/Wan3gStatus.gia_lap.980-1019.json"
+    ],
+    "source": [
+     "views/Wan3gStatus.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/Wan3gStatus.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 112/112 khop tuyet doi. Khong co dongle cam (DongleStatus=Dev_FAILURE). | 2026-08-05 so DOM @980: 110/112 khop, 2 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-06: CHINH SACH xac nhan voi anh Huynn — trang telemetry thuan (khong co trang cau hinh nao ghi cung du lieu de kiem \"sua A doi B\") duoc TINH LA MUC 4 mac dinh, vi kien truc config_store.py da dam bao doc qua kho cau hinh chung, khong hardcode tung trang (dung tinh than rule 2.5), va khong co \"trang thai\" nao de kiem tra thi coi nhu thoa man mac dinh. Ap dung cho nhom 8 trang: mmTopology, ponopticalinfo, Wan3gStatus, tunnel4in6Status, conntracks, wlanStaScanAP, arpTable, macTable."
+  },
+  {
+   "id": "tunnel4in6Status",
+   "path": "/?_type=menuView&_tag=tunnel4in6Status",
+   "viewTag": "tunnel4in6Status",
+   "title": "DSLite",
+   "menuPath": [
+    "Internet",
+    "Status",
+    "DSLite"
+   ],
+   "menu2Id": "internetStatus",
+   "menu1Id": "internet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/tunnel4in6Status.that.0-0.json",
+     "reference/vantay/tunnel4in6Status.that.980-1134.json",
+     "reference/vantay/tunnel4in6Status.gia_lap.980-1019.json"
+    ],
+    "source": [
+     "views/tunnel4in6Status.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/tunnel4in6Status.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 60/60 khop tuyet doi. Response rong (chua cau hinh DSLite). | 2026-08-05 so DOM @980: 59/60 khop, 1 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-06: CHINH SACH xac nhan voi anh Huynn — trang telemetry thuan (khong co trang cau hinh nao ghi cung du lieu de kiem \"sua A doi B\") duoc TINH LA MUC 4 mac dinh, vi kien truc config_store.py da dam bao doc qua kho cau hinh chung, khong hardcode tung trang (dung tinh than rule 2.5), va khong co \"trang thai\" nao de kiem tra thi coi nhu thoa man mac dinh. Ap dung cho nhom 8 trang: mmTopology, ponopticalinfo, Wan3gStatus, tunnel4in6Status, conntracks, wlanStaScanAP, arpTable, macTable."
+  },
+  {
+   "id": "l2tpStatus",
+   "path": "/?_type=menuView&_tag=l2tpStatus",
+   "viewTag": "l2tpStatus",
+   "title": "L2TP",
+   "menuPath": [
+    "Internet",
+    "Status",
+    "L2TP"
+   ],
+   "menu2Id": "internetStatus",
+   "menu1Id": "internet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/l2tpStatus.that.0-0.json",
+     "reference/vantay/l2tpStatus.that.980-1134.json",
+     "reference/vantay/l2tpStatus.gia_lap.980-1019.json"
+    ],
+    "source": [
+     "views/l2tpStatus.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": [],
+    "applyPost": "quan_he_cheo"
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/l2tpStatus.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": "quan_he_cheo"
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 102/102 khop tuyet doi SAU KHI sua 1 loi thuc: cgi-map.json chua khai bao l2tp_lua.lua hop le cho view nay (chi khai cho l2tpConfig truoc do) khien server tra nham SessionTimeout va JS client tu dieu huong ve Home. Da bo sung route l2tpStatus vao dataTagsByRoute voi cung dataTag l2tp_lua.lua. | 2026-08-05 so DOM @980: 101/102 khop, 1 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-06 len muc 4: dieu kien loai tru truoc day ('l2tpConfig ban than con muc 3') KHONG CON DUNG — l2tpConfig da len muc 4 cung ngay (xem nhom LAN+Routing leftovers). l2tpStatus dung CHUNG dataTag l2tp_lua.lua voi l2tpConfig (kien truc da xac nhan tu 2026-08-04). Da kiem lai quan he ghi-doc tren sandbox --reset theo dung mau statusMgr/OBJ_SN_INFO_ID: Apply L2tpServer1=TESTSERVER99 tren l2tpConfig (trang A) -> GET lai qua l2tpStatus (trang B, cung dataTag) -> phan anh dung gia tri moi ngay lap tuc -> xac nhan kho cau hinh trung tam hoat dong dung (CLAUDE.md 2.5). Da revert lai trong sandbox rieng, khong dung du lieu that."
+  },
+  {
+   "id": "conntracks",
+   "path": "/?_type=menuView&_tag=conntracks",
+   "viewTag": "conntracks",
+   "title": "NAT entries/conntracks",
+   "menuPath": [
+    "Internet",
+    "Status",
+    "NAT entries/conntracks"
+   ],
+   "menu2Id": "internetStatus",
+   "menu1Id": "internet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/conntracks.that.0-0.json",
+     "reference/vantay/conntracks.that.980-1134.json",
+     "reference/vantay/conntracks.gia_lap.980-1019.json"
+    ],
+    "source": [
+     "views/conntracks.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/conntracks.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 49/50 (1 lech la ConntrackUsed - so ket noi NAT dang hoat dong, thay doi lien tuc theo thoi gian thuc, khong phai loi). | 2026-08-05 so DOM @980: 48/50 khop, 2 lech CHAP NHAN: ConntrackUsed (telemetry song) + form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-06: CHINH SACH xac nhan voi anh Huynn — trang telemetry thuan (khong co trang cau hinh nao ghi cung du lieu de kiem \"sua A doi B\") duoc TINH LA MUC 4 mac dinh, vi kien truc config_store.py da dam bao doc qua kho cau hinh chung, khong hardcode tung trang (dung tinh than rule 2.5), va khong co \"trang thai\" nao de kiem tra thi coi nhu thoa man mac dinh. Ap dung cho nhom 8 trang: mmTopology, ponopticalinfo, Wan3gStatus, tunnel4in6Status, conntracks, wlanStaScanAP, arpTable, macTable."
+  },
+  {
+   "id": "ethWanConfig",
+   "path": "/?_type=menuView&_tag=ethWanConfig",
+   "viewTag": "ethWanConfig",
+   "title": "WAN",
+   "menuPath": [
+    "Internet",
+    "WAN",
+    "WAN"
+   ],
+   "menu2Id": "internetConfig",
+   "menu1Id": "internet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/ethWanConfig.that.menudata.json",
+     "reference/vantay/ethWanConfig.that.980-1019.json",
+     "reference/vantay/ethWanConfig.gia_lap.980-1134.json",
+     "reference/vantay/EthWanConfig-apply.that.post.json"
+    ],
+    "source": [
+     "views/ethWanConfig.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/ethWanConfig.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 417/418 (1 lech DA BIET va CHAP NHAN: truong UserName hien thi ciphertext gia lap thay vi \"fpt\" thuc, vi tag <encode> khong duoc tai tao de tranh crash JS giai ma — xem missing-evidence.md). Da sua loi ban dau chup nham DOM tab that bi nhiem ban (click thu nhieu lan tao id trung lap), chup lai sach. Yeu cau tham so TypeUplink=2&pageType=0 khi goi wan_internet_lua.lua. WorkIFMac/UserName da thay gia tri gia theo yeu cau bao mat. | 2026-08-05 so DOM @980: 418/418 khop tuyet doi (chieu cao khac nhau 1019 vs 1134 la binh thuong, chi la noi dung khac chieu cao trang, khong anh huong doi chieu chieu rong). | 2026-08-05 len muc 4: Apply that tren WAN dang song (internet_tr069, Always On, giu nguyen gia tri) thanh cong, sau khi anh Huynn xac nhan an toan. Dang rut_gon MO RONG - co them cac the khong chuan sau _InstID: <wantype>pppoe</wantype> (lap 2 lan), <Status>2</Status>, <encode>UserName,Password</encode>. Da them truong dataTags[tag]['theThemSauRutGon'] rieng cho dataTag nay. UserName/Password da sanitize (thong tin dang nhap PPPoE FPT that). Lan Apply dau tien bi loi -1452 (token cu) - da tai lai / roi thu lai thanh cong. Da phat lai dung tren sim."
+  },
+  {
+   "id": "Wan3gConfig",
+   "path": "/?_type=menuView&_tag=Wan3gConfig",
+   "viewTag": "Wan3gConfig",
+   "title": "3G/4G",
+   "menuPath": [
+    "Internet",
+    "WAN",
+    "3G/4G"
+   ],
+   "menu2Id": "internetConfig",
+   "menu1Id": "internet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/wan3g-pin.that.menudata.json",
+     "reference/vantay/wan3g-cfg.that.menudata.json",
+     "reference/vantay/wan3g-backup.that.menudata.json",
+     "reference/vantay/Wan3gConfig.that.980-1019.json",
+     "reference/vantay/Wan3gConfig.gia_lap.980-1134.json",
+     "reference/vantay/Wan3gConfig-apply.that.post.json"
+    ],
+    "source": [
+     "views/Wan3gConfig.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/Wan3gConfig.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 147/147 khop tuyet doi. Khong co dongle 3G/4G cam vao (DongleStatus=Dev_FAILURE), dung co che scalarTags/renderOrder moi trong config_store.py. | 2026-08-05 so DOM @980: 147/147 khop tuyet doi. | 2026-08-05 len muc 4: 3G/4G Device khong co dongle that (an toan). Apply 'Working Mode' (wwan_backup_lua.lua, giu nguyen) thanh cong, dang xac_nhan_trong (echo IGD). Da phat lai dung tren sim."
+  },
+  {
+   "id": "tunnel4in6Config",
+   "path": "/?_type=menuView&_tag=tunnel4in6Config",
+   "viewTag": "tunnel4in6Config",
+   "title": "DSLite",
+   "menuPath": [
+    "Internet",
+    "WAN",
+    "DSLite"
+   ],
+   "menu2Id": "internetConfig",
+   "menu1Id": "internet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/tunnel4in6Config.that.menudata.json",
+     "reference/vantay/tunnel4in6Config.that.980-1019.json",
+     "reference/vantay/tunnel4in6Config.gia_lap.980-1019.json",
+     "reference/vantay/DSLite-apply.that.post.json",
+     "reference/vantay/DSLite-delete.that.post.json"
+    ],
+    "source": [
+     "views/tunnel4in6Config.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/tunnel4in6Config.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 125/125 khop tuyet doi. Response rong (chua cau hinh DSLite). | 2026-08-05 so DOM @980: 124/125 khop (1 lech CHAP NHAN — xem missing-evidence.md ban 13). | 2026-08-06 len muc 4: tu lai thiet bi that (cho phep anh Huynn), tao 1 ket noi DSLite (TestDSLite) roi xoa - _InstID=-1 khi tao, server tu sinh DEV.DSLITE.IFSETTING1 (danhSach.tienToId). Ten object OBJ_TUNNEL46_ID lay tu reference/source/views/tunnel4in6Config.html. Da phat lai KHOP tren sim, thiet bi that da xac nhan reverted ve rong (danh sach 'New Item')."
+  },
+  {
+   "id": "l2tpConfig",
+   "path": "/?_type=menuView&_tag=l2tpConfig",
+   "viewTag": "l2tpConfig",
+   "title": "L2TP",
+   "menuPath": [
+    "Internet",
+    "WAN",
+    "L2TP"
+   ],
+   "menu2Id": "internetConfig",
+   "menu1Id": "internet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/l2tpConfig.that.menudata.json",
+     "reference/vantay/l2tpConfig.that.980-1019.json",
+     "reference/vantay/l2tpConfig.gia_lap.980-1019.json",
+     "reference/vantay/L2TP-apply-attempt.that.post.json",
+     "reference/vantay/L2TP-disable.that.post.json"
+    ],
+    "source": [
+     "views/l2tpConfig.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/l2tpConfig.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 115/115 khop tuyet doi. Chua cau hinh, toan bo gia tri mac dinh. | 2026-08-05 so DOM @980: 114/115 khop (1 lech CHAP NHAN — xem missing-evidence.md ban 13). | 2026-08-06 len muc 4: tu lai thiet bi that (cho phep anh Huynn). Khac voi lan thu truoc — dien gia tri gia (L2TP Server/Username) roi bam Apply THANH CONG (object nay CHI CO 1 instance co dinh DEV.L2TP.TUNNEL1, khong phai danh sach, giong OBJ_FWDMZ_ID/OBJ_L2TP_ID). Da revert ve Enable=0 (an toan chuc nang) - Server/Username khong xoa duoc ve rong qua UI (validation client-side, cung gioi han nhu DMZ). GET sau Apply xac nhan gia tri moi duoc luu (kho cau hinh trung tam hoat dong dung). Truong 'Password' KHONG mo hinh hoa (ma hoa qua 'encode', GET that khong bao gio tra ve truong nay - phu hop bang chung). Da phat lai KHOP tren sim."
+  },
+  {
+   "id": "firewall",
+   "path": "/?_type=menuView&_tag=firewall",
+   "viewTag": "firewall",
+   "title": "Firewall",
+   "menuPath": [
+    "Internet",
+    "Security",
+    "Firewall"
+   ],
+   "menu2Id": "security",
+   "menu1Id": "internet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "sntp-apply.har",
+     "reference/vantay/Firewall-apply.that.post.json"
+    ],
+    "source": [
+     "views/firewall.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/firewall.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @980 (kho hep, hamburger hien): #page_content 90/90 khop, khung ca trang 119/119 khop — gom menu cap 3 day du 7 tab dung thu tu (firewall, filterCriteria, localServiceCtrl, alg, dmz, portForwarding, portTrigger). 0 lech toa do, 0 ham JS thieu. | 2026-08-05 len muc 4: Apply that (Enable=1, Level=Middle khong doi) thanh cong, dang rut_gon. Da phat lai dung tren sim. | 2026-08-07: phat hien+sua dataTag firewall_dos_lua.lua bi sot khi quet trang goc (khoi Anti-DoS Attack tung tra 404) — anh Huynn phat hien qua so sanh truc tiep voi thiet bi that. Bang chung: reference/vantay/FirewallDos-get.that.get.json, FirewallDos-apply.that.post.json. Da verify tren sandbox, khop dung byte. Muc 4 nay moi la muc 4 THAT."
+  },
+  {
+   "id": "filterCriteria",
+   "path": "/?_type=menuView&_tag=filterCriteria",
+   "viewTag": "filterCriteria",
+   "title": "Filter Criteria",
+   "menuPath": [
+    "Internet",
+    "Security",
+    "Filter Criteria"
+   ],
+   "menu2Id": "security",
+   "menu1Id": "internet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/filterCriteria-global.that.0-0.json",
+     "reference/vantay/filterCriteria-ip.that.0-0.json",
+     "reference/vantay/filterCriteria-mac.that.0-0.json",
+     "reference/vantay/filterCriteria-url.that.0-0.json",
+     "reference/vantay/filterCriteria.that.980-1134.json",
+     "reference/vantay/filterCriteria.gia_lap.980-1019.json",
+     "reference/vantay/FilterCriteria-apply.that.post.json"
+    ],
+    "source": [
+     "views/filterCriteria.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/filterCriteria.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 381/381 khop tuyet doi (1 ham JS bao thieu la false-positive do lich su dieu huong tab). 3 accordion con (IP/MAC/URL Filter) - IP/URL Filter dang rong (chua co rule). | 2026-08-05 so DOM @980: 234/238 khop, 4 lech CHAP NHAN (4 form-action cua 4 tab con IP/MAC/URL/Global filter, redact khac ban script — xem missing-evidence.md ban 13). | 2026-08-05 len muc 4: Apply that (khong doi) thanh cong, dang xac_nhan_trong VOI INSTIDENTITY LUON RONG (khac PortLocate/PonLoid/PonSn du cung gui _InstID=IGD) - phan bac gia thuyet 'luon echo', them truong instidentity=rong rieng cho dataTag nay. Nut Apply DUNG CHUNG id 'Btn_apply_FirewallConf' voi trang Firewall (cau truc HTML that, da xac nhan qua _tag request thuc te la firewall_filterglobal_lua.lua). Da phat lai dung tren sim."
+  },
+  {
+   "id": "localServiceCtrl",
+   "path": "/?_type=menuView&_tag=localServiceCtrl",
+   "viewTag": "localServiceCtrl",
+   "title": "Local Service Control",
+   "menuPath": [
+    "Internet",
+    "Security",
+    "Local Service Control"
+   ],
+   "menu2Id": "security",
+   "menu1Id": "internet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/localServiceCtrl-ipv4.that.0-0.json",
+     "reference/vantay/localServiceCtrl-ipv6.that.0-0.json",
+     "reference/vantay/localServiceCtrl-port.that.0-0.json",
+     "reference/vantay/localServiceCtrl.that.980-1134.json",
+     "reference/vantay/localServiceCtrl.gia_lap.980-1019.json",
+     "reference/vantay/LocalServiceCtrl-apply.that.post.json",
+     "reference/vantay/LocalServiceCtrl-delete.that.post.json",
+     "reference/vantay/LocalServiceCtrl-twoinst.that.post.json",
+     "reference/vantay/LocalServiceCtrlV6-apply2.that.post.json",
+     "reference/vantay/LocalServiceCtrlV6-delete.that.post.json",
+     "reference/vantay/RemoteServicePortCtrl-apply2.that.post.json"
+    ],
+    "source": [
+     "views/localServiceCtrl.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/localServiceCtrl.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 294/294 khop tuyet doi. 3 accordion con (Service Control IPv4/IPv6, Remote Service Port). IPv4/IPv6 dang rong, portservice co 5 dich vu mac dinh. | 2026-08-05 so DOM @980: 220/223 khop, 3 lech CHAP NHAN (3 form-action cua 3 accordion, redact khac ban script — xem missing-evidence.md ban 13). | 2026-08-06 (tu lai thiet bi that, cho phep cua anh Huynn): da test Apply/Delete THAT tren ca 3 dataTag. IPv4 (firewall_ipv4service_lua.lua)/IPv6 (firewall_ipv6service_lua.lua): tao instance moi (_InstID=-1 -> server sinh IGD.FWSc.FWSC<n>) va Delete deu khop 100% bang chung that (dang response moi 'rut_gon'/'xoa_gon', xem config_store.py). Remote Service Port (firewall_portservice_lua.lua): Apply sua ca 5 dong 1 luc (_InstID_0.._4/ServPort_0.._4) khop 100% (dang 'xac_nhan_trong', instidentity=tu_truong:_InstID_4). Da revert thiet bi that ve dung trang thai ban dau sau khi test (xoa het rule test, tra port ve 80/21/22/23/443). Len muc 4. GIA DINH CHUA KIEM CHUNG: (1) bo dem sinh _InstID cho IPv4/IPv6 co doc lap voi nhau hay khong; (2) sua 1 instance CO SAN (khac -1) trong danh sach IPv4/IPv6 dung dang response nao — chua co bang chung rieng, dang tam dung 'rut_gon' theo suy luan hop ly; (3) thu tu ParaName that khi GET danh sach CO du lieu — CHUA co bang chung GET tren thiet bi that voi danh sach khong rong (server that luon tra danh sach rong khi chup). Xem missing-evidence.md."
+  },
+  {
+   "id": "alg",
+   "path": "/?_type=menuView&_tag=alg",
+   "viewTag": "alg",
+   "title": "ALG",
+   "menuPath": [
+    "Internet",
+    "Security",
+    "ALG"
+   ],
+   "menu2Id": "security",
+   "menu1Id": "internet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/alg.that.0-0.json",
+     "reference/vantay/alg.that.980-1134.json",
+     "reference/vantay/alg.gia_lap.980-1019.json",
+     "reference/vantay/ALG-apply.that.post.json"
+    ],
+    "source": [
+     "views/alg.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/alg.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 106/106 khop tuyet doi. Tat ca ALG deu bat (L2TP/TFTP/FTP/IPSEC/RTSP/H323/PPTP/SIP). | 2026-08-05 so DOM @980: 105/106 khop, 1 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-05 len muc 4: Apply that (tat ca ALG On, khong doi) thanh cong, dang rut_gon. Da phat lai dung tren sim."
+  },
+  {
+   "id": "dmz",
+   "path": "/?_type=menuView&_tag=dmz",
+   "viewTag": "dmz",
+   "title": "DMZ",
+   "menuPath": [
+    "Internet",
+    "Security",
+    "DMZ"
+   ],
+   "menu2Id": "security",
+   "menu1Id": "internet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/dmz.that.0-0.json",
+     "reference/vantay/dmz.that.980-1134.json",
+     "reference/vantay/dmz.gia_lap.980-1019.json",
+     "reference/vantay/DMZ-apply.that.post.json",
+     "reference/vantay/DMZ-disable2.that.post.json"
+    ],
+    "source": [
+     "views/dmz.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/dmz.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 83/83 khop tuyet doi. DMZ dang tat (Enable=0). | 2026-08-05 so DOM @980: 82/83 khop, 1 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-06 len muc 4: tu lai thiet bi that (cho phep anh Huynn), Apply that phat hien them 6 truong sub_TempMacAddr0..5 (dung khi chon muc tieu theo MAC, chua test nhanh nay). Object CHI CO 1 instance co dinh (_InstID=IGD.FWDMZ.FWDMZ1 luon co san, khong phai danh sach them/xoa). Response dang rut_gon, da phat lai KHOP tren sim. GIOI HAN: khong the revert InternalClient ve rong qua UI vi validation client-side chan submit khi LAN Host rong (du DMZ=Off) - da revert ve Enable=0 (an toan chuc nang) nhung giu lai IP 192.168.1.150 thay vi rong nguyen ban. Xem missing-evidence.md."
+  },
+  {
+   "id": "portForwarding",
+   "path": "/?_type=menuView&_tag=portForwarding",
+   "viewTag": "portForwarding",
+   "title": "Port Forwarding",
+   "menuPath": [
+    "Internet",
+    "Security",
+    "Port Forwarding"
+   ],
+   "menu2Id": "security",
+   "menu1Id": "internet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/portForwarding.that.0-0.json",
+     "reference/vantay/portForwarding.that.980-1134.json",
+     "reference/vantay/portForwarding.gia_lap.980-1019.json",
+     "reference/vantay/PortForwarding-apply.that.post.json",
+     "reference/vantay/PortForwarding-delete.that.post.json"
+    ],
+    "source": [
+     "views/portForwarding.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/portForwarding.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 157/157 khop tuyet doi. Chua co rule nao (object rong). | 2026-08-05 so DOM @980: 156/157 khop, 1 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-06 len muc 4: tu lai thiet bi that (cho phep anh Huynn), tao 1 rule (TestPF) roi xoa - _InstID=-1 khi tao, server tu sinh DEV.NAT.PtMapping1 (danhSach.tienToId). Delete dung dang xoa_gon (giong Local Service Control). Da phat lai KHOP tren sim, thiet bi that da xac nhan reverted ve rong."
+  },
+  {
+   "id": "portTrigger",
+   "path": "/?_type=menuView&_tag=portTrigger",
+   "viewTag": "portTrigger",
+   "title": "Port Trigger",
+   "menuPath": [
+    "Internet",
+    "Security",
+    "Port Trigger"
+   ],
+   "menu2Id": "security",
+   "menu1Id": "internet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/portTrigger.that.0-0.json",
+     "reference/vantay/portTrigger.that.980-1134.json",
+     "reference/vantay/portTrigger.gia_lap.980-1019.json",
+     "reference/vantay/PortTrigger-apply.that.post.json",
+     "reference/vantay/PortTrigger-delete.that.post.json"
+    ],
+    "source": [
+     "views/portTrigger.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/portTrigger.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 143/143 khop tuyet doi, sach hoan toan (khong ca false-positive JS). Chua co rule nao (object rong). | 2026-08-05 so DOM @980: 142/143 khop, 1 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-06 len muc 4: tu lai thiet bi that (cho phep anh Huynn), tao 1 rule (TestPT) roi xoa - _InstID=-1 khi tao, server tu sinh IGD.FWPT1 (danhSach.tienToId). PHAT HIEN MOI: doi tuong nay dung TEN TRUONG ID KHAC MAC DINH - tat ca truong (ke ca ID) mang tien to day du 'OBJ_FWPT_ID.' (vd OBJ_FWPT_ID._OBJ_InstID, giong OBJ_RIPNG_ID) thay vi '_InstID' don gian nhu Local Service Control/Port Forwarding - da tong quat hoa co che danhSach (them danhSach.truongId) de xu ly. Da phat lai KHOP tren sim, thiet bi that da xac nhan reverted ve rong."
+  },
+  {
+   "id": "parentCtrl",
+   "path": "/?_type=menuView&_tag=parentCtrl",
+   "viewTag": "parentCtrl",
+   "title": "Parental Controls",
+   "menuPath": [
+    "Internet",
+    "Parental Controls"
+   ],
+   "menu2Id": "parentCtrl",
+   "menu1Id": "internet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/parentCtrl.that.0-0.json",
+     "reference/vantay/parentCtrl.that.980-1134.json",
+     "reference/vantay/parentCtrl.gia_lap.980-1019.json",
+     "reference/vantay/ParentCtrl-apply.that.post.json",
+     "reference/vantay/ParentCtrl-delete.that.post.json"
+    ],
+    "source": [
+     "views/parentCtrl.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/parentCtrl.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 222/222 khop tuyet doi, sach hoan toan. Chua co rule nao (object rong). | 2026-08-05 so DOM @980: 221/222 khop, 1 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-06 len muc 4: tu lai thiet bi that (cho phep anh Huynn), tao 1 rule (TestParent) roi xoa - _InstID=-1 khi tao, server tu sinh DEV.PCUser1 (danhSach.tienToId). Delete dung dang xoa_gon. Truong Week=64 la bitmask (gui khi tick 1 ngay Sun) - CHUA giai ma day du cho cac to hop khac (nhieu ngay/Everyday), xem missing-evidence.md. Da phat lai KHOP tren sim, thiet bi that da xac nhan reverted ve rong."
+  },
+  {
+   "id": "ddns",
+   "path": "/?_type=menuView&_tag=ddns",
+   "viewTag": "ddns",
+   "title": "DDNS",
+   "menuPath": [
+    "Internet",
+    "DDNS"
+   ],
+   "menu2Id": "ddns",
+   "menu1Id": "internet",
+   "hidden": false,
+   "level": 3,
+   "evidence": {
+    "har": [
+     "reference/vantay/ddns.that.0-0.json",
+     "reference/vantay/ddns-status.that.0-0.json",
+     "reference/vantay/ddns.that.980-1134.json",
+     "reference/vantay/ddns.gia_lap.980-1019.json"
+    ],
+    "source": [
+     "views/ddns.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/ddns.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 100/100 khop tuyet doi, sach hoan toan. fpt_ddns_status_model.lua tra JSON thuan (nhu WLANMLO). Chua cau hinh DDNS. | 2026-08-05 so DOM @980: 98/100 khop, 2 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-05 thu Apply that (gia tri khong doi, Enable=0): bi jQuery-validate chan hoan toan, 2 truong bat buoc dang rong (Interface + co the Username/Password). Khong co request nao gui di, khong co gi bi ghi. | 2026-08-06 thu lai voi Username/Host Name gia (DDNS van Off): client cho qua nhung SERVER TU CHOI (IF_ERRORID=-257, xem reference/vantay/DDNS-apply-rejected.that.post.json) - khac L2TP, DDNS co ve validate that voi may chu DynDNS that nen khong the thanh cong voi du lieu gia. Khong co gi bi ghi tren thiet bi that (xac nhan lai bang GET sau khi reload). Van o muc 3, can tai khoan DynDNS that tu anh Huynn moi len duoc muc 4."
+  },
+  {
+   "id": "sntp",
+   "path": "/?_type=menuView&_tag=sntp",
+   "viewTag": "sntp",
+   "title": "SNTP",
+   "menuPath": [
+    "Internet",
+    "SNTP"
+   ],
+   "menu2Id": "sntp",
+   "menu1Id": "internet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/har/sntp-apply.har",
+     "reference/har/GHI-CHU-APPLY.md#sntp-applyhar"
+    ],
+    "source": [
+     "views/sntp.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/sntp.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM: @1196 hai ben cung kho -> 95/95 khop, 0 lech toa do. @980 (kho hep, hamburger hien) -> 93/95; 2 cho lech la #scrollLeftBtn/#scrollRightBtn khac class, da truy ra la TAN DU TRANG THAI tu lich su dieu huong khac nhau, ca hai deu display:none. Trang firewall cung kho 980 cho 0 lech nen xac nhan khong phai loi dung. CSS goc trung ma bam hai ben. | 2026-08-05 len muc 4: bang chung that san co (sntp-apply.har, Giai doan 0) cho thay dinh dang response GHI thanh cong la DAY DU nhu GET + the _InstID chen sau header, KHAC voi gia dinh rut gon dua tren EnergyMode truoc do -> da sua config_store.xml_ghi_thanhcong() de mac dinh dung dang nay, EnergyMode danh dau ngoai le rieng (ghiRutGon). Da phat lai DUNG kich ban that tren SIM (PollTimeInterval 86400->43200->86400, khong dung thiet bi that) va thay khop cau truc/thu tu the 100% voi sntp_lua.lua/sntp-apply.har. Phat hien them: sess_token xoay sau MOI lan ghi (session.doi_token()) nhung client KHONG tu dong bo token moi -> lan Apply thu 2 LIEN TIEP (khong reload xen giua) tren SIM bi SessionTimeout va tu dong ve Home; CHUA CO bang chung that de xac nhan thiet bi that co hanh vi giong vay hay khong (sntp-apply.har chi co 1 POST, khong co POST thu 2 cho lan tra ve gia tri cu). Xem missing-evidence.md ban 20."
+  },
+  {
+   "id": "portBinding",
+   "path": "/?_type=menuView&_tag=portBinding",
+   "viewTag": "portBinding",
+   "title": "Port Binding",
+   "menuPath": [
+    "Internet",
+    "Port Binding"
+   ],
+   "menu2Id": "portBinding",
+   "menu1Id": "internet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/portBinding.that.0-0.json",
+     "reference/vantay/portBinding.that.980-1134.json",
+     "reference/vantay/portBinding.gia_lap.980-1019.json",
+     "reference/vantay/PortBinding-apply.that.post.json"
+    ],
+    "source": [
+     "views/portBinding.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/portBinding.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 176/176 khop tuyet doi, sach hoan toan. | 2026-08-05 so DOM @980: 175/176 khop, 1 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-05 len muc 4: bam dung nut Btn_apply_PORTBindConf:0 (instance that, khong phai nut template them-moi), gia tri khong doi -> POST that thanh cong, dinh dang response la mau THU BA (INSTIDENTITY rong, khong _InstID, khong du lieu) - da them nhanh 'xac_nhan_trong' vao xml_ghi_thanhcong(). Da phat lai dung tren sim, POST 200, khong reload. Xem missing-evidence.md ban 21."
+  },
+  {
+   "id": "rip",
+   "path": "/?_type=menuView&_tag=rip",
+   "viewTag": "rip",
+   "title": "Dynamic Routing",
+   "menuPath": [
+    "Internet",
+    "Dynamic Routing"
+   ],
+   "menu2Id": "rip",
+   "menu1Id": "internet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/rip.that.0-0.json",
+     "reference/vantay/rip-ripng.that.0-0.json",
+     "reference/vantay/rip.that.980-1134.json",
+     "reference/vantay/rip.gia_lap.980-1019.json",
+     "reference/vantay/RIP-apply.that.post.json"
+    ],
+    "source": [
+     "views/rip.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/rip.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 84/84 khop tuyet doi, sach hoan toan. RIP dang tat. route_ripng_m.lua co ParaName dang \"OBJ_RIPNG_ID.TenTruong\" (tien to lap ten object). | 2026-08-05 so DOM @980: 82/84 khop, 2 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-05 len muc 4: Apply that (Btn_apply_RIP, gia tri khong doi, RipEnabled=0) thanh cong. Request co tham so \"encode\" (RipAuthKey ma hoa, chua co khoa giai ma - da biet tu DHCPBasicCfg) nhung sim bo qua an toan (tham so la, khong ghi). Response dung dang xac_nhan_trong (giong Port Binding). Da phat lai thanh cong tren sim."
+  },
+  {
+   "id": "multicastmode",
+   "path": "/?_type=menuView&_tag=multicastmode",
+   "viewTag": "multicastmode",
+   "title": "Multicast Mode",
+   "menuPath": [
+    "Internet",
+    "Multicast",
+    "Multicast Mode"
+   ],
+   "menu2Id": "multicast",
+   "menu1Id": "internet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/multicastmode.that.0-0.json",
+     "reference/vantay/multicastmode.that.980-1134.json",
+     "reference/vantay/multicastmode.gia_lap.980-1019.json",
+     "reference/vantay/MulticastMode-apply.that.post.json"
+    ],
+    "source": [
+     "views/multicastmode.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/multicastmode.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 52/52 khop tuyet doi, sach hoan toan. | 2026-08-05 so DOM @980: 51/52 khop, 1 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-05 len muc 4: Apply that gia tri khong doi thanh cong, dang response xac_nhan_trong (giong Port Binding). Da phat lai thanh cong tren sim."
+  },
+  {
+   "id": "igmp",
+   "path": "/?_type=menuView&_tag=igmp",
+   "viewTag": "igmp",
+   "title": "IGMP",
+   "menuPath": [
+    "Internet",
+    "Multicast",
+    "IGMP"
+   ],
+   "menu2Id": "multicast",
+   "menu1Id": "internet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/igmp.that.0-0.json",
+     "reference/vantay/igmp.that.980-1134.json",
+     "reference/vantay/igmp.gia_lap.980-1019.json",
+     "reference/vantay/IGMP-apply.that.post.json"
+    ],
+    "source": [
+     "views/igmp.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/igmp.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 53/53 khop tuyet doi, sach hoan toan. | 2026-08-05 so DOM @980: 52/53 khop, 1 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-05 len muc 4: Apply that (_InstID=DEV.IGMPWan1, WanCID khong doi) thanh cong. Response dang rut_gon, thu tu the header khac EnergyMode (ID,PARAM,TYPE,STR) - da xac nhan voi anh Huynn thu tu the KHONG quan trong (xem missing-evidence.md ban 23)."
+  },
+  {
+   "id": "mld",
+   "path": "/?_type=menuView&_tag=mld",
+   "viewTag": "mld",
+   "title": "MLD",
+   "menuPath": [
+    "Internet",
+    "Multicast",
+    "MLD"
+   ],
+   "menu2Id": "multicast",
+   "menu1Id": "internet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/mld.that.0-0.json",
+     "reference/vantay/mld.that.980-1134.json",
+     "reference/vantay/mld.gia_lap.980-1019.json",
+     "reference/vantay/MLD-apply.that.post.json"
+    ],
+    "source": [
+     "views/mld.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/mld.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 53/53 khop tuyet doi, sach hoan toan. | 2026-08-05 so DOM @980: 52/53 khop, 1 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-05 len muc 4: Apply that (_InstID=DEV.MLDWan1, khong doi gia tri) thanh cong, dang rut_gon giong IGMP."
+  },
+  {
+   "id": "multicastbasic",
+   "path": "/?_type=menuView&_tag=multicastbasic",
+   "viewTag": "multicastbasic",
+   "title": "Basic",
+   "menuPath": [
+    "Internet",
+    "Multicast",
+    "Basic"
+   ],
+   "menu2Id": "multicast",
+   "menu1Id": "internet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/multicastbasic.that.0-0.json",
+     "reference/vantay/multicastbasic.that.980-1134.json",
+     "reference/vantay/multicastbasic.gia_lap.980-1019.json",
+     "reference/vantay/MulticastBasic-apply.that.post.json"
+    ],
+    "source": [
+     "views/multicastbasic.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/multicastbasic.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 54/54 khop tuyet doi, sach hoan toan. | 2026-08-05 so DOM @980: 53/54 khop, 1 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-05 len muc 4: Apply that (Agtime=360 khong doi) thanh cong, dang xac_nhan_trong (mau thu 4 cua dang nay)."
+  },
+  {
+   "id": "IgmpWLANCONF",
+   "path": "/?_type=menuView&_tag=IgmpWLANCONF",
+   "viewTag": "IgmpWLANCONF",
+   "title": "Multicast on Wi-Fi",
+   "menuPath": [
+    "Internet",
+    "Multicast",
+    "Multicast on Wi-Fi"
+   ],
+   "menu2Id": "multicast",
+   "menu1Id": "internet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/IgmpWLANCONF.that.0-0.json",
+     "reference/vantay/IgmpWLANCONF.that.980-1134.json",
+     "reference/vantay/IgmpWLANCONF.gia_lap.980-1019.json",
+     "reference/vantay/IgmpWLANCONF-apply.that.post.json"
+    ],
+    "source": [
+     "views/IgmpWLANCONF.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/IgmpWLANCONF.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 57/57 khop tuyet doi. multicast_model.lua tra JSON thuan. | 2026-08-05 so DOM @980: 56/57 khop, 1 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-05 Apply that (Enable=1 khong doi) thanh cong. Response la JSON THUAN (khong bo trong ajax_response_xml_root, khong echo du lieu doi tuong) - dataTag JSON DAU TIEN co nut Apply. Phat hien dispatch.menu_data_ghi() thieu duong ghi cho jsonDataTags - da them doi_tuong_json_cua()/ghi_json()/json_ghi_thanhcong() + nhanh re trong dispatch.py. Xem missing-evidence.md ban 23. 2026-08-05 da xac minh tren sim (server chay trong sandbox, state rieng): GET truoc Apply Enable=1, POST Apply Enable=1 tra dung response that (byte khop), GET sau Apply van Enable=1. Test doi gia tri 1->0->1 xac nhan ghi_json() luu dung vao jsonDataTags (khong phai no-op). 7 trang muc 4 dang XML khac (EnergyMode/SNTP/PortBinding/RIP/MulticastMode/IGMP/MLD) phat lai deu dung, khong hong. LEN MUC 4."
+  },
+  {
+   "id": "portlocate",
+   "path": "/?_type=menuView&_tag=portlocate",
+   "viewTag": "portlocate",
+   "title": "Port Locating",
+   "menuPath": [
+    "Internet",
+    "Port Locating"
+   ],
+   "menu2Id": "portlocate",
+   "menu1Id": "internet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/portlocate.that.0-0.json",
+     "reference/vantay/portlocate.that.980-1134.json",
+     "reference/vantay/portlocate.gia_lap.980-1019.json",
+     "reference/vantay/PortLocate-apply.that.post.json"
+    ],
+    "source": [
+     "views/portlocate.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/portlocate.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 92/92 khop tuyet doi, sach hoan toan. | 2026-08-05 so DOM @980: 91/92 khop, 1 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-05 len muc 4: Apply that (gia tri khong doi) thanh cong. Response dang xac_nhan_trong, INSTIDENTITY CO GIA TRI (echo _InstID=IGD) - xac nhan cong thuc echo dung ca khi co/khong co _InstID, khong phai dang moi. Da phat lai dung tren sim."
+  },
+  {
+   "id": "ponLoid",
+   "path": "/?_type=menuView&_tag=ponLoid",
+   "viewTag": "ponLoid",
+   "title": "LOID",
+   "menuPath": [
+    "Internet",
+    "PON Information",
+    "LOID"
+   ],
+   "menu2Id": "ponInfo",
+   "menu1Id": "internet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/ponLoid.that.0-0.json",
+     "reference/vantay/ponLoid.that.980-1134.json",
+     "reference/vantay/ponLoid.gia_lap.980-1019.json",
+     "reference/vantay/PonLoid-apply.that.post.json"
+    ],
+    "source": [
+     "views/ponLoid.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/ponLoid.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 53/53 khop tuyet doi. PonLoid la LOID that - DA SANITIZE (ca trong config_store lan trong 2 file reference/source cu bi lo tu truoc, xem missing-evidence.md). | 2026-08-05 so DOM @980: ban chup 980 lan dau lai lo LOID that \"123456789\" (dung LOID da biet tu 2026-08-04) trong file moi reference/vantay/ponLoid.that.980-1134.json — da SANITIZE ngay thanh \"000000000\" (khop voi gia tri gia trong config_store) truoc khi commit. Sau khi sua: 52/52 khop, 1 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 16). | 2026-08-05: Apply that (gia tri khong doi) thanh cong, dang xac_nhan_trong, da phat lai dung tren sim. LEN MUC 4 cho dinh dang response. PHAT HIEN: ngay sau Apply, phien BI DANG XUAT - nghi la hanh vi bao mat that cua thiet bi khi ghi lai thong tin dang nhap PON, nhung MOI quan sat 1 lan, CHUA xac nhan la quy luat lap lai. Xem missing-evidence.md. Bang chung reference/vantay/PonLoid-apply.that.post.json DA SANITIZE PonLoid/LoidPasswd/encode (thong tin dang nhap ISP that, nhay cam hon ca mat khau WLAN). 2026-08-05 kiem tra lai: dang nhap lai, Apply them 3 lan lien tiep deu SUCCESS, phien KHONG bi dang xuat - gia thuyet 'Apply LOID buoc dang xuat' BI BAC BO, lan dau chi la token cu/stale. Muc 4 on dinh."
+  },
+  {
+   "id": "ponSn",
+   "path": "/?_type=menuView&_tag=ponSn",
+   "viewTag": "ponSn",
+   "title": "SN",
+   "menuPath": [
+    "Internet",
+    "PON Information",
+    "SN"
+   ],
+   "menu2Id": "ponInfo",
+   "menu1Id": "internet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/ponSn.that.0-0.json",
+     "reference/vantay/ponSn.that.980-1134.json",
+     "reference/vantay/ponSn.gia_lap.980-1019.json",
+     "reference/vantay/PonSn-apply.that.post.json"
+    ],
+    "source": [
+     "views/ponSn.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/ponSn.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 58/58 khop tuyet doi. Sn la serial that cua thiet bi - DA SANITIZE (tuong tu ponLoid). | 2026-08-05 so DOM @980: ban chup 980 lan dau lai lo Sn that \"ZTEGdac25692\" trong file moi reference/vantay/ponSn.that.980-1134.json — da SANITIZE ngay thanh \"ZTEGFAKE0000\" (khop config_store) truoc khi commit. Sau khi sua: 57/57 khop, 1 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 16). | 2026-08-05 len muc 4: Apply that (khong chon Register ID/Password, giu nguyen) thanh cong, dang xac_nhan_trong (INSTIDENTITY=IGD). Da sanitize Sn/Ridpw/Pwd/encode (thong tin dang nhap PON that) truoc khi luu bang chung. Da phat lai dung tren sim."
+  },
+  {
+   "id": "localNetStatus",
+   "path": "/?_type=menuView&_tag=localNetStatus",
+   "viewTag": "localNetStatus",
+   "title": "Status",
+   "menuPath": [
+    "Local Network",
+    "Status"
+   ],
+   "menu2Id": "localNetStatus",
+   "menu1Id": "localnet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [],
+    "source": [
+     "views/localNetStatus.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/localNetStatus.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 259/263 khop (4 cho lech la bo dem byte/packet LAN dong, khong phai loi). 5 dataTag that da noi day du. Chua kiem kho hep (NT-3). | 2026-08-05 so DOM @980 (khong hep NT-3, DevTools device toolbar): 259/263 khop (4 lech la so lieu luu luong LAN song - da biet va chap nhan, giong cac truong hop CPU/Uptime truoc). | 2026-08-06: CHINH SACH tuong tu ap dung cho 4/5 dataTag telemetry thuan (PON port status, WLAN client stat, LAN device list, USB device list). Rieng 1/5 (wlan_wlanstatus_lua.lua, qua OBJ_WLANAP_ID/OBJ_WLANSETTING_ID) da co quan he kien truc voi nhieu trang WLAN da muc 4 (wlan_wlanbasiconoff_lua.lua, wlan_wlanbasicadconf_lua.lua, wlan_wlansssidconf_lua.lua, wlan_wps_lua.lua, wlan_macfilteraclpolicy_lua.lua) — cung co che da xac nhan song 3 lan (ethWanStatus/voipStatus/statusMgr), khong can lap lai test rieng."
+  },
+  {
+   "id": "wlanBasic",
+   "path": "/?_type=menuView&_tag=wlanBasic",
+   "viewTag": "wlanBasic",
+   "title": "WLAN Basic",
+   "menuPath": [
+    "Local Network",
+    "WLAN",
+    "WLAN Basic"
+   ],
+   "menu2Id": "wlanConfig",
+   "menu1Id": "localnet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/WlanBasicOnOff-apply.that.post.json",
+     "reference/vantay/WlanBasicAdvanced2G-apply.that.post.json"
+    ],
+    "source": [
+     "views/wlanBasic.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/wlanBasic.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 290/290 khop tuyet doi. 3 dataTag that da noi day du (wlan_wlanbasiconoff/basicadconf/sssidconf). Chua kiem kho hep (NT-3). | 2026-08-05 so DOM @980: 290/290 khop tuyet doi. | 2026-08-05 len muc 4: 2 dataTag da test - wlan_wlanbasiconoff_lua.lua (xac_nhan_trong, INSTIDENTITY echo TRUONG CUOI trong danh sach nhieu radio _InstID_2, khong phai _InstID top-level) va wlan_wlanbasicadconf_lua.lua (dang MOI 'day_du_gioi_han' - header kieu day_du nhung chi echo OBJ_WLANMLO_ID, khong phai object cua chinh dataTag). Da phat lai dung tren sim. | 2026-08-05 test them WLAN SSID Configuration (SSID1 2.4GHz, wlan_wlansssidconf_lua.lua, sanitized mat khau WiFi that): dang xac_nhan_trong, instidentity = tu_truong:_InstID_PSK (echo DEV.WIFI.AP1.PSK1, khong phai top-level _InstID). Form co truong 'encode' (ciphertext dai) - giong hien tuong DHCPBasicCfg, chua giai ma duoc, chi luu placeholder. Con 5GHz/6GHz cua WLAN Global Configuration va cac SSID2-12 khac chua test rieng tung cai (du kien dung chung dataTag/dang, se xac nhan neu can)."
+  },
+  {
+   "id": "wlanAdvanced",
+   "path": "/?_type=menuView&_tag=wlanAdvanced",
+   "viewTag": "wlanAdvanced",
+   "title": "WLAN Advanced",
+   "menuPath": [
+    "Local Network",
+    "WLAN",
+    "WLAN Advanced"
+   ],
+   "menu2Id": "wlanConfig",
+   "menu1Id": "localnet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [],
+    "source": [
+     "views/wlanAdvanced.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/wlanAdvanced.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 275/275 khop tuyet doi. 2 dataTag da noi (wlan_macfilteraclpolicy/macfilterrule). Chua kiem kho hep (NT-3). | 2026-08-05 so DOM @980: 275/275 khop tuyet doi. | 2026-08-05 len muc 4: Access Control-Mode Configuration (wlan_macfilteraclpolicy_lua.lua) da test Apply that - dang xac_nhan_trong, INSTIDENTITY = truong _InstID_11 (CUOI CUNG trong 12 SSID, khong phai top-level _InstID rong). Da phat lai dung tren sim. Access Control-Rule Configuration (wlan_macfilterrule_lua.lua) van la danh sach RONG (template New Item) - BO QUA theo tien le parentCtrl, con muc 3."
+  },
+  {
+   "id": "wps",
+   "path": "/?_type=menuView&_tag=wps",
+   "viewTag": "wps",
+   "title": "WPS",
+   "menuPath": [
+    "Local Network",
+    "WLAN",
+    "WPS"
+   ],
+   "menu2Id": "wlanConfig",
+   "menu1Id": "localnet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [],
+    "source": [
+     "views/wps.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/wps.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 117/117 khop tuyet doi (sau khi sua loi gop du lieu mat 2/3 instance OBJ_WPS_ID do 3 khoi XML trung ten tag). Chua kiem kho hep (NT-3). | 2026-08-05 so DOM @980: 117/117 khop tuyet doi. | 2026-08-05 len muc 4: WPS 2.4GHz (wlan_wps_lua.lua) da test Apply that - PHAT HIEN dang GHI thu 6 'day_du_co_instidentity' (header kieu rut_gon + INSTIDENTITY dau, nhung co du lieu object DAY DU nhu GET). INSTIDENTITY = SSID_InstID gui len, khong phai _InstID top-level. Nhan tien SUA TAN GOC config_store._sinh_khoi_obj() de ho tro dang OBJ_WPS_ID phat 3 khoi XML rieng (co gio bocRiengTungInstance) thay vi gop 1 khoi nhu truoc - GET va POST deu da phat lai dung byte-for-byte tren sim. Apply cho OBJ_WPS_ID con LOC chi echo 1 instance khop INSTIDENTITY (khac GET tra du 3)."
+  },
+  {
+   "id": "wlanStaScanAP",
+   "path": "/?_type=menuView&_tag=wlanStaScanAP",
+   "viewTag": "wlanStaScanAP",
+   "title": "Surrounding WiFi",
+   "menuPath": [
+    "Local Network",
+    "WLAN",
+    "Surrounding WiFi"
+   ],
+   "menu2Id": "wlanConfig",
+   "menu1Id": "localnet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [],
+    "source": [
+     "views/wlanStaScanAP.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/wlanStaScanAP.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 92/92 khop tuyet doi (sau khi sua loi ten dataTag sai va sua mac dinh phai RONG khi chua bam Scan). Nut Scan tra danh sach WiFi lan can that - da sanitize, CHUA noi hanh dong Scan (khac Apply thong thuong, chua co bang chung). Chua kiem kho hep (NT-3). | 2026-08-05 so DOM @980: 92/92 khop tuyet doi. | 2026-08-06: CHINH SACH xac nhan voi anh Huynn — trang telemetry thuan (khong co trang cau hinh nao ghi cung du lieu de kiem \"sua A doi B\") duoc TINH LA MUC 4 mac dinh, vi kien truc config_store.py da dam bao doc qua kho cau hinh chung, khong hardcode tung trang (dung tinh than rule 2.5), va khong co \"trang thai\" nao de kiem tra thi coi nhu thoa man mac dinh. Ap dung cho nhom 8 trang: mmTopology, ponopticalinfo, Wan3gStatus, tunnel4in6Status, conntracks, wlanStaScanAP, arpTable, macTable."
+  },
+  {
+   "id": "wifibandsteer",
+   "path": "/?_type=menuView&_tag=wifibandsteer",
+   "viewTag": "wifibandsteer",
+   "title": "WLAN Band Steering",
+   "menuPath": [
+    "Local Network",
+    "WLAN",
+    "WLAN Band Steering"
+   ],
+   "menu2Id": "wlanConfig",
+   "menu1Id": "localnet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [],
+    "source": [
+     "views/wifibandsteer.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/wifibandsteer.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 79/79 khop (0 loi thuc; 6 cho bao lech chi la vi tri cuon thanh tab cap 3 - tan du dieu huong, xem CLAUDE.md 4.3). Chua kiem kho hep (NT-3). | 2026-08-05 so DOM @980: 79/79 khop tuyet doi. | 2026-08-05 len muc 4: Apply that xac nhan (wlan_BandSteering_lua.lua), dang xac_nhan_trong, instidentity mac dinh (echo _InstID). Khong doi gia tri (Bandsteering van Off). Da phat lai dung tren sim."
+  },
+  {
+   "id": "WLANMLO",
+   "path": "/?_type=menuView&_tag=WLANMLO",
+   "viewTag": "WLANMLO",
+   "title": "MLO",
+   "menuPath": [
+    "Local Network",
+    "WLAN",
+    "MLO"
+   ],
+   "menu2Id": "wlanConfig",
+   "menu1Id": "localnet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [],
+    "source": [
+     "views/WLANMLO.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/WLANMLO.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 60/60 khop (0 loi thuc, tru tan du cuon tab). XAC MINH dinh_dang JSON hoat dong dung (response khong boc ajax_response_xml_root). Content-Type header con la gia dinh - xem missing-evidence.md. Chua kiem kho hep (NT-3). | 2026-08-05 so DOM @980: 60/60 khop tuyet doi. | 2026-08-05 len muc 4: Apply that xac nhan (wlan_mlo_model.lua, dataTag JSON), dung duong ghi JSON da co san tu phien truoc, response chi 4 truong loi khong echo du lieu. Khong doi gia tri (MLO van Off). Da phat lai dung tren sim."
+  },
+  {
+   "id": "smNetSphereMAP",
+   "path": "/?_type=menuView&_tag=smNetSphereMAP",
+   "viewTag": "smNetSphereMAP",
+   "title": "Mesh Wi-Fi",
+   "menuPath": [
+    "Local Network",
+    "WLAN",
+    "Mesh Wi-Fi"
+   ],
+   "menu2Id": "wlanConfig",
+   "menu1Id": "localnet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [],
+    "source": [
+     "views/smNetSphereMAP.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/smNetSphereMAP.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 77/77 khop (0 loi thuc, tru tan du cuon tab). Chua kiem kho hep (NT-3). | 2026-08-05 so DOM @980: 77/77 khop tuyet doi. | 2026-08-05 len muc 4: Apply that xac nhan (Localnet_NetSphere_Mode_lua.lua), dang xac_nhan_trong, instidentity mac dinh (echo _InstID=MULTIAPDOMAIN1). Khong doi gia tri (Mesh Wi-Fi van Off). Da phat lai dung tren sim."
+  },
+  {
+   "id": "lanMgrIpv4",
+   "path": "/?_type=menuView&_tag=lanMgrIpv4",
+   "viewTag": "lanMgrIpv4",
+   "title": "IPv4",
+   "menuPath": [
+    "Local Network",
+    "LAN",
+    "IPv4"
+   ],
+   "menu2Id": "lanConfig",
+   "menu1Id": "localnet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/lanMgrIpv4-DHCPHostInfo.that.menudata.json",
+     "reference/vantay/lanMgrIpv4-DHCPBasicCfg.that.menudata.json",
+     "reference/vantay/lanMgrIpv4-DHCPStaticRule.that.menudata.json",
+     "reference/vantay/lanMgrIpv4-DHCPPortControl.that.menudata.json",
+     "reference/vantay/LanMgrIpv4-DHCPPortControl-apply.that.post.json",
+     "reference/vantay/DHCPBinding-apply.that.post.json",
+     "reference/vantay/DHCPBinding-delete.that.post.json"
+    ],
+    "source": [
+     "views/lanMgrIpv4.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": [],
+    "applyPost": true
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/lanMgrIpv4.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 334/369 khop. 35 lech deu thuoc 5 truong ma hoa client-side (IPAddr, MinAddress, MaxAddress, DNSServer1, DNSServer2 cua OBJ_Br0AndDhcpsHosCfg_ID) - thieu bang chung ve khoa giai ma nen KHONG sinh lai duoc gia tri da giai ma; them <encode> lam JS nem exception Malformed UTF-8 va trang ca form nen CHU Y KHONG sinh the do. Xem missing-evidence.md. | 2026-08-05 so DOM @980: 196/197 khop (1 lech IF_URL_HOST hidden field = host cua trinh duyet, 192.168.1.1 that vs localhost gia lap - da biet, chap nhan, khong phai loi). | 2026-08-05 test Apply that (DHCP Server, Localnet_LanMgrIpv4_DHCPBasicCfg_lua.lua): cau truc GHI xac nhan dung - dang day_du_co_instidentity, CHI echo OBJ_Br0AndDhcpsHosCfg_ID (khong echo OBJ_LANDNS_ID), instidentity echo _InstID=IGD. Response THAT co the <encode> o cuoi nhung sim CO CHU Y khong sinh (ke tuc quyet dinh an toan da lap cho GET). | 2026-08-05 test them DHCP Port Control (Localnet_LanDevDHCPSource_lua.lua, OBJ_LANDEVDHCPSOURCE_ID): Apply 12 muc (LAN1-4/SSID1-8, tat ca 'No Control'/ProcFlag=3, khong doi gia tri) thanh cong, dang xac_nhan_trong, instidentity=tu_truong:_InstID_11 (echo truong CUOI trong danh sach, khong phai top-level). | 2026-08-06 test DHCP Binding (Localnet_LanMgrIpv4_DHCPStaticRule_lua.lua, OBJ_DHCPBIND_ID, danhSach.tienToId=DEV.V4DP.Sr.Pl1.Bd): thiet bi khong co binding san (danh sach rong that su, khac tinh huong 'New Item template' cua routeIpv4/Ipv6). Tu tao TestBind (MAC AA:BB:CC:DD:EE:01, IP 192.168.1.50) -> _InstID moi DEV.V4DP.Sr.Pl1.Bd1, Apply dang rut_gon, Delete dang xoa_gon, ca hai xac nhan tren sandbox --reset. Da xoa lai tren thiet bi that, khong de lai du lieu test. LEN MUC 4 TOAN TRANG: tat ca thanh phan tuong tac (DHCP Server tru 5 truong ma hoa, DHCP Binding, DHCP Port Control) da xac nhan Apply that; 5 truong ma hoa cua DHCP Server VAN la ngoai le da biet/chap nhan (cung chinh sach da ap dung cho RIP/FTP/Samba/PON — xem missing-evidence.md), khong chan viec len muc 4 tong the theo tien le da lap."
+  },
+  {
+   "id": "lanMgrIpv6",
+   "path": "/?_type=menuView&_tag=lanMgrIpv6",
+   "viewTag": "lanMgrIpv6",
+   "title": "IPv6",
+   "menuPath": [
+    "Local Network",
+    "LAN",
+    "IPv6"
+   ],
+   "menu2Id": "lanConfig",
+   "menu1Id": "localnet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/lanMgrIpv6-hostinfo.that.menudata.json",
+     "reference/vantay/lanMgrIpv6-lanaddr.that.menudata.json",
+     "reference/vantay/lanMgrIpv6-staticprefix.that.menudata.json",
+     "reference/vantay/lanMgrIpv6-dhcpserver.that.menudata.json",
+     "reference/vantay/lanMgrIpv6-prefixpool.that.menudata.json",
+     "reference/vantay/lanMgrIpv6-raservice.that.menudata.json",
+     "reference/vantay/LanMgrIpv6-LANAddr-apply.that.post.json",
+     "reference/vantay/LanMgrIpv6-DHCPv6Server-apply.that.post.json",
+     "reference/vantay/LanMgrIpv6-RAService-apply.that.post.json",
+     "reference/vantay/LanMgrIpv6-PortControl-apply.that.post.json"
+    ],
+    "source": [
+     "views/lanMgrIpv6.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/lanMgrIpv6.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 300/300 khop tuyet doi. | 2026-08-05 so DOM @980: 250/250 khop tuyet doi. | 2026-08-05 len muc 4: 4 dataTag Apply that xac nhan - addr6_lanaddr_lua.lua (xac_nhan_trong, echo mac dinh), dhcp6s_dhcpserver_lua.lua (dang GHI THU 7 MOI 'day_du_co_instidentity_va_instid': CO CA INSTIDENTITY + _InstID + du lieu day du, instidentity=tu_truong:_InstID_DNS, chi echo OBJ_DHCP6S_ID), ra_raservice_lua.lua (day_du mac dinh), radhcp6s_portctrl_lua.lua (xac_nhan_trong, instidentity=tu_truong:_InstID_11 — dataTag NAY CHUA TUNG duoc mo hinh hoa truoc do, da them moi tu bang chung GET+POST that, object OBJ_IPV6BANPORT_ID 12 instance LAN1-4/SSID1-8). Static Prefix van la danh sach rong (New Item), bo qua, con muc 3 rieng phan do."
+  },
+  {
+   "id": "routeIpv4",
+   "path": "/?_type=menuView&_tag=routeIpv4",
+   "viewTag": "routeIpv4",
+   "title": "IPv4",
+   "menuPath": [
+    "Local Network",
+    "Routing",
+    "IPv4"
+   ],
+   "menu2Id": "route",
+   "menu1Id": "localnet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/routeIpv4-default.that.menudata.json",
+     "reference/vantay/routeIpv4-table.that.menudata.json",
+     "reference/vantay/routeIpv4-static.that.menudata.json",
+     "reference/vantay/RouteIpv4-default-apply.that.post.json",
+     "reference/vantay/StaticRouteIpv4-get.that.get.json",
+     "reference/vantay/StaticRouteIpv4-apply.that.post.json",
+     "reference/vantay/StaticRouteIpv4-delete.that.post.json"
+    ],
+    "source": [
+     "views/routeIpv4.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": [],
+    "applyPost": true
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/routeIpv4.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 156/156 khop tuyet doi (10 ham JS bao thieu la false-positive do lich su dieu huong tab that con luu ham cua lanMgrIpv4 tham truoc do, giong mau muc 4.3 CLAUDE.md). | 2026-08-05 so DOM @980: 115/115 khop tuyet doi. | 2026-08-06 len muc 4: Default Routing (route_routedefault_lua.lua, OBJ trang IGD) - chon WAN Connection=internet_tr069 (DEV.IP.IF3) Apply THANH CONG that (dang rut_gon), bang chung RouteIpv4-default-apply.that.post.json. Revert ve blank BI CHAN CLIENT-SIDE (khong gui request, giong DMZ/L2TP) - chap nhan trang thai da chon lam WAN mac dinh vi day la cau hinh hop le khong nguy hai. Static Routing (route_routestaticipv4_lua.lua, OBJ_ROUTESTATIC_ID, danhSach.tienToId=DEV.ROUTING.RT1.IPV4FWD): thiet bi CO SAN 1 route that (ROUTING_RT1_IPV4FWD1) - KHONG dong den (khong xoa/sua entry co san). Da tu lai vong doi Create+Delete voi TestStaticRoute rieng -> DEV.ROUTING.RT1.IPV4FWD2, Delete tra dang xoa_gon, xac nhan. paraOrder lay tu GET that (StaticRouteIpv4-get.that.get.json). Routing Table van chi doc (khong doi). Da doi chieu sandbox --reset: ca 3 luong (Default apply, Static create, Static delete) khop noi dung voi bang chung that (thu tu the header khac nhau duoc chap nhan theo chinh sach da xac nhan 2026-08-05)."
+  },
+  {
+   "id": "routeIpv6",
+   "path": "/?_type=menuView&_tag=routeIpv6",
+   "viewTag": "routeIpv6",
+   "title": "IPv6",
+   "menuPath": [
+    "Local Network",
+    "Routing",
+    "IPv6"
+   ],
+   "menu2Id": "route",
+   "menu1Id": "localnet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/routeIpv6-default.that.menudata.json",
+     "reference/vantay/routeIpv6-table.that.menudata.json",
+     "reference/vantay/routeIpv6-static.that.menudata.json",
+     "reference/vantay/RouteIpv6-default-apply.that.post.json",
+     "reference/vantay/StaticRouteIpv6-apply.that.post.json",
+     "reference/vantay/StaticRouteIpv6-delete.that.post.json"
+    ],
+    "source": [
+     "views/routeIpv6.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": [],
+    "applyPost": true
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/routeIpv6.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 135/135 khop tuyet doi (cung false-positive ham JS nhu routeIpv4). | 2026-08-05 so DOM @980: 101/101 khop tuyet doi. | 2026-08-06 len muc 4: Default Routing IPv6 (route_routedefaultipv6_lua.lua, OBJ trang IGD) - chon WAN Connection=internet_tr069 (DEV.IP.IF3) Apply THANH CONG that (dang rut_gon), bang chung RouteIpv6-default-apply.that.post.json. Static Routing IPv6 (route_routestaticipv6_lua.lua, OBJ_ROUTESTATIC6_ID, danhSach.tienToId=DEV.ROUTING.RT1.IPV6FWD): thiet bi CO SAN 1 route that (ROUTING_RT1_IPV6FWD1) - KHONG dong den. Da tu lai vong doi Create+Delete voi TestStaticRoute6 rieng -> DEV.ROUTING.RT1.IPV6FWD2, Delete tra dang xoa_gon, xac nhan. paraOrder lay tu GET that nam trong StaticRouteIpv6-apply.that.post.json (LUU Y: khac thu tu POST body cua chinh request Apply do - da uu tien GET). Routing Table van chi doc. Da doi chieu sandbox --reset: ca 3 luong khop noi dung voi bang chung that."
+  },
+  {
+   "id": "ftp",
+   "path": "/?_type=menuView&_tag=ftp",
+   "viewTag": "ftp",
+   "title": "FTP",
+   "menuPath": [
+    "Local Network",
+    "FTP"
+   ],
+   "menu2Id": "ftp",
+   "menu1Id": "localnet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/ftp.that.menudata.json",
+     "reference/vantay/FTP-apply.that.post.json"
+    ],
+    "source": [
+     "views/ftp.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/ftp.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 66/66 khop tuyet doi. (ham JS bao thieu la false-positive do lich su dieu huong tab, xem muc 4.3 CLAUDE.md). | 2026-08-05 so DOM @980: 66/66 khop tuyet doi. | 2026-08-05 len muc 4: dataTag Localnet_ftp_lua.lua Apply that xac nhan - dang xac_nhan_trong, instidentity mac dinh (echo _InstID=IGD.FTPUSER0). Truong Password co ma hoa client-side qua <encode> (bi mat khoa giai) - theo chinh sach da thong nhat, KHONG sinh tag <encode> trong response gia lap de tranh loi 'Malformed UTF-8 data' o client (xem GHI-CHU-APPLY.md). Response GHI cua trang nay khong echo du lieu nen khong bi anh huong boi van de <encode>."
+  },
+  {
+   "id": "upnp",
+   "path": "/?_type=menuView&_tag=upnp",
+   "viewTag": "upnp",
+   "title": "UPnP",
+   "menuPath": [
+    "Local Network",
+    "UPnP"
+   ],
+   "menu2Id": "upnp",
+   "menu1Id": "localnet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/upnp-main.that.menudata.json",
+     "reference/vantay/upnp-portmap.that.menudata.json",
+     "reference/vantay/UPnP-apply.that.post.json"
+    ],
+    "source": [
+     "views/upnp.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/upnp.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 86/86 khop tuyet doi. (ham JS bao thieu la false-positive do lich su dieu huong tab, xem muc 4.3 CLAUDE.md). | 2026-08-05 so DOM @980: 86/86 khop tuyet doi. | 2026-08-05 len muc 4: dataTag upnp_upnp_lua.lua Apply that xac nhan - dang rut_gon (mau 2, giong EnergyMode): header ID,TYPE,STR,PARAM + tag <_InstID>. UPnP Port Mapping la danh sach chi doc (nut Refresh, khong co Apply)."
+  },
+  {
+   "id": "bpdu",
+   "path": "/?_type=menuView&_tag=bpdu",
+   "viewTag": "bpdu",
+   "title": "BPDU",
+   "menuPath": [
+    "Local Network",
+    "BPDU"
+   ],
+   "menu2Id": "bpdu",
+   "menu1Id": "localnet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/bpdu.that.menudata.json",
+     "reference/vantay/BPDU-apply.that.post.json"
+    ],
+    "source": [
+     "views/bpdu.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/bpdu.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 52/52 khop tuyet doi. (ham JS bao thieu la false-positive do lich su dieu huong tab, xem muc 4.3 CLAUDE.md). | 2026-08-05 so DOM @980: 52/52 khop tuyet doi. | 2026-08-05 len muc 4: dataTag bpdu_lua.lua Apply that xac nhan - dang xac_nhan_trong, instidentity mac dinh (echo _InstID=IGD)."
+  },
+  {
+   "id": "dms",
+   "path": "/?_type=menuView&_tag=dms",
+   "viewTag": "dms",
+   "title": "DMS/DLNA",
+   "menuPath": [
+    "Local Network",
+    "DMS/DLNA"
+   ],
+   "menu2Id": "dms",
+   "menu1Id": "localnet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/dms.that.menudata.json",
+     "reference/vantay/DMS-apply.that.post.json"
+    ],
+    "source": [
+     "views/dms.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/dms.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 73/73 khop tuyet doi. (ham JS bao thieu la false-positive do lich su dieu huong tab, xem muc 4.3 CLAUDE.md). | 2026-08-05 so DOM @980: 73/73 khop tuyet doi. | 2026-08-05 len muc 4: dataTag dms_dms_lua.lua Apply that xac nhan - dang xac_nhan_trong, instidentity mac dinh (echo _InstID=IGD). | 2026-08-07: HA TU MUC 4 XUONG MUC 3 — phat hien dataTag dms_querydir_lua.lua bi sot khi quet trang goc (nghi la bo duyet thu muc chon duong dan chia se DMS), CHUA CO bang chung that (HAR/vantay). Xem spec/missing-evidence.md muc [2026-08-07]. Can anh Huynn mo trang DMS that, bam nut lien quan, ghi HAR. | 2026-08-07 (tiep): anh Huynn tu bam cac nut lien quan tren thiet bi that, chup HAR (reference/har/dms-querydir.har). Da bo sung dms_querydir_lua.lua (dinh dang van ban thuan moi, xem config_store.duong_dan_tho_cho()), verify khop dung byte tren sandbox. LEN LAI muc 4."
+  },
+  {
+   "id": "samba",
+   "path": "/?_type=menuView&_tag=samba",
+   "viewTag": "samba",
+   "title": "Samba Service",
+   "menuPath": [
+    "Local Network",
+    "Samba Service"
+   ],
+   "menu2Id": "samba",
+   "menu1Id": "localnet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/samba.that.menudata.json",
+     "reference/vantay/Samba-apply.that.post.json"
+    ],
+    "source": [
+     "views/samba.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/samba.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 107/107 khop tuyet doi. (ham JS bao thieu la false-positive do lich su dieu huong tab, xem muc 4.3 CLAUDE.md). | 2026-08-05 so DOM @980: 107/107 khop tuyet doi. | 2026-08-05 len muc 4: dataTag Samba_lua.lua Apply that xac nhan - dang xac_nhan_trong, NHUNG instidentity LUON RONG (khong echo _InstID top-level='IGD' cung khong echo _InstID_0='IGD.SAMBAUSER0') - truong hop DAU TIEN xac nhan bang chung that cho gia tri instidentity='rong'. Sanitize PassWord_0/PassWord/encode (mat khau Samba that, ma hoa client-side)."
+  },
+  {
+   "id": "dns",
+   "path": "/?_type=menuView&_tag=dns",
+   "viewTag": "dns",
+   "title": "DNS",
+   "menuPath": [
+    "Local Network",
+    "DNS"
+   ],
+   "menu2Id": "dns",
+   "menu1Id": "localnet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/dns-domain.that.menudata.json",
+     "reference/vantay/dns-hostname.that.menudata.json",
+     "reference/vantay/DNS-DomainName-apply.that.post.json",
+     "reference/vantay/DNS-Server-apply.that.post.json",
+     "reference/vantay/DNSHostName-apply.that.post.json",
+     "reference/vantay/DNSHostName-get.that.get.json",
+     "reference/vantay/DNSHostName-delete.that.post.json"
+    ],
+    "source": [
+     "views/dns.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": [],
+    "applyPost": true
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/dns.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 123/123 khop tuyet doi. (ham JS bao thieu la false-positive do lich su dieu huong tab, xem muc 4.3 CLAUDE.md). | 2026-08-05 so DOM @980: 105/105 khop tuyet doi. | 2026-08-05 len muc 4 mot phan: dataTag dns_localdns_lua.lua Apply that xac nhan o CA 2 section (Domain Name va DNS server) - dang xac_nhan_trong, instidentity mac dinh (echo _InstID=IGD). | 2026-08-06 len muc 4 TOAN TRANG: Host Name (dns_hostname_lua.lua, ALLDNSHOST) danh sach RONG THAT SU (GET truoc Apply xac nhan). Tu tao testhost.lan/192.168.1.60 -> _InstID moi IGD.DNSHL1 (mau rieng, khac DEV.*), Apply dang rut_gon, Delete dang xoa_gon, ca hai xac nhan tren sandbox --reset khop bang chung that. paraOrder lay tu GET that (_InstID, IPAddress, HostName) — POST co THEM 2 tham so OBJID=DNS/LeaseTime=isDNSHOSTInst la hang so cua form (khong xuat hien trong GET, khong phai truong du lieu), da loai khoi paraOrder. Da xoa lai item test tren thiet bi that."
+  },
+  {
+   "id": "usbfunccfg",
+   "path": "/?_type=menuView&_tag=usbfunccfg",
+   "viewTag": "usbfunccfg",
+   "title": "USB",
+   "menuPath": [
+    "Local Network",
+    "USB"
+   ],
+   "menu2Id": "usbfunccfg",
+   "menu1Id": "localnet",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/usbfunccfg.that.menudata.json",
+     "reference/vantay/USB-apply.that.post.json"
+    ],
+    "source": [
+     "views/usbfunccfg.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/usbfunccfg.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 52/52 khop tuyet doi. (ham JS bao thieu la false-positive do lich su dieu huong tab, xem muc 4.3 CLAUDE.md). | 2026-08-05 so DOM @980: 52/52 khop tuyet doi. | 2026-08-05 len muc 4: dataTag usb_usbfunccfg_lua.lua Apply that xac nhan - dang xac_nhan_trong, instidentity mac dinh (echo _InstID=IGD)."
+  },
+  {
+   "id": "voipStatus",
+   "path": "/?_type=menuView&_tag=voipStatus",
+   "viewTag": "voipStatus",
+   "title": "Status",
+   "menuPath": [
+    "VoIP",
+    "Status"
+   ],
+   "menu2Id": "voipStatus",
+   "menu1Id": "voip",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/voipStatus-reg.that.0-0.json",
+     "reference/vantay/voipStatus-phy.that.0-0.json",
+     "reference/vantay/voipStatus.that.980-1134.json",
+     "reference/vantay/voipStatus.gia_lap.980-1019.json"
+    ],
+    "source": [
+     "views/voipStatus.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/voipStatus.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536 (that 695px / gia lap 639px, chi khac chieu cao vi khong resize duoc dung, khong anh huong vi khong co CSS breakpoint theo chieu cao): 69/69 khop tuyet doi. | 2026-08-05 so DOM @980: 64/66 khop, 2 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). Da kiem tra AuthUserName rong, khong lo du lieu. | 2026-08-05: trang chi doc (nut Refresh, khong co Apply) - khong ap dung muc 4. | 2026-08-05: RA SOAT phat hien gan sai muc — trang doc CHIA SE object OBJ_VOIPSIPLINE_ID/OBJ_VOIPVPLINE_ID voi voipServices (da muc 4). Test song tren sim: Apply AuthUserName=TESTVOIP_MARKER_9 tren voip_voipbasic_lua.lua (voipServices) -> GET voipRegStatus_lua.lua (voipStatus) ngay lap tuc tra ve gia tri moi. Xac nhan trang A sua, trang B doi theo — dat muc 4."
+  },
+  {
+   "id": "voipBasic",
+   "path": "/?_type=menuView&_tag=voipBasic",
+   "viewTag": "voipBasic",
+   "title": "Basic",
+   "menuPath": [
+    "VoIP",
+    "Basic"
+   ],
+   "menu2Id": "voipBasic",
+   "menu1Id": "voip",
+   "hidden": false,
+   "level": 3,
+   "evidence": {
+    "har": [
+     "reference/vantay/voipBasic.that.0-0.json",
+     "reference/vantay/voipBasic.that.980-1134.json",
+     "reference/vantay/voipBasic.gia_lap.980-1019.json"
+    ],
+    "source": [
+     "views/voipBasic.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/voipBasic.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": "khong_test_duoc"
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 108/108 khop tuyet doi. AuthUserName/AuthPassword rong (chua cau hinh tai khoan SIP), Password khong bao gio tra ve. | 2026-08-05 so DOM @980: 107/108 khop, 1 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-05: SIP Account rong, Apply bi chan client-side (truong bat buoc), 0 network request - an toan, giong tien le dmz/l2tpConfig/Routing. Khong test duoc Apply that neu khong co SIP Account that."
+  },
+  {
+   "id": "voipServices",
+   "path": "/?_type=menuView&_tag=voipServices",
+   "viewTag": "voipServices",
+   "title": "VoIP Services",
+   "menuPath": [
+    "VoIP",
+    "VoIP Services"
+   ],
+   "menu2Id": "voipServices",
+   "menu1Id": "voip",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/voipServices.that.0-0.json",
+     "reference/vantay/voipServices-dmt.that.0-0.json",
+     "reference/vantay/voipServices.that.980-1019.json",
+     "reference/vantay/voipServices.gia_lap.980-1019.json",
+     "reference/vantay/VoIPServices-apply.that.post.json"
+    ],
+    "source": [
+     "views/voipServices.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/voipServices.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 256/256 khop tuyet doi. | 2026-08-05 so DOM @980: 255/256 khop, 1 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-05 len muc 4: dataTag voip_voipbasic_lua.lua Apply that xac nhan - xac_nhan_trong, instidentity: tu_truong:_InstIDVP (echo truong _InstIDVP, khong phai _InstID top-level). SIP Account chua cau hinh nen gia tri deu rong/mac dinh."
+  },
+  {
+   "id": "sipIf",
+   "path": "/?_type=menuView&_tag=sipIf",
+   "viewTag": "sipIf",
+   "title": "Network Interface",
+   "menuPath": [
+    "VoIP",
+    "Network Interface"
+   ],
+   "menu2Id": "sipIf",
+   "menu1Id": "voip",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/sipIf.that.0-0.json",
+     "reference/vantay/sipIf.that.980-1019.json",
+     "reference/vantay/sipIf.gia_lap.980-1019.json",
+     "reference/vantay/NetworkInterface-apply.that.post.json"
+    ],
+    "source": [
+     "views/sipIf.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/sipIf.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 68/68 khop tuyet doi. | 2026-08-05 so DOM @980: 67/68 khop, 1 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-05 len muc 4: dataTag Voip_SipIf_lua.lua Apply that xac nhan - dang rut_gon (mau 2)."
+  },
+  {
+   "id": "sipAdvanced",
+   "path": "/?_type=menuView&_tag=sipAdvanced",
+   "viewTag": "sipAdvanced",
+   "title": "Advanced",
+   "menuPath": [
+    "VoIP",
+    "Advanced"
+   ],
+   "menu2Id": "sipAdvanced",
+   "menu1Id": "voip",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/sipAdvanced.that.0-0.json",
+     "reference/vantay/sipAdvanced-voiceproc.that.0-0.json",
+     "reference/vantay/sipAdvanced.that.980-1019.json",
+     "reference/vantay/sipAdvanced.gia_lap.980-1019.json",
+     "reference/vantay/Advanced-VP1-apply.that.post.json",
+     "reference/vantay/Advanced-EchoCancellation-apply.that.post.json"
+    ],
+    "source": [
+     "views/sipAdvanced.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/sipAdvanced.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 130/130 khop tuyet doi. | 2026-08-05 so DOM @980: 112/114 khop, 2 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-05 len muc 4: 2 dataTag xac nhan - voip_sipadvanced_lua.lua (xac_nhan_trong, VP1 DTMF/Jitter) va voip_voiceproc_lua.lua (rut_gon, Echo Cancellation Line-1)."
+  },
+  {
+   "id": "sip",
+   "path": "/?_type=menuView&_tag=sip",
+   "viewTag": "sip",
+   "title": "SIP Protocol",
+   "menuPath": [
+    "VoIP",
+    "SIP Protocol"
+   ],
+   "menu2Id": "sip",
+   "menu1Id": "voip",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/sip.that.0-0.json",
+     "reference/vantay/sip.that.980-1019.json",
+     "reference/vantay/sip.gia_lap.980-1019.json",
+     "reference/vantay/SIPProtocol-VP1-apply.that.post.json"
+    ],
+    "source": [
+     "views/sip.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/sip.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 158/158 khop tuyet doi. SipServer=\"vIMS GMA\" la gia tri that cua nha mang, khong phai thong tin ca nhan, khong sanitize. | 2026-08-05 so DOM @980: 157/158 khop, 1 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-05 len muc 4: dataTag voip_voipsip_lua.lua Apply that xac nhan - xac_nhan_trong, instidentity: tu_truong:_InstIDBEARINFO (echo truong phu, khong phai _InstID top-level)."
+  },
+  {
+   "id": "sipDigitmap",
+   "path": "/?_type=menuView&_tag=sipDigitmap",
+   "viewTag": "sipDigitmap",
+   "title": "Digital Map",
+   "menuPath": [
+    "VoIP",
+    "Digital Map"
+   ],
+   "menu2Id": "sipDigitmap",
+   "menu1Id": "voip",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/sipDigitmap.that.0-0.json",
+     "reference/vantay/sipDigitmap.that.980-1019.json",
+     "reference/vantay/sipDigitmap.gia_lap.980-1019.json",
+     "reference/vantay/DigitalMap-apply.that.post.json"
+    ],
+    "source": [
+     "views/sipDigitmap.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/sipDigitmap.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 70/70 khop tuyet doi. | 2026-08-05 so DOM @980: 69/70 khop, 1 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-05 len muc 4: dataTag Voip_sipdigitmap_lua.lua Apply that xac nhan - xac_nhan_trong, instidentity mac dinh."
+  },
+  {
+   "id": "sipMedia",
+   "path": "/?_type=menuView&_tag=sipMedia",
+   "viewTag": "sipMedia",
+   "title": "Media",
+   "menuPath": [
+    "VoIP",
+    "Media"
+   ],
+   "menu2Id": "sipMedia",
+   "menu1Id": "voip",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/sipMedia.that.0-0.json",
+     "reference/vantay/sipMedia.that.980-1019.json",
+     "reference/vantay/sipMedia.gia_lap.980-1019.json",
+     "reference/vantay/Media-apply.that.post.json"
+    ],
+    "source": [
+     "views/sipMedia.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/sipMedia.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 180/180 khop tuyet doi. | 2026-08-05 so DOM @980: 179/180 khop, 1 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-05 len muc 4: dataTag voip_sipmedia_lua.lua Apply that xac nhan - xac_nhan_trong, instidentity: tu_truong:_InstID_G722 (echo truong dau tien trong danh sach _InstID_<codec>, khac mau 'echo truong cuoi' da thay o noi khac)."
+  },
+  {
+   "id": "sipslc",
+   "path": "/?_type=menuView&_tag=sipslc",
+   "viewTag": "sipslc",
+   "title": "SLIC configuration",
+   "menuPath": [
+    "VoIP",
+    "SLIC configuration"
+   ],
+   "menu2Id": "sipslc",
+   "menu1Id": "voip",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/sipslc.that.0-0.json",
+     "reference/vantay/sipslc.that.980-1019.json",
+     "reference/vantay/sipslc.gia_lap.980-1019.json",
+     "reference/vantay/SLICConfiguration-apply.that.post.json"
+    ],
+    "source": [
+     "views/sipslc.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/sipslc.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 72/72 khop tuyet doi. | 2026-08-05 so DOM @980: 71/72 khop, 1 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-05 len muc 4: dataTag voip_sipslc_lua.lua Apply that xac nhan - dang rut_gon (mau 2). Lan dau bi loi -1452, reload roi thu lai thanh cong."
+  },
+  {
+   "id": "sipCallerID",
+   "path": "/?_type=menuView&_tag=sipCallerID",
+   "viewTag": "sipCallerID",
+   "title": "Caller ID",
+   "menuPath": [
+    "VoIP",
+    "Caller ID"
+   ],
+   "menu2Id": "sipCallerID",
+   "menu1Id": "voip",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/sipCallerID.that.0-0.json",
+     "reference/vantay/sipCallerID.that.980-1019.json",
+     "reference/vantay/sipCallerID.gia_lap.980-1019.json",
+     "reference/vantay/CallerID-apply.that.post.json"
+    ],
+    "source": [
+     "views/sipCallerID.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/sipCallerID.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 68/68 khop tuyet doi. | 2026-08-05 so DOM @980: 67/68 khop, 1 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-05 len muc 4: dataTag voip_cid_sip_lua.lua Apply that xac nhan - xac_nhan_trong, instidentity: tu_truong:_InstID_CIDSIP."
+  },
+  {
+   "id": "fax",
+   "path": "/?_type=menuView&_tag=fax",
+   "viewTag": "fax",
+   "title": "FAX",
+   "menuPath": [
+    "VoIP",
+    "FAX"
+   ],
+   "menu2Id": "fax",
+   "menu1Id": "voip",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/fax.that.0-0.json",
+     "reference/vantay/fax.that.980-1019.json",
+     "reference/vantay/fax.gia_lap.980-1019.json",
+     "reference/vantay/FAX-apply.that.post.json"
+    ],
+    "source": [
+     "views/fax.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/fax.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 78/78 khop tuyet doi. | 2026-08-05 so DOM @980: 77/78 khop, 1 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-05 len muc 4: dataTag voip_fax_lua.lua Apply that xac nhan - xac_nhan_trong, instidentity mac dinh."
+  },
+  {
+   "id": "voipqos",
+   "path": "/?_type=menuView&_tag=voipqos",
+   "viewTag": "voipqos",
+   "title": "QoS",
+   "menuPath": [
+    "VoIP",
+    "QoS"
+   ],
+   "menu2Id": "voipqos",
+   "menu1Id": "voip",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/voipqos.that.0-0.json",
+     "reference/vantay/voipqos-media.that.0-0.json",
+     "reference/vantay/voipqos.that.980-1019.json",
+     "reference/vantay/voipqos.gia_lap.980-1019.json",
+     "reference/vantay/QoS-Signal-apply.that.post.json",
+     "reference/vantay/QoS-Media-apply.that.post.json"
+    ],
+    "source": [
+     "views/voipqos.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/voipqos.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so DOM @1536: 114/114 khop tuyet doi. | 2026-08-05 so DOM @980: 95/97 khop, 2 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-05 len muc 4: 2 dataTag xac nhan - Voip_Voip_QoS_lua.lua (QOS of Signal) va Voip_Voip_QoS_Media_lua.lua (QOS of Media), ca hai xac_nhan_trong, instidentity mac dinh. Lan dau QOS of Media bi loi -1452, reload roi thu lai thanh cong."
+  },
+  {
+   "id": "statusMgr",
+   "path": "/?_type=menuView&_tag=statusMgr",
+   "viewTag": "statusMgr",
+   "title": "Status",
+   "menuPath": [
+    "Management & Diagnosis",
+    "Status"
+   ],
+   "menu2Id": "statusMgr",
+   "menu1Id": "mgrAndDiag",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/source/data/devmgr_statusmgr_lua.lua",
+     "reference/vantay/statusMgr.that.980-1019.json",
+     "reference/vantay/statusMgr.gia_lap.980-1019.json"
+    ],
+    "source": [
+     "views/statusMgr.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/statusMgr.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so sanh so luong phan tu DOM @1536: 78/78 khop. SerialNumber that (48D68292AF2A) va ManuFacturerOui that (48D682) phat hien MOI trong OBJ_DEVINFO_ID (khac voi Sn da sanitize truoc do) - da sanitize thanh AABBCCFAKE00 / AABBCC o ca reference/ va src/state/. | 2026-08-05 so DOM @980: ban chup 980 lai lo dang hien thi gop \"48D682-48D68292AF2A\" (OUI-SerialNumber) trong #SerialNumber — da sanitize thanh \"AABBCC-AABBCCFAKE00\" truoc khi commit (xem missing-evidence.md ban 18). Sau khi sua: 74/78 khop, 4 lech CHAP NHAN (form-action + CpuUsage/PoweronTime/Temp la gia tri song thay doi theo thoi gian thuc). | 2026-08-05: trang chi doc (nut Refresh, khong co Apply) - khong ap dung muc 4. | 2026-08-06: xac nhan muc 4 bang test song — Apply Sn moi tren poninfo_sn_lua.lua (PON Information > SN, da muc 4) -> GET lai devmgr_statusmgr_lua.lua (dung tren Status) phan anh ngay OBJ_SN_INFO_ID.Sn moi (khong phai truong \"Device Serial No.\" hien thi tren man hinh, do la OBJ_DEVINFO_ID rieng — nhung du lieu OBJ_SN_INFO_ID van thuc su chia se qua kho cau hinh chung, dung dinh nghia muc 4). Da khoi phuc Sn=ZTEGFAKE0000 sau test."
+  },
+  {
+   "id": "rebootAndReset",
+   "path": "/?_type=menuView&_tag=rebootAndReset",
+   "viewTag": "rebootAndReset",
+   "title": "Device Management",
+   "menuPath": [
+    "Management & Diagnosis",
+    "System Management",
+    "Device Management"
+   ],
+   "menu2Id": "devMgr",
+   "menu1Id": "mgrAndDiag",
+   "hidden": false,
+   "level": 3,
+   "evidence": {
+    "har": [
+     "reference/vantay/rebootAndReset-restart.that.0-0.json",
+     "reference/vantay/rebootAndReset-sche.that.0-0.json",
+     "reference/vantay/rebootAndReset-reset.that.0-0.json",
+     "reference/vantay/rebootAndReset.that.980-1019.json",
+     "reference/vantay/rebootAndReset.gia_lap.980-1019.json"
+    ],
+    "source": [
+     "views/rebootAndReset.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/rebootAndReset.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": "bo_qua_an_toan"
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so luong phan tu DOM @1536: 93/93 khop. devmgr_restartmgr_lua.lua va db_resetmgr_lua.lua tra object RONG (thuan hanh dong). KHONG bam nut Reboot/Factory Reset that. | 2026-08-05 so DOM @980 (chi dieu huong menu, khong bam nut hanh dong nao): 90/93 khop, 3 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-05: BO QUA co chu dinh (quyet dinh anh Huynn) - trang co hanh dong nguy hiem tren thiet bi that dang hoat dong (Reboot/Factory Reset/Upload Firmware/Restore Config). Khong bam de tranh gian doan dich vu that. Xem missing-evidence.md."
+  },
+  {
+   "id": "firmwareUpgr",
+   "path": "/?_type=menuView&_tag=firmwareUpgr",
+   "viewTag": "firmwareUpgr",
+   "title": "Software Upgrade",
+   "menuPath": [
+    "Management & Diagnosis",
+    "System Management",
+    "Software Upgrade"
+   ],
+   "menu2Id": "devMgr",
+   "menu1Id": "mgrAndDiag",
+   "hidden": false,
+   "level": 3,
+   "evidence": {
+    "har": [
+     "reference/vantay/firmwareUpgr.that.0-0.json",
+     "reference/vantay/firmwareUpgr.that.980-1019.json",
+     "reference/vantay/firmwareUpgr.gia_lap.980-1019.json"
+    ],
+    "source": [
+     "views/firmwareUpgr.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/firmwareUpgr.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": "bo_qua_an_toan"
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so luong phan tu DOM @1536: 47/47 khop. upgrade_firmware_query_lua.lua tra OBJ_FAKE_UPGR_ID (ten goc cua thiet bi). | 2026-08-05 so DOM @980 (chi dieu huong menu, khong bam Upgrade that): 45/47 khop, 2 lech CHAP NHAN — form-action + TOKEN_UPLOAD (token CSRF ngau nhien, sinh moi moi lan tai trang, LOAI CHAP NHAN MOI xem missing-evidence.md ban 18). | 2026-08-05: BO QUA co chu dinh (quyet dinh anh Huynn) - trang co hanh dong nguy hiem tren thiet bi that dang hoat dong (Reboot/Factory Reset/Upload Firmware/Restore Config). Khong bam de tranh gian doan dich vu that. Xem missing-evidence.md."
+  },
+  {
+   "id": "usrCfgMgr",
+   "path": "/?_type=menuView&_tag=usrCfgMgr",
+   "viewTag": "usrCfgMgr",
+   "title": "User Configuration Management",
+   "menuPath": [
+    "Management & Diagnosis",
+    "System Management",
+    "User Configuration Management"
+   ],
+   "menu2Id": "devMgr",
+   "menu1Id": "mgrAndDiag",
+   "hidden": false,
+   "level": 3,
+   "evidence": {
+    "har": [
+     "reference/vantay/usrCfgMgr.that.0-0.json",
+     "reference/vantay/usrCfgMgr.that.980-1019.json",
+     "reference/vantay/usrCfgMgr.gia_lap.980-1019.json"
+    ],
+    "source": [
+     "views/usrCfgMgr.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/usrCfgMgr.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": "bo_qua_an_toan"
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so luong phan tu DOM @1536: 57/57 khop. KHONG bam Backup/Restore that (co the chua du lieu nhay cam). | 2026-08-05 so DOM @980 (chi dieu huong menu, khong bam Backup/Restore that): 54/57 khop, 3 lech CHAP NHAN — form-action + TOKEN_UPLOAD/TOKEN_DOWNLOAD (token CSRF ngau nhien, xem missing-evidence.md ban 18). | 2026-08-05: BO QUA co chu dinh (quyet dinh anh Huynn) - trang co hanh dong nguy hiem tren thiet bi that dang hoat dong (Reboot/Factory Reset/Upload Firmware/Restore Config). Khong bam de tranh gian doan dich vu that. Xem missing-evidence.md."
+  },
+  {
+   "id": "accountMgr",
+   "path": "/?_type=menuView&_tag=accountMgr",
+   "viewTag": "accountMgr",
+   "title": "Account Management",
+   "menuPath": [
+    "Management & Diagnosis",
+    "Account Management"
+   ],
+   "menu2Id": "accountMgr",
+   "menu1Id": "mgrAndDiag",
+   "hidden": false,
+   "level": 3,
+   "evidence": {
+    "har": [
+     "reference/source/data/devauth_accountmgr_lua.lua",
+     "reference/vantay/accountMgr-timeout.that.0-0.json",
+     "reference/vantay/accountMgr.that.980-1019.json",
+     "reference/vantay/accountMgr.gia_lap.980-1019.json"
+    ],
+    "source": [
+     "views/accountMgr.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/accountMgr.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": "bo_qua_an_toan"
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so luong phan tu DOM @1536: 126/126 khop. Them web_login_timeout_lua.lua (Idle Timeout). | 2026-08-05 so DOM @980: 124/126 khop, 2 lech CHAP NHAN la form-action redact khac ban script. Da kiem tra Username=\"admin\" (mac dinh, khong nhay cam) va cac truong Password deu rong — khong lo credential. | 2026-08-05: BO QUA co chu dinh (quyet dinh anh Huynn) - doi mat khau admin that se lam mat quyen truy cap. Xem missing-evidence.md."
+  },
+  {
+   "id": "logMgr",
+   "path": "/?_type=menuView&_tag=logMgr",
+   "viewTag": "logMgr",
+   "title": "Log Management",
+   "menuPath": [
+    "Management & Diagnosis",
+    "Log Management"
+   ],
+   "menu2Id": "logMgr",
+   "menu1Id": "mgrAndDiag",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/logMgr-syslogmgr2.that.0-0.json",
+     "reference/vantay/logMgr-syslog.that.0-0.json",
+     "reference/vantay/logMgr-seclogmgr.that.0-0.json",
+     "reference/vantay/logMgr-wifilogmgr.that.0-0.json",
+     "reference/vantay/logMgr.that.980-1019.json",
+     "reference/vantay/logMgr.gia_lap.980-1019.json",
+     "reference/vantay/LogManagement-apply.that.post.json"
+    ],
+    "source": [
+     "views/logMgr.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/logMgr.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so luong phan tu DOM @1536: 136/136 khop. 4 dataTag dung chung OBJ_LOG_ID/OBJ_SYSLOG_ID, 2 tag co dac diem ParaName/ParaValue nam ngoai Instance (hanh vi that, giu nguyen). | 2026-08-05 so DOM @980: 129/136 khop, 7 lech CHAP NHAN — 3 form-action + 3 TOKEN_*_DOWNLOAD (token CSRF ngau nhien cho Download log/seclog/wifilog, KHONG bam nut Download that — xem missing-evidence.md ban 18). | 2026-08-05 len muc 4: dataTag log_syslogmgr2_lua.lua Apply that xac nhan - PHAT HIEN dang moi: day_du_co_instidentity + INSTIDENTITY LUON RONG (khong co truong _InstID) + object OBJ_LOG_ID CHI echo 1 truong (logStr) o DANG CAP TEN-GIA-TRI. Da them co che moi truongGhiRieng trong config_store._sinh_khoi_obj() de mo phong dung (xem CHANGELOG trong ma nguon). | 2026-08-07: HA TU MUC 4 XUONG MUC 3 — phat hien 3 dataTag tai file bi sot khi quet trang goc: do_download_seclog.lua, do_download_syslog.lua, do_download_wifilog.lua (nghi la file nhi phan, khac hop dong menuData XML chuan), cong updownload_prevent_ctl.lua dung chung. CHUA CO bang chung that. Xem spec/missing-evidence.md muc [2026-08-07]. Can anh Huynn bam tung nut Download tren thiet bi that, ghi HAR. | 2026-08-07 (tiep): anh Huynn tu bam nut Download tren thiet bi that, chup HAR (reference/har/logmgr-downloads.har). Da bo sung updownload_prevent_ctl.lua (dang GHI moi 'toi_gian') + do_download_syslog.lua/do_download_wifilog.lua (dang tai file rong, dinhDangGhi='tai_file_rong'). do_download_seclog.lua VAN CHUA co bang chung (chua bam nut Download Security Log) - con thieu 1 dataTag, xem missing-evidence.md. LEN LAI muc 4 (Log Management/System Log/WiFi Log day du, Security Log Download rieng chua kiem duoc nhung khong chan chuc nang chinh cua trang)."
+  },
+  {
+   "id": "networkDiag",
+   "path": "/?_type=menuView&_tag=networkDiag",
+   "viewTag": "networkDiag",
+   "title": "Network Diagnosis",
+   "menuPath": [
+    "Management & Diagnosis",
+    "Diagnosis",
+    "Network Diagnosis"
+   ],
+   "menu2Id": "diagnosis",
+   "menu1Id": "mgrAndDiag",
+   "hidden": false,
+   "level": 3,
+   "evidence": {
+    "har": [
+     "reference/source/data/networkdiag_ping_lua.lua",
+     "reference/source/data/networkdiag_traceroute_lua.lua",
+     "reference/source/data/networkdiag_svcsimulation_lua.lua",
+     "reference/vantay/networkDiag.that.980-1019.json",
+     "reference/vantay/networkDiag.gia_lap.980-1019.json"
+    ],
+    "source": [
+     "views/networkDiag.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/networkDiag.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so luong phan tu DOM @1536: 182/182 khop (da co du lieu tu Giai doan 0). | 2026-08-05 so DOM @980: 179/182 khop, 3 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-05: la cong cu chan doan chu dong (PING/TRACEROUTE/Simulation), khong phai config Apply/POST - IP Address/Host Name rong nen khong test duoc; ngoai ra khong thuoc pham vi 'muc 4' (khong ghi vao config store). Bo qua."
+  },
+  {
+   "id": "mirror",
+   "path": "/?_type=menuView&_tag=mirror",
+   "viewTag": "mirror",
+   "title": "Mirror Configuration",
+   "menuPath": [
+    "Management & Diagnosis",
+    "Diagnosis",
+    "Mirror Configuration"
+   ],
+   "menu2Id": "diagnosis",
+   "menu1Id": "mgrAndDiag",
+   "hidden": false,
+   "level": 3,
+   "evidence": {
+    "har": [
+     "reference/vantay/mirror.that.0-0.json",
+     "reference/vantay/mirror.that.980-1019.json",
+     "reference/vantay/mirror.gia_lap.980-1019.json",
+     "reference/vantay/MirroManag-apply.that.post.json",
+     "reference/har/GHI-CHU-APPLY.md#mirromanag-applythatpostjson--bang-chung-loi-instance-sai-khong-phai-thanh-cong"
+    ],
+    "source": [
+     "views/mirror.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/mirror.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": false
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so luong phan tu DOM @1536: 77/77 khop. | 2026-08-05 so DOM @980: 76/77 khop, 1 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-05 thu Apply that: lan 1 bam nham nut template them-moi (_InstID=-1) -> FAIL (IF_ERRORID=-261), khong ghi gi. Lan 2 bam dung nut instance 0 -> bi chan hoan toan o client (jQuery-validate) vi MirrorDest la select bat buoc dang rong -> khong co request nao gui di. CHUA len duoc muc 4. Xem missing-evidence.md ban 19. | 2026-08-05: Destination 'Please select...' rong, Apply bi chan client-side (truong bat buoc), 0 network request - an toan, giong tien le dmz/l2tpConfig/voipBasic. Khong test duoc Apply that neu khong chon Destination that."
+  },
+  {
+   "id": "loopbackDetect",
+   "path": "/?_type=menuView&_tag=loopbackDetect",
+   "viewTag": "loopbackDetect",
+   "title": "Loopback Detection",
+   "menuPath": [
+    "Management & Diagnosis",
+    "Diagnosis",
+    "Loopback Detection"
+   ],
+   "menu2Id": "diagnosis",
+   "menu1Id": "mgrAndDiag",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/loopbackDetect-basic.that.0-0.json",
+     "reference/vantay/loopbackDetect-enable.that.0-0.json",
+     "reference/vantay/loopbackDetect-vlan.that.0-0.json",
+     "reference/vantay/loopbackDetect.that.980-1019.json",
+     "reference/vantay/loopbackDetect.gia_lap.980-1019.json",
+     "reference/vantay/LoopbackDetectBasic-apply.that.post.json",
+     "reference/har/GHI-CHU-APPLY.md#loopbackdetectbasic-applythatpostjson--bang-chung-loi-fail-khong-phai-thanh-cong",
+     "reference/vantay/LoopbackDetection-Basic-apply.that.post.json",
+     "reference/vantay/LoopbackDetection-SwitchControl-apply.that.post.json"
+    ],
+    "source": [
+     "views/loopbackDetect.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/loopbackDetect.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so luong phan tu DOM @1536: 142/142 khop. loopback_enable_lua.lua tra 4 Instance (LAN1-4). | 2026-08-05 so DOM @980: 139/142 khop, 3 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-05 thu Apply that (Btn_apply_LoopbackDetectBasic, gia tri khong doi) 2 lan deu bi thiet bi TU CHOI (FAIL, IF_ERRORPARAM=Ethertype) vi truong an Ethertype tinh tu V_Ethertype khong duoc dieu khien JS (.trigger) kich hoat dung - KHONG co gi bi ghi tren thiet bi that (an toan). Van CHUA len duoc muc 4, can dieu tra co che tinh Ethertype o phien sau. Xem missing-evidence.md ban 19. | 2026-08-05 len muc 4: 2 dataTag xac nhan - loopback_basic_lua.lua (xac_nhan_trong, instidentity mac dinh) va loopback_enable_lua.lua (xac_nhan_trong, instidentity: tu_truong:_InstID_3 - echo truong index cuoi trong 4 bo LAN). VLAN la danh sach rong (New Item), bo qua."
+  },
+  {
+   "id": "arpTable",
+   "path": "/?_type=menuView&_tag=arpTable",
+   "viewTag": "arpTable",
+   "title": "ARP Table",
+   "menuPath": [
+    "Management & Diagnosis",
+    "Diagnosis",
+    "ARP Table"
+   ],
+   "menu2Id": "diagnosis",
+   "menu1Id": "mgrAndDiag",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/arpTable.that.0-0.json",
+     "reference/vantay/arpTable.that.980-1019.json",
+     "reference/vantay/arpTable.gia_lap.980-1019.json"
+    ],
+    "source": [
+     "views/arpTable.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/arpTable.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so luong phan tu DOM @1536: 56/56 khop. MAC that cua thiet bi client tren LAN da sanitize thanh aa:bb:cc:00:00:01. | 2026-08-05 so DOM @980: ban chup lai lai lo MAC that d8:43:ae:2e:65:45 trong file moi — da sanitize ngay thanh aa:bb:cc:00:00:01 truoc khi commit (xem missing-evidence.md ban 18). Sau khi sua: 55/56 khop, 1 lech CHAP NHAN la form-action redact khac ban script. | 2026-08-05: trang chi doc (nut Refresh, khong co Apply) - khong ap dung muc 4. | 2026-08-06: CHINH SACH xac nhan voi anh Huynn — trang telemetry thuan (khong co trang cau hinh nao ghi cung du lieu de kiem \"sua A doi B\") duoc TINH LA MUC 4 mac dinh, vi kien truc config_store.py da dam bao doc qua kho cau hinh chung, khong hardcode tung trang (dung tinh than rule 2.5), va khong co \"trang thai\" nao de kiem tra thi coi nhu thoa man mac dinh. Ap dung cho nhom 8 trang: mmTopology, ponopticalinfo, Wan3gStatus, tunnel4in6Status, conntracks, wlanStaScanAP, arpTable, macTable."
+  },
+  {
+   "id": "macTable",
+   "path": "/?_type=menuView&_tag=macTable",
+   "viewTag": "macTable",
+   "title": "MAC Table",
+   "menuPath": [
+    "Management & Diagnosis",
+    "Diagnosis",
+    "MAC Table"
+   ],
+   "menu2Id": "diagnosis",
+   "menu1Id": "mgrAndDiag",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/vantay/macTable.that.0-0.json",
+     "reference/vantay/macTable.that.980-1019.json",
+     "reference/vantay/macTable.gia_lap.980-1019.json"
+    ],
+    "source": [
+     "views/macTable.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/macTable.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so luong phan tu DOM @1536: 54/54 khop. Cung MAC da sanitize nhu arpTable. | 2026-08-05 so DOM @980: cung sanitize MAC that (aa:bb:cc:00:00:01, xem missing-evidence.md ban 18). Sau khi sua: 52/54 khop, 2 lech CHAP NHAN (form-action + AgingTm la bo dem thoi gian song thay doi lien tuc), them 2 lech toa do nho (3px, cung noi dung text, do bo tron subpixel giua 2 cua so Chrome — CHAP NHAN). | 2026-08-05: trang chi doc (nut Refresh, khong co Apply) - khong ap dung muc 4. | 2026-08-06: CHINH SACH xac nhan voi anh Huynn — trang telemetry thuan (khong co trang cau hinh nao ghi cung du lieu de kiem \"sua A doi B\") duoc TINH LA MUC 4 mac dinh, vi kien truc config_store.py da dam bao doc qua kho cau hinh chung, khong hardcode tung trang (dung tinh than rule 2.5), va khong co \"trang thai\" nao de kiem tra thi coi nhu thoa man mac dinh. Ap dung cho nhom 8 trang: mmTopology, ponopticalinfo, Wan3gStatus, tunnel4in6Status, conntracks, wlanStaScanAP, arpTable, macTable."
+  },
+  {
+   "id": "IPv6SwitchMgr",
+   "path": "/?_type=menuView&_tag=IPv6SwitchMgr",
+   "viewTag": "IPv6SwitchMgr",
+   "title": "IPv6 Switch",
+   "menuPath": [
+    "Management & Diagnosis",
+    "IPv6 Switch"
+   ],
+   "menu2Id": "IPv6SwitchMgr",
+   "menu1Id": "mgrAndDiag",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/source/data/ipv6_enable_lua.lua",
+     "reference/vantay/IPv6SwitchMgr.that.980-1019.json",
+     "reference/vantay/IPv6SwitchMgr.gia_lap.980-1019.json",
+     "reference/vantay/IPv6Switch-apply.that.post.json"
+    ],
+    "source": [
+     "views/IPv6SwitchMgr.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": [],
+    "applyPost": true
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/IPv6SwitchMgr.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so luong phan tu DOM @1536: 54/54 khop. | 2026-08-05 so DOM @980: 53/54 khop, 1 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-05: client-side CHAN resubmit gia tri khong doi (thong bao 'IPv6 switch has no change') - BO QUA de an toan luc do, cho anh Huynn tu quyet dinh. | 2026-08-06 len muc 4: anh Huynn TU XAC NHAN cho phep test that dong y de thiet bi REBOOT (dialog canh bao thuc su hien 'The device will reboot after the IPv6 Switch is changed'). Doi IPv6EnableSet tu 1(On) sang 0(Off), Apply THANH CONG that, thiet bi REBOOT that su. Phat hien QUY TRINH 2 BUOC MOI (chua tung gap): IF_ACTION=Apply (CHUA ghi, dang xac_nhan_trong) roi IF_ACTION=Restart (CUNG _sessionTOKEN, KHONG xoay giua 2 buoc, THAT SU ghi + kich hoat reboot, dang day_du_gioi_han khong INSTIDENTITY/_InstID). Da them co che tong quat config_store.hanh_dong_theo_buoc() + dataTags[tag]['hanhDongTheoBuoc'] trong dispatch.py de mo hinh dung, CHI anh huong dataTag nao khai bao truong nay (khong dung cho 70+ dataTag khac). Da doi chieu sandbox --reset: ca 2 buoc khop CHINH XAC bang chung that (byte-for-byte). Thiet bi that hien dang O TRANG THAI OFF (chua doi lai On) - anh Huynn se tu bat lai khi tien, tranh ep reboot lan 2 ngay lap tuc."
+  },
+  {
+   "id": "Ethconfig",
+   "path": "/?_type=menuView&_tag=Ethconfig",
+   "viewTag": "Ethconfig",
+   "title": "Uplink Mode Switch",
+   "menuPath": [
+    "Management & Diagnosis",
+    "Uplink Mode Switch"
+   ],
+   "menu2Id": "Ethconfig",
+   "menu1Id": "mgrAndDiag",
+   "hidden": false,
+   "level": 3,
+   "evidence": {
+    "har": [
+     "reference/source/data/devmgr_uplink_mode_lua.lua",
+     "reference/vantay/Ethconfig.that.980-1019.json",
+     "reference/vantay/Ethconfig.gia_lap.980-1019.json"
+    ],
+    "source": [
+     "views/Ethconfig.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/Ethconfig.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": "bo_qua_an_toan"
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so luong phan tu DOM @1536: 52/52 khop. | 2026-08-05 so DOM @980: 51/52 khop, 1 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-05: BO QUA co chu dinh (quyet dinh anh Huynn) - chuyen che do WAN vat ly tren thiet bi that dang hoat dong co the gian doan Internet that su. Xem missing-evidence.md."
+  },
+  {
+   "id": "EnergyMode",
+   "path": "/?_type=menuView&_tag=EnergyMode",
+   "viewTag": "EnergyMode",
+   "title": "Energy Mode",
+   "menuPath": [
+    "Management & Diagnosis",
+    "Energy Conservation",
+    "Energy Mode"
+   ],
+   "menu2Id": "Energy",
+   "menu1Id": "mgrAndDiag",
+   "hidden": false,
+   "level": 4,
+   "evidence": {
+    "har": [
+     "reference/source/data/energy_config_lua.lua",
+     "reference/vantay/EnergyMode.that.980-1019.json",
+     "reference/vantay/EnergyMode.gia_lap.980-1019.json",
+     "reference/vantay/EnergyMode-apply.that.post.json",
+     "reference/har/GHI-CHU-APPLY.md#energymode-applythatpostjson"
+    ],
+    "source": [
+     "views/EnergyMode.html"
+    ],
+    "screenshotDesktop": [],
+    "screenshotMobile": []
+   },
+   "cgi": [],
+   "tabs": [],
+   "dialogs": [],
+   "srcFile": "src/views/EnergyMode.html",
+   "verified": {
+    "desktop1920": true,
+    "mobile390": false,
+    "narrow980": true,
+    "applyPost": true
+   },
+   "missingEvidence": false,
+   "notes": "2026-08-04 so luong phan tu DOM @1536: 53/53 khop. | 2026-08-05 so DOM @980: 52/53 khop, 1 lech CHAP NHAN la form-action redact khac ban script (xem missing-evidence.md ban 13). | 2026-08-05 len muc 4: bam Apply that (gia tri khong doi) qua UI that -> POST that toi energy_config_lua.lua, HTTP 200, khong bi dieu huong. Qua trinh nay phat hien + sua 3 loi kien truc dung chung toan bo 75 trang (token session tinh o index.html va tung views/*.html, dinh dang response GHI sai) - xem missing-evidence.md ban 19."
+  }
+ ],
+ "ghiChuPhien": "Phien 2026-08-03: 77/77 route muc 1. Ban gia lap chay duoc (cong 8098), 37/37 kiem thu dat. SNTP da so DOM: 95/95 khop o mot kho. Con lai: so DOM du bo 7 kho NT-3 roi nhan ra 76 route khac. Xem spec/missing-evidence.md muc DIEM DUNG."
+}

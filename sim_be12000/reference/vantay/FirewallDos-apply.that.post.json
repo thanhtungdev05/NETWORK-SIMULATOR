@@ -1,0 +1,15 @@
+{
+ "ten": "FirewallDos-apply",
+ "ben": "that",
+ "khoMan": "post",
+ "sanitized": false,
+ "captured": [
+  {
+   "method": "POST",
+   "url": "/?_type=menuData&_tag=firewall_dos_lua.lua",
+   "reqBody": "IF_ACTION=Apply&_InstID=IGD&Enable=1&Threshold=100&Btn_apply_FirewallConf=&Btn_cancel_FirewallConf=&_sessionTOKEN=O57dhoRUmjDLadnn2tkfVmu5",
+   "status": 200,
+   "respBody": "<ajax_response_xml_root><INSTIDENTITY>IGD</INSTIDENTITY><IF_ERRORID>0</IF_ERRORID><IF_ERRORTYPE>SUCC</IF_ERRORTYPE><IF_ERRORSTR>SUCC</IF_ERRORSTR><IF_ERRORPARAM>SUCC</IF_ERRORPARAM><_InstID>IGD</_InstID></ajax_response_xml_root>"
+  }
+ ]
+}

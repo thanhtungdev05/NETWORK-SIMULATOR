@@ -1,0 +1,15 @@
+{
+ "ten": "StaticRouteIpv4-get",
+ "ben": "that",
+ "khoMan": "get",
+ "sanitized": false,
+ "captured": [
+  {
+   "method": "GET",
+   "url": "/?_type=menuData&_tag=route_routestaticipv4_lua.lua",
+   "reqBody": "",
+   "status": 200,
+   "respBody": "<?xml version=\"1.0\"?>\r\n<ajax_response_xml_root>\r\n    <IF_ERRORSTR>SessionTimeout</IF_ERRORSTR>\r\n    <IF_ERRORPARAM>SUCC</IF_ERRORPARAM>\r\n    <IF_ERRORTYPE>SUCC</IF_ERRORTYPE>\r\n</ajax_response_xml_root>\r\n"
+  }
+ ]
+}

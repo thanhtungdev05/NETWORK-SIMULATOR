@@ -1,0 +1,727 @@
+{
+  "device": "BE12000",
+  "hardwareModel": "ZTE F8728D",
+  "firmwareString": "F8728D V3.0.12P2N2",
+  "footer": "©2008-2025 ZTE Corporation. All rights reserved",
+  "capturedAt": "2026-08-03",
+  "capturedFrom": "http://192.168.1.1",
+  "capturedBy": "duyet menu truc tiep tren thiet bi that, ghi lai URL do trinh duyet goi",
+  "note": "Giao dien la single-page: moi trang tai bang GET /?_type=menuView&_tag=<tag>. Khong co file .htm rieng cho tung trang.",
+  "menu": [
+    {
+      "id": "homePage",
+      "label": "Home",
+      "level": 1,
+      "children": [
+        {
+          "id": "homePage",
+          "label": "Home",
+          "level": 2,
+          "defaultViewTag": "homePage",
+          "dataTags": [
+            "firewall_homepage_lua.lua",
+            "wlan_homepage_lua.lua"
+          ],
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "mmTopology",
+      "label": "Topology",
+      "level": 1,
+      "children": [
+        {
+          "id": "mmTopology",
+          "label": "Topology",
+          "level": 2,
+          "defaultViewTag": "mmTopology",
+          "dataTags": [
+            "topo_lua.lua"
+          ],
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "internet",
+      "label": "Internet",
+      "level": 1,
+      "children": [
+        {
+          "id": "internetStatus",
+          "label": "Status",
+          "level": 2,
+          "defaultViewTag": "ponopticalinfo",
+          "dataTags": [
+            "optical_info_lua.lua"
+          ],
+          "children": [
+            {
+              "tag": "ponopticalinfo",
+              "label": "PON Inform",
+              "level": 3
+            },
+            {
+              "tag": "ethWanStatus",
+              "label": "WAN",
+              "level": 3
+            },
+            {
+              "tag": "Wan3gStatus",
+              "label": "3G/4G",
+              "level": 3
+            },
+            {
+              "tag": "tunnel4in6Status",
+              "label": "DSLite",
+              "level": 3
+            },
+            {
+              "tag": "l2tpStatus",
+              "label": "L2TP",
+              "level": 3
+            },
+            {
+              "tag": "conntracks",
+              "label": "NAT entries/conntracks",
+              "level": 3
+            }
+          ]
+        },
+        {
+          "id": "internetConfig",
+          "label": "WAN",
+          "level": 2,
+          "defaultViewTag": "ethWanConfig",
+          "dataTags": [
+            "wan_internet_lua.lua"
+          ],
+          "children": [
+            {
+              "tag": "ethWanConfig",
+              "label": "WAN",
+              "level": 3
+            },
+            {
+              "tag": "Wan3gConfig",
+              "label": "3G/4G",
+              "level": 3
+            },
+            {
+              "tag": "tunnel4in6Config",
+              "label": "DSLite",
+              "level": 3
+            },
+            {
+              "tag": "l2tpConfig",
+              "label": "L2TP",
+              "level": 3
+            }
+          ]
+        },
+        {
+          "id": "security",
+          "label": "Security",
+          "level": 2,
+          "defaultViewTag": "firewall",
+          "dataTags": [
+            "firewall_config_lua.lua"
+          ],
+          "children": [
+            {
+              "tag": "firewall",
+              "label": "Firewall",
+              "level": 3
+            },
+            {
+              "tag": "filterCriteria",
+              "label": "Filter Criteria",
+              "level": 3
+            },
+            {
+              "tag": "localServiceCtrl",
+              "label": "Local Service Control",
+              "level": 3
+            },
+            {
+              "tag": "alg",
+              "label": "ALG",
+              "level": 3
+            },
+            {
+              "tag": "dmz",
+              "label": "DMZ",
+              "level": 3
+            },
+            {
+              "tag": "portForwarding",
+              "label": "Port Forwarding",
+              "level": 3
+            },
+            {
+              "tag": "portTrigger",
+              "label": "Port Trigger",
+              "level": 3
+            }
+          ]
+        },
+        {
+          "id": "parentCtrl",
+          "label": "Parental Controls",
+          "level": 2,
+          "defaultViewTag": "parentCtrl",
+          "dataTags": [
+            "firewall_parentctrl_lua.lua"
+          ],
+          "children": []
+        },
+        {
+          "id": "ddns",
+          "label": "DDNS",
+          "level": 2,
+          "defaultViewTag": "ddns",
+          "dataTags": [
+            "ddns_lua.lua"
+          ],
+          "children": []
+        },
+        {
+          "id": "sntp",
+          "label": "SNTP",
+          "level": 2,
+          "defaultViewTag": "sntp",
+          "dataTags": [
+            "sntp_lua.lua"
+          ],
+          "children": []
+        },
+        {
+          "id": "portBinding",
+          "label": "Port Binding",
+          "level": 2,
+          "defaultViewTag": "portBinding",
+          "dataTags": [
+            "portbinding_lua.lua"
+          ],
+          "children": []
+        },
+        {
+          "id": "rip",
+          "label": "Dynamic Routing",
+          "level": 2,
+          "defaultViewTag": "rip",
+          "dataTags": [
+            "rip_lua.lua"
+          ],
+          "children": []
+        },
+        {
+          "id": "multicast",
+          "label": "Multicast",
+          "level": 2,
+          "defaultViewTag": "multicastmode",
+          "dataTags": [
+            "multicast_mode_lua.lua"
+          ],
+          "children": [
+            {
+              "tag": "multicastmode",
+              "label": "Multicast Mode",
+              "level": 3
+            },
+            {
+              "tag": "igmp",
+              "label": "IGMP",
+              "level": 3
+            },
+            {
+              "tag": "mld",
+              "label": "MLD",
+              "level": 3
+            },
+            {
+              "tag": "multicastbasic",
+              "label": "Basic",
+              "level": 3
+            },
+            {
+              "tag": "IgmpWLANCONF",
+              "label": "Multicast on Wi-Fi",
+              "level": 3
+            }
+          ]
+        },
+        {
+          "id": "portlocate",
+          "label": "Port Locating",
+          "level": 2,
+          "defaultViewTag": "portlocate",
+          "dataTags": [
+            "Internet_PortLocate_lua.lua"
+          ],
+          "children": []
+        },
+        {
+          "id": "ponInfo",
+          "label": "PON Information",
+          "level": 2,
+          "defaultViewTag": "ponLoid",
+          "dataTags": [
+            "poninfo_loid_lua.lua"
+          ],
+          "children": [
+            {
+              "tag": "ponLoid",
+              "label": "LOID",
+              "level": 3
+            },
+            {
+              "tag": "ponSn",
+              "label": "SN",
+              "level": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "localnet",
+      "label": "Local Network",
+      "level": 1,
+      "children": [
+        {
+          "id": "localNetStatus",
+          "label": "Status",
+          "level": 2,
+          "defaultViewTag": "localNetStatus",
+          "dataTags": [
+            "status_lan_info_lua.lua"
+          ],
+          "children": []
+        },
+        {
+          "id": "wlanConfig",
+          "label": "WLAN",
+          "level": 2,
+          "defaultViewTag": "wlanBasic",
+          "dataTags": [
+            "wlan_wlanbasiconoff_lua.lua"
+          ],
+          "children": [
+            {
+              "tag": "wlanBasic",
+              "label": "WLAN Basic",
+              "level": 3
+            },
+            {
+              "tag": "wlanAdvanced",
+              "label": "WLAN Advanced",
+              "level": 3
+            },
+            {
+              "tag": "wps",
+              "label": "WPS",
+              "level": 3
+            },
+            {
+              "tag": "wlanStaScanAP",
+              "label": "Surrounding WiFi",
+              "level": 3
+            },
+            {
+              "tag": "wifibandsteer",
+              "label": "WLAN Band Steering",
+              "level": 3
+            },
+            {
+              "tag": "WLANMLO",
+              "label": "MLO",
+              "level": 3
+            },
+            {
+              "tag": "smNetSphereMAP",
+              "label": "Mesh Wi-Fi",
+              "level": 3
+            }
+          ]
+        },
+        {
+          "id": "lanConfig",
+          "label": "LAN",
+          "level": 2,
+          "defaultViewTag": "lanMgrIpv4",
+          "dataTags": [
+            "Localnet_LanMgrIpv4_DHCPHostInfo_lua.lua"
+          ],
+          "children": [
+            {
+              "tag": "lanMgrIpv4",
+              "label": "IPv4",
+              "level": 3
+            },
+            {
+              "tag": "lanMgrIpv6",
+              "label": "IPv6",
+              "level": 3
+            }
+          ]
+        },
+        {
+          "id": "route",
+          "label": "Routing",
+          "level": 2,
+          "defaultViewTag": "routeIpv4",
+          "dataTags": [
+            "route_routedefault_lua.lua"
+          ],
+          "children": [
+            {
+              "tag": "routeIpv4",
+              "label": "IPv4",
+              "level": 3
+            },
+            {
+              "tag": "routeIpv6",
+              "label": "IPv6",
+              "level": 3
+            }
+          ]
+        },
+        {
+          "id": "ftp",
+          "label": "FTP",
+          "level": 2,
+          "defaultViewTag": "ftp",
+          "dataTags": [
+            "Localnet_ftp_lua.lua"
+          ],
+          "children": []
+        },
+        {
+          "id": "upnp",
+          "label": "UPnP",
+          "level": 2,
+          "defaultViewTag": "upnp",
+          "dataTags": [
+            "upnp_upnp_lua.lua"
+          ],
+          "children": []
+        },
+        {
+          "id": "bpdu",
+          "label": "BPDU",
+          "level": 2,
+          "defaultViewTag": "bpdu",
+          "dataTags": [
+            "bpdu_lua.lua"
+          ],
+          "children": []
+        },
+        {
+          "id": "dms",
+          "label": "DMS/DLNA",
+          "level": 2,
+          "defaultViewTag": "dms",
+          "dataTags": [
+            "dms_dms_lua.lua"
+          ],
+          "children": []
+        },
+        {
+          "id": "samba",
+          "label": "Samba Service",
+          "level": 2,
+          "defaultViewTag": "samba",
+          "dataTags": [
+            "Samba_lua.lua"
+          ],
+          "children": []
+        },
+        {
+          "id": "dns",
+          "label": "DNS",
+          "level": 2,
+          "defaultViewTag": "dns",
+          "dataTags": [
+            "dns_localdns_lua.lua"
+          ],
+          "children": []
+        },
+        {
+          "id": "usbfunccfg",
+          "label": "USB",
+          "level": 2,
+          "defaultViewTag": "usbfunccfg",
+          "dataTags": [
+            "usb_usbfunccfg_lua.lua"
+          ],
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "voip",
+      "label": "VoIP",
+      "level": 1,
+      "children": [
+        {
+          "id": "voipStatus",
+          "label": "Status",
+          "level": 2,
+          "defaultViewTag": "voipStatus",
+          "dataTags": [
+            "voipRegStatus_lua.lua"
+          ],
+          "children": []
+        },
+        {
+          "id": "voipBasic",
+          "label": "Basic",
+          "level": 2,
+          "defaultViewTag": "voipBasic",
+          "dataTags": [
+            "voip_voipbasic_lua.lua"
+          ],
+          "children": []
+        },
+        {
+          "id": "voipServices",
+          "label": "VoIP Services",
+          "level": 2,
+          "defaultViewTag": "voipServices",
+          "dataTags": [
+            "voipDmtTimer_lua.lua",
+            "Voip_SipService_lua.lua"
+          ],
+          "children": []
+        },
+        {
+          "id": "sipIf",
+          "label": "Network Interface",
+          "level": 2,
+          "defaultViewTag": "sipIf",
+          "dataTags": [
+            "Voip_SipIf_lua.lua"
+          ],
+          "children": []
+        },
+        {
+          "id": "sipAdvanced",
+          "label": "Advanced",
+          "level": 2,
+          "defaultViewTag": "sipAdvanced",
+          "dataTags": [
+            "voip_sipadvanced_lua.lua"
+          ],
+          "children": []
+        },
+        {
+          "id": "sip",
+          "label": "SIP Protocol",
+          "level": 2,
+          "defaultViewTag": "sip",
+          "dataTags": [
+            "voip_voipsip_lua.lua"
+          ],
+          "children": []
+        },
+        {
+          "id": "sipDigitmap",
+          "label": "Digital Map",
+          "level": 2,
+          "defaultViewTag": "sipDigitmap",
+          "dataTags": [
+            "Voip_sipdigitmap_lua.lua"
+          ],
+          "children": []
+        },
+        {
+          "id": "sipMedia",
+          "label": "Media",
+          "level": 2,
+          "defaultViewTag": "sipMedia",
+          "dataTags": [
+            "voip_sipmedia_lua.lua"
+          ],
+          "children": []
+        },
+        {
+          "id": "sipslc",
+          "label": "SLIC configuration",
+          "level": 2,
+          "defaultViewTag": "sipslc",
+          "dataTags": [
+            "voip_sipslc_lua.lua"
+          ],
+          "children": []
+        },
+        {
+          "id": "sipCallerID",
+          "label": "Caller ID",
+          "level": 2,
+          "defaultViewTag": "sipCallerID",
+          "dataTags": [
+            "voip_cid_sip_lua.lua"
+          ],
+          "children": []
+        },
+        {
+          "id": "fax",
+          "label": "FAX",
+          "level": 2,
+          "defaultViewTag": "fax",
+          "dataTags": [
+            "voip_fax_lua.lua"
+          ],
+          "children": []
+        },
+        {
+          "id": "voipqos",
+          "label": "QoS",
+          "level": 2,
+          "defaultViewTag": "voipqos",
+          "dataTags": [
+            "Voip_Voip_QoS_lua.lua"
+          ],
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "mgrAndDiag",
+      "label": "Management & Diagnosis",
+      "level": 1,
+      "children": [
+        {
+          "id": "statusMgr",
+          "label": "Status",
+          "level": 2,
+          "defaultViewTag": "statusMgr",
+          "dataTags": [
+            "devmgr_statusmgr_lua.lua"
+          ],
+          "children": []
+        },
+        {
+          "id": "devMgr",
+          "label": "System Management",
+          "level": 2,
+          "defaultViewTag": "rebootAndReset",
+          "dataTags": [],
+          "children": [
+            {
+              "tag": "rebootAndReset",
+              "label": "Device Management",
+              "level": 3
+            },
+            {
+              "tag": "firmwareUpgr",
+              "label": "Software Upgrade",
+              "level": 3
+            },
+            {
+              "tag": "usrCfgMgr",
+              "label": "User Configuration Management",
+              "level": 3
+            }
+          ]
+        },
+        {
+          "id": "accountMgr",
+          "label": "Account Management",
+          "level": 2,
+          "defaultViewTag": "accountMgr",
+          "dataTags": [
+            "devauth_accountmgr_lua.lua"
+          ],
+          "children": []
+        },
+        {
+          "id": "logMgr",
+          "label": "Log Management",
+          "level": 2,
+          "defaultViewTag": "logMgr",
+          "dataTags": [
+            "log_syslogmgr2_lua.lua"
+          ],
+          "children": []
+        },
+        {
+          "id": "diagnosis",
+          "label": "Diagnosis",
+          "level": 2,
+          "defaultViewTag": "networkDiag",
+          "dataTags": [
+            "networkdiag_ping_lua.lua",
+            "networkdiag_traceroute_lua.lua",
+            "networkdiag_svcsimulation_lua.lua"
+          ],
+          "children": [
+            {
+              "tag": "networkDiag",
+              "label": "Network Diagnosis",
+              "level": 3
+            },
+            {
+              "tag": "mirror",
+              "label": "Mirror Configuration",
+              "level": 3
+            },
+            {
+              "tag": "loopbackDetect",
+              "label": "Loopback Detection",
+              "level": 3
+            },
+            {
+              "tag": "arpTable",
+              "label": "ARP Table",
+              "level": 3
+            },
+            {
+              "tag": "macTable",
+              "label": "MAC Table",
+              "level": 3
+            }
+          ]
+        },
+        {
+          "id": "IPv6SwitchMgr",
+          "label": "IPv6 Switch",
+          "level": 2,
+          "defaultViewTag": "IPv6SwitchMgr",
+          "dataTags": [
+            "ipv6_enable_lua.lua"
+          ],
+          "children": []
+        },
+        {
+          "id": "Ethconfig",
+          "label": "Uplink Mode Switch",
+          "level": 2,
+          "defaultViewTag": "Ethconfig",
+          "dataTags": [
+            "devmgr_uplink_mode_lua.lua"
+          ],
+          "children": []
+        },
+        {
+          "id": "Energy",
+          "label": "Energy Conservation",
+          "level": 2,
+          "defaultViewTag": "EnergyMode",
+          "dataTags": [
+            "energy_config_lua.lua"
+          ],
+          "children": [
+            {
+              "tag": "EnergyMode",
+              "label": "Energy Mode",
+              "level": 3
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

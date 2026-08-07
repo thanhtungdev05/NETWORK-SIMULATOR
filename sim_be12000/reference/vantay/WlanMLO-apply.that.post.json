@@ -1,0 +1,18 @@
+{
+  "page": "Local Network > WLAN > MLO",
+  "url": "/",
+  "method": "POST",
+  "dataTag": "wlan_mlo_model.lua",
+  "kieu": "json",
+  "ngayThu": "2026-08-05",
+  "reqBody": {
+    "IF_ACTION": "Apply",
+    "_InstID": "",
+    "MloEnable": "0",
+    "Btn_apply_WLANMLOInfo": "",
+    "Btn_cancel_WLANMLOInfo": "",
+    "_sessionTOKEN": "(bo qua, chi de minh hoa vi tri truong)"
+  },
+  "respBody": "{\"IF_ERRORPARAM\":\"SUCC\",\"IF_ERRORTYPE\":\"SUCC\",\"IF_ERRORSTR\":\"SUCC\",\"IF_ERRORID\":0}",
+  "ghiChu": "dataTag kieu JSON, da co san duong ghi tu phien truoc (json_ghi_thanhcong trong config_store.py). Response chi co 4 truong loi, khong echo du lieu - dung mo hinh da xac nhan voi IgmpWLANCONF. Khong doi gia tri (MLO van Off)."
+}

@@ -1,0 +1,9 @@
+{
+ "ten": "WLANMLO",
+ "ben": "menudata",
+ "khoMan": "0x0",
+ "url": "http://192.168.1.1/",
+ "data": {
+  "wlan_mlo_model.lua": "{\"IF_ERRORID\":0,\"OBJ_WLANMLO_ID\":{\"Instance\":[{\"MloEnable\":\"0\"}]},\"IF_ERRORTYPE\":\"SUCC\",\"IF_ERRORSTR\":\"SUCC\",\"IF_ERRORPARAM\":\"SUCC\"}"
+ }
+}

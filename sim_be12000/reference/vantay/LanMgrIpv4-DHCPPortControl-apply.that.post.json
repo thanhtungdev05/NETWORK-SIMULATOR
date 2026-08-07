@@ -1,0 +1,29 @@
+{
+  "page": "Local Network > LAN > IPv4 > DHCP Port Control",
+  "url": "/",
+  "method": "POST",
+  "dataTag": "Localnet_LanDevDHCPSource_lua.lua",
+  "ngayThu": "2026-08-05",
+  "reqBody": {
+    "IF_ACTION": "Apply",
+    "_InstNum": "12",
+    "_InstID_0": "DEV.BRIDGING.BR1.BRPORT2", "ProcFlag_0": "3",
+    "_InstID_1": "DEV.BRIDGING.BR1.BRPORT3", "ProcFlag_1": "3",
+    "_InstID_2": "DEV.BRIDGING.BR1.BRPORT4", "ProcFlag_2": "3",
+    "_InstID_3": "DEV.BRIDGING.BR1.BRPORT5", "ProcFlag_3": "3",
+    "_InstID_4": "DEV.BRIDGING.BR1.BRPORT6", "ProcFlag_4": "3",
+    "_InstID_5": "DEV.BRIDGING.BR1.BRPORT7", "ProcFlag_5": "3",
+    "_InstID_6": "DEV.BRIDGING.BR1.BRPORT8", "ProcFlag_6": "3",
+    "_InstID_7": "DEV.BRIDGING.BR1.BRPORT9", "ProcFlag_7": "3",
+    "_InstID_8": "DEV.BRIDGING.BR1.BRPORT10", "ProcFlag_8": "3",
+    "_InstID_9": "DEV.BRIDGING.BR1.BRPORT11", "ProcFlag_9": "3",
+    "_InstID_10": "DEV.BRIDGING.BR1.BRPORT12", "ProcFlag_10": "3",
+    "_InstID_11": "DEV.BRIDGING.BR1.BRPORT13", "ProcFlag_11": "3",
+    "_InstID": "",
+    "Btn_apply_LanDevDHCPSource": "",
+    "Btn_cancel_LanDevDHCPSource": "",
+    "_sessionTOKEN": "(bo qua)"
+  },
+  "respBody": "<ajax_response_xml_root><INSTIDENTITY>DEV.BRIDGING.BR1.BRPORT13</INSTIDENTITY><IF_ERRORID>0</IF_ERRORID><IF_ERRORTYPE>SUCC</IF_ERRORTYPE><IF_ERRORSTR>SUCC</IF_ERRORSTR><IF_ERRORPARAM>SUCC</IF_ERRORPARAM></ajax_response_xml_root>",
+  "ghiChu": "Dang xac_nhan_trong, instidentity = tu_truong:_InstID_11 (echo truong index CUOI trong 12 muc LAN/SSID, khong phai top-level _InstID rong) - cung mo hinh da thay o wlan_macfilteraclpolicy_lua.lua. LAN DAU TIEN thu Apply gap loi -1452 (token cu do vua Apply DHCP Server truoc do khong tai lai trang) - da tai lai / va thu lai thanh cong. Khong doi gia tri (tat ca No Control)."
+}

@@ -26,7 +26,7 @@ window.DEVICE_AX3000C = {
             '- Username: <span class="val">Sgfdl-123456-789</span>',
             '- Password: <span class="val">d123456</span>',
           ],
-          practiceUrl: '/sim_ax3000c/#/network/wan',
+          practiceUrl: '/sim_ax3000c/#/home',
           grading: {
             description: 'Kiểm tra cấu hình PPPoE trên AX3000C',
             rules: []

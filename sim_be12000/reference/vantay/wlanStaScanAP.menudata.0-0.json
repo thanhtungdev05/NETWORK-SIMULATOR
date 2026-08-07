@@ -1,0 +1,10 @@
+{
+ "ten": "wlanStaScanAP",
+ "ben": "menudata",
+ "khoMan": "0x0",
+ "url": "http://192.168.1.1/",
+ "ghiChu": "Ban da qua Scan chua co du lieu; ban co scan (APGetFrom=ScanAP) tra ve mang WiFi hang xom that.",
+ "data": {
+  "wlan_sta_wlan_profile_lua.lua": "<ajax_response_xml_root><IF_ERRORPARAM>SUCC</IF_ERRORPARAM><IF_ERRORTYPE>SUCC</IF_ERRORTYPE><IF_ERRORSTR>SUCC</IF_ERRORSTR><IF_ERRORID>0</IF_ERRORID></ajax_response_xml_root>"
+ }
+}

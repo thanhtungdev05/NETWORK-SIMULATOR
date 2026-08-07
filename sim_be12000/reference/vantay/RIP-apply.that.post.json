@@ -1,0 +1,15 @@
+{
+ "ten": "RIP-apply",
+ "ben": "that",
+ "khoMan": "post",
+ "captured": [
+  {
+   "method": "POST",
+   "url": "/?_type=menuData&_tag=rip_lua.lua",
+   "reqBody": "IF_ACTION=Apply&_InstID=IGD&RipEnabled=0&RipProtocol=1&RipAuthType=0&Btn_apply_RIP=&Btn_cancel_RIP=&encode=kRB0TlLg%2B2avTbkeyhxdHIEDPGnegwdxpDBUD7B24%2Fjl7sVghJ0y4%2Fufs049Oj27p13tERdMALim8KuH5YzUf3ffx8nx4VKDS4ipTNsMA4pZNqDabUghTgcHYr9ahlQHWEGBpusuON7iG5HESnyZQgFwvG3agVIPWjr%2BKN%2BXD7vjShUuR6c12HrxJrBlE1jR9Ex8eV1Td%2BmR%2B%2BIFYS60grp3ZSxmuExJzdkzeHh16J%2BAQUPCYc94kUdwbUK%2F5nws4H2W7P6%2F5ianjuVM6EgbXcNkpkYRNDxBE9ilh%2Fm7hmrOL0FRWuCziYxVGWJ4pZnm%2B%2FHVwLyR0Ru1dzkebYDG4Jfu6SeqkH2pNT8xE8NBNNhiLrh0xmkQtNdgg7eiW80WLdQeVG5FPl%2B7ZWRpTrWqICxJSNn9f09tXr7Z40wBXO50fDs2nF3o%2FwWb04Tv8pFRDH4itFiD%2FUG1ty6fIhajnV249Szsn03hyZy6VcJqf4BDrE47QQsHiJpETriMxyPxwzAOCujNNFrm0XlXrt34ktsTLru2qRQn1dvXXUYK1UpjNZLzY79AB78DPXjsHYn229azl4cLbX6l%2FTIzADrkWlKM%2FTEe3WLpMmNsTpBFbjzd8qls0nOco%2Bbdk4wQDOYm4jvk33KeVfhJmlHkDLeERWmfszWG7b3RdYfixRgHRBE%3D&_sessionTOKEN=5sxKtwRvS5gsG5nCthfrKVNU",
+   "status": 200,
+   "respBody": "<ajax_response_xml_root><INSTIDENTITY></INSTIDENTITY><IF_ERRORID>0</IF_ERRORID><IF_ERRORTYPE>SUCC</IF_ERRORTYPE><IF_ERRORSTR>SUCC</IF_ERRORSTR><IF_ERRORPARAM>SUCC</IF_ERRORPARAM></ajax_response_xml_root>",
+   "respHeaders": "accept-ranges: bytes\r\ncache-control: no-cache,no-store\r\nconnection: close\r\ncontent-length: 203\r\ncontent-security-policy: frame-ancestors 'self'\r\ncontent-type: text/xml; charset=utf-8\r\npragma: no-cache\r\nserver: \r\nx-content-type-options: nosniff\r\nx-frame-options: SAMEORIGIN\r\nx-xss-protection: 1; mode=block\r\n"
+  }
+ ]
+}

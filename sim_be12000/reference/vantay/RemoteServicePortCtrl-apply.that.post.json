@@ -1,0 +1,22 @@
+{
+ "ten": "RemoteServicePortCtrl-apply",
+ "ben": "that",
+ "khoMan": "post",
+ "sanitized": false,
+ "captured": [
+  {
+   "method": "POST",
+   "url": "/?_type=menuData&_tag=firewall_portservice_lua.lua",
+   "reqBody": "IF_ACTION=Apply&_InstNum=5&_InstID_0=IGD.PortControl1&ServPort_0=8080&_InstID_1=IGD.PortControl2&ServPort_1=21&_InstID_2=IGD.PortControl3&ServPort_2=22&_InstID_3=IGD.PortControl4&ServPort_3=23&_InstID_4=IGD.PortControl5&ServPort_4=443&_InstID=&ServPort=&Btn_apply_ServPortCfg=&Btn_cancel_ServPortCfg=&_sessionTOKEN=RjqwQnEJAYqwB7awkCU3gjPM",
+   "status": 200,
+   "respBody": "<ajax_response_xml_root><IF_ERRORPARAM>SUCC</IF_ERRORPARAM><IF_ERRORTYPE>-1</IF_ERRORTYPE><IF_ERRORSTR>This&#32;page&#32;has&#32;expired,&#32;please&#32;refresh&#32;and&#32;try&#32;again.&#32;</IF_ERRORSTR><IF_ERRORID>-1452</IF_ERRORID></ajax_response_xml_root>"
+  },
+  {
+   "method": "GET",
+   "url": "/?_type=hiddenData&_tag=sntp_data&_=1785983318016",
+   "reqBody": "",
+   "status": 200,
+   "respBody": "<ajax_response_xml_root><IF_ERRORPARAM>SUCC</IF_ERRORPARAM><IF_ERRORTYPE>SUCC</IF_ERRORTYPE><IF_ERRORSTR>SUCC</IF_ERRORSTR><IF_ERRORID>0</IF_ERRORID><OBJ_SNTP_ID><Instance><ParaName>_InstID</ParaName><ParaValue>IGD</ParaValue><ParaName>Enable</ParaName><ParaValue>1</ParaValue><ParaName>SntpBindWanName</ParaName><ParaValue></ParaValue><ParaName>NtpServer5</ParaName><ParaValue></ParaValue><ParaName>NtpServer4</ParaName><ParaValue></ParaValue><ParaName>NtpConfigPermission</ParaName><ParaValue>0</ParaValue><ParaName>AutoSetTzname</ParaName><ParaValue>0</ParaValue><ParaName>CurrentLocalTime</ParaName><ParaValue>1970-01-01T01:23:45</ParaValue><ParaName>NtpServer2</ParaName><ParaValue>asia.pool.ntp.org</ParaValue><ParaName>ZoneIndex</ParaName><ParaValue>24</ParaValue><ParaName>Dscp</ParaName><ParaValue>-1</ParaValue><ParaName>PollTimeInterval</ParaName><ParaValue>86400</ParaValue><ParaName>NtpServer3</ParaName><ParaValue></ParaValue><ParaName>NtpServer1</ParaName><ParaValue>vn.pool.ntp.org</ParaValue><ParaName>DaylightSavingsUsed</ParaName><ParaValue>0</ParaValue></Instance></OBJ_SNTP_ID></ajax_response_xml_root>"
+  }
+ ]
+}

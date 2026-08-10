@@ -327,12 +327,12 @@ function renderKpis() {
         { key: 'completed', valueId: 'kpiCompleted', comparisonId: 'kpiCompletedComparison', contextId: 'kpiCompletedContext', type: 'count', unit: 'bài' },
         { key: 'rate', valueId: 'kpiCompletionRate', comparisonId: 'kpiCompletionRateComparison', contextId: 'kpiCompletionRateContext', type: 'rate', unit: '%' },
         { key: 'firstTryRate', valueId: 'kpiFirstTryRate', comparisonId: 'kpiFirstTryRateComparison', contextId: 'kpiFirstTryRateContext', type: 'rate', unit: '%' },
-        { key: 'avgDuration', valueId: 'kpiAvgDuration', comparisonId: 'kpiAvgDurationComparison', contextId: 'kpiAvgDurationContext', type: 'duration', unit: 'phút', lowerIsBetter: true }
+        { key: 'avgDuration', valueId: 'kpiAvgDuration', comparisonId: 'kpiAvgDurationComparison', contextId: 'kpiAvgDurationContext', type: 'duration', unit: 'giây', lowerIsBetter: true }
     ];
 
     const formatMetric = (value, definition) => {
         if (definition.type === 'rate') return `${value}%`;
-        if (definition.type === 'duration') return `${value} phút`;
+        if (definition.type === 'duration') return formatDuration(value);
         return formatNumber.format(value);
     };
 
@@ -361,7 +361,7 @@ function renderKpis() {
                 if (definition.type === 'rate') {
                     changeText = `${formatDecimal(Math.abs(difference))} điểm %`;
                 } else if (definition.type === 'duration') {
-                    changeText = `${formatDecimal(Math.abs(difference))} phút`;
+                    changeText = formatDuration(Math.abs(difference));
                 } else {
                     const percentChange = previousValue
                         ? Math.round((difference / previousValue) * 100)
@@ -463,7 +463,7 @@ function renderSessions(rows) {
                 <td>${escapeHTML(item.labsLabel)}</td>
                 <td>
                     <div><strong>${escapeHTML(item.lastDateTimeFormatted)}</strong></div>
-                    <div class="item-sub">Thời gian làm: ${item.latestDuration} phút</div>
+                    <div class="item-sub">Thời gian làm: ${formatDuration(item.latestDuration)}</div>
                 </td>
             </tr>
         `).join('');
@@ -712,7 +712,7 @@ function renderLearnerDetail(rows) {
                     <td>${escapeHTML(item.device)}</td>
                     <td>${escapeHTML(item.lab)}</td>
                     <td><span class="status-pill ${getStatusClass(item.status)}">${escapeHTML(item.status)}</span></td>
-                    <td>${item.duration} phút</td>
+                    <td>${formatDuration(item.duration)}</td>
                 </tr>
             `).join('');
         }
@@ -1064,7 +1064,7 @@ function renderDevices(rows) {
                 <div class="metric-small"><strong>${item.sessions}</strong><span>Lượt làm</span></div>
                 <div class="metric-small"><strong>${item.labsCount}</strong><span>Số bài lab</span></div>
                 <div class="metric-small"><strong>${item.completion}%</strong><span>Hoàn thành</span></div>
-                <div class="metric-small"><strong>${item.avgDuration}m</strong><span>Thời gian TB</span></div>
+                <div class="metric-small"><strong>${formatDurationCompact(item.avgDuration)}</strong><span>Thời gian TB</span></div>
             </div>
         </div>
     `).join('');
@@ -1261,7 +1261,7 @@ function getDetailReportCellClass(cell) {
 
 function renderDetailReportMetricCell(cell, extraClass = '') {
     if (!cell.attempts) return `<td class="report-metric-cell report-cell-empty ${extraClass}"><span class="report-empty-value">—</span></td>`;
-    const title = `${cell.attempts} lượt làm • ${cell.completed} hoàn thành • Trung bình ${cell.avgDuration} phút`;
+    const title = `${cell.attempts} lượt làm • ${cell.completed} hoàn thành • Trung bình ${formatDuration(cell.avgDuration)}`;
     return `
         <td class="report-metric-cell ${getDetailReportCellClass(cell)} ${extraClass}" title="${escapeHTML(title)}">
             <strong>${formatNumber.format(cell.attempts)}</strong>
@@ -1434,9 +1434,34 @@ function timeOnly(value) {
     return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
 }
 
-function minutesFromSeconds(value) {
-    const seconds = Number(value) || 0;
-    return Math.max(0, Math.round(seconds / 60));
+function formatDuration(seconds) {
+    const total = Math.max(0, Math.round(Number(seconds) || 0));
+    if (total < 60) return `${total} giây`;
+    const minutes = Math.floor(total / 60);
+    const rem = total % 60;
+    return rem ? `${minutes} phút ${rem} giây` : `${minutes} phút`;
+}
+
+function formatDurationCompact(seconds) {
+    const total = Math.max(0, Math.round(Number(seconds) || 0));
+    if (total < 60) return `${total}s`;
+    const minutes = Math.floor(total / 60);
+    const rem = total % 60;
+    return rem ? `${minutes}m${rem}s` : `${minutes}m`;
+}
+
+function formatMetricValue(unit, key, value) {
+    if (unit === '%') return `${value}%`;
+    if (key === 'avgDuration') return formatDuration(value);
+    return formatNumber.format(value) + (unit ? ` ${unit}` : '');
+}
+
+function formatMetricDelta(unit, key, value) {
+    const sign = value > 0 ? '+' : (value < 0 ? '-' : '');
+    const abs = Math.abs(Math.round(value * 10) / 10);
+    if (unit === '%') return `${sign}${abs}%`;
+    if (key === 'avgDuration') return `${sign}${formatDuration(abs)}`;
+    return `${sign}${abs}${unit ? ` ${unit}` : ''}`;
 }
 
 function normalizeActionText(item) {
@@ -1459,7 +1484,7 @@ function mapApiSessions(apiSessions = []) {
             skill: item.skill?.skill_name || item.skill?.skill_id || item.lab?.lab_name || item.lab_name || 'N/A',
             mode: item.mode || 'Thực hành',
             status: statusToVietnamese(item.status),
-            duration: minutesFromSeconds(item.duration_sec),
+            duration: Number(item.duration_sec) || 0,
             firstTry: Boolean(item.completed_first_try),
             lastAction: normalizeActionText(item)
         };
@@ -2918,7 +2943,7 @@ function openDeviceSubModal(deviceName, rows) {
                 practiceCount: 0,
                 modeText: 'Chưa làm',
                 lastDateTimeStr: 'N/A',
-                lastDuration: '0 phút'
+                lastDuration: '0 giây'
             };
         }
         const latest = [...entry.sessions].sort((a, b) => parseDate(b.date) - parseDate(a.date))[0];
@@ -2927,7 +2952,7 @@ function openDeviceSubModal(deviceName, rows) {
         const statusLabel = isDone ? 'Hoàn thành' : 'Đang làm';
         const badgeClass = getStatusClass(statusLabel);
         const lastDateTimeStr = formatDateTime(latest.date, latest.time);
-        const lastDuration = `${latest.duration} phút`;
+        const lastDuration = formatDuration(latest.duration);
 
         return {
             ...entry,
@@ -3269,7 +3294,7 @@ function renderCompareCards(metricsA, metricsB, startA, endA) {
         {
             key: 'avgDuration',
             title: 'Thời gian làm bài trung bình',
-            unit: 'phút',
+            unit: 'giây',
             icon: `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
             isHigherBetter: false
         }
@@ -3286,16 +3311,16 @@ function renderCompareCards(metricsA, metricsB, startA, endA) {
         if (diff > 0) {
             const isGood = card.isHigherBetter;
             subClass = isGood ? 'sub-positive' : 'sub-negative';
-            subtext = `+${diff}${card.unit === '%' ? '%' : ''}${labelSubtextSuffix}`;
+            subtext = `${formatMetricDelta(card.unit, card.key, diff)}${labelSubtextSuffix}`;
         } else if (diff < 0) {
             const isGood = !card.isHigherBetter;
             subClass = isGood ? 'sub-positive' : 'sub-negative';
-            subtext = `${diff}${card.unit === '%' ? '%' : ''}${labelSubtextSuffix}`;
+            subtext = `${formatMetricDelta(card.unit, card.key, diff)}${labelSubtextSuffix}`;
         } else {
             subtext = `Bằng với Kỳ A${shortA ? ' (' + shortA + ')' : ''}`;
         }
 
-        const valFormatted = card.unit === '%' ? `${valB}%` : formatNumber.format(valB) + (card.unit ? ` ${card.unit}` : '');
+        const valFormatted = formatMetricValue(card.unit, card.key, valB);
 
         return `
             <div class="compare-stat-card">
@@ -3362,7 +3387,7 @@ function renderCompareTable(rowsA, rowsB, metricsA, metricsB, startA, endA, star
             { key: 'completed', label: 'Số lab đã hoàn thành', unit: 'bài', isHigherBetter: true },
             { key: 'rate', label: 'Tỷ lệ hoàn thành', unit: '%', isHigherBetter: true },
             { key: 'firstTryRate', label: 'Hoàn thành lần đầu', unit: '%', isHigherBetter: true },
-            { key: 'avgDuration', label: 'Thời gian trung bình', unit: 'phút', isHigherBetter: false }
+            { key: 'avgDuration', label: 'Thời gian trung bình', unit: 'giây', isHigherBetter: false }
         ]
         .filter(m => compareState.selectedMetrics.has(m.key))
         .map(m => {
@@ -3376,12 +3401,11 @@ function renderCompareTable(rowsA, rowsB, metricsA, metricsB, startA, endA, star
         metricsDef.sort((a, b) => compareValues(a[compareState.sortKey || 'label'], b[compareState.sortKey || 'label'], compareState.sortDir));
 
         tableBody.innerHTML = metricsDef.map(m => {
-            const valAFormatted = m.unit === '%' ? `${m.valA}%` : formatNumber.format(m.valA) + (m.unit ? ` ${m.unit}` : '');
-            const valBFormatted = m.unit === '%' ? `${m.valB}%` : formatNumber.format(m.valB) + (m.unit ? ` ${m.unit}` : '');
+            const valAFormatted = formatMetricValue(m.unit, m.key, m.valA);
+            const valBFormatted = formatMetricValue(m.unit, m.key, m.valB);
 
-            let diffText = m.diff > 0 ? `+${m.diff}` : `${m.diff}`;
-            if (m.unit === '%') diffText += '%';
-            else if (m.unit) diffText += ` ${m.unit}`;
+            let diffText = formatMetricDelta(m.unit, m.key, m.diff);
+            if (m.diff !== 0 && m.unit !== '%' && m.key !== 'avgDuration' && m.unit) diffText += ` ${m.unit}`;
 
             let pctText = m.pct > 0 ? `+${m.pct}%` : `${m.pct}%`;
             if (m.diff === 0) {
@@ -3755,7 +3779,7 @@ function renderCompareResults() {
         { key: 'completed', label: 'Số lab đã hoàn thành', unit: 'bài', isHigherBetter: true },
         { key: 'rate', label: 'Tỷ lệ hoàn thành', unit: '%', isHigherBetter: true },
         { key: 'firstTryRate', label: 'Hoàn thành lần đầu', unit: '%', isHigherBetter: true },
-        { key: 'avgDuration', label: 'Thời gian trung bình', unit: 'phút', isHigherBetter: false }
+        { key: 'avgDuration', label: 'Thời gian trung bình', unit: 'giây', isHigherBetter: false }
     ];
 
     const barsGrid = document.getElementById('compareBarsGrid');
@@ -3776,17 +3800,17 @@ function renderCompareResults() {
                 const isGood = m.isHigherBetter;
                 const cls = isGood ? 'delta-up' : 'delta-down';
                 const sign = '+';
-                deltaHtml = `<span class="compare-metric-delta ${cls}">↑ ${sign}${diff}${m.unit === '%' ? '%' : ''} (${sign}${pct}%)</span>`;
+                deltaHtml = `<span class="compare-metric-delta ${cls}">↑ ${formatMetricDelta(m.unit, m.key, diff)} (${sign}${pct}%)</span>`;
             } else if (diff < 0) {
                 const isGood = !m.isHigherBetter;
                 const cls = isGood ? 'delta-up' : 'delta-down';
-                deltaHtml = `<span class="compare-metric-delta ${cls}">↓ ${diff}${m.unit === '%' ? '%' : ''} (${pct}%)</span>`;
+                deltaHtml = `<span class="compare-metric-delta ${cls}">↓ ${formatMetricDelta(m.unit, m.key, diff)} (${pct}%)</span>`;
             } else {
                 deltaHtml = `<span class="compare-metric-delta delta-neutral">Không thay đổi</span>`;
             }
 
-            const valAFormatted = m.unit === '%' ? `${valA}%` : formatNumber.format(valA) + (m.unit ? ` ${m.unit}` : '');
-            const valBFormatted = m.unit === '%' ? `${valB}%` : formatNumber.format(valB) + (m.unit ? ` ${m.unit}` : '');
+            const valAFormatted = formatMetricValue(m.unit, m.key, valA);
+            const valBFormatted = formatMetricValue(m.unit, m.key, valB);
 
             return `
                 <div class="compare-metric-block">

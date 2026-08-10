@@ -55,7 +55,7 @@ const state = {
     learnerRegionsTouched: false,
     learnerTablePage: 1,
     learnerDetailPage: 1,
-    sessionsSort: { key: 'lastDate', direction: 'desc' },
+    sessionsSort: { key: 'lastDateTimeMs', direction: 'desc' },
 
     // Learner Detail popup filters & sort
     detailTimeSortDir: 'desc',
@@ -211,8 +211,13 @@ function formatCompactList(values, limit = 2) {
     return sorted.length > limit ? `${visible} +${sorted.length - limit}` : visible;
 }
 
+function sessionTimestampMs(item) {
+    const base = item?.date ? parseDate(item.date).getTime() : 0;
+    return (Number.isFinite(base) ? base : 0) + (item?.time ? parseTimeMs(item.time) : 0);
+}
+
 function getLatestSession(rows) {
-    return [...rows].sort((a, b) => parseDate(b.date) - parseDate(a.date))[0];
+    return [...rows].sort((a, b) => sessionTimestampMs(b) - sessionTimestampMs(a))[0];
 }
 
 function getDateFilteredSessions() {
@@ -444,6 +449,7 @@ function buildLearnerSummaries(rows) {
             status: latest?.status || 'N/A',
             lastDate: latest?.date || '',
             lastTime: latest?.time || '',
+            lastDateTimeMs: latest ? sessionTimestampMs(latest) : 0,
             lastDateTimeFormatted: formatDateTime(latest?.date, latest?.time),
             lastAction: latest?.lastAction || 'N/A',
             latestDuration: latest?.duration || 0,
@@ -2784,7 +2790,7 @@ function initSort() {
                 sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
             } else {
                 sortState.key = button.dataset.key;
-                sortState.direction = ['total', 'lastDate'].includes(button.dataset.key) ? 'desc' : 'asc';
+                sortState.direction = ['total', 'lastDateTimeMs'].includes(button.dataset.key) ? 'desc' : 'asc';
             }
             if (button.dataset.table === 'sessions') state.learnerTablePage = 1;
             renderAll();

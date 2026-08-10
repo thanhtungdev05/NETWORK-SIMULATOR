@@ -324,7 +324,18 @@
                                                 </div>
                                             </div>
                                         </th>
-                                        <th style="width: 16%;">Bài Lab</th>
+                                        <th style="width: 16%;">
+                                            <div class="popover-filter-wrapper" id="realtimeLabPopoverWrapper">
+                                                <button class="popover-trigger-btn" type="button">Bài Lab</button>
+                                                <div class="popover-dropdown" id="realtimeLabDropdown">
+                                                    <div class="popover-options" id="realtimeLabOptions"></div>
+                                                    <div class="popover-footer">
+                                                        <button type="button" class="popover-btn-clear"
+                                                            id="realtimeLabClear">Xóa lọc</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </th>
                                         <th style="width: 12%;">
                                             <div class="popover-filter-wrapper" id="realtimeStatusPopoverWrapper">
                                                 <button class="popover-trigger-btn" type="button">Trạng thái</button>
@@ -425,7 +436,7 @@
                         <div class="learner-table-toolbar" aria-label="Bộ lọc bảng chi tiết KTV">
                             <label class="learner-search-field" for="learnerKtvSearch">
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 5 5"></path></svg>
-                                <input type="search" id="learnerKtvSearch" placeholder="Tìm theo email KTV..." autocomplete="off">
+                                <input type="search" id="learnerKtvSearch" placeholder="Tìm theo tên hoặc email KTV..." autocomplete="off">
                             </label>
                             <button type="button" class="learner-filter-reset" id="learnerFilterReset">Xóa bộ lọc</button>
                         </div>
@@ -443,8 +454,28 @@
                                             </div>
                                         </div>
                                     </th>
-                                    <th style="width: 18%;">Email</th>
-                                    <th style="width: 12%;">Khu vực/CNx</th>
+                                    <th style="width: 18%;">
+                                        <div class="popover-filter-wrapper" id="learnerEmailPopoverWrapper">
+                                            <button class="popover-trigger-btn" type="button" aria-label="Lọc theo email">Email</button>
+                                            <div class="popover-dropdown" id="learnerEmailDropdown">
+                                                <div class="popover-options" id="learnerEmailOptions"></div>
+                                                <div class="popover-footer">
+                                                    <button type="button" class="popover-btn-clear" id="learnerEmailClear">Xóa lọc</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </th>
+                                    <th style="width: 12%;">
+                                        <div class="popover-filter-wrapper" id="learnerRegionPopoverWrapper">
+                                            <button class="popover-trigger-btn" type="button" aria-label="Lọc theo khu vực">Khu vực/CNx</button>
+                                            <div class="popover-dropdown" id="learnerRegionDropdown">
+                                                <div class="popover-options" id="learnerRegionOptions"></div>
+                                                <div class="popover-footer">
+                                                    <button type="button" class="popover-btn-clear" id="learnerRegionClear">Xóa lọc</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </th>
                                     <th style="width: 8%;"><button class="sort-button" type="button"
                                             data-table="sessions" data-key="total">Số phiên <span
                                                 class="sort-mark"></span></button></th>
@@ -621,7 +652,20 @@
                                     </div>
                                 </div>
                             </th>
-                            <th style="width: 20%;">Lab</th>
+                            <th style="width: 20%;">
+                                <div class="popover-filter-wrapper" id="detailLabPopoverWrapper">
+                                    <button class="popover-trigger-btn" type="button">Lab</button>
+                                    <div class="popover-dropdown" id="detailLabDropdown">
+                                        <input type="text" class="popover-search" id="detailLabSearch"
+                                            placeholder="Tìm lab...">
+                                        <div class="popover-options" id="detailLabOptions"></div>
+                                        <div class="popover-footer">
+                                            <button type="button" class="popover-btn-clear" id="detailLabClear">Xóa
+                                                lọc</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </th>
                             <th style="width: 14%;">
                                 <div class="popover-filter-wrapper" id="detailStatusPopoverWrapper">
                                     <button class="popover-trigger-btn" type="button">Trạng thái</button>

@@ -30,7 +30,10 @@ const state = {
     realtimeSelectedStatuses: new Set(['Hoàn thành', 'Đang làm']),
     realtimeSearchKtv: '',
     realtimeSearchDevice: '',
+    realtimeSearchLab: '',
     realtimePage: 1,
+    realtimeSelectedLabs: new Set(),
+    realtimeLabsTouched: false,
 
     // Instructor class progress workspace
     instructorClasses: [],
@@ -46,6 +49,10 @@ const state = {
     learnerSelectedDevices: new Set(),
     learnerSelectedLabs: new Set(),
     learnerSearchKtv: '',
+    learnerSelectedEmails: new Set(),
+    learnerEmailsTouched: false,
+    learnerSelectedRegions: new Set(),
+    learnerRegionsTouched: false,
     learnerTablePage: 1,
     learnerDetailPage: 1,
     sessionsSort: { key: 'lastDate', direction: 'desc' },
@@ -58,6 +65,9 @@ const state = {
     detailSelectedDevices: new Set(),
     detailSelectedStatuses: new Set(['Hoàn thành', 'Đang làm', 'Chưa thực hiện']),
     detailSearchDevice: '',
+    detailSelectedLabs: new Set(),
+    detailLabsTouched: false,
+    detailSearchLab: '',
 
     // Lab detail filter & sort
     labSelectedDevices: new Set(),
@@ -315,11 +325,24 @@ function getKpiComparisonPeriods() {
 
 function renderKpis() {
     const periods = getKpiComparisonPeriods();
+    const practiceOnly = item => item.mode !== 'Hướng dẫn';
+    const periodMetrics = rows => {
+        const all = computeMetrics(rows);
+        const practice = computeMetrics(rows.filter(practiceOnly));
+        return {
+            totalSessions: all.totalSessions,
+            learners: all.learners,
+            completed: practice.completed,
+            rate: practice.rate,
+            firstTryRate: practice.firstTryRate,
+            avgDuration: all.avgDuration
+        };
+    };
     const currentRows = filterSessionsByDate(periods.currentStart, periods.currentEnd);
     const previousRows = filterSessionsByDate(periods.previousStart, periods.previousEnd);
-    const currentMetrics = computeMetrics(currentRows);
-    const previousMetrics = computeMetrics(previousRows);
-    const lifetimeMetrics = computeMetrics(sessions);
+    const currentMetrics = periodMetrics(currentRows);
+    const previousMetrics = periodMetrics(previousRows);
+    const lifetimeMetrics = periodMetrics(sessions);
 
     const definitions = [
         { key: 'totalSessions', valueId: 'kpiSessions', comparisonId: 'kpiSessionsComparison', contextId: 'kpiSessionsContext', type: 'count', unit: 'phiên' },
@@ -432,12 +455,17 @@ function buildLearnerSummaries(rows) {
 function renderSessions(rows) {
     let filteredRows = rows.filter(item => (
         state.learnerSelectedKtvs.has(item.learner)
+        && state.learnerSelectedEmails.has(item.learner)
         && state.learnerSelectedDevices.has(item.device)
         && state.learnerSelectedLabs.has(item.lab)
+        && state.learnerSelectedRegions.has(item.region)
     ));
     const learnerKeyword = state.learnerSearchKtv.trim().toLocaleLowerCase('vi');
     if (learnerKeyword) {
-        filteredRows = filteredRows.filter(item => item.learner.toLocaleLowerCase('vi').includes(learnerKeyword));
+        filteredRows = filteredRows.filter(item => {
+            const haystack = `${item.learner} ${getLearnerName(item.learner)}`.toLocaleLowerCase('vi');
+            return haystack.includes(learnerKeyword);
+        });
     }
 
     const summaries = buildLearnerSummaries(filteredRows);
@@ -657,9 +685,16 @@ function renderLearnerDetail(rows) {
     }
     populatePopoverOptions('detailDeviceOptions', ktvDevices, state.detailSelectedDevices, () => { state.detailDevicesTouched = true; }, state.detailSearchDevice);
 
+    const ktvLabs = [...new Set(allLearnerRows.map(item => item.lab))].sort((a, b) => a.localeCompare(b, 'vi'));
+    if (state.detailSelectedLabs.size === 0 && !state.detailLabsTouched) {
+        state.detailSelectedLabs = new Set(ktvLabs);
+    }
+    populatePopoverOptions('detailLabOptions', ktvLabs, state.detailSelectedLabs, () => { state.detailLabsTouched = true; }, state.detailSearchLab);
+
     let filteredHistory = [...allLearnerRows];
     filteredHistory = filteredHistory.filter(item => state.detailSelectedModes.has(item.mode || 'Thực hành'));
     filteredHistory = filteredHistory.filter(item => state.detailSelectedDevices.has(item.device));
+    filteredHistory = filteredHistory.filter(item => state.detailSelectedLabs.has(item.lab));
     filteredHistory = filteredHistory.filter(item => state.detailSelectedStatuses.has(item.status));
 
     if (state.detailSortKey === 'duration') {
@@ -1577,12 +1612,15 @@ function applyDashboardData(data) {
     rebuildLearnerNameMap();
 }
 
-function mergeUntouchedFilterSets(allKtvs, allDevices, allLabs) {
+function mergeUntouchedFilterSets(allKtvs, allDevices, allLabs, allRegions) {
     if (!state.realtimeKtvsTouched) state.realtimeSelectedKtvs = new Set([...state.realtimeSelectedKtvs, ...allKtvs]);
     if (!state.learnerKtvsTouched) state.learnerSelectedKtvs = new Set([...state.learnerSelectedKtvs, ...allKtvs]);
+    if (!state.learnerEmailsTouched) state.learnerSelectedEmails = new Set([...state.learnerSelectedEmails, ...allKtvs]);
+    if (!state.learnerRegionsTouched) state.learnerSelectedRegions = new Set([...state.learnerSelectedRegions, ...allRegions]);
     if (!state.learnerDevicesTouched) state.learnerSelectedDevices = new Set([...state.learnerSelectedDevices, ...allDevices]);
     if (!state.learnerLabsTouched) state.learnerSelectedLabs = new Set([...state.learnerSelectedLabs, ...allLabs]);
     if (!state.realtimeDevicesTouched) state.realtimeSelectedDevices = new Set([...state.realtimeSelectedDevices, ...allDevices]);
+    if (!state.realtimeLabsTouched) state.realtimeSelectedLabs = new Set([...state.realtimeSelectedLabs, ...allLabs]);
     if (!state.labDevicesTouched) state.labSelectedDevices = new Set([...state.labSelectedDevices, ...allDevices]);
     if (!state.deviceDevicesTouched) state.deviceSelectedDevices = new Set([...state.deviceSelectedDevices, ...allDevices]);
 }
@@ -1603,9 +1641,13 @@ function refreshFilterOptionLists() {
     const allKtvs = [...new Set(sessions.map(item => item.learner))].sort();
     const allDevices = [...new Set(sessions.map(item => item.device))].sort();
     const allLabs = [...new Set(sessions.map(item => item.lab))].sort((a, b) => a.localeCompare(b, 'vi'));
-    populatePopoverOptions('realtimeKtvOptions', allKtvs, state.realtimeSelectedKtvs, () => { state.realtimeKtvsTouched = true; }, state.realtimeSearchKtv);
+    const allRegions = [...new Set(sessions.map(item => item.region))].sort((a, b) => a.localeCompare(b, 'vi'));
+    populatePopoverOptions('realtimeKtvOptions', allKtvs, state.realtimeSelectedKtvs, () => { state.realtimeKtvsTouched = true; }, state.realtimeSearchKtv, getLearnerName);
     populatePopoverOptions('realtimeDeviceOptions', allDevices, state.realtimeSelectedDevices, () => { state.realtimeDevicesTouched = true; }, state.realtimeSearchDevice);
-    populatePopoverOptions('learnerKtvOptions', allKtvs, state.learnerSelectedKtvs, () => { state.learnerKtvsTouched = true; }, state.learnerSearchKtv);
+    populatePopoverOptions('realtimeLabOptions', allLabs, state.realtimeSelectedLabs, () => { state.realtimeLabsTouched = true; }, state.realtimeSearchLab);
+    populatePopoverOptions('learnerKtvOptions', allKtvs, state.learnerSelectedKtvs, () => { state.learnerKtvsTouched = true; }, state.learnerSearchKtv, getLearnerName);
+    populatePopoverOptions('learnerEmailOptions', allKtvs, state.learnerSelectedEmails, () => { state.learnerEmailsTouched = true; });
+    populatePopoverOptions('learnerRegionOptions', allRegions, state.learnerSelectedRegions, () => { state.learnerRegionsTouched = true; });
     populatePopoverOptions('learnerDeviceOptions', allDevices, state.learnerSelectedDevices, () => { state.learnerDevicesTouched = true; });
     populatePopoverOptions('learnerLabOptions', allLabs, state.learnerSelectedLabs, () => { state.learnerLabsTouched = true; });
     populatePopoverOptions('labDeviceOptions', allDevices, state.labSelectedDevices, () => { state.labDevicesTouched = true; }, state.labSearchDevice);
@@ -1624,7 +1666,8 @@ async function refreshDashboardData() {
         const allKtvs = [...new Set(sessions.map(item => item.learner))].sort();
         const allDevices = [...new Set(sessions.map(item => item.device))].sort();
         const allLabs = [...new Set(sessions.map(item => item.lab))].sort((a, b) => a.localeCompare(b, 'vi'));
-        mergeUntouchedFilterSets(allKtvs, allDevices, allLabs);
+        const allRegions = [...new Set(sessions.map(item => item.region))].sort((a, b) => a.localeCompare(b, 'vi'));
+        mergeUntouchedFilterSets(allKtvs, allDevices, allLabs, allRegions);
         refreshFilterOptionLists();
         mergeDefaultClassLearners();
         renderAll();
@@ -1871,13 +1914,23 @@ function initPopovers() {
     const allKtvs = [...new Set(sessions.map(item => item.learner))].sort();
     const allDevices = [...new Set(sessions.map(item => item.device))].sort();
     const allLabs = [...new Set(sessions.map(item => item.lab))].sort((a, b) => a.localeCompare(b, 'vi'));
+    const allRegions = [...new Set(sessions.map(item => item.region))].sort((a, b) => a.localeCompare(b, 'vi'));
 
     // Fill sets with all items by default on initial load
     if (state.realtimeSelectedKtvs.size === 0 && !state.realtimeKtvsTouched) {
         state.realtimeSelectedKtvs = new Set(allKtvs);
     }
+    if (state.realtimeSelectedLabs.size === 0 && !state.realtimeLabsTouched) {
+        state.realtimeSelectedLabs = new Set(allLabs);
+    }
     if (state.learnerSelectedKtvs.size === 0 && !state.learnerKtvsTouched) {
         state.learnerSelectedKtvs = new Set(allKtvs);
+    }
+    if (state.learnerSelectedEmails.size === 0 && !state.learnerEmailsTouched) {
+        state.learnerSelectedEmails = new Set(allKtvs);
+    }
+    if (state.learnerSelectedRegions.size === 0 && !state.learnerRegionsTouched) {
+        state.learnerSelectedRegions = new Set(allRegions);
     }
     if (state.learnerSelectedDevices.size === 0 && !state.learnerDevicesTouched) {
         state.learnerSelectedDevices = new Set(allDevices);
@@ -1896,10 +1949,10 @@ function initPopovers() {
     }
 
     // 1. Realtime KTV Popover
-    populatePopoverOptions('realtimeKtvOptions', allKtvs, state.realtimeSelectedKtvs, () => { state.realtimeKtvsTouched = true; }, state.realtimeSearchKtv);
+    populatePopoverOptions('realtimeKtvOptions', allKtvs, state.realtimeSelectedKtvs, () => { state.realtimeKtvsTouched = true; }, state.realtimeSearchKtv, getLearnerName);
     document.getElementById('realtimeKtvSearch')?.addEventListener('input', (e) => {
         state.realtimeSearchKtv = e.target.value;
-        populatePopoverOptions('realtimeKtvOptions', allKtvs, state.realtimeSelectedKtvs, () => { state.realtimeKtvsTouched = true; }, state.realtimeSearchKtv);
+        populatePopoverOptions('realtimeKtvOptions', allKtvs, state.realtimeSelectedKtvs, () => { state.realtimeKtvsTouched = true; }, state.realtimeSearchKtv, getLearnerName);
     });
     document.getElementById('realtimeKtvClear')?.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -1908,7 +1961,7 @@ function initPopovers() {
         state.realtimeSearchKtv = '';
         const searchInput = document.getElementById('realtimeKtvSearch');
         if (searchInput) searchInput.value = '';
-        populatePopoverOptions('realtimeKtvOptions', allKtvs, state.realtimeSelectedKtvs, () => { state.realtimeKtvsTouched = true; });
+        populatePopoverOptions('realtimeKtvOptions', allKtvs, state.realtimeSelectedKtvs, () => { state.realtimeKtvsTouched = true; }, undefined, getLearnerName);
         renderAll();
     });
 
@@ -1948,7 +2001,20 @@ function initPopovers() {
         renderAll();
     });
 
-    // 4. Realtime Status Popover
+    // 4. Realtime Lab Popover
+    populatePopoverOptions('realtimeLabOptions', allLabs, state.realtimeSelectedLabs, () => { state.realtimeLabsTouched = true; }, state.realtimeSearchLab);
+    document.getElementById('realtimeLabClear')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        state.realtimeSelectedLabs = new Set(allLabs);
+        state.realtimeLabsTouched = false;
+        state.realtimeSearchLab = '';
+        const searchInput = document.querySelector('#realtimeLabDropdown .header-filter-search');
+        if (searchInput) searchInput.value = '';
+        populatePopoverOptions('realtimeLabOptions', allLabs, state.realtimeSelectedLabs, () => { state.realtimeLabsTouched = true; });
+        renderAll();
+    });
+
+    // 5. Realtime Status Popover
     document.querySelectorAll('#realtimeStatusOptions input[type="checkbox"]').forEach(chk => {
         chk.addEventListener('change', () => {
             if (chk.checked) {
@@ -1971,6 +2037,14 @@ function initPopovers() {
     populatePopoverOptions('learnerKtvOptions', allKtvs, state.learnerSelectedKtvs, () => {
         state.learnerKtvsTouched = true;
         updatePopoverTriggerLabels();
+    }, state.learnerSearchKtv, getLearnerName);
+    populatePopoverOptions('learnerEmailOptions', allKtvs, state.learnerSelectedEmails, () => {
+        state.learnerEmailsTouched = true;
+        updatePopoverTriggerLabels();
+    });
+    populatePopoverOptions('learnerRegionOptions', allRegions, state.learnerSelectedRegions, () => {
+        state.learnerRegionsTouched = true;
+        updatePopoverTriggerLabels();
     });
     populatePopoverOptions('learnerDeviceOptions', allDevices, state.learnerSelectedDevices, () => {
         state.learnerDevicesTouched = true;
@@ -1986,7 +2060,9 @@ function initPopovers() {
         renderAll();
     });
     const repopulateLearnerFilters = () => {
-        populatePopoverOptions('learnerKtvOptions', allKtvs, state.learnerSelectedKtvs, () => { state.learnerKtvsTouched = true; });
+        populatePopoverOptions('learnerKtvOptions', allKtvs, state.learnerSelectedKtvs, () => { state.learnerKtvsTouched = true; }, undefined, getLearnerName);
+        populatePopoverOptions('learnerEmailOptions', allKtvs, state.learnerSelectedEmails, () => { state.learnerEmailsTouched = true; });
+        populatePopoverOptions('learnerRegionOptions', allRegions, state.learnerSelectedRegions, () => { state.learnerRegionsTouched = true; });
         populatePopoverOptions('learnerDeviceOptions', allDevices, state.learnerSelectedDevices, () => { state.learnerDevicesTouched = true; });
         populatePopoverOptions('learnerLabOptions', allLabs, state.learnerSelectedLabs, () => { state.learnerLabsTouched = true; });
     };
@@ -1997,9 +2073,13 @@ function initPopovers() {
     };
     const resetLearnerFilters = () => {
         state.learnerSelectedKtvs = new Set(allKtvs);
+        state.learnerSelectedEmails = new Set(allKtvs);
+        state.learnerSelectedRegions = new Set(allRegions);
         state.learnerSelectedDevices = new Set(allDevices);
         state.learnerSelectedLabs = new Set(allLabs);
         state.learnerKtvsTouched = false;
+        state.learnerEmailsTouched = false;
+        state.learnerRegionsTouched = false;
         state.learnerDevicesTouched = false;
         state.learnerLabsTouched = false;
         state.learnerSearchKtv = '';
@@ -2007,6 +2087,8 @@ function initPopovers() {
         const searchInput = document.getElementById('learnerKtvSearch');
         if (searchInput) searchInput.value = '';
         clearHeaderSearch('learnerKtvPopoverWrapper');
+        clearHeaderSearch('learnerEmailPopoverWrapper');
+        clearHeaderSearch('learnerRegionPopoverWrapper');
         clearHeaderSearch('learnerDevicePopoverWrapper');
         clearHeaderSearch('learnerLabPopoverWrapper');
         repopulateLearnerFilters();
@@ -2017,6 +2099,22 @@ function initPopovers() {
         state.learnerSelectedKtvs = new Set(allKtvs);
         state.learnerKtvsTouched = false;
         clearHeaderSearch('learnerKtvPopoverWrapper');
+        repopulateLearnerFilters();
+        renderAll();
+    });
+    document.getElementById('learnerEmailClear')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        state.learnerSelectedEmails = new Set(allKtvs);
+        state.learnerEmailsTouched = false;
+        clearHeaderSearch('learnerEmailPopoverWrapper');
+        repopulateLearnerFilters();
+        renderAll();
+    });
+    document.getElementById('learnerRegionClear')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        state.learnerSelectedRegions = new Set(allRegions);
+        state.learnerRegionsTouched = false;
+        clearHeaderSearch('learnerRegionPopoverWrapper');
         repopulateLearnerFilters();
         renderAll();
     });
@@ -2072,7 +2170,22 @@ function initPopovers() {
         renderAll();
     });
 
-    // 8. Learner Detail Status Popover
+    // 8. Learner Detail Lab Search
+    document.getElementById('detailLabSearch')?.addEventListener('input', (e) => {
+        state.detailSearchLab = e.target.value;
+        renderAll();
+    });
+    document.getElementById('detailLabClear')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        state.detailLabsTouched = false;
+        state.detailSelectedLabs.clear();
+        state.detailSearchLab = '';
+        const searchInput = document.getElementById('detailLabSearch');
+        if (searchInput) searchInput.value = '';
+        renderAll();
+    });
+
+    // 9. Learner Detail Status Popover
     document.querySelectorAll('#detailStatusOptions input[type="checkbox"]').forEach(chk => {
         chk.addEventListener('change', () => {
             if (chk.checked) {
@@ -2091,7 +2204,7 @@ function initPopovers() {
         renderAll();
     });
 
-    // 9. Lab Device Popover
+    // 10. Lab Device Popover
     populatePopoverOptions('labDeviceOptions', allDevices, state.labSelectedDevices, () => { state.labDevicesTouched = true; }, state.labSearchDevice);
     document.getElementById('labDeviceSearch')?.addEventListener('input', (e) => {
         state.labSearchDevice = e.target.value;
@@ -2108,7 +2221,7 @@ function initPopovers() {
         renderAll();
     });
 
-    // 10. Device Section Popover
+    // 11. Device Section Popover
     populatePopoverOptions('deviceOptions', allDevices, state.deviceSelectedDevices, () => { state.deviceDevicesTouched = true; }, state.deviceSearchDevice);
     document.getElementById('deviceSearch')?.addEventListener('input', (e) => {
         state.deviceSearchDevice = e.target.value;
@@ -2172,6 +2285,8 @@ function renderRealtimeSubmissions(dateSessions) {
     filtered = filtered.filter(item => state.realtimeSelectedModes.has(item.mode || 'Thực hành'));
     // Filter by Device popover
     filtered = filtered.filter(item => state.realtimeSelectedDevices.has(item.device));
+    // Filter by Lab popover
+    filtered = filtered.filter(item => state.realtimeSelectedLabs.has(item.lab));
     // Filter by Status popover
     filtered = filtered.filter(item => state.realtimeSelectedStatuses.has(item.status));
 
@@ -2326,6 +2441,7 @@ function getInstructorClassProgress(selectedClass, selectedGroups) {
     const completedStatus = statusToVietnamese('completed');
     const rowsByLearner = new Map();
     sessions.forEach(item => {
+        if (item.mode === 'Hướng dẫn') return;
         if (!rowsByLearner.has(item.learner)) rowsByLearner.set(item.learner, []);
         rowsByLearner.get(item.learner).push(item);
     });
@@ -2600,7 +2716,7 @@ function renderAll() {
     renderRealtimeSubmissions(dateSessions);
     renderSessions(sessions);
     renderLearnerDetail(sessions);
-    renderDetailedReport(dateSessions);
+    renderDetailedReport(dateSessions.filter(item => item.mode !== 'Hướng dẫn'));
     renderSortMarks();
     updatePopoverTriggerLabels();
     updateRangeText(dateSessions);
@@ -2611,15 +2727,20 @@ function updatePopoverTriggerLabels() {
     const allKtvs = [...new Set(sessions.map(item => item.learner))].sort();
     const allDevices = [...new Set(sessions.map(item => item.device))].sort();
     const allLabs = [...new Set(sessions.map(item => item.lab))].sort((a, b) => a.localeCompare(b, 'vi'));
+    const allRegions = [...new Set(sessions.map(item => item.region))].sort((a, b) => a.localeCompare(b, 'vi'));
     const learnerReset = document.getElementById('learnerFilterReset');
     const selectedLearners = state.learnerSelectedKtvs.size;
     const ktvFiltered = selectedLearners !== allKtvs.length;
+    const emailFiltered = state.learnerSelectedEmails.size !== allKtvs.length;
+    const regionFiltered = state.learnerSelectedRegions.size !== allRegions.length;
     const deviceFiltered = state.learnerSelectedDevices.size !== allDevices.length;
     const labFiltered = state.learnerSelectedLabs.size !== allLabs.length;
     document.getElementById('learnerKtvPopoverWrapper')?.classList.toggle('has-filter', ktvFiltered);
+    document.getElementById('learnerEmailPopoverWrapper')?.classList.toggle('has-filter', emailFiltered);
+    document.getElementById('learnerRegionPopoverWrapper')?.classList.toggle('has-filter', regionFiltered);
     document.getElementById('learnerDevicePopoverWrapper')?.classList.toggle('has-filter', deviceFiltered);
     document.getElementById('learnerLabPopoverWrapper')?.classList.toggle('has-filter', labFiltered);
-    if (learnerReset) learnerReset.hidden = !ktvFiltered && !deviceFiltered && !labFiltered && !state.learnerSearchKtv.trim();
+    if (learnerReset) learnerReset.hidden = !ktvFiltered && !emailFiltered && !regionFiltered && !deviceFiltered && !labFiltered && !state.learnerSearchKtv.trim();
 
     const labLabel = document.getElementById('labDeviceTriggerLabel');
     if (labLabel) {
@@ -3267,12 +3388,13 @@ function initEvents() {
 
 let currentCompareTableTab = 'overview';
 
-function populatePopoverOptions(containerId, values, selectedSet, onCheckChange, searchVal = '') {
+function populatePopoverOptions(containerId, values, selectedSet, onCheckChange, searchVal = '', labelFn = null) {
     const container = document.getElementById(containerId);
     if (!container) return;
 
+    const labelOf = (val) => (labelFn ? labelFn(val) : val);
     const filteredValues = searchVal
-        ? values.filter(v => String(v).toLowerCase().includes(searchVal.toLowerCase()))
+        ? values.filter(v => String(labelOf(v)).toLowerCase().includes(searchVal.toLowerCase()))
         : values;
 
     if (!filteredValues.length) {
@@ -3285,7 +3407,7 @@ function populatePopoverOptions(containerId, values, selectedSet, onCheckChange,
         return `
             <label class="popover-option">
                 <input type="checkbox" value="${escapeHTML(val)}" ${checked}>
-                <span>${escapeHTML(val)}</span>
+                <span>${escapeHTML(labelOf(val))}</span>
             </label>
         `;
     }).join('');

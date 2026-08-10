@@ -1,0 +1,33 @@
+<!DOCTYPE html><html ng-app=myApp ng-controller=TranslateCtrl><head><script src="/js/gettext.min.js?094907"></script><meta / charset=UTF-8><link href="/style.min.css?094907" rel=stylesheet type=text/css><style>
+.tblHead > td {
+  border-bottom: 1px dashed #000;
+  height: 25px;
+}
+</style></head><body class=ng-cloak><form method=post><table align=center border=0 cellpadding=0 cellspacing=0 width=700><tr><td><b parent="{{ 'Diagnostics' | translate }}" sub-title translate>NAT Sessions Table</b><hr><table align=center border=0 cellpadding=2 cellspacing=0 width=700><tr><td><b><translate>NAT Active Sessions Table</translate> ( <translate>Limit</translate>: 128 <translate>entries</translate> )</b></td><td align=right class=red>|&nbsp; <a href="/cgi-bin/ipnatpm.cgi?sFormAuthStr=JdvKVyYlhh7GhS9" translate>Refresh</a>&nbsp;|</td></tr></table><table align=center cellpadding=2 cellspacing=0 style="border: 1px solid#767676" width=700><tr class=tblHead><td translate>Private IP</td><td>:<translate>Port</translate></td><td>#<translate>Pseudo Port</translate></td><td translate>Peer IP</td><td>:<translate>Port</translate></td><td translate>Interface</td><td translate>HW Acceleration</td></tr><tbody ng-repeat="r in aryTblData track by $index"><tr><td>{{r[0]}}</td><td>{{r[1]}}</td><td>{{r[2]}}</td><td>{{r[3]}}</td><td>{{r[4]}}</td><td>{{r[5]}}</td><td>{{r[6]}}</td></tr></tbody><tbody ng-repeat="r in [].constructor(emptyrow) track by $index"><tr><td colspan=7>&nbsp;</td></tr></tbody></table><br><input name=sFormAuthStr type=hidden value="JdvKVyYlhh7GhS9"></td></tr></table><textarea id=ipnatpminit style=display:none>
+  var aryTblData = [[],[],[],[],[],
+  [],[],[],[],[],
+  [],[],[],[],[],
+  [],[],[],[],[],
+  [],[],[],[],[],
+  [],[],[],[],[],
+  [],[],[],[],[],
+  [],[],[],[],[],
+  [],[],[],[],[],
+  [],[],[],[],[],
+  [],[],[],[],[],
+  [],[],[],[],[],
+  [],[],[],[],[],
+  [],[],[],[],[],
+  [],[],[],[],[],
+  [],[],[],[],[],
+  [],[],[],[],[],
+  [],[],[],[],[],
+  [],[],[],[],[],
+  [],[],[],[],[],
+  [],[],[],[],[],
+  [],[],[],[],[],
+  [],[],[],[],[],
+  [],[],[],[],[],
+  [],[],[],[],[],
+  [],[],[]];
+</textarea></form><script> top.ACTION_STATUS=-1;top.iActionStatusFlag='-2';top.iFwUpgradeState='0';top.act_sta.damage_alert();var bg=parent;var ipnatpminitScript=document.createElement("script");ipnatpminitScript.text=document.getElementById("ipnatpminit").value;document.head.appendChild(ipnatpminitScript);angular.element(document).ready(function(){ $scope.aryTblData=[];for(i=0;i<aryTblData.length;i++){if(aryTblData[i]==""){$scope.emptyrow=(i<15)?(15-i):0;break;}$scope.aryTblData.push(aryTblData[i]);}$scope.$apply();});</script></body></html>

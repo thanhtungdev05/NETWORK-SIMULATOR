@@ -7,9 +7,9 @@ Hệ thống giả lập giao diện quản trị web (Web Admin Interface) đa 
 ## 🌟 1. Tính Năng Nổi Bật (Key Features)
 
 - 🌐 **Master Dispatcher Duy Nhất (Port 8080)**:
-  - Gom toàn bộ **7 thiết bị giả lập** cùng Portal chính chạy chung trên **duy nhất 1 cổng 8080**.
+  - Gom toàn bộ **8 thiết bị giả lập** cùng Portal chính chạy chung trên **duy nhất 1 cổng 8080**.
   - Không cần bật nhiều cửa sổ terminal hay mở nhiều cổng khác nhau (`8081-8098`).
-  - Hệ thống tự động điều hướng request (`/sim_ac1000f`, `/sim_ax3000c`, `/sim_ax3000gz`, `/sim_ax3000hv2`, `/sim_ax3000s`, `/sim_be12000`, `/sim_be15000`).
+  - Hệ thống tự động điều hướng request (`/sim_ac1000f`, `/sim_ax3000c`, `/sim_ax3000gz`, `/sim_ax3000hv2`, `/sim_ax3000s`, `/sim_be12000`, `/sim_be15000`, `/sim_vigor2927`).
 
 - 💡 **Hệ Thống Bong Bóng Hướng Dẫn Từng Bước (Interactive Tooltips Engine)**:
   - Tự động hiển thị **Bong bóng hướng dẫn màu đỏ (Red Tooltips)** gắn chính xác vào từng trường nhập liệu, nút bấm, menu trên giao diện thiết bị giả lập.
@@ -29,7 +29,7 @@ Hệ thống giả lập giao diện quản trị web (Web Admin Interface) đa 
 
 ## 📱 2. Danh Sách Thiết Bị & Bài Học Giả Lập
 
-Hệ thống hỗ trợ **7 dòng thiết bị mạng FPT Telecom** với tổng cộng **54 bài học thực hành**:
+Hệ thống hỗ trợ **8 dòng thiết bị mạng FPT Telecom** với tổng cộng **55 bài học thực hành**:
 
 ### 1️⃣ ONT AC1000F (`DEVICE_AC1000F`) — 10 Bài Học
 - **Bài 1**: Cấu hình PPPoE (Kết nối WAN Internet)
@@ -99,6 +99,9 @@ Hệ thống hỗ trợ **7 dòng thiết bị mạng FPT Telecom** với tổng
 - **Bài 9**: Khởi động lại & Khôi phục cài đặt gốc
 - **Bài 10**: Cấu hình SNTP Đồng Bộ Thời Gian
 
+### 8️⃣ Router Vigor 2927 (`DEVICE_VIGOR2927`) — 1 Bài Học *(Mới thêm)*
+- **Bài 1**: Khám phá Vigor2927 (Đăng nhập và xem trạng thái)
+
 ---
 
 ## 📋 3. Yêu Cầu Hệ Thống (Prerequisites)
@@ -134,7 +137,8 @@ giailapthietbi/
 │   ├── ax3000hv2/           # Dữ liệu & Tooltips ONT AX3000HV2
 │   ├── ax3000s/             # Dữ liệu & Tooltips AX3000S
 │   ├── be12000/             # Dữ liệu & Tooltips Wi-Fi 7 BE12000
-│   └── be15000/             # Dữ liệu & Tooltips Wi-Fi 7 BE15000
+│   ├── be15000/             # Dữ liệu & Tooltips Wi-Fi 7 BE15000
+│   └── vigor2927/           # Dữ liệu & Tooltips Router Vigor 2927
 └── sim_*/                   # Mã nguồn giả lập backend & web CGI/ASP/LuCI từng thiết bị
     ├── sim_ac1000f/
     ├── sim_ax3000c/
@@ -142,7 +146,8 @@ giailapthietbi/
     ├── sim_ax3000hv2/
     ├── sim_ax3000s/
     ├── sim_be12000/
-    └── sim_be15000/
+    ├── sim_be15000/
+    └── sim_vigor2927/
 ```
 
 ---
@@ -179,7 +184,7 @@ Hệ thống chạy tập trung trên cổng duy nhất:
 |---|---|---|
 | **Portal Giả Lập Mạng FPT (Master)** | `http://localhost:8080` | `8080` |
 
-*Khi người dùng chọn thiết bị trên Portal (AC1000F, AX3000C, AX3000GZ, AX3000HV2, AX3000S, BE12000, BE15000), Master Dispatcher sẽ tự động điều hướng request mà không cần mở lại cổng.*
+*Khi người dùng chọn thiết bị trên Portal (AC1000F, AX3000C, AX3000GZ, AX3000HV2, AX3000S, BE12000, BE15000, Vigor2927), Master Dispatcher sẽ tự động điều hướng request mà không cần mở lại cổng.*
 
 ---
 

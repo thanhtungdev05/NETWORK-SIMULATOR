@@ -1,0 +1,73 @@
+<!DOCTYPE html><html ng-app=myApp ng-controller=TranslateCtrl><head><script src="/js/gettext.min.js?094907"></script><title>Service Status</title><meta / charset=UTF-8><link href="/style.min.css?094907" rel=stylesheet type=text/css><style>
+body{
+    font-family:arial;
+}
+#div1{
+	margin:0 auto;
+	width:700px;
+	height:535px;
+	position:relative;
+}
+.divline{
+	margin-top:0px;
+	text-align:center;
+}
+#divmsg{
+	box-shadow: -4px 0px 0px 0px #8B1A1A;
+	background-color:#C67171;
+	color:white;
+	width:100%;
+	height:36px;
+	line-height:35px;
+	font-size: 13px;
+	text-align:center;
+}
+#divuser{
+	margin-top:25px;
+	text-align:center;
+}
+.divpwd{
+	margin-top:15px;
+	text-align:center;
+}
+.divagree{
+	color:#999999;
+	width:100%;
+	margin-top:20px;
+	text-align:left;
+  font-size: 12px;
+}
+.divlogin{
+	color:#999999;
+	margin-top:20px;
+	text-align:center;
+}
+#div1 .ptitle{
+    color: #898989;
+	      line-height:0px;
+	      text-align:center;
+    font-size: 17px;
+        font-weight:bold;
+    letter-spacing: 0px;
+    font-family: inherit;
+      }
+#btnlogin{
+	color:white;
+	text-align:center;
+    font-size: 14px;
+    width: 100%;
+    /* height: 26px; */
+	border:none;
+    background-color: #c54242;
+    padding: 8px;
+}
+.login {
+     padding: 13px 23px 34px 23px!important;
+    height: auto!important;
+}
+</style><style id=__web-inspector-hide-shortcut-style__ type=text/css>
+.__web-inspector-hide-shortcut__, .__web-inspector-hide-shortcut__ *, .__web-inspector-hidebefore-shortcut__::before, .__web-inspector-hideafter-shortcut__::after
+{
+  visibility: hidden !important;
+}
+</style></head><body class=ng-cloak><form action=/cgi-bin/v2x00.cgi method=post name=frm1><table align=center border=0 cellpadding=0 cellspacing=0 width=700><tr><td class=title translate>Service Status</td><td></td></tr><tr><td colspan=2><hr size=1 style=margin-top:1px></td></tr><tr><td colspan=2><table align=center border=0 cellpadding=0 cellspacing=0 width=100%><tr><td class=ontab id=tab1 onClick=onChgAccMod(1) width=20%><b translate>Device Status</b></td><td class=offtab id=tab2 onClick=onChgAccMod(2) width=20%><b translate>Setup &amp; Log</b></td><td></td></tr></table><table border=1 cellpadding=0 cellspacing=0 width=100%><tr><td><br><div id=div1 ng-if="loginret || servicelogin || !serviceloginCount"><div class=login style="position:absolute;top:40%;left:45%;margin-top:-100px;margin-left:-200px;background:#E5E5E5;width: 65%;height: 300px;padding: 12px 20px 0 20px;"><p class=ptitle translate>Login to MyVigor</p><div class=divline><hr size=1></div><div align=center id=divrst style=display:none><div id=divmsg><span id="loginmsg" translate>Username or password is wrong. Please check it again.</span></div></div><div id=divuser><input name=usrname style="width: 100%;height:25px;border:none;" type=text value></div><div class=divpwd><input name=pwd style="width: 100%;height:25px;border:none;" type=password value></div><div class=divagree><input name=ichkagree type=checkbox value=1>&nbsp;<translate>I agree this function to record MyVigor account and email address on this device.</translate></div><div class=divlogin><input id=btnlogin onclick=clkLogin() type=button value="{{ 'Login' | translate }}"></div></div><input name=fid type=hidden value=224><input name=sFormAuthStr type=hidden value="JdvKVyYlhh7GhS9"></div><table align=center height=200 ng-if="!loginret && !servicelogin && serviceloginCount > 0" style="border: 2px #000 solid;margin-bottom:15px" width=95%><tr><th translate>Connecting With The Server</th></tr><tr><th><br><font face=Arial size=3 translate>Connection...</font></th></tr><tr><td align=center><translate>Please wait</translate>&nbsp;{{ serviceloginCount }}</td></tr></table><table align=center height=200 ng-if="!loginret && serviceloginCount <= 0" style="border: 2px #000 solid;margin-bottom:15px" width=95%><tr><th translate>Connecting With The Server</th></tr><tr><th><br><font face=Arial size=3 translate>Connection Failed!</font></th></tr><tr><td align=center translate>Please check your Internet connection and retry.</td></tr></table></td></tr></table></td></tr></table></form><script> parent.ACTION_STATUS=-1;parent.iActionStatusFlag='0';parent.iFwUpgradeState='0';parent.act_sta.damage_alert();const bg=parent;const f=document.frm1;const loginret=parseInt('0');angular.element(document).ready(()=>{$scope.loginret=loginret;$scope.servicelogin=bg.servicelogin;if(undefined==bg.serviceloginCount)bg.serviceloginCount=3;if(!loginret&&bg.serviceloginCount){$scope.serviceloginCount=bg.serviceloginCount;setTimeout(()=>{bg.serviceloginCount--;onChgAccMod(1);},5000);}$scope.$apply();initPage();});function initPage(){if(bg.servicelogin==1){if(loginret=='2'){document.getElementById("loginmsg").innerHTML=gettext("There have been too many login failures.Block login 5 minutes.");}else{document.getElementById("loginmsg").innerHTML=gettext("Username or password is wrong. Please check it again.");}document.getElementById("divrst").style.display="";}}function onclose(){document.getElementById("divrst").style.display="none";}function clkLogin(){const usrname=f.usrname.value.trim();const pwd=f.pwd.value.trim();if(!f.ichkagree.checked){document.getElementById("loginmsg").innerHTML=gettext("Please accept the agreement before login.");document.getElementById("divrst").style.display="";return false;}if(usrname==""||pwd==""){alert(gettext("Username or password is null. Please check it."));return false;}const btnlogin=document.getElementById('btnlogin');btnlogin.disabled=true;btnlogin.style.cursor='wait';bg.servicelogin=1;f.submit();}function onChgAccMod(page){if(page==1){location.href="/cgi-bin/v2x00.cgi?sFormAuthStr=JdvKVyYlhh7GhS9&fid=226";}else if(page==2){location.href="/cgi-bin/v2x00.cgi?sFormAuthStr=JdvKVyYlhh7GhS9&fid=215";}}</script></body></html>

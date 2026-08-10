@@ -26,5 +26,15 @@
    ""
   ],
   "rows": 1
+ },
+ "wifi": {
+  "values": [
+   0,
+   1,
+   "FPT_AX3000CV2",
+   "WPA2-Personal",
+   "fpt@12345"
+  ],
+  "rows": 0
  }
 }

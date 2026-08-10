@@ -1,0 +1,1074 @@
+[
+  {
+    "file": "index.htm",
+    "url": "https://192.168.1.1/",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/html",
+    "size": 68793
+  },
+  {
+    "file": "js/gettext.min.js",
+    "url": "https://192.168.1.1/js/gettext.min.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 194757
+  },
+  {
+    "file": "header.htm",
+    "url": "https://192.168.1.1/header.htm",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/html",
+    "size": 21863
+  },
+  {
+    "file": "l_m.htm",
+    "url": "https://192.168.1.1/l_m.htm",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/html",
+    "size": 3732
+  },
+  {
+    "file": "menu.htm",
+    "url": "https://192.168.1.1/menu.htm",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/html",
+    "size": 57281
+  },
+  {
+    "file": "act_sta.htm",
+    "url": "https://192.168.1.1/act_sta.htm",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/html",
+    "size": 3368
+  },
+  {
+    "file": "empty.htm",
+    "url": "https://192.168.1.1/empty.htm",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/html",
+    "size": 42
+  },
+  {
+    "file": "empty.htm",
+    "url": "https://192.168.1.1/empty.htm",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/html",
+    "size": 42
+  },
+  {
+    "file": "js/gettext.min.js",
+    "url": "https://192.168.1.1/js/gettext.min.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 194757
+  },
+  {
+    "file": "css/tmp_m.min.css",
+    "url": "https://192.168.1.1/css/tmp_m.min.css?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/css",
+    "size": 1323
+  },
+  {
+    "file": "css/tmp_m.min.css",
+    "url": "https://192.168.1.1/css/tmp_m.min.css?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/css",
+    "size": 1323
+  },
+  {
+    "file": "style.min.css",
+    "url": "https://192.168.1.1/style.min.css?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/css",
+    "size": 7348
+  },
+  {
+    "file": "js/tree.min.js",
+    "url": "https://192.168.1.1/js/tree.min.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 9250
+  },
+  {
+    "file": "css/tmp_m.min.css",
+    "url": "https://192.168.1.1/css/tmp_m.min.css?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/css",
+    "size": 1323
+  },
+  {
+    "file": "style.min.css",
+    "url": "https://192.168.1.1/style.min.css?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/css",
+    "size": 7348
+  },
+  {
+    "file": "doc/dashboard.htm",
+    "url": "https://192.168.1.1/doc/dashboard.htm",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/html",
+    "size": 105127
+  },
+  {
+    "file": "style.min.css",
+    "url": "https://192.168.1.1/style.min.css?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/css",
+    "size": 7348
+  },
+  {
+    "file": "cgi-bin/certificatedata.cgi",
+    "url": "https://192.168.1.1/cgi-bin/certificatedata.cgi?sFormAuthStr=K8sEXFc1TfxSlPA",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/x-javascript",
+    "size": 1931
+  },
+  {
+    "file": "js/gettext.min.js",
+    "url": "https://192.168.1.1/js/gettext.min.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 194757
+  },
+  {
+    "file": "images/00.png",
+    "url": "https://192.168.1.1/images/00.png?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "image/png",
+    "size": 324
+  },
+  {
+    "file": "images/headerlogo.png",
+    "url": "https://192.168.1.1/images/headerlogo.png?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "image/png",
+    "size": 158000
+  },
+  {
+    "file": "images/02.png",
+    "url": "https://192.168.1.1/images/02.png?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "image/png",
+    "size": 10976
+  },
+  {
+    "file": "images/dashboard.png",
+    "url": "https://192.168.1.1/images/dashboard.png?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "image/png",
+    "size": 54108
+  },
+  {
+    "file": "dashbctl.cgi",
+    "url": "https://192.168.1.1/dashbctl.cgi?sFormAuthStr=K8sEXFc1TfxSlPA&iVpnPageIdx=1",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/json",
+    "size": 4137
+  },
+  {
+    "file": "images/2927.gif",
+    "url": "https://192.168.1.1/images/2927.gif?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "image/gif",
+    "size": 36180
+  },
+  {
+    "file": "images/sharepart.png",
+    "url": "https://192.168.1.1/images/sharepart.png?v=vt3PsSxyQvxvAvNWXXu2K9pgWEpB3CnBxFNxi",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "image/png",
+    "size": 23312
+  },
+  {
+    "file": "dashbctl.cgi",
+    "url": "https://192.168.1.1/dashbctl.cgi?sFormAuthStr=K8sEXFc1TfxSlPA&iVpnPageIdx=1",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/json",
+    "size": 4136
+  },
+  {
+    "file": "dashbctl.cgi",
+    "url": "https://192.168.1.1/dashbctl.cgi?sFormAuthStr=K8sEXFc1TfxSlPA&iVpnPageIdx=1",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/json",
+    "size": 4136
+  },
+  {
+    "file": "dashbctl.cgi",
+    "url": "https://192.168.1.1/dashbctl.cgi?sFormAuthStr=K8sEXFc1TfxSlPA&iVpnPageIdx=1",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/json",
+    "size": 4136
+  },
+  {
+    "file": "dashbctl.cgi",
+    "url": "https://192.168.1.1/dashbctl.cgi?sFormAuthStr=K8sEXFc1TfxSlPA&iVpnPageIdx=1",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/json",
+    "size": 4134
+  },
+  {
+    "file": "dashbctl.cgi",
+    "url": "https://192.168.1.1/dashbctl.cgi?sFormAuthStr=K8sEXFc1TfxSlPA&iVpnPageIdx=1",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/json",
+    "size": 4135
+  },
+  {
+    "file": "dashbctl.cgi",
+    "url": "https://192.168.1.1/dashbctl.cgi?sFormAuthStr=K8sEXFc1TfxSlPA&iVpnPageIdx=1",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/json",
+    "size": 4136
+  },
+  {
+    "file": "dashbctl.cgi",
+    "url": "https://192.168.1.1/dashbctl.cgi?sFormAuthStr=K8sEXFc1TfxSlPA&iVpnPageIdx=1",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/json",
+    "size": 4136
+  },
+  {
+    "file": "dashbctl.cgi",
+    "url": "https://192.168.1.1/dashbctl.cgi?sFormAuthStr=K8sEXFc1TfxSlPA&iVpnPageIdx=1",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/json",
+    "size": 4136
+  },
+  {
+    "file": "dashbctl.cgi",
+    "url": "https://192.168.1.1/dashbctl.cgi?sFormAuthStr=K8sEXFc1TfxSlPA&iVpnPageIdx=1",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/json",
+    "size": 4136
+  },
+  {
+    "file": "dashbctl.cgi",
+    "url": "https://192.168.1.1/dashbctl.cgi?sFormAuthStr=K8sEXFc1TfxSlPA&iVpnPageIdx=1",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/json",
+    "size": 4136
+  },
+  {
+    "file": "dashbctl.cgi",
+    "url": "https://192.168.1.1/dashbctl.cgi?sFormAuthStr=K8sEXFc1TfxSlPA&iVpnPageIdx=1",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/json",
+    "size": 4136
+  },
+  {
+    "file": "doc/dashboard.htm",
+    "url": "https://192.168.1.1/doc/dashboard.htm",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/html",
+    "size": 105127
+  },
+  {
+    "file": "style.min.css",
+    "url": "https://192.168.1.1/style.min.css?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/css",
+    "size": 7348
+  },
+  {
+    "file": "cgi-bin/certificatedata.cgi",
+    "url": "https://192.168.1.1/cgi-bin/certificatedata.cgi?sFormAuthStr=K8sEXFc1TfxSlPA",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/x-javascript",
+    "size": 1931
+  },
+  {
+    "file": "js/gettext.min.js",
+    "url": "https://192.168.1.1/js/gettext.min.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 194757
+  },
+  {
+    "file": "images/dashboard.png",
+    "url": "https://192.168.1.1/images/dashboard.png?094907",
+    "method": "GET",
+    "status": 304,
+    "mimeType": "image/png",
+    "size": 54108
+  },
+  {
+    "file": "dashbctl.cgi",
+    "url": "https://192.168.1.1/dashbctl.cgi?sFormAuthStr=K8sEXFc1TfxSlPA&iVpnPageIdx=1",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/json",
+    "size": 4136
+  },
+  {
+    "file": "images/2927.gif",
+    "url": "https://192.168.1.1/images/2927.gif?094907",
+    "method": "GET",
+    "status": 304,
+    "mimeType": "image/gif",
+    "size": 36180
+  },
+  {
+    "file": "doc/wizmw.htm",
+    "url": "https://192.168.1.1/doc/wizmw.htm",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/html",
+    "size": 493
+  },
+  {
+    "file": "js/gettext.min.js",
+    "url": "https://192.168.1.1/js/gettext.min.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 194757
+  },
+  {
+    "file": "doc/wizmw_m.htm",
+    "url": "https://192.168.1.1/doc/wizmw_m.htm",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/html",
+    "size": 3010
+  },
+  {
+    "file": "doc/wizmw_m1.htm",
+    "url": "https://192.168.1.1/doc/wizmw_m1.htm",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/html",
+    "size": 2337
+  },
+  {
+    "file": "doc/wizmw1.htm",
+    "url": "https://192.168.1.1/doc/wizmw1.htm",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/html",
+    "size": 6034
+  },
+  {
+    "file": "js/gettext.min.js",
+    "url": "https://192.168.1.1/js/gettext.min.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 194757
+  },
+  {
+    "file": "style.min.css",
+    "url": "https://192.168.1.1/style.min.css?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/css",
+    "size": 7348
+  },
+  {
+    "file": "doc/constructerr.htm",
+    "url": "https://192.168.1.1/doc/constructerr.htm",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/html",
+    "size": 685
+  },
+  {
+    "file": "js/gettext.min.js",
+    "url": "https://192.168.1.1/js/gettext.min.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 194757
+  },
+  {
+    "file": "style.min.css",
+    "url": "https://192.168.1.1/style.min.css?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/css",
+    "size": 7348
+  },
+  {
+    "file": "doc/vpnclwiz1.htm",
+    "url": "https://192.168.1.1/doc/vpnclwiz1.htm",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/html",
+    "size": 4053
+  },
+  {
+    "file": "js/gettext.min.js",
+    "url": "https://192.168.1.1/js/gettext.min.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 194757
+  },
+  {
+    "file": "style.min.css",
+    "url": "https://192.168.1.1/style.min.css?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/css",
+    "size": 7348
+  },
+  {
+    "file": "js/tool.min.js",
+    "url": "https://192.168.1.1/js/tool.min.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 20262
+  },
+  {
+    "file": "doc/vpnsvwiz1.htm",
+    "url": "https://192.168.1.1/doc/vpnsvwiz1.htm",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/html",
+    "size": 19219
+  },
+  {
+    "file": "js/gettext.min.js",
+    "url": "https://192.168.1.1/js/gettext.min.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 194757
+  },
+  {
+    "file": "style.min.css",
+    "url": "https://192.168.1.1/style.min.css?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/css",
+    "size": 7348
+  },
+  {
+    "file": "doc/mwangen1.htm",
+    "url": "https://192.168.1.1/doc/mwangen1.htm",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/html",
+    "size": 16203
+  },
+  {
+    "file": "js/gettext.min.js",
+    "url": "https://192.168.1.1/js/gettext.min.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 194757
+  },
+  {
+    "file": "style.min.css",
+    "url": "https://192.168.1.1/style.min.css?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/css",
+    "size": 7348
+  },
+  {
+    "file": "js/webchange.js",
+    "url": "https://192.168.1.1/js/webchange.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 1286
+  },
+  {
+    "file": "doc/mwangen1.htm",
+    "url": "https://192.168.1.1/doc/mwangen1.htm",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/html",
+    "size": 16203
+  },
+  {
+    "file": "js/gettext.min.js",
+    "url": "https://192.168.1.1/js/gettext.min.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 194757
+  },
+  {
+    "file": "style.min.css",
+    "url": "https://192.168.1.1/style.min.css?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/css",
+    "size": 7348
+  },
+  {
+    "file": "js/webchange.js",
+    "url": "https://192.168.1.1/js/webchange.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 1286
+  },
+  {
+    "file": "doc/mwaninet1.htm",
+    "url": "https://192.168.1.1/doc/mwaninet1.htm",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/html",
+    "size": 11498
+  },
+  {
+    "file": "js/gettext.min.js",
+    "url": "https://192.168.1.1/js/gettext.min.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 194757
+  },
+  {
+    "file": "style.min.css",
+    "url": "https://192.168.1.1/style.min.css?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/css",
+    "size": 7348
+  },
+  {
+    "file": "doc/mpvcvlan1.HTM",
+    "url": "https://192.168.1.1/doc/mpvcvlan1.HTM",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/html",
+    "size": 21266
+  },
+  {
+    "file": "js/gettext.min.js",
+    "url": "https://192.168.1.1/js/gettext.min.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 194757
+  },
+  {
+    "file": "style.min.css",
+    "url": "https://192.168.1.1/style.min.css?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/css",
+    "size": 7348
+  },
+  {
+    "file": "js/dhtml.min.js",
+    "url": "https://192.168.1.1/js/dhtml.min.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 1889
+  },
+  {
+    "file": "js/webchange.js",
+    "url": "https://192.168.1.1/js/webchange.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 1286
+  },
+  {
+    "file": "images/faqmark1.png",
+    "url": "https://192.168.1.1/images/faqmark1.png",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "image/png",
+    "size": 3108
+  },
+  {
+    "file": "doc/mpvcvlan1.HTM",
+    "url": "https://192.168.1.1/doc/mpvcvlan1.HTM",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/html",
+    "size": 21266
+  },
+  {
+    "file": "js/gettext.min.js",
+    "url": "https://192.168.1.1/js/gettext.min.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 194757
+  },
+  {
+    "file": "style.min.css",
+    "url": "https://192.168.1.1/style.min.css?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/css",
+    "size": 7348
+  },
+  {
+    "file": "js/dhtml.min.js",
+    "url": "https://192.168.1.1/js/dhtml.min.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 1889
+  },
+  {
+    "file": "js/webchange.js",
+    "url": "https://192.168.1.1/js/webchange.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 1286
+  },
+  {
+    "file": "images/faqmark1.png",
+    "url": "https://192.168.1.1/images/faqmark1.png",
+    "method": "GET",
+    "status": 304,
+    "mimeType": "image/png",
+    "size": 3108
+  },
+  {
+    "file": "doc/wanbudget.htm",
+    "url": "https://192.168.1.1/doc/wanbudget.htm",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/html",
+    "size": 13510
+  },
+  {
+    "file": "js/gettext.min.js",
+    "url": "https://192.168.1.1/js/gettext.min.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 194757
+  },
+  {
+    "file": "js/dhtml.min.js",
+    "url": "https://192.168.1.1/js/dhtml.min.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 1889
+  },
+  {
+    "file": "style.min.css",
+    "url": "https://192.168.1.1/style.min.css?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/css",
+    "size": 7348
+  },
+  {
+    "file": "js/webchange.js",
+    "url": "https://192.168.1.1/js/webchange.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 1286
+  },
+  {
+    "file": "images/lock2.png",
+    "url": "https://192.168.1.1/images/lock2.png",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "image/png",
+    "size": 1156
+  },
+  {
+    "file": "images/faqmark1.png",
+    "url": "https://192.168.1.1/images/faqmark1.png",
+    "method": "GET",
+    "status": 304,
+    "mimeType": "image/png",
+    "size": 3108
+  },
+  {
+    "file": "doc/wanbudget.htm",
+    "url": "https://192.168.1.1/doc/wanbudget.htm",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/html",
+    "size": 13510
+  },
+  {
+    "file": "js/gettext.min.js",
+    "url": "https://192.168.1.1/js/gettext.min.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 194757
+  },
+  {
+    "file": "js/dhtml.min.js",
+    "url": "https://192.168.1.1/js/dhtml.min.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 1889
+  },
+  {
+    "file": "style.min.css",
+    "url": "https://192.168.1.1/style.min.css?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/css",
+    "size": 7348
+  },
+  {
+    "file": "js/webchange.js",
+    "url": "https://192.168.1.1/js/webchange.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 1286
+  },
+  {
+    "file": "images/lock2.png",
+    "url": "https://192.168.1.1/images/lock2.png",
+    "method": "GET",
+    "status": 304,
+    "mimeType": "image/png",
+    "size": 1156
+  },
+  {
+    "file": "images/faqmark1.png",
+    "url": "https://192.168.1.1/images/faqmark1.png",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "image/png",
+    "size": 3108
+  },
+  {
+    "file": "doc/enet1.htm",
+    "url": "https://192.168.1.1/doc/enet1.htm",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/html",
+    "size": 11238
+  },
+  {
+    "file": "js/gettext.min.js",
+    "url": "https://192.168.1.1/js/gettext.min.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 194757
+  },
+  {
+    "file": "js/webchange.js",
+    "url": "https://192.168.1.1/js/webchange.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 1286
+  },
+  {
+    "file": "style.min.css",
+    "url": "https://192.168.1.1/style.min.css?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/css",
+    "size": 7348
+  },
+  {
+    "file": "js/variable.js",
+    "url": "https://192.168.1.1/js/variable.js?87841",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 17914
+  },
+  {
+    "file": "js/tool.min.js",
+    "url": "https://192.168.1.1/js/tool.min.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 20262
+  },
+  {
+    "file": "doc/enet1.htm",
+    "url": "https://192.168.1.1/doc/enet1.htm",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/html",
+    "size": 11238
+  },
+  {
+    "file": "js/gettext.min.js",
+    "url": "https://192.168.1.1/js/gettext.min.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 194757
+  },
+  {
+    "file": "js/webchange.js",
+    "url": "https://192.168.1.1/js/webchange.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 1286
+  },
+  {
+    "file": "style.min.css",
+    "url": "https://192.168.1.1/style.min.css?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/css",
+    "size": 7348
+  },
+  {
+    "file": "js/variable__2.js",
+    "url": "https://192.168.1.1/js/variable.js?87846",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 17914
+  },
+  {
+    "file": "js/tool.min.js",
+    "url": "https://192.168.1.1/js/tool.min.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 20262
+  },
+  {
+    "file": "doc/vlansetup.htm",
+    "url": "https://192.168.1.1/doc/vlansetup.htm",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/html",
+    "size": 18918
+  },
+  {
+    "file": "js/gettext.min.js",
+    "url": "https://192.168.1.1/js/gettext.min.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 194757
+  },
+  {
+    "file": "style.min.css",
+    "url": "https://192.168.1.1/style.min.css?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/css",
+    "size": 7348
+  },
+  {
+    "file": "js/webchange.js",
+    "url": "https://192.168.1.1/js/webchange.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 1286
+  },
+  {
+    "file": "js/variable__3.js",
+    "url": "https://192.168.1.1/js/variable.js?87849",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 17914
+  },
+  {
+    "file": "images/faqmark1.png",
+    "url": "https://192.168.1.1/images/faqmark1.png",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "image/png",
+    "size": 3108
+  },
+  {
+    "file": "doc/reboot.sht",
+    "url": "https://192.168.1.1/doc/reboot.sht",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/html",
+    "size": 1442
+  },
+  {
+    "file": "js/gettext.min.js",
+    "url": "https://192.168.1.1/js/gettext.min.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 194757
+  },
+  {
+    "file": "style.min.css",
+    "url": "https://192.168.1.1/style.min.css?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/css",
+    "size": 7348
+  },
+  {
+    "file": "doc/reboot1.sht",
+    "url": "https://192.168.1.1/doc/reboot1.sht",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/html",
+    "size": 4045
+  },
+  {
+    "file": "style.min.css",
+    "url": "https://192.168.1.1/style.min.css?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/css",
+    "size": 7348
+  },
+  {
+    "file": "doc/ipbmac.htm",
+    "url": "https://192.168.1.1/doc/ipbmac.htm",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/html",
+    "size": 26636
+  },
+  {
+    "file": "js/gettext.min.js",
+    "url": "https://192.168.1.1/js/gettext.min.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 194757
+  },
+  {
+    "file": "style.min.css",
+    "url": "https://192.168.1.1/style.min.css?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/css",
+    "size": 7348
+  },
+  {
+    "file": "js/webchange.js",
+    "url": "https://192.168.1.1/js/webchange.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 1286
+  },
+  {
+    "file": "doc/ipbmac.htm",
+    "url": "https://192.168.1.1/doc/ipbmac.htm",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/html",
+    "size": 26636
+  },
+  {
+    "file": "js/gettext.min.js",
+    "url": "https://192.168.1.1/js/gettext.min.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 194757
+  },
+  {
+    "file": "style.min.css",
+    "url": "https://192.168.1.1/style.min.css?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/css",
+    "size": 7348
+  },
+  {
+    "file": "js/webchange.js",
+    "url": "https://192.168.1.1/js/webchange.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 1286
+  },
+  {
+    "file": "doc/lanmirr.htm",
+    "url": "https://192.168.1.1/doc/lanmirr.htm",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/html",
+    "size": 12502
+  },
+  {
+    "file": "js/gettext.min.js",
+    "url": "https://192.168.1.1/js/gettext.min.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 194757
+  },
+  {
+    "file": "style.min.css",
+    "url": "https://192.168.1.1/style.min.css?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "text/css",
+    "size": 7348
+  },
+  {
+    "file": "js/tool.min.js",
+    "url": "https://192.168.1.1/js/tool.min.js?094907",
+    "method": "GET",
+    "status": 200,
+    "mimeType": "application/javascript",
+    "size": 20262
+  },
+  {
+    "file": "cgi-bin/hotspot.cgi",
+    "url": "https://192.168.1.1/cgi-bin/hotspot.cgi?fid=0&sFormAuthStr=K8sEXFc1TfxSlPA",
+    "method": "GET",
+    "status": 0,
+    "mimeType": "x-unknown",
+    "size": 184706
+  }
+]

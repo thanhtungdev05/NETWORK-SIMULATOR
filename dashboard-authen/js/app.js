@@ -1672,7 +1672,21 @@ async function loadDashboardFromApi() {
     }
 }
 
+async function guardDashboardAdmin() {
+    let response;
+    try {
+        response = await fetch(`${API_BASE_URL}/auth/session`);
+    } catch (error) {
+        return;
+    }
+    const isAdmin = response.ok && (await response.json().catch(() => null))?.user?.role === 'admin';
+    if (!isAdmin) {
+        window.location.replace(`${window.location.origin}/`);
+    }
+}
+
 async function loadInitialDashboardData() {
+    await guardDashboardAdmin();
     await loadDashboardFromApi();
 
     const requestedLearner = new URLSearchParams(window.location.search).get('learner');

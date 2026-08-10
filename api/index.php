@@ -8,7 +8,6 @@ require_once __DIR__ . '/lib/runtime.php';
 require_once __DIR__ . '/lib/PostgresSessionHandler.php';
 require_once __DIR__ . '/lib/iam_identity.php';
 require_once __DIR__ . '/lib/tracking_handler.php';
-require_once __DIR__ . '/lib/training_tracking_handler.php';
 load_app_environment($root);
 
 $GLOBALS['request_id'] = bin2hex(random_bytes(8));
@@ -209,8 +208,6 @@ function mock_bypass_user(): array
         'email' => 'dev-bypass@ftc.local',
         'role' => 'admin',
         'display_name' => 'KTV Admin (Bypass Mode)',
-        'employee_id' => 'TECH_ADMIN',
-        'profile_status' => 'enriched',
         'iam_subject' => 'dev-bypass-admin',
         'last_login_at' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
         'created_at' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
@@ -280,8 +277,7 @@ function normalize_email(string $email): string
     return strtolower(trim($email));
 }
 
-const USER_COLUMNS = 'user_id, email, employee_id, display_name, role, profile_status, iam_subject, last_login_at, iam_profile, created_at, updated_at';
-const ACTIVITY_LOG_COLUMNS = 'id, created_at, event_type, user_id, technician_employee_id, technician_name, technician_email, email, user_email, action_title, title, lab_name, group_name, lab_url, device_name, device, severity, level, description, desc_text, client_ip, user_agent, payload';
+const USER_COLUMNS = 'user_id, email, display_name, role, last_login_at, iam_profile, created_at, updated_at';
 const LOGIN_LOG_COLUMNS = 'id, created_at, event_type, user_id, employee_id, display_name, email, role, iam_subject, ip_address, user_agent, session_id_hash';
 
 function find_user(string $email): ?array
@@ -311,12 +307,6 @@ function user_response(?array $row): ?array
         'user_id' => $row['user_id'],
         'email' => $row['email'],
         'role' => $row['role'] ?? 'user',
-        'profileStatus' => $row['profile_status'] ?? 'provisional',
-        'profile_status' => $row['profile_status'] ?? 'provisional',
-        'employeeId' => $row['employee_id'] ?? null,
-        'employee_id' => $row['employee_id'] ?? null,
-        'iamSubject' => $row['iam_subject'] ?? null,
-        'iam_subject' => $row['iam_subject'] ?? null,
         'displayName' => $row['display_name'] ?? null,
         'display_name' => $row['display_name'] ?? null,
         'lastLoginAt' => $row['last_login_at'] ?? null,
@@ -324,50 +314,6 @@ function user_response(?array $row): ?array
         'createdAt' => $row['created_at'] ?? null,
         'updatedAt' => $row['updated_at'] ?? null,
     ];
-}
-
-function log_response(array $row): array
-{
-    $payload = [];
-    if (!empty($row['payload'])) {
-        $decoded = json_decode((string)$row['payload'], true);
-        if (is_array($decoded)) {
-            $payload = $decoded;
-        }
-    }
-
-    return array_merge($payload, [
-        'id' => (string)$row['id'],
-        'userId' => $row['user_id'] ?? null,
-        'user_id' => $row['user_id'] ?? null,
-        'actionTitle' => $row['action_title'] ?? null,
-        'title' => $row['title'] ?? null,
-        'labName' => $row['lab_name'] ?? null,
-        'groupName' => $row['group_name'] ?? null,
-        'labUrl' => $row['lab_url'] ?? null,
-        'deviceName' => $row['device_name'] ?? null,
-        'device' => $row['device'] ?? null,
-        'eventType' => $row['event_type'] ?? 'lab_completed',
-        'event_type' => $row['event_type'] ?? 'lab_completed',
-        'technicianEmail' => $row['technician_email'] ?? $row['email'] ?? null,
-        'technician_email' => $row['technician_email'] ?? $row['email'] ?? null,
-        'technicianEmployeeId' => $row['technician_employee_id'] ?? null,
-        'technician_employee_id' => $row['technician_employee_id'] ?? null,
-        'technicianName' => $row['technician_name'] ?? null,
-        'technician_name' => $row['technician_name'] ?? null,
-        'clientIp' => $row['client_ip'] ?? null,
-        'client_ip' => $row['client_ip'] ?? null,
-        'userAgent' => $row['user_agent'] ?? null,
-        'user_agent' => $row['user_agent'] ?? null,
-        'severity' => $row['severity'] ?? 'LOW',
-        'level' => $row['level'] ?? 'LOW',
-        'description' => $row['description'] ?? null,
-        'desc' => $row['desc_text'] ?? null,
-        'email' => $row['email'] ?? null,
-        'user' => $row['user_email'] ?? null,
-        'createdAt' => $row['created_at'] ?? null,
-        'timestamp' => $row['created_at'] ?? null,
-    ]);
 }
 
 function login_log_response(array $row): array
@@ -413,18 +359,6 @@ function redirect_to(string $url): void
     exit;
 }
 
-function csv_env(string $key): array
-{
-    $value = env_value($key, '');
-    if (!$value) {
-        return [];
-    }
-    return array_values(array_filter(array_map(
-        fn($item) => trim((string)$item),
-        explode(',', $value)
-    ), fn($item) => $item !== ''));
-}
-
 function iam_provider(): Keycloak
 {
     if (!class_exists(Keycloak::class)) {
@@ -464,63 +398,22 @@ function iam_identity(array $profile): array
     }
 }
 
-function default_iam_role(string $email, ?string $employeeId): string
-{
-    $adminEmails = array_map('normalize_email', csv_env('IAM_ADMIN_EMAILS'));
-    $adminEmployeeIds = array_map(fn($item) => strtoupper($item), csv_env('IAM_ADMIN_EMPLOYEE_IDS'));
-
-    if (in_array(normalize_email($email), $adminEmails, true)) {
-        return 'admin';
-    }
-
-    if ($employeeId && in_array(strtoupper($employeeId), $adminEmployeeIds, true)) {
-        return 'admin';
-    }
-
-    return 'user';
-}
-
-function find_iam_user(string $email, ?string $employeeId, string $subject): ?array
-{
-    $clauses = ['email = :email', 'iam_subject = :iam_subject'];
-    $params = ['email' => normalize_email($email), 'iam_subject' => $subject];
-
-    if ($employeeId) {
-        $clauses[] = 'employee_id = :employee_id';
-        $params['employee_id'] = $employeeId;
-    }
-
-    $stmt = db()->prepare('SELECT ' . USER_COLUMNS . ' FROM users WHERE ' . implode(' OR ', $clauses) . ' ORDER BY created_at ASC LIMIT 2');
-    $stmt->execute($params);
-    $rows = $stmt->fetchAll();
-
-    if (count($rows) > 1 && $rows[0]['user_id'] !== $rows[1]['user_id']) {
-        throw new RuntimeException('IAM identity matches multiple users and requires manual review.');
-    }
-
-    return $rows[0] ?? null;
-}
-
 function upsert_iam_user(array $profile): array
 {
     $identity = iam_identity($profile);
-    $existing = find_iam_user($identity['email'], $identity['employee_id'], $identity['subject']);
+    $existing = find_user($identity['email']);
     $profileJson = json_encode($profile, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     if ($profileJson === false) {
         $profileJson = '{}';
     }
 
     if ($existing) {
-        $role = $existing['role'] === 'admin'
-            ? 'admin'
-            : default_iam_role($identity['email'], $identity['employee_id']);
+        $role = $existing['role'] === 'admin' ? 'admin' : 'user';
 
         $stmt = db()->prepare(
             'UPDATE users
              SET email = :email,
                  role = :role,
-                 employee_id = COALESCE(:employee_id, employee_id),
-                 iam_subject = :iam_subject,
                  display_name = :display_name,
                  iam_profile = :iam_profile,
                  last_login_at = NOW(),
@@ -532,8 +425,6 @@ function upsert_iam_user(array $profile): array
             'user_id' => $existing['user_id'],
             'email' => $identity['email'],
             'role' => $role,
-            'employee_id' => $identity['employee_id'],
-            'iam_subject' => $identity['subject'],
             'display_name' => $identity['display_name'],
             'iam_profile' => $profileJson,
         ]);
@@ -542,17 +433,14 @@ function upsert_iam_user(array $profile): array
 
     $stmt = db()->prepare(
         'INSERT INTO users
-         (email, role, profile_status, employee_id, iam_subject, display_name, iam_profile, last_login_at, created_at, updated_at)
+         (email, role, display_name, iam_profile, last_login_at, created_at, updated_at)
          VALUES
-         (:email, :role, :profile_status, :employee_id, :iam_subject, :display_name, :iam_profile, NOW(), NOW(), NOW())
+         (:email, :role, :display_name, :iam_profile, NOW(), NOW(), NOW())
          RETURNING ' . USER_COLUMNS
     );
     $stmt->execute([
         'email' => $identity['email'],
-        'role' => default_iam_role($identity['email'], $identity['employee_id']),
-        'profile_status' => 'provisional',
-        'employee_id' => $identity['employee_id'],
-        'iam_subject' => $identity['subject'],
+        'role' => 'user',
         'display_name' => $identity['display_name'],
         'iam_profile' => $profileJson,
     ]);
@@ -708,7 +596,6 @@ function process_iam_callback(): void
     session_regenerate_id(true);
     $_SESSION['user_id'] = $user['user_id'];
     $_SESSION['user_email'] = $user['email'];
-    $_SESSION['iam_subject'] = $user['iam_subject'] ?? null;
     record_login_log($user);
     redirect_to(iam_post_login_url($user));
 }
@@ -803,22 +690,6 @@ function optional_text(array $input, string $key, int $maximumLength = 500): ?st
     return $value === '' ? null : $value;
 }
 
-function redact_sensitive_payload(mixed $value, ?string $key = null): mixed
-{
-    if ($key && preg_match('/password|passwd|secret|token|credential|pppoe|wifi[_-]?key|pre[_-]?shared/i', $key)) {
-        return '[REDACTED]';
-    }
-    if (!is_array($value)) {
-        return $value;
-    }
-
-    $redacted = [];
-    foreach ($value as $childKey => $childValue) {
-        $redacted[$childKey] = redact_sensitive_payload($childValue, (string)$childKey);
-    }
-    return $redacted;
-}
-
 function handle_users(array $segments, string $method): void
 {
     $current = require_user();
@@ -833,7 +704,7 @@ function handle_users(array $segments, string $method): void
 
         $search = trim((string)($_GET['q'] ?? ''));
         if ($search !== '') {
-            $where[] = '(email ILIKE :search OR display_name ILIKE :search OR employee_id ILIKE :search)';
+            $where[] = '(email ILIKE :search OR display_name ILIKE :search)';
             $params['search'] = '%' . $search . '%';
         }
 
@@ -844,15 +715,6 @@ function handle_users(array $segments, string $method): void
             }
             $where[] = 'role = :role';
             $params['role'] = $role;
-        }
-
-        $profileStatus = trim((string)($_GET['profile_status'] ?? ''));
-        if ($profileStatus !== '') {
-            if (!in_array($profileStatus, ['provisional', 'enriched', 'unmatched', 'conflict'], true)) {
-                fail(400, 'bad-filter', 'Invalid profile status filter.');
-            }
-            $where[] = 'profile_status = :profile_status';
-            $params['profile_status'] = $profileStatus;
         }
 
         if (array_key_exists('created_at', $cursor) || array_key_exists('email', $cursor)) {
@@ -935,19 +797,6 @@ function handle_users(array $segments, string $method): void
             $stmt->execute(['user_id' => $target['user_id'], 'role' => $newRole]);
             $updated = $stmt->fetch();
 
-            $audit = $pdo->prepare(
-                'INSERT INTO user_role_audit_logs
-                 (actor_user_id, target_user_id, old_role, new_role, ip_address, user_agent)
-                 VALUES (:actor_user_id, :target_user_id, :old_role, :new_role, :ip_address, :user_agent)'
-            );
-            $audit->execute([
-                'actor_user_id' => $actor['user_id'],
-                'target_user_id' => $target['user_id'],
-                'old_role' => $target['role'],
-                'new_role' => $newRole,
-                'ip_address' => request_ip(),
-                'user_agent' => request_user_agent(),
-            ]);
             $pdo->commit();
             respond(['item' => user_response($updated)]);
         } catch (Throwable $exception) {
@@ -959,146 +808,6 @@ function handle_users(array $segments, string $method): void
     }
 
     fail(404, 'not-found', 'Users endpoint not found.');
-}
-
-function handle_activity_logs(array $segments, string $method): void
-{
-    if ($method === 'GET') {
-        require_admin();
-        $limit = query_limit();
-        $cursor = decode_cursor(isset($_GET['cursor']) ? (string)$_GET['cursor'] : null);
-        $where = [];
-        $params = [];
-
-        if (isset($cursor['id'])) {
-            $cursorId = filter_var($cursor['id'], FILTER_VALIDATE_INT);
-            if ($cursorId === false) {
-                fail(400, 'bad-cursor', 'The activity cursor is invalid.');
-            }
-            $where[] = 'id < :cursor_id';
-            $params['cursor_id'] = $cursorId;
-        }
-
-        $from = query_timestamp('from');
-        $to = query_timestamp('to');
-        if ($from) {
-            $where[] = 'created_at >= :from_time';
-            $params['from_time'] = $from;
-        }
-        if ($to) {
-            $where[] = 'created_at <= :to_time';
-            $params['to_time'] = $to;
-        }
-
-        foreach (['email' => 'technician_email', 'employee_id' => 'technician_employee_id', 'device' => 'device', 'event_type' => 'event_type'] as $queryKey => $column) {
-            $value = trim((string)($_GET[$queryKey] ?? ''));
-            if ($value !== '') {
-                $where[] = $column . ' = :' . $queryKey;
-                $params[$queryKey] = $value;
-            }
-        }
-
-        $sql = 'SELECT ' . ACTIVITY_LOG_COLUMNS . ' FROM activity_logs';
-        if ($where) {
-            $sql .= ' WHERE ' . implode(' AND ', $where);
-        }
-        $sql .= ' ORDER BY id DESC LIMIT ' . ($limit + 1);
-        $stmt = db()->prepare($sql);
-        $stmt->execute($params);
-        $rows = $stmt->fetchAll();
-        $hasMore = count($rows) > $limit;
-        if ($hasMore) {
-            $rows = array_slice($rows, 0, $limit);
-        }
-        $last = $rows ? $rows[array_key_last($rows)] : null;
-        $nextCursor = $hasMore && $last ? encode_cursor(['id' => (int)$last['id']]) : null;
-        respond(pagination_response(array_map('log_response', $rows), $limit, $hasMore, $nextCursor));
-    }
-
-    if ($method === 'POST') {
-        $current = require_user();
-        $input = json_body();
-        $eventType = optional_text($input, 'eventType', 64) ?? 'lab_completed';
-        if ($eventType !== 'lab_completed') {
-            fail(400, 'unsupported-event', 'Only lab_completed is supported by the current event contract.');
-        }
-
-        $email = normalize_email((string)$current['email']);
-        $safePayload = redact_sensitive_payload($input);
-        unset(
-            $safePayload['email'],
-            $safePayload['user'],
-            $safePayload['employeeId'],
-            $safePayload['employee_id'],
-            $safePayload['technicianEmail'],
-            $safePayload['technicianEmployeeId']
-        );
-
-        // In development bypass mode, avoid writing activity logs to DB to prevent FK errors
-        if (dev_bypass_enabled()) {
-            $now = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
-            $fake = [
-                'id' => 0,
-                'created_at' => $now,
-                'event_type' => $eventType,
-                'user_id' => $current['user_id'] ?? null,
-                'action_title' => optional_text($input, 'actionTitle'),
-                'title' => optional_text($input, 'title'),
-                'lab_name' => optional_text($input, 'labName'),
-                'group_name' => optional_text($input, 'groupName'),
-                'lab_url' => optional_text($input, 'labUrl', 2000),
-                'device_name' => optional_text($input, 'deviceName'),
-                'device' => optional_text($input, 'device') ?? optional_text($input, 'deviceName'),
-                'severity' => optional_text($input, 'severity', 32) ?? 'LOW',
-                'level' => optional_text($input, 'level', 32) ?? 'LOW',
-                'description' => optional_text($input, 'description', 2000),
-                'desc_text' => optional_text($input, 'desc', 2000) ?? optional_text($input, 'description', 2000),
-                'email' => $email,
-                'user_email' => $email,
-                'technician_email' => $email,
-                'technician_employee_id' => $current['employee_id'] ?? null,
-                'technician_name' => $current['display_name'] ?? null,
-                'client_ip' => request_ip(),
-                'user_agent' => request_user_agent(),
-                'payload' => json_encode($safePayload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
-            ];
-            respond(['item' => log_response($fake)], 201);
-        }
-
-        $stmt = db()->prepare(
-            'INSERT INTO activity_logs
-             (event_type, user_id, action_title, title, lab_name, group_name, lab_url, device_name, device, severity, level, description, desc_text, email, user_email, technician_email, technician_employee_id, technician_name, client_ip, user_agent, payload, created_at)
-             VALUES
-             (:event_type, :user_id, :action_title, :title, :lab_name, :group_name, :lab_url, :device_name, :device, :severity, :level, :description, :desc_text, :email, :user_email, :technician_email, :technician_employee_id, :technician_name, :client_ip, :user_agent, :payload, NOW())
-             RETURNING ' . ACTIVITY_LOG_COLUMNS
-        );
-        $stmt->execute([
-            'event_type' => $eventType,
-            'user_id' => $current['user_id'],
-            'action_title' => optional_text($input, 'actionTitle'),
-            'title' => optional_text($input, 'title'),
-            'lab_name' => optional_text($input, 'labName'),
-            'group_name' => optional_text($input, 'groupName'),
-            'lab_url' => optional_text($input, 'labUrl', 2000),
-            'device_name' => optional_text($input, 'deviceName'),
-            'device' => optional_text($input, 'device') ?? optional_text($input, 'deviceName'),
-            'severity' => optional_text($input, 'severity', 32) ?? 'LOW',
-            'level' => optional_text($input, 'level', 32) ?? 'LOW',
-            'description' => optional_text($input, 'description', 2000),
-            'desc_text' => optional_text($input, 'desc', 2000) ?? optional_text($input, 'description', 2000),
-            'email' => $email,
-            'user_email' => $email,
-            'technician_email' => $email,
-            'technician_employee_id' => $current['employee_id'] ?? null,
-            'technician_name' => $current['display_name'] ?? null,
-            'client_ip' => request_ip(),
-            'user_agent' => request_user_agent(),
-            'payload' => json_encode($safePayload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
-        ]);
-        respond(['item' => log_response($stmt->fetch())], 201);
-    }
-
-    fail(404, 'not-found', 'Activity logs endpoint not found.');
 }
 
 function handle_login_logs(array $segments, string $method): void
@@ -1234,7 +943,7 @@ function handle_dashboard(array $segments, string $method): void
         fail(405, 'method-not-allowed', 'Dashboard endpoint only supports GET.');
     }
 
-    require_user();
+    require_admin();
 
     $action = $segments[1] ?? '';
     if ($action !== 'all') {
@@ -1344,16 +1053,10 @@ try {
         handle_iam($segments, $method);
     } elseif ($resource === 'users') {
         handle_users($segments, $method);
-    } elseif ($resource === 'activity_logs') {
-        handle_activity_logs($segments, $method);
     } elseif ($resource === 'login_logs') {
         handle_login_logs($segments, $method);
     } elseif ($resource === 'tracking') {
-        if (training_tracking_is_logical_path($segments)) {
-            handle_training_tracking($segments, $method);
-        } else {
-            handle_tracking($segments, $method);
-        }
+        handle_tracking($segments, $method);
     } elseif ($resource === 'dev') {
         handle_dev($segments, $method);
     } elseif ($resource === 'dashboard') {

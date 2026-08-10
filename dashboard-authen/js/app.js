@@ -410,6 +410,7 @@ function buildLearnerSummaries(rows) {
         const primaryMode = modesArray.length === 1 ? modesArray[0] : (latest?.mode || 'Thực hành');
         return {
             learner: item.learner,
+            region: item.rows[0]?.region || getLearnerRegion(item.learner),
             total: item.rows.length,
             devicesCount: item.devices.size,
             labsCount: item.labs.size,
@@ -445,7 +446,7 @@ function renderSessions(rows) {
     if (els.sessionCountBadge) els.sessionCountBadge.textContent = `${summaries.length} KTV / ${filteredRows.length} phiên`;
 
     if (!sorted.length) {
-        if (els.sessionsBody) els.sessionsBody.innerHTML = '<tr><td colspan="5" class="empty">Không có KTV phù hợp với bộ lọc.</td></tr>';
+        if (els.sessionsBody) els.sessionsBody.innerHTML = '<tr><td colspan="7" class="empty">Không có KTV phù hợp với bộ lọc.</td></tr>';
         if (els.learnerTableMeta) els.learnerTableMeta.innerHTML = '';
         return;
     }
@@ -455,15 +456,17 @@ function renderSessions(rows) {
         els.sessionsBody.innerHTML = pageData.rows.map(item => `
             <tr class="clickable-row ${state.selectedLearner === item.learner ? 'active' : ''}" data-learner="${escapeHTML(item.learner)}" title="Bấm để xem chi tiết KTV">
                 <td>
-                    <div class="learner-link">${escapeHTML(item.learner)}</div>
+                    <div class="learner-link" title="${escapeHTML(item.learner)}">${escapeHTML(getLearnerName(item.learner))}</div>
                     <div class="item-sub">${item.completion}% hoàn thành</div>
                 </td>
+                <td>${escapeHTML(item.learner)}</td>
+                <td>${escapeHTML(item.region)}</td>
                 <td><strong>${item.total}</strong></td>
                 <td>${escapeHTML(item.devicesLabel)}</td>
                 <td>${escapeHTML(item.labsLabel)}</td>
                 <td>
                     <div><strong>${escapeHTML(item.lastDateTimeFormatted)}</strong></div>
-                    <div class="item-sub">Thời gian làm: ${formatDuration(item.latestDuration)}</div>
+                    <div class="item-sub">Thời gian phiên gần nhất: ${formatDuration(item.latestDuration)}</div>
                 </td>
             </tr>
         `).join('');
@@ -682,8 +685,8 @@ function renderLearnerDetail(rows) {
     const guideSessionsCount = allLearnerRows.filter(item => item.mode === 'Hướng dẫn').length;
     const practiceSessionsCount = allLearnerRows.filter(item => item.mode === 'Thực hành').length;
 
-    if (els.learnerDetailTitle) els.learnerDetailTitle.textContent = state.selectedLearner;
-    if (els.learnerDetailSubtitle) els.learnerDetailSubtitle.textContent = `${allLearnerRows.length} phiên thực hành trong toàn bộ lịch sử.`;
+    if (els.learnerDetailTitle) els.learnerDetailTitle.textContent = getLearnerName(state.selectedLearner);
+    if (els.learnerDetailSubtitle) els.learnerDetailSubtitle.textContent = `${allLearnerRows[0]?.region || getLearnerRegion(state.selectedLearner)} • ${state.selectedLearner} • ${allLearnerRows.length} phiên thực hành trong toàn bộ lịch sử.`;
     if (els.detailTotalSessions) els.detailTotalSessions.textContent = allLearnerRows.length;
     if (els.detailTotalSessionsSub) {
         els.detailTotalSessionsSub.innerHTML = `
@@ -1253,14 +1256,14 @@ function getDetailReportTotal(index, regionKeys, columns) {
 }
 
 function getDetailReportCellClass(cell) {
-    if (!cell.attempts) return 'report-cell-empty';
+    if (!cell.attempts) return 'report-cell-zero';
     if (cell.rate >= 80) return 'report-cell-high';
     if (cell.rate >= 50) return 'report-cell-medium';
     return 'report-cell-low';
 }
 
 function renderDetailReportMetricCell(cell, extraClass = '') {
-    if (!cell.attempts) return `<td class="report-metric-cell report-cell-empty ${extraClass}"><span class="report-empty-value">—</span></td>`;
+    if (!cell.attempts) return `<td class="report-metric-cell report-cell-zero ${extraClass}" title="Chưa có dữ liệu trong khoảng lọc"><strong>0</strong><span>0% HT</span></td>`;
     const title = `${cell.attempts} lượt làm • ${cell.completed} hoàn thành • Trung bình ${formatDuration(cell.avgDuration)}`;
     return `
         <td class="report-metric-cell ${getDetailReportCellClass(cell)} ${extraClass}" title="${escapeHTML(title)}">
@@ -1464,6 +1467,20 @@ function formatMetricDelta(unit, key, value) {
     return `${sign}${abs}${unit ? ` ${unit}` : ''}`;
 }
 
+let learnerNameMap = new Map();
+
+function rebuildLearnerNameMap() {
+    learnerNameMap = new Map();
+    sessions.forEach(item => {
+        if (!item.learner || learnerNameMap.has(item.learner)) return;
+        learnerNameMap.set(item.learner, item.technicianName || item.learner);
+    });
+}
+
+function getLearnerName(learner) {
+    return learnerNameMap.get(learner) || learner || 'KTV chưa xác định';
+}
+
 function normalizeActionText(item) {
     return item?.latest_action?.message || item?.latest_action?.action || item?.last_action || 'N/A';
 }
@@ -1521,21 +1538,118 @@ function setDashboardLoading(visible) {
     el.setAttribute('aria-hidden', String(!visible));
 }
 
+let dashboardPollTimer = null;
+let dashboardRefreshInFlight = false;
+let lastDashboardSignature = '';
+const DASHBOARD_POLL_INTERVAL_MS = 30000;
+
+function buildDashboardSignature(data) {
+    const list = data.sessions || [];
+    const first = list[0];
+    const last = list[list.length - 1];
+    return [
+        list.length,
+        first?.session_id || '',
+        first?.finished_at || '',
+        last?.session_id || '',
+        last?.finished_at || '',
+        (data.devices || []).length
+    ].join('|');
+}
+
+async function fetchDashboardData() {
+    const response = await fetch(`${API_BASE_URL}/dashboard/all`);
+    if (!response.ok) throw new Error(`API trả về HTTP ${response.status}`);
+    const payload = await response.json();
+    const data = payload.data || {};
+    return {
+        sessions: mapApiSessions(data.sessions || []),
+        deviceCatalog: (Array.isArray(data.devices) && Array.isArray(data.labs))
+            ? buildDeviceCatalog(data.devices, data.labs)
+            : [],
+        raw: data
+    };
+}
+
+function applyDashboardData(data) {
+    sessions = data.sessions;
+    deviceCatalog = data.deviceCatalog;
+    rebuildLearnerNameMap();
+}
+
+function mergeUntouchedFilterSets(allKtvs, allDevices, allLabs) {
+    if (!state.realtimeKtvsTouched) state.realtimeSelectedKtvs = new Set([...state.realtimeSelectedKtvs, ...allKtvs]);
+    if (!state.learnerKtvsTouched) state.learnerSelectedKtvs = new Set([...state.learnerSelectedKtvs, ...allKtvs]);
+    if (!state.learnerDevicesTouched) state.learnerSelectedDevices = new Set([...state.learnerSelectedDevices, ...allDevices]);
+    if (!state.learnerLabsTouched) state.learnerSelectedLabs = new Set([...state.learnerSelectedLabs, ...allLabs]);
+    if (!state.realtimeDevicesTouched) state.realtimeSelectedDevices = new Set([...state.realtimeSelectedDevices, ...allDevices]);
+    if (!state.labDevicesTouched) state.labSelectedDevices = new Set([...state.labSelectedDevices, ...allDevices]);
+    if (!state.deviceDevicesTouched) state.deviceSelectedDevices = new Set([...state.deviceSelectedDevices, ...allDevices]);
+}
+
+function mergeDefaultClassLearners() {
+    const defaultClass = state.instructorClasses.find(item => item.id === 'class-default');
+    if (!defaultClass) return;
+    const learners = getInstructorLearners();
+    if (!learners.length) return;
+    const merged = [...new Set([...(defaultClass.members || []), ...learners])].sort((a, b) => a.localeCompare(b, 'vi'));
+    if (merged.length !== defaultClass.members.length) {
+        defaultClass.members = merged;
+        saveInstructorClasses();
+    }
+}
+
+function refreshFilterOptionLists() {
+    const allKtvs = [...new Set(sessions.map(item => item.learner))].sort();
+    const allDevices = [...new Set(sessions.map(item => item.device))].sort();
+    const allLabs = [...new Set(sessions.map(item => item.lab))].sort((a, b) => a.localeCompare(b, 'vi'));
+    populatePopoverOptions('realtimeKtvOptions', allKtvs, state.realtimeSelectedKtvs, () => { state.realtimeKtvsTouched = true; }, state.realtimeSearchKtv);
+    populatePopoverOptions('realtimeDeviceOptions', allDevices, state.realtimeSelectedDevices, () => { state.realtimeDevicesTouched = true; }, state.realtimeSearchDevice);
+    populatePopoverOptions('learnerKtvOptions', allKtvs, state.learnerSelectedKtvs, () => { state.learnerKtvsTouched = true; }, state.learnerSearchKtv);
+    populatePopoverOptions('learnerDeviceOptions', allDevices, state.learnerSelectedDevices, () => { state.learnerDevicesTouched = true; });
+    populatePopoverOptions('learnerLabOptions', allLabs, state.learnerSelectedLabs, () => { state.learnerLabsTouched = true; });
+    populatePopoverOptions('labDeviceOptions', allDevices, state.labSelectedDevices, () => { state.labDevicesTouched = true; }, state.labSearchDevice);
+    populatePopoverOptions('deviceOptions', allDevices, state.deviceSelectedDevices, () => { state.deviceDevicesTouched = true; }, state.deviceSearchDevice);
+}
+
+async function refreshDashboardData() {
+    if (dashboardRefreshInFlight || document.hidden) return;
+    dashboardRefreshInFlight = true;
+    try {
+        const data = await fetchDashboardData();
+        const signature = buildDashboardSignature(data.raw);
+        if (signature === lastDashboardSignature) return;
+        lastDashboardSignature = signature;
+        applyDashboardData(data);
+        const allKtvs = [...new Set(sessions.map(item => item.learner))].sort();
+        const allDevices = [...new Set(sessions.map(item => item.device))].sort();
+        const allLabs = [...new Set(sessions.map(item => item.lab))].sort((a, b) => a.localeCompare(b, 'vi'));
+        mergeUntouchedFilterSets(allKtvs, allDevices, allLabs);
+        refreshFilterOptionLists();
+        mergeDefaultClassLearners();
+        renderAll();
+    } catch (error) {
+        console.warn('Poll dữ liệu timer_sessions thất bại (giữ dữ liệu cũ).', error);
+    } finally {
+        dashboardRefreshInFlight = false;
+    }
+}
+
+function startDashboardPolling() {
+    if (dashboardPollTimer) return;
+    dashboardPollTimer = setInterval(refreshDashboardData, DASHBOARD_POLL_INTERVAL_MS);
+}
+
 async function loadDashboardFromApi() {
     setDashboardLoading(true);
     try {
         setDataSourceLabel('Đang tải dữ liệu từ timer_sessions');
         renderAll();
 
-        const response = await fetch(`${API_BASE_URL}/dashboard/all`);
-        if (!response.ok) throw new Error(`API trả về HTTP ${response.status}`);
+        const data = await fetchDashboardData();
+        lastDashboardSignature = buildDashboardSignature(data.raw);
+        applyDashboardData(data);
 
-        const payload = await response.json();
-        const data = payload.data || {};
-        sessions = mapApiSessions(data.sessions || []);
-        if (Array.isArray(data.devices) && Array.isArray(data.labs)) {
-            deviceCatalog = buildDeviceCatalog(data.devices, data.labs);
-        }
         state.selectedLearner = '';
         state.learnerTablePage = 1;
         state.learnerDetailPage = 1;
@@ -1547,12 +1661,14 @@ async function loadDashboardFromApi() {
         console.warn('Không kết nối được dữ liệu timer_sessions.', error);
         sessions = [];
         deviceCatalog = [];
+        rebuildLearnerNameMap();
         setDataSourceLabel('Không tải được dữ liệu timer_sessions');
         initFilters();
         initPopovers();
         renderAll();
     } finally {
         setDashboardLoading(false);
+        startDashboardPolling();
     }
 }
 
@@ -2067,7 +2183,7 @@ function renderRealtimeSubmissions(dateSessions) {
     tbody.innerHTML = pageData.rows.map(item => `
         <tr>
             <td><strong>${escapeHTML(formatDateTime(item.date, item.time))}</strong></td>
-            <td><div class="learner-link">${escapeHTML(item.learner)}</div></td>
+            <td><div class="learner-link" title="${escapeHTML(item.learner)}">${escapeHTML(getLearnerName(item.learner))}</div></td>
             <td><span class="mode-pill ${item.mode === 'Hướng dẫn' ? 'mode-guide' : 'mode-practice'}">${escapeHTML(item.mode || 'Thực hành')}</span></td>
             <td>${escapeHTML(item.device)}</td>
             <td>${escapeHTML(item.lab)}</td>
@@ -2208,9 +2324,10 @@ function getInstructorClassProgress(selectedClass, selectedGroups) {
                     .filter(item => item.device === group.device && item.status === completedStatus)
                     .map(item => item.lab)
             );
-            const completed = group.labs.filter(lab => completedLabs.has(lab)).length;
+            const labResults = group.labs.map(lab => ({ lab, completed: completedLabs.has(lab) }));
+            const completed = labResults.filter(item => item.completed).length;
             const total = group.labs.length;
-            return { device: group.device, completed, total, rate: total ? Math.round((completed / total) * 100) : 0 };
+            return { device: group.device, labResults, completed, total, rate: total ? Math.round((completed / total) * 100) : 0 };
         });
         const completed = deviceResults.reduce((sum, item) => sum + item.completed, 0);
         const total = deviceResults.reduce((sum, item) => sum + item.total, 0);
@@ -2224,10 +2341,8 @@ function getInstructorClassProgress(selectedClass, selectedGroups) {
     });
 }
 
-function getInstructorProgressClass(completed, total) {
-    if (!completed) return 'instructor-progress-zero';
-    if (completed >= total) return 'instructor-progress-complete';
-    return 'instructor-progress-partial';
+function getInstructorLabCellClass(completed) {
+    return completed ? 'instructor-progress-complete' : 'instructor-progress-zero';
 }
 
 function getInstructorRateClass(rate) {
@@ -2289,33 +2404,49 @@ function renderInstructorClassProgress() {
     const total = progressRows.reduce((sum, item) => sum + item.total, 0);
     const rate = total ? Math.round((completed / total) * 100) : 0;
 
+    const columns = selectedGroups.flatMap((group, groupIndex) => group.labs.map((lab, labIndex) => ({
+        device: group.device,
+        lab,
+        groupIndex,
+        isFirst: labIndex === 0
+    })));
+
     summary.innerHTML = `
         <span class="instructor-summary-chip"><strong>${progressRows.length}</strong> KTV</span>
         <span class="instructor-summary-chip"><strong>${selectedGroups.length}</strong> thiết bị</span>
-        <span class="instructor-summary-chip"><strong>${selectedGroups.reduce((sum, item) => sum + item.labs.length, 0)}</strong> bài lab</span>
+        <span class="instructor-summary-chip"><strong>${columns.length}</strong> bài lab</span>
         <span class="instructor-summary-chip"><strong>${completed}/${total}</strong> bài hoàn thành</span>
         <span class="instructor-summary-chip"><strong>${rate}%</strong> tiến độ lớp</span>
     `;
 
     head.innerHTML = `
-        <tr>
-            <th class="instructor-progress-index" scope="col">STT</th>
-            <th class="instructor-progress-email" scope="col">Email học viên</th>
-            ${selectedGroups.map(group => `<th class="instructor-progress-device" scope="col" title="${escapeHTML(`${group.device} · ${group.labs.length} bài lab`)}">${escapeHTML(group.device)}<small>${group.labs.length} bài lab</small></th>`).join('')}
-            <th class="instructor-progress-total" scope="col">Hoàn thành</th>
-            <th class="instructor-progress-rate" scope="col">Tỷ lệ</th>
+        <tr class="instructor-progress-group-row">
+            <th class="instructor-progress-index" rowspan="2" scope="col">STT</th>
+            <th class="instructor-progress-email" rowspan="2" scope="col">KTV</th>
+            ${selectedGroups.map((group, index) => `
+                <th class="instructor-progress-device instructor-progress-group instructor-progress-tone-${index % 5}" colspan="${group.labs.length}" scope="colgroup">
+                    ${escapeHTML(group.device)}
+                    <span>${group.labs.length} bài lab</span>
+                </th>
+            `).join('')}
+            <th class="instructor-progress-total" rowspan="2" scope="col">Hoàn thành</th>
+            <th class="instructor-progress-rate" rowspan="2" scope="col">Tỷ lệ</th>
+        </tr>
+        <tr class="instructor-progress-lab-row">
+            ${columns.map(column => `
+                <th class="instructor-progress-lab instructor-progress-lab-tone-${column.groupIndex % 5} ${column.isFirst ? 'group-start' : ''}" scope="col" title="${escapeHTML(`${column.device} • ${column.lab}`)}">${escapeHTML(column.lab)}</th>
+            `).join('')}
         </tr>
     `;
     body.innerHTML = progressRows.map((row, index) => `
         <tr>
             <td class="instructor-progress-index">${index + 1}</td>
-            <th class="instructor-progress-email" scope="row" title="${escapeHTML(row.learner)}">${escapeHTML(row.learner)}</th>
-            ${row.deviceResults.map(item => `
-                <td class="instructor-progress-device instructor-device-result ${getInstructorProgressClass(item.completed, item.total)}" title="${escapeHTML(`${item.device}: ${item.completed}/${item.total} bài hoàn thành`)}">
-                    <strong>${item.completed}/${item.total}</strong>
-                    <span>${item.rate}%</span>
+            <th class="instructor-progress-email" scope="row" title="${escapeHTML(row.learner)}">${escapeHTML(getLearnerName(row.learner))}</th>
+            ${row.deviceResults.flatMap(item => item.labResults.map(lab => `
+                <td class="instructor-progress-lab instructor-lab-cell ${getInstructorLabCellClass(lab.completed)}" title="${escapeHTML(`${item.device} • ${lab.lab}: ${lab.completed ? 'Hoàn thành' : 'Chưa hoàn thành'}`)}">
+                    ${lab.completed ? '✓' : '0%'}
                 </td>
-            `).join('')}
+            `)).join('')}
             <td class="instructor-progress-total">${row.completed}/${row.total}</td>
             <td class="instructor-progress-rate ${getInstructorRateClass(row.rate)}">${row.rate}%</td>
         </tr>
@@ -2396,11 +2527,11 @@ function exportInstructorClassCsv() {
     const groups = getInstructorDeviceGroups().filter(item => !state.instructorSelectedDevice || item.device === state.instructorSelectedDevice);
     const progressRows = getInstructorClassProgress(selectedClass, groups);
     const escapeCsv = value => `"${String(value ?? '').replace(/"/g, '""')}"`;
-    const header = ['STT', 'Email học viên', ...groups.map(item => item.device), 'Hoàn thành', 'Tỷ lệ'];
+    const header = ['STT', 'KTV', ...groups.flatMap(group => group.labs.map(lab => `${group.device} - ${lab}`)), 'Hoàn thành', 'Tỷ lệ'];
     const csvRows = progressRows.map((row, index) => [
         index + 1,
         row.learner,
-        ...row.deviceResults.map(item => `${item.completed}/${item.total}`),
+        ...row.deviceResults.flatMap(item => item.labResults.map(lab => (lab.completed ? '1' : '0'))),
         `${row.completed}/${row.total}`,
         `${row.rate}%`
     ]);
@@ -3513,7 +3644,7 @@ function renderCompareTable(rowsA, rowsB, metricsA, metricsB, startA, endA, star
 
         tableBody.innerHTML = list.map(item => `
             <tr>
-                <td><strong>${escapeHTML(item.name)}</strong></td>
+                <td><strong title="${escapeHTML(item.name)}">${escapeHTML(getLearnerName(item.name))}</strong></td>
                 <td>${item.totA} phiên (${item.compA} HT)</td>
                 <td>${item.totB} phiên (${item.compB} HT)</td>
                 <td>${item.rateA}%</td>
@@ -3621,7 +3752,7 @@ function renderCompareTable(rowsA, rowsB, metricsA, metricsB, startA, endA, star
 
         tableBody.innerHTML = list.map(item => `
             <tr>
-                <td><strong>${escapeHTML(item.name)}</strong></td>
+                <td><strong title="${escapeHTML(item.name)}">${escapeHTML(getLearnerName(item.name))}</strong></td>
                 <td>${escapeHTML(item.region)}</td>
                 <td>${item.totA}</td>
                 <td>${item.totB}</td>

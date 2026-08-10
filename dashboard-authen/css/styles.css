@@ -7423,6 +7423,11 @@ th:nth-last-child(2) .header-filter-popover .popover-dropdown {
     background: #ffffff;
 }
 
+.report-cell-zero {
+    color: #a1aabc;
+    background: #ffffff;
+}
+
 .report-empty-value {
     margin: 0 !important;
     font-size: 13px !important;
@@ -7839,6 +7844,68 @@ th:nth-last-child(2) .header-filter-popover .popover-dropdown {
     min-width: 118px;
 }
 
+.instructor-progress-table .instructor-progress-group {
+    color: #ffffff;
+    background: linear-gradient(135deg, #294373, #355c96);
+    font-size: 10.5px !important;
+    line-height: 1.15;
+    white-space: nowrap;
+}
+
+.instructor-progress-table .instructor-progress-group span {
+    display: block;
+    margin-top: 2px;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 8px;
+    font-weight: 600;
+}
+
+.instructor-progress-table .instructor-progress-tone-0 { background: linear-gradient(135deg, #294373, #355c96) !important; }
+.instructor-progress-table .instructor-progress-tone-1 { background: linear-gradient(135deg, #4b397b, #6c55a4) !important; }
+.instructor-progress-table .instructor-progress-tone-2 { background: linear-gradient(135deg, #246278, #3389a1) !important; }
+.instructor-progress-table .instructor-progress-tone-3 { background: linear-gradient(135deg, #3d557d, #5476a9) !important; }
+.instructor-progress-table .instructor-progress-tone-4 { background: linear-gradient(135deg, #5e436f, #865d91) !important; }
+
+.instructor-progress-lab {
+    width: 58px;
+    min-width: 58px;
+}
+
+.instructor-progress-lab-row th {
+    height: 48px;
+    padding: 4px !important;
+    color: #31415e !important;
+    background: #eef3fb !important;
+    font-size: 8.5px !important;
+    font-weight: 720 !important;
+    line-height: 1.18;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.instructor-progress-lab-tone-0 { background: #eef3fb !important; }
+.instructor-progress-lab-tone-1 { background: #f3effb !important; }
+.instructor-progress-lab-tone-2 { background: #ecf8fb !important; }
+.instructor-progress-lab-tone-3 { background: #eef3fa !important; }
+.instructor-progress-lab-tone-4 { background: #f7eff7 !important; }
+
+.instructor-progress-table .group-start {
+    border-left: 2px solid #a9b7cb !important;
+}
+
+.instructor-lab-cell {
+    height: 42px;
+    padding: 2px 4px !important;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.instructor-lab-cell.instructor-progress-zero,
+.instructor-lab-cell.instructor-progress-complete {
+    color: inherit;
+    background: inherit;
+}
+
 .instructor-progress-total {
     width: 92px;
     min-width: 92px;
@@ -7849,22 +7916,6 @@ th:nth-last-child(2) .header-filter-popover .popover-dropdown {
     width: 72px;
     min-width: 72px;
     font-weight: 800;
-}
-
-.instructor-device-result strong,
-.instructor-device-result span {
-    display: block;
-}
-
-.instructor-device-result strong {
-    color: #27354c;
-    font-size: 12px;
-}
-
-.instructor-device-result span {
-    margin-top: 1px;
-    font-size: 8.5px;
-    font-weight: 720;
 }
 
 .instructor-progress-zero {

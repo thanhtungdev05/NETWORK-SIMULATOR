@@ -1263,6 +1263,37 @@ function handle_dashboard(array $segments, string $method): void
     $sessions = [];
     $deviceMap = [];
     $labMap = [];
+    try {
+        $catalogRows = db()
+            ->query(
+                'SELECT d.device_id, d.model, d.device_name, l.lab_id, l.lab_name
+                 FROM device_catalog d
+                 LEFT JOIN lab_catalog l ON l.device_id = d.device_id
+                 ORDER BY d.device_name, l.lab_name'
+            )
+            ->fetchAll();
+        foreach ($catalogRows as $row) {
+            $deviceName = (string)($row['device_name'] ?? '');
+            if ($deviceName !== '' && !isset($deviceMap[$deviceName])) {
+                $deviceMap[$deviceName] = [
+                    'device_id' => (string)($row['device_id'] ?? ('DEV_' . count($deviceMap))),
+                    'model' => (string)($row['model'] ?? ''),
+                    'device_name' => $deviceName,
+                ];
+            }
+            $labId = (string)($row['lab_id'] ?? '');
+            if ($labId !== '' && !isset($labMap[$labId])) {
+                $labMap[$labId] = [
+                    'lab_id' => $labId,
+                    'lab_name' => (string)($row['lab_name'] ?? $labId),
+                    'device_id' => (string)($row['device_id'] ?? ''),
+                ];
+            }
+        }
+    } catch (Throwable $ignored) {
+        // Bang danh muc chua duoc tao (chua chay migration 008) -> chi dung du lieu tu sessions.
+    }
+
     foreach ($rows as $row) {
         $sessions[] = [
             'session_id' => (string)$row['session_id'],
@@ -1294,7 +1325,7 @@ function handle_dashboard(array $segments, string $method): void
             $labMap[$labKey] = [
                 'lab_id' => $labKey,
                 'lab_name' => $labName,
-                'device_id' => $deviceMap[$device]['device_id'] ?? 'DEV_0',
+                'device_id' => $deviceMap[$device]['device_id'] ?? 'DEV_' . count($deviceMap),
             ];
         }
     }

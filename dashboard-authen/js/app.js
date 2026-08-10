@@ -2458,7 +2458,7 @@ function renderInstructorClassProgress() {
             <th class="instructor-progress-email" scope="row" title="${escapeHTML(row.learner)}">${escapeHTML(getLearnerName(row.learner))}</th>
             ${row.deviceResults.flatMap(item => item.labResults.map(lab => `
                 <td class="instructor-progress-lab instructor-lab-cell ${getInstructorLabCellClass(lab.completed)}" title="${escapeHTML(`${item.device} • ${lab.lab}: ${lab.completed ? 'Hoàn thành' : 'Chưa hoàn thành'}`)}">
-                    ${lab.completed ? '✓' : '0%'}
+                    ${lab.completed ? '✓' : ''}
                 </td>
             `)).join('')}
             <td class="instructor-progress-total">${row.completed}/${row.total}</td>

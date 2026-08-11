@@ -492,7 +492,7 @@
   // ── Action Menu Items ────────────────────────────────────────────
   document.getElementById('menu-dashboard').addEventListener('click', () => {
     actionMenu.classList.remove('open');
-    alert('🖥️ Quản lý Dashboard\n\nTính năng này sẽ được phát triển trong phiên bản tiếp theo.');
+    window.open('/dashboard-authen', '_blank', 'noopener');
   });
 
   document.getElementById('menu-logout').addEventListener('click', () => {

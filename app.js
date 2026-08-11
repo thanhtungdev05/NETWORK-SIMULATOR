@@ -11,6 +11,11 @@
   let currentMode = 'guide'; // 'guide' (có popups) hoặc 'practice' (không có popups)
   let guideSyncInterval = null;
 
+  // ── Tracking State ───────────────────────────────────────────────
+  // Lưu thông tin phiên thực hành hiện tại để gửi Tracking API khi kết thúc
+  let _trackingSession = null; // { device, lesson, mode, startedAt }
+  let _currentUser = null;    // { technician_id, name, email } — lấy từ API auth/session
+
   // ── DOM Refs ─────────────────────────────────────────────────────
   const sidebar = document.getElementById('sidebar');
   const btnCollapse = document.getElementById('btn-collapse');
@@ -116,6 +121,34 @@
     setTimeout(() => {
       statusText.textContent = 'System Ready';
     }, 1200);
+
+    // Tải thông tin người dùng hiện tại từ API để dùng cho Tracking
+    fetchCurrentUser();
+  }
+
+  // ── Fetch Current User (for Tracking) ───────────────────────────
+  /**
+   * Lấy thông tin user đang đăng nhập từ API auth/session.
+   * Kết quả được cache vào _currentUser để dùng khi gửi Tracking API.
+   * Không block UI nếu API lỗi — chỉ log warning.
+   */
+  function fetchCurrentUser() {
+    fetch('/api/index.php/auth/session', { credentials: 'include' })
+      .then(function (res) { return res.ok ? res.json() : null; })
+      .then(function (data) {
+        const u = data && data.user;
+        if (u) {
+          _currentUser = {
+            technician_id: u.user_id || u.id || 'UNKNOWN',
+            name: u.displayName || u.display_name || u.email || 'KTV',
+            email: u.email || ''
+          };
+        }
+      })
+      .catch(function () {
+        // Không làm gì — portal vẫn hoạt động bình thường
+        console.warn('[Tracking] Không thể lấy thông tin user từ API.');
+      });
   }
 
   // ── Device Selection ─────────────────────────────────────────────
@@ -285,6 +318,14 @@
       localStorage.removeItem('ftc_guide_popups');
     }
 
+    // ── Ghi nhận thời điểm BẮT ĐẦU phiên thực hành (Tracking) ──
+    _trackingSession = {
+      device: device,
+      lesson: lesson,
+      mode: enableGuide ? 'Hướng dẫn' : 'Thực hành',
+      startedAt: new Date().toISOString()
+    };
+
     // Reset iframe loading state
     iframeLoading.classList.remove('hidden');
     deviceIframe.src = 'about:blank';
@@ -332,10 +373,81 @@
   }
 
   function backToLesson() {
+    // ── Gửi Tracking API khi KTV HOÀN THÀNH / THOÁT khỏi bài lab ──
+    sendTrackingTimer();
+
     deviceIframe.src = '';
     currentIframeUrl = '';
     clearGuidePopups();
     showLesson();
+  }
+
+  // ── Tracking API ─────────────────────────────────────────────────
+  /**
+   * Gửi thông tin phiên thực hành lên server qua POST /api/index.php/tracking/timer.
+   * Chỉ gọi 1 lần khi KTV kết thúc bài lab (bấm nút Quay lại).
+   * Không throw lỗi — portal vẫn hoạt động bình thường nếu API lỗi.
+   */
+  function sendTrackingTimer() {
+    if (!_trackingSession) return; // Chưa có phiên nào được bắt đầu
+
+    const session = _trackingSession;
+    _trackingSession = null; // Reset ngay để tránh gửi 2 lần
+
+    const finishedAt = new Date();
+    const startedAt = new Date(session.startedAt);
+    const durationSec = Math.max(0, Math.round((finishedAt - startedAt) / 1000));
+
+    // Lấy tên thiết bị từ device object (ưu tiên device.name, fallback device.id)
+    const deviceName = (session.device && session.device.name) ? session.device.name : (session.device && session.device.id ? session.device.id : 'Unknown');
+
+    // Lấy lab_id chính xác từ lesson.id (khớp với data.js)
+    const labId = session.lesson && session.lesson.id ? session.lesson.id : (session.lesson && session.lesson.title ? session.lesson.title : 'Unknown');
+
+    // Thông tin KTV — dùng từ user đã đăng nhập, fallback về anonymous
+    const user = _currentUser || {
+      technician_id: 'ANONYMOUS',
+      name: 'Người dùng chưa đăng nhập',
+      email: ''
+    };
+
+    const payload = {
+      technician_id: user.technician_id,
+      name: user.name,
+      email: user.email || undefined,
+      lab_id: labId,
+      mode: session.mode,
+      device: deviceName,
+      started_at: session.startedAt,
+      finished_at: finishedAt.toISOString(),
+      duration_sec: durationSec
+    };
+
+    // Loại bỏ các field undefined trước khi gửi
+    Object.keys(payload).forEach(function (k) {
+      if (payload[k] === undefined) delete payload[k];
+    });
+
+    fetch('/api/index.php/tracking/timer', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+      .then(function (res) {
+        if (!res.ok) {
+          return res.json().then(function (err) {
+            console.warn('[Tracking] API trả về lỗi:', err);
+          });
+        }
+        return res.json().then(function (data) {
+          console.info('[Tracking] Đã ghi phiên thực hành:', data);
+        });
+      })
+      .catch(function (err) {
+        // Không hiển thị lỗi cho người dùng — portal vẫn hoạt động bình thường
+        console.warn('[Tracking] Không thể gửi dữ liệu tracking:', err);
+      });
   }
 
   // ── Breadcrumb ───────────────────────────────────────────────────

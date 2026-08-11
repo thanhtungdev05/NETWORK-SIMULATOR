@@ -65,8 +65,8 @@ SIM_HANDLERS = {
 # File/thư mục Portal luôn do Portal phục vụ (chống bị 'cướp' bởi Referer/Cookie)
 PORTAL_PATHS = {'/', '/index.html', '/styles.css', '/app.js', '/data.js', '/portal.html',
                 '/favicon.ico', '/login', '/login/index.html', '/api',
-                '/dashboard', '/dashboard/'}
-PORTAL_PREFIXES = ('/devices/', '/assets/', '/login/', '/api/', '/vendor/', '/dashboard/')
+                '/dashboard', '/dashboard/', '/dashboard-authen', '/dashboard-authen/'}
+PORTAL_PREFIXES = ('/devices/', '/assets/', '/login/', '/api/', '/vendor/', '/dashboard/', '/dashboard-authen/')
 
 
 def is_portal_path(path):
@@ -181,9 +181,10 @@ class MasterDispatcher(SimpleHTTPRequestHandler):
 
         # Mount dashboard (thu muc dashboard-authen) thanh /dashboard/*.
         # Xu ly TRUOC detect_simulator de tranh bi cookie current_sim cua sim 'cuop' request.
-        if method == 'GET' and (path_only == '/dashboard' or path_only.startswith('/dashboard/')):
+        if method == 'GET' and (path_only == '/dashboard' or path_only.startswith('/dashboard/') or path_only == '/dashboard-authen' or path_only.startswith('/dashboard-authen/')):
             parts = self.path.split('?', 1)
-            sub = parts[0][len('/dashboard'):]
+            prefix = '/dashboard-authen' if path_only.startswith('/dashboard-authen') else '/dashboard'
+            sub = parts[0][len(prefix):]
             if sub == '':
                 sub = '/'
             if not sub.startswith('/'):

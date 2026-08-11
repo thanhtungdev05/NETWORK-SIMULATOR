@@ -492,7 +492,7 @@
   // ── Action Menu Items ────────────────────────────────────────────
   document.getElementById('menu-dashboard').addEventListener('click', () => {
     actionMenu.classList.remove('open');
-    window.open('/dashboard-authen', '_blank', 'noopener');
+    window.open('/dashboard-authen/', '_blank', 'noopener');
   });
 
   document.getElementById('menu-logout').addEventListener('click', () => {

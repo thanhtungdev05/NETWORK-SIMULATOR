@@ -45,10 +45,52 @@
   </div>
 
   <script>
+    const TRACKING = {
+      TECHNICIAN_ID: "DEV_TECH_002",
+      LAB_ID: "LAB_VIRTUAL_ONT_AX3000S",
+      MODE: "Thực hành",
+      TIMER_URL: "/api/index.php/tracking/timer",
+      TIMER_NAME: "KTV DEV_TECH_002",
+      TIMER_EMAIL: "devtech002@fpt.com",
+      TIMER_FINISHED_AT: "2026-08-05T12:30:00+07:00",
+      TIMER_DURATION_SEC: 55,
+      TIMER_DEVICE: "AX3000S",
+    };
+    window.TRACKING = TRACKING;
+
+    function sendTrackingTimer() {
+      const body = {
+        technician_id: TRACKING.TECHNICIAN_ID,
+        name: TRACKING.TIMER_NAME,
+        email: TRACKING.TIMER_EMAIL,
+        lab_id: TRACKING.LAB_ID,
+        mode: TRACKING.MODE,
+        device: TRACKING.TIMER_DEVICE,
+        finished_at: TRACKING.TIMER_FINISHED_AT,
+        duration_sec: TRACKING.TIMER_DURATION_SEC,
+      };
+
+      console.log("TRACKING TIMER payload:", body);
+
+      return fetch(TRACKING.TIMER_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+        keepalive: true,
+      })
+        .then(function (res) { return res.json(); })
+        .then(function (data) { console.log("TRACKING TIMER response:", data); })
+        .catch(function (err) { console.error("TRACKING TIMER error:", err); });
+    }
+
     function doLogin(e) {
       e.preventDefault();
-      // Bản giả lập: không kiểm tra mật khẩu thật, chuyển thẳng vào trang quản trị.
-      window.location.href = "app.html";
+      sendTrackingTimer().finally(function () {
+        // Bản giả lập: không kiểm tra mật khẩu thật, chuyển thẳng vào trang quản trị.
+        window.location.href = "app.html";
+      });
       return false;
     }
   </script>

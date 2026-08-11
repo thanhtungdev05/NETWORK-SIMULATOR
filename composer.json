@@ -1,0 +1,14 @@
+{
+  "name": "ftc/virtual-devices",
+  "description": "FTC Virtual Devices portal and IAM integration",
+  "type": "project",
+  "require": {
+    "php": "^8.0",
+    "ext-curl": "*",
+    "ext-json": "*",
+    "ext-pdo": "*",
+    "ext-pdo_pgsql": "*",
+    "vlucas/phpdotenv": "^5.5",
+    "stevenmaguire/oauth2-keycloak": "^3.0"
+  }
+}

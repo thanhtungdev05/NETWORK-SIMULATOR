@@ -1,0 +1,13 @@
+services:
+  ftc-virtual:
+    build: .
+    image: ftc-virtual:latest
+    container_name: ftc-virtual
+    env_file:
+      - .env
+    environment:
+      PORT: "8080"
+      API_PORT: "8081"
+    ports:
+      - "8080:8080"
+    restart: unless-stopped

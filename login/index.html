@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Đăng nhập hệ thống FTC - Giả lập Thiết bị bằng tài khoản IAM.">
+  <meta name="theme-color" content="#071632">
+  <title>Đăng nhập | FTC - Giả lập Thiết bị</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="login-shell">
+    <section class="login-card" aria-labelledby="login-title">
+      <div class="brand-logo-wrap">
+        <img
+          class="brand-logo"
+          src="../assets/logoFPT.png"
+          alt="FTC - FPT Telecom"
+          width="286"
+          height="318"
+        >
+      </div>
+
+      <div class="login-heading">
+        <h1 id="login-title">FTC - Giả lập Thiết bị</h1>
+        <p class="login-description">Đăng nhập để tiếp tục vào hệ thống đào tạo và thực hành thiết bị.</p>
+      </div>
+
+      <a class="iam-button" id="iam-login" href="/api/index.php/iam/login">
+        <span class="iam-icon" aria-hidden="true">
+          <i></i><i></i><i></i><i></i>
+        </span>
+        <span class="button-label">Đăng nhập bằng IAM</span>
+        <span class="button-arrow" aria-hidden="true">→</span>
+      </a>
+
+      <p class="security-note">
+        <span aria-hidden="true">●</span>
+        Sử dụng tài khoản IAM nội bộ của bạn
+      </p>
+    </section>
+  </main>
+
+  <script src="app.js?v=local-bypass-20260805"></script>
+</body>
+</html>

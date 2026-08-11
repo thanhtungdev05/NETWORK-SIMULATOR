@@ -112,19 +112,6 @@
       }, 400);
     }
 
-    // Window resize & iframe observer to keep guide popups perfectly aligned
-    window.addEventListener('resize', () => {
-      if (currentMode === 'guide') applyGuidePopups();
-    });
-
-    if (window.ResizeObserver && deviceIframe) {
-      try {
-        new ResizeObserver(() => {
-          if (currentMode === 'guide') applyGuidePopups();
-        }).observe(deviceIframe);
-      } catch (e) { }
-    }
-
     // Show system ready after short delay
     setTimeout(() => {
       statusText.textContent = 'System Ready';
@@ -377,12 +364,6 @@
   // ── Sidebar Toggle ───────────────────────────────────────────────
   function toggleSidebar() {
     sidebar.classList.toggle('collapsed');
-    if (currentMode === 'guide') {
-      setTimeout(applyGuidePopups, 50);
-      setTimeout(applyGuidePopups, 150);
-      setTimeout(applyGuidePopups, 300);
-      setTimeout(applyGuidePopups, 350);
-    }
   }
 
   // ── Action Menu ──────────────────────────────────────────────────
@@ -540,21 +521,6 @@
   function injectGuidePopupsIntoDoc(doc, popups) {
     if (!doc || !doc.body) return;
 
-    // Attach scroll and resize listeners inside the document
-    if (!doc.__ftcGuideEventsBound) {
-      doc.__ftcGuideEventsBound = true;
-      const onScrollOrResize = () => {
-        if (currentMode === 'guide') {
-          applyGuidePopups();
-        }
-      };
-      doc.addEventListener('scroll', onScrollOrResize, { passive: true, capture: true });
-      if (doc.defaultView && doc.defaultView !== doc) {
-        doc.defaultView.addEventListener('scroll', onScrollOrResize, { passive: true });
-        doc.defaultView.addEventListener('resize', onScrollOrResize, { passive: true });
-      }
-    }
-
     // Inject styles
     if (!doc.getElementById('ftc-guide-injected-style')) {
       const styleTag = doc.createElement('style');
@@ -566,10 +532,10 @@
           background: #ff0000 !important;
           color: #ffffff !important;
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
-          font-size: 11px !important;
+          font-size: 13px !important;
           font-weight: 700 !important;
-          line-height: 1.1 !important;
-          padding: 5px 10px !important;
+          line-height: 1.2 !important;
+          padding: 8px 14px !important;
           border-radius: 4px !important;
           box-shadow: 0 4px 12px rgba(255, 0, 0, 0.4) !important;
           white-space: nowrap !important;
@@ -696,11 +662,7 @@
       try {
         const elements = findGuideElements(doc, pop.selector);
         for (let i = 0; i < elements.length; i++) {
-          let el = elements[i];
-          if (!pop.keepTarget && ['DIV', 'SPAN', 'TD', 'FORM'].includes(el.tagName)) {
-            const innerCtrl = el.querySelector('input, select, button, textarea, a');
-            if (innerCtrl) el = innerCtrl;
-          }
+          const el = elements[i];
           const r = el.getBoundingClientRect();
           if (r.width > 0 || r.height > 0 || el.offsetParent !== null) {
             target = el;
@@ -708,30 +670,9 @@
           }
         }
         if (!target && elements.length > 0) {
-          let el = elements[0];
-          if (!pop.keepTarget && ['DIV', 'SPAN', 'TD', 'FORM'].includes(el.tagName)) {
-            const innerCtrl = el.querySelector('input, select, button, textarea, a');
-            if (innerCtrl) el = innerCtrl;
-          }
-          target = el;
+          target = elements[0];
         }
       } catch (e) { }
-
-      // When a modal is open, ignore targets outside the modal
-      let activeModal = null;
-      try {
-        const visibleModals = Array.from(doc.querySelectorAll('.modal, .cbi-modal, #modal_overlay, .el-dialog')).filter(el => {
-          const style = doc.defaultView.getComputedStyle(el);
-          return style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
-        });
-        if (visibleModals.length > 0) {
-          activeModal = visibleModals[0];
-        }
-      } catch (e) {}
-
-      if (target && activeModal && !activeModal.contains(target)) {
-        target = null;
-      }
 
       if (!target) {
         const oldBubble = doc.querySelector(`.ftc-guide-bubble[data-guide-index="${idx}"]`);
@@ -759,39 +700,20 @@
       }
 
       const win = doc.defaultView || window;
-      const bodyStyle = (win.getComputedStyle && doc.body) ? win.getComputedStyle(doc.body) : null;
-      const isBodyPositioned = bodyStyle && bodyStyle.position && bodyStyle.position !== 'static';
+      const scrollX = win.pageXOffset || doc.documentElement.scrollLeft || 0;
+      const scrollY = win.pageYOffset || doc.documentElement.scrollTop || 0;
 
-      let targetLeft = 0;
-      let targetTop = 0;
-
-      if (isBodyPositioned) {
-        const bodyRect = doc.body.getBoundingClientRect();
-        targetLeft = rect.left - bodyRect.left - (doc.body.clientLeft || 0);
-        targetTop = rect.top - bodyRect.top - (doc.body.clientTop || 0);
-      } else {
-        const scrollX = win.pageXOffset || doc.documentElement.scrollLeft || (doc.body ? doc.body.scrollLeft : 0) || 0;
-        const scrollY = win.pageYOffset || doc.documentElement.scrollTop || (doc.body ? doc.body.scrollTop : 0) || 0;
-        targetLeft = rect.left + scrollX;
-        targetTop = rect.top + scrollY;
-      }
-
+      const targetTop = rect.top + scrollY;
+      const targetLeft = rect.left + scrollX;
       const bWidth = bubble.offsetWidth || 180;
       const bHeight = bubble.offsetHeight || 30;
       const winW = win.innerWidth || doc.documentElement.clientWidth || 1024;
       const winH = win.innerHeight || doc.documentElement.clientHeight || 768;
       let pos = pop.position || 'right';
 
-      // Check overflow relative to viewport
-      if (!pop.forcePosition) {
-        if (pos === 'right' && (rect.left + rect.width + bWidth + 16) > winW) {
-          if (rect.left - bWidth - 12 >= 10) {
-            pos = 'left';
-          }
-        } else if (pos === 'left' && (rect.left - bWidth - 12) < 0) {
-          if (rect.left + rect.width + bWidth + 16 <= winW) {
-            pos = 'right';
-          }
+      if (pos === 'right' && (targetLeft + rect.width + bWidth + 16) > winW) {
+        if (targetLeft - bWidth - 12 >= 10) {
+          pos = 'left';
         }
       }
 
@@ -799,24 +721,22 @@
 
       let calcLeft = 0;
       let calcTop = 0;
-      
-      const ox = pop.offsetX || 0;
-      const oy = pop.offsetY || 0;
 
       if (pos === 'right') {
-        calcLeft = targetLeft + rect.width + 8 + ox;
-        calcTop = targetTop + (rect.height / 2) - (bHeight / 2) + oy;
+        calcLeft = targetLeft + rect.width + 10;
+        calcTop = targetTop + (rect.height / 2) - (bHeight / 2);
       } else if (pos === 'left') {
-        calcLeft = targetLeft - bWidth - 8 + ox;
-        calcTop = targetTop + (rect.height / 2) - (bHeight / 2) + oy;
+        calcLeft = targetLeft - bWidth - 10;
+        calcTop = targetTop + (rect.height / 2) - (bHeight / 2);
       } else if (pos === 'bottom') {
-        calcLeft = targetLeft + (rect.width / 2) - (bWidth / 2) + ox;
-        calcTop = targetTop + rect.height + 8 + oy;
+        calcLeft = targetLeft + (rect.width / 2) - (bWidth / 2);
+        calcTop = targetTop + rect.height + 8;
       } else if (pos === 'top') {
-        calcLeft = targetLeft + (rect.width / 2) - (bWidth / 2) + ox;
-        calcTop = targetTop - bHeight - 8 + oy;
+        calcLeft = targetLeft + (rect.width / 2) - (bWidth / 2);
+        calcTop = targetTop - bHeight - 8;
       }
 
+      // Giữ vị trí chính xác sát target, tránh đè lên ô nhập
       calcLeft = Math.max(5, calcLeft);
       calcTop = Math.max(5, calcTop);
 

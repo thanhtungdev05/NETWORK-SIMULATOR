@@ -1,0 +1,4 @@
+RewriteEngine On
+
+# Keep the public contract independent from the PHP front-controller name.
+RewriteRule ^tracking(?:/(.*))?/?$ index.php/tracking/$1 [QSA,END]

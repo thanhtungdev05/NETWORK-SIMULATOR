@@ -3,13 +3,18 @@
 """
 Master Server (Port 8080) cho Hệ thống giả lập mạng FPT.
 Đóng vai trò điều hướng (Dispatcher) các request tới đúng server con
-mà không cần mở thêm các cổng khác (8081-8098).
+và proxy /api/* sang PHP nội bộ — toàn bộ chạy trên 1 cổng duy nhất (8080).
 """
 import os
+import re
 import sys
 import threading
 import time
 import webbrowser
+import socket
+import shutil
+import subprocess
+import http.client
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 
@@ -20,8 +25,10 @@ if hasattr(sys.stdout, 'reconfigure'):
     except Exception:
         pass
 
-PORT = 8080
+PORT = int(os.environ.get('PORT', '8080'))
+API_PORT = int(os.environ.get('API_PORT', '8082'))
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DASHBOARD_DIR = os.path.join(BASE_DIR, 'dashboard-authen')
 os.chdir(BASE_DIR)
 
 # Import các Handler của từng thiết bị
@@ -32,7 +39,6 @@ import sim_ax3000hv2.server2 as ax3000hv2
 import sim_ax3000s.server as ax3000s
 import sim_be12000.src.server as be12000
 import sim_be15000.server as be15000
-import sim_vigor2927.src.server as vigor2927
 
 # Mapping từ device id sang module
 SIM_MODULES = {
@@ -42,8 +48,7 @@ SIM_MODULES = {
     'sim_ax3000hv2': ax3000hv2,
     'sim_ax3000s': ax3000s,
     'sim_be12000': be12000,
-    'sim_be15000': be15000,
-    'sim_vigor2927': vigor2927
+    'sim_be15000': be15000
 }
 
 # Các class Handler của từng thiết bị
@@ -54,9 +59,24 @@ SIM_HANDLERS = {
     'sim_ax3000hv2': ax3000hv2.H,
     'sim_ax3000s': ax3000s.H,
     'sim_be12000': be12000.Handler,
-    'sim_be15000': be15000.H,
-    'sim_vigor2927': vigor2927.H
+    'sim_be15000': be15000.H
 }
+
+# File/thư mục Portal luôn do Portal phục vụ (chống bị 'cướp' bởi Referer/Cookie)
+PORTAL_PATHS = {'/', '/index.html', '/styles.css', '/app.js', '/data.js', '/portal.html',
+                '/favicon.ico', '/login', '/login/index.html', '/api',
+                '/dashboard', '/dashboard/'}
+PORTAL_PREFIXES = ('/devices/', '/assets/', '/login/', '/api/', '/vendor/', '/dashboard/')
+
+
+def is_portal_path(path):
+    """True neu path thuoc Portal (dung chung cho cac buoc detect_simulator)."""
+    if path in PORTAL_PATHS:
+        return True
+    for prefix in PORTAL_PREFIXES:
+        if path.startswith(prefix):
+            return True
+    return False
 
 class MasterDispatcher(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -67,9 +87,12 @@ class MasterDispatcher(SimpleHTTPRequestHandler):
         super().end_headers()
 
     def detect_simulator(self):
-        # 1. Kiểm tra prefix trong URL path
+        # 0. Các file/thư mục Portal luôn do Portal phục vụ (chống bị 'cướp' bởi Referer/Cookie)
         path = self.path.split('?')[0]
-        
+        if is_portal_path(path):
+            return None
+
+        # 1. Kiểm tra prefix trong URL path
         for sim_id in SIM_MODULES.keys():
             prefix = '/' + sim_id
             if path == prefix or path.startswith(prefix + '/'):
@@ -84,8 +107,6 @@ class MasterDispatcher(SimpleHTTPRequestHandler):
 
         # 2. Kiểm tra header Referer
         referer = self.headers.get('Referer', '')
-        print(f"[DEBUG] detect_simulator for {self.path} - Referer: {referer}")
-        
         if referer:
             ref_path = urlparse(referer).path
             for sim_id in SIM_MODULES.keys():
@@ -95,31 +116,82 @@ class MasterDispatcher(SimpleHTTPRequestHandler):
 
         # 3. Kiểm tra Cookie (Fallback an toàn nhất)
         cookie = self.headers.get('Cookie', '')
-        # print(f"[DEBUG] detect_simulator for {self.path} - Cookie: {cookie}")
         if cookie:
-            import re
             m = re.search(r'current_sim=(sim_[a-zA-Z0-9_]+)', cookie)
             if m:
                 sim_id = m.group(1)
-                if sim_id in SIM_MODULES:
-                    # Chống cướp quyền (hijacking) Portal:
-                    # Nếu request đang yêu cầu rõ ràng các file của Portal, ta bỏ qua Cookie
-                    portal_paths = ['/', '/index.html', '/styles.css', '/app.js', '/favicon.ico']
-                    portal_prefixes = ['/devices/', '/assets/']
-                    
-                    is_portal = False
-                    if path in portal_paths:
-                        is_portal = True
-                    for pp in portal_prefixes:
-                        if path.startswith(pp):
-                            is_portal = True
-                            
-                    if not is_portal:
-                        return sim_id
+                # Chống cướp quyền (hijacking) Portal: request rõ ràng thuộc Portal thì bỏ qua Cookie
+                if sim_id in SIM_MODULES and not is_portal_path(path):
+                    return sim_id
 
         return None
 
+    def _proxy_api(self, method):
+        """Reverse proxy /api/* sang PHP noi bo de giu SINGLE-PORT (chi can 8080).
+        Giữ nguyên Host header tu trinh duyet de PHP build dung absolute URL + cookie."""
+        headers = {}
+        for k, v in self.headers.items():
+            if k.lower() in ('connection', 'keep-alive', 'proxy-connection',
+                             'transfer-encoding', 'upgrade', 'content-length'):
+                continue
+            headers[k] = v
+
+        body = b''
+        if method in ('POST', 'PUT', 'PATCH', 'DELETE'):
+            try:
+                length = int(self.headers.get('Content-Length', '0') or 0)
+            except ValueError:
+                length = 0
+            if length > 0:
+                body = self.rfile.read(length)
+
+        conn = None
+        try:
+            conn = http.client.HTTPConnection('127.0.0.1', API_PORT, timeout=30)
+            conn.request(method, self.path, body=body, headers=headers)
+            resp = conn.getresponse()
+            data = resp.read()
+        except Exception as e:
+            print('[API-PROXY] Loi chuyen tiep /api/* -> PHP: %s' % e)
+            self.send_error(502, 'Bad Gateway')
+            return
+        finally:
+            if conn is not None:
+                conn.close()
+
+        self.send_response(resp.status)
+        hop_by_hop = {'connection', 'keep-alive', 'proxy-connection', 'transfer-encoding', 'upgrade'}
+        for k, v in resp.getheaders():
+            if k.lower() in hop_by_hop or k.lower() == 'content-length':
+                continue
+            self.send_header(k, v)
+        self.send_header('Content-Length', str(len(data)))
+        self.end_headers()
+        if method != 'HEAD':
+            try:
+                self.wfile.write(data)
+            except (BrokenPipeError, ConnectionResetError):
+                pass
+
     def dispatch(self, method):
+        # Chuyen tiep /api/* -> PHP noi bo (browser chi can 1 cong 8080)
+        path_only = self.path.split('?')[0]
+        if path_only == '/api' or path_only.startswith('/api/'):
+            return self._proxy_api(method)
+
+        # Mount dashboard (thu muc dashboard-authen) thanh /dashboard/*.
+        # Xu ly TRUOC detect_simulator de tranh bi cookie current_sim cua sim 'cuop' request.
+        if method == 'GET' and (path_only == '/dashboard' or path_only.startswith('/dashboard/')):
+            parts = self.path.split('?', 1)
+            sub = parts[0][len('/dashboard'):]
+            if sub == '':
+                sub = '/'
+            if not sub.startswith('/'):
+                sub = '/' + sub
+            self.path = sub + (('?' + parts[1]) if len(parts) > 1 else '')
+            self.directory = DASHBOARD_DIR
+            return super().do_GET()
+
         sim_id = self.detect_simulator()
         if sim_id:
             # Gán thư mục gốc cho SimpleHTTPRequestHandler (được dùng bởi một số handler con)
@@ -215,19 +287,160 @@ class MasterDispatcher(SimpleHTTPRequestHandler):
         self.dispatch('DELETE')
 
 
+class DualStackServer(ThreadingHTTPServer):
+    address_family = socket.AF_INET6
+    daemon_threads = True
+    # Windows SO_REUSEADDR cho phep bind trung cong -> tat de chi 1 instance chay duoc
+    allow_reuse_address = False
+
+    def server_bind(self):
+        try:
+            self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
+        except (AttributeError, OSError):
+            pass
+        super().server_bind()
+
+
+def listening_pids(local_target):
+    """Tra ve tap PID cac tien trinh dang LISTENING co dia chi cuc bo la local_target.
+    local_target vi du: '127.0.0.1:8082' hoac '8080' (moi dia chi)."""
+    pids = set()
+    try:
+        out = subprocess.run(['netstat', '-ano'], capture_output=True, text=True, timeout=10).stdout
+    except Exception:
+        return pids
+    for line in out.splitlines():
+        if 'LISTENING' not in line.upper():
+            continue
+        parts = line.split()
+        if len(parts) < 5 or not parts[-1].isdigit():
+            continue
+        local = parts[1]
+        if local_target.isdigit():
+            match = local.endswith(':' + local_target)
+        else:
+            match = local == local_target
+        if match:
+            pids.add(int(parts[-1]))
+    return pids
+
+
+def process_name(pid):
+    """Ten tien trinh (chu thuong) theo PID; tra ve '' neu khong lay duoc."""
+    try:
+        return subprocess.run(
+            ['tasklist', '/fi', 'PID eq %d' % pid, '/fo', 'csv', '/nh'],
+            capture_output=True, text=True, timeout=10
+        ).stdout.lower()
+    except Exception:
+        return ''
+
+
+def wait_port_free(port, timeout=3.0, step=0.3):
+    """Doi den khi cong port khong con LISTENING nao (sau taskkill bat dong bo).
+    Tra ve True neu da free trong thoi gian cho, False neu van con."""
+    waited = 0.0
+    while waited < timeout:
+        if not listening_pids(str(port)):
+            return True
+        time.sleep(step)
+        waited += step
+    return not listening_pids(str(port))
+
+
+def kill_orphan_php():
+    """Dong PHP mo coi (php -S) dang lang nghe 127.0.0.1:API_PORT tu lan chay truoc.
+    Chi dong process php.exe tren dung cong API noi bo, khong dong server khac."""
+    for pid in listening_pids('127.0.0.1:%d' % API_PORT):
+        if 'php' not in process_name(pid):
+            continue
+        subprocess.run(['taskkill', '/pid', str(pid), '/f'],
+                       capture_output=True, text=True, timeout=10)
+        print('[API] Da dong PHP mo coi (pid %d) tren 127.0.0.1:%d.' % (pid, API_PORT))
+
+
+def start_php_api():
+    """Tu dong chay PHP API server neu co the (tam dung khi START_PHP=0)."""
+    if os.environ.get('START_PHP', '1') == '0':
+        print("[API] START_PHP=0 -> khong tu dong chay PHP.")
+        return None
+
+    php = shutil.which('php')
+    if not php:
+        print("[API] KHONG tim thay php trong PATH -> bo qua. Chay thu cong: php -S 0.0.0.0:%d -t ." % API_PORT)
+        return None
+
+    # Tu dong dong PHP mo coi cua lan chay truoc (neu co)
+    kill_orphan_php()
+
+    # Doi cho cong that su gia phong sau taskkill (bat dong bo)
+    if not wait_port_free(API_PORT):
+        print("[API] CANH BAO: cong %d van co server la (khong phai PHP) -> dung chung, /api/* co the loi." % API_PORT)
+        return None
+
+    try:
+        log_path = os.path.join(BASE_DIR, 'php_api.log')
+        log_file = open(log_path, 'a', encoding='utf-8', errors='replace')
+        proc = subprocess.Popen(
+            [php, '-S', '127.0.0.1:%d' % API_PORT, '-t', BASE_DIR],
+            cwd=BASE_DIR,
+            stdout=log_file,
+            stderr=subprocess.STDOUT,
+        )
+        print("[API] PHP noi bo chi lang nghe 127.0.0.1:%d (pid %d, log: %s)" % (API_PORT, proc.pid, log_path))
+        print("[API] /api/* duoc dispatcher proxy tu http://127.0.0.1:%d" % PORT)
+        return proc
+    except Exception as exc:
+        print("[API] Khong chay duoc PHP: %s" % exc)
+        return None
+
+
 def start_server():
     os.chdir(BASE_DIR)
-    srv = ThreadingHTTPServer(('0.0.0.0', PORT), MasterDispatcher)
+
+    # Chong chay 2 instance: neu cong PORT da co trinh lang nghe -> tu dong tat instance cu cua minh
+    owners = listening_pids(str(PORT))
+    foreign = []
+    for pid in sorted(owners):
+        name = process_name(pid)
+        if 'python' in name or name.strip().startswith('"py'):
+            print("[API] Phat hien instance cu (pid %d) dang giu cong %d -> tu dong tat." % (pid, PORT))
+            subprocess.run(['taskkill', '/pid', str(pid), '/f', '/t'],
+                           capture_output=True, text=True, timeout=10)
+        else:
+            foreign.append(pid)
+
+    if foreign:
+        print("=" * 65)
+        print("   [LOI] Cong %d bi tien trinh khac (khong phai run_all.py) chiem giu!" % PORT)
+        print("   PID: %s" % ", ".join(str(p) for p in foreign))
+        print("   Hay tu tat no roi chay lai, vi du:")
+        print("     Get-NetTCPConnection -LocalPort %d -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }" % PORT)
+        print("=" * 65)
+        return
+
+    if owners and not wait_port_free(PORT, timeout=4.5):
+        print("[LOI] Cong %d chua duoc giai phong, tu bo." % PORT)
+        return
+
+    php_proc = start_php_api()
+
+    try:
+        srv = DualStackServer(('::', PORT), MasterDispatcher)
+    except (OSError, ValueError):
+        fallback_srv = type('IPv4Server', (ThreadingHTTPServer,), {'allow_reuse_address': False})
+        srv = fallback_srv(('0.0.0.0', PORT), MasterDispatcher)
     srv.daemon_threads = True
     print("=" * 65)
     print("   HE THONG GIA LAP MANG FPT - MASTER DISPATCHER")
-    print("   Da gop tat ca thiet bi chay tren 1 cong duy nhat!")
-    print(f"   Dang chay tai: http://localhost:{PORT}")
+    print("   Tat ca chay tren 1 cong duy nhat (single-port)!")
+    print(f"   Portal + Devices + API: http://127.0.0.1:{PORT}")
+    print(f"   API (/api/*) duoc proxy sang PHP noi bo 127.0.0.1:{API_PORT}")
     print("=" * 65)
     
     def open_browser():
         time.sleep(1)
-        webbrowser.open(f"http://localhost:{PORT}")
+        webbrowser.open(f"http://127.0.0.1:{PORT}")
     
     threading.Thread(target=open_browser, daemon=True).start()
     
@@ -235,6 +448,9 @@ def start_server():
         srv.serve_forever()
     except KeyboardInterrupt:
         print("\nDa tat may chu.")
+    finally:
+        if php_proc is not None:
+            php_proc.terminate()
 
 if __name__ == "__main__":
     start_server()

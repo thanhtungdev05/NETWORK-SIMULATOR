@@ -6,7 +6,7 @@ set "ROOT=%~dp0"
 cd /d "%ROOT%"
 
 echo ====================================================================
-echo    HE THONG GIA LAP MANG FPT - KHOI DONG SERVER
+echo    HE THONG GIA LAP MANG FPT - MASTER DISPATCHER (1 CONG 8080)
 echo ====================================================================
 echo.
 
@@ -24,8 +24,14 @@ if %errorlevel% neq 0 (
     )
 )
 
-echo Dang khoi dong Master Dispatcher tren cong 8080...
-echo Tat ca thiet bi duoc gop chung vao 1 tien trinh nay de toi uu RAM.
-%PY_CMD% run_all.py
+echo Dang khoi dong Master Dispatcher (Portal + toan bo thiet bi tren cong 8080)...
+start "FTC Virtual Devices - Dispatcher 8080" cmd /k "cd /d "%ROOT%" && %PY_CMD% run_all.py"
 
-pause
+echo.
+echo ====================================================================
+echo    DA BAT MASTER DISPATCHER TREN CONG 8080!
+echo    Dang mo trinh duyet: http://localhost:8080
+echo ====================================================================
+echo.
+timeout /t 2 >nul
+start http://localhost:8080

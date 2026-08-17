@@ -6,7 +6,7 @@
 window.DEVICE_AC1000F_LESSONS = window.DEVICE_AC1000F_LESSONS || [];
 
 window.DEVICE_AC1000F_LESSONS.push({
-  id: 'ac1-bai5',
+  id: 'LAB_AC1000F_05',
   title: 'Bài 5: Cấu hình DNS',
   subtitle: 'Cấu hình máy chủ DDNS',
   instructions: [

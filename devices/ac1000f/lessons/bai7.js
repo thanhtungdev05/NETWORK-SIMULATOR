@@ -6,7 +6,7 @@
 window.DEVICE_AC1000F_LESSONS = window.DEVICE_AC1000F_LESSONS || [];
 
 window.DEVICE_AC1000F_LESSONS.push({
-  id: 'ac1-bai7',
+  id: 'LAB_AC1000F_07',
   title: 'Bài 7: Cấu hình Backup/Restore',
   subtitle: 'Sao lưu và phục hồi cấu hình thiết bị',
   instructions: [

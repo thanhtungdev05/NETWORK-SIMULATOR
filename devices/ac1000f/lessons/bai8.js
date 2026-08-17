@@ -6,7 +6,7 @@
 window.DEVICE_AC1000F_LESSONS = window.DEVICE_AC1000F_LESSONS || [];
 
 window.DEVICE_AC1000F_LESSONS.push({
-  id: 'ac1-bai8',
+  id: 'LAB_AC1000F_08',
   title: 'Bài 8: Cấu hình WiFi Timer',
   subtitle: 'Lên lịch tắt/bật Wi-Fi tự động',
     instructions: [

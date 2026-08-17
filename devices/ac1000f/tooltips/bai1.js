@@ -4,7 +4,7 @@
 
 if (!window.TOOLTIPS_AC1000F) window.TOOLTIPS_AC1000F = {};
 
-window.TOOLTIPS_AC1000F['ac1-bai1'] = [
+window.TOOLTIPS_AC1000F['LAB_AC1000F_01'] = [
   // Nút chọn Network ở Menu trên cùng (Frame header)
   {
     selector: 'a[onclick*="change_bg2"]',

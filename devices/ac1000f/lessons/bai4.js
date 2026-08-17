@@ -6,7 +6,7 @@
 window.DEVICE_AC1000F_LESSONS = window.DEVICE_AC1000F_LESSONS || [];
 
 window.DEVICE_AC1000F_LESSONS.push({
-  id: 'ac1-bai4',
+  id: 'LAB_AC1000F_04',
   title: 'Bài 4: Cấu hình Mở Port',
   subtitle: 'Mở Port (Port Forwarding) trên thiết bị',
   instructions: [

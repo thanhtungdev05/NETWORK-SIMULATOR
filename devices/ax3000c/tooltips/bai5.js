@@ -4,7 +4,7 @@
 
 if (!window.TOOLTIPS_AX3000C) window.TOOLTIPS_AX3000C = {};
 
-window.TOOLTIPS_AX3000C['ax3c-bai5'] = [
+window.TOOLTIPS_AX3000C['LAB_AX3000CV2_05'] = [
     // 1. Chọn Network ở Menu bên trái (chỉ hiện khi chưa ở trang Port Forwarding)
     {
         selector: '.el-submenu__title:contains("Network")',

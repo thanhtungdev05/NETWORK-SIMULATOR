@@ -4,7 +4,7 @@
 
 if (!window.TOOLTIPS_AC1000F) window.TOOLTIPS_AC1000F = {};
 
-window.TOOLTIPS_AC1000F['ac1-bai3'] = [
+window.TOOLTIPS_AC1000F['LAB_AC1000F_03'] = [
   // Tab Network ở Header
   {
     selector: 'a[onclick*="change_bg2"]',

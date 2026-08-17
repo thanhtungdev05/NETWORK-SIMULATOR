@@ -6,7 +6,7 @@
 window.DEVICE_AC1000F_LESSONS = window.DEVICE_AC1000F_LESSONS || [];
 
 window.DEVICE_AC1000F_LESSONS.push({
-  id: 'ac1-bai1',
+  id: 'LAB_AC1000F_01',
   title: 'Bài 1: Cấu hình PPPoE',
   subtitle: 'Thiết lập kết nối WAN/Internet với tài khoản PPPoE',
   instructions: [

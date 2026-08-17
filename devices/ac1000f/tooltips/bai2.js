@@ -4,7 +4,7 @@
 
 if (!window.TOOLTIPS_AC1000F) window.TOOLTIPS_AC1000F = {};
 
-window.TOOLTIPS_AC1000F['ac1-bai2'] = [
+window.TOOLTIPS_AC1000F['LAB_AC1000F_02'] = [
   // --- CHUNG ---
   {
     selector: 'a[onclick*="change_bg2"]',

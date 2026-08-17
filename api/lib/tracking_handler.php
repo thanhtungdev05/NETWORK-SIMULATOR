@@ -32,6 +32,8 @@ function tracking_timer_response(array $timer): array
         'device_model' => (string)($timer['device_model'] ?? ($timer['device'] ?? '')),
         'lab_id' => (string)($timer['lab_id'] ?? ''),
         'lab_name' => (string)($timer['lab_name'] ?? ($timer['lab_id'] ?? '')),
+        'status' => (string)($timer['status'] ?? 'completed'),
+        'completed_first_try' => $timer['completed_first_try'] ?? null,
         'saved' => (bool)($timer['saved'] ?? false),
     ];
 }
@@ -61,9 +63,30 @@ function handle_tracking(array $segments, string $method): void
         $labId = optional_text($input, 'lab_id', 50) ?? optional_text($input, 'labId', 50) ?? optional_text($input, 'lab', 50);
         $mode = optional_text($input, 'mode', 30) ?? 'Thực hành';
         $device = optional_text($input, 'device', 100) ?? optional_text($input, 'device_model', 100) ?? optional_text($input, 'deviceModel', 100);
+        $status = optional_text($input, 'status', 30) ?? 'completed';
 
         if (!in_array($mode, ['Thực hành', 'Hướng dẫn'], true)) {
             fail(400, 'bad-request', "mode must be 'Thực hành' or 'Hướng dẫn'.");
+        }
+        if (!in_array($status, ['completed', 'failed', 'abandoned'], true)) {
+            fail(400, 'bad-request', "status must be 'completed', 'failed' or 'abandoned'.");
+        }
+
+        $completedFirstTry = null;
+        $firstTryKey = array_key_exists('completed_first_try', $input)
+            ? 'completed_first_try'
+            : (array_key_exists('completedFirstTry', $input) ? 'completedFirstTry' : null);
+        if ($firstTryKey !== null && $input[$firstTryKey] !== null && $input[$firstTryKey] !== '') {
+            if (!is_bool($input[$firstTryKey])) {
+                fail(400, 'bad-request', 'completed_first_try must be a JSON boolean.');
+            }
+            $completedFirstTry = $input[$firstTryKey];
+        }
+        if ($status !== 'completed' && $completedFirstTry !== null) {
+            fail(400, 'bad-request', 'completed_first_try is only valid for completed sessions.');
+        }
+        if ($mode === 'Hướng dẫn') {
+            $completedFirstTry = null;
         }
 
         $durationSec = $input['duration_sec'] ?? $input['durationSec'] ?? $input['duration'] ?? null;
@@ -92,6 +115,8 @@ function handle_tracking(array $segments, string $method): void
             'device_model' => $device ?? '',
             'lab_id' => $labId ?? '',
             'lab_name' => $labId ?? '',
+            'status' => $status,
+            'completed_first_try' => $completedFirstTry,
             'saved' => false,
         ];
 
@@ -102,12 +127,71 @@ function handle_tracking(array $segments, string $method): void
 
         try {
             $pdo = db();
+            $resolvedUserId = null;
+            if ($timer['technician_id'] !== '' || $timer['email'] !== '') {
+                $resolve = $pdo->prepare(
+                    <<<'SQL'
+                    WITH input AS (
+                        SELECT NULLIF(:technician_id, '')::text AS technician_id,
+                               NULLIF(:email, '')::text AS email
+                    )
+                    SELECT roster.user_id,
+                           roster.employee_id,
+                           roster.email,
+                           roster.display_name,
+                           input.technician_id IS NOT NULL
+                               AND roster.employee_id = input.technician_id AS employee_match,
+                           input.email IS NOT NULL
+                               AND LOWER(roster.email) = LOWER(input.email) AS email_match
+                      FROM users roster
+                      CROSS JOIN input
+                     WHERE roster.employee_id = input.technician_id
+                        OR LOWER(roster.email) = LOWER(input.email)
+                    SQL
+                );
+                $resolve->execute([
+                    'technician_id' => $timer['technician_id'],
+                    'email' => $timer['email'],
+                ]);
+                $resolvedRows = $resolve->fetchAll();
+                $employeeUserIds = [];
+                $emailUserIds = [];
+                $usersById = [];
+                foreach ($resolvedRows as $resolvedRow) {
+                    $candidateId = (string)$resolvedRow['user_id'];
+                    $usersById[$candidateId] = $resolvedRow;
+                    if (database_boolean($resolvedRow['employee_match'] ?? false)) {
+                        $employeeUserIds[$candidateId] = true;
+                    }
+                    if (database_boolean($resolvedRow['email_match'] ?? false)) {
+                        $emailUserIds[$candidateId] = true;
+                    }
+                }
+                if (count($employeeUserIds) > 1 || count($emailUserIds) > 1) {
+                    fail(409, 'tracking/identity-ambiguous', 'The supplied tracking identity matches multiple users.');
+                }
+                $employeeUserId = array_key_first($employeeUserIds);
+                $emailUserId = array_key_first($emailUserIds);
+                if ($employeeUserId && $emailUserId && $employeeUserId !== $emailUserId) {
+                    fail(409, 'tracking/identity-conflict', 'technician_id and email belong to different users.');
+                }
+                $resolvedUserId = $employeeUserId ?: $emailUserId;
+                if ($resolvedUserId && isset($usersById[$resolvedUserId])) {
+                    $canonicalUser = $usersById[$resolvedUserId];
+                    $timer['technician_id'] = (string)($canonicalUser['employee_id'] ?: $timer['technician_id']);
+                    $timer['email'] = (string)($canonicalUser['email'] ?: $timer['email']);
+                    $timer['name'] = (string)($canonicalUser['display_name'] ?: $timer['name']);
+                }
+            }
             $insert = $pdo->prepare(
-                'INSERT INTO timer_sessions (technician_id, name, email, started_at, finished_at, duration_sec, mode, device, lab_id, lab_name)
-                 VALUES (:technician_id, :name, :email, :started_at, :finished_at, :duration_sec, :mode, :device, :lab_id, :lab_name)
-                 RETURNING id'
+                <<<'SQL'
+                INSERT INTO timer_sessions (user_id, technician_id, name, email, started_at, finished_at, duration_sec, mode, device, lab_id, lab_name, status, completed_first_try, last_action)
+                VALUES (:user_id, :technician_id, :name, :email, :started_at, :finished_at, :duration_sec, :mode, :device, :lab_id, :lab_name, :status, :completed_first_try, :last_action)
+                RETURNING id
+                SQL
             );
             $insert->execute([
+                'user_id' => $resolvedUserId,
                 'technician_id' => $timer['technician_id'],
                 'name' => $timer['name'],
                 'email' => $timer['email'],
@@ -118,12 +202,18 @@ function handle_tracking(array $segments, string $method): void
                 'device' => $timer['device'],
                 'lab_id' => $timer['lab_id'],
                 'lab_name' => $timer['lab_name'],
+                'status' => $timer['status'],
+                'completed_first_try' => $timer['completed_first_try'],
+                'last_action' => $timer['status'] === 'completed'
+                    ? 'Save & Apply cấu hình cuối'
+                    : ($timer['status'] === 'failed' ? 'Nộp cấu hình nhưng chưa đạt yêu cầu' : 'Rời phiên trước khi hoàn thành'),
             ]);
             $savedRow = $insert->fetch();
             $timer['session_id'] = $savedRow ? (string)$savedRow['id'] : $timer['session_id'];
             $timer['saved'] = true;
-        } catch (Throwable) {
-            $timer['saved'] = false;
+        } catch (Throwable $exception) {
+            report_exception($exception, 'tracking-timer-save');
+            fail(500, 'tracking/save-failed', 'Unable to save the timer session.');
         }
 
         respond(['item' => tracking_timer_response($timer)]);

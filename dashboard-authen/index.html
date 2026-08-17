@@ -160,13 +160,13 @@
                             <div class="kpi-note" id="kpiCompletedContext">Đang tính dữ liệu so sánh</div>
                         </div>
                         <div class="kpi-card">
-                            <div class="kpi-label">Tỷ lệ hoàn thành</div>
+                            <div class="kpi-label">Tỷ lệ phiên thực hành hoàn thành</div>
                             <div class="kpi-value cyan" id="kpiCompletionRate">0%</div>
                             <div class="kpi-comparison" id="kpiCompletionRateComparison"></div>
                             <div class="kpi-note" id="kpiCompletionRateContext">Đang tính dữ liệu so sánh</div>
                         </div>
                         <div class="kpi-card">
-                            <div class="kpi-label">Hoàn thành lần đầu</div>
+                            <div class="kpi-label">Đạt lần đầu (đã đánh giá)</div>
                             <div class="kpi-value green" id="kpiFirstTryRate">0%</div>
                             <div class="kpi-comparison" id="kpiFirstTryRateComparison"></div>
                             <div class="kpi-note" id="kpiFirstTryRateContext">Đang tính dữ liệu so sánh</div>
@@ -183,7 +183,7 @@
                         <div class="detail-section-header ktv-monthly-header">
                             <div>
                                 <h4>Xu hướng hoạt động theo tháng</h4>
-                                <span>Số phiên và tỷ lệ hoàn thành toàn hệ thống trong 12 tháng của năm báo cáo</span>
+                                <span>Số phiên và tỷ lệ hoàn thành Thực hành trong 12 tháng của năm báo cáo</span>
                             </div>
                             <div class="ktv-monthly-summary" id="overviewMonthlySummary"></div>
                         </div>
@@ -198,9 +198,9 @@
                         <div class="instructor-class-manager-copy">
                             <span class="instructor-section-eyebrow">Quản lý đào tạo</span>
                             <h2>Quản lý lớp học</h2>
-                            <p>Tạo lớp và nhập danh sách KTV để theo dõi tiến độ thực hành tập trung.</p>
+                            <p>Lớp và danh sách KTV được đồng bộ từ hồ sơ nhân viên trong cơ sở dữ liệu.</p>
                         </div>
-                        <div class="instructor-class-create">
+                        <div class="instructor-class-create" hidden>
                             <label class="sr-only" for="instructorClassName">Tên lớp mới</label>
                             <input type="text" id="instructorClassName" placeholder="Nhập tên lớp mới (VD: K15)..." maxlength="80">
                             <input type="file" id="instructorClassFile" accept=".csv,.txt,.xlsx,.xls" hidden>
@@ -229,7 +229,7 @@
                                     <span>Lớp học</span>
                                     <select id="instructorClassSelect" aria-label="Chọn lớp học"></select>
                                 </label>
-                                <button type="button" class="instructor-button danger" id="instructorClassDelete">
+                                <button type="button" class="instructor-button danger" id="instructorClassDelete" hidden>
                                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13M10 11v5m4-5v5" /></svg>
                                     Xóa lớp
                                 </button>
@@ -345,6 +345,10 @@
                                                                 value="Hoàn thành" checked> Hoàn thành</label>
                                                         <label class="popover-option"><input type="checkbox"
                                                                 value="Đang làm" checked> Đang làm</label>
+                                                        <label class="popover-option"><input type="checkbox"
+                                                                value="Không đạt" checked> Không đạt</label>
+                                                        <label class="popover-option"><input type="checkbox"
+                                                                value="Đã dừng" checked> Đã dừng</label>
                                                     </div>
                                                     <div class="popover-footer">
                                                         <button type="button" class="popover-btn-clear"
@@ -369,7 +373,7 @@
                             <div>
                                 <span class="detail-report-eyebrow">Báo cáo vận hành</span>
                                 <h2>Chi tiết thiết bị và bài lab theo khu vực</h2>
-                                <p>Đối chiếu lượt thực hiện và tỷ lệ hoàn thành của từng bài lab tại mỗi Khu vực/CNx.</p>
+                                <p>Đối chiếu số KTV hoàn thành từng bài lab thực hành trên tổng KTV của mỗi Khu vực/CNx.</p>
                             </div>
                             <div class="detail-report-period">
                                 <span>Kỳ báo cáo</span>
@@ -392,7 +396,7 @@
                                 <strong id="detailReportLabs">0</strong>
                             </div>
                             <div class="detail-report-stat report-stat-green">
-                                <span>Tỷ lệ hoàn thành</span>
+                                <span>Độ phủ hoàn thành</span>
                                 <strong id="detailReportCompletion">0%</strong>
                             </div>
                         </div>
@@ -401,7 +405,7 @@
                             <div class="detail-report-table-header">
                                 <div>
                                     <h3>Ma trận thực hành theo Khu vực/CNx</h3>
-                                    <span>Thiết bị được nhóm ở hàng đầu, các bài lab nằm ở hàng tiêu đề thứ hai.</span>
+                                    <span>Mỗi ô hiển thị KTV hoàn thành / tổng KTV khu vực; “—” là chưa có dữ liệu trong kỳ.</span>
                                 </div>
                                 <div class="detail-report-legend" aria-label="Chú thích màu tỷ lệ hoàn thành">
                                     <span><i class="legend-high"></i> Từ 80%</span>
@@ -675,6 +679,10 @@
                                                     checked> Hoàn thành</label>
                                             <label class="popover-option"><input type="checkbox" value="Đang làm"
                                                     checked> Đang làm</label>
+                                            <label class="popover-option"><input type="checkbox" value="Không đạt"
+                                                    checked> Không đạt</label>
+                                            <label class="popover-option"><input type="checkbox" value="Đã dừng"
+                                                    checked> Đã dừng</label>
                                             <label class="popover-option"><input type="checkbox" value="Chưa thực hiện"
                                                     checked> Chưa thực hiện</label>
                                         </div>
@@ -845,7 +853,7 @@
         </div>
     </div>
 
-    <script src="js/app.js"></script>
+    <script src="js/app.js?v=20260813-2"></script>
 </body>
 
 </html>

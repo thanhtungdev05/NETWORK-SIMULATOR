@@ -2,6 +2,11 @@ const API_BASE_URL = '/api/index.php';
 
 let sessions = [];
 let deviceCatalog = [];
+let technicianCatalog = [];
+let trainingAssignments = [];
+let dashboardReport = null;
+let technicianByIdentity = new Map();
+let technicianCatalogAuthoritative = false;
 
 const formatNumber = new Intl.NumberFormat('vi-VN');
 const LEARNER_TABLE_PAGE_SIZE = 4;
@@ -27,7 +32,7 @@ const state = {
     realtimeSelectedKtvs: new Set(),
     realtimeSelectedModes: new Set(['Thực hành', 'Hướng dẫn']),
     realtimeSelectedDevices: new Set(),
-    realtimeSelectedStatuses: new Set(['Hoàn thành', 'Đang làm']),
+    realtimeSelectedStatuses: new Set(['Hoàn thành', 'Đang làm', 'Không đạt', 'Đã dừng']),
     realtimeSearchKtv: '',
     realtimeSearchDevice: '',
     realtimeSearchLab: '',
@@ -63,7 +68,7 @@ const state = {
     detailSortKey: 'time',
     detailSelectedModes: new Set(['Thực hành', 'Hướng dẫn']),
     detailSelectedDevices: new Set(),
-    detailSelectedStatuses: new Set(['Hoàn thành', 'Đang làm', 'Chưa thực hiện']),
+    detailSelectedStatuses: new Set(['Hoàn thành', 'Đang làm', 'Không đạt', 'Đã dừng', 'Chưa thực hiện']),
     detailSearchDevice: '',
     detailSelectedLabs: new Set(),
     detailLabsTouched: false,
@@ -202,6 +207,7 @@ function fillSelect(id, values, defaultLabel) {
 function getStatusClass(status) {
     if (status === 'Hoàn thành') return 'status-done';
     if (status === 'Đang làm') return 'status-running';
+    if (status === 'Không đạt' || status === 'Đã dừng') return 'status-risk';
     return 'status-notstarted';
 }
 
@@ -330,7 +336,7 @@ function getKpiComparisonPeriods() {
 
 function renderKpis() {
     const periods = getKpiComparisonPeriods();
-    const practiceOnly = item => item.mode !== 'Hướng dẫn';
+    const practiceOnly = item => item.mode === 'Thực hành';
     const periodMetrics = rows => {
         const all = computeMetrics(rows);
         const practice = computeMetrics(rows.filter(practiceOnly));
@@ -345,9 +351,28 @@ function renderKpis() {
     };
     const currentRows = filterSessionsByDate(periods.currentStart, periods.currentEnd);
     const previousRows = filterSessionsByDate(periods.previousStart, periods.previousEnd);
-    const currentMetrics = periodMetrics(currentRows);
-    const previousMetrics = periodMetrics(previousRows);
-    const lifetimeMetrics = periodMetrics(sessions);
+    const mapReportMetrics = metric => ({
+        totalSessions: Number(metric?.practice_attempts) || 0,
+        learners: Number(metric?.participating_technicians) || 0,
+        completed: Number(metric?.passed_count) || 0,
+        rate: metric?.completion_rate === null || metric?.completion_rate === undefined
+            ? null
+            : Number(metric.completion_rate),
+        firstTryRate: metric?.first_try_rate === null || metric?.first_try_rate === undefined
+            ? null
+            : Number(metric.first_try_rate),
+        avgDuration: Number(metric?.avg_duration_sec) || 0
+    });
+    const authoritativeSummary = dashboardReport?.summary;
+    const currentMetrics = authoritativeSummary
+        ? mapReportMetrics(authoritativeSummary.current)
+        : periodMetrics(currentRows);
+    const previousMetrics = authoritativeSummary
+        ? mapReportMetrics(authoritativeSummary.previous)
+        : periodMetrics(previousRows);
+    const lifetimeMetrics = authoritativeSummary?.lifetime
+        ? mapReportMetrics(authoritativeSummary.lifetime)
+        : periodMetrics(sessions);
 
     const definitions = [
         { key: 'totalSessions', valueId: 'kpiSessions', comparisonId: 'kpiSessionsComparison', contextId: 'kpiSessionsContext', type: 'count', unit: 'phiên' },
@@ -359,6 +384,7 @@ function renderKpis() {
     ];
 
     const formatMetric = (value, definition) => {
+        if (value === null || value === undefined) return '—';
         if (definition.type === 'rate') return `${value}%`;
         if (definition.type === 'duration') return formatDuration(value);
         return formatNumber.format(value);
@@ -370,7 +396,8 @@ function renderKpis() {
         const currentValue = currentMetrics[definition.key];
         const previousValue = previousMetrics[definition.key];
         const lifetimeValue = lifetimeMetrics[definition.key];
-        const difference = Math.round((currentValue - previousValue) * 10) / 10;
+        const comparable = currentValue !== null && previousValue !== null;
+        const difference = comparable ? Math.round((currentValue - previousValue) * 10) / 10 : null;
         const valueElement = document.getElementById(definition.valueId);
         const comparisonElement = document.getElementById(definition.comparisonId);
         const contextElement = document.getElementById(definition.contextId);
@@ -382,7 +409,9 @@ function renderKpis() {
             let changeText = 'Không đổi';
             let arrow = '•';
 
-            if (difference !== 0) {
+            if (difference === null) {
+                changeText = 'Chưa đủ mẫu số';
+            } else if (difference !== 0) {
                 comparisonClass = difference > 0 ? 'positive' : 'negative';
                 arrow = difference > 0 ? '↑' : '↓';
 
@@ -406,7 +435,10 @@ function renderKpis() {
         }
 
         if (contextElement) {
-            const noDataLabel = currentRows.length ? '' : ' • Chưa có dữ liệu';
+            const hasCurrentData = authoritativeSummary
+                ? Number(authoritativeSummary.current?.assigned_count || authoritativeSummary.current?.practice_attempts) > 0
+                : currentRows.length > 0;
+            const noDataLabel = hasCurrentData ? '' : ' • Chưa có dữ liệu';
             contextElement.textContent = `${periods.currentLabel}${noDataLabel} • Lũy kế ${formatMetric(lifetimeValue, definition)}${definition.type === 'count' ? ` ${definition.unit}` : ''}`;
         }
     });
@@ -604,10 +636,12 @@ function renderOverviewMonthlyTrend(rows) {
         return;
     }
 
-    const selectedDate = state.startDate ? parseDate(state.startDate) : new Date();
+    const latestDataDate = new Date(Math.max(...validDates.map(date => date.getTime())));
+    const selectedDate = state.startDate ? parseDate(state.startDate) : latestDataDate;
     const selectedKey = `${selectedDate.getFullYear()}-${selectedDate.getMonth()}`;
     const reportYear = selectedDate.getFullYear();
     const today = new Date();
+    const monthlyReport = new Map((dashboardReport?.monthly || []).map(item => [item.month, item]));
     const periods = Array.from({ length: 12 }, (_, index) => {
         const date = new Date(reportYear, index, 1);
         const monthRows = rows.filter(item => {
@@ -616,7 +650,18 @@ function renderOverviewMonthlyTrend(rows) {
                 && itemDate.getFullYear() === date.getFullYear()
                 && itemDate.getMonth() === date.getMonth();
         });
-        const metrics = computeMetrics(monthRows);
+        const reportMonth = monthlyReport.get(`${reportYear}-${String(index + 1).padStart(2, '0')}`);
+        const fallbackMetrics = computeMetrics(monthRows.filter(item => item.mode === 'Thực hành'));
+        const metrics = dashboardReport
+            ? (reportMonth ? {
+                totalSessions: Number(reportMonth.practice_attempts) || 0,
+                learners: Number(reportMonth.participating_technicians) || 0,
+                completed: Number(reportMonth.passed_count) || 0,
+                rate: reportMonth.completion_rate === null ? null : Number(reportMonth.completion_rate),
+                firstTryRate: reportMonth.first_try_rate === null ? null : Number(reportMonth.first_try_rate),
+                avgDuration: Number(reportMonth.avg_duration_sec) || 0
+            } : { totalSessions: 0, learners: 0, completed: 0, rate: null, firstTryRate: null, avgDuration: 0 })
+            : fallbackMetrics;
         return {
             date,
             key: `${date.getFullYear()}-${date.getMonth()}`,
@@ -639,13 +684,13 @@ function renderOverviewMonthlyTrend(rows) {
         const height = period.totalSessions ? Math.max(12, Math.round((period.totalSessions / maxSessions) * 100)) : 0;
         const isSelected = period.key === selectedKey;
         return `
-            <div class="ktv-month-column ${isSelected ? 'selected' : ''} ${period.isFuture ? 'future' : ''}" title="${period.label}: ${period.totalSessions} phiên, ${period.completed} hoàn thành">
+            <div class="ktv-month-column ${isSelected ? 'selected' : ''} ${period.isFuture ? 'future' : ''}" title="${period.label}: ${period.totalSessions} lượt Thực hành, ${period.completed} assignment đạt">
                 <strong>${period.totalSessions}</strong>
                 <div class="ktv-month-bar-track">
                     <div class="ktv-month-bar" style="height: ${height}%;"></div>
                 </div>
                 <span class="ktv-month-label">${period.shortLabel}</span>
-                <span class="ktv-month-rate">${period.rate}% HT</span>
+                <span class="ktv-month-rate">${period.rate === null ? '—' : `${period.rate}% HT`}</span>
             </div>
         `;
     }).join('');
@@ -1114,7 +1159,7 @@ function renderDevices(rows) {
     `).join('');
 }
 
-const REGION_CATALOG = [
+const BASE_REGION_CATALOG = [
     { code: 'DNB' },
     { code: 'HCM' },
     { code: 'TDDT', children: ['TDDT - TIN', 'TDDT - PNC'] },
@@ -1125,33 +1170,20 @@ const REGION_CATALOG = [
     { code: 'TBB' }
 ];
 
-const REGION_FILTER_OPTIONS = REGION_CATALOG.flatMap(region => region.children || [region.code]);
+let REGION_CATALOG = BASE_REGION_CATALOG.map(region => ({
+    ...region,
+    children: region.children ? [...region.children] : undefined
+}));
+let REGION_FILTER_OPTIONS = REGION_CATALOG.flatMap(region => region.children || [region.code]);
 
 function getLearnerRegion(learner) {
-    const map = {
-        'nguyenvana@fpt.com': 'DNB',
-        'tranthib@fpt.com': 'HCM',
-        'levanc@fpt.com': 'TDDT - TIN',
-        'phamthid@fpt.com': 'TDDT - PNC',
-        'hoangvane@fpt.com': 'TNB',
-        'vuvanf@fpt.com': 'TNMT - TIN',
-        'doanthig@fpt.com': 'TNMT - PNC',
-        'buiminhh@fpt.com': 'DBB',
-        'dangquangi@fpt.com': 'HNI',
-        'nhothij@fpt.com': 'TBB',
-        'truongvank@fpt.com': 'DNB',
-        'ngothil@fpt.com': 'HCM'
-    };
-    if (map[learner] && REGION_FILTER_OPTIONS.includes(map[learner])) return map[learner];
-    if (!learner) return REGION_FILTER_OPTIONS[0] || 'Chưa phân vùng';
-    let sum = 0;
-    for (let i = 0; i < learner.length; i++) sum += learner.charCodeAt(i);
-    return REGION_FILTER_OPTIONS[sum % REGION_FILTER_OPTIONS.length] || 'Chưa phân vùng';
+    const key = String(learner || '').trim().toLowerCase();
+    return technicianByIdentity.get(key)?.dashboardRegion || 'Chưa phân vùng';
 }
 
 function normalizeRegionName(region, learner) {
     const value = String(region || '').trim();
-    if (!value || /^Vùng\s*\d+$/i.test(value)) return getLearnerRegion(learner);
+    if (!value) return getLearnerRegion(learner);
     const directMatch = REGION_FILTER_OPTIONS.find(option => option.toLowerCase() === value.toLowerCase());
     return directMatch || value;
 }
@@ -1255,60 +1287,131 @@ function detailReportCellKey(region, device, lab) {
     return `${region}\u001f${device}\u001f${lab}`;
 }
 
+function renderAuthoritativeDetailedReport(reportMatrix) {
+    if (!els.detailReportHead || !els.detailReportBody || !els.detailReportFoot) return;
+    const groups = reportMatrix.device_groups || [];
+    const columns = groups.flatMap((group, groupIndex) => (group.labs || []).map((lab, labIndex) => ({
+        device: group.device?.name || group.device?.device_name || group.device_name || '',
+        deviceId: group.device?.device_id || group.device_id || '',
+        lab: lab.name || lab.lab_name || '',
+        labId: lab.lab_id || '',
+        groupIndex,
+        isFirst: labIndex === 0,
+        isLast: labIndex === group.labs.length - 1
+    })));
+    const metricCell = (cell = {}, extraClass = '') => {
+        const assigned = Number(cell.assigned_count) || 0;
+        const passed = Number(cell.passed_count) || 0;
+        const rate = cell.completion_rate === null || cell.completion_rate === undefined
+            ? null
+            : Number(cell.completion_rate);
+        if (!assigned || rate === null) {
+            return `<td class="report-metric-cell report-cell-zero ${extraClass}" title="Bài lab chưa được giao trong kỳ"><strong>—</strong><span>Chưa giao</span></td>`;
+        }
+        const cssClass = rate >= 80 ? 'report-cell-high' : (rate >= 50 ? 'report-cell-medium' : 'report-cell-low');
+        const attempted = Number(cell.attempted_count) || 0;
+        const attempts = Number(cell.attempt_count) || 0;
+        return `<td class="report-metric-cell ${cssClass} ${extraClass}" title="${escapeHTML(`${passed}/${assigned} KTV đạt • ${attempted} KTV đã làm • ${attempts} lần làm`)}"><strong>${passed}/${assigned}</strong><span>${rate}% HT</span></td>`;
+    };
+    els.detailReportHead.innerHTML = `
+        <tr class="report-device-header-row">
+            <th class="report-region-head" rowspan="2"><strong>Khu vực/CNx</strong></th>
+            ${groups.map((group, index) => `<th class="report-device-group report-device-tone-${index % 5}" colspan="${(group.labs || []).length}">${escapeHTML(group.device?.name || group.device_name || '')}<span>${(group.labs || []).length} bài lab</span></th>`).join('')}
+            <th class="report-summary-head" rowspan="2">Tổng</th>
+        </tr>
+        <tr class="report-lab-header-row">${columns.map(column => `<th class="report-lab-head report-device-tone-${column.groupIndex % 5} ${column.isFirst ? 'group-start' : ''} ${column.isLast ? 'group-end' : ''}" title="${escapeHTML(`${column.device} • ${column.lab}`)}">${escapeHTML(column.lab)}</th>`).join('')}</tr>`;
+    els.detailReportBody.innerHTML = (reportMatrix.rows || []).map(row => {
+        const region = row.region || {};
+        return `<tr><th class="report-region-cell"><div class="report-region-label"><span class="report-region-spacer"></span>${escapeHTML(region.name || region.region_name || region.code || region.region_code || '')}</div></th>${columns.map(column => metricCell(row.cells?.[column.labId], column.isFirst ? 'group-start' : '')).join('')}${metricCell(row.total, 'report-row-total')}</tr>`;
+    }).join('');
+    const grand = reportMatrix.grand_total || {};
+    els.detailReportFoot.innerHTML = `<tr><th class="report-region-cell report-grand-label">Tổng hệ thống</th>${columns.map(column => metricCell(grand.cells?.[column.labId], column.isFirst ? 'group-start' : '')).join('')}${metricCell(grand.total || grand, 'report-row-total report-grand-total')}</tr>`;
+    const summaryValues = {
+        detailReportPeriod: dashboardReport?.meta?.period?.label || getRangeLabel(),
+        detailReportSessions: formatNumber.format(Number(grand.total?.attempt_count || grand.attempt_count) || 0),
+        detailReportRegions: formatNumber.format((reportMatrix.rows || []).length),
+        detailReportLabs: formatNumber.format(columns.length),
+        detailReportCompletion: grand.total?.completion_rate === null || grand.completion_rate === null
+            ? '—'
+            : `${Number(grand.total?.completion_rate ?? grand.completion_rate) || 0}%`
+    };
+    Object.entries(summaryValues).forEach(([id, value]) => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = value;
+    });
+}
+
 function buildDetailReportIndex(rows) {
     const index = new Map();
     rows.forEach(item => {
         const region = item.region || getLearnerRegion(item.learner);
         const key = detailReportCellKey(region, item.device, item.lab);
-        if (!index.has(key)) index.set(key, { attempts: 0, completed: 0, duration: 0 });
+        if (!index.has(key)) index.set(key, { attempts: 0, learners: new Set(), completedLearners: new Set(), duration: 0 });
         const cell = index.get(key);
         cell.attempts += 1;
-        cell.completed += item.status === 'Hoàn thành' ? 1 : 0;
+        cell.learners.add(item.learner);
+        if (item.status === 'Hoàn thành') cell.completedLearners.add(item.learner);
         cell.duration += Number(item.duration) || 0;
     });
     return index;
 }
 
+function getDetailReportEligibleLearners(regionKeys) {
+    const regions = new Set(regionKeys);
+    return new Set(technicianCatalog
+        .filter(item => !item.isTerminated && item.email && regions.has(item.dashboardRegion))
+        .map(item => item.email));
+}
+
 function getDetailReportCell(index, regionKeys, column) {
-    const result = { attempts: 0, completed: 0, duration: 0 };
+    const eligibleLearners = getDetailReportEligibleLearners(regionKeys);
+    const result = { attempts: 0, learners: new Set(), completedLearners: new Set(), duration: 0 };
     regionKeys.forEach(region => {
         const cell = index.get(detailReportCellKey(region, column.device, column.lab));
         if (!cell) return;
         result.attempts += cell.attempts;
-        result.completed += cell.completed;
+        cell.learners.forEach(learner => result.learners.add(learner));
+        cell.completedLearners.forEach(learner => result.completedLearners.add(learner));
         result.duration += cell.duration;
     });
-    result.rate = result.attempts ? Math.round((result.completed / result.attempts) * 100) : 0;
+    result.eligible = eligibleLearners.size;
+    result.attempted = result.learners.size;
+    result.completed = result.completedLearners.size;
+    result.rate = result.eligible ? Math.round((result.completed / result.eligible) * 100) : null;
     result.avgDuration = result.attempts ? Math.round(result.duration / result.attempts) : 0;
     return result;
 }
 
 function getDetailReportTotal(index, regionKeys, columns) {
-    const result = { attempts: 0, completed: 0, duration: 0 };
+    const eligibleLearners = getDetailReportEligibleLearners(regionKeys);
+    const result = { attempts: 0, attempted: 0, completed: 0, eligible: eligibleLearners.size * columns.length, duration: 0, isAggregate: true };
     columns.forEach(column => {
         const cell = getDetailReportCell(index, regionKeys, column);
         result.attempts += cell.attempts;
+        result.attempted += cell.attempted;
         result.completed += cell.completed;
         result.duration += cell.duration;
     });
-    result.rate = result.attempts ? Math.round((result.completed / result.attempts) * 100) : 0;
+    result.rate = result.eligible ? Math.round((result.completed / result.eligible) * 100) : null;
     result.avgDuration = result.attempts ? Math.round(result.duration / result.attempts) : 0;
     return result;
 }
 
 function getDetailReportCellClass(cell) {
-    if (!cell.attempts) return 'report-cell-zero';
+    if (cell.rate === null || !cell.attempts) return 'report-cell-zero';
     if (cell.rate >= 80) return 'report-cell-high';
     if (cell.rate >= 50) return 'report-cell-medium';
     return 'report-cell-low';
 }
 
 function renderDetailReportMetricCell(cell, extraClass = '') {
-    if (!cell.attempts) return `<td class="report-metric-cell report-cell-zero ${extraClass}" title="Chưa có dữ liệu trong khoảng lọc"><strong>0</strong><span>0% HT</span></td>`;
-    const title = `${cell.attempts} lượt làm • ${cell.completed} hoàn thành • Trung bình ${formatDuration(cell.avgDuration)}`;
+    if (!cell.eligible) return `<td class="report-metric-cell report-cell-zero ${extraClass}" title="Không có KTV trong phạm vi này"><strong>—</strong><span>N/A</span></td>`;
+    if (!cell.attempts) return `<td class="report-metric-cell report-cell-zero ${extraClass}" title="Chưa có KTV thực hiện trong khoảng lọc"><strong>—</strong><span>Chưa có dữ liệu</span></td>`;
+    const coverageUnit = cell.isAggregate ? 'lượt KTV-lab' : 'KTV';
+    const title = `${cell.completed}/${cell.eligible} ${coverageUnit} hoàn thành • ${cell.attempted} ${coverageUnit} đã làm • ${cell.attempts} phiên • Trung bình ${formatDuration(cell.avgDuration)}`;
     return `
         <td class="report-metric-cell ${getDetailReportCellClass(cell)} ${extraClass}" title="${escapeHTML(title)}">
-            <strong>${formatNumber.format(cell.attempts)}</strong>
+            <strong>${formatNumber.format(cell.completed)}/${formatNumber.format(cell.eligible)}</strong>
             <span>${cell.rate}% HT</span>
         </td>
     `;
@@ -1316,6 +1419,10 @@ function renderDetailReportMetricCell(cell, extraClass = '') {
 
 function renderDetailedReport(rows) {
     if (!els.detailReportHead || !els.detailReportBody || !els.detailReportFoot) return;
+    if (dashboardReport?.matrix) {
+        renderAuthoritativeDetailedReport(dashboardReport.matrix);
+        return;
+    }
 
     const groups = getDetailReportDeviceGroups(rows);
     const columns = groups.flatMap((group, groupIndex) => group.labs.map((lab, labIndex) => ({
@@ -1396,8 +1503,11 @@ function renderDetailedReport(rows) {
 
     const activeRegions = new Set(rows.map(item => item.region || getLearnerRegion(item.learner)));
     const activeLabs = new Set(rows.map(item => `${item.device}\u001f${item.lab}`));
-    const completed = rows.filter(item => item.status === 'Hoàn thành').length;
-    const completionRate = rows.length ? Math.round((completed / rows.length) * 100) : 0;
+    const completedPairs = new Set(rows
+        .filter(item => item.status === 'Hoàn thành')
+        .map(item => `${item.learner}\u001f${item.device}\u001f${item.lab}`)).size;
+    const eligiblePairs = technicianCatalog.filter(item => !item.isTerminated && item.email).length * columns.length;
+    const completionRate = eligiblePairs ? Math.round((completedPairs / eligiblePairs) * 100) : 0;
     const summaryValues = {
         detailReportPeriod: getRangeLabel(),
         detailReportSessions: formatNumber.format(rows.length),
@@ -1454,8 +1564,8 @@ function statusToVietnamese(status) {
         completed: 'Hoàn thành',
         in_progress: 'Đang làm',
         stuck: 'Đang làm',
-        abandoned: 'Chưa thực hiện',
-        failed: 'Đang làm',
+        abandoned: 'Đã dừng',
+        failed: 'Không đạt',
         not_started: 'Chưa thực hiện'
     };
     return map[status] || status || 'Chưa thực hiện';
@@ -1510,8 +1620,78 @@ function formatMetricDelta(unit, key, value) {
 
 let learnerNameMap = new Map();
 
+function normalizeTechnicianCatalog(apiTechnicians = []) {
+    return apiTechnicians.map(item => ({
+        userId: item.user_id || item.userId || item.id || '',
+        employeeId: item.employee_id || item.employeeId || '',
+        email: String(item.email || '').trim().toLowerCase(),
+        displayName: item.display_name || item.displayName || item.email || 'KTV chưa xác định',
+        jobTitle: item.job_title || item.jobTitle || '',
+        classCode: item.class_code || item.classCode || '',
+        unitCode: item.unit_code || item.unitCode || '',
+        unitName: item.unit_name || item.unitName || '',
+        regionCode: item.region_code || item.regionCode || '',
+        branchCode: item.branch_code || item.branchCode || '',
+        dashboardRegion: item.dashboard_region || item.dashboardRegion || '',
+        isTerminated: Boolean(item.is_terminated ?? item.isTerminated)
+    }));
+}
+
+function normalizeTrainingAssignments(apiAssignments = []) {
+    return apiAssignments.map(item => ({
+        assignmentId: item.assignment_id || item.assignmentId || '',
+        employeeId: item.employee_id || item.employeeId || '',
+        learner: String(item.email || item.learner || '').trim().toLowerCase(),
+        displayName: item.display_name || item.displayName || item.email || '',
+        classId: item.class_id || item.classId || '',
+        classCode: item.class_code || item.classCode || '',
+        regionId: item.region_id || item.regionId || '',
+        region: normalizeRegionName(item.region_name || item.regionName || item.region_code || '', item.email),
+        deviceId: item.device_id || item.deviceId || '',
+        device: item.device_name || item.deviceName || item.device || 'N/A',
+        labId: item.lab_id || item.labId || '',
+        lab: item.lab_name || item.labName || item.lab || 'N/A',
+        assignedDate: dateOnly(item.assigned_at || item.assignedAt),
+        dueDate: dateOnly(item.due_at || item.dueAt),
+        status: item.status || 'assigned',
+        passed: item.status === 'passed' || Boolean(item.passed),
+        completedAt: item.completed_at || item.completedAt || null,
+        firstPassAttemptNo: item.first_pass_attempt_no === null || item.first_pass_attempt_no === undefined
+            ? null
+            : Number(item.first_pass_attempt_no),
+        firstTryEvaluated: Boolean(item.first_try_evaluated ?? item.firstTryEvaluated),
+        attemptCount: Number(item.attempt_count || item.attemptCount) || 0,
+        attempted: Number(item.attempt_count || item.attemptCount) > 0,
+        avgDuration: Number(item.avg_duration_sec || item.avgDurationSec) || 0
+    }));
+}
+
+function rebuildTechnicianIndex() {
+    technicianByIdentity = new Map();
+    REGION_CATALOG = BASE_REGION_CATALOG.map(region => ({
+        ...region,
+        children: region.children ? [...region.children] : undefined
+    }));
+    REGION_FILTER_OPTIONS = REGION_CATALOG.flatMap(region => region.children || [region.code]);
+    technicianCatalog.forEach(item => {
+        [item.email, item.employeeId, item.userId].filter(Boolean).forEach(identity => {
+            technicianByIdentity.set(String(identity).trim().toLowerCase(), item);
+        });
+    });
+    const dynamicRegions = [...new Set(technicianCatalog.map(item => item.dashboardRegion).filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b, 'vi'));
+    dynamicRegions.forEach(region => {
+        if (REGION_FILTER_OPTIONS.includes(region)) return;
+        REGION_CATALOG.push({ code: region });
+        REGION_FILTER_OPTIONS.push(region);
+    });
+}
+
 function rebuildLearnerNameMap() {
     learnerNameMap = new Map();
+    technicianCatalog.forEach(item => {
+        if (item.email) learnerNameMap.set(item.email, item.displayName || item.email);
+    });
     sessions.forEach(item => {
         if (!item.learner || learnerNameMap.has(item.learner)) return;
         learnerNameMap.set(item.learner, item.technicianName || item.learner);
@@ -1529,21 +1709,31 @@ function normalizeActionText(item) {
 function mapApiSessions(apiSessions = []) {
     return apiSessions.map(item => {
         const learner = item.technician?.email || item.email || item.technician?.full_name || item.full_name || item.technician_id || 'Unknown';
+        const technician = technicianByIdentity.get(String(item.technician_id || '').trim().toLowerCase())
+            || technicianByIdentity.get(String(item.email || '').trim().toLowerCase());
         return {
             sessionId: item.session_id,
             technicianId: item.technician_id || item.technician?.technician_id,
-            technicianName: item.technician?.full_name || item.full_name || '',
+            technicianName: technician?.displayName || item.technician?.full_name || item.full_name || '',
             date: dateOnly(item.started_at),
             time: timeOnly(item.started_at),
             learner,
-            region: normalizeRegionName(item.region_name || item.region || item.technician?.region, learner),
+            region: normalizeRegionName(technician?.dashboardRegion || item.region_name || item.region || item.technician?.region, learner),
+            classCode: technician?.classCode || item.class_code || '',
+            jobTitle: technician?.jobTitle || item.job_title || '',
+            unitCode: technician?.unitCode || item.unit_code || '',
+            unitName: technician?.unitName || item.unit_name || '',
+            branchCode: technician?.branchCode || item.branch_code || '',
             device: item.device?.device_name || item.device_name || item.device_id || 'N/A',
             lab: item.lab?.lab_name || item.lab_name || item.lab_id || 'N/A',
             skill: item.skill?.skill_name || item.skill?.skill_id || item.lab?.lab_name || item.lab_name || 'N/A',
             mode: item.mode || 'Thực hành',
             status: statusToVietnamese(item.status),
             duration: Number(item.duration_sec) || 0,
-            firstTry: Boolean(item.completed_first_try),
+            firstTry: item.completed_first_try === null || item.completed_first_try === undefined
+                ? null
+                : item.completed_first_try === true || item.completed_first_try === 1
+                    || ['1', 't', 'true', 'yes'].includes(String(item.completed_first_try).trim().toLowerCase()),
             lastAction: normalizeActionText(item)
         };
     });
@@ -1582,39 +1772,103 @@ function setDashboardLoading(visible) {
 let dashboardPollTimer = null;
 let dashboardRefreshInFlight = false;
 let lastDashboardSignature = '';
+let dashboardReportRequestSequence = 0;
 const DASHBOARD_POLL_INTERVAL_MS = 30000;
+
+function dashboardReportQuery() {
+    const periods = getKpiComparisonPeriods();
+    return new URLSearchParams({
+        from: periods.currentStart,
+        to: periods.currentEnd,
+        compare_from: periods.previousStart,
+        compare_to: periods.previousEnd,
+        cohort: 'due_in_period'
+    });
+}
+
+async function fetchDashboardReport(query = dashboardReportQuery()) {
+    const response = await fetch(`${API_BASE_URL}/dashboard/report?${query}`);
+    if (!response.ok) throw new Error(`API báo cáo trả về HTTP ${response.status}`);
+    const payload = await response.json();
+    return payload.data || null;
+}
+
+async function reloadDashboardReport() {
+    const requestSequence = ++dashboardReportRequestSequence;
+    try {
+        const report = await fetchDashboardReport();
+        if (requestSequence !== dashboardReportRequestSequence) return;
+        dashboardReport = report;
+        renderAll();
+    } catch (error) {
+        console.warn('Không tải được báo cáo assignment theo kỳ.', error);
+    }
+}
 
 function buildDashboardSignature(data) {
     const list = data.sessions || [];
+    const technicians = data.technicians || [];
     const first = list[0];
     const last = list[list.length - 1];
+    const latestTechnicianUpdate = technicians.reduce((latest, item) => {
+        const value = item.updated_at || item.updatedAt || '';
+        return value > latest ? value : latest;
+    }, '');
+    const completedCount = list.filter(item => item.status === 'completed').length;
+    const knownFirstTryCount = list.filter(item => item.completed_first_try !== null && item.completed_first_try !== undefined).length;
+    const firstTryCount = list.filter(item => item.completed_first_try === true).length;
     return [
         list.length,
         first?.session_id || '',
         first?.finished_at || '',
         last?.session_id || '',
         last?.finished_at || '',
-        (data.devices || []).length
+        (data.devices || []).length,
+        technicians.length,
+        latestTechnicianUpdate,
+        completedCount,
+        knownFirstTryCount,
+        firstTryCount,
+        data.report_meta?.data_version || ''
     ].join('|');
 }
 
 async function fetchDashboardData() {
-    const response = await fetch(`${API_BASE_URL}/dashboard/all`);
-    if (!response.ok) throw new Error(`API trả về HTTP ${response.status}`);
-    const payload = await response.json();
+    const [response, reportResponse] = await Promise.all([
+        fetch(`${API_BASE_URL}/dashboard/all`),
+        fetch(`${API_BASE_URL}/dashboard/report?${dashboardReportQuery()}`)
+    ]);
+    if (!response.ok) throw new Error(`API dữ liệu chi tiết trả về HTTP ${response.status}`);
+    if (!reportResponse.ok) throw new Error(`API báo cáo trả về HTTP ${reportResponse.status}`);
+    const [payload, reportPayload] = await Promise.all([response.json(), reportResponse.json()]);
     const data = payload.data || {};
+    const report = reportPayload.data || null;
+    const techniciansAuthoritative = Array.isArray(data.technicians);
+    const technicians = normalizeTechnicianCatalog(techniciansAuthoritative ? data.technicians : []);
+    technicianCatalog = technicians;
+    technicianCatalogAuthoritative = techniciansAuthoritative;
+    rebuildTechnicianIndex();
     return {
         sessions: mapApiSessions(data.sessions || []),
         deviceCatalog: (Array.isArray(data.devices) && Array.isArray(data.labs))
             ? buildDeviceCatalog(data.devices, data.labs)
             : [],
-        raw: data
+        technicians,
+        techniciansAuthoritative,
+        assignments: normalizeTrainingAssignments(data.assignments || []),
+        report,
+        raw: { ...data, report_meta: report?.meta || null }
     };
 }
 
 function applyDashboardData(data) {
     sessions = data.sessions;
     deviceCatalog = data.deviceCatalog;
+    technicianCatalog = data.technicians || [];
+    trainingAssignments = data.assignments || [];
+    dashboardReport = data.report || null;
+    technicianCatalogAuthoritative = Boolean(data.techniciansAuthoritative);
+    rebuildTechnicianIndex();
     rebuildLearnerNameMap();
 }
 
@@ -1710,6 +1964,11 @@ async function loadDashboardFromApi() {
         console.warn('Không kết nối được dữ liệu timer_sessions.', error);
         sessions = [];
         deviceCatalog = [];
+        technicianCatalog = [];
+        trainingAssignments = [];
+        dashboardReport = null;
+        technicianCatalogAuthoritative = false;
+        rebuildTechnicianIndex();
         rebuildLearnerNameMap();
         setDataSourceLabel('Không tải được dữ liệu timer_sessions');
         initFilters();
@@ -2034,7 +2293,7 @@ function initPopovers() {
     });
     document.getElementById('realtimeStatusClear')?.addEventListener('click', (e) => {
         e.stopPropagation();
-        state.realtimeSelectedStatuses = new Set(['Hoàn thành', 'Đang làm']);
+        state.realtimeSelectedStatuses = new Set(['Hoàn thành', 'Đang làm', 'Không đạt', 'Đã dừng']);
         document.querySelectorAll('#realtimeStatusOptions input[type="checkbox"]').forEach(chk => chk.checked = true);
         renderAll();
     });
@@ -2205,7 +2464,7 @@ function initPopovers() {
     });
     document.getElementById('detailStatusClear')?.addEventListener('click', (e) => {
         e.stopPropagation();
-        state.detailSelectedStatuses = new Set(['Hoàn thành', 'Đang làm', 'Chưa thực hiện']);
+        state.detailSelectedStatuses = new Set(['Hoàn thành', 'Đang làm', 'Không đạt', 'Đã dừng', 'Chưa thực hiện']);
         document.querySelectorAll('#detailStatusOptions input[type="checkbox"]').forEach(chk => chk.checked = true);
         renderAll();
     });
@@ -2356,8 +2615,30 @@ function parseTimeMs(timeStr) {
 const INSTRUCTOR_CLASSES_STORAGE_KEY = 'ftc-instructor-classes-v1';
 
 function getInstructorLearners() {
-    return [...new Set(sessions.map(item => item.learner).filter(Boolean))]
+    const rosterLearners = technicianCatalog
+        .filter(item => !item.isTerminated && item.email)
+        .map(item => item.email);
+    return [...new Set([...rosterLearners, ...sessions.map(item => item.learner).filter(Boolean)])]
         .sort((a, b) => a.localeCompare(b, 'vi'));
+}
+
+function getDatabaseInstructorClasses() {
+    const classes = new Map();
+    technicianCatalog
+        .filter(item => !item.isTerminated && item.email)
+        .forEach(item => {
+            const className = item.classCode || 'Chưa xếp lớp';
+            if (!classes.has(className)) classes.set(className, []);
+            classes.get(className).push(item.email);
+        });
+    return [...classes.entries()]
+        .sort(([left], [right]) => left.localeCompare(right, 'vi'))
+        .map(([name, members]) => ({
+            id: `db-class-${name}`,
+            name,
+            members: [...new Set(members)].sort((a, b) => a.localeCompare(b, 'vi')),
+            source: 'database'
+        }));
 }
 
 function getInstructorDeviceGroups() {
@@ -2395,6 +2676,15 @@ function saveInstructorClasses() {
 }
 
 function initializeInstructorClasses() {
+    const databaseClasses = getDatabaseInstructorClasses();
+    if (technicianCatalogAuthoritative) {
+        state.instructorClasses = databaseClasses;
+        state.instructorClassesLoaded = true;
+        if (!state.instructorClasses.some(item => item.id === state.instructorActiveClassId)) {
+            state.instructorActiveClassId = state.instructorClasses[0]?.id || '';
+        }
+        return;
+    }
     if (!state.instructorClassesLoaded) {
         try {
             const stored = JSON.parse(localStorage.getItem(INSTRUCTOR_CLASSES_STORAGE_KEY) || '[]');
@@ -2444,6 +2734,28 @@ function initializeInstructorClasses() {
 }
 
 function getInstructorClassProgress(selectedClass, selectedGroups) {
+    if (trainingAssignments.length) {
+        const selectedMembers = new Set(selectedClass?.members || []);
+        const assignmentByLearnerLab = new Map();
+        trainingAssignments
+            .filter(item => selectedMembers.has(item.learner))
+            .forEach(item => assignmentByLearnerLab.set(`${item.learner}\u001f${item.device}\u001f${item.lab}`, item));
+        return (selectedClass?.members || []).map(learner => {
+            const deviceResults = selectedGroups.map(group => {
+                const labResults = group.labs.map(lab => {
+                    const assignment = assignmentByLearnerLab.get(`${learner}\u001f${group.device}\u001f${lab}`);
+                    return { lab, assigned: Boolean(assignment), completed: Boolean(assignment?.passed) };
+                });
+                const assignedResults = labResults.filter(item => item.assigned);
+                const completed = assignedResults.filter(item => item.completed).length;
+                const total = assignedResults.length;
+                return { device: group.device, labResults, completed, total, rate: total ? Math.round((completed / total) * 100) : null };
+            });
+            const completed = deviceResults.reduce((sum, item) => sum + item.completed, 0);
+            const total = deviceResults.reduce((sum, item) => sum + item.total, 0);
+            return { learner, deviceResults, completed, total, rate: total ? Math.round((completed / total) * 100) : null };
+        });
+    }
     const completedStatus = statusToVietnamese('completed');
     const rowsByLearner = new Map();
     sessions.forEach(item => {
@@ -2477,7 +2789,8 @@ function getInstructorClassProgress(selectedClass, selectedGroups) {
     });
 }
 
-function getInstructorLabCellClass(completed) {
+function getInstructorLabCellClass(completed, assigned = true) {
+    if (!assigned) return 'instructor-progress-zero';
     return completed ? 'instructor-progress-complete' : 'instructor-progress-zero';
 }
 
@@ -2516,19 +2829,21 @@ function renderInstructorClassProgress() {
         .join('');
     deviceSelect.value = state.instructorSelectedDevice;
 
+    const selectedClass = state.instructorClasses.find(item => item.id === state.instructorActiveClassId);
     const deleteButton = document.getElementById('instructorClassDelete');
     const exportButton = document.getElementById('instructorClassExport');
-    if (deleteButton) deleteButton.disabled = !state.instructorClasses.length;
+    if (deleteButton) deleteButton.disabled = !state.instructorClasses.length || selectedClass?.source === 'database';
     if (exportButton) exportButton.disabled = !state.instructorClasses.length;
 
-    const selectedClass = state.instructorClasses.find(item => item.id === state.instructorActiveClassId);
     if (!selectedClass) {
         head.innerHTML = '';
         body.innerHTML = '';
         summary.innerHTML = '';
         scroll.hidden = true;
         empty.hidden = false;
-        empty.textContent = 'Chưa có lớp học. Nhập tên lớp và chọn “Tạo lớp” để bắt đầu.';
+        empty.textContent = technicianCatalogAuthoritative
+            ? 'Chưa có lớp học trong hồ sơ nhân viên trên cơ sở dữ liệu.'
+            : 'Chưa có lớp học.';
         return;
     }
 
@@ -2579,12 +2894,12 @@ function renderInstructorClassProgress() {
             <td class="instructor-progress-index">${index + 1}</td>
             <th class="instructor-progress-email" scope="row" title="${escapeHTML(row.learner)}">${escapeHTML(getLearnerName(row.learner))}</th>
             ${row.deviceResults.flatMap(item => item.labResults.map(lab => `
-                <td class="instructor-progress-lab instructor-lab-cell ${getInstructorLabCellClass(lab.completed)}" title="${escapeHTML(`${item.device} • ${lab.lab}: ${lab.completed ? 'Hoàn thành' : 'Chưa hoàn thành'}`)}">
-                    ${lab.completed ? '✓' : ''}
+                <td class="instructor-progress-lab instructor-lab-cell ${getInstructorLabCellClass(lab.completed, lab.assigned !== false)}" title="${escapeHTML(`${item.device} • ${lab.lab}: ${lab.assigned === false ? 'Chưa giao' : (lab.completed ? 'Hoàn thành' : 'Chưa hoàn thành')}`)}">
+                    ${lab.assigned === false ? '—' : (lab.completed ? '✓' : '')}
                 </td>
             `)).join('')}
             <td class="instructor-progress-total">${row.completed}/${row.total}</td>
-            <td class="instructor-progress-rate ${getInstructorRateClass(row.rate)}">${row.rate}%</td>
+            <td class="instructor-progress-rate ${getInstructorRateClass(row.rate || 0)}">${row.rate === null ? '—' : `${row.rate}%`}</td>
         </tr>
     `).join('');
 
@@ -2722,7 +3037,7 @@ function renderAll() {
     renderRealtimeSubmissions(dateSessions);
     renderSessions(sessions);
     renderLearnerDetail(sessions);
-    renderDetailedReport(dateSessions.filter(item => item.mode !== 'Hướng dẫn'));
+    renderDetailedReport(dateSessions.filter(item => item.mode === 'Thực hành'));
     renderSortMarks();
     updatePopoverTriggerLabels();
     updateRangeText(dateSessions);
@@ -2909,6 +3224,7 @@ function initDateRangePicker() {
             }
             renderMonthGrid(year);
             renderAll();
+            if (dashboardReport || sessions.length) reloadDashboardReport();
         };
 
         const renderMonthGrid = (year = Number(yearSelect?.value) || today.getFullYear()) => {
@@ -3016,6 +3332,7 @@ function initDateRangePicker() {
         state.realtimePage = 1;
         picker?.classList.remove('open');
         renderAll();
+        if (dashboardReport || sessions.length) reloadDashboardReport();
     });
 
     document.getElementById('dateRangeClear')?.addEventListener('click', (e) => {
@@ -3030,6 +3347,7 @@ function initDateRangePicker() {
         picker?.classList.remove('open');
         renderCalendar();
         renderAll();
+        if (dashboardReport || sessions.length) reloadDashboardReport();
     });
 
     document.addEventListener('click', (event) => {
@@ -3467,8 +3785,9 @@ function computeMetrics(rows) {
     const learners = new Set(rows.map(item => item.learner)).size;
     const rate = totalSessions ? Math.round((completed / totalSessions) * 1000) / 10 : 0;
 
-    const firstTryCount = rows.filter(item => item.firstTry && item.status === 'Hoàn thành').length;
-    const firstTryRate = completed ? Math.round((firstTryCount / completed) * 100) : (totalSessions ? Math.round((firstTryCount / totalSessions) * 100) : 0);
+    const evaluatedCompletions = rows.filter(item => item.status === 'Hoàn thành' && item.firstTry !== null);
+    const firstTryCount = evaluatedCompletions.filter(item => item.firstTry).length;
+    const firstTryRate = evaluatedCompletions.length ? Math.round((firstTryCount / evaluatedCompletions.length) * 100) : 0;
 
     const totalDuration = rows.reduce((sum, item) => sum + (item.duration || 0), 0);
     const avgDuration = totalSessions ? Math.round(totalDuration / totalSessions) : 0;
@@ -3479,6 +3798,7 @@ function computeMetrics(rows) {
         completed,
         rate,
         firstTryRate,
+        evaluatedFirstTry: evaluatedCompletions.length,
         avgDuration
     };
 }
@@ -4015,8 +4335,8 @@ function renderCompareResults() {
     const startB = document.getElementById('compareStartB')?.value || '';
     const endB = document.getElementById('compareEndB')?.value || '';
 
-    const rowsA = filterSessionsByDate(startA, endA);
-    const rowsB = filterSessionsByDate(startB, endB);
+    const rowsA = filterSessionsByDate(startA, endA).filter(item => item.mode === 'Thực hành');
+    const rowsB = filterSessionsByDate(startB, endB).filter(item => item.mode === 'Thực hành');
 
     const metricsA = computeMetrics(rowsA);
     const metricsB = computeMetrics(rowsB);

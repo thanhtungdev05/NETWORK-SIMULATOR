@@ -17,8 +17,8 @@ if [ -n "$DATABASE_URL" ] || [ -n "$PGHOST" ]; then
             break
         fi
         if [ "$attempt" -eq 5 ]; then
-            echo "WARNING: migrations failed after 5 attempts; continuing anyway."
-            break
+            echo "ERROR: migrations failed after 5 attempts; refusing to start with an incompatible schema."
+            exit 1
         fi
         echo "Migration attempt $attempt failed; retrying in 5s..."
         attempt=$((attempt + 1))

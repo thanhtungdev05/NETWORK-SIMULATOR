@@ -1,3 +1,5 @@
+FROM composer:2 AS composer
+
 FROM python:3.12-slim
 
 ENV PYTHONUNBUFFERED=1 \
@@ -8,7 +10,6 @@ WORKDIR /app
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        curl \
         unzip \
         php-cli \
         php-curl \
@@ -19,10 +20,11 @@ RUN apt-get update \
         php-pgsql \
     && rm -rf /var/lib/apt/lists/*
 
+COPY --from=composer /usr/bin/composer /usr/local/bin/composer
+
 COPY . /app
 
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
-    && composer install --no-dev --no-interaction --prefer-dist --no-progress --no-ansi
+RUN composer install --no-dev --no-interaction --prefer-dist --no-progress --no-ansi
 
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh

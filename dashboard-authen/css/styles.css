@@ -7586,6 +7586,11 @@ th:nth-last-child(2) .header-filter-popover .popover-dropdown {
     flex-wrap: wrap;
 }
 
+.instructor-class-create[hidden],
+.instructor-button[hidden] {
+    display: none !important;
+}
+
 .instructor-class-create input[type='text'] {
     width: min(280px, 100%);
     height: 40px;

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vigor Login Page</title>
+<style>
+  body { margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #ffffff; }
+  .login-container { display: flex; justify-content: center; padding-top: 100px; }
+  .login-box-wrapper { width: 450px; }
+  .header-logos { display: flex; align-items: flex-end; margin-bottom: -1px; }
+  .logo-draytek { color: #d32f2f; font-size: 32px; font-weight: bold; font-style: italic; margin-right: 15px; margin-bottom: 5px; }
+  .logo-vigor { background-color: #a72828; color: white; font-size: 20px; font-weight: bold; font-style: italic; padding: 5px 20px 5px 30px; border-top-left-radius: 20px; border-top-right-radius: 5px; flex-grow: 1; text-align: right; border-bottom: 3px solid #661111; }
+  .login-title-bar { background-color: #222; color: white; font-style: italic; font-weight: bold; font-size: 16px; padding: 3px 20px; width: 100px; border-bottom-right-radius: 15px; }
+  .login-form-box { background: #fdfdfd; padding: 25px 40px; border: 1px solid #ddd; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border-top: none; }
+  .input-row { display: flex; align-items: center; margin-bottom: 12px; }
+  .input-row label { width: 90px; font-size: 13px; font-weight: bold; color: #000; text-align: right; margin-right: 15px; }
+  .input-row input, .input-row select { flex-grow: 1; padding: 4px 5px; border: 1px solid #000; font-size: 13px; box-sizing: border-box; }
+  .btn-row { display: flex; justify-content: flex-end; margin-top: 15px; }
+  .btn-row button { padding: 4px 15px; background: linear-gradient(to bottom, #fff, #ddd); border: 1px solid #aaa; color: #333; font-size: 13px; cursor: pointer; border-radius: 3px; }
+  .btn-row button:hover { background: linear-gradient(to bottom, #eee, #ccc); }
+  .security-warning { margin-top: 30px; text-align: center; font-size: 11px; font-weight: bold; color: #000; }
+  .security-warning a { color: #0000ee; text-decoration: underline; }
+  .copyright { margin-top: 20px; text-align: center; font-size: 11px; color: #999; }
+</style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-box-wrapper">
+      <div class="header-logos">
+        <div class="logo-draytek">DrayTek</div>
+        <div class="logo-vigor">Vigor2927 Series</div>
+      </div>
+      <div class="login-title-bar">Login</div>
+      <div class="login-form-box">
+        <form action="/cgi-bin/wlogin.cgi" method="POST">
+          <div class="input-row">
+            <label>Username</label>
+            <input type="text" name="aa" value="admin">
+          </div>
+          <div class="input-row">
+            <label>Password</label>
+            <input type="password" name="ab" value="admin">
+          </div>
+          <div class="input-row">
+            <label>Language</label>
+            <select name="lang">
+              <option value="en">English</option>
+            </select>
+          </div>
+          <div class="btn-row">
+            <button type="submit">Login</button>
+          </div>
+        </form>
+        <div class="security-warning">
+          Security Warning: You are logging in without encryption which is<br>
+          not recommended. To login securely <a href="#">click here</a>.
+        </div>
+      </div>
+      <div class="copyright">
+        Copyright © 2000-2024 DrayTek Corp. All Rights Reserved.
+      </div>
+    </div>
+  </div>
+</body>
+</html>

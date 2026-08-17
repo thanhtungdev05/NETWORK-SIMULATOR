@@ -199,7 +199,10 @@ def handle_ubus(req):
         if obj == "session" and fn == "wizardstate_get":
             return ubus_result(rid, 0, {"state": "done", "step": 0})
         if obj == "system" and fn == "board":
-            return ubus_result(rid, 0, {"model_name": "AP-AX3000CV2"})
+            DATA = ubus_data("system", "board", args)
+            if DATA is not None:
+                return ubus_result(rid, 0, DATA)
+            return ubus_result(rid, 0, {"model_name": "AP-AX3000CV2", "release": {"revision": "AP-AX3000C-0.10.2"}})
 
         # KIEM TRA SID NGHIEM NGAT CHO TAT CA CAC CALL DU LIEU:
         # Neu SID khong khop (do vua reset_session hoac chua login) -> tu choi tat ca cac call du lieu!

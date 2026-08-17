@@ -11,11 +11,17 @@
 FORM {margin:0px;}
 
 
+html, body {
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+}
+
 BODY.main {
     font-family: Arial, Helvetica, sans-serif; font-size: 12px;
     background-color: white;
     margin-top: 30px;
     margin-left: 30px;
+    overflow-x: auto !important;
 }
 table.headtable {
     border: 1px solid black;

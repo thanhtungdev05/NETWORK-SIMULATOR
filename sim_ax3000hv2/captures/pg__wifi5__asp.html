@@ -288,7 +288,7 @@ function doLoad()
 							</tr>
 							<tr height="30px">
 								<td width="250px" align=left class="tabdata" style="padding-left:20px;">SSID Name</td>
-								<td align=left class="tabdata">
+								<td align=left class="tabdata" id="td_wifi5SSid_2G">
 									<input type="text" name="wifi5SSid_2G" id="wifi5SSid_2G" size="35" maxlength="32">
 									<script>
 									document.getElementById("wifi5SSid_2G").value = wifi5_ssid_2g;
@@ -297,7 +297,7 @@ function doLoad()
 							</tr>
 							<tr height="30px">
 								<td width="250px" align=left class="tabdata" style="padding-left:20px;">Security Passphrase</td>
-								<td align=left class="tabdata">
+								<td align=left class="tabdata" id="td_wifi5Pwd_2G">
 									<input type="text" name="wifi5Pwd_2G" id="wifi5Pwd_2G" size="35" maxlength="64" onBlur="wpapskCheck(this)">(8~63 characters or 64 Hex string)
 									<script>
 									document.getElementById("wifi5Pwd_2G").value = wifi5_psk_2g;
@@ -361,7 +361,7 @@ function doLoad()
 							</tr>
 							<tr height="30px">
 								<td width="250px" align=left class="tabdata" style="padding-left:20px;">SSID Name</td>
-								<td align=left class="tabdata">
+								<td align=left class="tabdata" id="td_wifi5SSid_5G">
 									<input type="text" name="wifi5SSid_5G" id="wifi5SSid_5G" size="35" maxlength="32">
 									<script>
 									document.getElementById("wifi5SSid_5G").value = wifi5_ssid_5g;
@@ -370,7 +370,7 @@ function doLoad()
 							</tr>
 							<tr height="30px">
 								<td width="250px" align=left class="tabdata" style="padding-left:20px;">Security Passphrase</td>
-								<td align=left class="tabdata">
+								<td align=left class="tabdata" id="td_wifi5Pwd_5G">
 									<input type="text" name="wifi5Pwd_5G" id="wifi5Pwd_5G" size="35" maxlength="64" onBlur="wpapskCheck(this)">(8~63 characters or 64 Hex string)
 									<script>
 									document.getElementById("wifi5Pwd_5G").value = wifi5_psk_5g;

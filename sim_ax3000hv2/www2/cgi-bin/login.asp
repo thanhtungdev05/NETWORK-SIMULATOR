@@ -110,12 +110,17 @@ var LoginTimes="0";
 
 			function doLoad()
 			{
-				document.configform.username.focus();
 				delCookie("uid");
 				delCookie("psw");
 				delCookie("SESSIONID");
 				delCookie("logout");
 				delCookie("ipchange");
+				delCookie("sysauth");
+				try {
+					document.getElementById('username').value = '';
+					document.getElementById('password').value = '';
+				} catch(e) {}
+				document.configform.username.focus();
 			}
 
 			/*function encodeString(val)

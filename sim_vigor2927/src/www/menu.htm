@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Menu</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    background: linear-gradient(to bottom, #5a5a5a 0%, #8a8a8a 100%);
+    font-family: Arial, Verdana, Tahoma, sans-serif;
+    font-size: 12px;
+    color: #fff;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+.menu-top {
+    padding: 5px 4px 3px 4px;
+    border-bottom: 1px solid #666;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+.btn-small {
+    background: linear-gradient(to bottom, #e0e0e0, #c0c0c0);
+    color: #333;
+    border: 1px solid #999;
+    border-radius: 3px;
+    padding: 1px 6px;
+    font-size: 11px;
+    cursor: pointer;
+}
+.btn-ipv6 {
+    background: linear-gradient(to bottom, #4a7aff, #3060dd);
+    color: #fff;
+    border: 1px solid #2050cc;
+    border-radius: 3px;
+    padding: 1px 8px;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+}
+.search-box { margin: 6px 4px 4px 4px; }
+.search-box input {
+    width: 100%;
+    padding: 3px 5px;
+    font-size: 11px;
+    border: 1px solid #aaa;
+    border-radius: 2px;
+    background: #f5f5f5;
+    color: #333;
+}
+.menu-section { padding: 4px 0 2px 4px; }
+.menu-item {
+    display: block;
+    padding: 2px 4px;
+    color: #fff;
+    text-decoration: none;
+    font-size: 12px;
+    cursor: pointer;
+}
+.menu-item:hover { color: #ffdd00; text-decoration: underline; }
+.menu-separator { border-top: 1px solid #777; margin: 5px 4px; }
+.section-title {
+    display: block;
+    padding: 6px 4px 2px 4px;
+    color: #fff;
+    font-weight: bold;
+    font-size: 12px;
+}
+.copyright { text-align: center; color: #ffdd00; font-size: 11px; padding: 8px 4px 4px 4px; }
+.status-bar {
+    background: rgba(0,0,0,0.3);
+    padding: 4px 6px;
+    margin-top: 8px;
+    font-size: 11px;
+    color: #ddd;
+    text-align: center;
+}
+.hidden { display: none; }
+</style>
+</head>
+<body>
+
+<div class="menu-top">
+    <select class="btn-small">
+        <option>Auto Logout</option>
+        <option>30 min</option>
+        <option>60 min</option>
+        <option>Disable</option>
+    </select>
+    <a class="btn-ipv6" href="javascript:void(0)">IPv6</a>
+</div>
+
+<div class="menu-section">
+    <a class="menu-item" href="javascript:MainFunction('/cgi-bin/cgidashboard.cgi?fid=1&sFormAuthStr=K8sEXFc1TfxSlPA')">Dashboard</a>
+    <a class="menu-item" href="javascript:void(0)" onclick="toggleSub('sub-wizards')">Wizards</a>
+    <div id="sub-wizards" class="hidden" style="padding-left:10px;">
+        <a class="menu-item" href="javascript:MainFunction('/doc/wizmw.htm')">Quick Start Wizard</a>
+        <a class="menu-item" href="javascript:MainFunction('/cgi-bin/vpn.cgi?fid=0&sFormAuthStr=K8sEXFc1TfxSlPA')">VPN Client Wizard</a>
+        <a class="menu-item" href="javascript:MainFunction('/cgi-bin/vpn.cgi?fid=3&sFormAuthStr=K8sEXFc1TfxSlPA')">VPN Server Wizard</a>
+    </div>
+    <a class="menu-item" href="javascript:MainFunction('/cgi-bin/v2x00.cgi?fid=168&option=1&sFormAuthStr=K8sEXFc1TfxSlPA')">Online Status</a>
+</div>
+
+<div class="menu-separator"></div>
+<div class="search-box">
+    <input type="text" placeholder="Search Menu" id="menuSearch" oninput="filterMenu(this.value)">
+</div>
+<div class="menu-separator"></div>
+
+<div class="menu-section" id="allMenuItems">
+    <a class="menu-item" href="javascript:MainFunction('/cgi-bin/wan.cgi?fid=100&sFormAuthStr=K8sEXFc1TfxSlPA')">WAN</a>
+    <a class="menu-item" href="javascript:MainFunction('/cgi-bin/v2x00.cgi?fid=2001&sFormAuthStr=K8sEXFc1TfxSlPA')">LAN</a>
+    <a class="menu-item" href="javascript:MainFunction('/cgi-bin/v2x00.cgi?fid=2225&iOpt=0&sFormAuthStr=K8sEXFc1TfxSlPA')">Hotspot Web Portal</a>
+    <a class="menu-item" href="javascript:MainFunction('/cgi-bin/v2x00.cgi?fid=2053&sFormAuthStr=K8sEXFc1TfxSlPA')">Routing</a>
+    <a class="menu-item" href="javascript:MainFunction('/cgi-bin/ipnat.cgi?fid=0&iPageIdx=1&sFormAuthStr=K8sEXFc1TfxSlPA')">NAT</a>
+    <a class="menu-item" href="javascript:MainFunction('/cgi-bin/ipnat.cgi?fid=20&iAct=0&sFormAuthStr=K8sEXFc1TfxSlPA')">Hardware Acceleration</a>
+    <a class="menu-item" href="javascript:MainFunction('/cgi-bin/ipf1.cgi?sFormAuthStr=K8sEXFc1TfxSlPA')">Firewall</a>
+    <a class="menu-item" href="javascript:MainFunction('/cgi-bin/fwuser.cgi?fid=0&iAct=0&sFormAuthStr=K8sEXFc1TfxSlPA')">User Management</a>
+    <a class="menu-item" href="javascript:MainFunction('/cgi-bin/ipobj.cgi?sIpObjAct=showpage&iIpObjPnum=1&sFormAuthStr=K8sEXFc1TfxSlPA')">Objects Setting</a>
+    <a class="menu-item" href="javascript:MainFunction('/cgi-bin/appeprof.cgi?sProfileAct=showpage&sFormAuthStr=K8sEXFc1TfxSlPA')">CSM</a>
+    <a class="menu-item" href="javascript:MainFunction('/cgi-bin/v2x00.cgi?fid=2092&sFormAuthStr=K8sEXFc1TfxSlPA')">Bandwidth Management</a>
+    <a class="menu-item" href="javascript:MainFunction('/cgi-bin/v2x00.cgi?fid=2055&sFormAuthStr=K8sEXFc1TfxSlPA')">Applications</a>
+    <a class="menu-item" href="javascript:MainFunction('/cgi-bin/v2x00.cgi?fid=2035&sFormAuthStr=K8sEXFc1TfxSlPA')">VPN and Remote Access</a>
+    <a class="menu-item" href="javascript:MainFunction('/cgi-bin/v2x00.cgi?fid=1210&sFormAuthStr=K8sEXFc1TfxSlPA')">Certificate Management</a>
+    <a class="menu-item" href="javascript:MainFunction('/cgi-bin/ftpset.cgi?sProfileAct=showpage&sFormAuthStr=K8sEXFc1TfxSlPA')">USB Application</a>
+    <a class="menu-item" href="javascript:MainFunction('/cgi-bin/v2x00.cgi?fid=2015&sFormAuthStr=K8sEXFc1TfxSlPA')">System Maintenance</a>
+    <a class="menu-item" href="javascript:MainFunction('/cgi-bin/v2x00.cgi?fid=2440&sFormAuthStr=K8sEXFc1TfxSlPA')">Diagnostics</a>
+</div>
+
+<div class="menu-separator"></div>
+<div class="menu-section">
+    <span class="section-title">Central Management</span>
+    <a class="menu-item" style="padding-left:8px;" href="javascript:void(0)">VPN</a>
+    <a class="menu-item" style="padding-left:8px;" href="javascript:void(0)">AP</a>
+    <a class="menu-item" style="padding-left:8px;" href="javascript:void(0)">Switch</a>
+    <a class="menu-item" style="padding-left:8px;" href="javascript:void(0)">External Devices</a>
+</div>
+
+<div class="menu-separator"></div>
+<div class="menu-section">
+    <span class="section-title">MyVigor Services</span>
+    <a class="menu-item" style="padding-left:8px;" href="javascript:void(0)">Registration &amp; Services</a>
+    <a class="menu-item" style="padding-left:8px;" href="javascript:void(0)">Service Status</a>
+</div>
+
+<div class="copyright">All Rights Reserved.</div>
+
+<div class="status-bar">
+    <div id="modeText">Admin mode</div>
+    <div>Status: <span id="statusText">Ready</span></div>
+</div>
+
+<script>
+function MainFunction(url) {
+    try {
+        if (parent && parent.main && parent.main.location) {
+            parent.main.location.href = url;
+        }
+    } catch(e) {}
+}
+
+function toggleSub(id) {
+    var sub = document.getElementById(id);
+    if (sub) sub.classList.toggle('hidden');
+}
+
+function filterMenu(val) {
+    val = val.toLowerCase().trim();
+    document.querySelectorAll('#allMenuItems .menu-item').forEach(function(item) {
+        item.style.display = (!val || item.textContent.toLowerCase().indexOf(val) >= 0) ? '' : 'none';
+    });
+}
+
+setInterval(function() {
+    try {
+        var statusEl = document.getElementById('statusText');
+        if (!statusEl) return;
+        var st = 0;
+        try {
+            if (parent && typeof parent.iActionStatusFlag !== 'undefined') {
+                st = parseInt(parent.iActionStatusFlag);
+            }
+        } catch(e) {}
+        var labels = {'-1': 'Invalid', '0': 'Ready', '1': 'Settings Unsaved', '2': 'Upload Successful', '4': 'Settings Saved'};
+        statusEl.textContent = labels[String(st)] !== undefined ? labels[String(st)] : 'Ready';
+    } catch(e) {}
+}, 2000);
+</script>
+</body>
+</html>

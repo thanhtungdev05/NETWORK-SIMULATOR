@@ -17,6 +17,10 @@
   /* mot dong: nhan ben trai + o nhap ben phai + dong mo ta (co icon '?') */
   function dong(t, oNhap) {
     var d = el('div', 'cbi-value');
+    if (t.ten) {
+      d.dataset.name = t.ten;
+      d.id = 'cbi-modal-' + t.ten;
+    }
     d.appendChild(el('label', 'cbi-value-title', t.nhan || ''));
     var f = el('div', 'cbi-value-field');
     f.appendChild(oNhap);
@@ -150,6 +154,12 @@
       // rmempty=false => truong bat buoc; LuCI to vien do
       if (t.batbuoc) w.style.borderColor = '#d33';
     }
+    
+    if (t.ten && w && typeof w.setAttribute === 'function') {
+      w.dataset.name = t.ten;
+      w.id = 'modal_field_' + t.ten;
+    }
+
     // o.readonly=true trong ma nguon -> thiet bi hien o bi khoa, chu xam
     if (t.khoa) {
       [].concat(w.tagName ? [w] : [], [].slice.call(w.querySelectorAll ? w.querySelectorAll('input,select') : []))
@@ -321,14 +331,14 @@
     Promise.all([
       fetch('/modal-defs.json').then(function (r) { return r.json(); }),
       window.__FIRSTCHILD ||
-        fetch('/firstchild.json').then(function (r) { return r.json(); }).catch(function () { return {}; }),
+      fetch('/firstchild.json').then(function (r) { return r.json(); }).catch(function () { return {}; }),
       // dat duoi /luci-static/ de server phuc vu duoc ngay, khong can khoi dong lai
       fetch('/luci-static/gia-tri-that.json').then(function (r) { return r.json(); })
         .catch(function () { return {}; })
     ]).then(function (kq) {
       DEFS = kq[0]; FIRSTCHILD = kq[1] || {}; GIATRI = kq[2] || {};
       var n = gan(); if (n) console.log('[modal] da gan ' + n + ' nut');
-    }).catch(function () {});
+    }).catch(function () { });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', chay);
   else chay();

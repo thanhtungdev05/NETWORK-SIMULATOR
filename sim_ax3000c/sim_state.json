@@ -10,16 +10,30 @@
    "",
    "",
    "fpt",
-   "fpt",
-   "Always",
+   "",
+   1,
+   "0",
+   ""
+  ],
+  "rows": 0
+ },
+ "portfwd": {
+  "values": [
+   "",
+   "TCP",
+   "",
+   "",
+   ""
+  ],
+  "rows": 1
+ },
+ "wifi": {
+  "values": [
    0,
-   "",
-   "",
-   0,
-   "",
-   "",
-   "Auto",
-   "Auto"
+   1,
+   "FPT_AX3000CV2",
+   "WPA2-Personal",
+   "fpt@12345"
   ],
   "rows": 0
  }

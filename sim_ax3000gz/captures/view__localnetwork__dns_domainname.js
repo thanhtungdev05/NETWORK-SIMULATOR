@@ -1,1 +1,0 @@
-'use strict';'require view';'require form';'require uci';return view.extend({load:function(){return Promise.all([uci.load('dhcp')]);},render:function(){let m,s,o;m=new form.Map('dhcp',_('Domain Name'));s=m.section(form.NamedSection,'@dnsmasq[0]',_('Domain Name'));s.anonymous=true;o=s.option(form.Value,'domain',_('Domain Name'));return m.render();}});

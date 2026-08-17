@@ -30,3 +30,45 @@ sim_state.json
 
 # PHP runtime
 php_api.log
+
+# ── Script cào dữ liệu / dev-only tools ─────────────────────
+# Dùng khi build simulator, không cần khi deploy
+**/collector.py
+**/chay_collector.bat
+**/chay_thu_van_tay.bat
+
+# be12000 dev scripts
+sim_be12000/bung_*.py
+sim_be12000/trich_*.py
+sim_be12000/go_boc_viewsource.py
+sim_be12000/tao_factory_state.py
+sim_be12000/tools/
+
+# Hướng dẫn cào dữ liệu (nội bộ)
+**/HUONG-DAN*.md
+**/HUONG-DAN-CHUP-HAR.md
+
+# Captures (raw HTML từ router thật, không serve)
+**/captures/
+**/captures_new/
+
+# Reference data (dev-only, trừ vigor2927/reference/source/ là server cần)
+**/reference/har/
+**/reference/raw/
+**/reference/rendered/
+**/reference/vantay/
+**/reference/screenshot/
+**/reference/goi_tai_ve/
+sim_be12000/reference/source/
+
+# Dev notes nội bộ
+**/STATUS.md
+**/ISSUES.md
+**/CLAUDE.md
+**/CHUP-HAR-BO-SUNG.md
+
+# Dev tools thừa
+**/boc_modal.py
+**/clean_ext.py
+**/tools_kiem_thu.py
+**/Chay-server.bat

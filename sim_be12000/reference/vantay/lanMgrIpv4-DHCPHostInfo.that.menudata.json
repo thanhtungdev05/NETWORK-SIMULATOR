@@ -1,6 +1,0 @@
-{
- "ten": "lanMgrIpv4-DHCPHostInfo",
- "ben": "that",
- "khoMan": "menudata",
- "noiDung": "<ajax_response_xml_root><IF_ERRORPARAM>SUCC</IF_ERRORPARAM><IF_ERRORTYPE>SUCC</IF_ERRORTYPE><IF_ERRORSTR>SUCC</IF_ERRORSTR><IF_ERRORID>0</IF_ERRORID><OBJ_DHCPHOSTINFO_ID></OBJ_DHCPHOSTINFO_ID></ajax_response_xml_root>"
-}

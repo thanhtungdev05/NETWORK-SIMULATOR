@@ -1,1 +1,0 @@
-{"slave":[],"master":{"SoftwareVer":"V3.0.12P2N2","AssocTime":"7718","IF_ERRORID":0,"BhStaRssi":"0","BhStaDataUpBpsRate":"0","BhStaSnr":"0","BhStaDataDownBpsRate":"0","instID":"MESH.CONTROLLER","LinkSpeed":"0","RxPower":"0","IpAddr":"192.168.1.1","MacAddr":"aa:bb:cc:00:00:02","AccessType":"Connecting","DeviceName":"ZTE:F8728D","TxPower":"0"},"ad":{"MGET_INST_NUM":0}}

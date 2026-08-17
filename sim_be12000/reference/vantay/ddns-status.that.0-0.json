@@ -1,6 +1,0 @@
-{
- "ten": "ddns-status",
- "ben": "that",
- "khoMan": "0x0",
- "noiDung": "{\"OBJ_DDNSCLIENT_ID\":{\"Instance\":[{\"CurrentDynamicIP\":\"\",\"LastUpdateTime\":\"\",\"Status\":\"Disconnected\"}]},\"IF_ERRORID\":0,\"IF_ERRORTYPE\":\"SUCC\",\"IF_ERRORSTR\":\"SUCC\",\"IF_ERRORPARAM\":\"SUCC\"}"
-}

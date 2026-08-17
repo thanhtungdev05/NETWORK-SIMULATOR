@@ -11,6 +11,7 @@ WORKDIR /app
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         unzip \
+        dos2unix \
         php-cli \
         php-curl \
         php-mbstring \
@@ -27,7 +28,7 @@ COPY . /app
 RUN composer install --no-dev --no-interaction --prefer-dist --no-progress --no-ansi
 
 COPY docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
+RUN dos2unix /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh
 
 EXPOSE 8080
 

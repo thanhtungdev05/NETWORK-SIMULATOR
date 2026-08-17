@@ -1,6 +1,0 @@
-<?xml version="1.0"?>
-<ajax_response_xml_root>
-    <IF_ERRORSTR>SessionTimeout</IF_ERRORSTR>
-    <IF_ERRORPARAM>SUCC</IF_ERRORPARAM>
-    <IF_ERRORTYPE>SUCC</IF_ERRORTYPE>
-</ajax_response_xml_root>

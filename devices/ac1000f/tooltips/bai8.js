@@ -1,4 +1,4 @@
-/**
+﻿/**
  * devices/ac1000f/tooltips/bai8.js — Tooltip Hướng dẫn cho Bài 8: WiFi Timer
  */
 

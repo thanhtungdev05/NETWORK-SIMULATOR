@@ -21,7 +21,7 @@ window.TOOLTIPS_AX3000C['ax3c-bai2'] = [
   },
   // 3. Chọn WIFI ở Submenu bên trái cấp 2 (chỉ hiện khi chưa ở trang Wi-Fi)
   {
-    selector: '.el-menu-item:contains("Wi-Fi"), .el-menu-item:contains("WIFI"), [index*="/network/wifi"]',
+    selector: '.el-menu-item:contains("Wi-Fi"), .el-menu-item:contains("WIFI"), .el-menu-item[index*="/network/wifi"]',
     text: 'Chọn WIFI',
     position: 'right',
     hideOnPage: 'wifi'

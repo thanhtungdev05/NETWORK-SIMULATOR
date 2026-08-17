@@ -221,6 +221,21 @@ function doSubmit(){
 	}
 	showSpin();//cindy add
 	document.UrlFilterform.Save_or_Delete.value = 1;
+	
+	// LƯU CẤU HÌNH VÀO SESSION STORAGE (GIẢ LẬP)
+	var simData = {};
+	for(var j=0; j<document.UrlFilterform.elements.length; j++) {
+		var el = document.UrlFilterform.elements[j];
+		if(el.name) {
+			if(el.type === 'radio' || el.type === 'checkbox') {
+				if(el.checked) simData[el.name] = el.value;
+			} else {
+				simData[el.name] = el.value;
+			}
+		}
+	}
+	sessionStorage.setItem('UF_simData', JSON.stringify(simData));
+	
 	document.UrlFilterform.submit();
 }
 
@@ -466,6 +481,36 @@ function init()
 				</tr>	
 			</table>
 		
+		<!-- LƯU CẤU HÌNH VÀO SESSION STORAGE (GIẢ LẬP) -->
+		<script>
+			window.addEventListener('DOMContentLoaded', function() {
+				var stored = sessionStorage.getItem('UF_simData');
+				if(stored) {
+					var data = JSON.parse(stored);
+					for(var key in data) {
+						var els = document.getElementsByName(key);
+						if(els.length > 0) {
+							if(els[0].type === 'radio' || els[0].type === 'checkbox') {
+								for(var i=0; i<els.length; i++) {
+									if(els[i].value === data[key]) els[i].checked = true;
+								}
+							} else if(els[0].tagName === 'SELECT') {
+								for(var i=0; i<els[0].options.length; i++) {
+									if(els[0].options[i].value === data[key] || els[0].options[i].text === data[key]) {
+										els[0].selectedIndex = i;
+										break;
+									}
+								}
+							} else {
+								els[0].value = data[key];
+							}
+						}
+					}
+					// Chỉ phục hồi 1 lần duy nhất sau khi bấm Save, sau đó xoá để phiên sau rỗng
+					sessionStorage.removeItem('UF_simData');
+				}
+			});
+		</script>
 		</FORM>
 	</BODY>
 </HTML>

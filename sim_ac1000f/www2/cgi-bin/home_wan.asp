@@ -1626,10 +1626,29 @@ if(hasAtm==0 && hasPtm==0 && hasWan0==1){
 		}
 	}
 
-	showSpin();//cindy add 
-	form.wanSaveFlag.value = 1;
-	form.wanVCFlag.value = "3";
-	form.submit();
+	// Nếu đúng hết cả 10 điều kiện -> Lưu session và hiện alert thành công
+	try {
+		if (form.wan_PPPUsername) sessionStorage.setItem('ftc_ac1000f_wan_PPPUsername', form.wan_PPPUsername.value);
+		if (form.wan_PPPPassword) sessionStorage.setItem('ftc_ac1000f_wan_PPPPassword', form.wan_PPPPassword.value);
+	} catch(e) {}
+
+	showSpin();
+	var saveBtn = form.SaveBtn;
+	if (saveBtn) {
+		saveBtn.disabled = true;
+		saveBtn.value = "Saving...";
+	}
+	setTimeout(function() {
+		var target = document.getElementById('firstDiv');
+		if (target) target.innerHTML = '<span style="color:#15803d; font-weight:bold; font-size:12px; margin-left:10px; line-height:24px;">✔ Saved successfully!</span>';
+		if (saveBtn) {
+			saveBtn.disabled = false;
+			saveBtn.value = "Save";
+		}
+		setTimeout(function() {
+			if (target) target.innerHTML = '';
+		}, 2500);
+	}, 500);
 }
 function inValidStaticIPSubNet(staticIP,staticMask)
 {
@@ -1983,8 +2002,20 @@ function doLoad() {
 		}
 	}
 	}
-	if(document.Alpha_WAN.wan_PPPPassword != null)
-		document.Alpha_WAN.wan_PPPPassword.value = (typeof pppPwd !== 'undefined') ? pppPwd : '';
+	if(document.Alpha_WAN.wan_PPPPassword != null) {
+		var savedPass = sessionStorage.getItem('ftc_ac1000f_wan_PPPPassword');
+		if (savedPass !== null) {
+			document.Alpha_WAN.wan_PPPPassword.value = savedPass;
+		} else {
+			document.Alpha_WAN.wan_PPPPassword.value = (typeof pppPwd !== 'undefined') ? pppPwd : '';
+		}
+	}
+	if(document.Alpha_WAN.wan_PPPUsername != null) {
+		var savedUser = sessionStorage.getItem('ftc_ac1000f_wan_PPPUsername');
+		if (savedUser !== null) {
+			document.Alpha_WAN.wan_PPPUsername.value = savedUser;
+		}
+	}
 		
 	
 	
@@ -2810,7 +2841,7 @@ NAT</td>
         	<TBODY>
 		<TR>
 		  
-          		<INPUT TYPE="TEXT" NAME="wan_PPPUsername" SIZE="32" MAXLENGTH="64" VALUE="fpt" >
+          		<INPUT TYPE="TEXT" NAME="wan_PPPUsername" SIZE="32" MAXLENGTH="64" VALUE="" >
 		  
 		  <input type="HIDDEN" name="TTNETGuiSupport" value=0>
 		  </TD></TR></TBODY></TABLE>
@@ -2828,7 +2859,7 @@ NAT</td>
 <tr height="30px">
 		<td width="250px" align=left class="tabdata" style="padding-left:20px;"> PPPoE Password</td>
 		<td align=left class="tabdata" style="width:370px;">
-		<INPUT TYPE="PASSWORD" NAME="wan_PPPPassword" SIZE="32" MAXLENGTH="30" VALUE="fpt" ></td>
+		<INPUT TYPE="PASSWORD" NAME="wan_PPPPassword" SIZE="32" MAXLENGTH="30" VALUE="" ></td>
 	</tr>
 
 
@@ -3274,3 +3305,4 @@ bytes&nbsp;&nbsp;(0 means use default) </td>
 			</table>
 		
 </form></body></html>
+

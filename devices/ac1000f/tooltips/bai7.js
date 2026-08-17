@@ -1,4 +1,4 @@
-/**
+﻿/**
  * devices/ac1000f/tooltips/bai7.js — Tooltip Hướng dẫn cho Bài 7: Backup/Restore file cấu hình
  */
 

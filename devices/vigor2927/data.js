@@ -1,5 +1,6 @@
 /**
- * devices/vigor2927/data.js — Dữ liệu & Kịch bản thực hành cho Vigor2927
+ * devices/vigor2927/data.js — Cấu hình chung cho Vigor2927
+ * Các bài học chi tiết được quản lý độc lập trong thư mục devices/vigor2927/lessons/ (bai1.js)
  */
 
 window.DEVICE_VIGOR2927 = {
@@ -14,24 +15,17 @@ window.DEVICE_VIGOR2927 = {
   categories: [
     {
       title: 'HỌC TẬP',
-      lessons: [
-        {
-          id: 'vg2927-bai1',
-          title: 'Bài 1: Khám phá Vigor2927',
-          subtitle: 'Đăng nhập và xem trạng thái',
-          instructions: [
-            '<b>Yêu cầu:</b>',
-            'Đăng nhập vào thiết bị và xem trạng thái thiết bị',
-            '- Username: <span class="val">admin</span>',
-            '- Password: <span class="val">admin</span>',
-          ],
-          practiceUrl: '/sim_vigor2927/weblogin.htm',
-          grading: {
-            description: 'Kiểm tra đăng nhập',
-            rules: []
-          }
-        }
-      ]
+      lessons: window.DEVICE_VIGOR2927_LESSONS || []
     }
   ]
 };
+
+// Đồng bộ Tooltips vào store toàn cục TOOLTIPS_VIGOR2927 để tương thích với popup engine
+if (!window.TOOLTIPS_VIGOR2927) window.TOOLTIPS_VIGOR2927 = {};
+if (window.DEVICE_VIGOR2927_LESSONS) {
+  window.DEVICE_VIGOR2927_LESSONS.forEach(lesson => {
+    if (lesson.guidePopups) {
+      window.TOOLTIPS_VIGOR2927[lesson.id] = lesson.guidePopups;
+    }
+  });
+}

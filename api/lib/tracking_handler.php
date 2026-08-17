@@ -34,6 +34,9 @@ function tracking_timer_response(array $timer): array
         'lab_name' => (string)($timer['lab_name'] ?? ($timer['lab_id'] ?? '')),
         'status' => (string)($timer['status'] ?? 'completed'),
         'completed_first_try' => $timer['completed_first_try'] ?? null,
+        'is_passed' => isset($timer['is_passed']) ? (bool)$timer['is_passed'] : null,
+        'score' => isset($timer['score']) ? (float)$timer['score'] : null,
+        'grading_details' => $timer['grading_details'] ?? null,
         'saved' => (bool)($timer['saved'] ?? false),
     ];
 }
@@ -97,6 +100,25 @@ function handle_tracking(array $segments, string $method): void
             }
         }
 
+        // Chấm điểm (Grading fields)
+        $isPassed = null;
+        if (isset($input['is_passed'])) {
+            $isPassed = filter_var($input['is_passed'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        } elseif (isset($input['passed'])) {
+            $isPassed = filter_var($input['passed'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        }
+
+        $score = null;
+        if (isset($input['score'])) {
+            $scoreVal = filter_var($input['score'], FILTER_VALIDATE_FLOAT);
+            if ($scoreVal !== false) {
+                $score = max(0.0, min(100.0, (float)$scoreVal));
+            }
+        }
+
+        $gradingDetails = $input['grading_details'] ?? $input['details'] ?? null;
+        $gradingDetailsJson = is_array($gradingDetails) ? json_encode($gradingDetails, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null;
+
         $finishedAt = normalized_timestamp(
             $input['finished_at'] ?? $input['finishedAt'] ?? $input['end_time'] ?? null,
             'finished_at'
@@ -117,6 +139,9 @@ function handle_tracking(array $segments, string $method): void
             'lab_name' => $labId ?? '',
             'status' => $status,
             'completed_first_try' => $completedFirstTry,
+            'is_passed' => $isPassed,
+            'score' => $score,
+            'grading_details' => $gradingDetails,
             'saved' => false,
         ];
 
@@ -125,68 +150,69 @@ function handle_tracking(array $segments, string $method): void
             $timer['duration_sec'] = max(0, (new DateTimeImmutable($finishedAt))->getTimestamp() - (new DateTimeImmutable($startedAt))->getTimestamp());
         }
 
-        try {
-            $pdo = db();
-            $resolvedUserId = null;
-            if ($timer['technician_id'] !== '' || $timer['email'] !== '') {
-                $resolve = $pdo->prepare(
-                    <<<'SQL'
-                    WITH input AS (
-                        SELECT NULLIF(:technician_id, '')::text AS technician_id,
-                               NULLIF(:email, '')::text AS email
-                    )
-                    SELECT roster.user_id,
-                           roster.employee_id,
-                           roster.email,
-                           roster.display_name,
-                           input.technician_id IS NOT NULL
-                               AND roster.employee_id = input.technician_id AS employee_match,
-                           input.email IS NOT NULL
-                               AND LOWER(roster.email) = LOWER(input.email) AS email_match
-                      FROM users roster
-                      CROSS JOIN input
-                     WHERE roster.employee_id = input.technician_id
-                        OR LOWER(roster.email) = LOWER(input.email)
-                    SQL
-                );
-                $resolve->execute([
-                    'technician_id' => $timer['technician_id'],
-                    'email' => $timer['email'],
-                ]);
-                $resolvedRows = $resolve->fetchAll();
-                $employeeUserIds = [];
-                $emailUserIds = [];
-                $usersById = [];
-                foreach ($resolvedRows as $resolvedRow) {
-                    $candidateId = (string)$resolvedRow['user_id'];
-                    $usersById[$candidateId] = $resolvedRow;
-                    if (database_boolean($resolvedRow['employee_match'] ?? false)) {
-                        $employeeUserIds[$candidateId] = true;
-                    }
-                    if (database_boolean($resolvedRow['email_match'] ?? false)) {
-                        $emailUserIds[$candidateId] = true;
-                    }
+        $pdo = db();
+        $resolvedUserId = null;
+        if ($timer['technician_id'] !== '' || $timer['email'] !== '') {
+            $resolve = $pdo->prepare(
+                <<<'SQL'
+                WITH input AS (
+                    SELECT NULLIF(:technician_id, '')::text AS technician_id,
+                           NULLIF(:email, '')::text AS email
+                )
+                SELECT roster.user_id,
+                       roster.employee_id,
+                       roster.email,
+                       roster.display_name,
+                       input.technician_id IS NOT NULL
+                           AND roster.employee_id = input.technician_id AS employee_match,
+                       input.email IS NOT NULL
+                           AND LOWER(roster.email) = LOWER(input.email) AS email_match
+                  FROM users roster
+                  CROSS JOIN input
+                 WHERE roster.employee_id = input.technician_id
+                    OR LOWER(roster.email) = LOWER(input.email)
+                SQL
+            );
+            $resolve->execute([
+                'technician_id' => $timer['technician_id'],
+                'email' => $timer['email'],
+            ]);
+            $resolvedRows = $resolve->fetchAll();
+            $employeeUserIds = [];
+            $emailUserIds = [];
+            $usersById = [];
+            foreach ($resolvedRows as $resolvedRow) {
+                $candidateId = (string)$resolvedRow['user_id'];
+                $usersById[$candidateId] = $resolvedRow;
+                if (database_boolean($resolvedRow['employee_match'] ?? false)) {
+                    $employeeUserIds[$candidateId] = true;
                 }
-                if (count($employeeUserIds) > 1 || count($emailUserIds) > 1) {
-                    fail(409, 'tracking/identity-ambiguous', 'The supplied tracking identity matches multiple users.');
-                }
-                $employeeUserId = array_key_first($employeeUserIds);
-                $emailUserId = array_key_first($emailUserIds);
-                if ($employeeUserId && $emailUserId && $employeeUserId !== $emailUserId) {
-                    fail(409, 'tracking/identity-conflict', 'technician_id and email belong to different users.');
-                }
-                $resolvedUserId = $employeeUserId ?: $emailUserId;
-                if ($resolvedUserId && isset($usersById[$resolvedUserId])) {
-                    $canonicalUser = $usersById[$resolvedUserId];
-                    $timer['technician_id'] = (string)($canonicalUser['employee_id'] ?: $timer['technician_id']);
-                    $timer['email'] = (string)($canonicalUser['email'] ?: $timer['email']);
-                    $timer['name'] = (string)($canonicalUser['display_name'] ?: $timer['name']);
+                if (database_boolean($resolvedRow['email_match'] ?? false)) {
+                    $emailUserIds[$candidateId] = true;
                 }
             }
+            if (count($employeeUserIds) > 1 || count($emailUserIds) > 1) {
+                fail(409, 'tracking/identity-ambiguous', 'The supplied tracking identity matches multiple users.');
+            }
+            $employeeUserId = array_key_first($employeeUserIds);
+            $emailUserId = array_key_first($emailUserIds);
+            if ($employeeUserId && $emailUserId && $employeeUserId !== $emailUserId) {
+                fail(409, 'tracking/identity-conflict', 'technician_id and email belong to different users.');
+            }
+            $resolvedUserId = $employeeUserId ?: $emailUserId;
+            if ($resolvedUserId && isset($usersById[$resolvedUserId])) {
+                $canonicalUser = $usersById[$resolvedUserId];
+                $timer['technician_id'] = (string)($canonicalUser['employee_id'] ?: $timer['technician_id']);
+                $timer['email'] = (string)($canonicalUser['email'] ?: $timer['email']);
+                $timer['name'] = (string)($canonicalUser['display_name'] ?: $timer['name']);
+            }
+        }
+
+        try {
             $insert = $pdo->prepare(
                 <<<'SQL'
-                INSERT INTO timer_sessions (user_id, technician_id, name, email, started_at, finished_at, duration_sec, mode, device, lab_id, lab_name, status, completed_first_try, last_action)
-                VALUES (:user_id, :technician_id, :name, :email, :started_at, :finished_at, :duration_sec, :mode, :device, :lab_id, :lab_name, :status, :completed_first_try, :last_action)
+                INSERT INTO timer_sessions (user_id, technician_id, name, email, started_at, finished_at, duration_sec, mode, device, lab_id, lab_name, status, completed_first_try, last_action, is_passed, score, grading_details)
+                VALUES (:user_id, :technician_id, :name, :email, :started_at, :finished_at, :duration_sec, :mode, :device, :lab_id, :lab_name, :status, :completed_first_try, :last_action, :is_passed, :score, :grading_details)
                 RETURNING id
                 SQL
             );
@@ -207,6 +233,9 @@ function handle_tracking(array $segments, string $method): void
                 'last_action' => $timer['status'] === 'completed'
                     ? 'Save & Apply cấu hình cuối'
                     : ($timer['status'] === 'failed' ? 'Nộp cấu hình nhưng chưa đạt yêu cầu' : 'Rời phiên trước khi hoàn thành'),
+                'is_passed' => $timer['is_passed'] !== null ? ($timer['is_passed'] ? 1 : 0) : null,
+                'score' => $timer['score'],
+                'grading_details' => $gradingDetailsJson,
             ]);
             $savedRow = $insert->fetch();
             $timer['session_id'] = $savedRow ? (string)$savedRow['id'] : $timer['session_id'];

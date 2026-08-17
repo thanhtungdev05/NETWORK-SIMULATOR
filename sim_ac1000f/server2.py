@@ -40,6 +40,26 @@ def get_nav_and_tab_for_page(page_name):
     return "/cgi-bin/navigation-basic.asp", "Network"
 
 
+SIM_STATE = {}
+
+def apply_sim_state_to_html(html_str, p_path):
+    if not SIM_STATE:
+        return html_str
+    
+    # Neu la trang home_wan.asp: inject wan_PPPUsername, wan_PPPPassword neu da luu
+    if "home_wan" in p_path.lower():
+        if "wan_PPPUsername" in SIM_STATE:
+            u_val = SIM_STATE["wan_PPPUsername"]
+            html_str = re.sub(r'(NAME=["\']wan_PPPUsername["\'][^>]*?VALUE=["\'])[^"\']*?(["\'])', rf'\g<1>{u_val}\2', html_str, flags=re.IGNORECASE)
+            html_str = re.sub(r'(VALUE=["\'])[^"\']*?(["\'][^>]*?NAME=["\']wan_PPPUsername["\'])', rf'\g<1>{u_val}\2', html_str, flags=re.IGNORECASE)
+        if "wan_PPPPassword" in SIM_STATE:
+            p_val = SIM_STATE["wan_PPPPassword"]
+            html_str = re.sub(r'(NAME=["\']wan_PPPPassword["\'][^>]*?VALUE=["\'])[^"\']*?(["\'])', rf'\g<1>{p_val}\2', html_str, flags=re.IGNORECASE)
+            html_str = re.sub(r'(VALUE=["\'])[^"\']*?(["\'][^>]*?NAME=["\']wan_PPPPassword["\'])', rf'\g<1>{p_val}\2', html_str, flags=re.IGNORECASE)
+            
+    return html_str
+
+
 class H(BaseHTTPRequestHandler):
     def _send(self, data, ctype, code=200):
         self.send_response(code)
@@ -66,19 +86,21 @@ class H(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
+        global SIM_STATE
         parsed = urlparse(self.path)
         p = unquote(parsed.path)
 
         if p in ("/", "/index.html", "/cgi-bin/login.html"):
             return self._redirect("/cgi-bin/login.asp")
 
+        # Reset session / Logout -> xoa state
+        if "logout" in p.lower() or p.endswith("/doLogout") or "resetsession" in p.lower():
+            SIM_STATE.clear()
+            return self._redirect("/cgi-bin/login.asp")
+
         # Dang nhap: login.asp goi submitform() -> top.location "/cgi-bin/requestFromLoginPage"
         if p in ("/cgi-bin/requestFromLoginPage", "/cgi-bin/logincheck.cgi"):
             return self._redirect("/cgi-bin/index.asp")
-
-        # Dang xuat -> ve trang login
-        if "logout" in p.lower() or p.endswith("/doLogout"):
-            return self._redirect("/cgi-bin/login.asp")
 
         # Xu ly dac biet cho /cgi-bin/index.asp (ho tro render full frameset theo page)
         if p == "/cgi-bin/index.asp":
@@ -142,17 +164,34 @@ class H(BaseHTTPRequestHandler):
         f = os.path.join(WWW, p.lstrip("/"))
         if os.path.isfile(f):
             ext = os.path.splitext(f)[1].lower()
-            with open(f, "rb") as fh:
-                content = fh.read()
-
-            return self._send(content, CT.get(ext, "application/octet-stream"))
-
-            return self._send(content, CT.get(ext, "application/octet-stream"))
+            if ext in (".asp", ".html", ".htm"):
+                with open(f, "r", encoding="utf-8", errors="replace") as fh:
+                    text_content = fh.read()
+                text_content = apply_sim_state_to_html(text_content, p)
+                return self._send(text_content.encode("utf-8"), CT.get(ext, "text/html; charset=utf-8"))
+            else:
+                with open(f, "rb") as fh:
+                    content = fh.read()
+                return self._send(content, CT.get(ext, "application/octet-stream"))
 
         return self._send(b"Not found: " + p.encode(), "text/plain", 404)
 
     def do_POST(self):
-        # cac form Apply cua thiet bi POST ve CGI; ban gia lap chi bao thanh cong
+        global SIM_STATE
+        try:
+            length = int(self.headers.get("Content-Length", 0) or 0)
+            if length > 0:
+                body_bytes = self.rfile.read(length)
+                ctype = self.headers.get("Content-Type", "")
+                if "application/x-www-form-urlencoded" in ctype:
+                    params = parse_qs(body_bytes.decode("utf-8", errors="replace"))
+                    for k, v in params.items():
+                        if v:
+                            SIM_STATE[k] = v[0]
+        except Exception as e:
+            pass
+
+        # cac form Apply cua thiet bi POST ve CGI; ban gia lap luu state va redirect ve Referer
         self._redirect(self.headers.get("Referer") or "/cgi-bin/index.asp")
 
     def log_message(self, *a):

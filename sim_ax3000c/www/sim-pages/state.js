@@ -40,7 +40,13 @@
           if (d && d.rows && window.simAdd) {
             for (var i = 0; i < d.rows; i++) window.simAdd();
           }
-          setTimeout(function () { restore(d && d.values); if (cb) cb(d); }, 30);
+          setTimeout(function () {
+            restore(d && d.values);
+            if (d && d.values && d.values.length > 0) {
+              document._ftcIsSaved = true; // Neu co du lieu tu truoc tren server -> da save
+            }
+            if (cb) cb(d);
+          }, 30);
         })
         .catch(function () { if (cb) cb(null); });
     },
@@ -52,7 +58,14 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ values: collect(), rows: rows })
       }).then(function (r) {
-        if (r.ok) alert(okMsg || 'Configuration has been applied.');
+        if (r.ok) {
+          alert(okMsg || 'Configuration has been applied.');
+          document._ftcIsSaved = true; // Danh dau da luu cau hinh thanh cong
+          // Báo cáo sự kiện Save ra ngoài Portal
+          if (window.parent && window.parent.onSimulatorSave) {
+            try { window.parent.onSimulatorSave(window); } catch (e) {}
+          }
+        }
         else alert('Luu that bai.');
       }).catch(function () { alert('Khong ket noi duoc server.'); });
     },
@@ -64,4 +77,12 @@
 
   document.addEventListener('DOMContentLoaded', function () { window.simState.load(); });
   if (document.readyState !== 'loading') window.simState.load();
+
+  // Reset flag _ftcIsSaved ve false khi co bat ky thay doi nao
+  document.addEventListener('input', function() {
+    document._ftcIsSaved = false;
+  });
+  document.addEventListener('change', function() {
+    document._ftcIsSaved = false;
+  });
 })();

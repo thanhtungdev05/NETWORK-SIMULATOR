@@ -21,13 +21,15 @@ window.TOOLTIPS_AC1000F['ac1-bai1'] = [
   {
     selector: 'input[name="wan_PPPUsername"], input[name="pppUserName"], input[name="username"], #username',
     text: 'Bước 1: nhập tên khách hàng ví dụ: Sgfdl-210208-218',
-    position: 'right'
+    position: 'right',
+    expected: 'Sgfdl-210208-218'
   },
   // Bước 2: Ô nhập PPPoE Password (Frame main)
   {
     selector: 'input[name="wan_PPPPassword"], input[name="pppPassword"], input[name="password"], #password',
     text: 'Bước 2: nhập mật mã khách hàng ví dụ: fpt12345',
-    position: 'right'
+    position: 'right',
+    expected: 'fpt12345'
   },
   // Bước 3: Nút Save (Frame main)
   {

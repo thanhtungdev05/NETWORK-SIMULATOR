@@ -1843,7 +1843,7 @@ function doIsolateIGMPChange(){
 					<table width="640" border="0" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" style="table-layout: fixed">
 						<tr height="30px">
 							<td align=left class="tabdata" style="width:250px;padding-left:20px;">IP Address</td>
-							<td align=left class="tabdata"> <INPUT TYPE="TEXT" NAME="uiViewIPAddr" SIZE="15" MAXLENGTH="15" onblur=blockIP(); VALUE="192.168.1.1" >	
+							<td align=left class="tabdata"> <INPUT TYPE="TEXT" NAME="uiViewIPAddr" SIZE="15" MAXLENGTH="15" onblur=blockIP(); VALUE="" >	
 							    <INPUT TYPE="HIDDEN" NAME="dhcpFlag" VALUE="1">
 							    <INPUT TYPE="HIDDEN" NAME="lanFlag" VALUE="0">
 							    <INPUT TYPE="HIDDEN" NAME="DNSproxy" VALUE='Yes'> 
@@ -1852,7 +1852,7 @@ function doIsolateIGMPChange(){
 
 						<tr height="30px">
 							<td align=left class="tabdata" style="width:250px;padding-left:20px;">IP Subnet Mask</td>
-							<td align=left class="tabdata"><INPUT TYPE="TEXT" NAME="uiViewNetMask" SIZE="15" MAXLENGTH="15" VALUE="255.255.255.0" ></td>
+							<td align=left class="tabdata"><INPUT TYPE="TEXT" NAME="uiViewNetMask" SIZE="15" MAXLENGTH="15" VALUE="" ></td>
 						</tr>
 
 							
@@ -2062,7 +2062,7 @@ function doIsolateIGMPChange(){
 							<tr height="30px">
 								<td width="250px" align=left class="tabdata" style="padding-left:20px;">Start IP</td>
 							     	<td align=left class="tabdata">
-							        	<INPUT TYPE="TEXT" NAME="StartIp" SIZE="15" MAXLENGTH="15" onblur=blockStartIP(); VALUE="192.168.1.2" >	        
+							        	<INPUT TYPE="TEXT" NAME="StartIp" SIZE="15" MAXLENGTH="15" onblur=blockStartIP(); VALUE="" >	        
 								</td>
 							</tr>
 							<!--cindy delete ip pool count-->
@@ -2077,7 +2077,7 @@ function doIsolateIGMPChange(){
 							<tr height="30px">
 								<td width="250px" align=left class="tabdata" style="padding-left:20px;"> End IP</td>
 							     	<td align=left class="tabdata">
-							        	<INPUT TYPE="TEXT" NAME="EndIp" SIZE="15" MAXLENGTH="15" onblur=blockEndIP(); VALUE="192.168.1.254" >	        
+							        	<INPUT TYPE="TEXT" NAME="EndIp" SIZE="15" MAXLENGTH="15" onblur=blockEndIP(); VALUE="" >	        
 							 	</td>
 							</tr>
 							<!--cindy add end ip-->
@@ -2087,7 +2087,7 @@ function doIsolateIGMPChange(){
 							<tr height="30px">
 							    	<td width="250px" align=left class="tabdata" style="padding-left:20px;"> Lease Time</td>
 							     	<td align=left class="tabdata">
-							        	<INPUT TYPE="TEXT" NAME="dhcp_LeaseTime" SIZE="6" MAXLENGTH="6" VALUE="86400" >
+							        	<INPUT TYPE="TEXT" NAME="dhcp_LeaseTime" SIZE="6" MAXLENGTH="6" VALUE="" >
 							        	seconds   (0 sets to default value of 259200)	        
 							     	</td>
 							</tr>
@@ -2468,7 +2468,7 @@ function doIsolateIGMPChange(){
 					<td width="420"></td>
 				</tr>	
 				<tr>
-					<td align=center colSpan=3 style="background-color:transparent;font-family: Arial,Helvetica,sans-serif;"><font size=2>Copyright Â© 2019 FPT. All Rights Reserved.   </font></td>
+					<td align=center colSpan=3 style="background-color:transparent;font-family: Arial,Helvetica,sans-serif;"><font size=2>Copyright © 2019 FPT. All Rights Reserved.   </font></td>
 				</tr>
 				<tr height="10">
 					<td width="20">&nbsp;</td>
@@ -2483,3 +2483,66 @@ function doIsolateIGMPChange(){
 		doDisplay();
 	</script>
 </html>
+
+<!-- B?T Ð?U SCRIPT CH?N RELOAD TRANG KHI SAVE (T? Ð?NG THÊM VÀO) -->
+<script>
+(function() {
+    // Hàm hi?n th? thông báo thành công gi? l?p
+    function showFakeSaveMsg(formEl) {
+        var target = document.getElementById('firstDiv') || document.getElementById('firstDiv0') || document.getElementById('firstDiv2') || document.getElementById('buttoncolor') || document.getElementById('button0');
+        if (!target) {
+            var btns = formEl ? formEl.querySelectorAll('.button1') : [];
+            if (btns.length > 0) {
+                target = document.createElement('span');
+                btns[0].parentNode.insertBefore(target, btns[0].nextSibling);
+            } else {
+                target = document.body;
+            }
+        }
+        if (!document.getElementById('fakeSaveMsg')) {
+            var msg = document.createElement('span');
+            msg.id = 'fakeSaveMsg';
+            msg.style.color = '#15803d';
+            msg.style.fontWeight = 'bold';
+            msg.style.fontSize = '12px';
+            msg.style.marginLeft = '10px';
+            msg.style.lineHeight = '24px';
+            target.appendChild(msg);
+        }
+        var msgEl = document.getElementById('fakeSaveMsg');
+        msgEl.innerHTML = '? Saved successfully!';
+        
+        setTimeout(function() {
+            msgEl.innerHTML = '';
+        }, 2500);
+
+        // BÁO CÁO RA PORTAL (duy?t lên qua frameset d? tìm dúng portal)
+        try {
+            var w = window;
+            for (var i = 0; i < 10; i++) {
+                if (w.onSimulatorSave) {
+                    w.onSimulatorSave(window);
+                    break;
+                }
+                if (w === w.parent) break;
+                w = w.parent;
+            }
+        } catch(e) {}
+    }
+
+    // 1. Ch?n submit HTML native (các nút <input type="submit">)
+    document.addEventListener('submit', function(e) {
+        e.preventDefault();
+        showFakeSaveMsg(e.target);
+    });
+
+    // 2. Ch?n submit b?ng JS (document.form.submit())
+    if (typeof HTMLFormElement !== 'undefined') {
+        var originalSubmit = HTMLFormElement.prototype.submit;
+        HTMLFormElement.prototype.submit = function() {
+            showFakeSaveMsg(this);
+        };
+    }
+})();
+</script>
+<!-- K?T THÚC SCRIPT CH?N RELOAD -->

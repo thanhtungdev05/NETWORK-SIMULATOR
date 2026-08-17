@@ -23,9 +23,9 @@ window.TOOLTIPS_AC1000F['ac1-bai10'] = [
     text: 'Bước 3: chọn URL Filter',
     position: 'right'
   },
-  // Bước 4: Chọn Enable ở mục URL Filter Editing Active
+  // Bước 4: Chọn Enable ở mục URL Filter Editing Individual active
   {
-    selector: 'input[name="RuleIndex_active"][value="1"], input[name="RuleIndex_active"]',
+    selector: 'input[name="SingleRule_active"][value="1"], input[name="SingleRule_active"]',
     text: 'Bước 4: chọn Enable',
     position: 'top'
   },

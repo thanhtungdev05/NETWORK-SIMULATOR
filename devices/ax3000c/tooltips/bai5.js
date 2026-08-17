@@ -21,7 +21,7 @@ window.TOOLTIPS_AX3000C['ax3c-bai5'] = [
     },
     // 3. Chọn Port Forwarding ở Submenu bên trái (chỉ hiện khi chưa ở trang Port Forwarding)
     {
-        selector: '.el-menu-item:contains("Port Forwarding"), [index*="/network/portfwd"]',
+        selector: '.el-menu-item:contains("Port Forwarding"), .el-menu-item[index*="/network/portfwd"]',
         text: 'Chọn Port Forwarding',
         position: 'right',
         hideOnPage: 'portfwd'

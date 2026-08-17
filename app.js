@@ -248,6 +248,40 @@
     fetchCurrentUser();
   }
 
+  function renderUserProfile() {
+    const section = document.getElementById('user-profile-section');
+    if (!section) return;
+
+    if (_currentUser) {
+      const initials = (_currentUser.name || 'K').substring(0, 2).toUpperCase();
+      section.innerHTML = `
+        <div class="auth-container">
+          <div class="auth-user-info">
+            <div class="auth-avatar">${initials}</div>
+            <div class="auth-details">
+              <span class="auth-name" title="${_currentUser.name}">${_currentUser.name}</span>
+              <span class="auth-role">${_currentUser.technician_id}</span>
+            </div>
+          </div>
+          <button class="btn-auth btn-logout" id="btn-iam-logout">Đăng xuất</button>
+        </div>
+      `;
+      document.getElementById('btn-iam-logout').addEventListener('click', function() {
+        fetch('/api/index.php/auth/logout', { method: 'POST', credentials: 'include' })
+          .then(() => window.location.reload());
+      });
+    } else {
+      section.innerHTML = `
+        <div class="auth-container">
+          <button class="btn-auth btn-login" id="btn-iam-login">Đăng nhập IAM</button>
+        </div>
+      `;
+      document.getElementById('btn-iam-login').addEventListener('click', function() {
+        window.location.href = '/api/index.php/auth/login?next=' + encodeURIComponent(window.location.pathname);
+      });
+    }
+  }
+
   // ── Fetch Current User (for Tracking) ───────────────────────────
   /**
    * Lấy thông tin user đang đăng nhập từ API auth/session.
@@ -266,6 +300,7 @@
             email: u.email || ''
           };
         }
+        renderUserProfile();
       })
       .catch(function () {
         // Không làm gì — portal vẫn hoạt động bình thường
@@ -588,12 +623,30 @@
       return lesson.grading.customGrading(allDocs);
     }
 
-    const rules = (lesson.grading && lesson.grading.rules && lesson.grading.rules.length > 0)
+    let rules = (lesson.grading && lesson.grading.rules && lesson.grading.rules.length > 0)
       ? lesson.grading.rules
       : [];
 
+    // Tự động đọc đáp án từ tooltips nếu chưa định nghĩa rules riêng
     if (rules.length === 0) {
-      // Nếu bài học chưa có rule chi tiết, mặc định xem như hoàn tất thao tác
+      const deviceTooltipsVar = `TOOLTIPS_${device.id.toUpperCase()}`;
+      if (window[deviceTooltipsVar] && window[deviceTooltipsVar][lesson.id]) {
+        const tooltips = window[deviceTooltipsVar][lesson.id];
+        tooltips.forEach(step => {
+          if (step.expected !== undefined) {
+            rules.push({
+              selector: step.selector,
+              expected: step.expected,
+              type: step.checkType || 'text_exact',
+              label: step.text.split(':')[0] || 'Kiểm tra'
+            });
+          }
+        });
+      }
+    }
+
+    if (rules.length === 0) {
+      // Nếu bài học chưa có rule chi tiết và tooltip không có expected, mặc định xem như hoàn tất thao tác
       return {
         passed: true,
         score: 100,

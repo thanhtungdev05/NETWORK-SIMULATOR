@@ -963,7 +963,9 @@ function handle_dashboard(array $segments, string $method): void
                 device AS device_name,
                 lab_id,
                 lab_name,
-                finished_at
+                finished_at,
+                is_passed,
+                score
              FROM timer_sessions
              ORDER BY COALESCE(started_at, finished_at) DESC'
         )
@@ -1015,7 +1017,9 @@ function handle_dashboard(array $segments, string $method): void
             'device_name' => (string)($row['device_name'] ?? ''),
             'lab_id' => (string)($row['lab_id'] ?? ''),
             'lab_name' => (string)($row['lab_name'] ?? ''),
-            'status' => 'completed',
+            'is_passed' => isset($row['is_passed']) ? (bool)$row['is_passed'] : null,
+            'score' => isset($row['score']) ? (float)$row['score'] : null,
+            'status' => (isset($row['is_passed']) && $row['is_passed'] === false) ? 'failed' : 'completed',
             'completed_first_try' => true,
         ];
 

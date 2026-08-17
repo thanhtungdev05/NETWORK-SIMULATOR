@@ -1,0 +1,92 @@
+/**
+ * devices/ax3000c/lessons/bai4.js
+ * Bài 4: Cấu hình DNS trên AX3000C
+ */
+
+window.DEVICE_AX3000C_LESSONS = window.DEVICE_AX3000C_LESSONS || [];
+
+window.DEVICE_AX3000C_LESSONS.push({
+  id: 'ax3c-bai4',
+  title: 'Bài 4-Cấu hình DNS',
+  subtitle: 'Cấu hình máy chủ DNS của FPT và Google',
+  instructions: [
+    '<b>Yêu cầu:</b>',
+    'Thực hiện cấu hình DNS trên thiết bị và cấu hình các máy chủ DNS theo yêu cầu sau:',
+    '- DNS Server 1: <span class="val">210.245.31.220</span> (DNS của FPT)',
+    '- DNS Server 2: <span class="val">8.8.8.8</span> (DNS của Google)',
+    '<i>Gợi ý IP DNS FPT: 210.245.31.220, 210.245.31.221, 210.31.1.253, 210.31.1.254</i>',
+    '<i>Gợi ý IP DNS Google: 8.8.8.8, 8.8.4.4</i>',
+  ],
+  practiceUrl: '/sim_ax3000c/#/network/dhcp',
+  clearFields: [
+    '.card .bd .row:nth-child(7) input',
+    '.card .bd .row:nth-child(8) input'
+  ],
+  grading: {
+    description: 'Kiểm tra cấu hình DNS Server trên AX3000C',
+    rules: [
+      {
+        id: 'dns_server_1',
+        name: 'DNS Server 1',
+        selector: '.card .bd .row:nth-child(7) input, .row:has(.lbl:contains("DNS Server 1")) input',
+        expected: '210.245.31.220',
+        type: 'text_exact',
+        trim: true,
+        required: true
+      },
+      {
+        id: 'dns_server_2',
+        name: 'DNS Server 2',
+        selector: '.card .bd .row:nth-child(8) input, .row:has(.lbl:contains("DNS Server 2")) input',
+        expected: '8.8.8.8',
+        type: 'text_exact',
+        trim: true,
+        required: true
+      }
+    ]
+  },
+  guidePopups: [
+    {
+      selector: '.el-submenu__title:contains("Network"), .el-submenu:contains("Network")',
+      text: 'Chọn Network',
+      position: 'right',
+      hideOnPage: 'lan'
+    },
+    {
+      selector: '.el-submenu:contains("Network") .el-submenu__title:contains("LAN"), li.el-submenu:contains("LAN") .el-submenu__title',
+      text: 'Chọn LAN',
+      position: 'right',
+      hideOnPage: 'lan'
+    },
+    {
+      selector: '.el-menu-item:contains("LAN"), li.el-menu-item:contains("LAN"), [index*="/network/lan"], [index*="/network/dhcp"]',
+      text: 'Chọn LAN',
+      position: 'right',
+      hideOnPage: 'lan'
+    },
+    {
+      selector: '.card .bd .row:nth-child(6) .ctrl, .row:has(.lbl:contains("Define custom servers")) select, .row:has(.lbl:contains("Define custom servers")) input',
+      text: 'Bước 1: chọn Enable của Define custom servers',
+      position: 'right',
+      page: 'lan'
+    },
+    {
+      selector: '.card .bd .row:nth-child(7) input, .row:has(.lbl:contains("DNS Server 1")) input',
+      text: 'Bước 2: nhập DNS Server 1 ví dụ: 210.245.31.220',
+      position: 'right',
+      page: 'lan'
+    },
+    {
+      selector: '.card .bd .row:nth-child(8) input, .row:has(.lbl:contains("DNS Server 2")) input',
+      text: 'Bước 3: nhập DNS Server 2 ví dụ: 8.8.8.8',
+      position: 'right',
+      page: 'lan'
+    },
+    {
+      selector: 'button.apply, button.btn.apply, button[onclick*="save"], input[type="submit"]',
+      text: 'Bước 4: chọn Apply',
+      position: 'right',
+      page: 'lan'
+    }
+  ]
+});

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * devices/ac1000f/tooltips/bai4.js — Tooltip Hướng dẫn cho Bài 4: Cấu hình Mở Port (Port Forwarding)
  */
 

@@ -1,6 +1,3 @@
-
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="utf-8" dir="ltr" lang="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=11;IE=10;IE=9; IE=8; IE=7; IE=EDGE">
@@ -1153,3 +1150,73 @@ function doMACcheck(object)
 </FORM>
 </BODY>
 </HTML>
+
+<!-- BẮT ĐẦU SCRIPT CHẶN RELOAD TRANG KHI SAVE (TỰ ĐỘNG THÊM VÀO) -->
+<script>
+(function() {
+    // Hàm hiển thị thông báo thành công giả lập
+    function showFakeSaveMsg(formEl) {
+        var target = document.getElementById('firstDiv') || document.getElementById('firstDiv0') || document.getElementById('firstDiv2') || document.getElementById('buttoncolor') || document.getElementById('button0');
+        if (!target) {
+            var btns = formEl ? formEl.querySelectorAll('.button1') : [];
+            if (btns.length > 0) {
+                target = document.createElement('span');
+                btns[0].parentNode.insertBefore(target, btns[0].nextSibling);
+            } else {
+                target = document.body;
+            }
+        }
+        if (!document.getElementById('fakeSaveMsg')) {
+            var msg = document.createElement('span');
+            msg.id = 'fakeSaveMsg';
+            msg.style.color = '#15803d';
+            msg.style.fontWeight = 'bold';
+            msg.style.fontSize = '12px';
+            msg.style.marginLeft = '10px';
+            msg.style.lineHeight = '24px';
+            target.appendChild(msg);
+        }
+        var msgEl = document.getElementById('fakeSaveMsg');
+        msgEl.innerHTML = '✔ Saved successfully!';
+        
+        // Hiện spinner một chút cho giống thật
+        if (typeof showSpin === 'function') {
+            try { showSpin(); } catch(e){}
+        } else if (typeof showSpin2 === 'function') {
+            try { showSpin2(); } catch(e){}
+        }
+        
+        setTimeout(function() {
+            msgEl.innerHTML = '';
+        }, 2500);
+
+        // BÁO CÁO RA PORTAL (duyệt lên qua frameset để tìm đúng portal)
+        try {
+            var w = window;
+            for (var i = 0; i < 10; i++) {
+                if (w.onSimulatorSave) {
+                    w.onSimulatorSave(window);
+                    break;
+                }
+                if (w === w.parent) break;
+                w = w.parent;
+            }
+        } catch(e) {}
+    }
+
+    // 1. Chặn submit HTML native (các nút <input type="submit">)
+    document.addEventListener('submit', function(e) {
+        e.preventDefault();
+        showFakeSaveMsg(e.target);
+    });
+
+    // 2. Chặn submit bằng JS (document.form.submit())
+    if (typeof HTMLFormElement !== 'undefined') {
+        var originalSubmit = HTMLFormElement.prototype.submit;
+        HTMLFormElement.prototype.submit = function() {
+            showFakeSaveMsg(this);
+        };
+    }
+})();
+</script>
+<!-- KẾT THÚC SCRIPT CHẶN RELOAD -->

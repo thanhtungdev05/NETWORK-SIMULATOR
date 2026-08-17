@@ -1,4 +1,4 @@
-/**
+﻿/**
  * devices/ac1000f/tooltips/bai9.js — Tooltip Hướng dẫn cho Bài 9: Reboot Timer
  */
 

@@ -1,6 +1,3 @@
-			
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="utf-8" dir="ltr" lang="utf-8">
 <head>
@@ -272,9 +269,25 @@ function Add_virtualsvr()
 	
 	if (chkRule())
 		return;
-	showSpin1();//cindy add 
-	document.NAT_form.virsevFlag.value = 2;
-	document.NAT_form.submit();
+	// FIX CHO GIẢ LẬP: Chặn submit form và update giao diện table
+	var v_sport = document.NAT_form.start_port1.value;
+	var v_eport = document.NAT_form.end_port1.value;
+	var v_ip = document.NAT_form.Addr1.value;
+	var v_lsport = document.NAT_form.local_sport.value;
+	var v_leport = document.NAT_form.local_eport.value;
+	
+	if(document.NAT_form.Virsvr_IP_select.selectedIndex > 0) {
+		v_ip = document.NAT_form.Virsvr_IP_select.options[document.NAT_form.Virsvr_IP_select.selectedIndex].text;
+	}
+
+	tableData1[i][1] = v_sport;
+	tableData1[i][2] = v_eport;
+	tableData1[i][3] = v_ip;
+	tableData1[i][4] = v_lsport;
+	tableData1[i][5] = v_leport;
+
+	showTableVirtualServer('firstDiv1', tableHeader1, tableData1, 2);
+	alert("Lưu cấu hình giả lập thành công! Vui lòng nhấn nút 'Save & Apply' bên dưới trang để Nộp bài.");
 }
 //virtual server add end
 
@@ -1242,4 +1255,74 @@ showTableTrig('porttriggeringCfg',tableHeader2,tableData2,2);
 		
 </form>
 </body>
-</html>        
+</html>
+
+<!-- BẮT ĐẦU SCRIPT CHẶN RELOAD TRANG KHI SAVE (TỰ ĐỘNG THÊM VÀO) -->
+<script>
+(function() {
+    // Hàm hiển thị thông báo thành công giả lập
+    function showFakeSaveMsg(formEl) {
+        var target = document.getElementById('firstDiv') || document.getElementById('firstDiv0') || document.getElementById('firstDiv2') || document.getElementById('buttoncolor') || document.getElementById('button0');
+        if (!target) {
+            var btns = formEl ? formEl.querySelectorAll('.button1') : [];
+            if (btns.length > 0) {
+                target = document.createElement('span');
+                btns[0].parentNode.insertBefore(target, btns[0].nextSibling);
+            } else {
+                target = document.body;
+            }
+        }
+        if (!document.getElementById('fakeSaveMsg')) {
+            var msg = document.createElement('span');
+            msg.id = 'fakeSaveMsg';
+            msg.style.color = '#15803d';
+            msg.style.fontWeight = 'bold';
+            msg.style.fontSize = '12px';
+            msg.style.marginLeft = '10px';
+            msg.style.lineHeight = '24px';
+            target.appendChild(msg);
+        }
+        var msgEl = document.getElementById('fakeSaveMsg');
+        msgEl.innerHTML = '✔ Saved successfully!';
+        
+        // Hiện spinner một chút cho giống thật
+        if (typeof showSpin === 'function') {
+            try { showSpin(); } catch(e){}
+        } else if (typeof showSpin2 === 'function') {
+            try { showSpin2(); } catch(e){}
+        }
+        
+        setTimeout(function() {
+            msgEl.innerHTML = '';
+        }, 2500);
+
+        // BÁO CÁO RA PORTAL (duyệt lên qua frameset để tìm đúng portal)
+        try {
+            var w = window;
+            for (var i = 0; i < 10; i++) {
+                if (w.onSimulatorSave) {
+                    w.onSimulatorSave(window);
+                    break;
+                }
+                if (w === w.parent) break;
+                w = w.parent;
+            }
+        } catch(e) {}
+    }
+
+    // 1. Chặn submit HTML native (các nút <input type="submit">)
+    document.addEventListener('submit', function(e) {
+        e.preventDefault();
+        showFakeSaveMsg(e.target);
+    });
+
+    // 2. Chặn submit bằng JS (document.form.submit())
+    if (typeof HTMLFormElement !== 'undefined') {
+        var originalSubmit = HTMLFormElement.prototype.submit;
+        HTMLFormElement.prototype.submit = function() {
+            showFakeSaveMsg(this);
+        };
+    }
+})();
+</script>
+<!-- KẾT THÚC SCRIPT CHẶN RELOAD -->

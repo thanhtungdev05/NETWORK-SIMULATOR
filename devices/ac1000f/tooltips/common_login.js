@@ -1,5 +1,5 @@
-/**
- * devices/ac1000f/tooltips/common_login.js — Tooltip Hướng dẫn chung cho trang Đăng Nhập (login.asp)
+﻿/**
+ * devices/ac1000f/tooltips/common_login.js â€” Tooltip HÆ°á»›ng dáº«n chung cho trang ÄÄƒng Nháº­p (login.asp)
  */
 
 if (!window.TOOLTIPS_AC1000F) window.TOOLTIPS_AC1000F = {};
@@ -16,3 +16,4 @@ window.TOOLTIPS_AC1000F._common_login = [
     position: 'right'
   }
 ];
+

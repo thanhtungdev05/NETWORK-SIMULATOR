@@ -7,21 +7,21 @@ if (!window.TOOLTIPS_AX3000C) window.TOOLTIPS_AX3000C = {};
 window.TOOLTIPS_AX3000C['ax3c-bai1'] = [
   // 1. Chọn Network ở Menu bên trái (chỉ hiện khi chưa ở trang WAN)
   {
-    selector: '.el-submenu__title:contains("Network"), .el-submenu:contains("Network")',
+    selector: 'li.el-submenu:not(.is-opened):contains("Network") .el-submenu__title',
     text: 'Chọn Network',
     position: 'right',
     hideOnPage: 'wan'
   },
   // 2. Chọn WAN ở Menu bên trái cấp 1 (chỉ hiện khi chưa ở trang WAN)
   {
-    selector: '.el-submenu:contains("Network") .el-submenu__title:contains("WAN"), li.el-submenu:contains("WAN") .el-submenu__title',
+    selector: 'li.el-submenu.is-opened:contains("Network") li.el-submenu:not(.is-opened):contains("WAN") .el-submenu__title',
     text: 'Chọn WAN',
     position: 'right',
     hideOnPage: 'wan'
   },
   // 3. Chọn WAN ở Submenu bên trái cấp 2 (chỉ hiện khi chưa ở trang WAN)
   {
-    selector: '.el-menu-item:contains("WAN"), li.el-menu-item:contains("WAN"), [index*="/network/wan"]',
+    selector: 'li.el-submenu.is-opened:contains("Network") li.el-submenu.is-opened:contains("WAN") li.el-menu-item:contains("WAN")',
     text: 'Chọn WAN',
     position: 'right',
     hideOnPage: 'wan'
@@ -36,7 +36,7 @@ window.TOOLTIPS_AX3000C['ax3c-bai1'] = [
   // Bước 2: Nhập tên VD: sgfdl-123456-789 (chỉ hiện khi đã vào trang WAN)
   {
     selector: '.grp[data-t="PPPoE"] input[type="text"], input[name="username"], #username',
-    text: 'Bước 2: nhập tên VD: sgfdl-123456-789',
+    text: 'Bước 2: nhập tên VD: Sgfdl-123456-789',
     position: 'right',
     page: 'wan'
   },

@@ -1,6 +1,3 @@
-
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="utf-8" dir="ltr" lang="utf-8">
 	<head>
@@ -147,6 +144,21 @@ function uiSave(){
 	}
 	showSpin();
 	document.tool_wifitimer.saveFlag.value=1;
+	
+	// LƯU CẤU HÌNH VÀO SESSION STORAGE (GIẢ LẬP)
+	var simData = {};
+	for(var j=0; j<document.tool_wifitimer.elements.length; j++) {
+		var el = document.tool_wifitimer.elements[j];
+		if(el.name) {
+			if(el.type === 'radio' || el.type === 'checkbox') {
+				if(el.checked) simData[el.name] = el.value;
+			} else {
+				simData[el.name] = el.value;
+			}
+		}
+	}
+	sessionStorage.setItem('WT_simData', JSON.stringify(simData));
+	
 	document.tool_wifitimer.submit();
 }		
 			
@@ -269,6 +281,99 @@ function uiSave(){
 				</tr>	
 			</table>
 		
+		<!-- LƯU CẤU HÌNH VÀO SESSION STORAGE (GIẢ LẬP) -->
+		<script>
+			window.addEventListener('DOMContentLoaded', function() {
+				var stored = sessionStorage.getItem('WT_simData');
+				if(stored) {
+					var data = JSON.parse(stored);
+					for(var key in data) {
+						var els = document.getElementsByName(key);
+						if(els.length > 0) {
+							if(els[0].type === 'radio' || els[0].type === 'checkbox') {
+								for(var i=0; i<els.length; i++) {
+									if(els[i].value === data[key]) els[i].checked = true;
+								}
+							} else {
+								els[0].value = data[key];
+							}
+						}
+					}
+					// Chỉ phục hồi 1 lần duy nhất sau khi bấm Save, sau đó xoá để phiên sau rỗng
+					sessionStorage.removeItem('WT_simData');
+				}
+			});
+		</script>
 		</form>
 	</body>
 </html>
+
+<!-- BẮT ĐẦU SCRIPT CHẶN RELOAD TRANG KHI SAVE (TỰ ĐỘNG THÊM VÀO) -->
+<script>
+(function() {
+    // Hàm hiển thị thông báo thành công giả lập
+    function showFakeSaveMsg(formEl) {
+        var target = document.getElementById('firstDiv') || document.getElementById('firstDiv0') || document.getElementById('firstDiv2') || document.getElementById('buttoncolor') || document.getElementById('button0');
+        if (!target) {
+            var btns = formEl ? formEl.querySelectorAll('.button1') : [];
+            if (btns.length > 0) {
+                target = document.createElement('span');
+                btns[0].parentNode.insertBefore(target, btns[0].nextSibling);
+            } else {
+                target = document.body;
+            }
+        }
+        if (!document.getElementById('fakeSaveMsg')) {
+            var msg = document.createElement('span');
+            msg.id = 'fakeSaveMsg';
+            msg.style.color = '#15803d';
+            msg.style.fontWeight = 'bold';
+            msg.style.fontSize = '12px';
+            msg.style.marginLeft = '10px';
+            msg.style.lineHeight = '24px';
+            target.appendChild(msg);
+        }
+        var msgEl = document.getElementById('fakeSaveMsg');
+        msgEl.innerHTML = '✔ Saved successfully!';
+        
+        // Hiện spinner một chút cho giống thật
+        if (typeof showSpin === 'function') {
+            try { showSpin(); } catch(e){}
+        } else if (typeof showSpin2 === 'function') {
+            try { showSpin2(); } catch(e){}
+        }
+        
+        setTimeout(function() {
+            msgEl.innerHTML = '';
+        }, 2500);
+
+        // BÁO CÁO RA PORTAL (duyệt lên qua frameset để tìm đúng portal)
+        try {
+            var w = window;
+            for (var i = 0; i < 10; i++) {
+                if (w.onSimulatorSave) {
+                    w.onSimulatorSave(window);
+                    break;
+                }
+                if (w === w.parent) break;
+                w = w.parent;
+            }
+        } catch(e) {}
+    }
+
+    // 1. Chặn submit HTML native (các nút <input type="submit">)
+    document.addEventListener('submit', function(e) {
+        e.preventDefault();
+        showFakeSaveMsg(e.target);
+    });
+
+    // 2. Chặn submit bằng JS (document.form.submit())
+    if (typeof HTMLFormElement !== 'undefined') {
+        var originalSubmit = HTMLFormElement.prototype.submit;
+        HTMLFormElement.prototype.submit = function() {
+            showFakeSaveMsg(this);
+        };
+    }
+})();
+</script>
+<!-- KẾT THÚC SCRIPT CHẶN RELOAD -->

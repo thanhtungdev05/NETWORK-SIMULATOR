@@ -32,6 +32,9 @@ function tracking_timer_response(array $timer): array
         'device_model' => (string)($timer['device_model'] ?? ($timer['device'] ?? '')),
         'lab_id' => (string)($timer['lab_id'] ?? ''),
         'lab_name' => (string)($timer['lab_name'] ?? ($timer['lab_id'] ?? '')),
+        'is_passed' => isset($timer['is_passed']) ? (bool)$timer['is_passed'] : null,
+        'score' => isset($timer['score']) ? (float)$timer['score'] : null,
+        'grading_details' => $timer['grading_details'] ?? null,
         'saved' => (bool)($timer['saved'] ?? false),
     ];
 }
@@ -74,6 +77,25 @@ function handle_tracking(array $segments, string $method): void
             }
         }
 
+        // Chấm điểm (Grading fields)
+        $isPassed = null;
+        if (isset($input['is_passed'])) {
+            $isPassed = filter_var($input['is_passed'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        } elseif (isset($input['passed'])) {
+            $isPassed = filter_var($input['passed'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        }
+
+        $score = null;
+        if (isset($input['score'])) {
+            $scoreVal = filter_var($input['score'], FILTER_VALIDATE_FLOAT);
+            if ($scoreVal !== false) {
+                $score = max(0.0, min(100.0, (float)$scoreVal));
+            }
+        }
+
+        $gradingDetails = $input['grading_details'] ?? $input['details'] ?? null;
+        $gradingDetailsJson = is_array($gradingDetails) ? json_encode($gradingDetails, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null;
+
         $finishedAt = normalized_timestamp(
             $input['finished_at'] ?? $input['finishedAt'] ?? $input['end_time'] ?? null,
             'finished_at'
@@ -92,6 +114,9 @@ function handle_tracking(array $segments, string $method): void
             'device_model' => $device ?? '',
             'lab_id' => $labId ?? '',
             'lab_name' => $labId ?? '',
+            'is_passed' => $isPassed,
+            'score' => $score,
+            'grading_details' => $gradingDetails,
             'saved' => false,
         ];
 
@@ -101,10 +126,10 @@ function handle_tracking(array $segments, string $method): void
         }
 
         try {
-            $pdo = db();
+            $pdo = create_database_connection();
             $insert = $pdo->prepare(
-                'INSERT INTO timer_sessions (technician_id, name, email, started_at, finished_at, duration_sec, mode, device, lab_id, lab_name)
-                 VALUES (:technician_id, :name, :email, :started_at, :finished_at, :duration_sec, :mode, :device, :lab_id, :lab_name)
+                'INSERT INTO timer_sessions (technician_id, name, email, started_at, finished_at, duration_sec, mode, device, lab_id, lab_name, is_passed, score, grading_details)
+                 VALUES (:technician_id, :name, :email, :started_at, :finished_at, :duration_sec, :mode, :device, :lab_id, :lab_name, :is_passed, :score, :grading_details)
                  RETURNING id'
             );
             $insert->execute([
@@ -118,12 +143,43 @@ function handle_tracking(array $segments, string $method): void
                 'device' => $timer['device'],
                 'lab_id' => $timer['lab_id'],
                 'lab_name' => $timer['lab_name'],
+                'is_passed' => $timer['is_passed'] !== null ? ($timer['is_passed'] ? 1 : 0) : null,
+                'score' => $timer['score'],
+                'grading_details' => $gradingDetailsJson,
             ]);
             $savedRow = $insert->fetch();
             $timer['session_id'] = $savedRow ? (string)$savedRow['id'] : $timer['session_id'];
             $timer['saved'] = true;
         } catch (Throwable) {
-            $timer['saved'] = false;
+            // Fallback neu bang chua co cot moi hoac DB offline trong dev
+            try {
+                if (isset($pdo) && $pdo instanceof PDO) {
+                    $insertFallback = $pdo->prepare(
+                        'INSERT INTO timer_sessions (technician_id, name, email, started_at, finished_at, duration_sec, mode, device, lab_id, lab_name)
+                         VALUES (:technician_id, :name, :email, :started_at, :finished_at, :duration_sec, :mode, :device, :lab_id, :lab_name)
+                         RETURNING id'
+                    );
+                    $insertFallback->execute([
+                        'technician_id' => $timer['technician_id'],
+                        'name' => $timer['name'],
+                        'email' => $timer['email'],
+                        'started_at' => $startedAt,
+                        'finished_at' => $finishedAt,
+                        'duration_sec' => $timer['duration_sec'],
+                        'mode' => $mode,
+                        'device' => $timer['device'],
+                        'lab_id' => $timer['lab_id'],
+                        'lab_name' => $timer['lab_name'],
+                    ]);
+                    $savedRow = $insertFallback->fetch();
+                    $timer['session_id'] = $savedRow ? (string)$savedRow['id'] : $timer['session_id'];
+                    $timer['saved'] = true;
+                } else {
+                    $timer['saved'] = false;
+                }
+            } catch (Throwable) {
+                $timer['saved'] = false;
+            }
         }
 
         respond(['item' => tracking_timer_response($timer)]);

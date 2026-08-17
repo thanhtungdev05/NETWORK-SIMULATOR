@@ -312,6 +312,12 @@ class Handler(SimpleHTTPRequestHandler):
         path_clean = self.path.split("?")[0].rstrip("/")
         if path_clean == "/sim-reset-session":
             reset_sid()
+            # Xoa sim_state.json de reset cau hinh sach
+            if os.path.exists(STATE_FILE):
+                try:
+                    os.remove(STATE_FILE)
+                except Exception:
+                    pass
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.send_header("Access-Control-Allow-Origin", "*")

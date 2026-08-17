@@ -21,7 +21,7 @@ window.TOOLTIPS_AX3000C['ax3c-bai4'] = [
   },
   // 3. Chọn LAN cấp 2 ở Submenu bên trái (chỉ hiện khi chưa ở trang LAN)
   {
-    selector: '.el-menu-item:contains("LAN"), li.el-menu-item:contains("LAN"), [index*="/network/lan"], [index*="/network/dhcp"]',
+    selector: '.el-menu-item:contains("LAN"), li.el-menu-item:contains("LAN"), .el-menu-item[index*="/network/lan"], .el-menu-item[index*="/network/dhcp"]',
     text: 'Chọn LAN',
     position: 'right',
     hideOnPage: 'lan'

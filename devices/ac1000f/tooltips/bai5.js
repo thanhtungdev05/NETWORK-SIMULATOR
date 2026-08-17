@@ -1,4 +1,4 @@
-/**
+﻿/**
  * devices/ac1000f/tooltips/bai5.js — Tooltip Hướng dẫn cho Bài 5: Cấu hình tên miền động DDNS
  */
 

@@ -8,6 +8,7 @@
   // ── State ────────────────────────────────────────────────────────
   let currentDeviceId = null;
   let currentLessonId = null;
+  let _currentLesson = null;  // lesson object hiện tại (dùng cho clearFields)
   let currentMode = 'guide'; // 'guide' (có popups) hoặc 'practice' (không có popups)
   let guideSyncInterval = null;
 
@@ -15,6 +16,12 @@
   // Lưu thông tin phiên thực hành hiện tại để gửi Tracking API khi kết thúc
   let _trackingSession = null; // { device, lesson, mode, startedAt }
   let _currentUser = null;    // { technician_id, name, email } — lấy từ API auth/session
+
+  // ── Practice Timer State ────────────────────────────────────────
+  let _practiceTimerInterval = null; // setInterval ID cho đồng hồ realtime
+  let _practiceStartTime = null;     // Date object lúc bắt đầu thực hành
+  let _lastSubmitDurationSec = 0;    // Thời gian khi nộp bài (dùng cho tracking)
+  let _lastEvalResult = null;        // Kết quả chấm điểm gần nhất (dùng cho nút modal)
 
   // ── DOM Refs ─────────────────────────────────────────────────────
   const sidebar = document.getElementById('sidebar');
@@ -42,9 +49,30 @@
   const iframeLoading = document.getElementById('iframe-loading');
   const btnBackLesson = document.getElementById('btn-back-lesson');
   const btnOpenNewTab = document.getElementById('btn-open-new-tab');
+  const btnSubmitLab = document.getElementById('btn-submit-lab');
+  const practiceTimer = document.getElementById('practice-timer');
   const serverWarning = document.getElementById('server-warning');
   const practiceModeLabel = document.getElementById('practice-mode-label');
   const practiceLessonTitle = document.getElementById('practice-lesson-title');
+
+  // Grading Modal elements
+  const gradingModal = document.getElementById('grading-modal');
+  const gradingBackdrop = document.getElementById('grading-backdrop');
+  const btnModalRetry = document.getElementById('btn-modal-retry');
+  const btnModalClose = document.getElementById('btn-modal-close');
+  const gmIcon = document.getElementById('gm-icon');
+  const gmTitle = document.getElementById('gm-title');
+  const gmSubtitle = document.getElementById('gm-subtitle');
+  const gmScoreBadge = document.getElementById('gm-score-badge');
+  const gmScoreNum = document.getElementById('gm-score-num');
+  const gmMetaDevice = document.getElementById('gm-meta-device');
+  const gmMetaLesson = document.getElementById('gm-meta-lesson');
+  const gmMetaMode = document.getElementById('gm-meta-mode');
+  const gmMetaTime = document.getElementById('gm-meta-time');
+  const gmStatusBox = document.getElementById('gm-status-box');
+  const gmStatusTitle = document.getElementById('gm-status-title');
+  const gmStatusDesc = document.getElementById('gm-status-desc');
+  const gmChecklistBody = document.getElementById('gm-checklist-body');
 
   // Track current iframe URL
   let currentIframeUrl = '';
@@ -79,6 +107,42 @@
     if (btnOpenNewTab) btnOpenNewTab.addEventListener('click', () => {
       if (currentIframeUrl) window.open(currentIframeUrl, '_blank', 'noopener');
     });
+    if (btnSubmitLab) btnSubmitLab.addEventListener('click', submitLab);
+
+    // ── Grading Modal Events ──────────────────────────────────────────
+
+    // 1. Click backdrop (viền đen ngoài bảng điểm)
+    if (gradingBackdrop) gradingBackdrop.addEventListener('click', () => {
+      // KHÓA màn hình nếu CHƯA ĐẠT ở chế độ Thực hành
+      if (_lastEvalResult && !_lastEvalResult.passed && currentMode === 'practice') return;
+      
+      // Nếu ĐẠT: Đóng và quay về danh sách bài học
+      if (_lastEvalResult && _lastEvalResult.passed) {
+        hideGradingModal();
+        backToLesson();
+      } else {
+        // Nếu CHƯA ĐẠT (chỉ có thể xảy ra ở chế độ Hướng dẫn): Ẩn bảng để KTV tự sửa lỗi
+        hideGradingModal();
+      }
+    });
+
+    // 2. Nút "Quay lại làm từ đầu" / "Đóng & Sửa lỗi" (Hiển thị khi CHƯA ĐẠT)
+    if (btnModalRetry) btnModalRetry.addEventListener('click', () => {
+      if (currentMode === 'guide') {
+        // Chế độ Hướng dẫn: Đóng bảng để KTV thao tác tiếp, giữ nguyên giao diện thiết bị
+        hideGradingModal();
+      } else {
+        // Chế độ Thực hành: Reset toàn bộ, đuổi ra ngoài danh sách bài học
+        hideGradingModal();
+        backToLesson();
+      }
+    });
+
+    // 3. Nút "Hoàn tất & Quay lại" (Hiển thị khi ĐẠT)
+    if (btnModalClose) btnModalClose.addEventListener('click', () => {
+      hideGradingModal();
+      backToLesson();
+    });
 
     // Handle messages from simulator frames
     window.addEventListener('message', function (event) {
@@ -91,7 +155,7 @@
       }
     });
 
-    // When iframe loads, trigger popups if in guide mode
+    // When iframe loads, trigger popups if in guide mode + clear fields
     deviceIframe.addEventListener('load', () => {
       iframeLoading.classList.add('hidden');
       if (currentMode === 'guide') {
@@ -102,14 +166,72 @@
       } else {
         clearGuidePopups();
       }
+      // Xóa trắng các field được khai báo trong clearFields của bài học
+      setTimeout(clearLessonFields, 300);
+      setTimeout(clearLessonFields, 900);
+      
+      // Gọi hook phục hồi dữ liệu nếu bài học có định nghĩa
+      if (_currentLesson && typeof _currentLesson.onSimLoad === 'function') {
+        setTimeout(() => { _currentLesson.onSimLoad(deviceIframe.contentWindow); }, 400);
+        setTimeout(() => { _currentLesson.onSimLoad(deviceIframe.contentWindow); }, 1000);
+      }
     });
 
     // Periodic sync interval while practice screen is active
     if (!guideSyncInterval) {
       guideSyncInterval = setInterval(() => {
         if (practiceScreen.classList.contains('visible')) {
+          // Xóa trắng trường của bài học cho cả Hướng dẫn và Thực hành khi load trang mới
+          clearLessonFields();
+
           if (currentMode === 'guide') {
             applyGuidePopups();
+            
+            // Theo dõi sự kiện click vào nút Save/Apply trong iframe
+            try {
+              const allDocs = getAllAccessibleDocuments(deviceIframe.contentWindow);
+              allDocs.forEach(doc => {
+                if (!doc._ftcSaveListenerAttached) {
+                  doc.addEventListener('click', function(e) {
+                    let el = e.target;
+                    while(el && el !== doc) {
+                      if ((el.tagName === 'INPUT' || el.tagName === 'BUTTON') && 
+                          (el.type === 'submit' || (el.value || el.textContent || '').toLowerCase().includes('save') || (el.value || el.textContent || '').toLowerCase().includes('apply'))) {
+                        window._hasClickedSaveInGuide = true;
+                      }
+                      el = el.parentNode;
+                    }
+                  }, true);
+                  doc._ftcSaveListenerAttached = true;
+                }
+              });
+            } catch(e) {}
+
+            // Tự động kiểm tra hoàn thành để mở nút Nộp bài trong chế độ Hướng dẫn
+            if (btnSubmitLab && btnSubmitLab.disabled) {
+              const device = DEVICES.find(d => d.id === currentDeviceId);
+              const lesson = getCurrentLesson();
+              if (device && lesson) {
+                const evalResult = evaluateLesson(device, lesson);
+                
+                // Kiểm tra xem bài học có yêu cầu bấm Save/Apply không thông qua tooltip
+                let requiresSave = false;
+                const popups = getLessonPopupsForDoc(device.id, lesson, null) || [];
+                const popupsStr = JSON.stringify(popups).toLowerCase();
+                if (popupsStr.includes('save') || popupsStr.includes('apply')) {
+                  requiresSave = true;
+                }
+
+                if (evalResult && evalResult.passed) {
+                  // Chỉ bật nút nếu (Không cần Save) HOẶC (Đã bấm Save)
+                  if (!requiresSave || window._hasClickedSaveInGuide) {
+                    btnSubmitLab.disabled = false;
+                    btnSubmitLab.style.opacity = '1';
+                    btnSubmitLab.style.cursor = 'pointer';
+                  }
+                }
+              }
+            }
           } else {
             clearGuidePopups();
           }
@@ -298,8 +420,15 @@
     currentIframeUrl = url;
     currentMode = enableGuide ? 'guide' : 'practice';
 
+    // Thiết lập cookie current_sim cho Master Dispatcher
+    const simId = device.folder || ('sim_' + device.id);
+    document.cookie = 'current_sim=' + simId + ';path=/;SameSite=Lax';
+
     // Update practice topbar info
-    if (practiceModeLabel) practiceModeLabel.textContent = modeLabel + ':';
+    if (practiceModeLabel) {
+      practiceModeLabel.textContent = modeLabel + ':';
+      practiceModeLabel.className = 'practice-badge ' + (enableGuide ? 'guide' : 'practice');
+    }
     if (practiceLessonTitle) practiceLessonTitle.textContent = lesson.title;
 
     // Always hide server warning banner
@@ -318,6 +447,26 @@
       localStorage.removeItem('ftc_guide_popups');
     }
 
+    // Reset session storage của thiết bị
+    try {
+      sessionStorage.removeItem('ftc_ac1000f_wan_PPPUsername');
+      sessionStorage.removeItem('ftc_ac1000f_wan_PPPPassword');
+    } catch(e) {}
+
+    // Reset wifi storage cho bài 2
+    if (lesson && lesson.id === 'ac1-bai2') {
+      try {
+        localStorage.removeItem('ftc_sim_wifi24');
+        localStorage.removeItem('ftc_sim_wifi5g');
+      } catch(e) {}
+    }
+
+    // Lưu lesson hiện tại để dùng cho clearFields
+    _currentLesson = lesson;
+
+    // Reset cờ theo dõi click Save cho phiên hướng dẫn mới
+    window._hasClickedSaveInGuide = false;
+
     // ── Ghi nhận thời điểm BẮT ĐẦU phiên thực hành (Tracking) ──
     _trackingSession = {
       device: device,
@@ -326,9 +475,25 @@
       startedAt: new Date().toISOString()
     };
 
+    // ── Khởi động đồng hồ realtime trên toolbar ──
+    startPracticeTimer();
+
     // Reset iframe loading state
     iframeLoading.classList.remove('hidden');
     deviceIframe.src = 'about:blank';
+
+    // Thiết lập trạng thái ban đầu cho nút Nộp bài
+    if (btnSubmitLab) {
+      if (currentMode === 'guide') {
+        btnSubmitLab.disabled = true;
+        btnSubmitLab.style.opacity = '0.5';
+        btnSubmitLab.style.cursor = 'not-allowed';
+      } else {
+        btnSubmitLab.disabled = false;
+        btnSubmitLab.style.opacity = '1';
+        btnSubmitLab.style.cursor = 'pointer';
+      }
+    }
 
     // Switch to practice screen
     showPractice();
@@ -373,8 +538,11 @@
   }
 
   function backToLesson() {
-    // ── Gửi Tracking API khi KTV HOÀN THÀNH / THOÁT khỏi bài lab ──
-    sendTrackingTimer();
+    // Reset đồng hồ và session tracking
+    resetPracticeTimer();
+    _trackingSession = null;
+    _lastEvalResult = null;
+    _lastSubmitDurationSec = 0;
 
     deviceIframe.src = '';
     currentIframeUrl = '';
@@ -382,21 +550,316 @@
     showLesson();
   }
 
+  // ── Clear Fields On Load ──────────────────────────────────────────
+  /**
+   * Xóa trắng các input field được khai báo trong lesson.clearFields[].
+   * Chạy sau mỗi lần iframe load hoặc định kỳ để học viên phải tự nhập giá trị.
+   */
+  function clearLessonFields() {
+    if (!_currentLesson || !Array.isArray(_currentLesson.clearFields) || _currentLesson.clearFields.length === 0) return;
+    try {
+      const allDocs = getAllAccessibleDocuments(deviceIframe.contentWindow);
+      allDocs.forEach(doc => {
+        if (doc._ftcFieldsCleared) return;
+        let clearedAny = false;
+        _currentLesson.clearFields.forEach(selector => {
+          try {
+            doc.querySelectorAll(selector).forEach(el => {
+              if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                el.value = '';
+                clearedAny = true;
+              }
+            });
+          } catch(e) {}
+        });
+        if (clearedAny) {
+          doc._ftcFieldsCleared = true;
+        }
+      });
+    } catch(e) {}
+  }
+
+  // ── Grading & Evaluation Engine ──────────────────────────────────
+  function evaluateLesson(device, lesson) {
+    if (!lesson) return null;
+
+    if (lesson.grading && typeof lesson.grading.customGrading === 'function') {
+      const allDocs = getAllAccessibleDocuments(deviceIframe.contentWindow);
+      return lesson.grading.customGrading(allDocs);
+    }
+
+    const rules = (lesson.grading && lesson.grading.rules && lesson.grading.rules.length > 0)
+      ? lesson.grading.rules
+      : [];
+
+    if (rules.length === 0) {
+      // Nếu bài học chưa có rule chi tiết, mặc định xem như hoàn tất thao tác
+      return {
+        passed: true,
+        score: 100,
+        passedCount: 1,
+        totalRules: 1,
+        details: [
+          {
+            id: 'default',
+            name: 'Thao tác cấu hình',
+            expected: 'Hoàn tất theo yêu cầu đề bài',
+            actual: 'Đã hoàn thành',
+            passed: true,
+            message: 'Đã hoàn thành các bước yêu cầu'
+          }
+        ]
+      };
+    }
+
+    const allDocs = getAllAccessibleDocuments(deviceIframe.contentWindow);
+    let passedCount = 0;
+    const details = [];
+
+    rules.forEach(rule => {
+      let actualValue = '';
+      let elementFound = false;
+      let isSaved = false;
+
+      // Tìm element trong tất cả accessible frames
+      for (const doc of allDocs) {
+        try {
+          const el = doc.querySelector(rule.selector);
+          if (el) {
+            elementFound = true;
+            isSaved = !!doc._ftcIsSaved;
+            if (el.type === 'checkbox' || el.type === 'radio') {
+              actualValue = el.checked ? (el.value || 'true') : 'false';
+            } else {
+              actualValue = (el.value !== undefined ? el.value : el.textContent || '').trim();
+            }
+            break;
+          }
+        } catch (e) {}
+      }
+
+      const expectedVal = (rule.trim !== false) ? String(rule.expected).trim() : String(rule.expected);
+      const compActual = (rule.trim !== false) ? String(actualValue).trim() : String(actualValue);
+      let isMatch = false;
+
+      if (rule.type === 'text_exact') {
+        isMatch = compActual === expectedVal;
+      } else if (rule.type === 'case_insensitive') {
+        isMatch = compActual.toLowerCase() === expectedVal.toLowerCase();
+      } else if (rule.type === 'contains') {
+        isMatch = compActual.includes(expectedVal);
+      } else {
+        isMatch = compActual === expectedVal;
+      }
+
+      if (isMatch) {
+        // Đối với thiết bị AX3000C, bắt buộc trang chứa phần tử phải được bấm Save/Apply thành công
+        if (currentDeviceId === 'ax3000c' && !isSaved) {
+          isMatch = false;
+        }
+      }
+
+      if (isMatch) {
+        passedCount++;
+      }
+
+      let msg = '';
+      if (isMatch) {
+        msg = 'Chính xác';
+      } else {
+        if (currentDeviceId === 'ax3000c' && elementFound && !isSaved) {
+          msg = 'Chưa bấm Apply để lưu cấu hình';
+        } else {
+          msg = `Mong muốn: "${expectedVal}", Thực tế: "${actualValue || 'Trống'}"`;
+        }
+      }
+
+      details.push({
+        id: rule.id,
+        name: rule.name,
+        expected: expectedVal,
+        actual: (currentDeviceId === 'ax3000c' && elementFound && !isSaved) ? `${actualValue} (Chưa lưu)` : (actualValue || '(Chưa nhập / Chưa tìm thấy)'),
+        passed: isMatch,
+        message: msg
+      });
+    });
+
+    const score = Math.round((passedCount / rules.length) * 100);
+    const passed = passedCount === rules.length;
+
+    return {
+      passed: passed,
+      score: score,
+      passedCount: passedCount,
+      totalRules: rules.length,
+      details: details
+    };
+  }
+
+  function submitLab() {
+    const device = DEVICES.find(d => d.id === currentDeviceId);
+    const lesson = getCurrentLesson();
+    if (!device || !lesson) return;
+
+    // Dừng đồng hồ và lấy thời gian chính xác
+    const durationSec = stopPracticeTimer();
+
+    // Chấm điểm
+    const evalResult = evaluateLesson(device, lesson);
+
+    // Lưu kết quả tạm để nút modal dùng khi cần thiết
+    _lastEvalResult = evalResult;
+    _lastSubmitDurationSec = durationSec;
+
+    // =========================================================================
+    // [GỬI TEAM DATA] LƯU Ý VỀ LUỒNG TRACKING API 
+    // - Vị trí: Tracking được gọi ngay khi KTV ấn nút "Nộp Bài" (submitLab).
+    // - Phân luồng: 
+    //   + Chế độ Hướng dẫn (guide): CHỈ gửi log khi ĐẠT 100% (passed = true). 
+    //     Các lần KTV nộp thử bị Rớt (FAIL) sẽ bị bỏ qua để tránh rác DB.
+    //   + Chế độ Thực hành (practice): LUÔN gửi log (Cả PASS và FAIL) ngay lúc bấm.
+    // =========================================================================
+    if (currentMode === 'practice' || (currentMode === 'guide' && evalResult.passed)) {
+      sendTrackingTimer(evalResult, durationSec);
+    }
+
+    // Hiển thị modal kết quả cho KTV xem
+    showGradingModal(evalResult, device, lesson, currentMode, durationSec);
+  }
+
+  function showGradingModal(res, device, lesson, mode, durationSec) {
+    if (!gradingModal) return;
+
+    const mins = Math.floor(durationSec / 60);
+    const secs = durationSec % 60;
+    const timeStr = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+    if (gmMetaDevice) gmMetaDevice.textContent = (device && device.name) ? device.name : 'Thiết bị';
+    if (gmMetaLesson) gmMetaLesson.textContent = (lesson && lesson.title) ? lesson.title : 'Bài học';
+    if (gmMetaMode) gmMetaMode.textContent = mode === 'guide' ? '💡 Hướng dẫn' : '⚡ Thực hành';
+    if (gmMetaTime) gmMetaTime.textContent = timeStr;
+
+    if (gmScoreNum) gmScoreNum.textContent = res.score;
+
+    if (res.passed) {
+      if (gmScoreBadge) gmScoreBadge.classList.remove('failed');
+      if (gmIcon) gmIcon.textContent = '🎉';
+      if (gmTitle) gmTitle.textContent = 'KẾT QUẢ: ĐẠT YÊU CẦU';
+      if (gmSubtitle) gmSubtitle.textContent = 'Chúc mừng bạn đã cấu hình chính xác bài thực hành!';
+      if (gmStatusBox) gmStatusBox.className = 'gm-status-box';
+      if (gmStatusTitle) gmStatusTitle.textContent = '✔ ĐẠT TOÀN BỘ TIÊU CHÍ (100%)';
+      if (gmStatusDesc) gmStatusDesc.textContent = 'Cấu hình hoàn toàn trùng khớp với thông số kỹ thuật chuẩn của FPT Telecom.';
+      // ĐẠT: hiện nút "Hoàn tất", ẩn nút "Quay lại làm từ đầu"
+      if (btnModalClose) btnModalClose.style.display = '';
+      if (btnModalRetry) btnModalRetry.style.display = 'none';
+    } else {
+      if (gmScoreBadge) gmScoreBadge.classList.add('failed');
+      if (gmIcon) gmIcon.textContent = '⚠️';
+      if (gmTitle) gmTitle.textContent = 'KẾT QUẢ: CHƯA ĐẠT';
+      if (gmSubtitle) gmSubtitle.textContent = 'Một số thông số cấu hình chưa đúng với yêu cầu đề bài.';
+      if (gmStatusBox) gmStatusBox.className = 'gm-status-box failed';
+      if (gmStatusTitle) gmStatusTitle.textContent = `✖ CHƯA ĐẠT (${res.passedCount}/${res.totalRules} tiêu chí đúng)`;
+      
+      if (mode === 'guide') {
+        if (gmStatusDesc) gmStatusDesc.textContent = 'Vui lòng kiểm tra lại các lỗi bên dưới, đóng bảng này và sửa lỗi.';
+        if (btnModalRetry) {
+          btnModalRetry.style.display = '';
+          btnModalRetry.innerHTML = '<span>✖ Đóng & Sửa lỗi</span>';
+        }
+      } else {
+        if (gmStatusDesc) gmStatusDesc.textContent = 'Vui lòng quay lại và thực hiện lại bài thực hành từ đầu.';
+        if (btnModalRetry) {
+          btnModalRetry.style.display = '';
+          btnModalRetry.innerHTML = '<span>↩ Quay lại làm từ đầu</span>';
+        }
+      }
+      if (btnModalClose) btnModalClose.style.display = 'none';
+    }
+
+    // Render danh sách checklist — chỉ hiện tiêu chí SAI, giữ header phân biệt phần
+    if (gmChecklistBody) {
+      gmChecklistBody.innerHTML = '';
+      const checklistSection = gmChecklistBody.closest('table, .gm-checklist-wrap, section');
+
+      // Lọc ra các tiêu chí thực sự (bỏ header) bị sai
+      const failedRealItems = res.details.filter(item => !item._isHeader && !item.passed);
+
+      if (failedRealItems.length === 0) {
+        // Tất cả đúng: ẩn bảng
+        if (checklistSection) checklistSection.style.display = 'none';
+      } else {
+        if (checklistSection) checklistSection.style.display = '';
+
+        // Xác định section nào có lỗi (kể cả hint & item thực)
+        const has24GFail = failedRealItems.some(i => i.id.startsWith('2.4G_') || i.id === '_24g_hint');
+        const has5GFail  = failedRealItems.some(i => i.id.startsWith('5G_')   || i.id === '_5g_hint');
+
+        res.details.forEach(item => {
+          // Header row: chỉ vẽ nếu section đó có lỗi
+          if (item._isHeader) {
+            const shouldShow = (item.id === '_header_24g' && has24GFail) ||
+                               (item.id === '_header_5g'  && has5GFail);
+            if (!shouldShow) return;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td colspan="4" style="background:#1e293b;color:#94a3b8;font-weight:700;
+                font-size:11px;letter-spacing:1px;padding:6px 10px;text-align:center;">
+                ${item.name}
+              </td>
+            `;
+            gmChecklistBody.appendChild(tr);
+            return;
+          }
+          // Hint row (trang chưa mở): hiển thị dạng cảnh báo nổi bật
+          if (item.id === '_24g_hint' || item.id === '_5g_hint') {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td colspan="4" style="background:#7c2d12;color:#fed7aa;font-size:12px;
+                padding:6px 10px;font-style:italic;">
+                ⚠ ${item.expected}
+              </td>
+            `;
+            gmChecklistBody.appendChild(tr);
+            return;
+          }
+          // Tiêu chí thường: chỉ vẽ nếu sai
+          if (item.passed) return;
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong>${item.name}</strong></td>
+            <td><code class="gm-code-val">${item.expected}</code></td>
+            <td><code class="gm-code-val" style="color:#b91c1c; font-weight:700;">${item.actual}</code></td>
+            <td><span class="gm-badge-fail">✖ Sai</span></td>
+          `;
+          gmChecklistBody.appendChild(tr);
+        });
+      }
+    }
+
+    gradingModal.style.display = 'flex';
+    gradingModal.setAttribute('aria-hidden', 'false');
+  }
+
+  function hideGradingModal() {
+    if (gradingModal) {
+      gradingModal.style.display = 'none';
+      gradingModal.setAttribute('aria-hidden', 'true');
+    }
+  }
+
   // ── Tracking API ─────────────────────────────────────────────────
   /**
    * Gửi thông tin phiên thực hành lên server qua POST /api/index.php/tracking/timer.
-   * Chỉ gọi 1 lần khi KTV kết thúc bài lab (bấm nút Quay lại).
-   * Không throw lỗi — portal vẫn hoạt động bình thường nếu API lỗi.
+   * Được gọi DUY NHẤT 1 LẦN khi KTV bấm nút trên modal kết quả.
+   * @param {object|null} evalResult - Kết quả chấm điểm
+   * @param {number} durationSec - Thời gian làm bài (giây), lấy từ đồng hồ đã dừng
    */
-  function sendTrackingTimer() {
+  function sendTrackingTimer(evalResult, durationSec) {
     if (!_trackingSession) return; // Chưa có phiên nào được bắt đầu
 
     const session = _trackingSession;
-    _trackingSession = null; // Reset ngay để tránh gửi 2 lần
 
     const finishedAt = new Date();
-    const startedAt = new Date(session.startedAt);
-    const durationSec = Math.max(0, Math.round((finishedAt - startedAt) / 1000));
 
     // Lấy tên thiết bị từ device object (ưu tiên device.name, fallback device.id)
     const deviceName = (session.device && session.device.name) ? session.device.name : (session.device && session.device.id ? session.device.id : 'Unknown');
@@ -420,8 +883,14 @@
       device: deviceName,
       started_at: session.startedAt,
       finished_at: finishedAt.toISOString(),
-      duration_sec: durationSec
+      duration_sec: durationSec || 0
     };
+
+    if (evalResult) {
+      payload.is_passed = evalResult.passed;
+      payload.score = evalResult.score;
+      payload.grading_details = evalResult.details;
+    }
 
     // Loại bỏ các field undefined trước khi gửi
     Object.keys(payload).forEach(function (k) {
@@ -441,13 +910,89 @@
           });
         }
         return res.json().then(function (data) {
-          console.info('[Tracking] Đã ghi phiên thực hành:', data);
+          console.info('[Tracking] Đã ghi phiên thực hành & chấm điểm:', data);
         });
       })
       .catch(function (err) {
         // Không hiển thị lỗi cho người dùng — portal vẫn hoạt động bình thường
         console.warn('[Tracking] Không thể gửi dữ liệu tracking:', err);
       });
+  }
+
+  // ── Practice Timer (Đồng hồ realtime trên toolbar) ──────────────
+  /**
+   * Bắt đầu đồng hồ đếm thời gian, cập nhật mỗi giây lên #practice-timer.
+   */
+  function startPracticeTimer() {
+    // Dọn interval cũ nếu có
+    if (_practiceTimerInterval) clearInterval(_practiceTimerInterval);
+
+    _practiceStartTime = new Date();
+    _lastSubmitDurationSec = 0;
+    _lastEvalResult = null;
+
+    // Cập nhật text ngay lập tức
+    if (practiceTimer) {
+      practiceTimer.textContent = '⏱ 00:00';
+      practiceTimer.classList.remove('stopped');
+      practiceTimer.classList.add('running');
+    }
+
+    _practiceTimerInterval = setInterval(function () {
+      if (!_practiceStartTime) return;
+      const elapsed = Math.floor((new Date() - _practiceStartTime) / 1000);
+      const mins = Math.floor(elapsed / 60);
+      const secs = elapsed % 60;
+      if (practiceTimer) {
+        practiceTimer.textContent = '⏱ ' + String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+      }
+
+      // Tự động ngắt phiên nếu quá 60 phút (3600 giây)
+      if (elapsed >= 3600) {
+        alert("Đã hết thời gian thao tác (60 phút). Phiên làm việc sẽ tự động kết thúc và kết quả bị hủy bỏ.");
+        backToLesson();
+      }
+    }, 1000);
+  }
+
+  /**
+   * Dừng đồng hồ và trả về số giây đã chạy.
+   * @returns {number} Số giây từ lúc bắt đầu đến lúc dừng
+   */
+  function stopPracticeTimer() {
+    if (_practiceTimerInterval) {
+      clearInterval(_practiceTimerInterval);
+      _practiceTimerInterval = null;
+    }
+
+    let durationSec = 0;
+    if (_practiceStartTime) {
+      durationSec = Math.max(0, Math.floor((new Date() - _practiceStartTime) / 1000));
+    }
+
+    // Đổi style đồng hồ sang trạng thái "đã dừng"
+    if (practiceTimer) {
+      practiceTimer.classList.remove('running');
+      practiceTimer.classList.add('stopped');
+    }
+
+    return durationSec;
+  }
+
+  /**
+   * Reset đồng hồ về 00:00 và dọn interval.
+   */
+  function resetPracticeTimer() {
+    if (_practiceTimerInterval) {
+      clearInterval(_practiceTimerInterval);
+      _practiceTimerInterval = null;
+    }
+    _practiceStartTime = null;
+
+    if (practiceTimer) {
+      practiceTimer.textContent = '⏱ 00:00';
+      practiceTimer.classList.remove('running', 'stopped');
+    }
   }
 
   // ── Breadcrumb ───────────────────────────────────────────────────
@@ -614,6 +1159,17 @@
     function traverse(win) {
       try {
         if (!win || !win.document) return;
+
+        // Nếu frame này bị ẩn khỏi giao diện (chỉ rộng/cao 0px và parent display none), bỏ qua nó
+        if (win.frameElement) {
+          try {
+            const rect = win.frameElement.getBoundingClientRect();
+            if (rect.width === 0 && rect.height === 0 && win.frameElement.offsetParent === null) {
+              return;
+            }
+          } catch(e) {}
+        }
+
         docs.push(win.document);
         if (win.frames && win.frames.length > 0) {
           for (let i = 0; i < win.frames.length; i++) {
@@ -703,27 +1259,54 @@
     const parts = selectorStr.split(',').map(s => s.trim());
     const results = [];
     for (const sel of parts) {
-      if (sel.includes(':contains(')) {
-        const match = sel.match(/^(.*?):contains\(["']?(.*?)["']?\)$/);
-        if (match) {
-          const baseSel = match[1] || '*';
-          const textToMatch = match[2].trim().toLowerCase();
-          try {
-            const candidates = doc.querySelectorAll(baseSel);
-            candidates.forEach(el => {
-              const txt = (el.textContent || el.innerText || '').trim().toLowerCase();
-              if (txt.includes(textToMatch)) {
-                results.push(el);
-              }
-            });
-          } catch (e) { }
+      try {
+        if (!sel.includes(':contains(')) {
+          const els = doc.querySelectorAll(sel);
+          els.forEach(el => results.push(el));
           continue;
         }
+
+        // Tách selector thành các phân đoạn bằng khoảng trắng
+        const segments = sel.split(/\s+/).filter(Boolean);
+        let currentContexts = [doc.body || doc];
+
+        for (let i = 0; i < segments.length; i++) {
+          const seg = segments[i];
+          const match = seg.match(/^(.*?):contains\(["']?(.*?)["']?\)$/);
+          let baseSel = seg;
+          let textToMatch = null;
+
+          if (match) {
+            baseSel = match[1] || '*';
+            textToMatch = match[2].trim().toLowerCase();
+          }
+
+          const nextContexts = [];
+          for (const ctx of currentContexts) {
+            const elements = ctx.querySelectorAll(baseSel);
+            elements.forEach(el => {
+              if (textToMatch) {
+                const txt = (el.textContent || el.innerText || '').trim().toLowerCase();
+                if (txt.includes(textToMatch)) {
+                  nextContexts.push(el);
+                }
+              } else {
+                nextContexts.push(el);
+              }
+            });
+          }
+          currentContexts = nextContexts;
+          if (currentContexts.length === 0) break;
+        }
+
+        currentContexts.forEach(el => {
+          if (!results.includes(el)) {
+            results.push(el);
+          }
+        });
+      } catch (e) {
+        console.error("Error in findGuideElements for selector:", sel, e);
       }
-      try {
-        const els = doc.querySelectorAll(sel);
-        els.forEach(el => results.push(el));
-      } catch (e) { }
     }
     return results;
   }
@@ -864,6 +1447,31 @@
       }
     });
   }
+
+  // ── Hook cho Simulator Save ──────────────────────────────────────
+  window.onSimulatorSave = function(simWin) {
+    window._hasClickedSaveInGuide = true;
+
+    if (_currentLesson && typeof _currentLesson.onSimSave === 'function') {
+      try {
+        _currentLesson.onSimSave(simWin);
+      } catch(e) {}
+    }
+
+    // Đánh giá tức thì để mở nút Nộp bài ngay không cần chờ setInterval
+    if (currentMode === 'guide' && btnSubmitLab && btnSubmitLab.disabled) {
+      const device = DEVICES.find(d => d.id === currentDeviceId);
+      const lesson = getCurrentLesson();
+      if (device && lesson) {
+        const evalResult = evaluateLesson(device, lesson);
+        if (evalResult && evalResult.passed) {
+          btnSubmitLab.disabled = false;
+          btnSubmitLab.style.opacity = '1';
+          btnSubmitLab.style.cursor = 'pointer';
+        }
+      }
+    }
+  };
 
   // ── Boot ─────────────────────────────────────────────────────────
   init();

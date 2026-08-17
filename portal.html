@@ -174,6 +174,38 @@
 
       <!-- ── PRACTICE IFRAME SCREEN ── -->
       <section id="practice-screen" aria-label="Giao diện thực hành thiết bị">
+        <!-- Practice Toolbar -->
+        <div class="practice-toolbar" id="practice-toolbar">
+          <div class="practice-toolbar-left">
+            <button id="btn-back-lesson" class="btn-toolbar btn-back" title="Quay lại danh mục bài học">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="15 18 9 12 15 6"/>
+              </svg>
+              <span>Quay lại</span>
+            </button>
+            <div class="practice-info">
+              <span id="practice-mode-label" class="practice-badge">⚡ Thực hành:</span>
+              <span id="practice-lesson-title" class="practice-title">Bài 1: Cấu hình PPPoE</span>
+            </div>
+          </div>
+
+          <div class="practice-toolbar-right">
+            <span id="practice-timer" class="practice-timer">⏱ 00:00</span>
+            <button id="btn-submit-lab" class="btn-toolbar btn-submit" title="Nộp bài và chấm điểm">
+              <span class="btn-icon">📝</span>
+              <span class="btn-text">Nộp bài & Chấm điểm</span>
+            </button>
+            <button id="btn-open-new-tab" class="btn-toolbar btn-tab" title="Mở trong tab mới">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                <polyline points="15 3 21 3 21 9"/>
+                <line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+              <span>Tab mới</span>
+            </button>
+          </div>
+        </div>
+
         <!-- Server warning (shown if device needs separate server) -->
         <div id="server-warning" class="server-warning" style="display:none">
           <span class="sw-icon">⚠️</span>
@@ -194,13 +226,91 @@
         </div>
       </section>
 
+      <!-- ── GRADING RESULT MODAL ── -->
+      <div id="grading-modal" class="grading-modal-overlay" aria-hidden="true" style="display: none;">
+        <div class="grading-modal-backdrop" id="grading-backdrop"></div>
+        <div class="grading-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="gm-title">
+          <!-- Modal Header -->
+          <div class="gm-header" id="gm-header">
+            <div class="gm-icon-wrap" id="gm-icon-wrap">
+              <span id="gm-icon">🎉</span>
+            </div>
+            <div class="gm-header-text">
+              <h3 id="gm-title">KẾT QUẢ CHẤM ĐIỂM</h3>
+              <p id="gm-subtitle">Đánh giá cấu hình bài thực hành</p>
+            </div>
+            <div class="gm-score-badge" id="gm-score-badge">
+              <span class="gm-score-num" id="gm-score-num">100</span>
+              <span class="gm-score-denom">/100</span>
+            </div>
+          </div>
+
+          <!-- Modal Body -->
+          <div class="gm-body">
+            <!-- Summary stats -->
+            <div class="gm-meta-grid">
+              <div class="gm-meta-item">
+                <span class="gm-meta-label">Thiết bị:</span>
+                <strong id="gm-meta-device">ONT AC1000F</strong>
+              </div>
+              <div class="gm-meta-item">
+                <span class="gm-meta-label">Bài học:</span>
+                <strong id="gm-meta-lesson">Bài 1: Cấu hình PPPoE</strong>
+              </div>
+              <div class="gm-meta-item">
+                <span class="gm-meta-label">Chế độ:</span>
+                <span id="gm-meta-mode" class="gm-mode-pill">Thực hành</span>
+              </div>
+              <div class="gm-meta-item">
+                <span class="gm-meta-label">Thời gian:</span>
+                <strong id="gm-meta-time">00:45</strong>
+              </div>
+            </div>
+
+            <!-- Result Alert Box -->
+            <div class="gm-status-box" id="gm-status-box">
+              <div class="gm-status-title" id="gm-status-title">ĐẠT YÊU CẦU BÀI LAB</div>
+              <div class="gm-status-desc" id="gm-status-desc">Cấu hình hoàn toàn chính xác theo yêu cầu kỹ thuật đề bài.</div>
+            </div>
+
+            <!-- Detailed Checklist Table -->
+            <div class="gm-table-wrap">
+              <div class="gm-table-title">Chi tiết tiêu chí kiểm tra:</div>
+              <table class="gm-table">
+                <thead>
+                  <tr>
+                    <th>Tiêu chí</th>
+                    <th>Yêu cầu đề bài</th>
+                    <th>Giá trị KTV cấu hình</th>
+                    <th>Đánh giá</th>
+                  </tr>
+                </thead>
+                <tbody id="gm-checklist-body">
+                  <!-- Injected via app.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Modal Footer -->
+          <div class="gm-footer">
+            <button id="btn-modal-retry" class="btn-modal btn-retry">
+              <span>🔄 Làm lại bài</span>
+            </button>
+            <button id="btn-modal-close" class="btn-modal btn-done">
+              <span>✔ Hoàn tất & Quay lại</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
     </main>
   </div><!-- /#main -->
 
 </div><!-- /#app -->
 
-<!-- Device Modules & Grading Scripts -->
-<script src="devices/ac1000f/data.js"></script>
+<!-- Device Modules & Modular Grading Scripts -->
+<!-- ONT AC1000F -->
 <script src="devices/ac1000f/tooltips/common_login.js"></script>
 <script src="devices/ac1000f/tooltips/bai1.js"></script>
 <script src="devices/ac1000f/tooltips/bai2.js"></script>
@@ -212,28 +322,88 @@
 <script src="devices/ac1000f/tooltips/bai8.js"></script>
 <script src="devices/ac1000f/tooltips/bai9.js"></script>
 <script src="devices/ac1000f/tooltips/bai10.js"></script>
-<script src="devices/ax3000c/data.js"></script>
+
+<script src="devices/ac1000f/lessons/bai1.js"></script>
+<script src="devices/ac1000f/lessons/bai2.js"></script>
+<script src="devices/ac1000f/lessons/bai3.js"></script>
+<script src="devices/ac1000f/lessons/bai4.js"></script>
+<script src="devices/ac1000f/lessons/bai5.js"></script>
+<script src="devices/ac1000f/lessons/bai6.js"></script>
+<script src="devices/ac1000f/lessons/bai7.js"></script>
+<script src="devices/ac1000f/lessons/bai8.js"></script>
+<script src="devices/ac1000f/lessons/bai9.js"></script>
+<script src="devices/ac1000f/lessons/bai10.js"></script>
+<script src="devices/ac1000f/data.js"></script>
+
+<!-- ONT AX3000C -->
 <script src="devices/ax3000c/tooltips/common_login.js"></script>
-<script src="devices/ax3000c/tooltips/bai1.js"></script>
-<script src="devices/ax3000c/tooltips/bai2.js"></script>
-<script src="devices/ax3000c/tooltips/bai3.js"></script>
-<script src="devices/ax3000c/tooltips/bai4.js"></script>
-<script src="devices/ax3000c/tooltips/bai5.js"></script>
-<script src="devices/ax3000c/tooltips/bai6.js"></script>
-<script src="devices/ax3000c/tooltips/bai7.js"></script>
-<script src="devices/ax3000c/tooltips/bai8.js"></script>
-<script src="devices/ax3000c/tooltips/bai9.js"></script>
-<script src="devices/ax3000c/tooltips/bai10.js"></script>
+<script src="devices/ax3000c/lessons/bai1.js"></script>
+<script src="devices/ax3000c/lessons/bai2.js"></script>
+<script src="devices/ax3000c/lessons/bai3.js"></script>
+<script src="devices/ax3000c/lessons/bai4.js"></script>
+<script src="devices/ax3000c/lessons/bai5.js"></script>
+<script src="devices/ax3000c/data.js"></script>
+
+<!-- ONT AX3000GZ -->
+<script src="devices/ax3000gz/lessons/bai1.js"></script>
+<script src="devices/ax3000gz/lessons/bai2.js"></script>
+<script src="devices/ax3000gz/lessons/bai3.js"></script>
+<script src="devices/ax3000gz/lessons/bai4.js"></script>
+<script src="devices/ax3000gz/lessons/bai5.js"></script>
+<script src="devices/ax3000gz/lessons/bai6.js"></script>
+<script src="devices/ax3000gz/lessons/bai7.js"></script>
+<script src="devices/ax3000gz/lessons/bai8.js"></script>
+<script src="devices/ax3000gz/lessons/bai9.js"></script>
 <script src="devices/ax3000gz/data.js"></script>
-<script src="devices/ax3000gz/tooltips.js"></script>
+
+<!-- ONT AX3000H v2 -->
+<script src="devices/ax3000hv2/lessons/bai1.js"></script>
+<script src="devices/ax3000hv2/lessons/bai2.js"></script>
+<script src="devices/ax3000hv2/lessons/bai3.js"></script>
+<script src="devices/ax3000hv2/lessons/bai4.js"></script>
+<script src="devices/ax3000hv2/lessons/bai5.js"></script>
+<script src="devices/ax3000hv2/lessons/bai6.js"></script>
 <script src="devices/ax3000hv2/data.js"></script>
-<script src="devices/ax3000hv2/tooltips.js"></script>
+
+<!-- ONT AX3000S -->
+<script src="devices/ax3000s/lessons/bai1.js"></script>
+<script src="devices/ax3000s/lessons/bai2.js"></script>
+<script src="devices/ax3000s/lessons/bai3.js"></script>
+<script src="devices/ax3000s/lessons/bai4.js"></script>
+<script src="devices/ax3000s/lessons/bai5.js"></script>
+<script src="devices/ax3000s/lessons/bai6.js"></script>
+<script src="devices/ax3000s/lessons/bai7.js"></script>
 <script src="devices/ax3000s/data.js"></script>
-<script src="devices/ax3000s/tooltips.js"></script>
+
+<!-- ONT BE12000 -->
+<script src="devices/be12000/tooltips/common_login.js"></script>
+<script src="devices/be12000/lessons/bai1.js"></script>
+<script src="devices/be12000/lessons/bai2.js"></script>
+<script src="devices/be12000/lessons/bai3.js"></script>
+<script src="devices/be12000/lessons/bai4.js"></script>
+<script src="devices/be12000/lessons/bai5.js"></script>
+<script src="devices/be12000/lessons/bai6.js"></script>
+<script src="devices/be12000/lessons/bai7.js"></script>
 <script src="devices/be12000/data.js"></script>
-<script src="devices/be12000/tooltips.js"></script>
+
+<!-- ONT BE15000 -->
+<script src="devices/be15000/lessons/bai1.js"></script>
+<script src="devices/be15000/lessons/bai2.js"></script>
+<script src="devices/be15000/lessons/bai3.js"></script>
+<script src="devices/be15000/lessons/bai4.js"></script>
+<script src="devices/be15000/lessons/bai5.js"></script>
+<script src="devices/be15000/lessons/bai6.js"></script>
+<script src="devices/be15000/lessons/bai7.js"></script>
+<script src="devices/be15000/lessons/bai8.js"></script>
+<script src="devices/be15000/lessons/bai9.js"></script>
+<script src="devices/be15000/lessons/bai10.js"></script>
 <script src="devices/be15000/data.js"></script>
-<script src="devices/be15000/tooltips.js"></script>
+
+<!-- ONT Vigor2927 -->
+<script src="devices/vigor2927/tooltips/common_login.js"></script>
+<script src="devices/vigor2927/lessons/bai1.js"></script>
+<script src="devices/vigor2927/data.js"></script>
+
 <script src="devices/index.js"></script>
 <script src="data.js"></script>
 <script src="app.js"></script>

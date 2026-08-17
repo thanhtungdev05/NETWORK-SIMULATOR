@@ -3,3 +3,6 @@
 
 # SQL migrations must stay LF so checksums match across Windows/Linux
 *.sql text eol=lf
+
+# Shell scripts must stay LF for Docker/Linux compatibility
+*.sh text eol=lf

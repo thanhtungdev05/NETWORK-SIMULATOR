@@ -14,3 +14,19 @@ scratch/
 *.bak
 
 sim_state.json
+
+# ── File rác / dev-only ──────────────────────────────────────
+# HAR capture (log HTTP dùng khi reverse-engineer router)
+**/reference/har/
+**/captures/*.har
+
+# Raw crawl data (log nội bộ khi build simulator, không cần deploy)
+**/reference/raw/
+
+# File Word / tài liệu (đặt vào Drive, không vào git)
+*.docx
+*.xlsx
+*.pptx
+
+# PHP runtime
+php_api.log

@@ -439,11 +439,7 @@ def start_server():
     print(f"   API (/api/*) duoc proxy sang PHP noi bo 127.0.0.1:{API_PORT}")
     print("=" * 65)
     
-    def open_browser():
-        time.sleep(1)
-        webbrowser.open(f"http://127.0.0.1:{PORT}")
-    
-    threading.Thread(target=open_browser, daemon=True).start()
+
     
     try:
         srv.serve_forever()

@@ -157,14 +157,14 @@ try {
             email, display_name, role, iam_profile,
             employee_id, job_title, training_start_date, training_end_date,
             class_code, is_terminated, termination_date, termination_reason,
-            unit_code, unit_name, region_code, branch_code, dashboard_region,
+            unit_code, unit_name, region_code, dashboard_region,
             employee_source, employee_seed_batch, employee_synced_at,
             created_at, updated_at
          ) VALUES (
             :email, :display_name, 'user', '{}'::jsonb,
             :employee_id, :job_title, :training_start_date, :training_end_date,
             :class_code, :is_terminated, :termination_date, :termination_reason,
-            :unit_code, :unit_name, :region_code, :branch_code, :dashboard_region,
+            :unit_code, :unit_name, :region_code, :dashboard_region,
             :employee_source, :employee_seed_batch, NOW(), NOW(), NOW()
          ) RETURNING user_id
         SQL
@@ -184,7 +184,6 @@ try {
                 unit_code = :unit_code,
                 unit_name = :unit_name,
                 region_code = :region_code,
-                branch_code = :branch_code,
                 dashboard_region = :dashboard_region,
                 employee_source = :employee_source,
                 employee_seed_batch = :employee_seed_batch,
@@ -215,7 +214,6 @@ try {
             'unit_code' => $employee['unit_code'],
             'unit_name' => $employee['unit_name'],
             'region_code' => $employee['region_code'],
-            'branch_code' => $employee['branch_code'],
             'dashboard_region' => $employee['dashboard_region'],
             'employee_source' => basename($file),
             'employee_seed_batch' => $batch,

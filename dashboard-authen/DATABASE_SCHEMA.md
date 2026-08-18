@@ -184,14 +184,20 @@ Bảng `timer_sessions` có thêm:
 
 Danh mục thiết bị và bài lab lấy từ `device_catalog` và `lab_catalog`. Dashboard join phiên theo `user_id`; các phiên cũ chưa có `user_id` được fallback bằng mã nhân viên hoặc email.
 
-Migration `013_training_classes_and_session_outcomes.sql` bổ sung:
+Migration `017_grading_results.sql` bổ sung:
 
-- `training_classes` và `class_enrollments` để lớp demo không ghi đè mã lớp nguồn trong `users.class_code`.
-- View `v_current_training_class` để lấy lớp đang hiệu lực.
-- `completed_first_try` trở thành nullable và không còn default `TRUE`; `NULL` có nghĩa chưa đủ bằng chứng đánh giá.
-- Check constraint cho status, mode, duration và quan hệ giữa status với first-try.
+- `is_passed` (BOOLEAN): Kết quả chấm đạt (true) hoặc trượt (false).
+- `score` (NUMERIC(5,2)): Điểm số bài thi/thực hành từ simulator.
+- `grading_details` (JSONB): Chi tiết kết quả từng tiêu chí chấm điểm.
 
-Mô hình đích và đánh giá chi tiết nằm trong [DB_DASHBOARD_ASSESSMENT_2026-08-13.md](DB_DASHBOARD_ASSESSMENT_2026-08-13.md). Schema hiện tại vẫn là mô hình chuyển tiếp; cần `lab_assignments` và `lab_attempts` để tính tiến độ chương trình chính thức.
+Migration `018_cleanup_and_optimize.sql` chuẩn hóa và tối ưu:
+
+- Loại bỏ bảng trung gian thừa `class_lab_assignments`.
+- Dọn dẹp các cột thừa: `users.branch_code`, `catalog_version`, `effective_from`, `effective_to` trong các bảng danh mục.
+- Bổ sung trường giám sát telemetry vào `timer_sessions`: `client_ip`, `user_agent`, `device_id`, `session_type`.
+- Tạo bảng cấu hình tiêu chí chấm điểm động: `lab_grading_criteria`.
+- Bổ sung thiết bị `DEV_VIGOR2927` và 5 bài lab thực hành Vigor2927 vào `device_catalog` & `lab_catalog`.
+- Đánh các index tối ưu hóa truy vấn: `idx_users_region_id`, `idx_timer_sessions_lab_finished`, `idx_timer_sessions_user_lab`.
 
 ---
 

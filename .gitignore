@@ -72,3 +72,6 @@ sim_be12000/reference/source/
 **/clean_ext.py
 **/tools_kiem_thu.py
 **/Chay-server.bat
+
+#html thừa
+database_erd_visualizer.html

@@ -297,7 +297,7 @@ function database_nullable_boolean(mixed $value): ?bool
 const USER_COLUMNS = 'user_id, email, display_name, role, last_login_at, iam_profile,
     employee_id, job_title, training_start_date, training_end_date, class_code,
     is_terminated, termination_date, termination_reason, unit_code, unit_name,
-    region_code, branch_code, dashboard_region, region_id, employee_source,
+    region_code, dashboard_region, region_id, employee_source,
     employee_seed_batch, employee_synced_at, created_at, updated_at';
 const LOGIN_LOG_COLUMNS = 'id, created_at, event_type, user_id, employee_id, display_name, email, role, iam_subject, ip_address, user_agent, session_id_hash';
 
@@ -1068,7 +1068,6 @@ function handle_dashboard(array $segments, string $method): void
                 roster.unit_code,
                 roster.unit_name,
                 roster.region_code,
-                roster.branch_code,
                 roster.dashboard_region AS region_name,
                 roster.is_terminated,
                 COALESCE(timer.started_at, timer.finished_at) AS started_at,

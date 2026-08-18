@@ -29,6 +29,7 @@ function tracking_timer_response(array $timer): array
         'duration_sec' => (int)($timer['duration_sec'] ?? 0),
         'mode' => (string)($timer['mode'] ?? 'Thực hành'),
         'device' => (string)($timer['device'] ?? ''),
+        'device_id' => (string)($timer['device_id'] ?? ''),
         'device_model' => (string)($timer['device_model'] ?? ($timer['device'] ?? '')),
         'lab_id' => (string)($timer['lab_id'] ?? ''),
         'lab_name' => (string)($timer['lab_name'] ?? ($timer['lab_id'] ?? '')),
@@ -37,6 +38,9 @@ function tracking_timer_response(array $timer): array
         'is_passed' => isset($timer['is_passed']) ? (bool)$timer['is_passed'] : null,
         'score' => isset($timer['score']) ? (float)$timer['score'] : null,
         'grading_details' => $timer['grading_details'] ?? null,
+        'client_ip' => $timer['client_ip'] ?? null,
+        'user_agent' => $timer['user_agent'] ?? null,
+        'session_type' => (string)($timer['session_type'] ?? 'practice'),
         'saved' => (bool)($timer['saved'] ?? false),
     ];
 }
@@ -66,6 +70,8 @@ function handle_tracking(array $segments, string $method): void
         $labId = optional_text($input, 'lab_id', 50) ?? optional_text($input, 'labId', 50) ?? optional_text($input, 'lab', 50);
         $mode = optional_text($input, 'mode', 30) ?? 'Thực hành';
         $device = optional_text($input, 'device', 100) ?? optional_text($input, 'device_model', 100) ?? optional_text($input, 'deviceModel', 100);
+        $deviceId = optional_text($input, 'device_id', 50) ?? optional_text($input, 'deviceId', 50);
+        $sessionType = optional_text($input, 'session_type', 30) ?? optional_text($input, 'sessionType', 30) ?? 'practice';
         $status = optional_text($input, 'status', 30) ?? 'completed';
 
         if (!in_array($mode, ['Thực hành', 'Hướng dẫn'], true)) {
@@ -125,6 +131,21 @@ function handle_tracking(array $segments, string $method): void
         ) ?? (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
         $startedAt = normalized_timestamp($input['started_at'] ?? $input['startedAt'] ?? null, 'started_at');
 
+        $clientIp = function_exists('request_ip') ? request_ip() : ($_SERVER['REMOTE_ADDR'] ?? null);
+        $userAgent = function_exists('request_user_agent') ? request_user_agent() : ($_SERVER['HTTP_USER_AGENT'] ?? null);
+
+        $pdo = db();
+
+        // Neu client khong truyen device_id, look up tu lab_catalog theo lab_id
+        if (!$deviceId && $labId) {
+            try {
+                $devLookup = $pdo->prepare('SELECT device_id FROM lab_catalog WHERE lab_id = :lab_id LIMIT 1');
+                $devLookup->execute(['lab_id' => $labId]);
+                $deviceId = $devLookup->fetchColumn() ?: null;
+            } catch (Throwable $ignored) {
+            }
+        }
+
         $timer = [
             'session_id' => 'TMR_' . date('YmdHis') . '_' . bin2hex(random_bytes(3)),
             'technician_id' => $technicianId ?? '',
@@ -134,6 +155,7 @@ function handle_tracking(array $segments, string $method): void
             'duration_sec' => $durationSec ?? 0,
             'mode' => $mode,
             'device' => $device ?? '',
+            'device_id' => $deviceId ?? '',
             'device_model' => $device ?? '',
             'lab_id' => $labId ?? '',
             'lab_name' => $labId ?? '',
@@ -142,6 +164,9 @@ function handle_tracking(array $segments, string $method): void
             'is_passed' => $isPassed,
             'score' => $score,
             'grading_details' => $gradingDetails,
+            'client_ip' => $clientIp,
+            'user_agent' => $userAgent,
+            'session_type' => $sessionType,
             'saved' => false,
         ];
 
@@ -150,7 +175,6 @@ function handle_tracking(array $segments, string $method): void
             $timer['duration_sec'] = max(0, (new DateTimeImmutable($finishedAt))->getTimestamp() - (new DateTimeImmutable($startedAt))->getTimestamp());
         }
 
-        $pdo = db();
         $resolvedUserId = null;
         if ($timer['technician_id'] !== '' || $timer['email'] !== '') {
             $resolve = $pdo->prepare(
@@ -211,8 +235,17 @@ function handle_tracking(array $segments, string $method): void
         try {
             $insert = $pdo->prepare(
                 <<<'SQL'
-                INSERT INTO timer_sessions (user_id, technician_id, name, email, started_at, finished_at, duration_sec, mode, device, lab_id, lab_name, status, completed_first_try, last_action, is_passed, score, grading_details)
-                VALUES (:user_id, :technician_id, :name, :email, :started_at, :finished_at, :duration_sec, :mode, :device, :lab_id, :lab_name, :status, :completed_first_try, :last_action, :is_passed, :score, :grading_details)
+                INSERT INTO timer_sessions (
+                    user_id, technician_id, name, email, started_at, finished_at,
+                    duration_sec, mode, device, device_id, lab_id, lab_name,
+                    status, completed_first_try, last_action, is_passed, score,
+                    grading_details, client_ip, user_agent, session_type
+                ) VALUES (
+                    :user_id, :technician_id, :name, :email, :started_at, :finished_at,
+                    :duration_sec, :mode, :device, :device_id, :lab_id, :lab_name,
+                    :status, :completed_first_try, :last_action, :is_passed, :score,
+                    :grading_details, :client_ip, :user_agent, :session_type
+                )
                 RETURNING id
                 SQL
             );
@@ -226,6 +259,7 @@ function handle_tracking(array $segments, string $method): void
                 'duration_sec' => $timer['duration_sec'],
                 'mode' => $mode,
                 'device' => $timer['device'],
+                'device_id' => $deviceId,
                 'lab_id' => $timer['lab_id'],
                 'lab_name' => $timer['lab_name'],
                 'status' => $timer['status'],
@@ -236,6 +270,9 @@ function handle_tracking(array $segments, string $method): void
                 'is_passed' => $timer['is_passed'] !== null ? ($timer['is_passed'] ? 1 : 0) : null,
                 'score' => $timer['score'],
                 'grading_details' => $gradingDetailsJson,
+                'client_ip' => $clientIp,
+                'user_agent' => $userAgent,
+                'session_type' => $sessionType,
             ]);
             $savedRow = $insert->fetch();
             $timer['session_id'] = $savedRow ? (string)$savedRow['id'] : $timer['session_id'];

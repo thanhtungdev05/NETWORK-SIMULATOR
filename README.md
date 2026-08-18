@@ -1,107 +1,121 @@
-# 🚀 Hệ Thống Giả Lập Thiết Bị Mạng FPT (FPT Network Device Simulator)
+# 🚀 Hệ Thống Giả Lập Thiết Bị Mạng FPT (FTC Virtual Devices)
 
-Hệ thống giả lập giao diện quản trị web (Web Admin Interface) dành cho các dòng thiết bị modem/router mạng FPT Telecom. Dự án phục vụ mục đích thực hành, đào tạo, demo và tự động chấm điểm kỹ năng cấu hình thiết bị của Kỹ thuật viên (KTV).
+Hệ thống giả lập giao diện quản trị web (Web Admin Interface) dành cho các dòng thiết bị modem/router mạng FPT Telecom. Dự án phục vụ mục đích thực hành, đào tạo, demo, quản trị nhân sự và tự động chấm điểm kỹ năng cấu hình thiết bị của Kỹ thuật viên (KTV).
 
 ---
 
 ## 📋 Yêu Cầu Hệ Thống (Prerequisites)
 
-- **Python 3.x** (Khuyên dùng Python 3.8 trở lên)
-- **Hệ điều hành**: Windows, macOS, hoặc Linux.
-- 💡 **Lưu ý**: Dự án sử dụng hoàn toàn các thư viện chuẩn (Standard Library) của Python, **không cần cài đặt thêm bất kỳ thư viện bên thứ 3 nào** (`pip install`).
-- Môi trường chạy PHP nội bộ (đã được tích hợp sẵn qua script khởi động).
+Bạn có thể chọn **1 trong 2 cách** để chạy dự án:
+
+### Cách 1: Chạy bằng Docker (Khuyên dùng)
+- **Docker** & **Docker Compose** (Cài qua [Docker Desktop](https://www.docker.com/products/docker-desktop/)).
+- Không cần cài đặt riêng Python hay PHP — Docker sẽ tự động đóng gói và cấu hình môi trường hoàn chỉnh.
+
+### Cách 2: Chạy trực tiếp trên máy (Native)
+- **Python 3.10+**
+- **PHP-CLI 8.1+** (hỗ trợ `php-pgsql`, `php-mbstring`, `php-curl`).
+- Cài đặt thư viện Python: `pip install -r requirements.txt`
 
 ---
 
-## 📥 1. Hướng Dẫn Clone Project
+## 📥 1. Clone Dự Án & Cấu Hình
 
-Mở Terminal / Command Prompt / Git Bash và chạy lệnh:
+1. **Clone repository về máy:**
+   ```bash
+   git clone <URL_REPOSITORY_CUA_BAN>
+   cd tracking
+   ```
 
-```bash
-git clone <URL_REPOSITORY_CUAR_BAN>
-cd giailapthietbi
-```
+2. **Cấu hình biến môi trường:**
+   Tạo file `.env` từ file mẫu `.env.example`:
+   ```bash
+   cp .env.example .env
+   ```
+   Sau đó cập nhật thông tin trong file `.env`:
+   ```env
+   # Kết nối PostgreSQL (Neon Database)
+   DATABASE_URL=postgresql://<user>:<password>@<host>/<database>?sslmode=require
+   
+   # Cấu hình Django Admin Panel
+   DJANGO_SETTINGS_MODULE=admin_site.settings
+   DJANGO_SECRET_KEY=your-secret-key-here
+   DJANGO_DEBUG=1
+   DJANGO_SUPERUSER_USERNAME=admin
+   DJANGO_SUPERUSER_EMAIL=admin@example.com
+   DJANGO_SUPERUSER_PASSWORD=YourPasswordHere!
+   ```
 
 ---
 
-## ⚡ 2. Hướng Dẫn Khởi Chạy (Quick Start)
+## ⚡ 2. Hướng Dẫn Khởi Chạy Local (Quick Start)
 
-### 🔹 Cách 1: Chạy bằng Docker Compose (Khuyên dùng - Chuẩn Production / Đa nền tảng)
+### 🔹 Cách 1: Khởi chạy bằng Docker Compose (Khuyên dùng)
 Mở Terminal / PowerShell tại thư mục dự án và chạy:
 
 ```bash
 docker compose up --build
 ```
 
-> **Mô tả**: Docker sẽ tự động build image, nạp biến môi trường `.env`, chạy migrations PostgreSQL (Neon), tự tạo tài khoản Django Superuser, và khởi chạy toàn bộ hệ thống trên **1 cổng duy nhất `8080`**:
-> - **Portal & Giả lập**: `http://localhost:8080`
-> - **Dashboard**: `http://localhost:8080/dashboard/`
-> - **Admin Quản trị**: `http://localhost:8080/admin/`
+> **Cơ chế hoạt động**:
+> - Tự động build môi trường Linux chứa Python 3.12, PHP-CLI, Composer và Django.
+> - Tự động chạy migrations PostgreSQL (Neon) cho cả PHP và Django.
+> - Tự động tạo tài khoản Superuser Admin (nếu chưa có).
+> - Khởi động Master Dispatcher và ánh xạ **cổng duy nhất `8080`** ra máy tính của bạn.
 
-### 🔹 Cách 2: Chạy trực tiếp bằng Python
+---
+
+### 🔹 Cách 2: Khởi chạy trực tiếp (Native Python)
+Nếu không dùng Docker, bạn có thể chạy trực tiếp bằng lệnh:
+
 ```bash
+# 1. Cài đặt dependencies (chỉ cần chạy lần đầu)
+pip install -r requirements.txt
+
+# 2. Khởi chạy Master Dispatcher
 python run_all.py
 ```
 
----
-
-## 🛠 3. Các Tính Năng Đào Tạo Cốt Lõi
-
-Dự án không chỉ mô phỏng thiết bị mà còn tích hợp bộ công cụ Đào tạo và Chấm điểm tự động:
-
-### A. Hai Chế Độ Hoạt Động (Dual Modes)
-1. **💡 Chế độ Hướng dẫn (Guide Mode)**
-   - **Mục đích:** Học tập và rèn luyện.
-   - **Tính năng:**
-     - Hiển thị bong bóng hướng dẫn (Tooltips) chỉ dẫn từng bước thao tác. Hỗ trợ hiển thị độc lập theo từng trang con (vd: trang 2.4G và 5G).
-     - KTV được phép cấu hình sai. Khi ấn **Nộp Bài**, hệ thống sẽ hiện bảng báo lỗi, cho phép đóng bảng điểm để **quay lại giao diện cũ sửa lỗi** và nộp lại.
-     - **Chỉ ghi nhận Tracking (Log) khi đạt 100%**: Tránh xả rác cơ sở dữ liệu với các lần làm thử/sai của học viên.
-
-2. **⚡ Chế độ Thực hành (Practice Mode)**
-   - **Mục đích:** Kiểm tra, thi thật.
-   - **Tính năng:**
-     - Ẩn toàn bộ hướng dẫn, ép KTV tự nhớ các thông số cấu hình chuẩn FPT.
-     - **Khắt khe:** Nếu chấm điểm bị sai dù chỉ 1 tiêu chí, hệ thống khóa màn hình, yêu cầu "Quay lại làm từ đầu" và **reset toàn bộ thiết bị** (mất toàn bộ cấu hình).
-     - Gửi Tracking dữ liệu lập tức (bất kể Đạt hay Chưa đạt) ngay khi nhấn Nộp Bài để nạp vào Data Dashboard.
-
-### B. Chấm Điểm Tự Động Thông Minh (Smart Auto-Grading)
-- **Lấy dữ liệu trực tiếp từ Iframe giả lập:** Dùng DOM query để đọc dữ liệu KTV đã nhập, so khớp với bộ quy tắc chuẩn (`rules`).
-- **Lưu bộ nhớ tạm (Cache đa trang):** Khắc phục nhược điểm KTV phải chuyển trang khi cấu hình (VD: Cấu hình Wi-Fi 2.4G xong, nhấn *Save*, rồi chuyển sang Wi-Fi 5G, nhấn *Save*).
-  - Hệ thống tự động bắt tín hiệu *Save* từ bên trong iframe (`window.parent.onSimulatorSave`).
-  - Lấy điểm từng phần lưu vào `CACHE` cục bộ (`_AC1000F_BAI2_CACHE`).
-  - Gộp chung toàn bộ khi nhấn "Nộp Bài" ở ngoài Portal chính.
-
-### C. Ngăn Chặn Tải Lại Trang (Anti-Reload Script)
-Thiết bị thực tế thường khởi động lại hoặc load lại trang khi bấm Save. Trong giả lập:
-- Tích hợp bộ script Python (vd: `fix_saves.py`) tự động quét mã nguồn `.asp` của các giả lập.
-- Chèn Javascript ngăn lệnh submit, hiển thị thông báo giả lập `✔ Saved successfully!` và gửi tín hiệu báo cáo cho Portal ở lớp vỏ ngoài.
-
-### D. Hệ thống Tracking API & Logging
-- Tích hợp sẵn endpoint `/api/index.php/tracking/timer`.
-- Ghi nhận: ID KTV, Tên Bài Học, Điểm số, Tổng thời gian hoàn thành (tính bằng giây) và danh sách các lỗi cấu hình.
-- 100% không bị gửi đúp dữ liệu nhờ màng lọc logic thông minh tại nút "Nộp Bài".
+> **Cơ chế hoạt động**: `run_all.py` tự động đọc file `.env`, tự bật PHP API (nội bộ 8082), tự bật Django Admin (nội bộ 8083) và gom toàn bộ điều hướng về **cổng duy nhất `8080`**.
 
 ---
 
-## 🌐 4. Cấu Trúc Cổng Dịch Vụ (Single-Port)
+## 🌐 3. Cấu Trúc Điều Hướng (Single-Port 8080)
 
-| Thành phần | Địa chỉ (Routing qua Master Dispatcher) |
-|---|---|
-| **Portal Trung Tâm & Bài Học** | `http://localhost:8080/` |
-| **API Tracking (PHP)** | `http://localhost:8080/api/index.php` |
-| **Iframe Giả lập AC1000F** | `http://localhost:8080/sim_ac1000f/...` |
-| **Các giả lập khác** | `http://localhost:8080/sim_ax3000c/...` |
+Toàn bộ hệ thống đều được truy cập qua **1 cổng duy nhất `8080`**:
+
+| Dịch vụ | Đường dẫn truy cập | Mô tả |
+| :--- | :--- | :--- |
+| 🏠 **Portal Trung Tâm** | `http://localhost:8080/` | Trang chủ chọn thiết bị và chế độ thực hành |
+| 📊 **Dashboard Đào Tạo** | `http://localhost:8080/dashboard/` | Báo cáo tiến độ, KPI, ma trận kết quả KTV |
+| ⚙️ **Trang Quản Trị Admin** | `http://localhost:8080/admin/` | Quản lý KTV, Lớp học, Bài Lab, Timer Sessions, Xuất CSV |
+| 🔌 **PHP REST API** | `http://localhost:8080/api/` | API chấm điểm, tracking, IAM auth |
+| 📡 **7 Thiết bị Giả lập** | `http://localhost:8080/sim_<model>/` | Giao diện cấu hình AC1000F, AX3000C, AX3000GZ, AX3000HV2, AX3000S, BE12000, BE15000 |
+
+### 🔐 Thông Tin Đăng Nhập Trang Admin
+- **URL**: `http://localhost:8080/admin/`
+- **Tài khoản**: Cấu hình tại biến `DJANGO_SUPERUSER_USERNAME` (mặc định: `admin`)
+- **Mật khẩu**: Cấu hình tại biến `DJANGO_SUPERUSER_PASSWORD` trong file `.env`
+
 
 ---
 
-## 🛑 5. Hướng Dẫn Dừng Hệ Thống
+## 🛠 4. Các Tính Năng Đào Tạo Cốt Lõi
 
-- **Windows (CMD/PowerShell)**: Đóng cửa sổ CMD đang chạy (hoặc nhấn `Ctrl + C`).
-- **Terminal (macOS/Linux)**: Nhấn `Ctrl + C` tại cửa sổ Terminal đang chạy script để dừng toàn bộ dịch vụ Python và PHP nội bộ.
+1. **Hai Chế Độ Đào Tạo:**
+   - **💡 Chế độ Hướng dẫn (Guide Mode):** Có bong bóng chỉ dẫn từng bước (Tooltips). KTV được phép cấu hình sai, sửa lại và chỉ ghi nhận kết quả khi đạt 100%.
+   - **⚡ Chế độ Thực hành (Practice Mode):** Ẩn toàn bộ hướng dẫn, chấm điểm khắt khe. Nếu cấu hình sai sẽ yêu cầu làm lại từ đầu và reset modem về mặc định.
+
+2. **Chấm Điểm Tự Động Thông Minh (Smart Auto-Grading):**
+   - Đọc trực tiếp dữ liệu từ DOM của iframe thiết bị giả lập và so khớp với bộ tiêu chí chấm điểm chuẩn FPT Telecom.
+   - Hỗ trợ lưu cache đa trang (Wi-Fi 2.4G, Wi-Fi 5G, WAN, LAN) để tổng hợp điểm số chính xác khi bấm nộp bài.
+
+3. **Telemetry & Anti-Fraud:**
+   - Tự động ghi nhận thời gian thực hiện (giây), địa chỉ IP, User Agent, loại phiên và chi tiết từng bước cấu hình đúng/sai.
 
 ---
 
-## 📝 Ghi Chú
-- Giữ nguyên cửa sổ terminal/CMD trong suốt quá trình thực hành.
-- Nếu bạn có thay đổi cấu trúc thiết bị và luồng lưu file, hãy chạy lại lệnh vá file của Python để giả lập hoạt động đúng với Portal.
-- Đảm bảo cổng `8080` không bị chiếm dụng trước khi bật file Batch/Python.
+## 🛑 5. Dừng Hệ Thống
+
+- **Với Docker Compose**: Nhấn `Ctrl + C` hoặc chạy lệnh `docker compose down`.
+- **Với Python Native**: Nhấn `Ctrl + C` tại cửa sổ Terminal đang chạy `run_all.py`.

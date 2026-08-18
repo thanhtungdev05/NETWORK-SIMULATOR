@@ -264,7 +264,9 @@
       `;
       document.getElementById('btn-iam-logout').addEventListener('click', function() {
         fetch('/api/index.php/auth/logout', { method: 'POST', credentials: 'include' })
-          .then(() => window.location.reload());
+          .then(function() {
+            window.location.href = '/';
+          });
       });
     } else {
       section.innerHTML = `

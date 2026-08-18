@@ -23,7 +23,7 @@ Dashboard đọc GET /api/index.php/dashboard/all  (poll mỗi 30 giây)
 "Danh sách bài nộp lab" / "Chi tiết theo KTV" / KPI / Ma trận
 ```
 
-- Hệ thống chạy trên **port 8080** (`CHAY-TAT-CA.bat` / `run_all.py`). Trang web thiết bị và API được serve cùng server nên có thể gọi bằng đường dẫn tương đối `/api/index.php/tracking/timer`.
+- Hệ thống chạy trên **port 8080** (`docker compose up --build` / `run_all.py`). Trang web thiết bị và API được serve cùng server nên có thể gọi bằng đường dẫn tương đối `/api/index.php/tracking/timer`.
 - Dashboard tự cập nhật mỗi **30 giây** — sau khi gửi tracking thành công, dữ liệu xuất hiện trên dashboard trong tối đa ~30s.
 
 ---

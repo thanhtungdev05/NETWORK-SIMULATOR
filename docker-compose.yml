@@ -9,6 +9,7 @@ services:
     environment:
       PORT: "8080"
       API_PORT: "8081"
+      DJANGO_PORT: "8083"
     ports:
       - "8080:8080"
     restart: unless-stopped

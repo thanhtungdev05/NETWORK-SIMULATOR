@@ -75,3 +75,10 @@ sim_be12000/reference/source/
 
 #html thừa
 database_erd_visualizer.html
+
+# ── Django Admin Panel ────────────────────────────────────────
+admin_app/staticfiles/
+admin_app/admin_site/__pycache__/
+admin_app/admin_portal/__pycache__/
+admin_app/*.pyc
+admin_app/.env.admin

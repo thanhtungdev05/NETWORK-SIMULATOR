@@ -26,25 +26,22 @@ cd giailapthietbi
 
 ## ⚡ 2. Hướng Dẫn Khởi Chạy (Quick Start)
 
-Bạn có thể khởi chạy toàn bộ hệ thống bằng **1 trong 2 cách** sau:
+### 🔹 Cách 1: Chạy bằng Docker Compose (Khuyên dùng - Chuẩn Production / Đa nền tảng)
+Mở Terminal / PowerShell tại thư mục dự án và chạy:
 
-### 🔹 Cách 1: Chạy bằng File Batch (Dành riêng cho Windows)
-Mở **Command Prompt (CMD)** hoặc **PowerShell** tại thư mục dự án và chạy:
-
-```cmd
-.\CHAY-TAT-CA.bat
+```bash
+docker compose up --build
 ```
 
-> **Mô tả**: Lệnh này tự động bật **Master Dispatcher** chạy toàn bộ hệ thống trên **1 cổng duy nhất `8080`** và tự động mở trình duyệt truy cập `http://localhost:8080`.
+> **Mô tả**: Docker sẽ tự động build image, nạp biến môi trường `.env`, chạy migrations PostgreSQL (Neon), tự tạo tài khoản Django Superuser, và khởi chạy toàn bộ hệ thống trên **1 cổng duy nhất `8080`**:
+> - **Portal & Giả lập**: `http://localhost:8080`
+> - **Dashboard**: `http://localhost:8080/dashboard/`
+> - **Admin Quản trị**: `http://localhost:8080/admin/`
 
-### 🔹 Cách 2: Chạy bằng Python (Khuyên dùng - Đa nền tảng Windows / macOS / Linux)
-Chạy lệnh Python trực tiếp từ thư mục gốc dự án:
-
+### 🔹 Cách 2: Chạy trực tiếp bằng Python
 ```bash
 python run_all.py
 ```
-
-> **Mô tả**: Master Dispatcher gộp Portal, toàn bộ thiết bị giả lập và proxy API PHP (`/api/*`) sang **1 cổng duy nhất `8080`**.
 
 ---
 

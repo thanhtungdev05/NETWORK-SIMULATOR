@@ -1,6 +1,4 @@
-# Python dependencies for FTC Virtual Devices
 django>=4.2,<5.0
 psycopg2-binary>=2.9
 dj-database-url>=2.1
 whitenoise>=6.6
-

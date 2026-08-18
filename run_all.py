@@ -25,11 +25,33 @@ if hasattr(sys.stdout, 'reconfigure'):
     except Exception:
         pass
 
-PORT = int(os.environ.get('PORT', '8080'))
-API_PORT = int(os.environ.get('API_PORT', '8082'))
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DASHBOARD_DIR = os.path.join(BASE_DIR, 'dashboard-authen')
 os.chdir(BASE_DIR)
+
+def load_env():
+    """Doc file .env o thu muc goc va nap vao os.environ neu chua co."""
+    env_path = os.path.join(BASE_DIR, '.env')
+    if os.path.isfile(env_path):
+        try:
+            with open(env_path, 'r', encoding='utf-8', errors='ignore') as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith('#') or '=' not in line:
+                        continue
+                    k, v = line.split('=', 1)
+                    k = k.strip()
+                    v = v.strip().strip("'").strip('"')
+                    if k and k not in os.environ:
+                        os.environ[k] = v
+        except Exception:
+            pass
+
+load_env()
+
+PORT = int(os.environ.get('PORT', '8080'))
+API_PORT = int(os.environ.get('API_PORT', '8082'))
+DJANGO_PORT = int(os.environ.get('DJANGO_PORT', '8083'))
 
 # Import các Handler của từng thiết bị
 import sim_ac1000f.server2 as ac1000f
@@ -65,8 +87,10 @@ SIM_HANDLERS = {
 # File/thư mục Portal luôn do Portal phục vụ (chống bị 'cướp' bởi Referer/Cookie)
 PORTAL_PATHS = {'/', '/index.html', '/styles.css', '/app.js', '/data.js', '/portal.html',
                 '/favicon.ico', '/login', '/login/index.html', '/api',
-                '/dashboard', '/dashboard/', '/dashboard-authen', '/dashboard-authen/'}
-PORTAL_PREFIXES = ('/devices/', '/assets/', '/login/', '/api/', '/vendor/', '/dashboard/', '/dashboard-authen/')
+                '/dashboard', '/dashboard/', '/dashboard-authen', '/dashboard-authen/',
+                '/admin', '/admin/'}
+PORTAL_PREFIXES = ('/devices/', '/assets/', '/login/', '/api/', '/vendor/',
+                   '/dashboard/', '/dashboard-authen/', '/admin/', '/admin-static/')
 
 
 def is_portal_path(path):
@@ -126,6 +150,62 @@ class MasterDispatcher(SimpleHTTPRequestHandler):
 
         return None
 
+    def _proxy_django(self, method):
+        """Reverse proxy /admin/* va /admin-static/* sang Django Admin (127.0.0.1:DJANGO_PORT)."""
+        headers = {}
+        for k, v in self.headers.items():
+            if k.lower() in ('connection', 'keep-alive', 'proxy-connection',
+                             'transfer-encoding', 'upgrade', 'content-length'):
+                continue
+            headers[k] = v
+
+        host_hdr = self.headers.get('Host', f'127.0.0.1:{PORT}')
+        headers['X-Forwarded-Host'] = host_hdr
+        headers['X-Forwarded-Proto'] = 'http'
+        headers['X-Forwarded-Port'] = str(PORT)
+        if hasattr(self, 'client_address') and self.client_address:
+            headers['X-Forwarded-For'] = str(self.client_address[0])
+
+        body = b''
+        if method in ('POST', 'PUT', 'PATCH', 'DELETE'):
+            try:
+                length = int(self.headers.get('Content-Length', '0') or 0)
+            except ValueError:
+                length = 0
+            if length > 0:
+                body = self.rfile.read(length)
+
+        conn = None
+        try:
+            conn = http.client.HTTPConnection('127.0.0.1', DJANGO_PORT, timeout=30)
+            conn.request(method, self.path, body=body, headers=headers)
+            resp = conn.getresponse()
+            data = resp.read()
+        except Exception as e:
+            print('[DJANGO-PROXY] Loi chuyen tiep /admin/* -> Django: %s' % e)
+            self.send_error(502, 'Django Admin chua san sang, thu lai sau vai giay.')
+            return
+        finally:
+            if conn is not None:
+                conn.close()
+
+        self.send_response(resp.status)
+        hop_by_hop = {'connection', 'keep-alive', 'proxy-connection', 'transfer-encoding', 'upgrade'}
+        for k, v in resp.getheaders():
+            if k.lower() in hop_by_hop or k.lower() == 'content-length':
+                continue
+            if k.lower() == 'location':
+                # Chuyển hướng về đúng port public 8080 nếu Django trả về port nội bộ 8083
+                v = v.replace(f':{DJANGO_PORT}', f':{PORT}')
+            self.send_header(k, v)
+        self.send_header('Content-Length', str(len(data)))
+        self.end_headers()
+        if method != 'HEAD':
+            try:
+                self.wfile.write(data)
+            except (BrokenPipeError, ConnectionResetError):
+                pass
+
     def _proxy_api(self, method):
         """Reverse proxy /api/* sang PHP noi bo de giu SINGLE-PORT (chi can 8080).
         Giữ nguyên Host header tu trinh duyet de PHP build dung absolute URL + cookie."""
@@ -178,6 +258,11 @@ class MasterDispatcher(SimpleHTTPRequestHandler):
         path_only = self.path.split('?')[0]
         if path_only == '/api' or path_only.startswith('/api/'):
             return self._proxy_api(method)
+
+        # Chuyen tiep /admin/* va /admin-static/* -> Django Admin
+        if (path_only == '/admin' or path_only.startswith('/admin/')
+                or path_only.startswith('/admin-static/')):
+            return self._proxy_django(method)
 
         # Mount dashboard (thu muc dashboard-authen) thanh /dashboard/*.
         # Xu ly TRUOC detect_simulator de tranh bi cookie current_sim cua sim 'cuop' request.
@@ -396,6 +481,50 @@ def start_php_api():
         return None
 
 
+def kill_orphan_django():
+    """Dong Django Admin mo coi dang lang nghe 127.0.0.1:DJANGO_PORT tu lan chay truoc."""
+    for pid in listening_pids('127.0.0.1:%d' % DJANGO_PORT):
+        subprocess.run(['taskkill', '/pid', str(pid), '/f'],
+                       capture_output=True, text=True, timeout=10)
+        print('[ADMIN] Da dong Django mo coi (pid %d) tren 127.0.0.1:%d.' % (pid, DJANGO_PORT))
+
+
+def start_django_admin():
+    """Tu dong chay Django Admin server tren port noi bo DJANGO_PORT (8083)."""
+    if os.environ.get('START_DJANGO', '1') == '0':
+        print("[ADMIN] START_DJANGO=0 -> khong tu dong chay Django.")
+        return None
+
+    manage_py = os.path.join(BASE_DIR, 'admin_app', 'manage.py')
+    if not os.path.isfile(manage_py):
+        return None
+
+    kill_orphan_django()
+
+    if not wait_port_free(DJANGO_PORT):
+        print("[ADMIN] CANH BAO: cong %d chua giai phong." % DJANGO_PORT)
+        return None
+
+    try:
+        log_path = os.path.join(BASE_DIR, 'django_admin.log')
+        log_file = open(log_path, 'a', encoding='utf-8', errors='replace')
+        env = dict(os.environ)
+        env.setdefault('DJANGO_SETTINGS_MODULE', 'admin_site.settings')
+        proc = subprocess.Popen(
+            [sys.executable, manage_py, 'runserver', f'127.0.0.1:{DJANGO_PORT}', '--noreload'],
+            cwd=BASE_DIR,
+            env=env,
+            stdout=log_file,
+            stderr=subprocess.STDOUT,
+        )
+        print("[ADMIN] Django Admin noi bo chi lang nghe 127.0.0.1:%d (pid %d)" % (DJANGO_PORT, proc.pid))
+        print("[ADMIN] /admin/ duoc dispatcher proxy tu http://127.0.0.1:%d/admin/" % PORT)
+        return proc
+    except Exception as exc:
+        print("[ADMIN] Khong chay duoc Django Admin: %s" % exc)
+        return None
+
+
 def start_server():
     os.chdir(BASE_DIR)
 
@@ -425,6 +554,7 @@ def start_server():
         return
 
     php_proc = start_php_api()
+    django_proc = start_django_admin()
 
     try:
         srv = DualStackServer(('::', PORT), MasterDispatcher)
@@ -434,9 +564,11 @@ def start_server():
     srv.daemon_threads = True
     print("=" * 65)
     print("   HE THONG GIA LAP MANG FPT - MASTER DISPATCHER")
-    print("   Tat ca chay tren 1 cong duy nhat (single-port)!")
+    print("   Tat ca chay tren 1 cong duy nhat (single-port 8080)!")
     print(f"   Portal + Devices + API: http://127.0.0.1:{PORT}")
-    print(f"   API (/api/*) duoc proxy sang PHP noi bo 127.0.0.1:{API_PORT}")
+    print(f"   Quan tri Admin Panel:   http://127.0.0.1:{PORT}/admin/")
+    print(f"   API noi bo (/api/*) ->  PHP (127.0.0.1:{API_PORT})")
+    print(f"   Admin (/admin/*)    ->  Django (127.0.0.1:{DJANGO_PORT})")
     print("=" * 65)
     
     def open_browser():
@@ -452,6 +584,8 @@ def start_server():
     finally:
         if php_proc is not None:
             php_proc.terminate()
+        if django_proc is not None:
+            django_proc.terminate()
 
 if __name__ == "__main__":
     start_server()

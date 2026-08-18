@@ -32,8 +32,6 @@
   const statusText = document.getElementById('status-text');
   const heroScreen = document.getElementById('hero-screen');
   const lessonScreen = document.getElementById('lesson-screen');
-  const actionBtn = document.getElementById('action-btn');
-  const actionMenu = document.getElementById('action-menu');
   const loadingOverlay = document.getElementById('loading-overlay');
 
   // Lesson card elements
@@ -99,8 +97,6 @@
     // Bind events
     deviceSelect.addEventListener('change', () => selectDevice(deviceSelect.value));
     btnCollapse.addEventListener('click', toggleSidebar);
-    actionBtn.addEventListener('click', toggleActionMenu);
-    document.addEventListener('click', onDocClick);
 
     // Practice screen events
     if (btnBackLesson) btnBackLesson.addEventListener('click', backToLesson);
@@ -297,10 +293,14 @@
           _currentUser = {
             technician_id: u.user_id || u.id || 'UNKNOWN',
             name: u.displayName || u.display_name || u.email || 'KTV',
-            email: u.email || ''
+            email: u.email || '',
+            role: u.role || 'user'
           };
         }
         renderUserProfile();
+        if (_currentUser && _currentUser.role === 'admin') {
+          document.getElementById('btn-dashboard').style.display = '';
+        }
       })
       .catch(function () {
         // Không làm gì — portal vẫn hoạt động bình thường
@@ -1076,28 +1076,9 @@
     sidebar.classList.toggle('collapsed');
   }
 
-  // ── Action Menu ──────────────────────────────────────────────────
-  function toggleActionMenu() {
-    actionMenu.classList.toggle('open');
-  }
-
-  function onDocClick(e) {
-    if (!e.target.closest('.action-dropdown')) {
-      actionMenu.classList.remove('open');
-    }
-  }
-
-  // ── Action Menu Items ────────────────────────────────────────────
-  document.getElementById('menu-dashboard').addEventListener('click', () => {
-    actionMenu.classList.remove('open');
-    window.open('/dashboard-authen/', '_blank', 'noopener');
-  });
-
-  document.getElementById('menu-logout').addEventListener('click', () => {
-    actionMenu.classList.remove('open');
-    if (confirm('Bạn có muốn đăng xuất không?')) {
-      alert('Đã đăng xuất. Chúc bạn học tốt! 🎓');
-    }
+  // ── Dashboard Button (admin only) ──────────────────────────────────
+  document.getElementById('btn-dashboard').addEventListener('click', function () {
+    window.location.href = '/dashboard-authen/';
   });
 
   // ── Step By Step Guide Popups Logic ──────────────────────────────

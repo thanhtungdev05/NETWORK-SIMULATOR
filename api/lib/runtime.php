@@ -58,7 +58,7 @@ function normalize_app_timezone(?string $timezone): string
 
 function api_resource_requires_session(string $resource): bool
 {
-    return in_array($resource, ['auth', 'iam', 'users', 'login_logs', 'tracking', 'dashboard'], true);
+    return in_array($resource, ['auth', 'iam', 'users', 'login_logs', 'tracking', 'dashboard', 'roster'], true);
 }
 
 function normalize_neon_options(string $host, ?string $options): ?string

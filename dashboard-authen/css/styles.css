@@ -8037,3 +8037,473 @@ th:nth-last-child(2) .header-filter-popover .popover-dropdown {
         animation-duration: 1.6s;
     }
 }
+
+/* ============================================================
+   Roster (Quản lý KTV) — Admin view
+   ============================================================ */
+
+/* --- Tab bar --- */
+.roster-tab-bar {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid var(--border, #e2e5ea);
+    margin-bottom: 24px;
+}
+
+.roster-tab-btn {
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--muted, #6b7280);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    cursor: pointer;
+    transition: color .15s, border-color .15s;
+    font-family: inherit;
+}
+
+.roster-tab-btn:hover {
+    color: var(--text, #1f2937);
+}
+
+.roster-tab-btn.active {
+    color: var(--blue, #2563eb);
+    border-bottom-color: var(--blue, #2563eb);
+}
+
+/* --- Stats grid --- */
+.roster-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.roster-stat-card {
+    background: var(--surface, #fff);
+    border: 1px solid var(--border, #e2e5ea);
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+}
+
+.roster-stat-card .stat-label {
+    font-size: 12px;
+    color: var(--muted, #6b7280);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.roster-stat-card .stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text, #1f2937);
+}
+
+.roster-stat-card.region-card {
+    border-left: 3px solid var(--blue, #2563eb);
+}
+
+/* --- Toolbar --- */
+.roster-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.roster-search-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface, #fff);
+    border: 1px solid var(--border, #e2e5ea);
+    border-radius: 6px;
+    padding: 6px 12px;
+    flex: 1;
+    min-width: 200px;
+}
+
+.roster-search-field svg {
+    width: 16px;
+    height: 16px;
+    color: var(--muted, #6b7280);
+    flex-shrink: 0;
+}
+
+.roster-search-field input {
+    border: none;
+    outline: none;
+    font-size: 13px;
+    width: 100%;
+    background: transparent;
+    font-family: inherit;
+}
+
+.roster-select {
+    padding: 7px 12px;
+    font-size: 13px;
+    border: 1px solid var(--border, #e2e5ea);
+    border-radius: 6px;
+    background: var(--surface, #fff);
+    color: var(--text, #1f2937);
+    font-family: inherit;
+    cursor: pointer;
+}
+
+/* --- Table --- */
+.roster-table-wrapper {
+    overflow-x: auto;
+    border: 1px solid var(--border, #e2e5ea);
+    border-radius: 8px;
+    background: var(--surface, #fff);
+}
+
+.roster-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    table-layout: fixed;
+}
+
+.roster-table thead th {
+    text-align: left;
+    padding: 10px 12px;
+    font-weight: 600;
+    color: var(--muted, #6b7280);
+    background: #f8f9fb;
+    border-bottom: 1px solid var(--border, #e2e5ea);
+    white-space: nowrap;
+}
+
+.roster-table tbody td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border, #f0f1f4);
+    color: var(--text, #1f2937);
+    vertical-align: middle;
+}
+
+.roster-table tbody tr:hover {
+    background: #f8f9fb;
+}
+
+.roster-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* --- Badges --- */
+.badge-active {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 10px;
+    background: #dcfce7;
+    color: #166534;
+}
+
+.badge-terminated {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 10px;
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* --- Pagination --- */
+.roster-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    font-size: 13px;
+    color: var(--muted, #6b7280);
+}
+
+.roster-pagination-btns {
+    display: flex;
+    gap: 6px;
+}
+
+.roster-pagination-btns button {
+    padding: 5px 12px;
+    font-size: 13px;
+    border: 1px solid var(--border, #e2e5ea);
+    border-radius: 4px;
+    background: var(--surface, #fff);
+    color: var(--text, #1f2937);
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.roster-pagination-btns button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.roster-pagination-btns button:not(:disabled):hover {
+    background: #f0f4ff;
+}
+
+/* --- Upload zone --- */
+.upload-zone {
+    border: 2px dashed var(--border, #d1d5db);
+    border-radius: 12px;
+    padding: 48px 24px;
+    text-align: center;
+    background: #fafbfc;
+    transition: border-color .2s, background .2s;
+    cursor: pointer;
+}
+
+.upload-zone.dragover {
+    border-color: var(--blue, #2563eb);
+    background: #eff6ff;
+}
+
+.upload-zone .upload-icon {
+    width: 48px;
+    height: 48px;
+    color: var(--muted, #9ca3af);
+    margin-bottom: 12px;
+}
+
+.upload-zone p {
+    margin: 4px 0;
+    color: var(--text, #1f2937);
+}
+
+.upload-zone .upload-hint {
+    font-size: 12px;
+    color: var(--muted, #9ca3af);
+}
+
+.upload-file-info {
+    margin-top: 12px;
+    padding: 8px 16px;
+    background: #eff6ff;
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--blue, #2563eb);
+}
+
+/* --- Import actions --- */
+.roster-import-layout {
+    max-width: 700px;
+}
+
+.roster-import-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+/* --- Preview --- */
+.roster-preview {
+    margin-top: 24px;
+}
+
+.roster-preview-title {
+    font-size: 16px;
+    margin-bottom: 12px;
+}
+
+.roster-preview-stats {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.roster-preview-stat {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.roster-preview-stat.stat-insert {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.roster-preview-stat.stat-update {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.roster-preview-stat.stat-terminate {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.roster-preview-stat.stat-reactivate {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.roster-preview-stat.stat-error {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.roster-preview-errors {
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+}
+
+.roster-preview-errors h4 {
+    margin: 0 0 8px;
+    font-size: 14px;
+    color: #991b1b;
+}
+
+.roster-preview-errors ul {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 13px;
+    color: #7f1d1d;
+}
+
+.roster-preview-errors li {
+    margin-bottom: 4px;
+}
+
+.roster-preview-changes {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.roster-change-group {
+    margin-bottom: 16px;
+}
+
+.roster-change-group h4 {
+    font-size: 14px;
+    margin: 0 0 6px;
+}
+
+.roster-change-group table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.roster-change-group th {
+    text-align: left;
+    padding: 4px 8px;
+    background: #f3f4f6;
+    font-weight: 600;
+}
+
+.roster-change-group td {
+    padding: 4px 8px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+/* --- Import result --- */
+.roster-import-result {
+    margin-top: 20px;
+    padding: 16px;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.roster-import-result.result-success {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+}
+
+.roster-import-result.result-error {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+/* --- Edit modal --- */
+.roster-edit-card {
+    max-width: 520px;
+    width: 90%;
+}
+
+.roster-edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.roster-form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.roster-form-row label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted, #6b7280);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.roster-form-row input,
+.roster-form-row select {
+    padding: 8px 10px;
+    font-size: 13px;
+    border: 1px solid var(--border, #e2e5ea);
+    border-radius: 6px;
+    background: var(--surface, #fff);
+    font-family: inherit;
+}
+
+.roster-form-row input:focus,
+.roster-form-row select:focus {
+    outline: none;
+    border-color: var(--blue, #2563eb);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.roster-form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+/* --- Empty state --- */
+.roster-empty {
+    text-align: center;
+    padding: 40px;
+    color: var(--muted, #9ca3af);
+    font-size: 14px;
+}
+
+/* --- History table tweaks --- */
+#rosterHistoryBody td {
+    font-size: 12px;
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+    .roster-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .roster-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .roster-edit-card {
+        width: 95%;
+    }
+}

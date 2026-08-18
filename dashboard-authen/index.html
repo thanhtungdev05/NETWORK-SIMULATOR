@@ -46,6 +46,12 @@
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm13 10v-2a4 4 0 0 0-3-3.87M16 2.13a4 4 0 0 1 0 7.75" /></svg>
                     <span>Kỹ thuật viên</span>
                 </a>
+
+                <span class="sidebar-nav-label">Quản trị</span>
+                <a class="sidebar-link" href="?view=roster" data-dashboard-view="roster" aria-label="Quản lý KTV">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                    <span>Quản lý KTV</span>
+                </a>
             </nav>
 
             <div class="sidebar-footer">
@@ -65,6 +71,10 @@
                 </div>
             </div>
             <div class="top-actions">
+                <a href="/portal.html" class="button secondary" id="backToPortalBtn">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                    Portal
+                </a>
                 <button class="button" type="button" id="exportBtn">Xuất báo cáo</button>
             </div>
         </header>
@@ -513,6 +523,171 @@
                             <tbody id="sessionsBody"></tbody>
                         </table>
                         <div class="table-meta" id="learnerTableMeta"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quản lý KTV (Admin) -->
+            <section class="section dashboard-page-view" id="roster" data-page-view="roster">
+                <div class="roster-tab-bar" id="rosterTabBar">
+                    <button type="button" class="roster-tab-btn active" data-roster-tab="list">Danh sách KTV</button>
+                    <button type="button" class="roster-tab-btn" data-roster-tab="import">Import Excel</button>
+                    <button type="button" class="roster-tab-btn" data-roster-tab="history">Lịch sử import</button>
+                </div>
+
+                <!-- Sub-tab: Danh sách KTV -->
+                <div class="roster-panel" id="rosterListPanel">
+                    <div class="roster-toolbar">
+                        <label class="roster-search-field" for="rosterSearchInput">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 5 5"></path></svg>
+                            <input type="search" id="rosterSearchInput" placeholder="Tìm theo tên, email, mã NV, lớp..." autocomplete="off">
+                        </label>
+                        <select id="rosterStatusFilter" class="roster-select">
+                            <option value="active">Đang làm</option>
+                            <option value="terminated">Đã nghỉ</option>
+                            <option value="all">Tất cả</option>
+                        </select>
+                        <select id="rosterRegionFilter" class="roster-select">
+                            <option value="">Tất cả vùng</option>
+                        </select>
+                        <button type="button" class="button secondary" id="rosterExportBtn">Xuất CSV</button>
+                    </div>
+                    <div class="roster-table-wrapper">
+                        <table class="roster-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:70px">Mã NV</th>
+                                    <th style="width:16%">Họ tên</th>
+                                    <th style="width:20%">Email</th>
+                                    <th style="width:14%">Vị trí</th>
+                                    <th style="width:9%">Vùng</th>
+                                    <th style="width:7%">Lớp</th>
+                                    <th style="width:10%">Ngày BĐ</th>
+                                    <th style="width:8%">Trạng thái</th>
+                                    <th style="width:50px"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="rosterTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="roster-pagination" id="rosterPagination"></div>
+                </div>
+
+                <!-- Sub-tab: Import -->
+                <div class="roster-panel" id="rosterImportPanel" hidden>
+                    <div class="roster-import-layout">
+                        <div class="upload-zone" id="rosterUploadZone">
+                            <svg viewBox="0 0 24 24" aria-hidden="true" class="upload-icon"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            <p>Kéo thả file Excel (.xlsx) vào đây</p>
+                            <p class="upload-hint">hoặc</p>
+                            <button type="button" class="button" id="rosterFileBtn">Chọn file</button>
+                            <input type="file" id="rosterFileInput" accept=".xlsx" hidden>
+                            <div class="upload-file-info" id="rosterFileInfo" hidden></div>
+                        </div>
+                        <div class="roster-import-actions" id="rosterImportActions" hidden>
+                            <button type="button" class="button" id="rosterConfirmImportBtn">Xác nhận Import</button>
+                            <button type="button" class="button secondary" id="rosterCancelImportBtn">Hủy</button>
+                        </div>
+                    </div>
+                    <div class="roster-preview" id="rosterPreview" hidden>
+                        <h3 class="roster-preview-title">Kết quả preview</h3>
+                        <div class="roster-preview-stats" id="rosterPreviewStats"></div>
+                        <div class="roster-preview-errors" id="rosterPreviewErrors" hidden></div>
+                        <div class="roster-preview-changes" id="rosterPreviewChanges"></div>
+                    </div>
+                    <div class="roster-import-result" id="rosterImportResult" hidden></div>
+                </div>
+
+                <!-- Sub-tab: Lịch sử import -->
+                <div class="roster-panel" id="rosterHistoryPanel" hidden>
+                    <div class="roster-table-wrapper">
+                        <table class="roster-table">
+                            <thead>
+                                <tr>
+                                    <th>Batch ID</th>
+                                    <th>File</th>
+                                    <th>Người import</th>
+                                    <th>Tổng dòng</th>
+                                    <th>Thêm mới</th>
+                                    <th>Cập nhật</th>
+                                    <th>Nghỉ việc</th>
+                                    <th>Khôi phục</th>
+                                    <th>Lỗi</th>
+                                    <th>Thời gian</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rosterHistoryBody"></tbody>
+                        </table>
+                    </div>
+                    <div id="rosterHistoryEmpty" class="roster-empty" hidden>Chưa có lịch sử import nào.</div>
+                </div>
+
+                <!-- Edit KTV Modal -->
+                <div class="sub-modal-backdrop" id="rosterEditBackdrop" aria-hidden="true">
+                    <div class="sub-modal-card roster-edit-card">
+                        <div class="sub-modal-header">
+                            <div>
+                                <h3>Sửa thông tin KTV</h3>
+                                <div class="sub-modal-subtitle" id="rosterEditSubtitle"></div>
+                            </div>
+                            <button type="button" class="detail-close" id="rosterEditClose" aria-label="Đóng">×</button>
+                        </div>
+                        <div class="sub-modal-body">
+                            <form id="rosterEditForm" class="roster-edit-form">
+                                <input type="hidden" id="rosterEditEmployeeId">
+                                <div class="roster-form-row">
+                                    <label>Họ tên</label>
+                                    <input type="text" id="rosterEditDisplayName" required>
+                                </div>
+                                <div class="roster-form-row">
+                                    <label>Email</label>
+                                    <input type="email" id="rosterEditEmail" required>
+                                </div>
+                                <div class="roster-form-row">
+                                    <label>Vị trí</label>
+                                    <input type="text" id="rosterEditJobTitle">
+                                </div>
+                                <div class="roster-form-row">
+                                    <label>Mã vùng</label>
+                                    <input type="text" id="rosterEditRegionCode" maxlength="80">
+                                </div>
+                                <div class="roster-form-row">
+                                    <label>Vùng dashboard</label>
+                                    <input type="text" id="rosterEditDashboardRegion" maxlength="100">
+                                </div>
+                                <div class="roster-form-row">
+                                    <label>Mã đơn vị</label>
+                                    <input type="text" id="rosterEditUnitCode" maxlength="100">
+                                </div>
+                                <div class="roster-form-row">
+                                    <label>Tên đơn vị</label>
+                                    <input type="text" id="rosterEditUnitName" maxlength="200">
+                                </div>
+                                <div class="roster-form-row">
+                                    <label>Lớp</label>
+                                    <input type="text" id="rosterEditClassCode" maxlength="50">
+                                </div>
+                                <div class="roster-form-row">
+                                    <label>Ngày bắt đầu</label>
+                                    <input type="date" id="rosterEditTrainingStart">
+                                </div>
+                                <div class="roster-form-row">
+                                    <label>Ngày kết thúc</label>
+                                    <input type="date" id="rosterEditTrainingEnd">
+                                </div>
+                                <div class="roster-form-row">
+                                    <label>Nghỉ việc</label>
+                                    <select id="rosterEditTerminated">
+                                        <option value="0">Đang làm</option>
+                                        <option value="1">Đã nghỉ việc</option>
+                                    </select>
+                                </div>
+                                <div class="roster-form-actions">
+                                    <button type="submit" class="button">Lưu</button>
+                                    <button type="button" class="button secondary" id="rosterEditCancelBtn">Hủy</button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </section>

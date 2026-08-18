@@ -88,7 +88,27 @@ const state = {
 
     filtersBound: false,
     popoversInitialized: false,
-    dataSourceLabel: 'Đang tải dữ liệu từ timer_sessions'
+    dataSourceLabel: 'Đang tải dữ liệu từ timer_sessions',
+
+    // Roster (Quản lý KTV) — Admin
+    rosterTab: 'list',
+    rosterItems: [],
+    rosterStats: null,
+    rosterPage: 1,
+    rosterTotal: 0,
+    rosterSearch: '',
+    rosterStatusFilter: 'active',
+    rosterRegionFilter: '',
+    rosterRegions: [],
+    rosterHistoryItems: [],
+    rosterPreviewData: null,
+    rosterImportFile: null,
+    rosterImportBatchId: '',
+    rosterImportBusy: false,
+    rosterLoaded: false,
+    rosterHistoryLoaded: false,
+    rosterEditEmployeeId: '',
+    rosterInitialized: false,
 };
 
 const els = {
@@ -4547,6 +4567,11 @@ const DASHBOARD_VIEWS = {
         title: 'Thống kê kỹ thuật viên',
         subtitle: 'Tra cứu lịch sử, thiết bị và kết quả thực hành theo KTV'
     },
+    roster: {
+        eyebrow: 'Admin roster',
+        title: 'Quản lý KTV',
+        subtitle: 'Import, theo dõi và quản lý danh sách kỹ thuật viên'
+    },
 };
 
 let activeDashboardView = 'overview';
@@ -4593,6 +4618,13 @@ function initDashboardViewRouting() {
         if (isActive) link.setAttribute('aria-current', 'page');
         else link.removeAttribute('aria-current');
     });
+
+    if (activeDashboardView === 'roster') {
+        const loadIfReady = () => {
+            if (typeof loadRosterList === 'function' && !state.rosterLoaded) loadRosterList();
+        };
+        loadIfReady();
+    }
 }
 
 function initSidebarNavigation() {
@@ -4606,6 +4638,437 @@ function initSidebarNavigation() {
     });
 }
 
+/* ============================================================
+   Roster (Quản lý KTV) — Admin
+   ============================================================ */
+
+function initRoster() {
+    if (state.rosterInitialized) return;
+    state.rosterInitialized = true;
+
+    document.querySelectorAll('[data-roster-tab]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            state.rosterTab = btn.dataset.rosterTab;
+            document.querySelectorAll('[data-roster-tab]').forEach(b => b.classList.toggle('active', b.dataset.rosterTab === state.rosterTab));
+            document.getElementById('rosterListPanel').hidden = state.rosterTab !== 'list';
+            document.getElementById('rosterImportPanel').hidden = state.rosterTab !== 'import';
+            document.getElementById('rosterHistoryPanel').hidden = state.rosterTab !== 'history';
+            if (state.rosterTab === 'list' && !state.rosterLoaded) loadRosterList();
+            if (state.rosterTab === 'history' && !state.rosterHistoryLoaded) loadRosterHistory();
+        });
+    });
+
+    const searchInput = document.getElementById('rosterSearchInput');
+    if (searchInput) {
+        let debounce;
+        searchInput.addEventListener('input', () => {
+            clearTimeout(debounce);
+            debounce = setTimeout(() => {
+                state.rosterSearch = searchInput.value;
+                state.rosterPage = 1;
+                loadRosterList();
+            }, 300);
+        });
+    }
+
+    document.getElementById('rosterStatusFilter')?.addEventListener('change', e => {
+        state.rosterStatusFilter = e.target.value;
+        state.rosterPage = 1;
+        loadRosterList();
+    });
+
+    document.getElementById('rosterRegionFilter')?.addEventListener('change', e => {
+        state.rosterRegionFilter = e.target.value;
+        state.rosterPage = 1;
+        loadRosterList();
+    });
+
+    document.getElementById('rosterExportBtn')?.addEventListener('click', () => {
+        window.location.href = API_BASE_URL + '/roster/export?' + rosterFilterQuerystring();
+    });
+
+    const uploadZone = document.getElementById('rosterUploadZone');
+    const fileInput = document.getElementById('rosterFileInput');
+    if (uploadZone && fileInput) {
+        uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+        uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+        uploadZone.addEventListener('drop', e => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            const file = e.dataTransfer?.files?.[0];
+            if (file) handleRosterFile(file);
+        });
+        document.getElementById('rosterFileBtn')?.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files?.[0]) handleRosterFile(fileInput.files[0]);
+        });
+    }
+
+    document.getElementById('rosterConfirmImportBtn')?.addEventListener('click', confirmRosterImport);
+    document.getElementById('rosterCancelImportBtn')?.addEventListener('click', cancelRosterImport);
+
+    document.getElementById('rosterEditClose')?.addEventListener('click', closeRosterEdit);
+    document.getElementById('rosterEditCancelBtn')?.addEventListener('click', closeRosterEdit);
+    document.getElementById('rosterEditBackdrop')?.addEventListener('click', e => {
+        if (e.target === e.currentTarget) closeRosterEdit();
+    });
+    document.getElementById('rosterEditForm')?.addEventListener('submit', submitRosterEdit);
+
+    document.getElementById('rosterTableBody')?.addEventListener('click', e => {
+        const btn = e.target.closest('.roster-edit-btn');
+        if (btn?.dataset.employeeId) openRosterEdit(btn.dataset.employeeId);
+    });
+
+    document.getElementById('rosterPagination')?.addEventListener('click', e => {
+        const btn = e.target.closest('.roster-page-btn');
+        if (btn && !btn.disabled && btn.dataset.page) rosterGoPage(Number(btn.dataset.page));
+    });
+}
+
+function rosterFilterQuerystring() {
+    const params = new URLSearchParams();
+    params.set('status', state.rosterStatusFilter);
+    if (state.rosterSearch) params.set('search', state.rosterSearch);
+    if (state.rosterRegionFilter) params.set('region', state.rosterRegionFilter);
+    return params.toString();
+}
+
+async function loadRosterList() {
+    state.rosterLoaded = false;
+    try {
+        const params = new URLSearchParams();
+        params.set('status', state.rosterStatusFilter);
+        params.set('page', String(state.rosterPage));
+        if (state.rosterSearch) params.set('search', state.rosterSearch);
+        if (state.rosterRegionFilter) params.set('region', state.rosterRegionFilter);
+        const resp = await fetch(`${API_BASE_URL}/roster/list?${params}`);
+        if (!resp.ok) throw new Error('Failed to load roster');
+        const json = await resp.json();
+        const data = json.data || {};
+        state.rosterItems = data.items || [];
+        state.rosterStats = data.stats || null;
+        state.rosterTotal = data.total || 0;
+        state.rosterLoaded = true;
+        renderRosterList();
+    } catch (err) {
+        console.error('loadRosterList error:', err);
+    }
+}
+
+function renderRosterList() {
+    renderRosterStats();
+    renderRosterTableBody();
+    renderRosterPagination();
+    populateRosterRegionFilter();
+}
+
+function renderRosterStats() {
+    const grid = document.getElementById('rosterStatsGrid');
+    if (grid) grid.innerHTML = '';
+}
+
+function renderRosterTableBody() {
+    const tbody = document.getElementById('rosterTableBody');
+    if (!tbody) return;
+    if (!state.rosterItems.length) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:#9ca3af">Không có dữ liệu.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = state.rosterItems.map(item => {
+        const terminated = item.is_terminated || item.isTerminated;
+        const badge = terminated ? '<span class="badge-terminated">Đã nghỉ</span>' : '<span class="badge-active">Đang làm</span>';
+        const dateStr = d => d ? new Date(d).toLocaleDateString('vi-VN') : '-';
+        const eid = escapeHTML(item.employee_id || item.employeeId || '');
+        return `<tr>
+            <td>${eid}</td>
+            <td>${escapeHTML(item.display_name || item.displayName || '')}</td>
+            <td>${escapeHTML(item.email || '')}</td>
+            <td>${escapeHTML(item.job_title || item.jobTitle || '')}</td>
+            <td>${escapeHTML(item.dashboard_region || item.dashboardRegion || '')}</td>
+            <td>${escapeHTML(item.class_code || item.classCode || '')}</td>
+            <td>${escapeHTML(dateStr(item.training_start_date || item.trainingStartDate))}</td>
+            <td>${badge}</td>
+            <td><button type="button" class="button secondary roster-edit-btn" style="padding:3px 8px;font-size:12px" data-employee-id="${eid}">Sửa</button></td>
+        </tr>`;
+    }).join('');
+}
+
+function renderRosterPagination() {
+    const el = document.getElementById('rosterPagination');
+    if (!el) return;
+    const totalPages = Math.max(1, Math.ceil(state.rosterTotal / 50));
+    el.innerHTML = `
+        <span>Trang ${state.rosterPage} / ${totalPages} — ${formatNumber.format(state.rosterTotal)} kết quả</span>
+        <div class="roster-pagination-btns">
+            <button class="roster-page-btn" data-page="${state.rosterPage - 1}" ${state.rosterPage <= 1 ? 'disabled' : ''}>Trước</button>
+            <button class="roster-page-btn" data-page="${state.rosterPage + 1}" ${state.rosterPage >= totalPages ? 'disabled' : ''}>Sau</button>
+        </div>
+    `;
+}
+
+function rosterGoPage(page) {
+    state.rosterPage = page;
+    loadRosterList();
+}
+
+function populateRosterRegionFilter() {
+    const sel = document.getElementById('rosterRegionFilter');
+    if (!sel || !state.rosterStats) return;
+    const regions = (state.rosterStats.byRegion || state.rosterStats.by_region || []).map(r => r.region).sort();
+    const current = state.rosterRegionFilter;
+    sel.innerHTML = '<option value="">Tất cả vùng</option>' + regions.map(r => `<option value="${escapeHTML(r)}" ${r === current ? 'selected' : ''}>${escapeHTML(r)}</option>`).join('');
+}
+
+/* --- Import --- */
+
+function handleRosterFile(file) {
+    if (!file.name.endsWith('.xlsx')) {
+        alert('Vui lòng chọn file .xlsx');
+        return;
+    }
+    state.rosterImportFile = file;
+    state.rosterPreviewData = null;
+    const info = document.getElementById('rosterFileInfo');
+    if (info) {
+        info.hidden = false;
+        info.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+    }
+    document.getElementById('rosterPreview').hidden = true;
+    document.getElementById('rosterImportResult').hidden = true;
+    document.getElementById('rosterImportActions').hidden = false;
+    doRosterPreview(file);
+}
+
+async function doRosterPreview(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('dry_run', 'true');
+    try {
+        const resp = await fetch(`${API_BASE_URL}/roster/import`, { method: 'POST', body: formData });
+        const json = await resp.json();
+        const data = json.data || json.error || {};
+        state.rosterPreviewData = data;
+        renderRosterPreview(data);
+    } catch (err) {
+        console.error('Preview error:', err);
+        const el = document.getElementById('rosterPreview');
+        if (el) { el.hidden = false; el.innerHTML = `<div class="roster-preview-errors" style="display:block"><h4>Lỗi preview</h4><p>${escapeHTML(String(err))}</p></div>`; }
+    }
+}
+
+function renderRosterPreview(data) {
+    const container = document.getElementById('rosterPreview');
+    if (!container) return;
+    container.hidden = false;
+
+    const statsEl = document.getElementById('rosterPreviewStats');
+    if (statsEl) {
+        statsEl.innerHTML = `
+            <span class="roster-preview-stat stat-insert">Thêm mới: ${data.inserted || 0}</span>
+            <span class="roster-preview-stat stat-update">Cập nhật: ${data.updated || 0}</span>
+            <span class="roster-preview-stat stat-terminate">Nghỉ việc: ${data.terminated || 0}</span>
+            <span class="roster-preview-stat stat-reactivate">Khôi phục: ${data.reactivated || 0}</span>
+            <span class="roster-preview-stat stat-error">Lỗi: ${data.error_count || data.errorCount || 0}</span>
+        `;
+    }
+
+    const errorsEl = document.getElementById('rosterPreviewErrors');
+    if (errorsEl) {
+        const errors = data.errors || [];
+        if (errors.length) {
+            errorsEl.hidden = false;
+            errorsEl.innerHTML = `<h4>Lỗi (${errors.length})</h4><ul>${errors.map(e => `<li>Dòng ${e.row || '?'}: ${escapeHTML(e.message || '')}</li>`).join('')}</ul>`;
+        } else {
+            errorsEl.hidden = true;
+        }
+    }
+
+    const changesEl = document.getElementById('rosterPreviewChanges');
+    if (changesEl) {
+        let html = '';
+        const changes = data.changes || {};
+        [['inserted', 'Thêm mới', 'stat-insert'], ['updated', 'Cập nhật', 'stat-update'], ['terminated', 'Nghỉ việc', 'stat-terminate'], ['reactivated', 'Khôi phục', 'stat-reactivate']].forEach(([key, label, cls]) => {
+            const items = changes[key] || [];
+            if (!items.length) return;
+            html += `<div class="roster-change-group"><h4 class="roster-preview-stat ${cls}">${label} (${items.length})</h4><table><thead><tr><th>Mã NV</th><th>Tên</th><th>Email</th><th>Vùng</th></tr></thead><tbody>${items.map(i => `<tr><td>${escapeHTML(i.employee_id || '')}</td><td>${escapeHTML(i.display_name || '')}</td><td>${escapeHTML(i.email || '')}</td><td>${escapeHTML(i.region || '')}</td></tr>`).join('')}</tbody></table></div>`;
+        });
+        changesEl.innerHTML = html || '<p style="color:#9ca3af">Không có thay đổi nào.</p>';
+    }
+}
+
+async function confirmRosterImport() {
+    if (state.rosterImportBusy || !state.rosterImportFile) return;
+    const data = state.rosterPreviewData;
+    if (!data) {
+        alert('Vui lòng đợi preview hoàn tất trước khi import.');
+        return;
+    }
+    if ((data.error_count || data.errorCount || 0) > 0) {
+        alert('Vui lòng sửa lỗi trước khi import.');
+        return;
+    }
+    state.rosterImportBusy = true;
+    const btn = document.getElementById('rosterConfirmImportBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Đang import...'; }
+
+    const formData = new FormData();
+    formData.append('file', state.rosterImportFile);
+    try {
+        const resp = await fetch(`${API_BASE_URL}/roster/import`, { method: 'POST', body: formData });
+        const json = await resp.json();
+        if (!resp.ok) {
+            const errData = json.error || {};
+            showRosterResult(errData.message || 'Import thất bại.', false, errData.details);
+        } else {
+            const result = json.data || {};
+            showRosterResult(
+                `Import thành công: ${result.inserted || 0} thêm, ${result.updated || 0} cập nhật, ${result.terminated || 0} nghỉ, ${result.reactivated || 0} khôi phục.`,
+                true
+            );
+            state.rosterLoaded = false;
+            state.rosterHistoryLoaded = false;
+        }
+    } catch (err) {
+        showRosterResult('Lỗi khi import: ' + err.message, false);
+    } finally {
+        state.rosterImportBusy = false;
+        if (btn) { btn.disabled = false; btn.textContent = 'Xác nhận Import'; }
+    }
+}
+
+function showRosterResult(message, success, details) {
+    const el = document.getElementById('rosterImportResult');
+    if (!el) return;
+    el.hidden = false;
+    el.className = 'roster-import-result ' + (success ? 'result-success' : 'result-error');
+    let html = `<p>${escapeHTML(message)}</p>`;
+    if (details && details.length) {
+        html += '<ul style="margin:8px 0 0;padding-left:18px;font-size:13px">';
+        details.forEach(d => { html += `<li>${escapeHTML(d.message || d)}</li>`; });
+        html += '</ul>';
+    }
+    el.innerHTML = html;
+}
+
+function cancelRosterImport() {
+    state.rosterImportFile = null;
+    state.rosterPreviewData = null;
+    const info = document.getElementById('rosterFileInfo');
+    if (info) info.hidden = true;
+    document.getElementById('rosterPreview').hidden = true;
+    document.getElementById('rosterImportResult').hidden = true;
+    document.getElementById('rosterImportActions').hidden = true;
+    document.getElementById('rosterFileInput').value = '';
+}
+
+/* --- History --- */
+
+async function loadRosterHistory() {
+    try {
+        const resp = await fetch(`${API_BASE_URL}/roster/history`);
+        if (!resp.ok) throw new Error('Failed to load history');
+        const json = await resp.json();
+        state.rosterHistoryItems = (json.data || {}).items || [];
+        state.rosterHistoryLoaded = true;
+        renderRosterHistory();
+    } catch (err) {
+        console.error('loadRosterHistory error:', err);
+    }
+}
+
+function renderRosterHistory() {
+    const tbody = document.getElementById('rosterHistoryBody');
+    const emptyEl = document.getElementById('rosterHistoryEmpty');
+    if (!tbody) return;
+    if (!state.rosterHistoryItems.length) {
+        tbody.innerHTML = '';
+        if (emptyEl) emptyEl.hidden = false;
+        return;
+    }
+    if (emptyEl) emptyEl.hidden = true;
+    tbody.innerHTML = state.rosterHistoryItems.map(item => {
+        const dt = item.importedAt || item.imported_at;
+        const dateStr = dt ? new Date(dt).toLocaleString('vi-VN') : '-';
+        return `<tr>
+            <td><code>${escapeHTML(item.batchId || item.batch_id || '')}</code></td>
+            <td>${escapeHTML(item.fileName || item.file_name || '')}</td>
+            <td>${escapeHTML(item.importedByName || item.imported_by_name || item.importedByEmail || '-')}</td>
+            <td>${formatNumber.format(Number(item.totalRows || item.total_rows || 0))}</td>
+            <td style="color:#166534">${formatNumber.format(Number(item.inserted || 0))}</td>
+            <td style="color:#1e40af">${formatNumber.format(Number(item.updated || 0))}</td>
+            <td style="color:#991b1b">${formatNumber.format(Number(item.terminated || 0))}</td>
+            <td style="color:#92400e">${formatNumber.format(Number(item.reactivated || 0))}</td>
+            <td>${formatNumber.format(Number(item.errorCount || item.error_count || 0))}</td>
+            <td>${dateStr}</td>
+        </tr>`;
+    }).join('');
+}
+
+/* --- Edit KTV --- */
+
+async function openRosterEdit(employeeId) {
+    const item = state.rosterItems.find(i => (i.employee_id || i.employeeId) === employeeId);
+    if (!item) return;
+    state.rosterEditEmployeeId = employeeId;
+    document.getElementById('rosterEditSubtitle').textContent = employeeId + ' — ' + (item.display_name || item.displayName || '');
+    document.getElementById('rosterEditEmployeeId').value = employeeId;
+    document.getElementById('rosterEditDisplayName').value = item.display_name || item.displayName || '';
+    document.getElementById('rosterEditEmail').value = item.email || '';
+    document.getElementById('rosterEditJobTitle').value = item.job_title || item.jobTitle || '';
+    document.getElementById('rosterEditRegionCode').value = item.region_code || item.regionCode || '';
+    document.getElementById('rosterEditDashboardRegion').value = item.dashboard_region || item.dashboardRegion || '';
+    document.getElementById('rosterEditUnitCode').value = item.unit_code || item.unitCode || '';
+    document.getElementById('rosterEditUnitName').value = item.unit_name || item.unitName || '';
+    document.getElementById('rosterEditClassCode').value = item.class_code || item.classCode || '';
+    document.getElementById('rosterEditTrainingStart').value = item.training_start_date || item.trainingStartDate || '';
+    document.getElementById('rosterEditTrainingEnd').value = item.training_end_date || item.trainingEndDate || '';
+    document.getElementById('rosterEditTerminated').value = (item.is_terminated || item.isTerminated) ? '1' : '0';
+    const backdrop = document.getElementById('rosterEditBackdrop');
+    if (backdrop) { backdrop.hidden = false; backdrop.classList.add('visible'); backdrop.setAttribute('aria-hidden', 'false'); }
+}
+
+function closeRosterEdit() {
+    const backdrop = document.getElementById('rosterEditBackdrop');
+    if (backdrop) { backdrop.hidden = true; backdrop.classList.remove('visible'); backdrop.setAttribute('aria-hidden', 'true'); }
+    state.rosterEditEmployeeId = '';
+}
+
+async function submitRosterEdit(e) {
+    e.preventDefault();
+    const employeeId = state.rosterEditEmployeeId;
+    if (!employeeId) return;
+    const payload = {
+        display_name: document.getElementById('rosterEditDisplayName').value.trim(),
+        email: document.getElementById('rosterEditEmail').value.trim(),
+        job_title: document.getElementById('rosterEditJobTitle').value.trim() || null,
+        region_code: document.getElementById('rosterEditRegionCode').value.trim() || null,
+        dashboard_region: document.getElementById('rosterEditDashboardRegion').value.trim() || null,
+        unit_code: document.getElementById('rosterEditUnitCode').value.trim() || null,
+        unit_name: document.getElementById('rosterEditUnitName').value.trim() || null,
+        class_code: document.getElementById('rosterEditClassCode').value.trim() || null,
+        training_start_date: document.getElementById('rosterEditTrainingStart').value || null,
+        training_end_date: document.getElementById('rosterEditTrainingEnd').value || null,
+        is_terminated: document.getElementById('rosterEditTerminated').value === '1',
+    };
+    try {
+        const resp = await fetch(`${API_BASE_URL}/roster/${encodeURIComponent(employeeId)}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+        if (!resp.ok) {
+            const err = await resp.json();
+            alert(err.error?.message || 'Cập nhật thất bại.');
+            return;
+        }
+        closeRosterEdit();
+        state.rosterLoaded = false;
+        loadRosterList();
+    } catch (err) {
+        alert('Lỗi: ' + err.message);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     initDashboardViewRouting();
     initSidebarNavigation();
@@ -4615,6 +5078,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initHourlyDatePicker();
     initExport();
     initInstructorWorkspace();
+    initRoster();
     initEvents();
     initSubModalEvents();
     initCompareModal();

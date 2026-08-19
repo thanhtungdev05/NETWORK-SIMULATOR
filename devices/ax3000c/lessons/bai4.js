@@ -6,7 +6,7 @@
 window.DEVICE_AX3000C_LESSONS = window.DEVICE_AX3000C_LESSONS || [];
 
 window.DEVICE_AX3000C_LESSONS.push({
-  id: 'ax3c-bai4',
+  id: 'LAB_AX3000CV2_04',
   title: 'Bài 4-Cấu hình DNS',
   subtitle: 'Cấu hình máy chủ DNS của FPT và Google',
   instructions: [

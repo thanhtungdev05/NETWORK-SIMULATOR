@@ -6,7 +6,7 @@
 window.DEVICE_AC1000F_LESSONS = window.DEVICE_AC1000F_LESSONS || [];
 
 window.DEVICE_AC1000F_LESSONS.push({
-  id: 'ac1-bai10',
+  id: 'LAB_AC1000F_10',
   title: 'Bài 10: Cấu hình chặn Web',
   subtitle: 'Thiết lập quy tắc lọc và chặn truy cập Web',
     instructions: [

@@ -4,7 +4,7 @@
 
 if (!window.TOOLTIPS_AX3000C) window.TOOLTIPS_AX3000C = {};
 
-window.TOOLTIPS_AX3000C['ax3c-bai3'] = [
+window.TOOLTIPS_AX3000C['LAB_AX3000CV2_03'] = [
   // 1. Chọn Network ở Menu bên trái (chỉ hiện khi chưa ở trang LAN)
   {
     selector: '.el-submenu__title:contains("Network"), .el-submenu:contains("Network")',

@@ -4,7 +4,7 @@
 
 if (!window.TOOLTIPS_AC1000F) window.TOOLTIPS_AC1000F = {};
 
-window.TOOLTIPS_AC1000F['ac1-bai9'] = [
+window.TOOLTIPS_AC1000F['LAB_AC1000F_09'] = [
     // Bước 1: Chọn Maintenance ở Header
     {
         selector: 'a[onclick*="change_bg5"]',

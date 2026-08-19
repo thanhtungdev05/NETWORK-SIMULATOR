@@ -6,7 +6,7 @@
 window.DEVICE_AX3000C_LESSONS = window.DEVICE_AX3000C_LESSONS || [];
 
 window.DEVICE_AX3000C_LESSONS.push({
-  id: 'ax3c-bai3',
+  id: 'LAB_AX3000CV2_03',
   title: 'Bài 3-Cấu hình đổi IP LAN',
   subtitle: 'Thay đổi địa chỉ IP LAN và dải DHCP Pool',
   instructions: [

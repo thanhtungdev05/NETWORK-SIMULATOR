@@ -1788,7 +1788,7 @@ function handle_dashboard(array $segments, string $method): void
             'mode' => (string)($row['mode'] ?? 'Thực hành'),
             'device_name' => (string)($row['device_name'] ?? ''),
             'lab_id' => (string)($row['lab_id'] ?? ''),
-            'lab_name' => (string)($row['lab_name'] ?? ''),
+            'lab_name' => isset($labMap[(string)($row['lab_id'] ?? '')]) ? $labMap[(string)($row['lab_id'] ?? '')]['lab_name'] : (string)($row['lab_name'] ?? ''),
             'is_passed' => isset($row['is_passed']) ? (bool)$row['is_passed'] : null,
             'score' => isset($row['score']) ? (float)$row['score'] : null,
             'status' => (string)($row['status'] ?? ((isset($row['is_passed']) && $row['is_passed'] === false) ? 'failed' : 'completed')),

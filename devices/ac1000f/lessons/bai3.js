@@ -6,7 +6,7 @@
 window.DEVICE_AC1000F_LESSONS = window.DEVICE_AC1000F_LESSONS || [];
 
 window.DEVICE_AC1000F_LESSONS.push({
-  id: 'ac1-bai3',
+  id: 'LAB_AC1000F_03',
   title: 'Bài 3: CẤU HÌNH IP LAN',
   subtitle: 'Thay đổi địa chỉ IP LAN và DHCP Pool',
   instructions: [

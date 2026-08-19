@@ -6,7 +6,7 @@
 window.DEVICE_AX3000C_LESSONS = window.DEVICE_AX3000C_LESSONS || [];
 
 window.DEVICE_AX3000C_LESSONS.push({
-  id: 'ax3c-bai5',
+  id: 'LAB_AX3000CV2_05',
   title: 'Bài 5-Cấu hình NAT Port',
   subtitle: 'Mở Port (Port Forwarding) trên thiết bị',
   instructions: [

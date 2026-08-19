@@ -7,7 +7,7 @@
   window.DEVICE_AC1000F_LESSONS = window.DEVICE_AC1000F_LESSONS || [];
 
   window.DEVICE_AC1000F_LESSONS.push({
-    id: 'ac1-bai2',
+    id: 'LAB_AC1000F_02',
     title: 'Bài 2: Cấu hình mạng Wi-Fi',
     subtitle: 'Thiết lập Wi-Fi 2.4G + 5G đúng chuẩn FPT Telecom',
     instructions: [

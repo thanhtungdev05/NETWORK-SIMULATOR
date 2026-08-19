@@ -38,9 +38,9 @@ window.TOOLTIPS_AX3000GZ['LAB_AX3000GZ_08'] = [
     page: 'forwards'
   },
   {
-    selector: '[id="modal_field_enabled"] input[value="1"]',
+    selector: '[id="modal_field_enabled"] label:last-child',
     text: 'Bước 2: Enable: Chọn On',
-    position: 'top',
+    position: 'right',
     page: 'forwards'
   },
   {

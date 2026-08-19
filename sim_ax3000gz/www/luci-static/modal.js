@@ -60,10 +60,11 @@
 
   function oRadio(t) {   // ListValue dang radio (widget='radio'), vd On/Off
     var w = el('span');
+    var groupName = 'r_' + Math.random().toString(36).slice(2, 7);
     (t.chon || []).forEach(function (c, i) {
       var lb = el('label'); lb.style.marginRight = '14px';
       var r = document.createElement('input');
-      r.type = 'radio'; r.name = 'r_' + Math.random().toString(36).slice(2, 7);
+      r.type = 'radio'; r.name = groupName;
       r.className = 'cbi-input-radio'; r.value = c.v;
       if (t.macdinh !== undefined ? c.v === t.macdinh : i === 0) r.checked = true;
       lb.appendChild(r); lb.appendChild(document.createTextNode(' ' + c.n));

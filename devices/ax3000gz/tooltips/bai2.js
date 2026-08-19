@@ -19,9 +19,9 @@ window.TOOLTIPS_AX3000GZ['LAB_AX3000GZ_02'] = [
     hideOnPage: 'wlan'
   },
   {
-    selector: '[data-idref="3bc33733"] h3 .arrow',
+    selector: '#wlan_global_config_text',
     text: 'Bước 1: Chọn WLAN Global Configuration',
-    position: 'bottom',
+    position: 'right',
     page: 'wlan'
   },
   {
@@ -43,9 +43,9 @@ window.TOOLTIPS_AX3000GZ['LAB_AX3000GZ_02'] = [
     page: 'wlan'
   },
   {
-    selector: '[data-idref="fe3e1d27"] h3 .arrow',
+    selector: '#wlan_ssid_config_text',
     text: 'Bước 3: Chọn WLAN SSID Configuration',
-    position: 'bottom',
+    position: 'right',
     page: 'wlan'
   },
   {

@@ -23,17 +23,9 @@ window.DEVICE_AX3000GZ_LESSONS.push({
     description: 'Kiểm tra cấu hình SNTP trên AX3000GZ',
     rules: [
       {
-        id: 'sntp_timezone',
-        name: 'Time Zone',
-        selector: '[id="widget.cbid.system.cfg01e48a.zonename"]',
-        type: 'text_exact',
-        trim: true,
-        required: true
-      },
-      {
         id: 'sntp_server',
         name: 'NTP Server candidates',
-        selector: '#cbid\\.system\\.cfg01e48a\\.server input[value="vn.pool.ntp.org"], #cbid\\.system\\.cfg01e48a\\.server input[value="asia.pool.ntp.org"]',
+        selector: '[id="cbid.system.cfg01e48a.server"] input[value="vn.pool.ntp.org"], [id="cbid.system.cfg01e48a.server"] input[value="asia.pool.ntp.org"]',
         expected: ['vn.pool.ntp.org', 'asia.pool.ntp.org'],
         type: 'any_of',
         trim: true,

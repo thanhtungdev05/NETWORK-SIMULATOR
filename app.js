@@ -1556,12 +1556,19 @@
       const lesson = getCurrentLesson();
       if (device && lesson) {
         const evalResult = evaluateLesson(device, lesson);
+        console.error('[FTC-DEBUG] onSimulatorSave evalResult:', JSON.stringify(evalResult));
         if (evalResult && evalResult.passed) {
           btnSubmitLab.disabled = false;
           btnSubmitLab.style.opacity = '1';
           btnSubmitLab.style.cursor = 'pointer';
+        } else if (evalResult) {
+          console.error('[FTC-DEBUG] Grading FAILED — details:', JSON.stringify(evalResult.details));
         }
+      } else {
+        console.error('[FTC-DEBUG] device or lesson is null. device:', !!device, 'lesson:', !!lesson, 'currentDeviceId:', currentDeviceId, 'currentLessonId:', currentLessonId);
       }
+    } else {
+      console.error('[FTC-DEBUG] onSimulatorSave skipped — mode:', currentMode, 'btnDisabled:', btnSubmitLab && btnSubmitLab.disabled);
     }
   };
 

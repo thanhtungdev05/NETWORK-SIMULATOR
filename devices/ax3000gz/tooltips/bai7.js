@@ -26,7 +26,7 @@ window.TOOLTIPS_AX3000GZ['LAB_AX3000GZ_07'] = [
   },
   {
     selector: '[id="widget.cbid.system.cfg01e48a.server"]',
-    text: 'Bước 2: Nhập lần lượt vn.pool.ntp.org và asia.pool.ntp.org',
+    text: 'Bước 2: Đảm bảo danh sách có vn.pool.ntp.org hoặc asia.pool.ntp.org',
     position: 'right',
     page: 'sntp'
   },

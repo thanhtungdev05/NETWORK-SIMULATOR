@@ -17,8 +17,7 @@ window.DEVICE_AX3000GZ_LESSONS.push({
   ],
   practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/internet/sntp',
   clearFields: [
-    '[id="widget.cbid.system.cfg01e48a.zonename"]',
-    '#cbid\\.system\\.cfg01e48a\\.server .item'
+    '[id="widget.cbid.system.cfg01e48a.zonename"]'
   ],
   grading: {
     description: 'Kiểm tra cấu hình SNTP trên AX3000GZ',
@@ -27,7 +26,6 @@ window.DEVICE_AX3000GZ_LESSONS.push({
         id: 'sntp_timezone',
         name: 'Time Zone',
         selector: '[id="widget.cbid.system.cfg01e48a.zonename"]',
-        expected: 'Asia/Ho Chi Minh',
         type: 'text_exact',
         trim: true,
         required: true

@@ -43,16 +43,18 @@ def get_nav_and_tab_for_page(page_name):
 
 SIM_STATE = {}
 
-def apply_sim_state_to_html(html_str):
-    if not SIM_STATE:
-        return html_str
-    
+def apply_sim_state_to_html(html_str, show_success=False):
     import json
-    state_json = json.dumps(SIM_STATE)
+    state_json = json.dumps(SIM_STATE) if SIM_STATE else "{}"
+    
+    success_code = ""
+    if show_success:
+        success_code = 'alert("Operate successfully!");'
     
     js_code = f"""
     <script type="text/javascript">
     window.addEventListener('DOMContentLoaded', function() {{
+        {success_code}
         var state = {state_json};
         for (var name in state) {{
             var val = state[name];
@@ -120,6 +122,8 @@ class H(BaseHTTPRequestHandler):
             SIM_STATE.clear()
             return self._redirect("/cgi-bin/login.asp")
 
+        show_success = "save_success=1" in self.path
+
         # Xu ly dac biet cho /cgi-bin/index.asp (ho tro render full frameset theo page)
         if p == "/cgi-bin/index.asp":
             qs = parse_qs(parsed.query)
@@ -142,7 +146,7 @@ class H(BaseHTTPRequestHandler):
                     html = re.sub(r'src=["\']/cgi-bin/navigation-status\.asp["\']', f'src="{final_nav}"', html)
                     html = re.sub(r'src=["\']/cgi-bin/status_deviceinfo\.asp["\']', f'src="{clean_page}"', html)
 
-                html = apply_sim_state_to_html(html)
+                html = apply_sim_state_to_html(html, show_success)
                 return self._send(html.encode("utf-8"), "text/html; charset=utf-8")
 
         # Xu ly dac biet cho /cgi-bin/status.asp de active tab truyen qua URL (?tab=Network)
@@ -176,7 +180,7 @@ class H(BaseHTTPRequestHandler):
                     """
                     html = html.replace('</head>', tab_script + '</head>')
 
-                html = apply_sim_state_to_html(html)
+                html = apply_sim_state_to_html(html, show_success)
                 return self._send(html.encode("utf-8"), "text/html; charset=utf-8")
 
         # Duong dan file trong www2
@@ -186,7 +190,7 @@ class H(BaseHTTPRequestHandler):
             if ext in (".asp", ".html", ".htm"):
                 with open(f, "r", encoding="utf-8", errors="replace") as fh:
                     text_content = fh.read()
-                text_content = apply_sim_state_to_html(text_content)
+                text_content = apply_sim_state_to_html(text_content, show_success)
                 return self._send(text_content.encode("utf-8"), CT.get(ext, "text/html; charset=utf-8"))
             else:
                 with open(f, "rb") as fh:
@@ -209,7 +213,13 @@ class H(BaseHTTPRequestHandler):
                             SIM_STATE[k] = v[0]
         except Exception as e:
             pass
-        self._redirect(self.headers.get("Referer") or "/cgi-bin/index.asp")
+        
+        referer = self.headers.get("Referer") or "/cgi-bin/index.asp"
+        if "save_success=1" in referer:
+            redirect_to = referer
+        else:
+            redirect_to = referer + ("&" if "?" in referer else "?") + "save_success=1"
+        self._redirect(redirect_to)
 
     def log_message(self, *a):
         pass

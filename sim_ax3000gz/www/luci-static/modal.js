@@ -77,15 +77,16 @@
     var w = el('div');
     var all = el('label', '', '');
     var ca = document.createElement('input');
-    ca.type = 'checkbox'; ca.className = 'cbi-input-checkbox';
+    ca.type = 'checkbox'; ca.className = 'cbi-input-checkbox'; ca.value = 'ALL';
     all.appendChild(ca); all.appendChild(document.createTextNode(' Everyday'));
     w.appendChild(all);
     var hang = el('div'); hang.style.marginTop = '10px';
+    var valMap = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     ['Sun.', 'Mon.', 'Tues.', 'Wed.', 'Thur.', 'Fri.', 'Sat.'].forEach(function (t, i) {
       var lb = el('label'); lb.style.marginRight = '12px';
       if (i === 0 || i === 6) lb.style.color = '#d33';   // Sun. va Sat. mau do nhu that
       var c = document.createElement('input');
-      c.type = 'checkbox'; c.className = 'cbi-input-checkbox';
+      c.type = 'checkbox'; c.className = 'cbi-input-checkbox'; c.value = valMap[i];
       lb.appendChild(c); lb.appendChild(document.createTextNode(' ' + t));
       hang.appendChild(lb);
     });
@@ -133,7 +134,7 @@
 
   function oWidget(t, gt, them) {
     var w;
-    if (t.ten === 'week_days') w = oNgay();
+    if (t.ten === 'week_days' || t.ten === 'weekdays') w = oNgay();
     else if (t.ten === 'TimeRange') w = oThoiLuong();
     else if (t.kieu === 'Flag') {
       w = document.createElement('input');

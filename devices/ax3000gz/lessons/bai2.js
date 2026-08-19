@@ -22,7 +22,7 @@ window.DEVICE_AX3000GZ_LESSONS.push({
       {
         id: 'wlan_ssid',
         name: 'Tên Wi-Fi (SSID)',
-        selector: 'input[name="ssid"], input[name*="SSID"], #ssid',
+        selector: '[id="modal_field_SSID"]',
         expected: 'FPT Telecom',
         type: 'text_exact',
         trim: true,
@@ -31,7 +31,7 @@ window.DEVICE_AX3000GZ_LESSONS.push({
       {
         id: 'wlan_key',
         name: 'Mật khẩu Wi-Fi (WPA Key)',
-        selector: 'input[name="wpakey"], input[name*="key"], input[type="password"]',
+        selector: '[id="modal_field_KeyPassphrase"] input',
         expected: 'fpt12345',
         type: 'text_exact',
         trim: true,

@@ -6,7 +6,7 @@
 window.DEVICE_AX3000GZ_LESSONS = window.DEVICE_AX3000GZ_LESSONS || [];
 
 window.DEVICE_AX3000GZ_LESSONS.push({
-  id: 'ax3gz-bai9',
+  id: 'LAB_AX3000GZ_09',
   title: 'Bài 9: Cấu hình Chặn MAC',
   subtitle: 'Lọc và quản lý quyền truy cập qua địa chỉ MAC',
   instructions: [

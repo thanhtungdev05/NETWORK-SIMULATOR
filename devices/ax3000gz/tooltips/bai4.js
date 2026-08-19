@@ -4,7 +4,7 @@
 
 if (!window.TOOLTIPS_AX3000GZ) window.TOOLTIPS_AX3000GZ = {};
 
-window.TOOLTIPS_AX3000GZ['ax3gz-bai4'] = [
+window.TOOLTIPS_AX3000GZ['LAB_AX3000GZ_04'] = [
     {
         selector: '#topmenu a[href$="/localnetwork"]',
         text: 'Chọn Local Network',

@@ -6,7 +6,7 @@
 window.DEVICE_AX3000GZ_LESSONS = window.DEVICE_AX3000GZ_LESSONS || [];
 
 window.DEVICE_AX3000GZ_LESSONS.push({
-  id: 'ax3gz-bai3',
+  id: 'LAB_AX3000GZ_03',
   title: 'Bài 3: Tính năng BandSteering',
   subtitle: 'Kích hoạt và cấu hình tính năng Band Steering',
   instructions: [

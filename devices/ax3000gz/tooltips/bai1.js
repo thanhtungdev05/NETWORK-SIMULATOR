@@ -4,7 +4,7 @@
 
 if (!window.TOOLTIPS_AX3000GZ) window.TOOLTIPS_AX3000GZ = {};
 
-window.TOOLTIPS_AX3000GZ['ax3gz-bai1'] = [
+window.TOOLTIPS_AX3000GZ['LAB_AX3000GZ_01'] = [
     {
         selector: '#WANUrl, li:not(.active) > a[href$="/internet/wan"]',
         text: 'Chọn WAN',

@@ -6,7 +6,7 @@
 window.DEVICE_AX3000GZ_LESSONS = window.DEVICE_AX3000GZ_LESSONS || [];
 
 window.DEVICE_AX3000GZ_LESSONS.push({
-  id: 'ax3gz-bai2',
+  id: 'LAB_AX3000GZ_02',
   title: 'Bài 2: Cấu hình WiFi',
   subtitle: 'Thiết lập Wi-Fi 2.4GHz và 5GHz cho AX3000GZ',
   instructions: [

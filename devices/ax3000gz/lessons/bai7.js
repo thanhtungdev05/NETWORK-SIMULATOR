@@ -6,7 +6,7 @@
 window.DEVICE_AX3000GZ_LESSONS = window.DEVICE_AX3000GZ_LESSONS || [];
 
 window.DEVICE_AX3000GZ_LESSONS.push({
-  id: 'ax3gz-bai7',
+  id: 'LAB_AX3000GZ_07',
   title: 'Bài 7: Cấu hình SNTP',
   subtitle: 'Đồng bộ thời gian hệ thống qua máy chủ SNTP',
   instructions: [

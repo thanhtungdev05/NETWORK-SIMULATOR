@@ -6,7 +6,7 @@
 window.DEVICE_AX3000GZ_LESSONS = window.DEVICE_AX3000GZ_LESSONS || [];
 
 window.DEVICE_AX3000GZ_LESSONS.push({
-  id: 'ax3gz-bai1',
+  id: 'LAB_AX3000GZ_01',
   title: 'Bài 1: Cấu hình ONT',
   subtitle: 'Thiết lập kết nối WAN/ONT trên AX3000GZ',
   instructions: [

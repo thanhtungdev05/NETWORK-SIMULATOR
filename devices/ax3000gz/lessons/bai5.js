@@ -6,7 +6,7 @@
 window.DEVICE_AX3000GZ_LESSONS = window.DEVICE_AX3000GZ_LESSONS || [];
 
 window.DEVICE_AX3000GZ_LESSONS.push({
-  id: 'ax3gz-bai5',
+  id: 'LAB_AX3000GZ_05',
   title: 'Bài 5: Cấu hình IGMP',
   subtitle: 'Cấu hình IGMP Snooping / Proxy cho truyền hình IPTV',
   instructions: [

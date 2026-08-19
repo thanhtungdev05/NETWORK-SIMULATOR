@@ -4,7 +4,7 @@
 
 if (!window.TOOLTIPS_AX3000GZ) window.TOOLTIPS_AX3000GZ = {};
 
-window.TOOLTIPS_AX3000GZ['ax3gz-bai6'] = [
+window.TOOLTIPS_AX3000GZ['LAB_AX3000GZ_06'] = [
     {
         selector: '#topmenu a[href*="/internet"]',
         text: 'Bước 1: Chọn Internet',

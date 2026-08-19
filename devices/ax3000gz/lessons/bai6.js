@@ -6,7 +6,7 @@
 window.DEVICE_AX3000GZ_LESSONS = window.DEVICE_AX3000GZ_LESSONS || [];
 
 window.DEVICE_AX3000GZ_LESSONS.push({
-  id: 'ax3gz-bai6',
+  id: 'LAB_AX3000GZ_06',
   title: 'Bài 6: Cấu hình DDNS',
   subtitle: 'Đăng ký tên miền động để truy cập từ Internet',
   instructions: [

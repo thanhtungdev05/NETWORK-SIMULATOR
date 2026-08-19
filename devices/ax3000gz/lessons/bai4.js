@@ -6,7 +6,7 @@
 window.DEVICE_AX3000GZ_LESSONS = window.DEVICE_AX3000GZ_LESSONS || [];
 
 window.DEVICE_AX3000GZ_LESSONS.push({
-  id: 'ax3gz-bai4',
+  id: 'LAB_AX3000GZ_04',
   title: 'Bài 4: Cấu hình Mesh WiFi',
   subtitle: 'Thiết lập và quản lý mạng Mesh WiFi',
   instructions: [

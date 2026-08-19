@@ -4,4 +4,4 @@
 
 if (!window.TOOLTIPS_AX3000GZ) window.TOOLTIPS_AX3000GZ = {};
 
-window.TOOLTIPS_AX3000GZ['ax3gz-bai10'] = [];
+window.TOOLTIPS_AX3000GZ['LAB_AX3000GZ_10'] = [];

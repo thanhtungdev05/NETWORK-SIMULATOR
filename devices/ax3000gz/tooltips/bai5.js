@@ -21,14 +21,14 @@ window.TOOLTIPS_AX3000GZ['LAB_AX3000GZ_05'] = [
   {
     selector: '.tabs a[href*="multicastwifi"]',
     text: 'Chọn tab Multicast On Wi-Fi',
-    position: 'bottom',
+    position: 'right',
     page: 'multicast',
     hideOnPage: 'multicastwifi'
   },
   {
     selector: '[id="widget.cbid.json.multicastWifi.Enable.0"]',
     text: 'Enable: Chọn On',
-    position: 'right',
+    position: 'bottom',
     page: 'multicast'
   },
   {

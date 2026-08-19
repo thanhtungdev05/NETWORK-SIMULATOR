@@ -198,7 +198,16 @@
       than.innerHTML = '';
       dn.truong.forEach(function (t) {
         if (tabId !== null && t.tab && t.tab !== tabId) return;
-        than.appendChild(dong(t, oWidget(t, gt[t.ten], (gt._chonThem || {})[t.ten])));
+        var val = gt[t.ten];
+        var parentWin = window.parent;
+        if (parentWin && parentWin._currentLesson && Array.isArray(parentWin._currentLesson.clearFields)) {
+          var selector1 = '[id="modal_field_' + t.ten + '"]';
+          var selector2 = '[id="modal_field_' + t.ten + '"] input';
+          if (parentWin._currentLesson.clearFields.indexOf(selector1) >= 0 || parentWin._currentLesson.clearFields.indexOf(selector2) >= 0) {
+            val = '';
+          }
+        }
+        than.appendChild(dong(t, oWidget(t, val, (gt._chonThem || {})[t.ten])));
       });
     }
 

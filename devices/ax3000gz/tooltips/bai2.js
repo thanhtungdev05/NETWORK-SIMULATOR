@@ -68,7 +68,7 @@ window.TOOLTIPS_AX3000GZ['LAB_AX3000GZ_02'] = [
   },
   {
     selector: '#modal_overlay .cbi-button-save',
-    text: 'Bước 7: Chọn Apply để lưu cấu hình.',
+    text: 'Chọn Apply để lưu cấu hình.',
     position: 'top',
     page: 'wlan'
   }

@@ -16,6 +16,10 @@ window.DEVICE_AX3000GZ_LESSONS.push({
     '- WPA Key: <span class="val">fpt12345</span>',
   ],
   practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/localnetwork/WLAN/WLANbasic',
+  clearFields: [
+    '[id="modal_field_SSID"]',
+    '[id="modal_field_KeyPassphrase"] input'
+  ],
   grading: {
     description: 'Kiểm tra SSID và WPA Key trên AX3000GZ',
     rules: [

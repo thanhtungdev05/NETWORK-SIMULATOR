@@ -498,6 +498,7 @@
 
     // Lưu lesson hiện tại để dùng cho clearFields
     _currentLesson = lesson;
+    window._currentLesson = lesson;
 
     // Reset cờ theo dõi click Save cho phiên hướng dẫn mới
     window._hasClickedSaveInGuide = false;

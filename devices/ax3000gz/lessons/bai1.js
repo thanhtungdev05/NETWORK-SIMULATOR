@@ -16,6 +16,10 @@ window.DEVICE_AX3000GZ_LESSONS.push({
     '- Password: <span class="val">fpt12345</span>',
   ],
   practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/internet/wan/interface',
+  clearFields: [
+    '[id="widget.cbid.network.wan.username"]',
+    '[id="widget.cbid.network.wan.password"]'
+  ],
   grading: {
     description: 'Kiểm tra WAN/ONT Interface trên AX3000GZ',
     rules: [

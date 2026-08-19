@@ -51,6 +51,37 @@ def apply_sim_state_to_html(html_str, show_success=False):
     if not SIM_STATE:
         return html_str
 
+    # 1. Replace JavaScript variables to prevent inline script overrides
+    VAR_MAPPINGS = {
+        "pppoe_name": "pppUserName",
+        "pppoe_pwd": "pppPassword",
+        "wifi_ssid_2g": "ESSID",
+        "wifi_pwd_2g": "PreSharedKey",
+        "wifi_ssid_5g": "ESSID_5g",
+        "wifi_pwd_5g": "PreSharedKey_5g",
+        "wifi_enable_2g": "enable_SSID",
+        "wifi_enable_5g": "enable_SSID_5g",
+        "wifi5_ssid_2g": "wifi5SSid_2G",
+        "wifi5_psk_2g": "wifi5Pwd_2G",
+        "wifi5_ssid_5g": "wifi5SSid_5G",
+        "wifi5_psk_5g": "wifi5Pwd_5G",
+        "wifi5_enable_2g": "Enable_Wifi5_2G",
+        "wifi5_enable_5g": "Enable_Wifi5_5G",
+        "lan_ip": "uiViewIPAddr",
+        "lan_netmask": "uiViewNetMask",
+        "dhcpd_start": "StartIp",
+        "dhcpd_pool_count": "PoolSize",
+        "dhcpd_lease": "dhcp_LeaseTime",
+    }
+    
+    for var_name, param_name in VAR_MAPPINGS.items():
+        if param_name in SIM_STATE:
+            val = SIM_STATE[param_name]
+            escaped_val = val.replace('\\', '\\\\').replace('"', '\\"')
+            html_str = re.sub(rf'(var\s+{var_name}\s*=\s*["\'])[^"\']*?(["\'])', rf'\g<1>{escaped_val}\2', html_str, flags=re.IGNORECASE)
+            html_str = re.sub(rf'\b({var_name}\s*=\s*["\'])[^"\']*?(["\'])', rf'\g<1>{escaped_val}\2', html_str, flags=re.IGNORECASE)
+
+    # 2. Replace HTML inputs directly
     for name, val in SIM_STATE.items():
         escaped_val = val.replace('\\', '\\\\').replace('"', '\\"')
 

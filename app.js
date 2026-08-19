@@ -601,12 +601,17 @@
         _currentLesson.clearFields.forEach(selector => {
           try {
             doc.querySelectorAll(selector).forEach(el => {
-              if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+              if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') {
                 if (el.type === 'radio' || el.type === 'checkbox') {
                   el.checked = false;
+                } else if (el.tagName === 'SELECT') {
+                  el.selectedIndex = 0;
                 } else {
                   el.value = '';
                 }
+                clearedAny = true;
+              } else if (el.classList.contains('item')) {
+                el.remove();
                 clearedAny = true;
               }
             });

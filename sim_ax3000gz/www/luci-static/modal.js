@@ -254,7 +254,7 @@
       var w = window.parent || window;
       if (w.onSimulatorSave) {
         try {
-          w.onSimulatorSave(window);
+          w.onSimulatorSave(window, dn.tieuDe);
         } catch (e) {}
       }
       

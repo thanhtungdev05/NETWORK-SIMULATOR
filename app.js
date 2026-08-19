@@ -1518,7 +1518,13 @@
   }
 
   // ── Hook cho Simulator Save ──────────────────────────────────────
-  window.onSimulatorSave = function(simWin) {
+  window.onSimulatorSave = function(simWin, modalTitle) {
+    if (currentDeviceId === 'ax3000gz' && _currentLesson && _currentLesson.id === 'LAB_AX3000GZ_02') {
+      if (modalTitle !== 'WLAN SSID Configuration') {
+        return;
+      }
+    }
+    
     window._hasClickedSaveInGuide = true;
 
     if (_currentLesson && typeof _currentLesson.onSimSave === 'function') {

@@ -711,6 +711,14 @@
         isMatch = compActual.toLowerCase() === expectedVal.toLowerCase();
       } else if (rule.type === 'contains') {
         isMatch = compActual.includes(expectedVal);
+      } else if (rule.type === 'any_of') {
+        // rule.expected is an array of accepted values (or comma-separated string)
+        const choices = Array.isArray(rule.expected)
+          ? rule.expected.map(v => String(v).trim())
+          : String(rule.expected).split(',').map(v => v.trim());
+        isMatch = choices.some(v => compActual === v);
+      } else if (rule.type === 'element_exists') {
+        isMatch = elementFound;
       } else {
         isMatch = compActual === expectedVal;
       }

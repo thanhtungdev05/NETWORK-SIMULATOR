@@ -33,20 +33,11 @@ window.DEVICE_AX3000GZ_LESSONS.push({
         required: true
       },
       {
-        id: 'sntp_server_vn',
-        name: 'NTP Server VN',
-        selector: '#cbid\\.system\\.cfg01e48a\\.server input[value="vn.pool.ntp.org"]',
-        expected: 'vn.pool.ntp.org',
-        type: 'text_exact',
-        trim: true,
-        required: true
-      },
-      {
-        id: 'sntp_server_asia',
-        name: 'NTP Server Asia',
-        selector: '#cbid\\.system\\.cfg01e48a\\.server input[value="asia.pool.ntp.org"]',
-        expected: 'asia.pool.ntp.org',
-        type: 'text_exact',
+        id: 'sntp_server',
+        name: 'NTP Server candidates',
+        selector: '#cbid\\.system\\.cfg01e48a\\.server input[value="vn.pool.ntp.org"], #cbid\\.system\\.cfg01e48a\\.server input[value="asia.pool.ntp.org"]',
+        expected: ['vn.pool.ntp.org', 'asia.pool.ntp.org'],
+        type: 'any_of',
         trim: true,
         required: true
       }

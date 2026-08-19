@@ -1272,12 +1272,12 @@
           background: #ff0000 !important;
           color: #ffffff !important;
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
-          font-size: 13px !important;
+          font-size: 11px !important;
           font-weight: 700 !important;
           line-height: 1.2 !important;
-          padding: 8px 14px !important;
-          border-radius: 4px !important;
-          box-shadow: 0 4px 12px rgba(255, 0, 0, 0.4) !important;
+          padding: 4px 8px !important;
+          border-radius: 3px !important;
+          box-shadow: 0 2px 8px rgba(255, 0, 0, 0.35) !important;
           white-space: nowrap !important;
           pointer-events: none !important;
           user-select: none !important;

@@ -116,7 +116,7 @@ class H(BaseHTTPRequestHandler):
         if p in ("/cgi-bin/requestFromLoginPage", "/cgi-bin/reqLogin", "/cgi-bin/logincheck.cgi"):
             return self._redirect("/cgi-bin/index.asp")
 
-        if "logout" in p.lower() or p.endswith("/doLogout") or "resetsession" in p.lower():
+        if "logout" in self.path.lower() or "resetsession" in self.path.lower():
             SIM_STATE.clear()
             return self._redirect("/cgi-bin/login.asp")
 

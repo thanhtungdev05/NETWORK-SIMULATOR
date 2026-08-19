@@ -339,6 +339,9 @@
       if (!/^(Add|Edit|Modify)$/i.test(t)) return;
       b.addEventListener('click', function (e) {
         e.preventDefault();
+        var w = window.parent || window;
+        w._hasClickedSaveInGuide = false;
+        
         var dn = ds[0];
         if (ds.length > 1) {
           var muc = mucCuaNut(b);

@@ -33,14 +33,14 @@ window.TOOLTIPS_AX3000GZ['LAB_AX3000GZ_08'] = [
   },
   {
     selector: '[id="modal_field_name"]',
-    text: 'Bước 2: Nhập Name: FPT Telecom',
+    text: 'Bước 3: Nhập Name: FPT Telecom',
     position: 'right',
     page: 'forwards'
   },
   {
     selector: '[id="modal_field_enabled"] input[value="1"]',
-    text: 'Bước 3: Enable: Chọn On',
-    position: 'right',
+    text: 'Bước 2: Enable: Chọn On',
+    position: 'top',
     page: 'forwards'
   },
   {

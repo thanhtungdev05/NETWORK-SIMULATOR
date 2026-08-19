@@ -157,6 +157,7 @@
 
     // When iframe loads, trigger popups if in guide mode + clear fields
     deviceIframe.addEventListener('load', () => {
+      window._hasClickedSaveInGuide = false;
       iframeLoading.classList.add('hidden');
       if (currentMode === 'guide') {
         setTimeout(applyGuidePopups, 100);

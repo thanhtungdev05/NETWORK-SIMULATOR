@@ -233,12 +233,14 @@ class H(BaseHTTPRequestHandler):
             length = int(self.headers.get("Content-Length", 0) or 0)
             if length > 0:
                 body_bytes = self.rfile.read(length)
-                ctype = self.headers.get("Content-Type", "")
-                if "application/x-www-form-urlencoded" in ctype:
-                    params = parse_qs(body_bytes.decode("utf-8", errors="replace"))
-                    for k, v in params.items():
-                        if v:
-                            SIM_STATE[k] = v[0]
+                params = parse_qs(body_bytes.decode("utf-8", errors="replace"))
+                for k, v in params.items():
+                    if v:
+                        SIM_STATE[k] = v[0]
+                        if k == "Username":
+                            SIM_STATE["pppUserName"] = v[0]
+                        elif k == "Password":
+                            SIM_STATE["pppPassword"] = v[0]
         except Exception as e:
             pass
         

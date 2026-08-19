@@ -32,44 +32,50 @@ window.TOOLTIPS_AX3000GZ['LAB_AX3000GZ_08'] = [
     page: 'forwards'
   },
   {
+    selector: '[id="modal_field_name"]',
+    text: 'Bước 2: Nhập Name: FPT Telecom',
+    position: 'right',
+    page: 'forwards'
+  },
+  {
     selector: '[id="modal_field_enabled"] input[value="1"]',
-    text: 'Bước 2: Enable: Chọn On',
+    text: 'Bước 3: Enable: Chọn On',
     position: 'right',
     page: 'forwards'
   },
   {
     selector: '[id="modal_field_proto"]',
-    text: 'Bước 3: Protocol: Chọn TCP/UDP',
+    text: 'Bước 4: Protocol: Chọn TCP/UDP',
     position: 'right',
     page: 'forwards'
   },
   {
     selector: '[id="modal_field_src_ip"]',
-    text: 'Bước 4: Nhập WAN Host IP Address: 21.143.157.184',
+    text: 'Bước 5: Nhập WAN Host IP Address: 21.143.157.184',
     position: 'right',
     page: 'forwards'
   },
   {
     selector: '[id="modal_field_dest_ip"]',
-    text: 'Bước 5: Nhập LAN Host: 192.168.1.254',
+    text: 'Bước 6: Nhập LAN Host: 192.168.1.254',
     position: 'right',
     page: 'forwards'
   },
   {
     selector: '[id="modal_field_src_dport"]',
-    text: 'Bước 6: Nhập WAN Port: 8080',
+    text: 'Bước 7: Nhập WAN Port: 8080',
     position: 'right',
     page: 'forwards'
   },
   {
     selector: '[id="modal_field_dest_port"]',
-    text: 'Bước 7: Nhập LAN Host Port: 8080',
+    text: 'Bước 8: Nhập LAN Host Port: 8080',
     position: 'right',
     page: 'forwards'
   },
   {
     selector: '.modal .cbi-page-actions .cbi-button-save',
-    text: 'Bước 8: Chọn Apply để lưu cấu hình',
+    text: 'Bước 9: Chọn Apply để lưu cấu hình',
     position: 'bottom',
     page: 'forwards'
   }

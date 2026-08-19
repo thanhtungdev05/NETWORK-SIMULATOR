@@ -360,6 +360,24 @@
   }
 
   function chay() {
+    var style = document.createElement('style');
+    style.innerHTML = '\
+      #modal_overlay > .modal.cbi-modal {\
+        margin: 1.5em auto !important;\
+        padding: 0.8em 1.2em 0.6em !important;\
+        max-width: 650px !important;\
+      }\
+      #modal_overlay > .modal.cbi-modal .cbi-value {\
+        margin-bottom: 10px !important;\
+      }\
+      #modal_overlay > .modal.cbi-modal h4 {\
+        margin-top: 0 !important;\
+        margin-bottom: 12px !important;\
+        line-height: 1.2 !important;\
+      }\
+    ';
+    document.head.appendChild(style);
+
     Promise.all([
       fetch('/modal-defs.json').then(function (r) { return r.json(); }),
       window.__FIRSTCHILD ||

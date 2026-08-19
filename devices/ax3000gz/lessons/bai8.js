@@ -12,6 +12,7 @@ window.DEVICE_AX3000GZ_LESSONS.push({
   instructions: [
     '<b>Yêu cầu:</b>',
     'Thực hiện cấu hình Mở Port trên thiết bị theo các thông số được cung cấp dưới đây:',
+    '- Name: <span class="val">FPT Telecom</span>',
     '- Enable: <span class="val">On</span>',
     '- Protocol: <span class="val">TCP/UDP</span>',
     '- WAN Host IP Address: <span class="val">21.143.157.184</span>',
@@ -31,6 +32,15 @@ window.DEVICE_AX3000GZ_LESSONS.push({
   grading: {
     description: 'Kiểm tra Port Forwarding rules trên AX3000GZ',
     rules: [
+      {
+        id: 'pf_name',
+        name: 'Name',
+        selector: '[id="modal_field_name"]',
+        expected: 'FPT Telecom',
+        type: 'text_exact',
+        trim: true,
+        required: true
+      },
       {
         id: 'pf_enabled',
         name: 'Enable Status',

@@ -26,7 +26,7 @@ window.DEVICE_AX3000HV2_LESSONS.push({
       {
         id: 'res_mac',
         name: 'Địa chỉ MAC',
-        selector: 'input[name="res_mac"], input[name*="mac"], #mac',
+        selector: 'input[name="MACAddr"]',
         expected: 'AA:BB:CC:DD:EE:FF',
         type: 'case_insensitive',
         trim: true,
@@ -35,7 +35,7 @@ window.DEVICE_AX3000HV2_LESSONS.push({
       {
         id: 'res_ip',
         name: 'Địa chỉ IP gán',
-        selector: 'input[name="res_ip"], input[name*="ip"], #ip',
+        selector: 'input[name="IpAddr"]',
         expected: '192.168.1.100',
         type: 'text_exact',
         trim: true,

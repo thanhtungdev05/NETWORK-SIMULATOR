@@ -28,7 +28,7 @@ window.DEVICE_AX3000HV2_LESSONS.push({
       {
         id: 'guest_ssid',
         name: 'Tên Wi-Fi Guest (SSID)',
-        selector: 'input[name="ESSID_guest"], input[name*="guest_ssid"]',
+        selector: 'input[name="ESSID"]',
         expected: 'FPT Telecom_Guest',
         type: 'text_exact',
         trim: true,
@@ -37,7 +37,7 @@ window.DEVICE_AX3000HV2_LESSONS.push({
       {
         id: 'guest_key',
         name: 'Mật khẩu Wi-Fi Guest',
-        selector: 'input[name="PreSharedKey_guest"], input[name*="guest_key"]',
+        selector: 'input[name="PreSharedKey"]',
         expected: 'fpt12345',
         type: 'text_exact',
         trim: true,

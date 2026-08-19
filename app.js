@@ -1448,19 +1448,21 @@
       }
 
       const win = doc.defaultView || window;
-      const scrollX = win.pageXOffset || doc.documentElement.scrollLeft || 0;
-      const scrollY = win.pageYOffset || doc.documentElement.scrollTop || 0;
+      const bodyStyle = win.getComputedStyle(doc.body);
+      const isBodyPositioned = bodyStyle && bodyStyle.position !== 'static';
+      const offsetParent = isBodyPositioned ? doc.body : doc.documentElement;
+      const parentRect = offsetParent.getBoundingClientRect();
 
-      const targetTop = rect.top + scrollY;
-      const targetLeft = rect.left + scrollX;
+      const targetTop = rect.top - parentRect.top;
+      const targetLeft = rect.left - parentRect.left;
       const bWidth = bubble.offsetWidth || 180;
       const bHeight = bubble.offsetHeight || 30;
       const winW = win.innerWidth || doc.documentElement.clientWidth || 1024;
       const winH = win.innerHeight || doc.documentElement.clientHeight || 768;
       let pos = pop.position || 'right';
 
-      if (pos === 'right' && (targetLeft + rect.width + bWidth + 16) > winW) {
-        if (targetLeft - bWidth - 12 >= 10) {
+      if (pos === 'right' && (rect.left + rect.width + bWidth + 16) > winW) {
+        if (rect.left - bWidth - 12 >= 10) {
           pos = 'left';
         }
       }

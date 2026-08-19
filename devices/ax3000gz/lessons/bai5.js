@@ -14,14 +14,17 @@ window.DEVICE_AX3000GZ_LESSONS.push({
     'Thực hiện cấu hình IGMP Proxy/Snooping hỗ trợ dịch vụ truyền hình:',
     '- Enable: <span class="val">On</span>',
   ],
-  practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/internet/wan/interface',
+  practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/internet/multicast',
+  clearFields: [
+    'input[name="cbid.json.multicastWifi.Enable"]'
+  ],
   grading: {
     description: 'Kiểm tra cấu hình IGMP trên AX3000GZ',
     rules: [
       {
         id: 'igmp_enable',
         name: 'IGMP Enable',
-        selector: 'input[name="igmp_enable"], input[type="checkbox"][name*="igmp"]',
+        selector: 'input[name="cbid.json.multicastWifi.Enable"]:checked',
         expected: 'true',
         type: 'text_exact',
         trim: true,

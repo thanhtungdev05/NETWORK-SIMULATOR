@@ -27,8 +27,8 @@ window.TOOLTIPS_AX3000GZ['LAB_AX3000GZ_04'] = [
   },
   {
     selector: '[id="widget.cbid.json.data.Enable.0"]',
-    text: 'Đảm bảo Enable chọn On',
-    position: 'right',
+    text: 'Enable chọn On',
+    position: 'left',
     page: 'mesh'
   },
   {

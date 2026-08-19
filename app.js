@@ -602,7 +602,11 @@
           try {
             doc.querySelectorAll(selector).forEach(el => {
               if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-                el.value = '';
+                if (el.type === 'radio' || el.type === 'checkbox') {
+                  el.checked = false;
+                } else {
+                  el.value = '';
+                }
                 clearedAny = true;
               }
             });

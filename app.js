@@ -1422,6 +1422,19 @@
         }
       } catch (e) { }
 
+      if (target) {
+        const modalOverlay = doc.getElementById('modal_overlay') || doc.querySelector('.modal-overlay, .modal_overlay, #modal-overlay');
+        const isModalOpen = modalOverlay && (
+          modalOverlay.classList.contains('active') || 
+          modalOverlay.classList.contains('show') || 
+          modalOverlay.style.display === 'flex' || 
+          modalOverlay.style.display === 'block'
+        );
+        if (isModalOpen && !modalOverlay.contains(target)) {
+          target = null;
+        }
+      }
+
       if (!target) {
         const oldBubble = doc.querySelector(`.ftc-guide-bubble[data-guide-index="${idx}"]`);
         if (oldBubble) oldBubble.remove();

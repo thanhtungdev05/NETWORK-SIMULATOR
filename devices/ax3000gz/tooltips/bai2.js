@@ -19,15 +19,15 @@ window.TOOLTIPS_AX3000GZ['LAB_AX3000GZ_02'] = [
     hideOnPage: 'wlan'
   },
   {
-    selector: '[data-idref="3bc33733"] h3',
+    selector: '[data-idref="3bc33733"] h3 .arrow',
     text: 'Bước 1: Chọn WLAN Global Configuration',
-    position: 'top',
+    position: 'bottom',
     page: 'wlan'
   },
   {
     selector: '#cbi-json-WLANBasicAd0 .cbi-button-edit',
     text: 'Bước 2: Chọn Edit của WLAN (2.4G)',
-    position: 'top',
+    position: 'left',
     page: 'wlan'
   },
   {
@@ -39,31 +39,31 @@ window.TOOLTIPS_AX3000GZ['LAB_AX3000GZ_02'] = [
   {
     selector: '#cbi-json-WLANBasicAd1 .cbi-button-edit',
     text: 'Chọn Edit của WLAN (5G)',
-    position: 'top',
+    position: 'left',
     page: 'wlan'
   },
   {
-    selector: '[data-idref="fe3e1d27"] h3',
+    selector: '[data-idref="fe3e1d27"] h3 .arrow',
     text: 'Bước 3: Chọn WLAN SSID Configuration',
-    position: 'top',
+    position: 'bottom',
     page: 'wlan'
   },
   {
     selector: '#cbi-json-WLANSSID0 .cbi-button-edit',
     text: 'Bước 4: Chọn Edit của SSID1(2.4G)',
-    position: 'top',
+    position: 'left',
     page: 'wlan'
   },
   {
     selector: '[id="modal_field_SSID"]',
     text: 'Bước 5: Nhập SSID Name: FPT Telecom',
-    position: 'top',
+    position: 'right',
     page: 'wlan'
   },
   {
     selector: '[id="modal_field_KeyPassphrase"] input',
     text: 'Bước 6: Nhập WPA Passphrase: fpt12345',
-    position: 'top',
+    position: 'right',
     page: 'wlan'
   },
   {

@@ -18,13 +18,13 @@ window.TOOLTIPS_AX3000GZ['LAB_AX3000GZ_01'] = [
     hideOnPage: 'wan'
   },
   {
-    selector: '#widget\\.cbid\\.network\\.wan\\.username',
+    selector: '[id="widget.cbid.network.wan.username"]',
     text: 'Bước 1: Nhập Username của phần PPP: fpt',
     position: 'right',
     page: 'wan'
   },
   {
-    selector: '#widget\\.cbid\\.network\\.wan\\.password',
+    selector: '[id="widget.cbid.network.wan.password"]',
     text: 'Bước 2: Nhập Password của phần PPP: fpt12345',
     position: 'right',
     page: 'wan'

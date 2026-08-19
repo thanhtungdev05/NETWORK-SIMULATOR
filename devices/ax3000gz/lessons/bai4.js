@@ -15,14 +15,18 @@ window.DEVICE_AX3000GZ_LESSONS.push({
     '- Roaming Limit(2.4G): <span class="val">-65</span>',
     '- Roaming Limit(5G): <span class="val">-65</span>',
   ],
-  practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/localnetwork/WLAN/WLANbasic',
+  practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/localnetwork/WLAN/mesh',
+  clearFields: [
+    '[id="widget.cbid.json.data.RoamRssiLmt24G"]',
+    '[id="widget.cbid.json.data.RoamRssiLmt5G"]'
+  ],
   grading: {
     description: 'Kiểm tra Mesh WiFi settings',
     rules: [
       {
         id: 'roaming_24g',
         name: 'Roaming Limit 2.4G',
-        selector: 'input[name="roaming_24g"], input[name*="roaming_24"]',
+        selector: '[id="widget.cbid.json.data.RoamRssiLmt24G"]',
         expected: '-65',
         type: 'text_exact',
         trim: true,
@@ -31,7 +35,7 @@ window.DEVICE_AX3000GZ_LESSONS.push({
       {
         id: 'roaming_5g',
         name: 'Roaming Limit 5G',
-        selector: 'input[name="roaming_5g"], input[name*="roaming_5"]',
+        selector: '[id="widget.cbid.json.data.RoamRssiLmt5G"]',
         expected: '-65',
         type: 'text_exact',
         trim: true,

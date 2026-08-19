@@ -6,7 +6,7 @@
 window.DEVICE_AX3000HV2_LESSONS = window.DEVICE_AX3000HV2_LESSONS || [];
 
 window.DEVICE_AX3000HV2_LESSONS.push({
-  id: 'ax3hv2-bai1',
+  id: 'LAB_AX3000HV2_01',
   title: 'Bài 1: Cấu hình PPPoE',
   subtitle: 'Thiết lập kết nối Internet PPPoE cho AX3000H v2',
   instructions: [

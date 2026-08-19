@@ -1,5 +1,5 @@
 if (!window.TOOLTIPS_AX3000HV2) window.TOOLTIPS_AX3000HV2 = {};
-window.TOOLTIPS_AX3000HV2['ax3hv2-bai6'] = [
+window.TOOLTIPS_AX3000HV2['LAB_AX3000HV2_06'] = [
     {
         selector: '#topmenu a:contains("Network"), a:contains("Network")',
         text: 'Bước 1: Chọn Network',

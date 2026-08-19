@@ -6,7 +6,7 @@
 window.DEVICE_AX3000HV2_LESSONS = window.DEVICE_AX3000HV2_LESSONS || [];
 
 window.DEVICE_AX3000HV2_LESSONS.push({
-  id: 'ax3hv2-bai2',
+  id: 'LAB_AX3000HV2_02',
   title: 'Bài 2: Cấu hình Wi-Fi Host',
   subtitle: 'Thiết lập mạng Wi-Fi chính (Host)',
   instructions: [

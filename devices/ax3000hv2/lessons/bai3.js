@@ -6,7 +6,7 @@
 window.DEVICE_AX3000HV2_LESSONS = window.DEVICE_AX3000HV2_LESSONS || [];
 
 window.DEVICE_AX3000HV2_LESSONS.push({
-  id: 'ax3hv2-bai3',
+  id: 'LAB_AX3000HV2_03',
   title: 'Bài 3: Cấu hình Wi-Fi Guest',
   subtitle: 'Thiết lập mạng Wi-Fi phụ cho khách (Guest)',
   instructions: [

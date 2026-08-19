@@ -70,7 +70,7 @@ window.TOOLTIPS_AX3000GZ['LAB_AX3000GZ_09'] = [
   {
     selector: '[id="modal_field_weekdays"]',
     text: 'Bước 8: Chọn ngày trong tuần (Tích chọn thứ 2, 3, 4, 5, 6)',
-    position: 'right',
+    position: 'bottom',
     page: 'filterCriteria'
   },
   {

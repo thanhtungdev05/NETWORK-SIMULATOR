@@ -6,7 +6,7 @@
 window.DEVICE_AX3000HV2_LESSONS = window.DEVICE_AX3000HV2_LESSONS || [];
 
 window.DEVICE_AX3000HV2_LESSONS.push({
-  id: 'ax3hv2-bai4',
+  id: 'LAB_AX3000HV2_04',
   title: 'Bài 4: Cấu hình Wi-Fi IoT',
   subtitle: 'Thiết lập mạng Wi-Fi dành riêng cho thiết bị IoT',
   instructions: [

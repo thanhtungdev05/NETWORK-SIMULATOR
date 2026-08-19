@@ -6,7 +6,7 @@
 window.DEVICE_AX3000HV2_LESSONS = window.DEVICE_AX3000HV2_LESSONS || [];
 
 window.DEVICE_AX3000HV2_LESSONS.push({
-  id: 'ax3hv2-bai6',
+  id: 'LAB_AX3000HV2_06',
   title: 'Bài 6: Cấu hình DHCP Reservation',
   subtitle: 'Gán địa chỉ IP cố định (Static DHCP) cho thiết bị',
   instructions: [

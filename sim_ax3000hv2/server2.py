@@ -44,49 +44,46 @@ def get_nav_and_tab_for_page(page_name):
 SIM_STATE = {}
 
 def apply_sim_state_to_html(html_str, show_success=False):
-    import json
-    state_json = json.dumps(SIM_STATE) if SIM_STATE else "{}"
-    
-    success_code = ""
     if show_success:
-        success_code = 'alert("Operate successfully!");'
-    
-    js_code = f"""
-    <script type="text/javascript">
-    window.addEventListener('DOMContentLoaded', function() {{
-        {success_code}
-        var state = {state_json};
-        for (var name in state) {{
-            var val = state[name];
-            var els = document.getElementsByName(name);
-            if (els && els.length > 0) {{
-                for (var i = 0; i < els.length; i++) {{
-                    var el = els[i];
-                    if (el.type === 'radio' || el.type === 'checkbox') {{
-                        if (el.value === val) el.checked = true;
-                        else el.checked = false;
-                    }} else {{
-                        el.value = val;
-                    }}
-                    if (typeof el.onchange === 'function') el.onchange();
-                    if (typeof el.onblur === 'function') el.onblur();
-                }}
-            }}
-            var elById = document.getElementById(name);
-            if (elById) {{
-                if (elById.type === 'radio' || elById.type === 'checkbox') {{
-                    if (elById.value === val) elById.checked = true;
-                }} else {{
-                    elById.value = val;
-                }}
-                if (typeof elById.onchange === 'function') elById.onchange();
-                if (typeof elById.onblur === 'function') elById.onblur();
-            }}
-        }}
-    }});
-    </script>
-    """
-    return html_str.replace("</head>", js_code + "</head>")
+        alert_js = '<script type="text/javascript">window.addEventListener("DOMContentLoaded", function() { alert("Operate successfully!"); });</script>'
+        html_str = html_str.replace("</head>", alert_js + "</head>")
+
+    if not SIM_STATE:
+        return html_str
+
+    for name, val in SIM_STATE.items():
+        escaped_val = val.replace('\\', '\\\\').replace('"', '\\"')
+
+        def input_callback(match):
+            tag = match.group(0)
+            
+            # Check input type
+            type_match = re.search(r'type=["\'](.*?)["\']', tag, flags=re.IGNORECASE)
+            itype = type_match.group(1).lower() if type_match else 'text'
+            
+            if itype in ('radio', 'checkbox'):
+                val_match = re.search(rf'value=["\'](.*?)["\']', tag, flags=re.IGNORECASE)
+                tag_clean = re.sub(r'\s+checked(=["\']?checked["\']?)?', '', tag, flags=re.IGNORECASE)
+                if val_match and val_match.group(1) == val:
+                    if tag_clean.endswith('/>'):
+                        return tag_clean[:-2] + ' checked="checked" />'
+                    else:
+                        return tag_clean[:-1] + ' checked="checked" >'
+                return tag_clean
+            else:
+                if re.search(r'value=["\']', tag, flags=re.IGNORECASE):
+                    tag_clean = re.sub(r'(value=["\'])[^"\']*?(["\'])', rf'\g<1>{escaped_val}\2', tag, flags=re.IGNORECASE)
+                    return tag_clean
+                else:
+                    if tag.endswith('/>'):
+                        return tag[:-2] + f' value="{escaped_val}" />'
+                    else:
+                        return tag[:-1] + f' value="{escaped_val}" >'
+
+        pattern_input = rf'<input[^>]*?name=["\']{name}["\'][^>]*?>'
+        html_str = re.sub(pattern_input, input_callback, html_str, flags=re.IGNORECASE)
+        
+    return html_str
 
 
 class H(BaseHTTPRequestHandler):

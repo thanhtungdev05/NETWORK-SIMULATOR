@@ -22,10 +22,11 @@ function tracking_timer_response(array $timer): array
 {
     return [
         'session_id' => (string)($timer['session_id'] ?? ''),
+        'submission_id' => (string)($timer['submission_id'] ?? ''),
         'technician_id' => (string)($timer['technician_id'] ?? ''),
         'name' => (string)($timer['name'] ?? ''),
         'email' => (string)($timer['email'] ?? ''),
-        'finished_at' => $timer['finished_at'] ? (new DateTimeImmutable($timer['finished_at']))->format(DateTimeInterface::ATOM) : null,
+        'finished_at' => safe_datetime($timer['finished_at']),
         'duration_sec' => (int)($timer['duration_sec'] ?? 0),
         'mode' => (string)($timer['mode'] ?? 'Thực hành'),
         'device' => (string)($timer['device'] ?? ''),
@@ -42,6 +43,7 @@ function tracking_timer_response(array $timer): array
         'user_agent' => $timer['user_agent'] ?? null,
         'session_type' => (string)($timer['session_type'] ?? 'practice'),
         'saved' => (bool)($timer['saved'] ?? false),
+        'duplicate' => (bool)($timer['duplicate'] ?? false),
     ];
 }
 
@@ -131,6 +133,11 @@ function handle_tracking(array $segments, string $method): void
         ) ?? (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
         $startedAt = normalized_timestamp($input['started_at'] ?? $input['startedAt'] ?? null, 'started_at');
 
+        // Idempotency key — client-generated UUID per practice session
+        $submissionId = optional_text($input, 'submission_id', 64)
+            ?? optional_text($input, 'submissionId', 64)
+            ?? null;
+
         $clientIp = function_exists('request_ip') ? request_ip() : ($_SERVER['REMOTE_ADDR'] ?? null);
         $userAgent = function_exists('request_user_agent') ? request_user_agent() : ($_SERVER['HTTP_USER_AGENT'] ?? null);
 
@@ -148,6 +155,7 @@ function handle_tracking(array $segments, string $method): void
 
         $timer = [
             'session_id' => 'TMR_' . date('YmdHis') . '_' . bin2hex(random_bytes(3)),
+            'submission_id' => $submissionId,
             'technician_id' => $technicianId ?? '',
             'name' => $name ?? '',
             'email' => $email ?? '',
@@ -239,14 +247,38 @@ function handle_tracking(array $segments, string $method): void
                     user_id, technician_id, name, email, started_at, finished_at,
                     duration_sec, mode, device, device_id, lab_id, lab_name,
                     status, completed_first_try, last_action, is_passed, score,
-                    grading_details, client_ip, user_agent, session_type
+                    grading_details, client_ip, user_agent, session_type,
+                    submission_id
                 ) VALUES (
                     :user_id, :technician_id, :name, :email, :started_at, :finished_at,
                     :duration_sec, :mode, :device, :device_id, :lab_id, :lab_name,
                     :status, :completed_first_try, :last_action, :is_passed, :score,
-                    :grading_details, :client_ip, :user_agent, :session_type
+                    :grading_details, :client_ip, :user_agent, :session_type,
+                    :submission_id
                 )
-                RETURNING id
+                ON CONFLICT (submission_id) DO UPDATE SET
+                    user_id = EXCLUDED.user_id,
+                    technician_id = EXCLUDED.technician_id,
+                    name = EXCLUDED.name,
+                    email = EXCLUDED.email,
+                    started_at = EXCLUDED.started_at,
+                    finished_at = EXCLUDED.finished_at,
+                    duration_sec = EXCLUDED.duration_sec,
+                    mode = EXCLUDED.mode,
+                    device = EXCLUDED.device,
+                    device_id = EXCLUDED.device_id,
+                    lab_id = EXCLUDED.lab_id,
+                    lab_name = EXCLUDED.lab_name,
+                    status = EXCLUDED.status,
+                    completed_first_try = EXCLUDED.completed_first_try,
+                    last_action = EXCLUDED.last_action,
+                    is_passed = EXCLUDED.is_passed,
+                    score = EXCLUDED.score,
+                    grading_details = EXCLUDED.grading_details,
+                    client_ip = EXCLUDED.client_ip,
+                    user_agent = EXCLUDED.user_agent,
+                    session_type = EXCLUDED.session_type
+                RETURNING id, (xmax = 0) AS is_insert
                 SQL
             );
             $insert->execute([
@@ -273,10 +305,12 @@ function handle_tracking(array $segments, string $method): void
                 'client_ip' => $clientIp,
                 'user_agent' => $userAgent,
                 'session_type' => $sessionType,
+                'submission_id' => $submissionId,
             ]);
             $savedRow = $insert->fetch();
             $timer['session_id'] = $savedRow ? (string)$savedRow['id'] : $timer['session_id'];
             $timer['saved'] = true;
+            $timer['duplicate'] = $savedRow ? !$savedRow['is_insert'] : false;
         } catch (Throwable $exception) {
             report_exception($exception, 'tracking-timer-save');
             fail(500, 'tracking/save-failed', 'Unable to save the timer session.');

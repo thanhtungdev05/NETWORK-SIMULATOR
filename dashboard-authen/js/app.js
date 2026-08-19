@@ -12,12 +12,17 @@ const formatNumber = new Intl.NumberFormat('vi-VN');
 const LEARNER_TABLE_PAGE_SIZE = 4;
 const LEARNER_HISTORY_PAGE_SIZE = 6;
 
+const now = new Date();
+const currentMonthFirst = new Date(now.getFullYear(), now.getMonth(), 1);
+const currentMonthLast = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+const fmtDate = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
 const state = {
-    startDate: '',
-    endDate: '',
+    startDate: fmtDate(currentMonthFirst),
+    endDate: fmtDate(currentMonthLast),
     tempStartDate: '',
     tempEndDate: '',
-    calendarMonth: new Date(2026, 6, 1),
+    calendarMonth: new Date(now.getFullYear(), now.getMonth(), 1),
 
     hourlyStartDate: '',
     hourlyEndDate: '',
@@ -98,8 +103,6 @@ const state = {
     rosterTotal: 0,
     rosterSearch: '',
     rosterStatusFilter: 'active',
-    rosterRegionFilter: '',
-    rosterRegions: [],
     rosterHistoryItems: [],
     rosterPreviewData: null,
     rosterImportFile: null,
@@ -1854,8 +1857,11 @@ function buildDashboardSignature(data) {
 }
 
 async function fetchDashboardData() {
+    const allParams = new URLSearchParams();
+    if (state.startDate) allParams.set('from', state.startDate);
+    if (state.endDate) allParams.set('to', state.endDate);
     const [response, reportResponse] = await Promise.all([
-        fetch(`${API_BASE_URL}/dashboard/all`),
+        fetch(`${API_BASE_URL}/dashboard/all?${allParams}`),
         fetch(`${API_BASE_URL}/dashboard/report?${dashboardReportQuery()}`)
     ]);
     if (!response.ok) throw new Error(`API dữ liệu chi tiết trả về HTTP ${response.status}`);
@@ -2050,6 +2056,7 @@ let deferredFilterCallback = null;
 
 function enhanceHeaderFilterPopovers(root = document) {
     root.querySelectorAll('thead .popover-filter-wrapper').forEach(wrapper => {
+        if (wrapper.closest('#rosterListPanel')) return;
         const trigger = wrapper.querySelector('.popover-trigger-btn');
         const dropdown = wrapper.querySelector('.popover-dropdown');
         if (!trigger || !dropdown || dropdown.dataset.headerFilterEnhanced === 'true') return;
@@ -3357,10 +3364,13 @@ function initDateRangePicker() {
 
     document.getElementById('dateRangeClear')?.addEventListener('click', (e) => {
         e.stopPropagation();
-        state.tempStartDate = '';
-        state.tempEndDate = '';
-        state.startDate = '';
-        state.endDate = '';
+        const nowClear = new Date();
+        const first = new Date(nowClear.getFullYear(), nowClear.getMonth(), 1);
+        const last = new Date(nowClear.getFullYear(), nowClear.getMonth() + 1, 0);
+        state.tempStartDate = fmtDate(first);
+        state.tempEndDate = fmtDate(last);
+        state.startDate = fmtDate(first);
+        state.endDate = fmtDate(last);
         state.learnerTablePage = 1;
         state.learnerDetailPage = 1;
         state.realtimePage = 1;
@@ -4677,12 +4687,6 @@ function initRoster() {
         loadRosterList();
     });
 
-    document.getElementById('rosterRegionFilter')?.addEventListener('change', e => {
-        state.rosterRegionFilter = e.target.value;
-        state.rosterPage = 1;
-        loadRosterList();
-    });
-
     document.getElementById('rosterExportBtn')?.addEventListener('click', () => {
         window.location.href = API_BASE_URL + '/roster/export?' + rosterFilterQuerystring();
     });
@@ -4729,7 +4733,6 @@ function rosterFilterQuerystring() {
     const params = new URLSearchParams();
     params.set('status', state.rosterStatusFilter);
     if (state.rosterSearch) params.set('search', state.rosterSearch);
-    if (state.rosterRegionFilter) params.set('region', state.rosterRegionFilter);
     return params.toString();
 }
 
@@ -4740,7 +4743,6 @@ async function loadRosterList() {
         params.set('status', state.rosterStatusFilter);
         params.set('page', String(state.rosterPage));
         if (state.rosterSearch) params.set('search', state.rosterSearch);
-        if (state.rosterRegionFilter) params.set('region', state.rosterRegionFilter);
         const resp = await fetch(`${API_BASE_URL}/roster/list?${params}`);
         if (!resp.ok) throw new Error('Failed to load roster');
         const json = await resp.json();
@@ -4756,15 +4758,8 @@ async function loadRosterList() {
 }
 
 function renderRosterList() {
-    renderRosterStats();
     renderRosterTableBody();
     renderRosterPagination();
-    populateRosterRegionFilter();
-}
-
-function renderRosterStats() {
-    const grid = document.getElementById('rosterStatsGrid');
-    if (grid) grid.innerHTML = '';
 }
 
 function renderRosterTableBody() {
@@ -4809,14 +4804,6 @@ function renderRosterPagination() {
 function rosterGoPage(page) {
     state.rosterPage = page;
     loadRosterList();
-}
-
-function populateRosterRegionFilter() {
-    const sel = document.getElementById('rosterRegionFilter');
-    if (!sel || !state.rosterStats) return;
-    const regions = (state.rosterStats.byRegion || state.rosterStats.by_region || []).map(r => r.region).sort();
-    const current = state.rosterRegionFilter;
-    sel.innerHTML = '<option value="">Tất cả vùng</option>' + regions.map(r => `<option value="${escapeHTML(r)}" ${r === current ? 'selected' : ''}>${escapeHTML(r)}</option>`).join('');
 }
 
 /* --- Import --- */

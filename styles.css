@@ -369,10 +369,6 @@ html, body {
 }
 
 /* Thao tác Dropdown */
-.action-dropdown {
-  position: relative;
-}
-
 .action-btn {
   display: flex;
   align-items: center;
@@ -390,40 +386,6 @@ html, body {
   white-space: nowrap;
 }
 .action-btn:hover { background: #c62828; }
-
-.action-dropdown-menu {
-  display: none;
-  position: absolute;
-  right: 0;
-  top: calc(100% + 8px);
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: var(--shadow-lg);
-  border: 1px solid #e2e6f0;
-  overflow: hidden;
-  min-width: 180px;
-  z-index: 999;
-  animation: fadeDown 0.15s ease;
-}
-.action-dropdown-menu.open { display: block; }
-
-@keyframes fadeDown {
-  from { opacity: 0; transform: translateY(-6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.action-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  cursor: pointer;
-  color: #334;
-  font-size: 13px;
-  transition: background 0.15s;
-}
-.action-menu-item:hover { background: #f5f7ff; }
-.action-menu-item .item-icon { font-size: 16px; }
 
 /* ── CONTENT AREA ─────────────────────────────────────────── */
 #content {

@@ -1483,6 +1483,7 @@ tr:last-child td {
     display: flex;
     flex-direction: column;
     min-height: 0;
+    overflow-y: auto;
 }
 
 
@@ -8073,40 +8074,6 @@ th:nth-last-child(2) .header-filter-popover .popover-dropdown {
     border-bottom-color: var(--blue, #2563eb);
 }
 
-/* --- Stats grid --- */
-.roster-stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 16px;
-    margin-bottom: 20px;
-}
-
-.roster-stat-card {
-    background: var(--surface, #fff);
-    border: 1px solid var(--border, #e2e5ea);
-    border-radius: 8px;
-    padding: 16px;
-    text-align: center;
-}
-
-.roster-stat-card .stat-label {
-    font-size: 12px;
-    color: var(--muted, #6b7280);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 4px;
-}
-
-.roster-stat-card .stat-value {
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--text, #1f2937);
-}
-
-.roster-stat-card.region-card {
-    border-left: 3px solid var(--blue, #2563eb);
-}
-
 /* --- Toolbar --- */
 .roster-toolbar {
     display: flex;
@@ -8477,6 +8444,12 @@ th:nth-last-child(2) .header-filter-popover .popover-dropdown {
     display: flex;
     gap: 10px;
     margin-top: 8px;
+    padding: 10px 0;
+    position: sticky;
+    bottom: 0;
+    background: var(--surface, #fff);
+    border-top: 1px solid var(--border, #e2e5ea);
+    flex-shrink: 0;
 }
 
 /* --- Empty state --- */
@@ -8497,10 +8470,6 @@ th:nth-last-child(2) .header-filter-popover .popover-dropdown {
     .roster-toolbar {
         flex-direction: column;
         align-items: stretch;
-    }
-
-    .roster-stats-grid {
-        grid-template-columns: repeat(2, 1fr);
     }
 
     .roster-edit-card {

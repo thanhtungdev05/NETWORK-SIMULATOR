@@ -17,6 +17,11 @@
   let _trackingSession = null; // { device, lesson, mode, startedAt }
   let _currentUser = null;    // { technician_id, name, email } — lấy từ API auth/session
 
+  function escapeHTML(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
   // ── Practice Timer State ────────────────────────────────────────
   let _practiceTimerInterval = null; // setInterval ID cho đồng hồ realtime
   let _practiceStartTime = null;     // Date object lúc bắt đầu thực hành
@@ -255,8 +260,8 @@
           <div class="auth-user-info">
             <div class="auth-avatar">${initials}</div>
             <div class="auth-details">
-              <span class="auth-name" title="${_currentUser.name}">${_currentUser.name}</span>
-              <span class="auth-role">${_currentUser.technician_id}</span>
+              <span class="auth-name" title="${escapeHTML(_currentUser.name)}">${escapeHTML(_currentUser.name)}</span>
+              <span class="auth-role">${escapeHTML(_currentUser.technician_id)}</span>
             </div>
           </div>
           <button class="btn-auth btn-logout" id="btn-iam-logout">Đăng xuất</button>
@@ -509,7 +514,8 @@
       device: device,
       lesson: lesson,
       mode: enableGuide ? 'Hướng dẫn' : 'Thực hành',
-      startedAt: new Date().toISOString()
+      startedAt: new Date().toISOString(),
+      submissionId: crypto.randomUUID ? crypto.randomUUID() : ('sub-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10))
     };
 
     // ── Khởi động đồng hồ realtime trên toolbar ──
@@ -859,7 +865,7 @@
             tr.innerHTML = `
               <td colspan="4" style="background:#1e293b;color:#94a3b8;font-weight:700;
                 font-size:11px;letter-spacing:1px;padding:6px 10px;text-align:center;">
-                ${item.name}
+                ${escapeHTML(item.name)}
               </td>
             `;
             gmChecklistBody.appendChild(tr);
@@ -871,7 +877,7 @@
             tr.innerHTML = `
               <td colspan="4" style="background:#7c2d12;color:#fed7aa;font-size:12px;
                 padding:6px 10px;font-style:italic;">
-                ⚠ ${item.expected}
+                ⚠ ${escapeHTML(item.expected)}
               </td>
             `;
             gmChecklistBody.appendChild(tr);
@@ -881,9 +887,9 @@
           if (item.passed) return;
           const tr = document.createElement('tr');
           tr.innerHTML = `
-            <td><strong>${item.name}</strong></td>
-            <td><code class="gm-code-val">${item.expected}</code></td>
-            <td><code class="gm-code-val" style="color:#b91c1c; font-weight:700;">${item.actual}</code></td>
+            <td><strong>${escapeHTML(item.name)}</strong></td>
+            <td><code class="gm-code-val">${escapeHTML(item.expected)}</code></td>
+            <td><code class="gm-code-val" style="color:#b91c1c; font-weight:700;">${escapeHTML(item.actual)}</code></td>
             <td><span class="gm-badge-fail">✖ Sai</span></td>
           `;
           gmChecklistBody.appendChild(tr);
@@ -930,6 +936,7 @@
     };
 
     const payload = {
+      submission_id: session.submissionId,
       technician_id: user.technician_id,
       name: user.name,
       email: user.email || undefined,

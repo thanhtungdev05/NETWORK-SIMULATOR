@@ -17,7 +17,12 @@ $GLOBALS['request_id'] = bin2hex(random_bytes(8));
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 header('X-Request-ID: ' . $GLOBALS['request_id']);
-header('Access-Control-Allow-Origin: *');
+$corsOrigin = env_value('APP_BASE_URL', '');
+if ($corsOrigin !== '') {
+    header('Access-Control-Allow-Origin: ' . $corsOrigin);
+} else {
+    header('Access-Control-Allow-Origin: ' . request_origin());
+}
 header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Tracking-Key');
 header('Access-Control-Max-Age: 86400');
@@ -130,6 +135,9 @@ function is_local_request(): bool
 
 function dev_bypass_enabled(): bool
 {
+    if (env_value('APP_ENV', '') === 'production') {
+        return is_local_request();
+    }
     return is_local_request() || env_bool('AUTH_BYPASS_DEV', false);
 }
 
@@ -293,6 +301,18 @@ function database_boolean(mixed $value): bool
 function database_nullable_boolean(mixed $value): ?bool
 {
     return $value === null ? null : database_boolean($value);
+}
+
+function safe_datetime(?string $value): ?string
+{
+    if (!$value) {
+        return null;
+    }
+    try {
+        return (new DateTimeImmutable($value))->format(DateTimeInterface::ATOM);
+    } catch (Throwable $e) {
+        return null;
+    }
 }
 
 const USER_COLUMNS = 'user_id, email, display_name, role, last_login_at, iam_profile,
@@ -513,7 +533,7 @@ function upsert_iam_user(array $profile): array
             'employee_id' => $identity['employee_id'],
             'iam_profile' => $profileJson,
         ]);
-        return $stmt->fetch();
+        return $stmt->fetch() ?: $existing;
     }
 
     $stmt = db()->prepare(
@@ -530,7 +550,11 @@ function upsert_iam_user(array $profile): array
         'employee_id' => $identity['employee_id'],
         'iam_profile' => $profileJson,
     ]);
-    return $stmt->fetch();
+    $newUser = $stmt->fetch();
+    if (!$newUser) {
+        fail(500, 'iam/upsert-failed', 'Failed to create user from IAM profile.');
+    }
+    return $newUser;
 }
 
 function iam_post_login_url(array $user): string
@@ -540,11 +564,13 @@ function iam_post_login_url(array $user): string
 
 function request_ip(): ?string
 {
-    $forwarded = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '';
-    if ($forwarded) {
-        $first = trim(explode(',', $forwarded)[0]);
-        if ($first !== '') {
-            return $first;
+    if (is_local_request() || env_bool('TRUST_X_FORWARDED_FOR', false)) {
+        $forwarded = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '';
+        if ($forwarded) {
+            $first = trim(explode(',', $forwarded)[0]);
+            if ($first !== '') {
+                return $first;
+            }
         }
     }
     return $_SERVER['REMOTE_ADDR'] ?? null;
@@ -889,6 +915,10 @@ function handle_users(array $segments, string $method): void
             $stmt = $pdo->prepare('UPDATE users SET role = :role, updated_at = NOW() WHERE user_id = :user_id RETURNING ' . USER_COLUMNS);
             $stmt->execute(['user_id' => $target['user_id'], 'role' => $newRole]);
             $updated = $stmt->fetch();
+            if (!$updated) {
+                $pdo->rollBack();
+                fail(500, 'save-failed', 'User update returned no data.');
+            }
 
             $pdo->commit();
             respond(['item' => user_response($updated)]);
@@ -1134,18 +1164,6 @@ function roster_base_where(array &$params, bool $includeFilters = true): array
         $params['search_unitname'] = $searchPattern;
     }
 
-    $region = trim((string)($_GET['region'] ?? ''));
-    if ($region !== '') {
-        $where[] = '(
-            users.region_id::text = :region_id_text
-            OR users.region_code = :region_code
-            OR users.dashboard_region = :region_name
-        )';
-        $params['region_id_text'] = $region;
-        $params['region_code'] = $region;
-        $params['region_name'] = $region;
-    }
-
     return $where;
 }
 
@@ -1154,19 +1172,21 @@ function roster_stats(PDO $pdo): array
     $params = [];
     $where = roster_base_where($params, false);
     $whereSql = implode(' AND ', $where);
+
     $summary = $pdo
-        ->query(
+        ->prepare(
             "SELECT
                 COUNT(*) AS total,
                 COUNT(*) FILTER (WHERE is_terminated = FALSE) AS active,
                 COUNT(*) FILTER (WHERE is_terminated = TRUE) AS terminated
                FROM users
               WHERE $whereSql"
-        )
-        ->fetch() ?: ['total' => 0, 'active' => 0, 'terminated' => 0];
+        );
+    $summary->execute($params);
+    $summary = $summary->fetch() ?: ['total' => 0, 'active' => 0, 'terminated' => 0];
 
-    $regionRows = $pdo
-        ->query(
+    $regionStmt = $pdo
+        ->prepare(
             "SELECT COALESCE(NULLIF(dashboard_region, ''), NULLIF(region_code, ''), 'Chưa phân vùng') AS region,
                     COUNT(*) AS total,
                     COUNT(*) FILTER (WHERE is_terminated = FALSE) AS active,
@@ -1175,8 +1195,9 @@ function roster_stats(PDO $pdo): array
               WHERE $whereSql
               GROUP BY COALESCE(NULLIF(dashboard_region, ''), NULLIF(region_code, ''), 'Chưa phân vùng')
               ORDER BY region"
-        )
-        ->fetchAll();
+        );
+    $regionStmt->execute($params);
+    $regionRows = $regionStmt->fetchAll();
 
     return [
         'total' => (int)($summary['total'] ?? 0),
@@ -1295,15 +1316,13 @@ function handle_roster_list(): void
     $countStmt->execute($params);
     $total = (int)$countStmt->fetchColumn();
 
+    $sortSql = 'users.is_terminated ASC, users.dashboard_region NULLS LAST, users.class_code NULLS LAST, users.display_name NULLS LAST, users.email';
+
     $sql = "SELECT users.*, regions.branch_name AS roster_branch_name
               FROM users
               LEFT JOIN regions ON regions.region_id = users.region_id
              WHERE $whereSql
-             ORDER BY users.is_terminated ASC,
-                      users.dashboard_region NULLS LAST,
-                      users.class_code NULLS LAST,
-                      users.display_name NULLS LAST,
-                      users.email
+             ORDER BY $sortSql
              LIMIT :limit OFFSET :offset";
     $stmt = $pdo->prepare($sql);
     foreach ($params as $key => $value) {
@@ -1331,44 +1350,50 @@ function handle_roster_history(): void
     $offset = ($page - 1) * $limit;
     $pdo = db();
 
-    $countStmt = $pdo->query('SELECT COUNT(*) FROM roster_import_log');
-    $total = (int)$countStmt->fetchColumn();
+    try {
+        $countStmt = $pdo->query('SELECT COUNT(*) FROM roster_import_log');
+        $total = (int)$countStmt->fetchColumn();
 
-    $stmt = $pdo->prepare(
-        'SELECT log.*, users.email AS imported_by_email, users.display_name AS imported_by_name
-           FROM roster_import_log log
-           LEFT JOIN users ON users.user_id = log.imported_by
-          ORDER BY log.imported_at DESC
-          LIMIT :limit OFFSET :offset'
-    );
-    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-    $stmt->execute();
-    $items = array_map(static function (array $row): array {
-        $errors = json_decode((string)($row['error_details'] ?? '[]'), true);
-        return [
-            'id' => (int)$row['id'],
-            'batchId' => $row['batch_id'],
-            'batch_id' => $row['batch_id'],
-            'fileName' => $row['file_name'],
-            'file_name' => $row['file_name'],
-            'importedBy' => $row['imported_by'],
-            'imported_by' => $row['imported_by'],
-            'importedByName' => $row['imported_by_name'],
-            'importedByEmail' => $row['imported_by_email'],
-            'totalRows' => (int)$row['total_rows'],
-            'total_rows' => (int)$row['total_rows'],
-            'inserted' => (int)$row['inserted'],
-            'updated' => (int)$row['updated'],
-            'terminated' => (int)$row['terminated'],
-            'reactivated' => (int)$row['reactivated'],
-            'errorCount' => (int)$row['error_count'],
-            'error_count' => (int)$row['error_count'],
-            'errors' => is_array($errors) ? $errors : [],
-            'importedAt' => $row['imported_at'],
-            'imported_at' => $row['imported_at'],
-        ];
-    }, $stmt->fetchAll());
+        $stmt = $pdo->prepare(
+            'SELECT log.*, users.email AS imported_by_email, users.display_name AS imported_by_name
+               FROM roster_import_log log
+               LEFT JOIN users ON users.user_id = log.imported_by
+              ORDER BY log.imported_at DESC
+              LIMIT :limit OFFSET :offset'
+        );
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        $items = array_map(static function (array $row): array {
+            $errors = json_decode((string)($row['error_details'] ?? '[]'), true);
+            return [
+                'id' => (int)$row['id'],
+                'batchId' => $row['batch_id'],
+                'batch_id' => $row['batch_id'],
+                'fileName' => $row['file_name'],
+                'file_name' => $row['file_name'],
+                'importedBy' => $row['imported_by'],
+                'imported_by' => $row['imported_by'],
+                'importedByName' => $row['imported_by_name'],
+                'importedByEmail' => $row['imported_by_email'],
+                'totalRows' => (int)$row['total_rows'],
+                'total_rows' => (int)$row['total_rows'],
+                'inserted' => (int)$row['inserted'],
+                'updated' => (int)$row['updated'],
+                'terminated' => (int)$row['terminated'],
+                'reactivated' => (int)$row['reactivated'],
+                'errorCount' => (int)$row['error_count'],
+                'error_count' => (int)$row['error_count'],
+                'errors' => is_array($errors) ? $errors : [],
+                'importedAt' => $row['imported_at'],
+                'imported_at' => $row['imported_at'],
+            ];
+        }, $stmt->fetchAll());
+    } catch (Throwable $e) {
+        report_exception($e, 'roster-history');
+        $items = [];
+        $total = 0;
+    }
     respond(['data' => ['items' => $items, 'total' => $total, 'page' => $page, 'limit' => $limit]]);
 }
 
@@ -1517,6 +1542,10 @@ function handle_roster_update(string $employeeId): void
             'employee_id' => $employeeId,
         ]);
         $updated = $update->fetch();
+        if (!$updated) {
+            $pdo->rollBack();
+            fail(500, 'save-failed', 'Roster update returned no data.');
+        }
         $pdo->commit();
         respond(['item' => roster_item_response($updated)]);
     } catch (Throwable $exception) {
@@ -1549,6 +1578,9 @@ function handle_roster_export(): void
     header('Content-Disposition: attachment; filename="ktv_roster_' . $dateStamp . '.csv"');
     echo "\xEF\xBB\xBF";
     $out = fopen('php://output', 'wb');
+    if ($out === false) {
+        fail(500, 'export-failed', 'Unable to open output stream for CSV export.');
+    }
     fputcsv($out, [
         'employee_id',
         'display_name',
@@ -1640,80 +1672,118 @@ function handle_dashboard(array $segments, string $method): void
     }
 
     $pdo = db();
-    $rows = $pdo
-        ->query(
-            <<<'SQL'
-            SELECT
-                timer.id AS session_id,
-                COALESCE(timer.user_id, roster.user_id) AS user_id,
-                COALESCE(roster.employee_id, timer.technician_id) AS technician_id,
-                COALESCE(roster.display_name, timer.name) AS full_name,
-                COALESCE(roster.email, timer.email) AS email,
-                roster.class_code,
-                roster.job_title,
-                roster.unit_code,
-                roster.unit_name,
-                roster.region_code,
-                roster.dashboard_region AS region_name,
-                roster.is_terminated,
-                COALESCE(timer.started_at, timer.finished_at) AS started_at,
-                COALESCE(timer.duration_sec, 0) AS duration_sec,
-                timer.mode,
-                timer.device AS device_name,
-                timer.lab_id,
-                timer.lab_name,
-                timer.finished_at,
-                timer.is_passed,
-                timer.score,
-                timer.status,
-                timer.completed_first_try,
-                timer.last_action,
-                timer.is_mock,
-                timer.seed_batch
-             FROM timer_sessions timer
-             LEFT JOIN LATERAL (
-                 SELECT candidate.*
-                   FROM users candidate
-                  WHERE candidate.user_id = timer.user_id
-                     OR (
-                          timer.user_id IS NULL
-                          AND (
-                              candidate.employee_id = NULLIF(BTRIM(timer.technician_id), '')
-                              OR LOWER(candidate.email) = LOWER(NULLIF(BTRIM(timer.email), ''))
-                          )
-                     )
-                  ORDER BY CASE
-                      WHEN candidate.user_id = timer.user_id THEN 0
-                      WHEN candidate.employee_id = NULLIF(BTRIM(timer.technician_id), '') THEN 1
-                      ELSE 2
-                  END
-                  LIMIT 1
-             ) roster ON TRUE
-             ORDER BY COALESCE(timer.started_at, timer.finished_at) DESC
-            SQL
-        )
-        ->fetchAll();
-
-    $technicianRows = $pdo
-        ->query(
-            'SELECT ' . USER_COLUMNS . '
+    try {
+        $userLookupRows = $pdo->query(
+            'SELECT user_id, employee_id, email, display_name, class_code, job_title, unit_code, unit_name, region_code, dashboard_region, is_terminated
                FROM users
-              WHERE employee_id IS NOT NULL
-                AND is_terminated = FALSE
-                AND job_title = \'CB Kỹ thuật TKBT\'
-              ORDER BY class_code NULLS LAST, display_name NULLS LAST, email'
-        )
-        ->fetchAll();
+              WHERE employee_id IS NOT NULL OR user_id IS NOT NULL'
+        )->fetchAll();
 
-    $currentClassRows = $pdo
-        ->query(
-            <<<'SQL'
-            SELECT user_id, class_code, class_name, region_name
-              FROM v_current_training_class
-             ORDER BY user_id
-            SQL
-        )
-        ->fetchAll();
+        $userByUserId = [];
+        $userByEmployeeId = [];
+        $userByEmail = [];
+        foreach ($userLookupRows as $u) {
+            $uid = (string)($u['user_id'] ?? '');
+            $eid = (string)($u['employee_id'] ?? '');
+            $em  = strtolower(trim((string)($u['email'] ?? '')));
+            if ($uid !== '') $userByUserId[$uid] = $u;
+            if ($eid !== '') $userByEmployeeId[$eid] = $u;
+            if ($em !== '') $userByEmail[$em] = $u;
+        }
+        unset($userLookupRows);
+
+        $timerSql = 'SELECT
+                    timer.id AS session_id,
+                    timer.user_id,
+                    timer.technician_id,
+                    timer.name,
+                    timer.email,
+                    COALESCE(timer.started_at, timer.finished_at) AS started_at,
+                    COALESCE(timer.duration_sec, 0) AS duration_sec,
+                    timer.mode,
+                    timer.device AS device_name,
+                    timer.lab_id,
+                    timer.lab_name,
+                    timer.finished_at,
+                    timer.is_passed,
+                    timer.score,
+                    timer.status,
+                    timer.completed_first_try,
+                    timer.last_action,
+                    timer.is_mock,
+                    timer.seed_batch
+                 FROM timer_sessions timer
+                 WHERE NOT (
+                     timer.user_id IS NULL
+                     AND (
+                         timer.technician_id = :bypass_anon
+                         OR timer.technician_id = :bypass_uuid
+                         OR timer.technician_id = :bypass_empty
+                         OR timer.email = :bypass_email_empty
+                         OR timer.email = :bypass_email_dev
+                     )
+                 )';
+        $timerParams = [
+            'bypass_anon'        => 'ANONYMOUS',
+            'bypass_uuid'        => '00000000-0000-0000-0000-000000000001',
+            'bypass_empty'       => '',
+            'bypass_email_empty' => '',
+            'bypass_email_dev'   => 'dev-bypass@ftc.local',
+        ];
+
+        $dateFrom = trim((string)($_GET['from'] ?? ''));
+        $dateTo   = trim((string)($_GET['to'] ?? ''));
+        if ($dateFrom !== '') {
+            $timerSql .= ' AND COALESCE(timer.started_at, timer.finished_at) >= :date_from';
+            $timerParams['date_from'] = $dateFrom . 'T00:00:00+07:00';
+        }
+        if ($dateTo !== '') {
+            $timerSql .= ' AND COALESCE(timer.started_at, timer.finished_at) < (:date_to::date + INTERVAL \'1 day\')';
+            $timerParams['date_to'] = $dateTo;
+        }
+        $timerSql .= ' ORDER BY COALESCE(timer.started_at, timer.finished_at) DESC';
+
+        $timerStmt = $pdo->prepare($timerSql);
+        foreach ($timerParams as $k => $v) {
+            $timerStmt->bindValue(':' . $k, $v);
+        }
+        $timerStmt->execute();
+        $rows = $timerStmt->fetchAll();
+
+        $resolveRoster = function (?array $tRow) use ($userByUserId, $userByEmployeeId, $userByEmail): ?array {
+            $uid = (string)($tRow['user_id'] ?? '');
+            $eid = trim((string)($tRow['technician_id'] ?? ''));
+            $em  = strtolower(trim((string)($tRow['email'] ?? '')));
+            if ($uid !== '' && isset($userByUserId[$uid])) return $userByUserId[$uid];
+            if ($eid !== '' && isset($userByEmployeeId[$eid])) return $userByEmployeeId[$eid];
+            if ($em !== '' && isset($userByEmail[$em])) return $userByEmail[$em];
+            return null;
+        };
+
+        $technicianRows = $pdo
+            ->query(
+                'SELECT ' . USER_COLUMNS . '
+                   FROM users
+                  WHERE employee_id IS NOT NULL
+                    AND is_terminated = FALSE
+                    AND job_title = \'CB Kỹ thuật TKBT\'
+                  ORDER BY class_code NULLS LAST, display_name NULLS LAST, email'
+            )
+            ->fetchAll();
+
+        $currentClassRows = $pdo
+            ->query(
+                <<<'SQL'
+                SELECT user_id, class_code, class_name, region_name
+                  FROM v_current_training_class
+                 ORDER BY user_id
+                SQL
+            )
+            ->fetchAll();
+    } catch (Throwable $e) {
+        report_exception($e, 'dashboard-core-queries');
+        fail(500, 'dashboard-query-failed', 'Unable to load dashboard data.');
+    }
     $currentClasses = [];
     foreach ($currentClassRows as $classRow) {
         $currentClasses[(string)$classRow['user_id']] = $classRow;
@@ -1762,28 +1832,29 @@ function handle_dashboard(array $segments, string $method): void
     }
 
     foreach ($rows as $row) {
-        $currentClass = isset($row['user_id'])
-            ? ($currentClasses[(string)$row['user_id']] ?? null)
+        $roster = $resolveRoster($row);
+        $currentClass = ($roster && isset($roster['user_id']))
+            ? ($currentClasses[(string)$roster['user_id']] ?? null)
             : null;
         $sessions[] = [
             'session_id' => (string)$row['session_id'],
-            'user_id' => isset($row['user_id']) && $row['user_id'] !== ''
-                ? (string)$row['user_id']
-                : null,
-            'technician_id' => (string)($row['technician_id'] ?? ''),
-            'full_name' => (string)($row['full_name'] ?? ''),
-            'email' => (string)($row['email'] ?? ''),
-            'region_name' => (string)($row['region_name'] ?? ''),
-            'class_code' => (string)($currentClass['class_code'] ?? ($row['class_code'] ?? '')),
-            'source_class_code' => (string)($row['class_code'] ?? ''),
-            'job_title' => (string)($row['job_title'] ?? ''),
-            'unit_code' => (string)($row['unit_code'] ?? ''),
-            'unit_name' => (string)($row['unit_name'] ?? ''),
-            'region_code' => (string)($row['region_code'] ?? ''),
-            'branch_code' => (string)($row['branch_code'] ?? ''),
-            'is_terminated' => database_boolean($row['is_terminated'] ?? false),
-            'started_at' => $row['started_at'] ? (new DateTimeImmutable($row['started_at']))->format(DateTimeInterface::ATOM) : null,
-            'finished_at' => $row['finished_at'] ? (new DateTimeImmutable($row['finished_at']))->format(DateTimeInterface::ATOM) : null,
+            'user_id' => ($roster && isset($roster['user_id']) && $roster['user_id'] !== '')
+                ? (string)$roster['user_id']
+                : (isset($row['user_id']) && $row['user_id'] !== '' ? (string)$row['user_id'] : null),
+            'technician_id' => (string)($roster['employee_id'] ?? ($row['technician_id'] ?? '')),
+            'full_name' => (string)($roster['display_name'] ?? ($row['name'] ?? '')),
+            'email' => (string)($roster['email'] ?? ($row['email'] ?? '')),
+            'region_name' => (string)($roster['dashboard_region'] ?? ''),
+            'class_code' => (string)($currentClass['class_code'] ?? ($roster['class_code'] ?? '')),
+            'source_class_code' => (string)($roster['class_code'] ?? ''),
+            'job_title' => (string)($roster['job_title'] ?? ''),
+            'unit_code' => (string)($roster['unit_code'] ?? ''),
+            'unit_name' => (string)($roster['unit_name'] ?? ''),
+            'region_code' => (string)($roster['region_code'] ?? ''),
+            'branch_code' => '',
+            'is_terminated' => database_boolean($roster['is_terminated'] ?? false),
+            'started_at' => safe_datetime($row['started_at']),
+            'finished_at' => safe_datetime($row['finished_at']),
             'duration_sec' => (int)$row['duration_sec'],
             'mode' => (string)($row['mode'] ?? 'Thực hành'),
             'device_name' => (string)($row['device_name'] ?? ''),
@@ -1864,17 +1935,18 @@ function handle_dashboard(array $segments, string $method): void
                 'device_name' => (string)$row['device_name'],
                 'lab_id' => (string)$row['lab_id'],
                 'lab_name' => (string)$row['lab_name'],
-                'assigned_at' => $row['assigned_at'] ? (new DateTimeImmutable($row['assigned_at']))->format(DateTimeInterface::ATOM) : null,
-                'due_at' => $row['due_at'] ? (new DateTimeImmutable($row['due_at']))->format(DateTimeInterface::ATOM) : null,
+                'assigned_at' => safe_datetime($row['assigned_at']),
+                'due_at' => safe_datetime($row['due_at']),
                 'status' => (string)$row['status'],
-                'completed_at' => $row['completed_at'] ? (new DateTimeImmutable($row['completed_at']))->format(DateTimeInterface::ATOM) : null,
+                'completed_at' => safe_datetime($row['completed_at']),
                 'first_pass_attempt_no' => $row['first_pass_attempt_no'] !== null ? (int)$row['first_pass_attempt_no'] : null,
                 'first_try_evaluated' => (bool)($row['first_try_evaluated'] ?? false),
                 'attempt_count' => (int)($row['attempt_count'] ?? 0),
                 'avg_duration_sec' => (int)($row['avg_duration_sec'] ?? 0),
             ];
         }
-    } catch (Throwable $ignored) {
+    } catch (Throwable $e) {
+        report_exception($e, 'dashboard-assignments');
     }
 
     respond(['data' => [

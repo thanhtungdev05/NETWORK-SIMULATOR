@@ -60,6 +60,15 @@
     [/^Reset$/i, function (b) {
       bao(nhan(b), 'Tren thiet bi that: xoa toan bo nhat ky da luu.');
     }],
+    [/^Apply$/i, function (b) {
+      var w = window.parent || window;
+      if (w.onSimulatorSave) {
+        try {
+          w.onSimulatorSave(window);
+        } catch (e) {}
+      }
+      bao('Apply', 'Cấu hình đã được áp dụng thành công.');
+    }],
     [/^Hardware Diagnosis$/i, function (b) {
       bao(nhan(b), 'Tren thiet bi that: chay kiem tra phan cung va bao ket qua.');
     }]
@@ -71,7 +80,7 @@
       if (b.__act) return;
       var t = nhan(b);
       // bo qua cac nut da co hanh vi tu script khac
-      if (/^(Add|Edit|Modify|Apply|Cancel)$/i.test(t)) return;
+      if (/^(Add|Edit|Modify|Cancel)$/i.test(t)) return;
       if (/Reveal\/hide password/i.test(b.getAttribute('title') || '')) return;
       for (var i = 0; i < XU_LY.length; i++) {
         if (XU_LY[i][0].test(t)) {

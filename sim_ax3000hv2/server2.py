@@ -41,6 +41,51 @@ def get_nav_and_tab_for_page(page_name):
         return "/cgi-bin/navigation-status.asp", "Status"
     return "/cgi-bin/navigation-basic.asp", "Network"
 
+SIM_STATE = {}
+
+def apply_sim_state_to_html(html_str):
+    if not SIM_STATE:
+        return html_str
+    
+    import json
+    state_json = json.dumps(SIM_STATE)
+    
+    js_code = f"""
+    <script type="text/javascript">
+    window.addEventListener('DOMContentLoaded', function() {{
+        var state = {state_json};
+        for (var name in state) {{
+            var val = state[name];
+            var els = document.getElementsByName(name);
+            if (els && els.length > 0) {{
+                for (var i = 0; i < els.length; i++) {{
+                    var el = els[i];
+                    if (el.type === 'radio' || el.type === 'checkbox') {{
+                        if (el.value === val) el.checked = true;
+                        else el.checked = false;
+                    }} else {{
+                        el.value = val;
+                    }}
+                    if (typeof el.onchange === 'function') el.onchange();
+                    if (typeof el.onblur === 'function') el.onblur();
+                }}
+            }}
+            var elById = document.getElementById(name);
+            if (elById) {{
+                if (elById.type === 'radio' || elById.type === 'checkbox') {{
+                    if (elById.value === val) elById.checked = true;
+                }} else {{
+                    elById.value = val;
+                }}
+                if (typeof elById.onchange === 'function') elById.onchange();
+                if (typeof elById.onblur === 'function') elById.onblur();
+            }}
+        }}
+    }});
+    </script>
+    """
+    return html_str.replace("</head>", js_code + "</head>")
+
 
 class H(BaseHTTPRequestHandler):
     def _send(self, data, ctype, code=200):
@@ -61,6 +106,7 @@ class H(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
+        global SIM_STATE
         parsed = urlparse(self.path)
         p = unquote(parsed.path)
 
@@ -70,7 +116,8 @@ class H(BaseHTTPRequestHandler):
         if p in ("/cgi-bin/requestFromLoginPage", "/cgi-bin/reqLogin", "/cgi-bin/logincheck.cgi"):
             return self._redirect("/cgi-bin/index.asp")
 
-        if "logout" in p.lower() or p.endswith("/doLogout"):
+        if "logout" in p.lower() or p.endswith("/doLogout") or "resetsession" in p.lower():
+            SIM_STATE.clear()
             return self._redirect("/cgi-bin/login.asp")
 
         # Xu ly dac biet cho /cgi-bin/index.asp (ho tro render full frameset theo page)
@@ -95,6 +142,7 @@ class H(BaseHTTPRequestHandler):
                     html = re.sub(r'src=["\']/cgi-bin/navigation-status\.asp["\']', f'src="{final_nav}"', html)
                     html = re.sub(r'src=["\']/cgi-bin/status_deviceinfo\.asp["\']', f'src="{clean_page}"', html)
 
+                html = apply_sim_state_to_html(html)
                 return self._send(html.encode("utf-8"), "text/html; charset=utf-8")
 
         # Xu ly dac biet cho /cgi-bin/status.asp de active tab truyen qua URL (?tab=Network)
@@ -128,22 +176,39 @@ class H(BaseHTTPRequestHandler):
                     """
                     html = html.replace('</head>', tab_script + '</head>')
 
+                html = apply_sim_state_to_html(html)
                 return self._send(html.encode("utf-8"), "text/html; charset=utf-8")
 
         # Duong dan file trong www2
         f = os.path.join(WWW, p.lstrip("/"))
         if os.path.isfile(f):
             ext = os.path.splitext(f)[1].lower()
-            with open(f, "rb") as fh:
-                content = fh.read()
-
-            return self._send(content, CT.get(ext, "application/octet-stream"))
+            if ext in (".asp", ".html", ".htm"):
+                with open(f, "r", encoding="utf-8", errors="replace") as fh:
+                    text_content = fh.read()
+                text_content = apply_sim_state_to_html(text_content)
+                return self._send(text_content.encode("utf-8"), CT.get(ext, "text/html; charset=utf-8"))
+            else:
+                with open(f, "rb") as fh:
+                    content = fh.read()
+                return self._send(content, CT.get(ext, "application/octet-stream"))
 
         return self._send(b"Not found: " + p.encode(), "text/plain", 404)
 
     def do_POST(self):
-        # cac form Apply cua thiet bi POST ve CGI; ban gia lap chi bao thanh cong
-        # (khong ghi cau hinh). Tra ve trang chinh de khong loi.
+        global SIM_STATE
+        try:
+            length = int(self.headers.get("Content-Length", 0) or 0)
+            if length > 0:
+                body_bytes = self.rfile.read(length)
+                ctype = self.headers.get("Content-Type", "")
+                if "application/x-www-form-urlencoded" in ctype:
+                    params = parse_qs(body_bytes.decode("utf-8", errors="replace"))
+                    for k, v in params.items():
+                        if v:
+                            SIM_STATE[k] = v[0]
+        except Exception as e:
+            pass
         self._redirect(self.headers.get("Referer") or "/cgi-bin/index.asp")
 
     def log_message(self, *a):

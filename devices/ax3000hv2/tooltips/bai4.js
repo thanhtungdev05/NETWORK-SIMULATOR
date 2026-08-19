@@ -8,7 +8,7 @@ window.TOOLTIPS_AX3000HV2['LAB_AX3000HV2_04'] = [
     {
         selector: 'a[href*="wifi5.asp"], a:contains("IOT SSID")',
         text: 'Bước 2: Chọn IOT SSID',
-        position: 'right'
+        position: 'top'
     },
     {
         selector: 'input[name="Enable_Wifi5_2G"][value="1"]',

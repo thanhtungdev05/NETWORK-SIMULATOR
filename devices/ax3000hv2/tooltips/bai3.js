@@ -8,7 +8,7 @@ window.TOOLTIPS_AX3000HV2['LAB_AX3000HV2_03'] = [
     {
         selector: 'a[href*="wifi_guest.asp"], a:contains("Guest Wi-Fi")',
         text: 'Bước 2: Chọn Guest Wi-Fi',
-        position: 'right'
+        position: 'top'
     },
     {
         selector: 'input[name="enable_SSID"][value="1"]',

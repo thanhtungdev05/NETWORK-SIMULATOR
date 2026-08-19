@@ -60,7 +60,10 @@ window.addEventListener("DOMContentLoaded", function() {
     } catch(e) {}
 });
 </script>"""
-        html_str = html_str.replace("</head>", save_js + "</head>")
+        if re.search(r'</head>', html_str, re.IGNORECASE):
+            html_str = re.sub(r'</head>', save_js + "</head>", html_str, flags=re.IGNORECASE)
+        else:
+            html_str = save_js + html_str
 
 
     if not SIM_STATE:
@@ -221,7 +224,10 @@ class H(BaseHTTPRequestHandler):
                     }});
                     </script>
                     """
-                    html = html.replace('</head>', tab_script + '</head>')
+                    if re.search(r'</head>', html, re.IGNORECASE):
+                        html = re.sub(r'</head>', tab_script + "</head>", html, flags=re.IGNORECASE)
+                    else:
+                        html = tab_script + html
 
                 html = apply_sim_state_to_html(html, show_success)
                 return self._send(html.encode("utf-8"), "text/html; charset=utf-8")

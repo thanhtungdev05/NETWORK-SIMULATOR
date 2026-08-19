@@ -8,7 +8,7 @@ window.TOOLTIPS_AX3000HV2['LAB_AX3000HV2_02'] = [
     {
         selector: 'a[href*="wifi_basic.asp"], a:contains("Host SSID")',
         text: 'Bước 2: Chọn Host SSID',
-        position: 'right'
+        position: 'top'
     },
     {
         selector: 'input[name="ESSID"]',

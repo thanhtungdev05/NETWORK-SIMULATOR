@@ -8,7 +8,7 @@ window.TOOLTIPS_AX3000HV2['LAB_AX3000HV2_05'] = [
     {
         selector: 'a[href*="home_lan.asp"], a:contains("LAN")',
         text: 'Bước 2: Chọn LAN',
-        position: 'right'
+        position: 'top'
     },
     {
         selector: 'input[name="uiViewIPAddr"]',

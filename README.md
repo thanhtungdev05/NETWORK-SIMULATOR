@@ -52,52 +52,105 @@ python run_all.py
 
 Dự án không chỉ mô phỏng thiết bị mà còn tích hợp bộ công cụ Đào tạo và Chấm điểm tự động:
 
-### A. Hai Chế Độ Hoạt Động (Dual Modes)
+### A. Danh sách các dòng thiết bị giả lập (Simulators)
+Dự án đã giả lập thành công Web Admin Interface của 8 dòng thiết bị mạng thực tế phổ biến của FPT Telecom:
+1. **AC1000F** (`/sim_ac1000f`)
+2. **AX3000C** (`/sim_ax3000c`)
+3. **AX3000GZ** (`/sim_ax3000gz`)
+4. **AX3000Hv2** (`/sim_ax3000hv2`)
+5. **AX3000S** (`/sim_ax3000s`)
+6. **BE12000** (`/sim_be12000`)
+7. **BE15000** (`/sim_be15000`)
+8. **Vigor2927** (`/sim_vigor2927`)
+
+### B. Hai Chế Độ Hoạt Động (Dual Modes)
 1. **💡 Chế độ Hướng dẫn (Guide Mode)**
    - **Mục đích:** Học tập và rèn luyện.
    - **Tính năng:**
-     - Hiển thị bong bóng hướng dẫn (Tooltips) chỉ dẫn từng bước thao tác. Hỗ trợ hiển thị độc lập theo từng trang con (vd: trang 2.4G và 5G).
+     - Hiển thị bong bóng hướng dẫn (Tooltips) chỉ dẫn từng bước thao tác thực tế. Tooltips tự động đồng bộ theo từng trang con của thiết bị (ví dụ: chuyển trang WLAN, SNTP, Mesh, Port Forwarding...).
      - KTV được phép cấu hình sai. Khi ấn **Nộp Bài**, hệ thống sẽ hiện bảng báo lỗi, cho phép đóng bảng điểm để **quay lại giao diện cũ sửa lỗi** và nộp lại.
-     - **Chỉ ghi nhận Tracking (Log) khi đạt 100%**: Tránh xả rác cơ sở dữ liệu với các lần làm thử/sai của học viên.
+     - **Chỉ ghi nhận Tracking (Log) khi đạt 100%**: Tránh ghi nhận dữ liệu không hoàn chỉnh của học viên.
 
 2. **⚡ Chế độ Thực hành (Practice Mode)**
    - **Mục đích:** Kiểm tra, thi thật.
    - **Tính năng:**
      - Ẩn toàn bộ hướng dẫn, ép KTV tự nhớ các thông số cấu hình chuẩn FPT.
-     - **Khắt khe:** Nếu chấm điểm bị sai dù chỉ 1 tiêu chí, hệ thống khóa màn hình, yêu cầu "Quay lại làm từ đầu" và **reset toàn bộ thiết bị** (mất toàn bộ cấu hình).
+     - **Khắt khe:** Nếu chấm điểm bị sai dù chỉ 1 tiêu chí, hệ thống khóa màn hình, yêu cầu "Quay lại làm từ đầu" và **reset toàn bộ thiết bị** (mất toàn bộ cấu hình đã lưu).
      - Gửi Tracking dữ liệu lập tức (bất kể Đạt hay Chưa đạt) ngay khi nhấn Nộp Bài để nạp vào Data Dashboard.
 
-### B. Chấm Điểm Tự Động Thông Minh (Smart Auto-Grading)
+### C. Chấm Điểm Tự Động Thông Minh (Smart Auto-Grading)
 - **Lấy dữ liệu trực tiếp từ Iframe giả lập:** Dùng DOM query để đọc dữ liệu KTV đã nhập, so khớp với bộ quy tắc chuẩn (`rules`).
+- **Luật chấm điểm động linh hoạt:** Hỗ trợ chấm điểm phức tạp như kiểm tra giá trị bất kỳ trong danh sách (vd: NTP Server được chọn ứng cử viên thuộc `vn.pool.ntp.org` hoặc `asia.pool.ntp.org` bằng định dạng `any_of`).
 - **Lưu bộ nhớ tạm (Cache đa trang):** Khắc phục nhược điểm KTV phải chuyển trang khi cấu hình (VD: Cấu hình Wi-Fi 2.4G xong, nhấn *Save*, rồi chuyển sang Wi-Fi 5G, nhấn *Save*).
   - Hệ thống tự động bắt tín hiệu *Save* từ bên trong iframe (`window.parent.onSimulatorSave`).
   - Lấy điểm từng phần lưu vào `CACHE` cục bộ (`_AC1000F_BAI2_CACHE`).
   - Gộp chung toàn bộ khi nhấn "Nộp Bài" ở ngoài Portal chính.
 
-### C. Ngăn Chặn Tải Lại Trang (Anti-Reload Script)
+### D. Ngăn Chặn Tải Lại Trang (Anti-Reload Script)
 Thiết bị thực tế thường khởi động lại hoặc load lại trang khi bấm Save. Trong giả lập:
 - Tích hợp bộ script Python (vd: `fix_saves.py`) tự động quét mã nguồn `.asp` của các giả lập.
 - Chèn Javascript ngăn lệnh submit, hiển thị thông báo giả lập `✔ Saved successfully!` và gửi tín hiệu báo cáo cho Portal ở lớp vỏ ngoài.
 
-### D. Hệ thống Tracking API & Logging
+### E. Hệ thống Tracking API & Logging
 - Tích hợp sẵn endpoint `/api/index.php/tracking/timer`.
 - Ghi nhận: ID KTV, Tên Bài Học, Điểm số, Tổng thời gian hoàn thành (tính bằng giây) và danh sách các lỗi cấu hình.
 - 100% không bị gửi đúp dữ liệu nhờ màng lọc logic thông minh tại nút "Nộp Bài".
 
 ---
 
-## 🌐 4. Cấu Trúc Cổng Dịch Vụ (Single-Port)
+## 📊 4. Dashboard Giám Sát KTV (Training Management Dashboard)
+
+Dự án cung cấp một Dashboard quản trị hoàn chỉnh dành cho Admin/Giảng viên để theo dõi, thống kê tiến độ học tập và kết quả của các KTV.
+
+- **Đường dẫn truy cập:** `http://localhost:8080/dashboard/` (được mount tự động từ thư mục `dashboard-authen`).
+- **Bảo mật & Phân quyền**: Yêu cầu đăng nhập trước thông qua hệ thống IAM FPT (hoặc Dev Bypass mode trên localhost) và bắt buộc tài khoản có quyền `admin`.
+- **Chức năng chính:**
+  - Thống kê tổng số học viên (KTV), tổng số lượt làm bài (Sessions), tỉ lệ đạt (Pass Rate), tỉ lệ đạt lần đầu (First-pass Rate).
+  - So sánh hiệu suất học tập giữa các lớp (Class Code), các khu vực/vùng miền (Dashboard Region).
+  - Phân tích chi tiết biểu đồ tiến độ qua các tháng, danh sách chi tiết các lượt làm bài, trạng thái đạt/chưa đạt kèm thời gian và bài thực hành cụ thể.
+  - Tra cứu kết quả phân công bài tập (Assignments) và tiến trình hoàn thành của từng nhân viên.
+
+---
+
+## 💾 5. Cơ Sở Dữ Liệu & Migrations
+
+Hệ thống sử dụng cơ sở dữ liệu quan hệ **PostgreSQL** (mặc định kết nối Neon Cloud qua biến môi trường `DATABASE_URL` trong file `.env`).
+
+### Quản lý Schema qua Migrations
+Mọi thay đổi cấu trúc bảng, view hay dữ liệu mẫu đều được quản lý thông qua các file di trú phiên bản đặt trong thư mục `api/migrations/`.
+Các lệnh CLI hữu ích để quản lý cơ sở dữ liệu:
+* **Kiểm tra trạng thái di trú:**
+  ```bash
+  php api/migrate.php --status
+  ```
+* **Chạy di trú (Cập nhật Schema):**
+  ```bash
+  php api/migrate.php
+  ```
+* **Khởi tạo dữ liệu KTV & Sessions mẫu (Seed):**
+  ```bash
+  php api/seed_dashboard_ktv.php
+  ```
+* **Xác minh tính đúng đắn của dữ liệu mẫu:**
+  ```bash
+  php api/verify_dashboard_seed.php
+  ```
+
+---
+
+## 🌐 6. Cấu Trúc Cổng Dịch Vụ (Single-Port)
 
 | Thành phần | Địa chỉ (Routing qua Master Dispatcher) |
 |---|---|
 | **Portal Trung Tâm & Bài Học** | `http://localhost:8080/` |
-| **API Tracking (PHP)** | `http://localhost:8080/api/index.php` |
-| **Iframe Giả lập AC1000F** | `http://localhost:8080/sim_ac1000f/...` |
+| **API Backend (PHP)** | `http://localhost:8080/api/index.php` |
+| **Dashboard Quản trị** | `http://localhost:8080/dashboard/` |
+| **Giả lập AC1000F** | `http://localhost:8080/sim_ac1000f/...` |
 | **Các giả lập khác** | `http://localhost:8080/sim_ax3000c/...` |
 
 ---
 
-## 🛑 5. Hướng Dẫn Dừng Hệ Thống
+## 🛑 7. Hướng Dẫn Dừng Hệ Thống
 
 - **Windows (CMD/PowerShell)**: Đóng cửa sổ CMD đang chạy (hoặc nhấn `Ctrl + C`).
 - **Terminal (macOS/Linux)**: Nhấn `Ctrl + C` tại cửa sổ Terminal đang chạy script để dừng toàn bộ dịch vụ Python và PHP nội bộ.
@@ -105,6 +158,7 @@ Thiết bị thực tế thường khởi động lại hoặc load lại trang 
 ---
 
 ## 📝 Ghi Chú
+
 - Giữ nguyên cửa sổ terminal/CMD trong suốt quá trình thực hành.
 - Nếu bạn có thay đổi cấu trúc thiết bị và luồng lưu file, hãy chạy lại lệnh vá file của Python để giả lập hoạt động đúng với Portal.
 - Đảm bảo cổng `8080` không bị chiếm dụng trước khi bật file Batch/Python.

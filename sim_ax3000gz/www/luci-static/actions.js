@@ -67,7 +67,25 @@
           w.onSimulatorSave(window);
         } catch (e) {}
       }
-      bao('Apply', 'Cấu hình đã được áp dụng thành công.');
+      
+      var msgId = 'fakeSaveMsg';
+      var oldMsg = document.getElementById(msgId);
+      if (oldMsg) oldMsg.remove();
+      
+      var msg = document.createElement('span');
+      msg.id = msgId;
+      msg.style.color = '#15803d';
+      msg.style.fontWeight = 'bold';
+      msg.style.fontSize = '13px';
+      msg.style.marginLeft = '10px';
+      msg.style.verticalAlign = 'middle';
+      msg.innerHTML = '✔ Saved successfully!';
+      
+      b.parentNode.insertBefore(msg, b.nextSibling);
+      
+      setTimeout(function () {
+        if (msg && msg.parentNode) msg.parentNode.removeChild(msg);
+      }, 3000);
     }],
     [/^Hardware Diagnosis$/i, function (b) {
       bao(nhan(b), 'Tren thiet bi that: chay kiem tra phan cung va bao ket qua.');

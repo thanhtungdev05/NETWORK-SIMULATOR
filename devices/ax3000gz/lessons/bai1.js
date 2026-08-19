@@ -22,7 +22,7 @@ window.DEVICE_AX3000GZ_LESSONS.push({
       {
         id: 'wan_username',
         name: 'PPPoE Username',
-        selector: 'input[name="username"], input[name="user"], #username',
+        selector: '[id="widget.cbid.network.wan.username"]',
         expected: 'fpt',
         type: 'text_exact',
         trim: true,
@@ -31,7 +31,7 @@ window.DEVICE_AX3000GZ_LESSONS.push({
       {
         id: 'wan_password',
         name: 'PPPoE Password',
-        selector: 'input[name="password"], input[name="pwd"], #password',
+        selector: '[id="widget.cbid.network.wan.password"]',
         expected: 'fpt12345',
         type: 'text_exact',
         trim: true,

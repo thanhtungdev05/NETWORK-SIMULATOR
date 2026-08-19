@@ -228,7 +228,12 @@
     huy.style.cssFloat = 'left';
     huy.addEventListener('click', dongModal);
     ap.addEventListener('click', function () {
-      alert('Ban gia lap: cau hinh khong duoc ghi vao thiet bi that.');
+      var w = window.parent || window;
+      if (w.onSimulatorSave) {
+        try {
+          w.onSimulatorSave(window);
+        } catch (e) {}
+      }
       dongModal();
     });
     hd.appendChild(huy); hd.appendChild(ap);

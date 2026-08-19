@@ -16,6 +16,12 @@ window.DEVICE_AX3000HV2_LESSONS.push({
     '- WPA Key: <span class="val">fpt12345</span>',
   ],
   practiceUrl: '/sim_ax3000hv2/cgi-bin/index.asp?page=home_wireless.asp',
+  clearFields: [
+    'input[name="ESSID"]',
+    'input[name="PreSharedKey"]',
+    'input[name="ESSID_5g"]',
+    'input[name="PreSharedKey_5g"]'
+  ],
   grading: {
     description: 'Kiểm tra SSID Guest và WPA Key trên AX3000Hv2',
     rules: [

@@ -16,6 +16,10 @@ window.DEVICE_AX3000HV2_LESSONS.push({
     '- IP Address: <span class="val">192.168.1.100</span>',
   ],
   practiceUrl: '/sim_ax3000hv2/cgi-bin/index.asp?page=home_lan.asp',
+  clearFields: [
+    'input[name="IpAddr"]',
+    'input[name="MACAddr"]'
+  ],
   grading: {
     description: 'Kiểm tra DHCP Reservation settings',
     rules: [

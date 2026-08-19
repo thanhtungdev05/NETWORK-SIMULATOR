@@ -19,6 +19,13 @@ window.DEVICE_AX3000HV2_LESSONS.push({
     '- Lease Time: <span class="val">86400</span>',
   ],
   practiceUrl: '/sim_ax3000hv2/cgi-bin/index.asp?page=home_lan.asp',
+  clearFields: [
+    'input[name="uiViewIPAddr"]',
+    'input[name="uiViewNetMask"]',
+    'input[name="StartIp"]',
+    'input[name="PoolSize"]',
+    'input[name="dhcp_LeaseTime"]'
+  ],
   grading: {
     description: 'Kiểm tra LAN Router IP & DHCP Range trên AX3000Hv2',
     rules: [

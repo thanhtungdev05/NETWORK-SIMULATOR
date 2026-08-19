@@ -157,7 +157,6 @@
 
     // When iframe loads, trigger popups if in guide mode + clear fields
     deviceIframe.addEventListener('load', () => {
-      window._hasClickedSaveInGuide = false;
       iframeLoading.classList.add('hidden');
       if (currentMode === 'guide') {
         setTimeout(applyGuidePopups, 100);
@@ -593,6 +592,7 @@
    * Chạy sau mỗi lần iframe load hoặc định kỳ để học viên phải tự nhập giá trị.
    */
   function clearLessonFields() {
+    if (window._hasClickedSaveInGuide) return;
     if (!_currentLesson || !Array.isArray(_currentLesson.clearFields) || _currentLesson.clearFields.length === 0) return;
     try {
       const allDocs = getAllAccessibleDocuments(deviceIframe.contentWindow);

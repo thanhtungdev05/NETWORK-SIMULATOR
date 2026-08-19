@@ -16,6 +16,10 @@ window.DEVICE_AX3000HV2_LESSONS.push({
     '- Password: <span class="val">fpt12345</span>',
   ],
   practiceUrl: '/sim_ax3000hv2/cgi-bin/index.asp?page=home_wan.asp',
+  clearFields: [
+    'input[name="pppUserName"]',
+    'input[name="pppPassword"]'
+  ],
   grading: {
     description: 'Kiểm tra cấu hình PPPoE trên AX3000H v2',
     rules: [

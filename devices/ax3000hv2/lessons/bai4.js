@@ -16,6 +16,12 @@ window.DEVICE_AX3000HV2_LESSONS.push({
     '- WPA Key: <span class="val">fpt12345</span>',
   ],
   practiceUrl: '/sim_ax3000hv2/cgi-bin/index.asp?page=home_wireless.asp',
+  clearFields: [
+    'input[name="wifi5SSid_2G"]',
+    'input[name="wifi5Pwd_2G"]',
+    'input[name="wifi5SSid_5G"]',
+    'input[name="wifi5Pwd_5G"]'
+  ],
   grading: {
     description: 'Kiểm tra SSID IoT và WPA Key trên AX3000Hv2',
     rules: [

@@ -36,7 +36,7 @@ window.TOOLTIPS_AX3000C['LAB_AX3000CV2_02'] = [
   // Bước 2: Đặt mật khẩu WIFI VD: fpt123456 (chỉ hiện khi đã vào trang Wi-Fi)
   {
     selector: '#pp, input[type="password"]',
-    text: 'Bước 2: Đặt mật khẩu WIFI VD: fpt123456',
+    text: 'Bước 2: Đặt mật khẩu WIFI VD: fpt12345',
     position: 'right',
     page: 'wifi'
   },

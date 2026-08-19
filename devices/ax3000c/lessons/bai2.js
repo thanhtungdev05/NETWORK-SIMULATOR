@@ -70,7 +70,7 @@ window.DEVICE_AX3000C_LESSONS.push({
     },
     {
       selector: '#pp, input[type="password"]',
-      text: 'Bước 2: Đặt mật khẩu WIFI VD: fpt123456',
+      text: 'Bước 2: Đặt mật khẩu WIFI VD: fpt12345',
       position: 'right',
       page: 'wifi'
     },

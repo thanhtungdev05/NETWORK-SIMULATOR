@@ -16,13 +16,17 @@ window.DEVICE_AX3000GZ_LESSONS.push({
     '- RSSI Threshold(5g): <span class="val">-65</span>',
   ],
   practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/localnetwork/WLAN/BandSteering',
+  clearFields: [
+    '[id="widget.cbid.json.BandSteering.RssiThreshold2g"]',
+    '[id="widget.cbid.json.BandSteering.RssiThreshold5g"]'
+  ],
   grading: {
     description: 'Kiểm tra Band Steering trên AX3000GZ',
     rules: [
       {
         id: 'rssi_24g',
         name: 'RSSI Threshold 2.4G',
-        selector: 'input[name="rssi_24g"], input[name*="24g"]',
+        selector: '[id="widget.cbid.json.BandSteering.RssiThreshold2g"]',
         expected: '-65',
         type: 'text_exact',
         trim: true,
@@ -31,7 +35,7 @@ window.DEVICE_AX3000GZ_LESSONS.push({
       {
         id: 'rssi_5g',
         name: 'RSSI Threshold 5G',
-        selector: 'input[name="rssi_5g"], input[name*="5g"]',
+        selector: '[id="widget.cbid.json.BandSteering.RssiThreshold5g"]',
         expected: '-65',
         type: 'text_exact',
         trim: true,

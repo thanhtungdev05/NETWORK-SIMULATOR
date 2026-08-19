@@ -13,12 +13,14 @@ window.TOOLTIPS_AX3000HV2['LAB_AX3000HV2_06'] = [
     {
         selector: 'input[name="IpAddr"]',
         text: 'Bước 3: Nhập IP muốn gán: 192.168.1.100',
-        position: 'right'
+        position: 'right',
+        forcePosition: true
     },
     {
         selector: 'input[name="MACAddr"]',
         text: 'Bước 4: Nhập MAC thiết bị muốn gán: AA:BB:CC:DD:EE:FF',
-        position: 'right'
+        position: 'right',
+        forcePosition: true
     },
     {
         selector: 'input[value="Save"], input[name="SaveBtn"]',

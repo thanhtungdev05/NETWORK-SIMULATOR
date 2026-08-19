@@ -45,8 +45,23 @@ SIM_STATE = {}
 
 def apply_sim_state_to_html(html_str, show_success=False):
     if show_success:
-        alert_js = '<script type="text/javascript">window.addEventListener("DOMContentLoaded", function() { alert("Operate successfully!"); });</script>'
-        html_str = html_str.replace("</head>", alert_js + "</head>")
+        # Inject: alert thành công + đánh dấu _ftcIsSaved + gọi onSimulatorSave lên Portal
+        save_js = """<script type="text/javascript">
+window.addEventListener("DOMContentLoaded", function() {
+    alert("Operate successfully!");
+    // Đánh dấu đã lưu cấu hình thành công để hệ thống chấm điểm nhận biết
+    document._ftcIsSaved = true;
+    // Lắng nghe thay đổi input → reset cờ nếu người dùng sửa lại
+    document.addEventListener('input', function() { document._ftcIsSaved = false; });
+    document.addEventListener('change', function() { document._ftcIsSaved = false; });
+    // Thông báo lên Portal (app.js) qua postMessage để vượt qua giới hạn cross-origin
+    try {
+        window.top.postMessage({ type: 'FTC_SAVE_SUCCESS', source: 'ax3000hv2' }, '*');
+    } catch(e) {}
+});
+</script>"""
+        html_str = html_str.replace("</head>", save_js + "</head>")
+
 
     if not SIM_STATE:
         return html_str

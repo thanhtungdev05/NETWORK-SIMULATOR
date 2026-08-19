@@ -153,6 +153,28 @@
           clearGuidePopups();
         }
       }
+      // Nhận tín hiệu Save thành công từ simulator AX3000H v2 (qua postMessage cross-origin)
+      if (event.data && event.data.type === 'FTC_SAVE_SUCCESS') {
+        // Delay nhỏ để frame đã load xong và đặt document._ftcIsSaved = true trước khi đọc
+        setTimeout(function() {
+          try {
+            const allDocs = getAllAccessibleDocuments(deviceIframe.contentWindow);
+            let savedWin = null;
+            for (const doc of allDocs) {
+              if (doc._ftcIsSaved) {
+                savedWin = doc.defaultView || doc.parentWindow;
+                break;
+              }
+            }
+            // Nếu không tìm thấy frame cụ thể, dùng contentWindow của iframe
+            if (!savedWin) savedWin = deviceIframe.contentWindow;
+            if (typeof window.onSimulatorSave === 'function') {
+              window.onSimulatorSave(savedWin);
+            }
+          } catch(e) {}
+        }, 300);
+      }
+
     });
 
     // When iframe loads, trigger popups if in guide mode + clear fields
@@ -725,8 +747,8 @@
       }
 
       if (isMatch) {
-        // Đối với thiết bị AX3000C, bắt buộc trang chứa phần tử phải được bấm Save/Apply thành công
-        if (currentDeviceId === 'ax3000c' && !isSaved) {
+        // Đối với thiết bị AX3000C và AX3000H v2, bắt buộc trang chứa phần tử phải được bấm Save/Apply thành công
+        if ((currentDeviceId === 'ax3000c' || currentDeviceId === 'ax3000hv2') && !isSaved) {
           isMatch = false;
         }
       }
@@ -739,8 +761,8 @@
       if (isMatch) {
         msg = 'Chính xác';
       } else {
-        if (currentDeviceId === 'ax3000c' && elementFound && !isSaved) {
-          msg = 'Chưa bấm Apply để lưu cấu hình';
+        if ((currentDeviceId === 'ax3000c' || currentDeviceId === 'ax3000hv2') && elementFound && !isSaved) {
+          msg = 'Chưa bấm Save để lưu cấu hình';
         } else {
           msg = `Mong muốn: "${expectedVal}", Thực tế: "${actualValue || 'Trống'}"`;
         }
@@ -750,7 +772,7 @@
         id: rule.id,
         name: rule.name,
         expected: expectedVal,
-        actual: (currentDeviceId === 'ax3000c' && elementFound && !isSaved) ? `${actualValue} (Chưa lưu)` : (actualValue || '(Chưa nhập / Chưa tìm thấy)'),
+        actual: ((currentDeviceId === 'ax3000c' || currentDeviceId === 'ax3000hv2') && elementFound && !isSaved) ? `${actualValue} (Chưa lưu)` : (actualValue || '(Chưa nhập / Chưa tìm thấy)'),
         passed: isMatch,
         message: msg
       });
@@ -1493,7 +1515,7 @@
       const winH = win.innerHeight || doc.documentElement.clientHeight || 768;
       let pos = pop.position || 'right';
 
-      if (pos === 'right' && (rect.left + rect.width + bWidth + 16) > winW) {
+      if (!pop.forcePosition && pos === 'right' && (rect.left + rect.width + bWidth + 16) > winW) {
         if (rect.left - bWidth - 12 >= 10) {
           pos = 'left';
         }

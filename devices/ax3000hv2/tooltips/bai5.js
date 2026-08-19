@@ -13,27 +13,32 @@ window.TOOLTIPS_AX3000HV2['LAB_AX3000HV2_05'] = [
     {
         selector: 'input[name="uiViewIPAddr"]',
         text: 'Bước 3: Nhập IP: 192.168.1.254',
-        position: 'right'
+        position: 'right',
+        forcePosition: true
     },
     {
         selector: 'input[name="uiViewNetMask"]',
         text: 'Bước 4: Nhập Subnet Mask: 255.255.255.0',
-        position: 'right'
+        position: 'right',
+        forcePosition: true
     },
     {
         selector: 'input[name="StartIp"]',
         text: 'Bước 5: Nhập IP động đầu tiên: 192.168.1.2',
-        position: 'right'
+        position: 'right',
+        forcePosition: true
     },
     {
         selector: 'input[name="PoolSize"]',
         text: 'Bước 6: Nhập tổng số IP động: 200',
-        position: 'right'
+        position: 'right',
+        forcePosition: true
     },
     {
         selector: 'input[name="dhcp_LeaseTime"]',
         text: 'Bước 7: Nhập thời gian thuê IP: 86400',
-        position: 'right'
+        position: 'right',
+        forcePosition: true
     },
     {
         selector: 'input[value="Save"], input[name="SaveBtn"]',

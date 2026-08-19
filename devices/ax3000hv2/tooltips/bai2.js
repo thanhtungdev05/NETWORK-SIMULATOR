@@ -13,22 +13,26 @@ window.TOOLTIPS_AX3000HV2['LAB_AX3000HV2_02'] = [
     {
         selector: 'input[name="ESSID"]',
         text: 'Bước 3: Nhập tên Wifi: FPT Telecom',
-        position: 'right'
+        position: 'right',
+        forcePosition: true
     },
     {
         selector: 'input[name="PreSharedKey"]',
         text: 'Bước 4: Nhập mật khẩu Wifi: fpt12345',
-        position: 'right'
+        position: 'right',
+        forcePosition: true
     },
     {
         selector: 'input[name="ESSID_5g"]',
         text: 'Bước 5: Nhập tên Wifi 5G: FPT Telecom',
-        position: 'right'
+        position: 'right',
+        forcePosition: true
     },
     {
         selector: 'input[name="PreSharedKey_5g"]',
         text: 'Bước 6: Nhập mật khẩu Wifi 5G: fpt12345',
-        position: 'right'
+        position: 'right',
+        forcePosition: true
     },
     {
         selector: 'input[value="Save"], input[name="SaveBtn"]',

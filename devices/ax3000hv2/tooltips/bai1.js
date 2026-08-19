@@ -8,7 +8,7 @@ window.TOOLTIPS_AX3000HV2['LAB_AX3000HV2_01'] = [
     {
         selector: 'a[href*="home_wan"], a:contains("Internet")',
         text: 'Bước 2: Chọn Internet',
-        position: 'right'
+        position: 'top'
     },
     {
         selector: 'input[name="pppUserName"], #pppUserName',

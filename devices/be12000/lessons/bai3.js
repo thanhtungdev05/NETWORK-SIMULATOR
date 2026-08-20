@@ -6,7 +6,7 @@
 window.DEVICE_BE12000_LESSONS = window.DEVICE_BE12000_LESSONS || [];
 
 window.DEVICE_BE12000_LESSONS.push({
-  id: 'be12-bai3',
+  id: 'LAB_BE12000_03',
   title: 'Bài 3 - Trạng thái WAN Ethernet',
   subtitle: 'Xem thông tin và trạng thái kết nối WAN',
   instructions: [

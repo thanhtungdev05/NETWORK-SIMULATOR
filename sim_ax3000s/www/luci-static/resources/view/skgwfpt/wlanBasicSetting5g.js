@@ -131,7 +131,7 @@ if(getValue("Sel_PhyMode")=="anacaxbe")
 {for(var j=1;j<4;j++)
 {if(wifi_data.securityMode[j]=="WPA-PSK")
 {var objValue={"band":"5G","index":j+1,"securityMode":"WPA2-PSK"};data.push(objValue);}}}
-var ubusparam=new Array("rtweb.wifi","wlanBasicSet_encrypt",{"bss":data});var ubusparam2=new Array("rtweb.wifi","wlanBasicSet",{"bss":basicData});var jsonparam=[{"id":1,"params":ubusparam},{"id":2,"params":ubusparam2}];sk_auth_post(jsonparam,function(result){wifiReload();loading_show();setTimeout("hide_mode()",5000);});}
+var ubusparam=new Array("rtweb.wifi","wlanBasicSet_encrypt",{"bss":data});var ubusparam2=new Array("rtweb.wifi","wlanBasicSet",{"bss":basicData});var jsonparam=[{"id":1,"params":ubusparam},{"id":2,"params":ubusparam2}];sk_auth_post(jsonparam,function(result){wifiReload();loading_show();setTimeout(function(){hide_mode();},5000);});}
 function setRadioInfo()
 {var data=[];var radio=0,dfs=0;var nettype=getValue("Sel_PhyMode");var bandwidth=getValue("Sel_BandWidth");var channel=getValue("Sel_Channel");var power=getValue("Sel_TxPower");var acsTime=getValue("Txt_acsTime");var guardInterval=getValue("Sel_guardInterval");var muofdmaul_enable=0;var muofdmadl_enable=0;var mumimodl_enable=0;var mumimoul_enable=0;if(true==getChecked("UMUOFDMA_Enable"))
 {muofdmaul_enable=1;}

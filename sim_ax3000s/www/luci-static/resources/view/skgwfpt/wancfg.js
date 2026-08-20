@@ -441,20 +441,14 @@ function saveVlan()
 {enVlanMux=1;}
 else
 {enVlanMux=0;vlanMuxId=0;vlanMuxPr=0;}
-if(enVlanMux&&vlanID.value=="")
-{parent.warninfo_show(_("wancfg_VLANIDError1"));return 0;}
 if(enVlanMux)
-{vlanMuxId=parseInt(vlanID.value);vlanMuxMId=parseInt(multiVID.value);}
+{vlanMuxId=parseInt(vlanID.value);vlanMuxMId=parseInt(multiVID.value);if(isNaN(vlanMuxId)) vlanMuxId=0;if(isNaN(vlanMuxMId)) vlanMuxMId=0;}
 else
 {vlanMuxId=0;vlanMuxPr=0;vlanMuxMId=0;}
 if(d8021.value=="")
 {vlanMuxPr=0;}
 else
 {vlanMuxPr=d8021.value;}
-if(enVlanMux&&(vlanMuxId<1||vlanMuxId>4094||isNumber(vlanID.value)==false))
-{parent.warninfo_show("VLAN ID : "+vlanID.value+" "+_("wancfg_VLANIDError2"));return 0;}
-if(enVlanMux&&(multiVID.value!="")&&(vlanMuxMId<1||vlanMuxMId>4094||isNumber(multiVID.value)==false))
-{parent.warninfo_show("MULTI VLAN ID : "+multiVID.value+" "+_("wancfg_VLANIDError2"));return 0;}
 if(enVlanMux&&(!vlanMuxMId)){vlanMuxMId=0;}
 apply_data.vlanmode=parseInt(vlanMode.value);apply_data.vlanid=parseInt(vlanMuxId);apply_data.multivid=parseInt(vlanMuxMId);apply_data.vlanpri=parseInt(vlanMuxPr);}
 return 1;}

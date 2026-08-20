@@ -4,23 +4,43 @@
      Tái tạo giao diện LuCI gốc của thiết bị + backend ảo bằng JavaScript.
      ========================================================================== -->
 <html lang="vi">
+
 <head>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="ie=edge,chrome=1">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=1280">
   <title>AX3000S - Giả lập cấu hình</title>
 
+  <!-- QUAN TRỌNG: Ghim gốc phân giải URL tương đối vào đúng thư mục thật của trang.
+       Lý do: mã gốc (sk_gateway.js -> select_layer2 -> sk_redirect) gọi History.pushState
+       để đổi thanh địa chỉ sang dạng URL giả "/cgi-bin/luci/admin/..." mỗi khi người dùng
+       mở một mục menu dạng thư mục (VD: "Advance"). Nếu không có thẻ <base> này, mọi lần
+       tải view sau đó (loadView() dùng đường dẫn tương đối "luci-static/resources/...")
+       sẽ bị trình duyệt phân giải nhầm theo URL giả đó -> 404 -> nội dung trang không đổi,
+       khiến các phần tử của bước hướng dẫn (LabSteps) không bao giờ xuất hiện trong DOM và
+       tooltip không thể hiển thị. Thẻ <base> không đổi thanh địa chỉ, chỉ ghim nơi phân giải
+       các đường dẫn tương đối, nên không ảnh hưởng đến giao diện gốc.
+  -->
+  <script>
+    (function () {
+      var base = document.createElement('base');
+      base.href = location.origin + location.pathname.replace(/[^\/]*$/, '');
+      document.head.appendChild(base);
+    })();
+  </script>
+
   <!-- CSS gốc của thiết bị (đúng như header.htm gốc: chỉ 2 file này) -->
-  <link href="/luci-static/skgwfpt/sk_181_form.css" rel="stylesheet">
-  <link href="/luci-static/skgwfpt/jquery.jOrgChart.css" rel="stylesheet">
+  <link href="luci-static/skgwfpt/sk_181_form.css" rel="stylesheet">
+  <link href="luci-static/skgwfpt/jquery.jOrgChart.css" rel="stylesheet">
 
   <!-- 1) jQuery, 2) backend ảo, 3) lớp chặn mạng, 4) menu + envcar -->
-  <script src="/luci-static/resources/jquery-3.5.1.min.js"></script>
-  <script src="/sim/backend.js"></script>
-  <script src="/sim/backend-ext.js"></script>
-  <script src="/sim/net-mock.js"></script>
-  <script src="/menu.js"></script>
-  <script src="/sim/langs.js"></script>   <!-- 949 chuỗi dịch EN giải mã từ .lmo gốc -->
+  <script src="luci-static/resources/jquery-3.5.1.min.js"></script>
+  <script src="sim/backend.js"></script>
+  <script src="sim/backend-ext.js"></script>
+  <script src="sim/net-mock.js"></script>
+  <script src="menu.js?v=4"></script>
+  <script src="sim/langs.js"></script> <!-- 949 chuỗi dịch EN giải mã từ .lmo gốc -->
+  <script src="sim/tracker.js?v=7"></script> <!-- Bộ theo dõi và giám sát bài thực hành -->
 
   <!-- Biến toàn cục mà mã gốc cần -->
   <script>
@@ -30,14 +50,42 @@
   </script>
 
   <!-- Thư viện + mã gốc của thiết bị -->
-  <script src="/luci-static/resources/jquery.history.js"></script>
-  <script src="/luci-static/resources/jquery.jOrgChart.js"></script>
-  <script src="/luci-static/resources/sk_util.js"></script>
-  <script src="/luci-static/resources/common.js"></script>
-  <script src="/luci-static/resources/sk_gateway.js"></script>
-  <script src="/luci-static/resources/pureknob.js"></script>
-  <script src="/luci-static/resources/crypto-js.js"></script>
-  <script src="/luci-static/resources/echarts.min.js"></script>
+  <script src="luci-static/resources/jquery.history.js"></script>
+  <script src="luci-static/resources/jquery.jOrgChart.js"></script>
+  <script src="luci-static/resources/sk_util.js"></script>
+  <script src="luci-static/resources/common.js"></script>
+  <script src="luci-static/resources/sk_gateway.js?v=4"></script>
+
+  <!-- QUAN TRỌNG: Mã gốc của rất nhiều trang (ddns.js, ipfilter.js, macfilter.js, portforward.js,
+       dmz.js, sk_util.js...) gọi "parent.panel_show(...)", "parent.warninfo_show(...)",
+       "parent.loading_show(...)" - giả định các hàm này được host ở 1 FRAME CHA dùng chung.
+       Trong dự án gốc (chạy độc lập, không nhúng iframe) thì "parent" trùng với chính "window"
+       nên vẫn gọi trúng các hàm cục bộ. Nhưng ở dự án này, app.html được nhúng trong
+       <iframe id="app-frame"> của index.html ngoài cùng -> "parent" trỏ sang document NGOÀI
+       CÙNG (không hề có panel_show/warninfo_show/loading_show) -> gọi ra lỗi "not a function",
+       khiến các nút như "Add" (mở form thêm mới) không phản ứng gì cả.
+       Cách vá: gán thẳng các hàm cục bộ (đã định nghĩa ở sk_gateway.js phía trên) lên đối tượng
+       window.parent. Vì cùng origin nên gán được, và closure của hàm vẫn trỏ đúng về
+       document/jQuery của iframe này (nơi hàm được định nghĩa), không phải document ngoài cùng. -->
+  <script>
+    (function () {
+      if (window.parent && window.parent !== window) {
+        try {
+          window.parent.panel_show = panel_show;
+          window.parent.warninfo_show = warninfo_show;
+          window.parent.loading_show = loading_show;
+          window.parent.loading_show_data = loading_show_data;
+          window.parent.daillog_show = daillog_show;
+        } catch (e) {
+          console.warn('[app.html] Không gán được panel_show/warninfo_show lên parent frame:', e);
+        }
+      }
+    })();
+  </script>
+
+  <script src="luci-static/resources/pureknob.js"></script>
+  <script src="luci-static/resources/crypto-js.js"></script>
+  <script src="luci-static/resources/echarts.min.js"></script>
 </head>
 
 <body>
@@ -45,17 +93,18 @@
   <div class="pagetittle">
     <div class="container">
       <div class="logo_text">
-        <img src="/luci-static/resources/cbi/logo_fpt.png" style="height:70px;" alt="FPT" onerror="this.style.display='none'">
+        <img src="luci-static/resources/cbi/logo_fpt.png" style="height:70px;" alt="FPT"
+          onerror="this.style.display='none'">
       </div>
       <div class="logo-setup">
         <input type="button" id="quickset" class="btn btn-large btn-default" value="Wizard"
-               onclick="alert('Trang Wizard sẽ được bổ sung ở mốc sau.')" />
+          onclick="alert('Trang Wizard sẽ được bổ sung ở mốc sau.')" />
         <select name="language" id="language" class="btn btn-large btn-default" style="height:35px;" size="1">
           <option value="vi">Tiếng Việt</option>
           <option value="en" selected>English</option>
         </select>
         <input type="button" id="Sky_Logout" class="btn btn-large btn-default" value="Logout"
-               onclick="window.location.href='login.html'" />
+          onclick="window.location.href='login.html'" />
       </div>
     </div>
   </div>
@@ -187,7 +236,7 @@
           return null;
         }
         function resolvePath(href) {
-          var p = href.split("/"), l1 = p[4], l2 = p[5], l3 = p[6], node = treemenu[l1];
+          var p = new URL(href, window.location.origin).pathname.split("/"), l1 = p[4], l2 = p[5], l3 = p[6], node = treemenu[l1];
           if (!node) return null;
           var target = node;
           if (l2 && node.children && node.children[l2]) {
@@ -209,7 +258,7 @@
         }
         // Điều hướng: chuyển submenu + highlight tab + nạp ĐÚNG view (trực tiếp, không qua statechange).
         function navTo(href, el) {
-          var l1 = href.split("/")[4];
+          var l1 = new URL(href, window.location.origin).pathname.split("/")[4];
           jQuery(".layer2-menu > ul").hide();
           jQuery("#layer2-ul-" + l1).show();
           jQuery("#nav-layer1 li").removeClass("selected");
@@ -240,10 +289,15 @@
 
         // CHỐNG KẸT LOADING: bọc thẳng hàm hiện spinner của firmware. Backend ảo trả
         // tức thì, nên mọi Loading tự tắt sau 2.5s (vd DDNS lỗi trước khi kịp hide_mode).
+        // QUAN TRỌNG: KHÔNG được gọi window.hide_mode() ở đây - hàm đó (sk_gateway.js) xóa
+        // TẤT CẢ ".panel" đang có trên trang, không phân biệt panel đó là spinner loading hay
+        // là 1 form đang mở dở (VD: form "Add New Rule" của DDNS). Vì nhiều trang (DDNS...) tự
+        // gọi loading ngầm định kỳ, cơ chế "chống kẹt" 2.5s này trước đây vô tình đóng luôn cả
+        // form người dùng đang điền dở dù họ chưa bấm gì - chỉ nên dọn đúng phần tử loading/backimg,
+        // không đụng tới các panel khác.
         function forceHideLoading() {
-          try { if (typeof window.hide_mode === "function") window.hide_mode(); } catch (e) { }
-          document.querySelectorAll(".backimg, .panel.loading, .panel.warn").forEach(function (e) {
-            if (e.classList.contains("loading") || e.classList.contains("backimg")) e.remove();
+          document.querySelectorAll(".backimg, .panel.loading").forEach(function (e) {
+            e.remove();
           });
         }
         if (typeof window.loading_show_data === "function") {
@@ -262,48 +316,61 @@
           if (Date.now() - l.__simSeen > 3500) forceHideLoading();
         }, 1000);
 
-        function selectAndLoadView(targetPath) {
-          if (!targetPath) targetPath = "devinfo";
-          var links = document.querySelectorAll(".nav-layer1 a, .layer2-menu a");
-          var matchedEl = null;
-          for (var i = 0; i < links.length; i++) {
-            var href = links[i].getAttribute("href") || "";
-            if (typeof resolvePath === "function" && resolvePath(href) === targetPath) {
-              matchedEl = links[i];
-              break;
-            }
-          }
-          if (matchedEl) {
-            navTo(matchedEl.getAttribute("href"), matchedEl);
+        // Hiện nhóm cấp 2 của tab "status" và nạp trang Device Info đầu tiên
+        var statusUl = document.getElementById("layer2-ul-status");
+        if (statusUl) statusUl.style.display = "block";
+        var statusTab = document.querySelector("#nav-layer1 a[href$='/status'] li");
+        if (statusTab) statusTab.classList.add("selected");
+
+        // Nạp trang đầu tiên dựa vào URL hiện tại (hỗ trợ F5 reload)
+        if (typeof loadView === "function") {
+          var initialHref = window.location.pathname;
+          var initialPath = resolvePath(initialHref);
+          if (initialPath) {
+            navTo(initialHref);
           } else {
-            var statusUl = document.getElementById("layer2-ul-status");
-            if (statusUl) statusUl.style.display = "block";
-            var statusTab = document.querySelector("#nav-layer1 a[href$='/status'] li");
-            if (statusTab) statusTab.classList.add("selected");
-            if (typeof loadView === "function") {
-              loadView(targetPath);
-            } else {
-              document.querySelector(".content-detail").innerHTML =
-                "<p style='padding:20px;color:red'>Lỗi: mã gốc chưa nạp (loadView không tồn tại).</p>";
-            }
+            loadView("devinfo");
           }
+        } else {
+          document.querySelector(".content-detail").innerHTML =
+            "<p style='padding:20px;color:red'>Lỗi: mã gốc chưa nạp (loadView không tồn tại).</p>";
         }
-
-        var initView = (window.location.hash || "").replace("#", "").trim();
-        if (!initView) {
-          var params = new URLSearchParams(window.location.search);
-          initView = params.get("view") || params.get("page") || "devinfo";
-        }
-        selectAndLoadView(initView);
-
-        window.addEventListener("hashchange", function () {
-          var newView = (window.location.hash || "").replace("#", "").trim();
-          if (newView) {
-            selectAndLoadView(newView);
-          }
-        });
       });
     })();
   </script>
+  <!-- Tắt tính năng autocomplete cho toàn bộ input sinh ra trong quá trình mô phỏng -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // Tắt autocomplete cho các input có sẵn
+      var existingInputs = document.querySelectorAll('input[type="text"], input[type="password"], input[type="number"]');
+      for (var j = 0; j < existingInputs.length; j++) {
+        existingInputs[j].setAttribute('autocomplete', 'off');
+      }
+
+      // Tự động tắt autocomplete cho các input được nạp động sau này (bởi loadView)
+      var observer = new MutationObserver(function (mutations) {
+        mutations.forEach(function (mutation) {
+          if (mutation.addedNodes) {
+            for (var i = 0; i < mutation.addedNodes.length; i++) {
+              var node = mutation.addedNodes[i];
+              if (node.nodeType === 1) { // Element node
+                if (node.tagName === 'INPUT' && (node.type === 'text' || node.type === 'password' || node.type === 'number')) {
+                  node.setAttribute('autocomplete', 'off');
+                }
+                if (node.querySelectorAll) {
+                  var inputs = node.querySelectorAll('input[type="text"], input[type="password"], input[type="number"]');
+                  for (var j = 0; j < inputs.length; j++) {
+                    inputs[j].setAttribute('autocomplete', 'off');
+                  }
+                }
+              }
+            }
+          }
+        });
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    });
+  </script>
 </body>
+
 </html>

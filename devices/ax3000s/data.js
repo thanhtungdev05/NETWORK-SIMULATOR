@@ -24,8 +24,10 @@ window.DEVICE_AX3000S = {
 if (!window.TOOLTIPS_AX3000S) window.TOOLTIPS_AX3000S = {};
 if (window.DEVICE_AX3000S_LESSONS) {
   window.DEVICE_AX3000S_LESSONS.forEach(lesson => {
-    if (lesson.guidePopups) {
+    if (lesson.guidePopups && lesson.guidePopups.length > 0) {
       window.TOOLTIPS_AX3000S[lesson.id] = lesson.guidePopups;
+    } else if (window.TOOLTIPS_AX3000S[lesson.id]) {
+      lesson.guidePopups = window.TOOLTIPS_AX3000S[lesson.id];
     }
   });
 }

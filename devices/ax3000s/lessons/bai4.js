@@ -6,7 +6,7 @@
 window.DEVICE_AX3000S_LESSONS = window.DEVICE_AX3000S_LESSONS || [];
 
 window.DEVICE_AX3000S_LESSONS.push({
-  id: 'ax3s-bai4',
+  id: 'LAB_AX3000S_04',
   title: 'Bài 4-Cấu hình DNS',
   subtitle: 'Cấu hình máy chủ DNS của FPT và Google',
   instructions: [
@@ -18,13 +18,17 @@ window.DEVICE_AX3000S_LESSONS.push({
     '<i>Gợi ý IP DNS Google: 8.8.8.8, 8.8.4.4</i>',
   ],
   practiceUrl: '/sim_ax3000s/app.html#lancfgv4',
+  clearFields: [
+    'input[name="dnsPrimary"]',
+    'input[name="dnsSecondary"]'
+  ],
   grading: {
     description: 'Kiểm tra cấu hình DNS Server trên AX3000S',
     rules: [
       {
         id: 'dns_1',
         name: 'DNS Server 1',
-        selector: 'input[name="dns1"], input[name*="dns1"], #dns1',
+        selector: 'input[name="dnsPrimary"], #dnsPrimary',
         expected: '210.245.31.220',
         type: 'text_exact',
         trim: true,
@@ -33,7 +37,7 @@ window.DEVICE_AX3000S_LESSONS.push({
       {
         id: 'dns_2',
         name: 'DNS Server 2',
-        selector: 'input[name="dns2"], input[name*="dns2"], #dns2',
+        selector: 'input[name="dnsSecondary"], #dnsSecondary',
         expected: '8.8.8.8',
         type: 'text_exact',
         trim: true,

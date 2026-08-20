@@ -6,7 +6,7 @@
 window.DEVICE_BE12000_LESSONS = window.DEVICE_BE12000_LESSONS || [];
 
 window.DEVICE_BE12000_LESSONS.push({
-  id: 'be12-bai6',
+  id: 'LAB_BE12000_06',
   title: 'Bài 6 - Cấu hình SNTP Đồng Bộ Thời Gian',
   subtitle: 'Thiết lập máy chủ thời gian NTP',
   instructions: [

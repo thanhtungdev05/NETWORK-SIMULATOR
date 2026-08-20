@@ -6,7 +6,7 @@
 window.DEVICE_AX3000S_LESSONS = window.DEVICE_AX3000S_LESSONS || [];
 
 window.DEVICE_AX3000S_LESSONS.push({
-  id: 'ax3s-bai5',
+  id: 'LAB_AX3000S_05',
   title: 'Bài 5-Cấu hình địa chỉ IP LAN',
   subtitle: 'Thay đổi địa chỉ IP LAN và dải DHCP Pool',
   instructions: [
@@ -19,13 +19,18 @@ window.DEVICE_AX3000S_LESSONS.push({
     '- Lease Time: <span class="val">2 minute or 1 hour</span>',
   ],
   practiceUrl: '/sim_ax3000s/app.html#lancfgv4',
+  clearFields: [
+    'input[name="ethIpAddress"]',
+    'input[name="ethSubnetMask"]',
+    'input[name="dhcpEthStart"]'
+  ],
   grading: {
     description: 'Kiểm tra LAN Configuration IPv4 trên AX3000S',
     rules: [
       {
         id: 'lan_ip',
         name: 'IP Address',
-        selector: 'input[name="lan_ip"], input[name*="ip"], #lan_ip',
+        selector: 'input[name="ethIpAddress"], #ethIpAddress',
         expected: '192.168.1.1',
         type: 'text_exact',
         trim: true,
@@ -34,7 +39,7 @@ window.DEVICE_AX3000S_LESSONS.push({
       {
         id: 'lan_mask',
         name: 'Subnet Mask',
-        selector: 'input[name="lan_mask"], input[name*="mask"], #lan_mask',
+        selector: 'input[name="ethSubnetMask"], #ethSubnetMask',
         expected: '255.255.255.0',
         type: 'text_exact',
         trim: true,
@@ -43,7 +48,7 @@ window.DEVICE_AX3000S_LESSONS.push({
       {
         id: 'dhcp_start',
         name: 'Start IP',
-        selector: 'input[name="dhcp_start"], input[name*="start"], #dhcp_start',
+        selector: 'input[name="dhcpEthStart"], #dhcpEthStart',
         expected: '192.168.1.2',
         type: 'text_exact',
         trim: true,

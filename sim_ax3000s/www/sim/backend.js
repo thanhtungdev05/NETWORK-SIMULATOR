@@ -58,13 +58,13 @@
   ];
 
   var LAN = {
-    ipaddr: "192.168.1.1",
-    netmask: "255.255.255.0",
-    dhcp_enable: 1,
-    dhcp_start: "192.168.1.100",
-    dhcp_end: "192.168.1.200",
+    ipaddr: "",
+    netmask: "",
+    dhcp_enable: 0,
+    dhcp_start: "",
+    dhcp_end: "",
     dhcp_lease: 86400,
-    dns1: "192.168.1.1",
+    dns1: "",
     dns2: ""
   };
 
@@ -73,13 +73,13 @@
 
   var RADIOS = [
     {
-      band: "2.4G", ifname: "ra0", enable: 1, ssid: "FPT-Mesh-AX3000S",
-      password: "12345678", channel: 0, channel_now: 6, bandwidth: "40Mhz",
+      band: "2.4G", ifname: "ra0", enable: 1, ssid: "",
+      password: "", channel: 0, channel_now: 6, bandwidth: "40Mhz",
       security: "WPA2/WPA3-PSK", hidden: 0, txpower: 100, femstatus: "2/2"
     },
     {
-      band: "5G", ifname: "rai0", enable: 1, ssid: "FPT-Mesh-AX3000S-5G",
-      password: "12345678", channel: 0, channel_now: 36, bandwidth: "80Mhz",
+      band: "5G", ifname: "rai0", enable: 1, ssid: "",
+      password: "", channel: 0, channel_now: 36, bandwidth: "80Mhz",
       security: "WPA2/WPA3-PSK", hidden: 0, txpower: 100, femstatus: "3/3"
     }
   ];
@@ -257,9 +257,11 @@
         })
       };
     },
-    "rtweb.staticip.getStaticIP": function () { return []; },
-    "rtweb.staticip.addStaticIP": function () { return { result: "ok" }; },
-    "rtweb.staticip.delStaticIP": function () { return { result: "ok" }; },
+    "rtweb.staticip.getStaticIP": function () {
+      return { staticip: { entries: [] } };
+    },
+    "rtweb.staticip.addStaticIP": function () { return { result: 0 }; },
+    "rtweb.staticip.delStaticIP": function () { return { result: 0 }; },
     "rtweb.sta.getStaInfo": function () {
       // DMZ/Port Forward doc total + staDevices[].ipAddr/macAddr/hostName
       return {
@@ -320,9 +322,19 @@
       return {
         cfg: [0, 1, 2, 3].map(function (i) {
           return {
-            bandsteering_enable: 0,
-            "2.4G": { ssid: i === 0 ? RADIOS[0].ssid : "" },
-            "5G": { ssid: i === 0 ? RADIOS[1].ssid : "" }
+            bandsteering_enable: i === 0 ? 1 : 0, // Enable Band Steering for primary SSID
+            "2.4G": {
+              enable: i > 0 ? 0 : 1,
+              ssid: i === 0 ? RADIOS[0].ssid : (i === 1 ? "Guest WiFi" : (i === 2 ? "FPT Telecom-IoT" : "Wi-Fi 4")),
+              password: i === 0 ? RADIOS[0].password : "12345678",
+              securityMode: "WPA2-PSK"
+            },
+            "5G": {
+              enable: i > 0 ? 0 : 1,
+              ssid: i === 0 ? RADIOS[1].ssid : (i === 1 ? "Guest WiFi" : (i === 2 ? "FPT Telecom-IoT" : "Wi-Fi 4")),
+              password: i === 0 ? RADIOS[1].password : "12345678",
+              securityMode: "WPA2-PSK"
+            }
           };
         })
       };
@@ -330,9 +342,78 @@
     // Trang 5G doc them: wlanApClientGet (repeater) + wlanGlobalGet
     "rtweb.wifi.wlanApClientGet": function () { return { enable: 0, band: "5G", link: "disconnected" }; },
     "rtweb.wifi.wlanGlobalGet": function () { return { txbf: 1, dfs: 1, country: "VN" }; },
-    "rtweb.wifi.wlanRadioSet": function () { return { result: "ok" }; },
-    "rtweb.wifi.wlanBasicSet": function () { return { result: "ok" }; },
-    "rtweb.wifi.wlanBasicSet_encrypt": function () { return { result: "ok" }; },
+    "rtweb.wifi.wlanRadioSet": function (a) {
+      if (a && a.radios && a.radios[0]) {
+        var r = a.radios[0];
+        var idx = (r.band === "5G") ? 1 : 0;
+        if (typeof r.enable !== "undefined") RADIOS[idx].enable = r.enable;
+        if (r.transmitPower) RADIOS[idx].txpower = r.transmitPower;
+        if (r.bandwidth) RADIOS[idx].bandwidth = r.bandwidth;
+        if (typeof r.channel !== "undefined") RADIOS[idx].channel = r.channel;
+      }
+      return { result: "ok" };
+    },
+    "rtweb.wifi.wlanBasicSet": function (a) {
+      if (a && a.bss && a.bss[0]) {
+        var b = a.bss[0];
+        var is5G = (b.index === 15);
+        var idx = is5G ? 1 : 0;
+        if (b.ssid !== undefined) {
+          RADIOS[idx].ssid = b.ssid;
+          if (idx === 0) {
+            RADIOS[1].ssid = b.ssid; // mirror to 5G
+          }
+        }
+        if (b.hide !== undefined) RADIOS[idx].hidden = b.hide;
+      }
+      return { result: "ok" };
+    },
+    "rtweb.wifi.wlanBasicSet_encrypt": function (a) {
+      if (a && a.bss && a.bss[0]) {
+        var b = a.bss[0];
+        var is5G = (b.index === 15);
+        var idx = is5G ? 1 : 0;
+        
+        var clearPassword = b.password;
+        if (clearPassword && typeof CryptoJS !== "undefined") {
+          try {
+            var key = CryptoJS.enc.Utf8.parse(DEV.key || "1234567890abcdef");
+            var iv = CryptoJS.enc.Utf8.parse('0000000000000000');
+            var decrypted = CryptoJS.AES.decrypt(clearPassword, key, {
+              iv: iv,
+              mode: CryptoJS.mode.CBC,
+              padding: CryptoJS.pad.Pkcs7
+            });
+            var decryptedText = decrypted.toString(CryptoJS.enc.Utf8);
+            if (decryptedText) {
+              clearPassword = decryptedText;
+            }
+          } catch (e) {
+            console.error("Loi giai ma password:", e);
+          }
+        }
+
+        if (b.ssid !== undefined) {
+          RADIOS[idx].ssid = b.ssid;
+          if (idx === 0) {
+            RADIOS[1].ssid = b.ssid; // mirror to 5G
+          }
+        }
+        if (clearPassword !== undefined) {
+          RADIOS[idx].password = clearPassword;
+          if (idx === 0) {
+            RADIOS[1].password = clearPassword; // mirror to 5G
+          }
+        }
+        if (b.securityMode !== undefined) {
+          RADIOS[idx].security = b.securityMode;
+          if (idx === 0) {
+            RADIOS[1].security = b.securityMode; // mirror to 5G
+          }
+        }
+      }
+      return { result: "ok" };
+    },
     "rtweb.wifi.reload": function () { return { result: "ok" }; },
     // giu tuong thich handler cu
     "rtweb.wifi.getWlanBasic": function (a) {

@@ -50,7 +50,7 @@ html, body {
 /* ── Layout Shell ─────────────────────────────────────────── */
 #app {
   display: flex;
-  height: 100vh;
+  height: 100%;
   overflow: hidden;
 }
 
@@ -630,9 +630,12 @@ html, body {
   max-width: 280px;
 }
 
+/* Bỏ chặn màn hình dọc theo yêu cầu */
+/*
 @media (max-width: 768px) and (orientation: portrait) {
   #mobile-warning { display: flex; }
 }
+*/
 
 /* ── LOADING OVERLAY ──────────────────────────────────────── */
 #loading-overlay {
@@ -935,7 +938,7 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  max-height: 65vh;
+  max-height: 600px;
   overflow-y: auto;
 }
 
@@ -1180,6 +1183,7 @@ html, body {
 
 @media (max-width: 900px) {
   :root { --sidebar-width: 220px; }
+  .topbar-toggle-btn { display: flex !important; }
   #lesson-screen { padding: 20px; }
   .lesson-card-header, .lesson-card-body, .lesson-card-footer { padding-left: 20px; padding-right: 20px; }
 }

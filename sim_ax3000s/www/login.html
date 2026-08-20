@@ -1,98 +1,191 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=1280">
   <title>AX3000S - Đăng nhập</title>
-  <link href="/luci-static/skgwfpt/bootstrap.min.css" rel="stylesheet">
+  <link href="luci-static/skgwfpt/bootstrap.min.css" rel="stylesheet">
   <style>
-    html, body { height: 100%; margin: 0; font-family: Arial, Helvetica, sans-serif; background: #f4f6f9; }
-    .wrap { min-height: 100%; display: flex; align-items: center; justify-content: center; }
-    .box { width: 420px; max-width: 92vw; background: #fff; border-radius: 12px;
-           box-shadow: 0 8px 30px rgba(0,0,0,.08); padding: 34px 36px; }
-    .brand { text-align: center; margin-bottom: 8px; color: #f5811f; font-size: 26px; font-weight: 700; }
-    .model { text-align: center; color: #666; margin-bottom: 26px; font-size: 14px; }
-    label { display: block; font-size: 13px; color: #444; margin: 14px 0 6px; }
-    input[type=text], input[type=password] { width: 100%; height: 44px; box-sizing: border-box;
-      border: 1px solid #d5d9e0; border-radius: 8px; padding: 0 12px; font-size: 15px; }
-    .btn-login { width: 100%; height: 46px; margin-top: 22px; border: 0; border-radius: 8px;
-      background: #f5811f; color: #fff; font-size: 16px; cursor: pointer; }
-    .btn-login:hover { background: #e5720f; }
-    .hint { margin-top: 16px; font-size: 12px; color: #8a8f98; text-align: center; line-height: 1.6; }
-    .sim-tag { position: fixed; top: 10px; right: 12px; background: #eef; color: #335; font-size: 11px;
-      padding: 4px 10px; border-radius: 20px; }
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f4f6f9;
+    }
+
+    .wrap {
+      min-height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .box {
+      width: 420px;
+      max-width: 92vw;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, .08);
+      padding: 34px 36px;
+    }
+
+    .brand {
+      text-align: center;
+      margin-bottom: 8px;
+      color: #f5811f;
+      font-size: 26px;
+      font-weight: 700;
+    }
+
+    .model {
+      text-align: center;
+      color: #666;
+      margin-bottom: 26px;
+      font-size: 14px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      color: #444;
+      margin: 14px 0 6px;
+    }
+
+    input[type=text],
+    input[type=password] {
+      width: 100%;
+      height: 44px;
+      box-sizing: border-box;
+      border: 1px solid #d5d9e0;
+      border-radius: 8px;
+      padding: 0 12px;
+      font-size: 15px;
+    }
+
+    .btn-login {
+      width: 100%;
+      height: 46px;
+      margin-top: 22px;
+      border: 0;
+      border-radius: 8px;
+      background: #f5811f;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .btn-login:hover {
+      background: #e5720f;
+    }
+
+    .hint {
+      margin-top: 16px;
+      font-size: 12px;
+      color: #8a8f98;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .sim-tag {
+      position: fixed;
+      top: 10px;
+      right: 12px;
+      background: #eef;
+      color: #335;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .guide-tooltip {
+      position: absolute;
+      background: rgba(220, 38, 38, 0.92);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 8px 20px rgba(220, 38, 38, 0.35);
+      z-index: 9999;
+      pointer-events: none;
+      white-space: nowrap;
+      top: 50%;
+      left: 100%;
+      margin-left: 12px;
+      transform: translateY(-50%);
+    }
+
+    .guide-tooltip::after {
+      content: '';
+      position: absolute;
+      border: 7px solid transparent;
+      right: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+      border-right-color: rgba(220, 38, 38, 0.92);
+    }
   </style>
 </head>
+
 <body>
   <div class="sim-tag">BẢN GIẢ LẬP • dùng cho đào tạo</div>
   <div class="wrap">
     <form class="box" onsubmit="return doLogin(event)">
       <div class="brand">FPT Mesh Router</div>
-      <div class="model">AX3000S — Trang cấu hình</div>
-
       <label>Tên đăng nhập</label>
-      <input type="text" id="user" value="admin" autocomplete="username" />
+      <div class="input-wrapper">
+        <input type="text" id="user" value="" autocomplete="off" />
+        <div class="guide-tooltip">Nhập admin</div>
+      </div>
 
       <label>Mật khẩu</label>
-      <input type="password" id="pass" value="admin" autocomplete="current-password" />
-
-      <button class="btn-login" type="submit">Đăng nhập</button>
-      <div class="hint">
-        Tài khoản mặc định của bản giả lập: <b>admin / admin</b><br>
-        (Bản giả lập chấp nhận mọi mật khẩu để tiện thực hành.)
+      <div class="input-wrapper">
+        <input type="password" id="pass" value="" autocomplete="off" />
+        <div class="guide-tooltip">Nhập admin</div>
       </div>
+
+      <button class="btn-login" type="submit">Log in</button>
+
     </form>
   </div>
 
   <script>
-    const TRACKING = {
-      TECHNICIAN_ID: "DEV_TECH_002",
-      LAB_ID: "Bài 1-Cấu hình PPPoE",
-      MODE: "Thực hành",
-      TIMER_URL: "/api/index.php/tracking/timer",
-      TIMER_NAME: "KTV DEV_TECH_002",
-      TIMER_EMAIL: "devtech002@fpt.com",
-      TIMER_FINISHED_AT: "2026-08-10T14:15:00+07:00",
-      TIMER_DURATION_SEC: 60,
-      TIMER_DEVICE: "AX3000S",
-    };
-    window.TRACKING = TRACKING;
-
-    function sendTrackingTimer() {
-      const body = {
-        technician_id: TRACKING.TECHNICIAN_ID,
-        name: TRACKING.TIMER_NAME,
-        email: TRACKING.TIMER_EMAIL,
-        lab_id: TRACKING.LAB_ID,
-        mode: TRACKING.MODE,
-        device: TRACKING.TIMER_DEVICE,
-        finished_at: TRACKING.TIMER_FINISHED_AT,
-        duration_sec: TRACKING.TIMER_DURATION_SEC,
-      };
-
-      console.log("TRACKING TIMER payload:", body);
-
-      return fetch(TRACKING.TIMER_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
-        keepalive: true,
-      })
-        .then(function (res) { return res.json(); })
-        .then(function (data) { console.log("TRACKING TIMER response:", data); })
-        .catch(function (err) { console.error("TRACKING TIMER error:", err); });
-    }
+    document.addEventListener("DOMContentLoaded", function () {
+      var params = new URLSearchParams(window.location.search);
+      if (params.get('mode') !== 'guide') {
+        var tooltips = document.querySelectorAll('.guide-tooltip');
+        tooltips.forEach(function (t) { t.style.display = 'none'; });
+      }
+    });
 
     function doLogin(e) {
       e.preventDefault();
-      sendTrackingTimer().finally(function () {
-        // Bản giả lập: không kiểm tra mật khẩu thật, chuyển thẳng vào trang quản trị.
-        window.location.href = "app.html";
-      });
+
+      var user = document.getElementById("user").value;
+      var pass = document.getElementById("pass").value;
+
+      if (user === "admin" && pass === "admin") {
+        // Lưu thời gian bắt đầu khi nhấn đăng nhập (kèm lab ID để tránh dùng timestamp cũ)
+        var params = new URLSearchParams(window.location.search);
+        var labId = params.get('lab') || '0';
+        var now = Date.now().toString();
+        localStorage.setItem('labStartTime', now);
+        localStorage.setItem('labStartSession', labId + '_' + now);
+        // Bản giả lập: chuyển thẳng vào trang quản trị.
+        window.location.href = "app.html" + window.location.search + "&v=" + new Date().getTime();
+      } else {
+        alert("Bạn nhập sai Username hay Password");
+      }
+
       return false;
     }
   </script>
 </body>
+
 </html>

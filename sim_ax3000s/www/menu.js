@@ -1,3 +1,9 @@
+// ============================================================================
+// File: menu.js
+// Mô tả: Cấu trúc menu của giao diện web (Router UI). File này định nghĩa các 
+//        đường dẫn, phân cấp menu và quyền truy cập (ACL) cho từng trang.
+// Lưu ý: File này được tự động tạo ra từ (firmware menu.d + skr-menu.d).
+// ============================================================================
 // Auto-generated from firmware menu.d + skr-menu.d
 var treemenu = {
  "status": {
@@ -1633,4 +1639,4 @@ var treemenu = {
   }
  }
 };
-var envcar = {"sessionid": "00000000000000000000000000000000", "sessiontime": "600", "resource": "/luci-static/resources", "loginuser": "admin", "userlevel": 0};
+var envcar = {"sessionid": "00000000000000000000000000000000", "sessiontime": "600", "resource": "luci-static/resources", "loginuser": "admin", "userlevel": 0};

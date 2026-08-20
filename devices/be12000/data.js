@@ -24,8 +24,10 @@ window.DEVICE_BE12000 = {
 if (!window.TOOLTIPS_BE12000) window.TOOLTIPS_BE12000 = {};
 if (window.DEVICE_BE12000_LESSONS) {
   window.DEVICE_BE12000_LESSONS.forEach(lesson => {
-    if (lesson.guidePopups) {
+    if (lesson.guidePopups && lesson.guidePopups.length > 0) {
       window.TOOLTIPS_BE12000[lesson.id] = lesson.guidePopups;
+    } else if (window.TOOLTIPS_BE12000[lesson.id]) {
+      lesson.guidePopups = window.TOOLTIPS_BE12000[lesson.id];
     }
   });
 }

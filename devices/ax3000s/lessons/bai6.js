@@ -6,7 +6,7 @@
 window.DEVICE_AX3000S_LESSONS = window.DEVICE_AX3000S_LESSONS || [];
 
 window.DEVICE_AX3000S_LESSONS.push({
-  id: 'ax3s-bai6',
+  id: 'LAB_AX3000S_06',
   title: 'Bài 6-Cấu hình Port Forwarding',
   subtitle: 'Mở Port (Port Forwarding / Virtual Server)',
   instructions: [
@@ -19,13 +19,17 @@ window.DEVICE_AX3000S_LESSONS.push({
     '- Internal Port: <span class="val">8080</span>',
   ],
   practiceUrl: '/sim_ax3000s/app.html#portforward',
+  clearFields: [
+    'input[name="cusSrvName"]',
+    'input[name="ex_port"]'
+  ],
   grading: {
     description: 'Kiểm tra Port Forwarding rule trên AX3000S',
     rules: [
       {
         id: 'rule_name',
         name: 'Tên Rule',
-        selector: 'input[name="name"], input[name*="name"], #name',
+        selector: 'input[name="cusSrvName"], #cusSrvName',
         expected: 'NAT FPT',
         type: 'text_exact',
         trim: true,
@@ -34,7 +38,7 @@ window.DEVICE_AX3000S_LESSONS.push({
       {
         id: 'ext_port',
         name: 'External Port',
-        selector: 'input[name="ext_port"], input[name*="external"], #ext_port',
+        selector: 'input[name="ex_port"], #ex_port',
         expected: '8080',
         type: 'text_exact',
         trim: true,

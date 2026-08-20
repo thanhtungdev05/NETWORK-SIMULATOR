@@ -206,28 +206,56 @@
           // Xóa trắng trường của bài học cho cả Hướng dẫn và Thực hành khi load trang mới
           clearLessonFields();
 
+          // Theo dõi sự kiện click vào nút Save/Apply trong iframe (chạy cho cả Hướng dẫn và Thực hành)
+          try {
+            const allDocs = getAllAccessibleDocuments(deviceIframe.contentWindow);
+            allDocs.forEach(doc => {
+              if (!doc._ftcSaveListenerAttached) {
+                // Sự kiện click nút Save/Apply
+                doc.addEventListener('click', function(e) {
+                  let el = e.target;
+                  while(el && el !== doc) {
+                    if ((el.tagName === 'INPUT' || el.tagName === 'BUTTON') && 
+                        (el.type === 'submit' || (el.value || el.textContent || '').toLowerCase().includes('save') || (el.value || el.textContent || '').toLowerCase().includes('apply'))) {
+                      window._hasClickedSaveInGuide = true;
+                      
+                      // Đối với AX3000S (chạy SPA không reload trang vật lý), tự động đánh dấu và cập nhật tức thì
+                      if (currentDeviceId === 'ax3000s') {
+                        doc._ftcIsSaved = true;
+                        if (typeof window.onSimulatorSave === 'function') {
+                          window.onSimulatorSave(doc.defaultView || doc.parentWindow);
+                        }
+                      }
+                    }
+                    el = el.parentNode;
+                  }
+                }, true);
+
+                // Lắng nghe thay đổi trường để hủy cờ đã lưu và đánh dấu người dùng đã tự nhập
+                doc.addEventListener('input', function(e) {
+                  if (e.target) {
+                    e.target._ftcUserModified = true;
+                  }
+                  if (currentDeviceId === 'ax3000s') {
+                    doc._ftcIsSaved = false;
+                  }
+                });
+                doc.addEventListener('change', function(e) {
+                  if (e.target) {
+                    e.target._ftcUserModified = true;
+                  }
+                  if (currentDeviceId === 'ax3000s') {
+                    doc._ftcIsSaved = false;
+                  }
+                });
+
+                doc._ftcSaveListenerAttached = true;
+              }
+            });
+          } catch(e) {}
+
           if (currentMode === 'guide') {
             applyGuidePopups();
-            
-            // Theo dõi sự kiện click vào nút Save/Apply trong iframe
-            try {
-              const allDocs = getAllAccessibleDocuments(deviceIframe.contentWindow);
-              allDocs.forEach(doc => {
-                if (!doc._ftcSaveListenerAttached) {
-                  doc.addEventListener('click', function(e) {
-                    let el = e.target;
-                    while(el && el !== doc) {
-                      if ((el.tagName === 'INPUT' || el.tagName === 'BUTTON') && 
-                          (el.type === 'submit' || (el.value || el.textContent || '').toLowerCase().includes('save') || (el.value || el.textContent || '').toLowerCase().includes('apply'))) {
-                        window._hasClickedSaveInGuide = true;
-                      }
-                      el = el.parentNode;
-                    }
-                  }, true);
-                  doc._ftcSaveListenerAttached = true;
-                }
-              });
-            } catch(e) {}
 
             // Tự động kiểm tra hoàn thành để mở nút Nộp bài trong chế độ Hướng dẫn
             if (btnSubmitLab && btnSubmitLab.disabled) {
@@ -285,13 +313,8 @@
               <span class="auth-role">${_currentUser.technician_id}</span>
             </div>
           </div>
-          <button class="btn-auth btn-logout" id="btn-iam-logout">Đăng xuất</button>
         </div>
       `;
-      document.getElementById('btn-iam-logout').addEventListener('click', function() {
-        fetch('/api/index.php/auth/logout', { method: 'POST', credentials: 'include' })
-          .then(() => window.location.reload());
-      });
     } else {
       section.innerHTML = `
         <div class="auth-container">
@@ -619,11 +642,17 @@
     try {
       const allDocs = getAllAccessibleDocuments(deviceIframe.contentWindow);
       allDocs.forEach(doc => {
-        if (doc._ftcFieldsCleared) return;
-        let clearedAny = false;
         _currentLesson.clearFields.forEach(selector => {
           try {
             doc.querySelectorAll(selector).forEach(el => {
+              if (el._ftcUserModified || el === doc.activeElement) return;
+
+              // Bỏ qua việc xóa trường SSID/Mật khẩu trên trang 5G để KTV có thể nhìn thấy dữ liệu phản chiếu từ 2.4G
+              const is5GPage = doc.defaultView && doc.defaultView.location.hash.includes('wlanBasicSetting5g');
+              if (is5GPage && (selector.includes('Txt_SSID') || selector.includes('Pwd_WpaPsk'))) {
+                return;
+              }
+
               if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') {
                 if (el.type === 'radio' || el.type === 'checkbox') {
                   el.checked = false;
@@ -632,20 +661,16 @@
                 } else {
                   el.value = '';
                 }
-                clearedAny = true;
               } else if (el.classList.contains('item')) {
                 el.remove();
-                clearedAny = true;
               }
             });
           } catch(e) {}
         });
-        if (clearedAny) {
-          doc._ftcFieldsCleared = true;
-        }
       });
     } catch(e) {}
   }
+
 
   // ── Grading & Evaluation Engine ──────────────────────────────────
   function evaluateLesson(device, lesson) {
@@ -747,8 +772,8 @@
       }
 
       if (isMatch) {
-        // Đối với thiết bị AX3000C và AX3000H v2, bắt buộc trang chứa phần tử phải được bấm Save/Apply thành công
-        if ((currentDeviceId === 'ax3000c' || currentDeviceId === 'ax3000hv2') && !isSaved) {
+        // Đối với thiết bị AX3000C, AX3000H v2 và AX3000S, bắt buộc trang chứa phần tử phải được bấm Save/Apply thành công
+        if ((currentDeviceId === 'ax3000c' || currentDeviceId === 'ax3000hv2' || currentDeviceId === 'ax3000s') && !isSaved) {
           isMatch = false;
         }
       }
@@ -761,7 +786,7 @@
       if (isMatch) {
         msg = 'Chính xác';
       } else {
-        if ((currentDeviceId === 'ax3000c' || currentDeviceId === 'ax3000hv2') && elementFound && !isSaved) {
+        if ((currentDeviceId === 'ax3000c' || currentDeviceId === 'ax3000hv2' || currentDeviceId === 'ax3000s') && elementFound && !isSaved) {
           msg = 'Chưa bấm Save để lưu cấu hình';
         } else {
           msg = `Mong muốn: "${expectedVal}", Thực tế: "${actualValue || 'Trống'}"`;
@@ -772,7 +797,7 @@
         id: rule.id,
         name: rule.name,
         expected: expectedVal,
-        actual: ((currentDeviceId === 'ax3000c' || currentDeviceId === 'ax3000hv2') && elementFound && !isSaved) ? `${actualValue} (Chưa lưu)` : (actualValue || '(Chưa nhập / Chưa tìm thấy)'),
+        actual: ((currentDeviceId === 'ax3000c' || currentDeviceId === 'ax3000hv2' || currentDeviceId === 'ax3000s') && elementFound && !isSaved) ? `${actualValue} (Chưa lưu)` : (actualValue || '(Chưa nhập / Chưa tìm thấy)'),
         passed: isMatch,
         message: msg
       });
@@ -1137,7 +1162,8 @@
   document.getElementById('menu-logout').addEventListener('click', () => {
     actionMenu.classList.remove('open');
     if (confirm('Bạn có muốn đăng xuất không?')) {
-      alert('Đã đăng xuất. Chúc bạn học tốt! 🎓');
+      fetch('/api/index.php/auth/logout', { method: 'POST', credentials: 'include' })
+        .then(() => window.location.reload());
     }
   });
 
@@ -1409,6 +1435,10 @@
       if (!rootWin || !pageName) return false;
       const p = pageName.toLowerCase();
       try {
+        // Kiểm tra biến global oldpath của simulator
+        if (rootWin.oldpath && rootWin.oldpath.toLowerCase().includes(p)) {
+          return true;
+        }
         const docs = getAllAccessibleDocuments(rootWin);
         for (const d of docs) {
           const h = (d.location && d.location.href) ? d.location.href.toLowerCase() : '';

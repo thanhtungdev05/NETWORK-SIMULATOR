@@ -24,7 +24,7 @@ window.TOOLTIPS_BE12000._common_login = [
 ];
 
 // Bài 1: Quản lý LAN IPv4
-window.TOOLTIPS_BE12000['be12-bai1'] = [
+window.TOOLTIPS_BE12000['LAB_BE12000_01'] = [
   {
     selector: 'a#MM_localnet, #MM_localnet',
     text: 'Bước 1: Chọn Local Network',
@@ -48,7 +48,7 @@ window.TOOLTIPS_BE12000['be12-bai1'] = [
 ];
 
 // Bài 2: Cấu hình Wi-Fi MLO (Wi-Fi 7)
-window.TOOLTIPS_BE12000['be12-bai2'] = [
+window.TOOLTIPS_BE12000['LAB_BE12000_02'] = [
   {
     selector: 'a#MM_localnet, #MM_localnet',
     text: 'Bước 1: Chọn Local Network',
@@ -72,7 +72,7 @@ window.TOOLTIPS_BE12000['be12-bai2'] = [
 ];
 
 // Bài 3: Trạng thái WAN Ethernet
-window.TOOLTIPS_BE12000['be12-bai3'] = [
+window.TOOLTIPS_BE12000['LAB_BE12000_03'] = [
   {
     selector: 'a#MM_internet, #MM_internet',
     text: 'Bước 1: Chọn Internet',
@@ -86,7 +86,7 @@ window.TOOLTIPS_BE12000['be12-bai3'] = [
 ];
 
 // Bài 4: Chẩn đoán mạng
-window.TOOLTIPS_BE12000['be12-bai4'] = [
+window.TOOLTIPS_BE12000['LAB_BE12000_04'] = [
   {
     selector: 'a#MM_management, #MM_management',
     text: 'Bước 1: Chọn Management & Diagnosis',
@@ -100,7 +100,7 @@ window.TOOLTIPS_BE12000['be12-bai4'] = [
 ];
 
 // Bài 5: Quản lý Tài Khoản
-window.TOOLTIPS_BE12000['be12-bai5'] = [
+window.TOOLTIPS_BE12000['LAB_BE12000_05'] = [
   {
     selector: 'a#MM_management, #MM_management',
     text: 'Bước 1: Chọn Management & Diagnosis',
@@ -114,7 +114,7 @@ window.TOOLTIPS_BE12000['be12-bai5'] = [
 ];
 
 // Bài 6: SNTP
-window.TOOLTIPS_BE12000['be12-bai6'] = [
+window.TOOLTIPS_BE12000['LAB_BE12000_06'] = [
   {
     selector: 'a#MM_internet, #MM_internet',
     text: 'Bước 1: Chọn Internet',
@@ -128,7 +128,7 @@ window.TOOLTIPS_BE12000['be12-bai6'] = [
 ];
 
 // Bài 7: Reboot & Reset
-window.TOOLTIPS_BE12000['be12-bai7'] = [
+window.TOOLTIPS_BE12000['LAB_BE12000_07'] = [
   {
     selector: 'a#MM_management, #MM_management',
     text: 'Bước 1: Chọn Management & Diagnosis',

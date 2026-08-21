@@ -1,4 +1,4 @@
-/**
+﻿/**
  * devices/ax3000hv2/lessons/bai3.js
  * Bài 3: Cấu hình Wi-Fi Guest trên AX3000H v2
  */
@@ -6,8 +6,8 @@
 window.DEVICE_AX3000HV2_LESSONS = window.DEVICE_AX3000HV2_LESSONS || [];
 
 window.DEVICE_AX3000HV2_LESSONS.push({
-  id: 'ax3hv2-bai3',
-  title: 'Bài 3: Cấu hình Wi-Fi Guest',
+  id: 'LAB_AX3000HV2_03',
+  title: 'Bài 3 - Cấu hình Wi-Fi Guest',
   subtitle: 'Thiết lập mạng Wi-Fi phụ cho khách (Guest)',
   instructions: [
     '<b>Yêu cầu:</b>',
@@ -16,13 +16,19 @@ window.DEVICE_AX3000HV2_LESSONS.push({
     '- WPA Key: <span class="val">fpt12345</span>',
   ],
   practiceUrl: '/sim_ax3000hv2/cgi-bin/index.asp?page=home_wireless.asp',
+  clearFields: [
+    'input[name="ESSID"]',
+    'input[name="PreSharedKey"]',
+    'input[name="ESSID_5g"]',
+    'input[name="PreSharedKey_5g"]'
+  ],
   grading: {
     description: 'Kiểm tra SSID Guest và WPA Key trên AX3000Hv2',
     rules: [
       {
         id: 'guest_ssid',
         name: 'Tên Wi-Fi Guest (SSID)',
-        selector: 'input[name="ESSID_guest"], input[name*="guest_ssid"]',
+        selector: 'input[name="ESSID"]',
         expected: 'FPT Telecom_Guest',
         type: 'text_exact',
         trim: true,
@@ -31,7 +37,7 @@ window.DEVICE_AX3000HV2_LESSONS.push({
       {
         id: 'guest_key',
         name: 'Mật khẩu Wi-Fi Guest',
-        selector: 'input[name="PreSharedKey_guest"], input[name*="guest_key"]',
+        selector: 'input[name="PreSharedKey"]',
         expected: 'fpt12345',
         type: 'text_exact',
         trim: true,

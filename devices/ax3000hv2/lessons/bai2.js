@@ -1,4 +1,4 @@
-/**
+﻿/**
  * devices/ax3000hv2/lessons/bai2.js
  * Bài 2: Cấu hình Wi-Fi Host trên AX3000H v2
  */
@@ -6,8 +6,8 @@
 window.DEVICE_AX3000HV2_LESSONS = window.DEVICE_AX3000HV2_LESSONS || [];
 
 window.DEVICE_AX3000HV2_LESSONS.push({
-  id: 'ax3hv2-bai2',
-  title: 'Bài 2: Cấu hình Wi-Fi Host',
+  id: 'LAB_AX3000HV2_02',
+  title: 'Bài 2 - Cấu hình Wi-Fi Host',
   subtitle: 'Thiết lập mạng Wi-Fi chính (Host)',
   instructions: [
     '<b>Yêu cầu:</b>',
@@ -16,6 +16,13 @@ window.DEVICE_AX3000HV2_LESSONS.push({
     '- WPA Key: <span class="val">fpt12345</span>',
   ],
   practiceUrl: '/sim_ax3000hv2/cgi-bin/index.asp?page=home_wireless.asp',
+  clearFields: [
+    'input[name="ESSID"]',
+    'input[name="PreSharedKey1"]',
+    'input[name="PreSharedKey"]',
+    'input[name="ESSID_5g"]',
+    'input[name="PreSharedKey_5g"]'
+  ],
   grading: {
     description: 'Kiểm tra SSID Host và WPA Key trên AX3000Hv2',
     rules: [

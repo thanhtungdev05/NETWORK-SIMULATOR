@@ -7,7 +7,7 @@ window.DEVICE_AC1000F_LESSONS = window.DEVICE_AC1000F_LESSONS || [];
 
 window.DEVICE_AC1000F_LESSONS.push({
   id: 'LAB_AC1000F_09',
-  title: 'Bài 9: Cấu hình Reboot Timer',
+  title: 'Bài 9 - Cấu hình Reboot Timer',
   subtitle: 'Lên lịch khởi động lại thiết bị tự động',
     instructions: [
     '<b>Yêu cầu:</b> Cài đặt thời gian tự động khởi động lại (Reboot) thiết bị vào lúc:',

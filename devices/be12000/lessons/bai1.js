@@ -1,4 +1,4 @@
-/**
+﻿/**
  * devices/be12000/lessons/bai1.js
  * Bài 1 - Quản lý LAN IPv4 trên BE12000
  */
@@ -6,7 +6,7 @@
 window.DEVICE_BE12000_LESSONS = window.DEVICE_BE12000_LESSONS || [];
 
 window.DEVICE_BE12000_LESSONS.push({
-  id: 'be12-bai1',
+  id: 'LAB_BE12000_01',
   title: 'Bài 1 - Quản lý LAN IPv4',
   subtitle: 'Cấu hình địa chỉ IP LAN và DHCP Server',
   instructions: [

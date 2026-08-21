@@ -60,6 +60,33 @@
     [/^Reset$/i, function (b) {
       bao(nhan(b), 'Tren thiet bi that: xoa toan bo nhat ky da luu.');
     }],
+    [/^Apply$/i, function (b) {
+      var w = window.parent || window;
+      if (w.onSimulatorSave) {
+        try {
+          w.onSimulatorSave(window);
+        } catch (e) {}
+      }
+      
+      var msgId = 'fakeSaveMsg';
+      var oldMsg = document.getElementById(msgId);
+      if (oldMsg) oldMsg.remove();
+      
+      var msg = document.createElement('span');
+      msg.id = msgId;
+      msg.style.color = '#15803d';
+      msg.style.fontWeight = 'bold';
+      msg.style.fontSize = '13px';
+      msg.style.marginLeft = '10px';
+      msg.style.verticalAlign = 'middle';
+      msg.innerHTML = '✔ Saved successfully!';
+      
+      b.parentNode.insertBefore(msg, b.nextSibling);
+      
+      setTimeout(function () {
+        if (msg && msg.parentNode) msg.parentNode.removeChild(msg);
+      }, 3000);
+    }],
     [/^Hardware Diagnosis$/i, function (b) {
       bao(nhan(b), 'Tren thiet bi that: chay kiem tra phan cung va bao ket qua.');
     }]
@@ -71,7 +98,7 @@
       if (b.__act) return;
       var t = nhan(b);
       // bo qua cac nut da co hanh vi tu script khac
-      if (/^(Add|Edit|Modify|Apply|Cancel)$/i.test(t)) return;
+      if (/^(Add|Edit|Modify|Cancel)$/i.test(t)) return;
       if (/Reveal\/hide password/i.test(b.getAttribute('title') || '')) return;
       for (var i = 0; i < XU_LY.length; i++) {
         if (XU_LY[i][0].test(t)) {

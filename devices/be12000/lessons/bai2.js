@@ -1,4 +1,4 @@
-/**
+﻿/**
  * devices/be12000/lessons/bai2.js
  * Bài 2 - Cấu hình Wi-Fi MLO (Wi-Fi 7) trên BE12000
  */
@@ -6,7 +6,7 @@
 window.DEVICE_BE12000_LESSONS = window.DEVICE_BE12000_LESSONS || [];
 
 window.DEVICE_BE12000_LESSONS.push({
-  id: 'be12-bai2',
+  id: 'LAB_BE12000_02',
   title: 'Bài 2 - Cấu hình Wi-Fi MLO (Wi-Fi 7)',
   subtitle: 'Cấu hình Multi-Link Operation (MLO) trên BE12000',
   instructions: [

@@ -491,6 +491,10 @@
       {
        "v": "udp",
        "n": "UDP"
+      },
+      {
+       "v": "tcp udp",
+       "n": "TCP/UDP"
       }
      ],
      "goiy": null,

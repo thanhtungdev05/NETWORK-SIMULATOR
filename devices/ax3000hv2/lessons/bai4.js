@@ -1,4 +1,4 @@
-/**
+﻿/**
  * devices/ax3000hv2/lessons/bai4.js
  * Bài 4: Cấu hình Wi-Fi IoT trên AX3000H v2
  */
@@ -6,8 +6,8 @@
 window.DEVICE_AX3000HV2_LESSONS = window.DEVICE_AX3000HV2_LESSONS || [];
 
 window.DEVICE_AX3000HV2_LESSONS.push({
-  id: 'ax3hv2-bai4',
-  title: 'Bài 4: Cấu hình Wi-Fi IoT',
+  id: 'LAB_AX3000HV2_04',
+  title: 'Bài 4 - Cấu hình Wi-Fi IoT',
   subtitle: 'Thiết lập mạng Wi-Fi dành riêng cho thiết bị IoT',
   instructions: [
     '<b>Yêu cầu:</b>',
@@ -16,6 +16,12 @@ window.DEVICE_AX3000HV2_LESSONS.push({
     '- WPA Key: <span class="val">fpt12345</span>',
   ],
   practiceUrl: '/sim_ax3000hv2/cgi-bin/index.asp?page=home_wireless.asp',
+  clearFields: [
+    'input[name="wifi5SSid_2G"]',
+    'input[name="wifi5Pwd_2G"]',
+    'input[name="wifi5SSid_5G"]',
+    'input[name="wifi5Pwd_5G"]'
+  ],
   grading: {
     description: 'Kiểm tra SSID IoT và WPA Key trên AX3000Hv2',
     rules: [

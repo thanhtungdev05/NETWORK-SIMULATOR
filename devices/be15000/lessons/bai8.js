@@ -1,4 +1,4 @@
-/**
+﻿/**
  * devices/be15000/lessons/bai8.js
  * Bài 8 - Quản lý Log trên BE15000
  */

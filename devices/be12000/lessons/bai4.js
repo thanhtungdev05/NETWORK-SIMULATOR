@@ -1,4 +1,4 @@
-/**
+﻿/**
  * devices/be12000/lessons/bai4.js
  * Bài 4 - Chẩn đoán mạng (Network Diag) trên BE12000
  */
@@ -6,7 +6,7 @@
 window.DEVICE_BE12000_LESSONS = window.DEVICE_BE12000_LESSONS || [];
 
 window.DEVICE_BE12000_LESSONS.push({
-  id: 'be12-bai4',
+  id: 'LAB_BE12000_04',
   title: 'Bài 4 - Chẩn đoán mạng (Network Diag)',
   subtitle: 'Sử dụng công cụ Ping và Traceroute',
   instructions: [

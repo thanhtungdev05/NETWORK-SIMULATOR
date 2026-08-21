@@ -1,4 +1,4 @@
-/**
+﻿/**
  * devices/ax3000hv2/lessons/bai1.js
  * Bài 1: Cấu hình PPPoE trên AX3000H v2
  */
@@ -6,8 +6,8 @@
 window.DEVICE_AX3000HV2_LESSONS = window.DEVICE_AX3000HV2_LESSONS || [];
 
 window.DEVICE_AX3000HV2_LESSONS.push({
-  id: 'ax3hv2-bai1',
-  title: 'Bài 1: Cấu hình PPPoE',
+  id: 'LAB_AX3000HV2_01',
+  title: 'Bài 1 - Cấu hình PPPoE',
   subtitle: 'Thiết lập kết nối Internet PPPoE cho AX3000H v2',
   instructions: [
     '<b>Yêu cầu:</b>',
@@ -16,6 +16,10 @@ window.DEVICE_AX3000HV2_LESSONS.push({
     '- Password: <span class="val">fpt12345</span>',
   ],
   practiceUrl: '/sim_ax3000hv2/cgi-bin/index.asp?page=home_wan.asp',
+  clearFields: [
+    'input[name="pppUserName"]',
+    'input[name="pppPassword"]'
+  ],
   grading: {
     description: 'Kiểm tra cấu hình PPPoE trên AX3000H v2',
     rules: [

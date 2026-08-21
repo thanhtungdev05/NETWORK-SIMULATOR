@@ -4,25 +4,35 @@
 
 if (!window.TOOLTIPS_AX3000GZ) window.TOOLTIPS_AX3000GZ = {};
 
-window.TOOLTIPS_AX3000GZ['ax3gz-bai1'] = [
-    {
-        selector: '#WANUrl, li:not(.active) > a[href$="/internet/wan"]',
-        text: 'Chọn WAN',
-        position: 'right'
-    },
-    {
-        selector: '#widget\\.cbid\\.network\\.wan\\.username',
-        text: 'Bước 1: nhập tên hợp đồng ví dụ: fpt',
-        position: 'right'
-    },
-    {
-        selector: '#widget\\.cbid\\.network\\.wan\\.password',
-        text: 'Bước 2: nhập Password, ví dụ: fpt12345',
-        position: 'right'
-    },
-    {
-        selector: '.cbi-button-save',
-        text: 'Bước 3: chọn Apply',
-        position: 'bottom'
-    }
+window.TOOLTIPS_AX3000GZ['LAB_AX3000GZ_01'] = [
+  {
+    selector: '#topmenu a[href*="internet"]',
+    text: 'Chọn Internet',
+    position: 'bottom',
+    page: 'home'
+  },
+  {
+    selector: '#WANUrl, #sidebarmenu a[href*="/internet/wan"]',
+    text: 'Chọn Wan',
+    position: 'right',
+    hideOnPage: 'wan'
+  },
+  {
+    selector: '[id="widget.cbid.network.wan.username"]',
+    text: 'Bước 1: Nhập Username của phần PPP: fpt',
+    position: 'right',
+    page: 'wan'
+  },
+  {
+    selector: '[id="widget.cbid.network.wan.password"]',
+    text: 'Bước 2: Nhập Password của phần PPP: fpt12345',
+    position: 'right',
+    page: 'wan'
+  },
+  {
+    selector: '.cbi-button-save',
+    text: 'Bước 3: Chọn Apply để lưu cấu hình.',
+    position: 'bottom',
+    page: 'wan'
+  }
 ];

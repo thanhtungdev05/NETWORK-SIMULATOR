@@ -1,7 +1,7 @@
 if (!window.TOOLTIPS_AX3000HV2) window.TOOLTIPS_AX3000HV2 = {};
-window.TOOLTIPS_AX3000HV2['ax3hv2-bai1'] = [
+window.TOOLTIPS_AX3000HV2['LAB_AX3000HV2_01'] = [
     {
-        selector: '#topmenu a:contains("Network"), a:contains("Network")',
+        selector: '#MainMenu a:contains("Network")',
         text: 'Bước 1: Chọn Network',
         position: 'top'
     },
@@ -12,17 +12,17 @@ window.TOOLTIPS_AX3000HV2['ax3hv2-bai1'] = [
     },
     {
         selector: 'input[name="pppUserName"], #pppUserName',
-        text: 'Bước 3: Nhập tên<br>ví dụ: hnfdl-123456-789',
+        text: 'Bước 3: Nhập Username: fpt',
         position: 'right'
     },
     {
         selector: 'input[name="pppPassword"], #pppPassword',
-        text: 'Bước 4: Nhập mật khẩu<br>ví dụ: d123456',
+        text: 'Bước 4: Nhập Password: fpt12345',
         position: 'right'
     },
     {
         selector: 'input[value="Save"], #btnOK',
         text: 'Bước 5: Chọn Save',
-        position: 'bottom'
+        position: 'top'
     }
 ];

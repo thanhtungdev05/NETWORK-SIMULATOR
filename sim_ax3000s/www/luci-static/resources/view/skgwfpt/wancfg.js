@@ -1,25 +1,33 @@
 
 var apply_data={};var buildStaticPPP=0;var lanPortNum=4;var actionapply="add";var selindex=0;var delist=new Array();var portlist={};var WanConnJson={};var allportlistarry=new Array();var brlanipaddr="";var brlansubnetmask="";var sfuBindPort="";var onuType="";var pppoe_static_ip_support="";var ft_passthrough_bridge="";var bridgeMaxMtu=1500;var bridgeMinMtu=1280;var ipMaxMtu=1500;var ipMinMtu=576;var ipMinMtuV6=1280;var pppMaxMtu=1600;var pppMinMtu=576;var pppMinMtuV6=1280;var currMaxMtu=1500;var currMinMtu=1280;function unSeleLanPort(portId)
-{with(document.forms[0])
+{var f = document.forms[0];
+var IpVersion = f.IpVersion, connMode = f.connMode, serviceMode = f.serviceMode, vlanMode = f.vlanMode, vlanID = f.vlanID, multiVID = f.multiVID, d8021 = f.d8021, mtu = f.mtu, nat = f.nat, ipAddr = f.ipAddr, netMask = f.netMask, defGW = f.defGW, firstDns = f.firstDns, secondDns = f.secondDns, userName = f.userName, uPsd = f.uPsd, dialMode = f.dialMode, idleTime = f.idleTime, EnableStaticIp = f.EnableStaticIp, pppStaticIPAddress = f.pppStaticIPAddress, pppStaticSubnetMask = f.pppStaticSubnetMask, pppStaticStartAddress = f.pppStaticStartAddress, pppStaticEndAddress = f.pppStaticEndAddress, enblIANA = f.enblIANA, defaultroute = f.defaultroute, defaultroutev6 = f.defaultroutev6, wanAddress6 = f.wanAddress6, wanAddress6prefix = f.wanAddress6prefix, wanGateway6 = f.wanGateway6, enblPD = f.enblPD, delegatePrefix = f.delegatePrefix, delegatePrefixLen = f.delegatePrefixLen, dns6Primary = f.dns6Primary, dns6Secondary = f.dns6Secondary, enbl6RD = f.enbl6RD, ipv6rdBrAddr = f.ipv6rdBrAddr, ipv6rdIpv4MaskLen = f.ipv6rdIpv4MaskLen, ipv6rdPrefix = f.ipv6rdPrefix, ipv6rdPrefixLen = f.ipv6rdPrefixLen, enblDSLite = f.enblDSLite, dsLiteServer = f.dsLiteServer, enable = f.enable, seletall = f.seletall, btn_edit = f.btn_edit, btn_del = f.btn_del, btn_add = f.btn_add;
+if(true)
 {if(portId==-1)
 {for(var i=0;i<allportlistarry.length;i++)
 {document.getElementById("LanPort"+i).checked=false;}}
 else if(portId>=0&&portId<allportlistarry.length)
 {document.getElementById("LanPort"+portId).checked=false;}}}
 function seleLanPort(portId)
-{with(document.forms[0])
+{var f = document.forms[0];
+var IpVersion = f.IpVersion, connMode = f.connMode, serviceMode = f.serviceMode, vlanMode = f.vlanMode, vlanID = f.vlanID, multiVID = f.multiVID, d8021 = f.d8021, mtu = f.mtu, nat = f.nat, ipAddr = f.ipAddr, netMask = f.netMask, defGW = f.defGW, firstDns = f.firstDns, secondDns = f.secondDns, userName = f.userName, uPsd = f.uPsd, dialMode = f.dialMode, idleTime = f.idleTime, EnableStaticIp = f.EnableStaticIp, pppStaticIPAddress = f.pppStaticIPAddress, pppStaticSubnetMask = f.pppStaticSubnetMask, pppStaticStartAddress = f.pppStaticStartAddress, pppStaticEndAddress = f.pppStaticEndAddress, enblIANA = f.enblIANA, defaultroute = f.defaultroute, defaultroutev6 = f.defaultroutev6, wanAddress6 = f.wanAddress6, wanAddress6prefix = f.wanAddress6prefix, wanGateway6 = f.wanGateway6, enblPD = f.enblPD, delegatePrefix = f.delegatePrefix, delegatePrefixLen = f.delegatePrefixLen, dns6Primary = f.dns6Primary, dns6Secondary = f.dns6Secondary, enbl6RD = f.enbl6RD, ipv6rdBrAddr = f.ipv6rdBrAddr, ipv6rdIpv4MaskLen = f.ipv6rdIpv4MaskLen, ipv6rdPrefix = f.ipv6rdPrefix, ipv6rdPrefixLen = f.ipv6rdPrefixLen, enblDSLite = f.enblDSLite, dsLiteServer = f.dsLiteServer, enable = f.enable, seletall = f.seletall, btn_edit = f.btn_edit, btn_del = f.btn_del, btn_add = f.btn_add;
+if(true)
 {if(portId==-1)
 {for(var i=0;i<allportlistarry.length;i++)
 {document.getElementById("LanPort"+i).checked=true;}}
 else if(portId>=0&&portId<allportlistarry.length)
 {document.getElementById("LanPort"+portId).checked=true;}}}
 function enableLanPort()
-{with(document.forms[0])
+{var f = document.forms[0];
+var IpVersion = f.IpVersion, connMode = f.connMode, serviceMode = f.serviceMode, vlanMode = f.vlanMode, vlanID = f.vlanID, multiVID = f.multiVID, d8021 = f.d8021, mtu = f.mtu, nat = f.nat, ipAddr = f.ipAddr, netMask = f.netMask, defGW = f.defGW, firstDns = f.firstDns, secondDns = f.secondDns, userName = f.userName, uPsd = f.uPsd, dialMode = f.dialMode, idleTime = f.idleTime, EnableStaticIp = f.EnableStaticIp, pppStaticIPAddress = f.pppStaticIPAddress, pppStaticSubnetMask = f.pppStaticSubnetMask, pppStaticStartAddress = f.pppStaticStartAddress, pppStaticEndAddress = f.pppStaticEndAddress, enblIANA = f.enblIANA, defaultroute = f.defaultroute, defaultroutev6 = f.defaultroutev6, wanAddress6 = f.wanAddress6, wanAddress6prefix = f.wanAddress6prefix, wanGateway6 = f.wanGateway6, enblPD = f.enblPD, delegatePrefix = f.delegatePrefix, delegatePrefixLen = f.delegatePrefixLen, dns6Primary = f.dns6Primary, dns6Secondary = f.dns6Secondary, enbl6RD = f.enbl6RD, ipv6rdBrAddr = f.ipv6rdBrAddr, ipv6rdIpv4MaskLen = f.ipv6rdIpv4MaskLen, ipv6rdPrefix = f.ipv6rdPrefix, ipv6rdPrefixLen = f.ipv6rdPrefixLen, enblDSLite = f.enblDSLite, dsLiteServer = f.dsLiteServer, enable = f.enable, seletall = f.seletall, btn_edit = f.btn_edit, btn_del = f.btn_del, btn_add = f.btn_add;
+if(true)
 {for(var i=0;i<allportlistarry.length;i++)
 {var lanPortID="LanPort"+i;var lanPort=document.getElementById(lanPortID).disabled=false;if($("#"+lanPortID).parents(".skcheckbox-round").next().hasClass("skcheckbox-disabled"))
 $("#"+lanPortID).parents(".skcheckbox-round").next().removeClass("skcheckbox-disabled");}}}
 function disableLanPort()
-{var i=0,j=0,k=0;var intf="";var parts="";with(document.forms[0])
+{var i=0,j=0,k=0;var intf="";var parts="";var f = document.forms[0];
+var IpVersion = f.IpVersion, connMode = f.connMode, serviceMode = f.serviceMode, vlanMode = f.vlanMode, vlanID = f.vlanID, multiVID = f.multiVID, d8021 = f.d8021, mtu = f.mtu, nat = f.nat, ipAddr = f.ipAddr, netMask = f.netMask, defGW = f.defGW, firstDns = f.firstDns, secondDns = f.secondDns, userName = f.userName, uPsd = f.uPsd, dialMode = f.dialMode, idleTime = f.idleTime, EnableStaticIp = f.EnableStaticIp, pppStaticIPAddress = f.pppStaticIPAddress, pppStaticSubnetMask = f.pppStaticSubnetMask, pppStaticStartAddress = f.pppStaticStartAddress, pppStaticEndAddress = f.pppStaticEndAddress, enblIANA = f.enblIANA, defaultroute = f.defaultroute, defaultroutev6 = f.defaultroutev6, wanAddress6 = f.wanAddress6, wanAddress6prefix = f.wanAddress6prefix, wanGateway6 = f.wanGateway6, enblPD = f.enblPD, delegatePrefix = f.delegatePrefix, delegatePrefixLen = f.delegatePrefixLen, dns6Primary = f.dns6Primary, dns6Secondary = f.dns6Secondary, enbl6RD = f.enbl6RD, ipv6rdBrAddr = f.ipv6rdBrAddr, ipv6rdIpv4MaskLen = f.ipv6rdIpv4MaskLen, ipv6rdPrefix = f.ipv6rdPrefix, ipv6rdPrefixLen = f.ipv6rdPrefixLen, enblDSLite = f.enblDSLite, dsLiteServer = f.dsLiteServer, enable = f.enable, seletall = f.seletall, btn_edit = f.btn_edit, btn_del = f.btn_del, btn_add = f.btn_add;
+if(true)
 {for(i=0;i<WanConnJson.length;i++)
 {if(selindex!=WanConnJson[i].index)
 {intf=WanConnJson[i].portbind
@@ -172,7 +180,9 @@ selectdnsv6mode();$("#defaultroutev6").prop("checked",true);$("#defaultroute").p
 function defbridgecfg()
 {$("#vlanMode").val("1");enableVlan("1");hideElements();diableForFPT();}
 function changeConnMode(mode)
-{with(document.forms[0])
+{var f = document.forms[0];
+var IpVersion = f.IpVersion, connMode = f.connMode, serviceMode = f.serviceMode, vlanMode = f.vlanMode, vlanID = f.vlanID, multiVID = f.multiVID, d8021 = f.d8021, mtu = f.mtu, nat = f.nat, ipAddr = f.ipAddr, netMask = f.netMask, defGW = f.defGW, firstDns = f.firstDns, secondDns = f.secondDns, userName = f.userName, uPsd = f.uPsd, dialMode = f.dialMode, idleTime = f.idleTime, EnableStaticIp = f.EnableStaticIp, pppStaticIPAddress = f.pppStaticIPAddress, pppStaticSubnetMask = f.pppStaticSubnetMask, pppStaticStartAddress = f.pppStaticStartAddress, pppStaticEndAddress = f.pppStaticEndAddress, enblIANA = f.enblIANA, defaultroute = f.defaultroute, defaultroutev6 = f.defaultroutev6, wanAddress6 = f.wanAddress6, wanAddress6prefix = f.wanAddress6prefix, wanGateway6 = f.wanGateway6, enblPD = f.enblPD, delegatePrefix = f.delegatePrefix, delegatePrefixLen = f.delegatePrefixLen, dns6Primary = f.dns6Primary, dns6Secondary = f.dns6Secondary, enbl6RD = f.enbl6RD, ipv6rdBrAddr = f.ipv6rdBrAddr, ipv6rdIpv4MaskLen = f.ipv6rdIpv4MaskLen, ipv6rdPrefix = f.ipv6rdPrefix, ipv6rdPrefixLen = f.ipv6rdPrefixLen, enblDSLite = f.enblDSLite, dsLiteServer = f.dsLiteServer, enable = f.enable, seletall = f.seletall, btn_edit = f.btn_edit, btn_del = f.btn_del, btn_add = f.btn_add;
+if(true)
 {IpVersion.disabled=false;}
 $("#ipv6rdTable").hide();$("#dsliteTable").hide();if(allportlistarry.length>1)
 {$("#portbindtable").show();}
@@ -352,7 +362,9 @@ else
 {vpstr=vlanid+" / "+priority;}
 return vpstr;}
 function creatPortbindList(portbind)
-{var j=0;var portbindList="";var num=0;var lanPortLabel;var lanPortCheck;var list="";with(document.forms[0])
+{var j=0;var portbindList="";var num=0;var lanPortLabel;var lanPortCheck;var list="";var f = document.forms[0];
+var IpVersion = f.IpVersion, connMode = f.connMode, serviceMode = f.serviceMode, vlanMode = f.vlanMode, vlanID = f.vlanID, multiVID = f.multiVID, d8021 = f.d8021, mtu = f.mtu, nat = f.nat, ipAddr = f.ipAddr, netMask = f.netMask, defGW = f.defGW, firstDns = f.firstDns, secondDns = f.secondDns, userName = f.userName, uPsd = f.uPsd, dialMode = f.dialMode, idleTime = f.idleTime, EnableStaticIp = f.EnableStaticIp, pppStaticIPAddress = f.pppStaticIPAddress, pppStaticSubnetMask = f.pppStaticSubnetMask, pppStaticStartAddress = f.pppStaticStartAddress, pppStaticEndAddress = f.pppStaticEndAddress, enblIANA = f.enblIANA, defaultroute = f.defaultroute, defaultroutev6 = f.defaultroutev6, wanAddress6 = f.wanAddress6, wanAddress6prefix = f.wanAddress6prefix, wanGateway6 = f.wanGateway6, enblPD = f.enblPD, delegatePrefix = f.delegatePrefix, delegatePrefixLen = f.delegatePrefixLen, dns6Primary = f.dns6Primary, dns6Secondary = f.dns6Secondary, enbl6RD = f.enbl6RD, ipv6rdBrAddr = f.ipv6rdBrAddr, ipv6rdIpv4MaskLen = f.ipv6rdIpv4MaskLen, ipv6rdPrefix = f.ipv6rdPrefix, ipv6rdPrefixLen = f.ipv6rdPrefixLen, enblDSLite = f.enblDSLite, dsLiteServer = f.dsLiteServer, enable = f.enable, seletall = f.seletall, btn_edit = f.btn_edit, btn_del = f.btn_del, btn_add = f.btn_add;
+if(true)
 {var parts=portbind.split(',');for(i=0;i<parts.length;i++)
 {for(j=0;j<allportlistarry.length;j++)
 {if(allportlistarry[j].ifname==parts[i])
@@ -370,7 +382,9 @@ else
 {wanEntry="<tr><td colspan='7'>No data yet...</td></tr>";$("#seletall").attr("disabled",true);}
 $("#wan_entry_list").append(wanEntry);}
 function saveMtu()
-{var maxMtu;with(document.forms[0])
+{var maxMtu;var f = document.forms[0];
+var IpVersion = f.IpVersion, connMode = f.connMode, serviceMode = f.serviceMode, vlanMode = f.vlanMode, vlanID = f.vlanID, multiVID = f.multiVID, d8021 = f.d8021, mtu = f.mtu, nat = f.nat, ipAddr = f.ipAddr, netMask = f.netMask, defGW = f.defGW, firstDns = f.firstDns, secondDns = f.secondDns, userName = f.userName, uPsd = f.uPsd, dialMode = f.dialMode, idleTime = f.idleTime, EnableStaticIp = f.EnableStaticIp, pppStaticIPAddress = f.pppStaticIPAddress, pppStaticSubnetMask = f.pppStaticSubnetMask, pppStaticStartAddress = f.pppStaticStartAddress, pppStaticEndAddress = f.pppStaticEndAddress, enblIANA = f.enblIANA, defaultroute = f.defaultroute, defaultroutev6 = f.defaultroutev6, wanAddress6 = f.wanAddress6, wanAddress6prefix = f.wanAddress6prefix, wanGateway6 = f.wanGateway6, enblPD = f.enblPD, delegatePrefix = f.delegatePrefix, delegatePrefixLen = f.delegatePrefixLen, dns6Primary = f.dns6Primary, dns6Secondary = f.dns6Secondary, enbl6RD = f.enbl6RD, ipv6rdBrAddr = f.ipv6rdBrAddr, ipv6rdIpv4MaskLen = f.ipv6rdIpv4MaskLen, ipv6rdPrefix = f.ipv6rdPrefix, ipv6rdPrefixLen = f.ipv6rdPrefixLen, enblDSLite = f.enblDSLite, dsLiteServer = f.dsLiteServer, enable = f.enable, seletall = f.seletall, btn_edit = f.btn_edit, btn_del = f.btn_del, btn_add = f.btn_add;
+if(true)
 {maxMtu=parseInt(mtu.value);if(!isNumber(mtu.value)||maxMtu<currMinMtu||maxMtu>currMaxMtu)
 {parent.warninfo_show(_("wancfg_MTUValue")+": "+mtu.value+" "+_("wancfg_MTUValueError")+$("#span_mtu").html());return 0;}
 apply_data.mtu=maxMtu}
@@ -391,7 +405,9 @@ else if(actionapply=="edit")
 {return true;}}}}
 return false;}
 function saveServMode()
-{var servModeMask=0;var serverlist=1;with(document.forms[0])
+{var servModeMask=0;var serverlist=1;var f = document.forms[0];
+var IpVersion = f.IpVersion, connMode = f.connMode, serviceMode = f.serviceMode, vlanMode = f.vlanMode, vlanID = f.vlanID, multiVID = f.multiVID, d8021 = f.d8021, mtu = f.mtu, nat = f.nat, ipAddr = f.ipAddr, netMask = f.netMask, defGW = f.defGW, firstDns = f.firstDns, secondDns = f.secondDns, userName = f.userName, uPsd = f.uPsd, dialMode = f.dialMode, idleTime = f.idleTime, EnableStaticIp = f.EnableStaticIp, pppStaticIPAddress = f.pppStaticIPAddress, pppStaticSubnetMask = f.pppStaticSubnetMask, pppStaticStartAddress = f.pppStaticStartAddress, pppStaticEndAddress = f.pppStaticEndAddress, enblIANA = f.enblIANA, defaultroute = f.defaultroute, defaultroutev6 = f.defaultroutev6, wanAddress6 = f.wanAddress6, wanAddress6prefix = f.wanAddress6prefix, wanGateway6 = f.wanGateway6, enblPD = f.enblPD, delegatePrefix = f.delegatePrefix, delegatePrefixLen = f.delegatePrefixLen, dns6Primary = f.dns6Primary, dns6Secondary = f.dns6Secondary, enbl6RD = f.enbl6RD, ipv6rdBrAddr = f.ipv6rdBrAddr, ipv6rdIpv4MaskLen = f.ipv6rdIpv4MaskLen, ipv6rdPrefix = f.ipv6rdPrefix, ipv6rdPrefixLen = f.ipv6rdPrefixLen, enblDSLite = f.enblDSLite, dsLiteServer = f.dsLiteServer, enable = f.enable, seletall = f.seletall, btn_edit = f.btn_edit, btn_del = f.btn_del, btn_add = f.btn_add;
+if(true)
 {serverlist=parseInt(serviceMode.value)
 servModeMask=getServModeMask(serverlist);if(connMode.value!="bridge")
 {if((servModeMask&(1<<tr069ServiceBit))&&(checkSameWanServiceExist(tr069ServiceBit)==true))
@@ -409,7 +425,9 @@ function checkAlreadyExistBridgeNotBoundPort()
 {return true;}}}
 return false;}
 function saveBindPort()
-{var i;var num=0;var bindportlist="";with(document.forms[0])
+{var i;var num=0;var bindportlist="";var f = document.forms[0];
+var IpVersion = f.IpVersion, connMode = f.connMode, serviceMode = f.serviceMode, vlanMode = f.vlanMode, vlanID = f.vlanID, multiVID = f.multiVID, d8021 = f.d8021, mtu = f.mtu, nat = f.nat, ipAddr = f.ipAddr, netMask = f.netMask, defGW = f.defGW, firstDns = f.firstDns, secondDns = f.secondDns, userName = f.userName, uPsd = f.uPsd, dialMode = f.dialMode, idleTime = f.idleTime, EnableStaticIp = f.EnableStaticIp, pppStaticIPAddress = f.pppStaticIPAddress, pppStaticSubnetMask = f.pppStaticSubnetMask, pppStaticStartAddress = f.pppStaticStartAddress, pppStaticEndAddress = f.pppStaticEndAddress, enblIANA = f.enblIANA, defaultroute = f.defaultroute, defaultroutev6 = f.defaultroutev6, wanAddress6 = f.wanAddress6, wanAddress6prefix = f.wanAddress6prefix, wanGateway6 = f.wanGateway6, enblPD = f.enblPD, delegatePrefix = f.delegatePrefix, delegatePrefixLen = f.delegatePrefixLen, dns6Primary = f.dns6Primary, dns6Secondary = f.dns6Secondary, enbl6RD = f.enbl6RD, ipv6rdBrAddr = f.ipv6rdBrAddr, ipv6rdIpv4MaskLen = f.ipv6rdIpv4MaskLen, ipv6rdPrefix = f.ipv6rdPrefix, ipv6rdPrefixLen = f.ipv6rdPrefixLen, enblDSLite = f.enblDSLite, dsLiteServer = f.dsLiteServer, enable = f.enable, seletall = f.seletall, btn_edit = f.btn_edit, btn_del = f.btn_del, btn_add = f.btn_add;
+if(true)
 {for(i=0;i<allportlistarry.length;i++)
 {var lanPort=document.getElementById("LanPort"+i);if(lanPort.checked==true)
 {bindportlist+=lanPort.value;bindportlist+=","
@@ -419,7 +437,9 @@ if(connMode.value=="bridge"&&(2!=parseInt(serviceMode.value))&&num==allportlista
 apply_data.portbind=bindportlist;}
 return 1;}
 function saveNat()
-{var enblNat=1;with(document.forms[0])
+{var enblNat=1;var f = document.forms[0];
+var IpVersion = f.IpVersion, connMode = f.connMode, serviceMode = f.serviceMode, vlanMode = f.vlanMode, vlanID = f.vlanID, multiVID = f.multiVID, d8021 = f.d8021, mtu = f.mtu, nat = f.nat, ipAddr = f.ipAddr, netMask = f.netMask, defGW = f.defGW, firstDns = f.firstDns, secondDns = f.secondDns, userName = f.userName, uPsd = f.uPsd, dialMode = f.dialMode, idleTime = f.idleTime, EnableStaticIp = f.EnableStaticIp, pppStaticIPAddress = f.pppStaticIPAddress, pppStaticSubnetMask = f.pppStaticSubnetMask, pppStaticStartAddress = f.pppStaticStartAddress, pppStaticEndAddress = f.pppStaticEndAddress, enblIANA = f.enblIANA, defaultroute = f.defaultroute, defaultroutev6 = f.defaultroutev6, wanAddress6 = f.wanAddress6, wanAddress6prefix = f.wanAddress6prefix, wanGateway6 = f.wanGateway6, enblPD = f.enblPD, delegatePrefix = f.delegatePrefix, delegatePrefixLen = f.delegatePrefixLen, dns6Primary = f.dns6Primary, dns6Secondary = f.dns6Secondary, enbl6RD = f.enbl6RD, ipv6rdBrAddr = f.ipv6rdBrAddr, ipv6rdIpv4MaskLen = f.ipv6rdIpv4MaskLen, ipv6rdPrefix = f.ipv6rdPrefix, ipv6rdPrefixLen = f.ipv6rdPrefixLen, enblDSLite = f.enblDSLite, dsLiteServer = f.dsLiteServer, enable = f.enable, seletall = f.seletall, btn_edit = f.btn_edit, btn_del = f.btn_del, btn_add = f.btn_add;
+if(true)
 {if(nat.checked==true)
 {enblNat=1;}
 else
@@ -436,25 +456,21 @@ function checkAllVlanParam(vlanId)
 {return false;}}}
 return true;}
 function saveVlan()
-{var enVlanMux;var vlanMuxPr;var vlanMuxId;var vlanMuxMId;with(document.forms[0])
+{var enVlanMux;var vlanMuxPr;var vlanMuxId;var vlanMuxMId;var f = document.forms[0];
+var IpVersion = f.IpVersion, connMode = f.connMode, serviceMode = f.serviceMode, vlanMode = f.vlanMode, vlanID = f.vlanID, multiVID = f.multiVID, d8021 = f.d8021, mtu = f.mtu, nat = f.nat, ipAddr = f.ipAddr, netMask = f.netMask, defGW = f.defGW, firstDns = f.firstDns, secondDns = f.secondDns, userName = f.userName, uPsd = f.uPsd, dialMode = f.dialMode, idleTime = f.idleTime, EnableStaticIp = f.EnableStaticIp, pppStaticIPAddress = f.pppStaticIPAddress, pppStaticSubnetMask = f.pppStaticSubnetMask, pppStaticStartAddress = f.pppStaticStartAddress, pppStaticEndAddress = f.pppStaticEndAddress, enblIANA = f.enblIANA, defaultroute = f.defaultroute, defaultroutev6 = f.defaultroutev6, wanAddress6 = f.wanAddress6, wanAddress6prefix = f.wanAddress6prefix, wanGateway6 = f.wanGateway6, enblPD = f.enblPD, delegatePrefix = f.delegatePrefix, delegatePrefixLen = f.delegatePrefixLen, dns6Primary = f.dns6Primary, dns6Secondary = f.dns6Secondary, enbl6RD = f.enbl6RD, ipv6rdBrAddr = f.ipv6rdBrAddr, ipv6rdIpv4MaskLen = f.ipv6rdIpv4MaskLen, ipv6rdPrefix = f.ipv6rdPrefix, ipv6rdPrefixLen = f.ipv6rdPrefixLen, enblDSLite = f.enblDSLite, dsLiteServer = f.dsLiteServer, enable = f.enable, seletall = f.seletall, btn_edit = f.btn_edit, btn_del = f.btn_del, btn_add = f.btn_add;
+if(true)
 {if(vlanMode.value==2)
 {enVlanMux=1;}
 else
 {enVlanMux=0;vlanMuxId=0;vlanMuxPr=0;}
-if(enVlanMux&&vlanID.value=="")
-{parent.warninfo_show(_("wancfg_VLANIDError1"));return 0;}
 if(enVlanMux)
-{vlanMuxId=parseInt(vlanID.value);vlanMuxMId=parseInt(multiVID.value);}
+{vlanMuxId=parseInt(vlanID.value);vlanMuxMId=parseInt(multiVID.value);if(isNaN(vlanMuxId)) vlanMuxId=0;if(isNaN(vlanMuxMId)) vlanMuxMId=0;}
 else
 {vlanMuxId=0;vlanMuxPr=0;vlanMuxMId=0;}
 if(d8021.value=="")
 {vlanMuxPr=0;}
 else
 {vlanMuxPr=d8021.value;}
-if(enVlanMux&&(vlanMuxId<1||vlanMuxId>4094||isNumber(vlanID.value)==false))
-{parent.warninfo_show("VLAN ID : "+vlanID.value+" "+_("wancfg_VLANIDError2"));return 0;}
-if(enVlanMux&&(multiVID.value!="")&&(vlanMuxMId<1||vlanMuxMId>4094||isNumber(multiVID.value)==false))
-{parent.warninfo_show("MULTI VLAN ID : "+multiVID.value+" "+_("wancfg_VLANIDError2"));return 0;}
 if(enVlanMux&&(!vlanMuxMId)){vlanMuxMId=0;}
 apply_data.vlanmode=parseInt(vlanMode.value);apply_data.vlanid=parseInt(vlanMuxId);apply_data.multivid=parseInt(vlanMuxMId);apply_data.vlanpri=parseInt(vlanMuxPr);}
 return 1;}
@@ -467,7 +483,9 @@ return false;}
 function saveStaticIpAddr()
 {var wanIpAddress;var wanSubnetMask;var wanIntfGateway;var dnsPrimary;var dnsSecondary;if(apply_data.servicelist==4)
 {return 1;}
-with(document.forms[0])
+var f = document.forms[0];
+var IpVersion = f.IpVersion, connMode = f.connMode, serviceMode = f.serviceMode, vlanMode = f.vlanMode, vlanID = f.vlanID, multiVID = f.multiVID, d8021 = f.d8021, mtu = f.mtu, nat = f.nat, ipAddr = f.ipAddr, netMask = f.netMask, defGW = f.defGW, firstDns = f.firstDns, secondDns = f.secondDns, userName = f.userName, uPsd = f.uPsd, dialMode = f.dialMode, idleTime = f.idleTime, EnableStaticIp = f.EnableStaticIp, pppStaticIPAddress = f.pppStaticIPAddress, pppStaticSubnetMask = f.pppStaticSubnetMask, pppStaticStartAddress = f.pppStaticStartAddress, pppStaticEndAddress = f.pppStaticEndAddress, enblIANA = f.enblIANA, defaultroute = f.defaultroute, defaultroutev6 = f.defaultroutev6, wanAddress6 = f.wanAddress6, wanAddress6prefix = f.wanAddress6prefix, wanGateway6 = f.wanGateway6, enblPD = f.enblPD, delegatePrefix = f.delegatePrefix, delegatePrefixLen = f.delegatePrefixLen, dns6Primary = f.dns6Primary, dns6Secondary = f.dns6Secondary, enbl6RD = f.enbl6RD, ipv6rdBrAddr = f.ipv6rdBrAddr, ipv6rdIpv4MaskLen = f.ipv6rdIpv4MaskLen, ipv6rdPrefix = f.ipv6rdPrefix, ipv6rdPrefixLen = f.ipv6rdPrefixLen, enblDSLite = f.enblDSLite, dsLiteServer = f.dsLiteServer, enable = f.enable, seletall = f.seletall, btn_edit = f.btn_edit, btn_del = f.btn_del, btn_add = f.btn_add;
+if(true)
 {if(IpVersion.value==1||connMode.value!="route"||$('input:radio[name="ipproto"]:checked').val()!="static")
 {return 1;}
 wanIpAddress=ipAddr.value;wanSubnetMask=netMask.value;wanIntfGateway=defGW.value;dnsPrimary=firstDns.value;dnsSecondary=secondDns.value;if(isValidIpAddress(wanIpAddress)==false||checkIsSpecialIP(wanIpAddress)==true)
@@ -494,7 +512,9 @@ apply_data.ipaddr=wanIpAddress;apply_data.subnetmask=wanSubnetMask;apply_data.ga
 {apply_data.dns2=dnsSecondary;}}
 return 1;}
 function saveStaticIpv6Addr()
-{with(document.forms[0])
+{var f = document.forms[0];
+var IpVersion = f.IpVersion, connMode = f.connMode, serviceMode = f.serviceMode, vlanMode = f.vlanMode, vlanID = f.vlanID, multiVID = f.multiVID, d8021 = f.d8021, mtu = f.mtu, nat = f.nat, ipAddr = f.ipAddr, netMask = f.netMask, defGW = f.defGW, firstDns = f.firstDns, secondDns = f.secondDns, userName = f.userName, uPsd = f.uPsd, dialMode = f.dialMode, idleTime = f.idleTime, EnableStaticIp = f.EnableStaticIp, pppStaticIPAddress = f.pppStaticIPAddress, pppStaticSubnetMask = f.pppStaticSubnetMask, pppStaticStartAddress = f.pppStaticStartAddress, pppStaticEndAddress = f.pppStaticEndAddress, enblIANA = f.enblIANA, defaultroute = f.defaultroute, defaultroutev6 = f.defaultroutev6, wanAddress6 = f.wanAddress6, wanAddress6prefix = f.wanAddress6prefix, wanGateway6 = f.wanGateway6, enblPD = f.enblPD, delegatePrefix = f.delegatePrefix, delegatePrefixLen = f.delegatePrefixLen, dns6Primary = f.dns6Primary, dns6Secondary = f.dns6Secondary, enbl6RD = f.enbl6RD, ipv6rdBrAddr = f.ipv6rdBrAddr, ipv6rdIpv4MaskLen = f.ipv6rdIpv4MaskLen, ipv6rdPrefix = f.ipv6rdPrefix, ipv6rdPrefixLen = f.ipv6rdPrefixLen, enblDSLite = f.enblDSLite, dsLiteServer = f.dsLiteServer, enable = f.enable, seletall = f.seletall, btn_edit = f.btn_edit, btn_del = f.btn_del, btn_add = f.btn_add;
+if(true)
 {if(IpVersion.value==0||$('input:radio[name="ipproto"]:checked').val()!="static"||connMode.value!="route")
 {return 1;}
 var ipv6Addr;var ipv6prefix=wanAddress6prefix.value;if(wanAddress6prefix.value=='')
@@ -519,7 +539,9 @@ function checkDSLiteExist()
 {if(WanConnJson[i].dslite=='1')
 {return false;}}}
 return true;}
-function saveDslite(){with(document.forms[0]){if(!enblDSLite.checked){apply_data.dslite_mode=0;}else{if($('input:radio[name="dsliteMode"]:checked').val()=="dsliteAuto"){apply_data.dslite_mode=1;}
+function saveDslite(){var f = document.forms[0];
+var IpVersion = f.IpVersion, connMode = f.connMode, serviceMode = f.serviceMode, vlanMode = f.vlanMode, vlanID = f.vlanID, multiVID = f.multiVID, d8021 = f.d8021, mtu = f.mtu, nat = f.nat, ipAddr = f.ipAddr, netMask = f.netMask, defGW = f.defGW, firstDns = f.firstDns, secondDns = f.secondDns, userName = f.userName, uPsd = f.uPsd, dialMode = f.dialMode, idleTime = f.idleTime, EnableStaticIp = f.EnableStaticIp, pppStaticIPAddress = f.pppStaticIPAddress, pppStaticSubnetMask = f.pppStaticSubnetMask, pppStaticStartAddress = f.pppStaticStartAddress, pppStaticEndAddress = f.pppStaticEndAddress, enblIANA = f.enblIANA, defaultroute = f.defaultroute, defaultroutev6 = f.defaultroutev6, wanAddress6 = f.wanAddress6, wanAddress6prefix = f.wanAddress6prefix, wanGateway6 = f.wanGateway6, enblPD = f.enblPD, delegatePrefix = f.delegatePrefix, delegatePrefixLen = f.delegatePrefixLen, dns6Primary = f.dns6Primary, dns6Secondary = f.dns6Secondary, enbl6RD = f.enbl6RD, ipv6rdBrAddr = f.ipv6rdBrAddr, ipv6rdIpv4MaskLen = f.ipv6rdIpv4MaskLen, ipv6rdPrefix = f.ipv6rdPrefix, ipv6rdPrefixLen = f.ipv6rdPrefixLen, enblDSLite = f.enblDSLite, dsLiteServer = f.dsLiteServer, enable = f.enable, seletall = f.seletall, btn_edit = f.btn_edit, btn_del = f.btn_del, btn_add = f.btn_add;
+if(true){if(!enblDSLite.checked){apply_data.dslite_mode=0;}else{if($('input:radio[name="dsliteMode"]:checked').val()=="dsliteAuto"){apply_data.dslite_mode=1;}
 else{if(dsLiteServer.value==''){parent.warninfo_show(_("dsliteServer")+_("cannotBeEmptyError"));return-1;}
 if(dsLiteServer.value.indexOf(":")==-1){if(dsLiteServer.value.indexOf(".")==-1){parent.warninfo_show(_("dsliteServer")+dsLiteServer.value+_("isInvalidError"));return-1;}}else{if("::"==dsLiteServer.value||isValidIpv6Address(dsLiteServer.value)!=true||true==isMultiCastIpv6Address(dsLiteServer.value)){parent.warninfo_show(_("dsliteServer")+dsLiteServer.value+_("isInvalidError"));return-1;}
 if(!isGlobalIpv6Address(dsLiteServer.value)){parent.warninfo_show(_("dsliteServer")+dsLiteServer.value+_("isInvalidError"));return-1;}}
@@ -532,7 +554,9 @@ function checkIpv6rdExist()
 {if(WanConnJson[i].ipv6rd!=0)
 {return false;}}}
 return true;}
-function saveIpv6rd(){with(document.forms[0]){if(!enbl6RD.checked){apply_data.ipv6rd_mode=0;return 0;}else{if((checkIpv6rdExist()==false)){parent.warninfo_show(_("ipv6rdExistError"));return-1;}
+function saveIpv6rd(){var f = document.forms[0];
+var IpVersion = f.IpVersion, connMode = f.connMode, serviceMode = f.serviceMode, vlanMode = f.vlanMode, vlanID = f.vlanID, multiVID = f.multiVID, d8021 = f.d8021, mtu = f.mtu, nat = f.nat, ipAddr = f.ipAddr, netMask = f.netMask, defGW = f.defGW, firstDns = f.firstDns, secondDns = f.secondDns, userName = f.userName, uPsd = f.uPsd, dialMode = f.dialMode, idleTime = f.idleTime, EnableStaticIp = f.EnableStaticIp, pppStaticIPAddress = f.pppStaticIPAddress, pppStaticSubnetMask = f.pppStaticSubnetMask, pppStaticStartAddress = f.pppStaticStartAddress, pppStaticEndAddress = f.pppStaticEndAddress, enblIANA = f.enblIANA, defaultroute = f.defaultroute, defaultroutev6 = f.defaultroutev6, wanAddress6 = f.wanAddress6, wanAddress6prefix = f.wanAddress6prefix, wanGateway6 = f.wanGateway6, enblPD = f.enblPD, delegatePrefix = f.delegatePrefix, delegatePrefixLen = f.delegatePrefixLen, dns6Primary = f.dns6Primary, dns6Secondary = f.dns6Secondary, enbl6RD = f.enbl6RD, ipv6rdBrAddr = f.ipv6rdBrAddr, ipv6rdIpv4MaskLen = f.ipv6rdIpv4MaskLen, ipv6rdPrefix = f.ipv6rdPrefix, ipv6rdPrefixLen = f.ipv6rdPrefixLen, enblDSLite = f.enblDSLite, dsLiteServer = f.dsLiteServer, enable = f.enable, seletall = f.seletall, btn_edit = f.btn_edit, btn_del = f.btn_del, btn_add = f.btn_add;
+if(true){if(!enbl6RD.checked){apply_data.ipv6rd_mode=0;return 0;}else{if((checkIpv6rdExist()==false)){parent.warninfo_show(_("ipv6rdExistError"));return-1;}
 if($('input:radio[name="ipv6RDMode"]:checked').val()=="ipv6RDAuto"){apply_data.ipv6rd_mode=1;}
 else
 {if(ipv6rdBrAddr.value==''){parent.warninfo_show(_("ipv6rdBRV4Addr ")+_("cannotBeEmptyError"));return-1;}
@@ -546,7 +570,9 @@ var prefixLen;prefixLen=parseInt(ipv6rdPrefixLen.value);if(isNaN(ipv6rdPrefixLen
 apply_data.ipv6rd_ipv6prefix=ipv6rdPrefix.value;apply_data.ipv6rd_ipv6prefix_len=prefixLen;apply_data.ipv6rd_mode=2;}}}
 return 0;}
 function saveIpVersion()
-{var ver=2;with(document.forms[0])
+{var ver=2;var f = document.forms[0];
+var IpVersion = f.IpVersion, connMode = f.connMode, serviceMode = f.serviceMode, vlanMode = f.vlanMode, vlanID = f.vlanID, multiVID = f.multiVID, d8021 = f.d8021, mtu = f.mtu, nat = f.nat, ipAddr = f.ipAddr, netMask = f.netMask, defGW = f.defGW, firstDns = f.firstDns, secondDns = f.secondDns, userName = f.userName, uPsd = f.uPsd, dialMode = f.dialMode, idleTime = f.idleTime, EnableStaticIp = f.EnableStaticIp, pppStaticIPAddress = f.pppStaticIPAddress, pppStaticSubnetMask = f.pppStaticSubnetMask, pppStaticStartAddress = f.pppStaticStartAddress, pppStaticEndAddress = f.pppStaticEndAddress, enblIANA = f.enblIANA, defaultroute = f.defaultroute, defaultroutev6 = f.defaultroutev6, wanAddress6 = f.wanAddress6, wanAddress6prefix = f.wanAddress6prefix, wanGateway6 = f.wanGateway6, enblPD = f.enblPD, delegatePrefix = f.delegatePrefix, delegatePrefixLen = f.delegatePrefixLen, dns6Primary = f.dns6Primary, dns6Secondary = f.dns6Secondary, enbl6RD = f.enbl6RD, ipv6rdBrAddr = f.ipv6rdBrAddr, ipv6rdIpv4MaskLen = f.ipv6rdIpv4MaskLen, ipv6rdPrefix = f.ipv6rdPrefix, ipv6rdPrefixLen = f.ipv6rdPrefixLen, enblDSLite = f.enblDSLite, dsLiteServer = f.dsLiteServer, enable = f.enable, seletall = f.seletall, btn_edit = f.btn_edit, btn_del = f.btn_del, btn_add = f.btn_add;
+if(true)
 {if(connMode.value!="bridge")
 {if(IpVersion.value==0)
 {ver=1;}
@@ -563,7 +589,9 @@ function isContainNOSupportChar(str)
 {return true;}}
 return false;}
 function savePppParam()
-{var pppUserName;var pppPassword;var pppServerName;var pppIdleTime;var pppStaticIPEnable;var pppIpAddr;var pppInetMask;var pppIpStartAddr;var pppIpEndAddr;with(document.forms[0])
+{var pppUserName;var pppPassword;var pppServerName;var pppIdleTime;var pppStaticIPEnable;var pppIpAddr;var pppInetMask;var pppIpStartAddr;var pppIpEndAddr;var f = document.forms[0];
+var IpVersion = f.IpVersion, connMode = f.connMode, serviceMode = f.serviceMode, vlanMode = f.vlanMode, vlanID = f.vlanID, multiVID = f.multiVID, d8021 = f.d8021, mtu = f.mtu, nat = f.nat, ipAddr = f.ipAddr, netMask = f.netMask, defGW = f.defGW, firstDns = f.firstDns, secondDns = f.secondDns, userName = f.userName, uPsd = f.uPsd, dialMode = f.dialMode, idleTime = f.idleTime, EnableStaticIp = f.EnableStaticIp, pppStaticIPAddress = f.pppStaticIPAddress, pppStaticSubnetMask = f.pppStaticSubnetMask, pppStaticStartAddress = f.pppStaticStartAddress, pppStaticEndAddress = f.pppStaticEndAddress, enblIANA = f.enblIANA, defaultroute = f.defaultroute, defaultroutev6 = f.defaultroutev6, wanAddress6 = f.wanAddress6, wanAddress6prefix = f.wanAddress6prefix, wanGateway6 = f.wanGateway6, enblPD = f.enblPD, delegatePrefix = f.delegatePrefix, delegatePrefixLen = f.delegatePrefixLen, dns6Primary = f.dns6Primary, dns6Secondary = f.dns6Secondary, enbl6RD = f.enbl6RD, ipv6rdBrAddr = f.ipv6rdBrAddr, ipv6rdIpv4MaskLen = f.ipv6rdIpv4MaskLen, ipv6rdPrefix = f.ipv6rdPrefix, ipv6rdPrefixLen = f.ipv6rdPrefixLen, enblDSLite = f.enblDSLite, dsLiteServer = f.dsLiteServer, enable = f.enable, seletall = f.seletall, btn_edit = f.btn_edit, btn_del = f.btn_del, btn_add = f.btn_add;
+if(true)
 {if(connMode.value!="route"||$('input:radio[name="ipproto"]:checked').val()!="pppoe")
 {return 1;}
 pppUserName=userName.value;pppPassword=uPsd.value;if(dialMode.value==1)
@@ -604,7 +632,9 @@ if(pppIpStartAddr.length>0&&!cmpIpAddress(pppIpStartAddr,pppIpEndAddr)){parent.w
 apply_data.dial=pppIdleTime*60;apply_data.pppoename=pppUserName;apply_data.pppoepwd=getAES(pppPassword);apply_data.PPPoEStaticIPEnable=pppStaticIPEnable;apply_data.PPPoEStaticAddr=pppIpAddr;apply_data.PPPoEStaticMask=pppInetMask;apply_data.PPPoEStaticStartAddr=pppIpStartAddr;apply_data.PPPoEStaticEndAddr=pppIpEndAddr;}
 return 1;}
 function saveConnType()
-{var wanConnType;var index=0;with(document.forms[0])
+{var wanConnType;var index=0;var f = document.forms[0];
+var IpVersion = f.IpVersion, connMode = f.connMode, serviceMode = f.serviceMode, vlanMode = f.vlanMode, vlanID = f.vlanID, multiVID = f.multiVID, d8021 = f.d8021, mtu = f.mtu, nat = f.nat, ipAddr = f.ipAddr, netMask = f.netMask, defGW = f.defGW, firstDns = f.firstDns, secondDns = f.secondDns, userName = f.userName, uPsd = f.uPsd, dialMode = f.dialMode, idleTime = f.idleTime, EnableStaticIp = f.EnableStaticIp, pppStaticIPAddress = f.pppStaticIPAddress, pppStaticSubnetMask = f.pppStaticSubnetMask, pppStaticStartAddress = f.pppStaticStartAddress, pppStaticEndAddress = f.pppStaticEndAddress, enblIANA = f.enblIANA, defaultroute = f.defaultroute, defaultroutev6 = f.defaultroutev6, wanAddress6 = f.wanAddress6, wanAddress6prefix = f.wanAddress6prefix, wanGateway6 = f.wanGateway6, enblPD = f.enblPD, delegatePrefix = f.delegatePrefix, delegatePrefixLen = f.delegatePrefixLen, dns6Primary = f.dns6Primary, dns6Secondary = f.dns6Secondary, enbl6RD = f.enbl6RD, ipv6rdBrAddr = f.ipv6rdBrAddr, ipv6rdIpv4MaskLen = f.ipv6rdIpv4MaskLen, ipv6rdPrefix = f.ipv6rdPrefix, ipv6rdPrefixLen = f.ipv6rdPrefixLen, enblDSLite = f.enblDSLite, dsLiteServer = f.dsLiteServer, enable = f.enable, seletall = f.seletall, btn_edit = f.btn_edit, btn_del = f.btn_del, btn_add = f.btn_add;
+if(true)
 {if(connMode.value=="bridge")
 {wanConnType="ap-bridge";}
 else
@@ -620,7 +650,9 @@ else
 apply_data.networktype=wanConnType;}
 return 1;}
 function saveIpv6Param()
-{var dhcp6cForPd=0;var dhcp6cForAddr=0;with(document.forms[0])
+{var dhcp6cForPd=0;var dhcp6cForAddr=0;var f = document.forms[0];
+var IpVersion = f.IpVersion, connMode = f.connMode, serviceMode = f.serviceMode, vlanMode = f.vlanMode, vlanID = f.vlanID, multiVID = f.multiVID, d8021 = f.d8021, mtu = f.mtu, nat = f.nat, ipAddr = f.ipAddr, netMask = f.netMask, defGW = f.defGW, firstDns = f.firstDns, secondDns = f.secondDns, userName = f.userName, uPsd = f.uPsd, dialMode = f.dialMode, idleTime = f.idleTime, EnableStaticIp = f.EnableStaticIp, pppStaticIPAddress = f.pppStaticIPAddress, pppStaticSubnetMask = f.pppStaticSubnetMask, pppStaticStartAddress = f.pppStaticStartAddress, pppStaticEndAddress = f.pppStaticEndAddress, enblIANA = f.enblIANA, defaultroute = f.defaultroute, defaultroutev6 = f.defaultroutev6, wanAddress6 = f.wanAddress6, wanAddress6prefix = f.wanAddress6prefix, wanGateway6 = f.wanGateway6, enblPD = f.enblPD, delegatePrefix = f.delegatePrefix, delegatePrefixLen = f.delegatePrefixLen, dns6Primary = f.dns6Primary, dns6Secondary = f.dns6Secondary, enbl6RD = f.enbl6RD, ipv6rdBrAddr = f.ipv6rdBrAddr, ipv6rdIpv4MaskLen = f.ipv6rdIpv4MaskLen, ipv6rdPrefix = f.ipv6rdPrefix, ipv6rdPrefixLen = f.ipv6rdPrefixLen, enblDSLite = f.enblDSLite, dsLiteServer = f.dsLiteServer, enable = f.enable, seletall = f.seletall, btn_edit = f.btn_edit, btn_del = f.btn_del, btn_add = f.btn_add;
+if(true)
 {if(enblPD.checked)
 {dhcp6cForPd=1;}
 else
@@ -642,21 +674,27 @@ else
 apply_data.prefixsrc=dhcp6cForPd;apply_data.guasrc=dhcp6cForAddr;}
 return 1;}
 function saveDefaultroute()
-{with(document.forms[0])
+{var f = document.forms[0];
+var IpVersion = f.IpVersion, connMode = f.connMode, serviceMode = f.serviceMode, vlanMode = f.vlanMode, vlanID = f.vlanID, multiVID = f.multiVID, d8021 = f.d8021, mtu = f.mtu, nat = f.nat, ipAddr = f.ipAddr, netMask = f.netMask, defGW = f.defGW, firstDns = f.firstDns, secondDns = f.secondDns, userName = f.userName, uPsd = f.uPsd, dialMode = f.dialMode, idleTime = f.idleTime, EnableStaticIp = f.EnableStaticIp, pppStaticIPAddress = f.pppStaticIPAddress, pppStaticSubnetMask = f.pppStaticSubnetMask, pppStaticStartAddress = f.pppStaticStartAddress, pppStaticEndAddress = f.pppStaticEndAddress, enblIANA = f.enblIANA, defaultroute = f.defaultroute, defaultroutev6 = f.defaultroutev6, wanAddress6 = f.wanAddress6, wanAddress6prefix = f.wanAddress6prefix, wanGateway6 = f.wanGateway6, enblPD = f.enblPD, delegatePrefix = f.delegatePrefix, delegatePrefixLen = f.delegatePrefixLen, dns6Primary = f.dns6Primary, dns6Secondary = f.dns6Secondary, enbl6RD = f.enbl6RD, ipv6rdBrAddr = f.ipv6rdBrAddr, ipv6rdIpv4MaskLen = f.ipv6rdIpv4MaskLen, ipv6rdPrefix = f.ipv6rdPrefix, ipv6rdPrefixLen = f.ipv6rdPrefixLen, enblDSLite = f.enblDSLite, dsLiteServer = f.dsLiteServer, enable = f.enable, seletall = f.seletall, btn_edit = f.btn_edit, btn_del = f.btn_del, btn_add = f.btn_add;
+if(true)
 {if(defaultroute.checked==true)
 {apply_data.is_defaultroute=1;}
 else
 {apply_data.is_defaultroute=0;}
 return true;}}
 function saveDefaultroutev6()
-{with(document.forms[0])
+{var f = document.forms[0];
+var IpVersion = f.IpVersion, connMode = f.connMode, serviceMode = f.serviceMode, vlanMode = f.vlanMode, vlanID = f.vlanID, multiVID = f.multiVID, d8021 = f.d8021, mtu = f.mtu, nat = f.nat, ipAddr = f.ipAddr, netMask = f.netMask, defGW = f.defGW, firstDns = f.firstDns, secondDns = f.secondDns, userName = f.userName, uPsd = f.uPsd, dialMode = f.dialMode, idleTime = f.idleTime, EnableStaticIp = f.EnableStaticIp, pppStaticIPAddress = f.pppStaticIPAddress, pppStaticSubnetMask = f.pppStaticSubnetMask, pppStaticStartAddress = f.pppStaticStartAddress, pppStaticEndAddress = f.pppStaticEndAddress, enblIANA = f.enblIANA, defaultroute = f.defaultroute, defaultroutev6 = f.defaultroutev6, wanAddress6 = f.wanAddress6, wanAddress6prefix = f.wanAddress6prefix, wanGateway6 = f.wanGateway6, enblPD = f.enblPD, delegatePrefix = f.delegatePrefix, delegatePrefixLen = f.delegatePrefixLen, dns6Primary = f.dns6Primary, dns6Secondary = f.dns6Secondary, enbl6RD = f.enbl6RD, ipv6rdBrAddr = f.ipv6rdBrAddr, ipv6rdIpv4MaskLen = f.ipv6rdIpv4MaskLen, ipv6rdPrefix = f.ipv6rdPrefix, ipv6rdPrefixLen = f.ipv6rdPrefixLen, enblDSLite = f.enblDSLite, dsLiteServer = f.dsLiteServer, enable = f.enable, seletall = f.seletall, btn_edit = f.btn_edit, btn_del = f.btn_del, btn_add = f.btn_add;
+if(true)
 {if(defaultroutev6.checked==true)
 {apply_data.is_defaultroute_v6=1;}
 else
 {apply_data.is_defaultroute_v6=0;}
 return true;}}
 function btnSave()
-{var ubusparam=new Array();var jsonparam={};apply_data={};with(document.forms[0])
+{var ubusparam=new Array();var jsonparam={};apply_data={};var f = document.forms[0];
+var IpVersion = f.IpVersion, connMode = f.connMode, serviceMode = f.serviceMode, vlanMode = f.vlanMode, vlanID = f.vlanID, multiVID = f.multiVID, d8021 = f.d8021, mtu = f.mtu, nat = f.nat, ipAddr = f.ipAddr, netMask = f.netMask, defGW = f.defGW, firstDns = f.firstDns, secondDns = f.secondDns, userName = f.userName, uPsd = f.uPsd, dialMode = f.dialMode, idleTime = f.idleTime, EnableStaticIp = f.EnableStaticIp, pppStaticIPAddress = f.pppStaticIPAddress, pppStaticSubnetMask = f.pppStaticSubnetMask, pppStaticStartAddress = f.pppStaticStartAddress, pppStaticEndAddress = f.pppStaticEndAddress, enblIANA = f.enblIANA, defaultroute = f.defaultroute, defaultroutev6 = f.defaultroutev6, wanAddress6 = f.wanAddress6, wanAddress6prefix = f.wanAddress6prefix, wanGateway6 = f.wanGateway6, enblPD = f.enblPD, delegatePrefix = f.delegatePrefix, delegatePrefixLen = f.delegatePrefixLen, dns6Primary = f.dns6Primary, dns6Secondary = f.dns6Secondary, enbl6RD = f.enbl6RD, ipv6rdBrAddr = f.ipv6rdBrAddr, ipv6rdIpv4MaskLen = f.ipv6rdIpv4MaskLen, ipv6rdPrefix = f.ipv6rdPrefix, ipv6rdPrefixLen = f.ipv6rdPrefixLen, enblDSLite = f.enblDSLite, dsLiteServer = f.dsLiteServer, enable = f.enable, seletall = f.seletall, btn_edit = f.btn_edit, btn_del = f.btn_del, btn_add = f.btn_add;
+if(true)
 {if(enable.checked==true){apply_data.enable=1;}else{apply_data.enable=0;}
 if(!saveMtu()||!saveServMode()||!saveBindPort()||!saveNat()||!saveVlan())
 {return;}
@@ -696,7 +734,9 @@ selist[i].checked=true;else
 selist[i].checked=false;}
 changeSel();}
 function changeSel()
-{with(document.forms[0])
+{var f = document.forms[0];
+var IpVersion = f.IpVersion, connMode = f.connMode, serviceMode = f.serviceMode, vlanMode = f.vlanMode, vlanID = f.vlanID, multiVID = f.multiVID, d8021 = f.d8021, mtu = f.mtu, nat = f.nat, ipAddr = f.ipAddr, netMask = f.netMask, defGW = f.defGW, firstDns = f.firstDns, secondDns = f.secondDns, userName = f.userName, uPsd = f.uPsd, dialMode = f.dialMode, idleTime = f.idleTime, EnableStaticIp = f.EnableStaticIp, pppStaticIPAddress = f.pppStaticIPAddress, pppStaticSubnetMask = f.pppStaticSubnetMask, pppStaticStartAddress = f.pppStaticStartAddress, pppStaticEndAddress = f.pppStaticEndAddress, enblIANA = f.enblIANA, defaultroute = f.defaultroute, defaultroutev6 = f.defaultroutev6, wanAddress6 = f.wanAddress6, wanAddress6prefix = f.wanAddress6prefix, wanGateway6 = f.wanGateway6, enblPD = f.enblPD, delegatePrefix = f.delegatePrefix, delegatePrefixLen = f.delegatePrefixLen, dns6Primary = f.dns6Primary, dns6Secondary = f.dns6Secondary, enbl6RD = f.enbl6RD, ipv6rdBrAddr = f.ipv6rdBrAddr, ipv6rdIpv4MaskLen = f.ipv6rdIpv4MaskLen, ipv6rdPrefix = f.ipv6rdPrefix, ipv6rdPrefixLen = f.ipv6rdPrefixLen, enblDSLite = f.enblDSLite, dsLiteServer = f.dsLiteServer, enable = f.enable, seletall = f.seletall, btn_edit = f.btn_edit, btn_del = f.btn_del, btn_add = f.btn_add;
+if(true)
 {var selectnum=0;var selist=$("input[name='rml']");if(selist.length==0||selist.length===undefined)
 {seletall.checked=false;btn_edit.disabled=true;btn_del.disabled=true;return;}
 else
@@ -725,7 +765,9 @@ else if(lanPortNum=='2')
 else if(lanPortNum=='1')
 {$("#LanTable2").hide();$("#LanTable3").hide();$("#LanTable4").hide();}}
 function checkWanNum()
-{with(document.forms[0])
+{var f = document.forms[0];
+var IpVersion = f.IpVersion, connMode = f.connMode, serviceMode = f.serviceMode, vlanMode = f.vlanMode, vlanID = f.vlanID, multiVID = f.multiVID, d8021 = f.d8021, mtu = f.mtu, nat = f.nat, ipAddr = f.ipAddr, netMask = f.netMask, defGW = f.defGW, firstDns = f.firstDns, secondDns = f.secondDns, userName = f.userName, uPsd = f.uPsd, dialMode = f.dialMode, idleTime = f.idleTime, EnableStaticIp = f.EnableStaticIp, pppStaticIPAddress = f.pppStaticIPAddress, pppStaticSubnetMask = f.pppStaticSubnetMask, pppStaticStartAddress = f.pppStaticStartAddress, pppStaticEndAddress = f.pppStaticEndAddress, enblIANA = f.enblIANA, defaultroute = f.defaultroute, defaultroutev6 = f.defaultroutev6, wanAddress6 = f.wanAddress6, wanAddress6prefix = f.wanAddress6prefix, wanGateway6 = f.wanGateway6, enblPD = f.enblPD, delegatePrefix = f.delegatePrefix, delegatePrefixLen = f.delegatePrefixLen, dns6Primary = f.dns6Primary, dns6Secondary = f.dns6Secondary, enbl6RD = f.enbl6RD, ipv6rdBrAddr = f.ipv6rdBrAddr, ipv6rdIpv4MaskLen = f.ipv6rdIpv4MaskLen, ipv6rdPrefix = f.ipv6rdPrefix, ipv6rdPrefixLen = f.ipv6rdPrefixLen, enblDSLite = f.enblDSLite, dsLiteServer = f.dsLiteServer, enable = f.enable, seletall = f.seletall, btn_edit = f.btn_edit, btn_del = f.btn_del, btn_add = f.btn_add;
+if(true)
 {if(WanConnJson.length>=8)
 {btn_add.disabled=true;}
 else

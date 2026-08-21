@@ -10,9 +10,9 @@ if (!window.DEVICES || window.DEVICES.length === 0) {
       window.DEVICE_AX3000C,
       window.DEVICE_AX3000GZ,
       window.DEVICE_AX3000HV2,
-      window.DEVICE_AX3000S,
       window.DEVICE_BE12000,
       window.DEVICE_BE15000,
+      window.DEVICE_AX3000S,
       window.DEVICE_VIGOR2927,
     ].filter(Boolean);
   }

@@ -109,6 +109,25 @@
       if (currentIframeUrl) window.open(currentIframeUrl, '_blank', 'noopener');
     });
     if (btnSubmitLab) btnSubmitLab.addEventListener('click', submitLab);
+    const btnGuideErrors = document.getElementById('btn-guide-errors');
+    if (btnGuideErrors) {
+      btnGuideErrors.addEventListener('click', () => {
+        const device = DEVICES.find(d => d.id === currentDeviceId);
+        const lesson = getCurrentLesson();
+        if (device && lesson) {
+          const evalResult = evaluateLesson(device, lesson);
+
+          // Lấy thời gian thực để hiển thị trên bảng báo lỗi
+          let elapsed = 0;
+          if (typeof _practiceStartTime !== 'undefined' && _practiceStartTime) {
+            elapsed = Math.floor((new Date() - _practiceStartTime) / 1000);
+          }
+
+          // Show modal but don't record to DB (since it's Guide mode preview)
+          showGradingModal(evalResult, device, lesson, currentMode, elapsed);
+        }
+      });
+    }
 
     // ── Grading Modal Events ──────────────────────────────────────────
 
@@ -116,7 +135,7 @@
     if (gradingBackdrop) gradingBackdrop.addEventListener('click', () => {
       // KHÓA màn hình nếu CHƯA ĐẠT ở chế độ Thực hành
       if (_lastEvalResult && !_lastEvalResult.passed && currentMode === 'practice') return;
-      
+
       // Nếu ĐẠT: Đóng và quay về danh sách bài học
       if (_lastEvalResult && _lastEvalResult.passed) {
         hideGradingModal();
@@ -154,6 +173,28 @@
           clearGuidePopups();
         }
       }
+      // Nhận tín hiệu Save thành công từ simulator AX3000H v2 (qua postMessage cross-origin)
+      if (event.data && event.data.type === 'FTC_SAVE_SUCCESS') {
+        // Delay nhỏ để frame đã load xong và đặt document._ftcIsSaved = true trước khi đọc
+        setTimeout(function () {
+          try {
+            const allDocs = getAllAccessibleDocuments(deviceIframe.contentWindow);
+            let savedWin = null;
+            for (const doc of allDocs) {
+              if (doc._ftcIsSaved) {
+                savedWin = doc.defaultView || doc.parentWindow;
+                break;
+              }
+            }
+            // Nếu không tìm thấy frame cụ thể, dùng contentWindow của iframe
+            if (!savedWin) savedWin = deviceIframe.contentWindow;
+            if (typeof window.onSimulatorSave === 'function') {
+              window.onSimulatorSave(savedWin);
+            }
+          } catch (e) { }
+        }, 300);
+      }
+
     });
 
     // When iframe loads, trigger popups if in guide mode + clear fields
@@ -170,7 +211,7 @@
       // Xóa trắng các field được khai báo trong clearFields của bài học
       setTimeout(clearLessonFields, 300);
       setTimeout(clearLessonFields, 900);
-      
+
       // Gọi hook phục hồi dữ liệu nếu bài học có định nghĩa
       if (_currentLesson && typeof _currentLesson.onSimLoad === 'function') {
         setTimeout(() => { _currentLesson.onSimLoad(deviceIframe.contentWindow); }, 400);
@@ -185,51 +226,249 @@
           // Xóa trắng trường của bài học cho cả Hướng dẫn và Thực hành khi load trang mới
           clearLessonFields();
 
-          if (currentMode === 'guide') {
-            applyGuidePopups();
-            
-            // Theo dõi sự kiện click vào nút Save/Apply trong iframe
-            try {
-              const allDocs = getAllAccessibleDocuments(deviceIframe.contentWindow);
-              allDocs.forEach(doc => {
-                if (!doc._ftcSaveListenerAttached) {
-                  doc.addEventListener('click', function(e) {
+          // Theo dõi sự kiện click vào nút Save/Apply trong iframe (chạy cho cả Hướng dẫn và Thực hành)
+          try {
+            const allDocs = getAllAccessibleDocuments(deviceIframe.contentWindow);
+            allDocs.forEach(doc => {
+              // Liên tục Tắt gợi ý mật khẩu/tự động điền (Autocomplete/Saved Info) bằng phương pháp mạnh (readonly hack)
+              try {
+                doc.querySelectorAll('form:not([data-autofill-disabled]), input:not([data-autofill-disabled])').forEach(el => {
+                  el.setAttribute('data-autofill-disabled', 'true');
+                  el.setAttribute('autocomplete', 'off'); // Chuẩn chung
+                  el.setAttribute('data-lpignore', 'true'); // Chặn LastPass
+                  el.setAttribute('data-form-type', 'other');
+
+                  if (el.tagName === 'INPUT' && (el.type === 'text' || el.type === 'password' || el.type === 'number')) {
+                    // Bỏ qua các ô vốn dĩ đã bị khóa (readonly / disabled) từ mã HTML gốc
+                    if (el.hasAttribute('readonly') || el.hasAttribute('disabled')) {
+                      return;
+                    }
+
+                    // Cài cắm cạm bẫy readonly: Edge/Chrome sẽ không hiện popup Saved Info trên ô readonly.
+                    // Khi người dùng thực sự bấm vào hoặc tab vào, ta mới gỡ readonly ra.
+                    el.setAttribute('readonly', 'readonly');
+
+                    const removeReadonly = function () {
+                      if (el.hasAttribute('readonly')) {
+                        el.removeAttribute('readonly');
+                      }
+                    };
+
+                    el.addEventListener('focus', removeReadonly);
+                    el.addEventListener('click', removeReadonly);
+                    el.addEventListener('mousedown', removeReadonly);
+
+                    // Khôi phục readonly khi rời chuột/focus để đảm bảo chặn triệt để
+                    el.addEventListener('blur', function () {
+                      if (el.value === '') {
+                        el.setAttribute('readonly', 'readonly');
+                      }
+                    });
+                  }
+                });
+              } catch (e) { }
+
+              if (!doc._ftcSaveListenerAttached) {
+
+                // Ràng buộc đăng nhập thiết bị bắt buộc nhập admin / admin
+                const loc = (doc.location && doc.location.href) ? doc.location.href.toLowerCase() : '';
+                const hsh = (doc.location && doc.location.hash) ? doc.location.hash.toLowerCase() : '';
+                const isMainPage = hsh.includes('#/home') || hsh.includes('#/network') || hsh.includes('#/system') || hsh.includes('#/status') || hsh.includes('#/device');
+                const isLogin = !isMainPage && (loc.includes('login') || hsh.includes('login') || doc.querySelector('.login-fpt, form[action*="login"]'));
+
+                if (isLogin) {
+                  const checkLoginFields = function (e, triggerEl) {
+                    // Cố gắng tìm các ô nhập liệu user/pass trên trang (lấy mọi input không bị ẩn)
+                    const inputs = Array.from(doc.querySelectorAll('input')).filter(i => i.type !== 'hidden' && i.style.display !== 'none' && !i.disabled);
+                    let isOk = false;
+
+                    let hasAdminPass = false;
+                    let hasAdminUser = false;
+                    let hasPasswordType = false;
+
+                    inputs.forEach(i => {
+                      if (i.type === 'password') {
+                        hasPasswordType = true;
+                        if (i.value.trim() === 'admin') hasAdminPass = true;
+                      } else if (i.tagName === 'INPUT' && (i.type === 'text' || !i.type)) {
+                        if (i.value.trim() === 'admin') hasAdminUser = true;
+                      }
+                    });
+
+                    // Xác định hợp lệ:
+                    if (hasPasswordType) {
+                      if (inputs.length > 1) {
+                        if (hasAdminPass && hasAdminUser) isOk = true;
+                      } else {
+                        if (hasAdminPass) isOk = true;
+                      }
+                    } else {
+                      if (inputs.length >= 2 && inputs[0].value.trim() === 'admin' && inputs[1].value.trim() === 'admin') {
+                        isOk = true;
+                      } else if (inputs.length === 1 && inputs[0].value.trim() === 'admin') {
+                        isOk = true;
+                      }
+                    }
+
+                    if (!isOk && inputs.length > 0) {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      e.stopImmediatePropagation();
+                      alert("Tên đăng nhập hoặc mật khẩu không chính xác! (Gợi ý: admin / admin)");
+                      return false;
+                    }
+                    return true;
+                  };
+
+                  doc.addEventListener('click', function (e) {
                     let el = e.target;
-                    while(el && el !== doc) {
-                      if ((el.tagName === 'INPUT' || el.tagName === 'BUTTON') && 
-                          (el.type === 'submit' || (el.value || el.textContent || '').toLowerCase().includes('save') || (el.value || el.textContent || '').toLowerCase().includes('apply'))) {
-                        window._hasClickedSaveInGuide = true;
+                    while (el && el !== doc) {
+                      const txt = (el.value || el.textContent || el.innerText || '').toLowerCase();
+                      const cls = (el.className && typeof el.className === 'string') ? el.className.toLowerCase() : '';
+                      const id = (el.id || '').toLowerCase();
+
+                      if ((el.tagName === 'INPUT' || el.tagName === 'BUTTON' || el.tagName === 'A' || el.tagName === 'SPAN') &&
+                        (el.type === 'submit' || txt.includes('login') || txt.includes('log in') || txt.includes('đăng nhập') || id.includes('login') || cls.includes('login') || cls.includes('btn-primary') || cls.includes('submit'))) {
+
+                        if (!checkLoginFields(e, el)) return false;
                       }
                       el = el.parentNode;
                     }
                   }, true);
-                  doc._ftcSaveListenerAttached = true;
+
+                  doc.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter' || e.keyCode === 13) {
+                      if (!checkLoginFields(e, e.target)) return false;
+                    }
+                  }, true);
                 }
-              });
-            } catch(e) {}
+
+                // Sự kiện click nút Save/Apply
+                doc.addEventListener('click', function (e) {
+                  let el = e.target;
+                  while (el && el !== doc) {
+                    if ((el.tagName === 'INPUT' || el.tagName === 'BUTTON') &&
+                      (el.type === 'submit' || (el.value || el.textContent || '').toLowerCase().includes('save') || (el.value || el.textContent || '').toLowerCase().includes('apply'))) {
+                      window._hasClickedSaveInGuide = true;
+                      if (currentDeviceId === 'ax3000s') {
+                        doc._ftcIsSaved = true;
+                        if (typeof window.onSimulatorSave === 'function') window.onSimulatorSave(doc.defaultView || doc.parentWindow);
+                      }
+                    }
+                    el = el.parentNode;
+                  }
+                }, true);
+
+                // Đánh dấu người dùng đã chạm vào ô nhập liệu để tránh bị clear tự động
+                // Đồng thời hủy bỏ trạng thái "Đã Save" nếu người dùng sửa lại dữ liệu
+                doc.addEventListener('input', function (e) {
+                  if (e.target) {
+                    e.target._ftcUserModified = true;
+                  }
+                  window._hasClickedSaveInGuide = false;
+                  if (currentDeviceId === 'ax3000s') {
+                    doc._ftcIsSaved = false;
+                  }
+                }, true);
+                doc.addEventListener('change', function (e) {
+                  if (e.target) {
+                    e.target._ftcUserModified = true;
+                  }
+                  window._hasClickedSaveInGuide = false;
+                  if (currentDeviceId === 'ax3000s') {
+                    doc._ftcIsSaved = false;
+                  }
+                }, true);
+
+                // === BẮT LỖI TƯƠNG TÁC CHÍNH XÁC TUYỆT ĐỐI (Dành riêng cho SPAs) ===
+                if (!doc._ftcOriginalValues) doc._ftcOriginalValues = {};
+
+                const captureBeforeEdit = function (e) {
+                  if (!e.isTrusted) return; // Chỉ bắt người dùng thật
+                  let el = e.target;
+                  // Nếu click vào thẻ label bọc input, lấy input bên trong
+                  if (el.tagName === 'LABEL') {
+                    const input = el.querySelector('input, select, textarea');
+                    if (input) el = input;
+                  }
+                  if (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA') {
+                    if (!el.dataset.ftcId) el.dataset.ftcId = 'ftc_' + Math.random().toString(36).substr(2, 9);
+                    const uid = el.dataset.ftcId;
+                    // Lưu lại giá trị của field NGAY TRƯỚC KHI người dùng kịp thay đổi nó
+                    if (doc._ftcOriginalValues[uid] === undefined) {
+                      doc._ftcOriginalValues[uid] = (el.type === 'checkbox' || el.type === 'radio') ? el.checked : el.value;
+                    }
+                  }
+                };
+
+                // Mousedown và Focusin kích hoạt ngay trước khi giá trị kịp thay đổi
+                doc.addEventListener('mousedown', captureBeforeEdit, true);
+                doc.addEventListener('focusin', captureBeforeEdit, true);
+                // =================================================================
+
+                doc._ftcSaveListenerAttached = true;
+              }
+            });
+          } catch (e) { }
+
+          if (currentMode === 'guide') {
+            applyGuidePopups();
 
             // Tự động kiểm tra hoàn thành để mở nút Nộp bài trong chế độ Hướng dẫn
-            if (btnSubmitLab && btnSubmitLab.disabled) {
-              const device = DEVICES.find(d => d.id === currentDeviceId);
-              const lesson = getCurrentLesson();
-              if (device && lesson) {
-                const evalResult = evaluateLesson(device, lesson);
-                
-                // Kiểm tra xem bài học có yêu cầu bấm Save/Apply không thông qua tooltip
-                let requiresSave = false;
-                const popups = getLessonPopupsForDoc(device.id, lesson, null) || [];
-                const popupsStr = JSON.stringify(popups).toLowerCase();
-                if (popupsStr.includes('save') || popupsStr.includes('apply')) {
-                  requiresSave = true;
-                }
+            const device = DEVICES.find(d => d.id === currentDeviceId);
+            const lesson = getCurrentLesson();
+            if (device && lesson) {
+              const evalResult = evaluateLesson(device, lesson);
+              // === GUIDE MODE: AUTO-BASELINE UI ===
+              let btnGuideErrors = document.getElementById('btn-guide-errors');
+              if (btnGuideErrors) {
+                if (currentMode === 'guide' && evalResult) {
+                  const unexpectedError = evalResult.details.find(d => d.id.startsWith('unexpected_change'));
+                  const hasMissingSteps = !evalResult.passed;
 
+                  if (unexpectedError || hasMissingSteps) {
+                    btnGuideErrors.style.display = 'flex';
+
+                    // Ẩn xám nút nếu học viên chưa bấm Save
+                    if (!window._hasClickedSaveInGuide) {
+                      btnGuideErrors.disabled = true;
+                      btnGuideErrors.style.opacity = '0.5';
+                      btnGuideErrors.style.cursor = 'not-allowed';
+                      btnGuideErrors.style.background = '#f3f4f6';
+                      btnGuideErrors.style.color = '#9ca3af';
+                      btnGuideErrors.style.borderColor = '#d1d5db';
+                    } else {
+                      btnGuideErrors.disabled = false;
+                      btnGuideErrors.style.opacity = '1';
+                      btnGuideErrors.style.cursor = 'pointer';
+                      btnGuideErrors.style.background = '#fee2e2';
+                      btnGuideErrors.style.color = '#ef4444';
+                      btnGuideErrors.style.borderColor = '#fca5a5';
+                    }
+                  } else {
+                    btnGuideErrors.style.display = 'none';
+                  }
+                } else {
+                  btnGuideErrors.style.display = 'none';
+                }
+              }
+              // ====================================
+
+              if (btnSubmitLab && btnSubmitLab.disabled) {
                 if (evalResult && evalResult.passed) {
-                  // Chỉ bật nút nếu (Không cần Save) HOẶC (Đã bấm Save)
-                  if (!requiresSave || window._hasClickedSaveInGuide) {
+                  // Chỉ bật nút nếu Đã bấm Save
+                  if (window._hasClickedSaveInGuide) {
                     btnSubmitLab.disabled = false;
                     btnSubmitLab.style.opacity = '1';
                     btnSubmitLab.style.cursor = 'pointer';
                   }
+                }
+              } else if (btnSubmitLab && !btnSubmitLab.disabled) {
+                // Tự động tắt nút nếu học viên lỡ tay làm sai sau khi đã làm đúng hoặc chưa save lại
+                if (evalResult && (!evalResult.passed || !window._hasClickedSaveInGuide)) {
+                  btnSubmitLab.disabled = true;
+                  btnSubmitLab.style.opacity = '0.5';
+                  btnSubmitLab.style.cursor = 'not-allowed';
                 }
               }
             }
@@ -242,7 +481,7 @@
 
     // Show system ready after short delay
     setTimeout(() => {
-      statusText.textContent = 'System Ready';
+      if (statusText) statusText.textContent = 'System Ready';
     }, 1200);
 
     // Tải thông tin người dùng hiện tại từ API để dùng cho Tracking
@@ -264,24 +503,30 @@
               <span class="auth-role">${escapeHTML(_currentUser.technician_id)}</span>
             </div>
           </div>
-          <button class="btn-auth btn-logout" id="btn-iam-logout">Đăng xuất</button>
+          <button class="btn-auth btn-logout" id="btn-iam-logout" title="Đăng xuất">Đăng xuất</button>
         </div>
       `;
-      document.getElementById('btn-iam-logout').addEventListener('click', function() {
-        fetch('/api/index.php/auth/logout', { method: 'POST', credentials: 'include' })
-          .then(function() {
-            window.location.href = '/';
-          });
-      });
+      const btnIamLogout = document.getElementById('btn-iam-logout');
+      if (btnIamLogout) {
+        btnIamLogout.addEventListener('click', function () {
+          fetch('/api/index.php/auth/logout', { method: 'POST', credentials: 'include' })
+            .then(function () {
+              window.location.href = '/';
+            });
+        });
+      }
     } else {
       section.innerHTML = `
         <div class="auth-container">
           <button class="btn-auth btn-login" id="btn-iam-login">Đăng nhập IAM</button>
         </div>
       `;
-      document.getElementById('btn-iam-login').addEventListener('click', function() {
-        window.location.href = '/api/index.php/auth/login?next=' + encodeURIComponent(window.location.pathname);
-      });
+      const btnIamLogin = document.getElementById('btn-iam-login');
+      if (btnIamLogin) {
+        btnIamLogin.addEventListener('click', function () {
+          window.location.href = '/api/index.php/auth/login?next=' + encodeURIComponent(window.location.pathname);
+        });
+      }
     }
   }
 
@@ -306,7 +551,8 @@
         }
         renderUserProfile();
         if (_currentUser && _currentUser.role === 'admin') {
-          document.getElementById('btn-dashboard').style.display = '';
+          const btnDashboard = document.getElementById('btn-dashboard');
+          if (btnDashboard) btnDashboard.style.display = '';
         }
       })
       .catch(function () {
@@ -493,18 +739,19 @@
     try {
       sessionStorage.removeItem('ftc_ac1000f_wan_PPPUsername');
       sessionStorage.removeItem('ftc_ac1000f_wan_PPPPassword');
-    } catch(e) {}
+    } catch (e) { }
 
     // Reset wifi storage cho bài 2
     if (lesson && lesson.id === 'ac1-bai2') {
       try {
         localStorage.removeItem('ftc_sim_wifi24');
         localStorage.removeItem('ftc_sim_wifi5g');
-      } catch(e) {}
+      } catch (e) { }
     }
 
     // Lưu lesson hiện tại để dùng cho clearFields
     _currentLesson = lesson;
+    window._currentLesson = lesson;
 
     // Reset cờ theo dõi click Save cho phiên hướng dẫn mới
     window._hasClickedSaveInGuide = false;
@@ -599,28 +846,40 @@
    * Chạy sau mỗi lần iframe load hoặc định kỳ để học viên phải tự nhập giá trị.
    */
   function clearLessonFields() {
+    if (window._hasClickedSaveInGuide) return;
     if (!_currentLesson || !Array.isArray(_currentLesson.clearFields) || _currentLesson.clearFields.length === 0) return;
     try {
       const allDocs = getAllAccessibleDocuments(deviceIframe.contentWindow);
       allDocs.forEach(doc => {
-        if (doc._ftcFieldsCleared) return;
-        let clearedAny = false;
         _currentLesson.clearFields.forEach(selector => {
           try {
             doc.querySelectorAll(selector).forEach(el => {
-              if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-                el.value = '';
-                clearedAny = true;
+              if (el._ftcUserModified || el === doc.activeElement) return;
+
+              // Bỏ qua việc xóa trường SSID/Mật khẩu trên trang 5G để KTV có thể nhìn thấy dữ liệu phản chiếu từ 2.4G
+              const is5GPage = doc.defaultView && doc.defaultView.location.hash.includes('wlanBasicSetting5g');
+              if (is5GPage && (selector.includes('Txt_SSID') || selector.includes('Pwd_WpaPsk'))) {
+                return;
+              }
+
+              if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') {
+                if (el.type === 'radio' || el.type === 'checkbox') {
+                  el.checked = false;
+                } else if (el.tagName === 'SELECT') {
+                  el.selectedIndex = 0;
+                } else {
+                  el.value = '';
+                }
+              } else if (el.classList.contains('item')) {
+                el.remove();
               }
             });
-          } catch(e) {}
+          } catch (e) { }
         });
-        if (clearedAny) {
-          doc._ftcFieldsCleared = true;
-        }
       });
-    } catch(e) {}
+    } catch (e) { }
   }
+
 
   // ── Grading & Evaluation Engine ──────────────────────────────────
   function evaluateLesson(device, lesson) {
@@ -696,7 +955,7 @@
             }
             break;
           }
-        } catch (e) {}
+        } catch (e) { }
       }
 
       const expectedVal = (rule.trim !== false) ? String(rule.expected).trim() : String(rule.expected);
@@ -709,13 +968,21 @@
         isMatch = compActual.toLowerCase() === expectedVal.toLowerCase();
       } else if (rule.type === 'contains') {
         isMatch = compActual.includes(expectedVal);
+      } else if (rule.type === 'any_of') {
+        // rule.expected is an array of accepted values (or comma-separated string)
+        const choices = Array.isArray(rule.expected)
+          ? rule.expected.map(v => String(v).trim())
+          : String(rule.expected).split(',').map(v => v.trim());
+        isMatch = choices.some(v => compActual === v);
+      } else if (rule.type === 'element_exists') {
+        isMatch = elementFound;
       } else {
         isMatch = compActual === expectedVal;
       }
 
       if (isMatch) {
-        // Đối với thiết bị AX3000C, bắt buộc trang chứa phần tử phải được bấm Save/Apply thành công
-        if (currentDeviceId === 'ax3000c' && !isSaved) {
+        // Đối với thiết bị AX3000C, AX3000H v2 và AX3000S, bắt buộc trang chứa phần tử phải được bấm Save/Apply thành công
+        if ((currentDeviceId === 'ax3000c' || currentDeviceId === 'ax3000hv2' || currentDeviceId === 'ax3000s') && !isSaved) {
           isMatch = false;
         }
       }
@@ -728,8 +995,8 @@
       if (isMatch) {
         msg = 'Chính xác';
       } else {
-        if (currentDeviceId === 'ax3000c' && elementFound && !isSaved) {
-          msg = 'Chưa bấm Apply để lưu cấu hình';
+        if ((currentDeviceId === 'ax3000c' || currentDeviceId === 'ax3000hv2' || currentDeviceId === 'ax3000s') && elementFound && !isSaved) {
+          msg = 'Chưa bấm Save để lưu cấu hình';
         } else {
           msg = `Mong muốn: "${expectedVal}", Thực tế: "${actualValue || 'Trống'}"`;
         }
@@ -739,20 +1006,129 @@
         id: rule.id,
         name: rule.name,
         expected: expectedVal,
-        actual: (currentDeviceId === 'ax3000c' && elementFound && !isSaved) ? `${actualValue} (Chưa lưu)` : (actualValue || '(Chưa nhập / Chưa tìm thấy)'),
+        actual: ((currentDeviceId === 'ax3000c' || currentDeviceId === 'ax3000hv2' || currentDeviceId === 'ax3000s') && elementFound && !isSaved) ? `${actualValue} (Chưa lưu)` : (actualValue || '(Chưa nhập / Chưa tìm thấy)'),
         passed: isMatch,
         message: msg
       });
     });
 
-    const score = Math.round((passedCount / rules.length) * 100);
-    const passed = passedCount === rules.length;
+    function getLabelForElement(el, doc) {
+      if (el.labels && el.labels.length > 0) return el.labels[0].textContent.trim().replace(/:$/, '');
+      if (el.id) {
+        const label = doc.querySelector(`label[for="${el.id}"]`);
+        if (label) return label.textContent.trim().replace(/:$/, '');
+      }
+      const tr = el.closest('tr');
+      if (tr) {
+        const th = tr.querySelector('th, td.head, td.label, .dt');
+        if (th && th !== el.parentElement) return th.textContent.trim().replace(/:$/, '');
+        const firstTd = tr.querySelector('td');
+        if (firstTd && firstTd !== el.closest('td')) return firstTd.textContent.trim().replace(/:$/, '');
+      }
+      const dl = el.closest('dl');
+      if (dl) {
+        const dt = dl.querySelector('dt, .dt');
+        if (dt) return dt.textContent.trim().replace(/:$/, '');
+      }
+      let parent = el.parentElement;
+      let depth = 0;
+      while (parent && parent !== doc.body && depth < 4) {
+        const prev = parent.previousElementSibling;
+        if (prev && (prev.tagName === 'LABEL' || prev.className.includes('label') || prev.className.includes('title') || prev.className.includes('dt'))) {
+          return prev.textContent.trim().replace(/:$/, '');
+        }
+        const labelEl = parent.querySelector('label, .label, .dt, .title, .head');
+        if (labelEl && labelEl !== el && !labelEl.contains(el)) {
+          return labelEl.textContent.trim().replace(/:$/, '');
+        }
+        parent = parent.parentElement;
+        depth++;
+      }
+      let fallback = el.id || el.name || el.placeholder;
+      if (fallback) return fallback.replace(/_/g, ' ');
+      return 'Trường ẩn/Không xác định';
+    }
+
+    // === BỘ LỌC AUTO-BASELINE (TÌM THAO TÁC THỪA) ===
+    let unexpectedErrors = [];
+
+    allDocs.forEach(doc => {
+      if (doc._ftcOriginalValues) {
+        Object.keys(doc._ftcOriginalValues).forEach(uid => {
+          const originalValue = doc._ftcOriginalValues[uid];
+          const el = doc.querySelector(`[data-ftc-id="${uid}"]`);
+          if (el) {
+            // Kiểm tra xem input này có thuộc về các bước yêu cầu (rules) không?
+            const isExpected = rules.some(r => {
+              try { return doc.querySelector(r.selector) === el; } catch (e) { return false; }
+            });
+
+            // Nếu KHÔNG nằm trong rule, nhưng lại bị sửa giá trị khác gốc
+            if (!isExpected) {
+              const currentValue = (el.type === 'checkbox' || el.type === 'radio') ? el.checked : el.value;
+              if (String(currentValue) !== String(originalValue)) {
+                // Bỏ qua đánh giá radio bị tắt để tránh 1 lần click sinh 2 lỗi trùng lặp
+                if (el.type === 'radio' && !el.checked) return;
+
+                let labelText = getLabelForElement(el, doc);
+                let formattedOriginal = '';
+                let formattedCurrent = '';
+
+                if (el.type === 'checkbox' || el.type === 'radio') {
+                  formattedOriginal = (originalValue === true || String(originalValue) === 'true') ? 'Bật/Enable' : 'Tắt/Disable';
+                  formattedCurrent = currentValue ? 'Bật/Enable' : 'Tắt/Disable';
+                } else if (el.tagName === 'SELECT') {
+                  try {
+                    let optOrig = el.querySelector(`option[value="${originalValue}"]`);
+                    let optCurr = el.querySelector(`option[value="${currentValue}"]`);
+                    formattedOriginal = optOrig ? optOrig.textContent.trim() : originalValue;
+                    formattedCurrent = optCurr ? optCurr.textContent.trim() : currentValue;
+                  } catch (e) {
+                    formattedOriginal = originalValue;
+                    formattedCurrent = currentValue;
+                  }
+                } else {
+                  formattedOriginal = originalValue || 'Trống';
+                  formattedCurrent = currentValue || 'Trống';
+                }
+
+                unexpectedErrors.push({
+                  label: labelText,
+                  expected: formattedOriginal,
+                  actual: formattedCurrent
+                });
+              }
+            }
+          }
+        });
+      }
+    });
+
+    // Cập nhật kết quả passed: Chỉ pass khi đủ rule VÀ không có thao tác thừa
+    const hasUnexpected = unexpectedErrors.length > 0;
+    const passed = (passedCount === rules.length) && !hasUnexpected;
+    const score = passed ? 100 : Math.round((passedCount / rules.length) * (hasUnexpected ? 99 : 100));
+
+    let finalTotalRules = rules.length + unexpectedErrors.length;
+
+    // Đẩy TẤT CẢ lỗi thao tác thừa vào danh sách details
+    unexpectedErrors.forEach(err => {
+      details.push({
+        id: 'unexpected_change_' + Math.random(),
+        name: err.label,
+        expected: err.expected,
+        actual: err.actual,
+        passed: false,
+        message: 'Thao tác thừa ngoài yêu cầu'
+      });
+    });
+    // ===============================================
 
     return {
       passed: passed,
       score: score,
       passedCount: passedCount,
-      totalRules: rules.length,
+      totalRules: finalTotalRules,
       details: details
     };
   }
@@ -820,7 +1196,7 @@
       if (gmSubtitle) gmSubtitle.textContent = 'Một số thông số cấu hình chưa đúng với yêu cầu đề bài.';
       if (gmStatusBox) gmStatusBox.className = 'gm-status-box failed';
       if (gmStatusTitle) gmStatusTitle.textContent = `✖ CHƯA ĐẠT (${res.passedCount}/${res.totalRules} tiêu chí đúng)`;
-      
+
       if (mode === 'guide') {
         if (gmStatusDesc) gmStatusDesc.textContent = 'Vui lòng kiểm tra lại các lỗi bên dưới, đóng bảng này và sửa lỗi.';
         if (btnModalRetry) {
@@ -853,13 +1229,13 @@
 
         // Xác định section nào có lỗi (kể cả hint & item thực)
         const has24GFail = failedRealItems.some(i => i.id.startsWith('2.4G_') || i.id === '_24g_hint');
-        const has5GFail  = failedRealItems.some(i => i.id.startsWith('5G_')   || i.id === '_5g_hint');
+        const has5GFail = failedRealItems.some(i => i.id.startsWith('5G_') || i.id === '_5g_hint');
 
         res.details.forEach(item => {
           // Header row: chỉ vẽ nếu section đó có lỗi
           if (item._isHeader) {
             const shouldShow = (item.id === '_header_24g' && has24GFail) ||
-                               (item.id === '_header_5g'  && has5GFail);
+              (item.id === '_header_5g' && has5GFail);
             if (!shouldShow) return;
             const tr = document.createElement('tr');
             tr.innerHTML = `
@@ -1086,9 +1462,12 @@
   }
 
   // ── Dashboard Button (admin only) ──────────────────────────────────
-  document.getElementById('btn-dashboard').addEventListener('click', function () {
-    window.location.href = '/dashboard-authen/';
-  });
+  const btnDashboard = document.getElementById('btn-dashboard');
+  if (btnDashboard) {
+    btnDashboard.addEventListener('click', function () {
+      window.location.href = '/dashboard-authen/';
+    });
+  }
 
   // ── Step By Step Guide Popups Logic ──────────────────────────────
   function getLessonPopups(deviceId, lesson) {
@@ -1210,7 +1589,7 @@
             if (rect.width === 0 && rect.height === 0 && win.frameElement.offsetParent === null) {
               return;
             }
-          } catch(e) {}
+          } catch (e) { }
         }
 
         docs.push(win.document);
@@ -1243,12 +1622,12 @@
           background: #ff0000 !important;
           color: #ffffff !important;
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
-          font-size: 13px !important;
+          font-size: 11px !important;
           font-weight: 700 !important;
           line-height: 1.2 !important;
-          padding: 8px 14px !important;
-          border-radius: 4px !important;
-          box-shadow: 0 4px 12px rgba(255, 0, 0, 0.4) !important;
+          padding: 4px 8px !important;
+          border-radius: 3px !important;
+          box-shadow: 0 2px 8px rgba(255, 0, 0, 0.35) !important;
           white-space: nowrap !important;
           pointer-events: none !important;
           user-select: none !important;
@@ -1297,67 +1676,71 @@
       (doc.head || doc.documentElement).appendChild(styleTag);
     }
 
-  function findGuideElements(doc, selectorStr) {
-    if (!doc || !selectorStr) return [];
-    const parts = selectorStr.split(',').map(s => s.trim());
-    const results = [];
-    for (const sel of parts) {
-      try {
-        if (!sel.includes(':contains(')) {
-          const els = doc.querySelectorAll(sel);
-          els.forEach(el => results.push(el));
-          continue;
-        }
-
-        // Tách selector thành các phân đoạn bằng khoảng trắng
-        const segments = sel.split(/\s+/).filter(Boolean);
-        let currentContexts = [doc.body || doc];
-
-        for (let i = 0; i < segments.length; i++) {
-          const seg = segments[i];
-          const match = seg.match(/^(.*?):contains\(["']?(.*?)["']?\)$/);
-          let baseSel = seg;
-          let textToMatch = null;
-
-          if (match) {
-            baseSel = match[1] || '*';
-            textToMatch = match[2].trim().toLowerCase();
+    function findGuideElements(doc, selectorStr) {
+      if (!doc || !selectorStr) return [];
+      const parts = selectorStr.split(',').map(s => s.trim());
+      const results = [];
+      for (const sel of parts) {
+        try {
+          if (!sel.includes(':contains(')) {
+            const els = doc.querySelectorAll(sel);
+            els.forEach(el => results.push(el));
+            continue;
           }
 
-          const nextContexts = [];
-          for (const ctx of currentContexts) {
-            const elements = ctx.querySelectorAll(baseSel);
-            elements.forEach(el => {
-              if (textToMatch) {
-                const txt = (el.textContent || el.innerText || '').trim().toLowerCase();
-                if (txt.includes(textToMatch)) {
+          // Tách selector thành các phân đoạn bằng khoảng trắng
+          const segments = sel.split(/\s+/).filter(Boolean);
+          let currentContexts = [doc.body || doc];
+
+          for (let i = 0; i < segments.length; i++) {
+            const seg = segments[i];
+            const match = seg.match(/^(.*?):contains\(["']?(.*?)["']?\)$/);
+            let baseSel = seg;
+            let textToMatch = null;
+
+            if (match) {
+              baseSel = match[1] || '*';
+              textToMatch = match[2].trim().toLowerCase();
+            }
+
+            const nextContexts = [];
+            for (const ctx of currentContexts) {
+              const elements = ctx.querySelectorAll(baseSel);
+              elements.forEach(el => {
+                if (textToMatch) {
+                  const txt = (el.textContent || el.innerText || '').trim().toLowerCase();
+                  if (txt.includes(textToMatch)) {
+                    nextContexts.push(el);
+                  }
+                } else {
                   nextContexts.push(el);
                 }
-              } else {
-                nextContexts.push(el);
-              }
-            });
+              });
+            }
+            currentContexts = nextContexts;
+            if (currentContexts.length === 0) break;
           }
-          currentContexts = nextContexts;
-          if (currentContexts.length === 0) break;
-        }
 
-        currentContexts.forEach(el => {
-          if (!results.includes(el)) {
-            results.push(el);
-          }
-        });
-      } catch (e) {
-        console.error("Error in findGuideElements for selector:", sel, e);
+          currentContexts.forEach(el => {
+            if (!results.includes(el)) {
+              results.push(el);
+            }
+          });
+        } catch (e) {
+          console.error("Error in findGuideElements for selector:", sel, e);
+        }
       }
+      return results;
     }
-    return results;
-  }
 
     function isPageActiveInTree(rootWin, pageName) {
       if (!rootWin || !pageName) return false;
       const p = pageName.toLowerCase();
       try {
+        // Kiểm tra biến global oldpath của simulator
+        if (rootWin.oldpath && rootWin.oldpath.toLowerCase().includes(p)) {
+          return true;
+        }
         const docs = getAllAccessibleDocuments(rootWin);
         for (const d of docs) {
           const h = (d.location && d.location.href) ? d.location.href.toLowerCase() : '';
@@ -1412,6 +1795,19 @@
         }
       } catch (e) { }
 
+      if (target) {
+        const modalOverlay = doc.getElementById('modal_overlay') || doc.querySelector('.modal-overlay, .modal_overlay, #modal-overlay');
+        const isModalOpen = modalOverlay && (
+          modalOverlay.classList.contains('active') ||
+          modalOverlay.classList.contains('show') ||
+          modalOverlay.style.display === 'flex' ||
+          modalOverlay.style.display === 'block'
+        );
+        if (isModalOpen && !modalOverlay.contains(target)) {
+          target = null;
+        }
+      }
+
       if (!target) {
         const oldBubble = doc.querySelector(`.ftc-guide-bubble[data-guide-index="${idx}"]`);
         if (oldBubble) oldBubble.remove();
@@ -1438,19 +1834,21 @@
       }
 
       const win = doc.defaultView || window;
-      const scrollX = win.pageXOffset || doc.documentElement.scrollLeft || 0;
-      const scrollY = win.pageYOffset || doc.documentElement.scrollTop || 0;
+      const bodyStyle = win.getComputedStyle(doc.body);
+      const isBodyPositioned = bodyStyle && bodyStyle.position !== 'static';
+      const offsetParent = isBodyPositioned ? doc.body : doc.documentElement;
+      const parentRect = offsetParent.getBoundingClientRect();
 
-      const targetTop = rect.top + scrollY;
-      const targetLeft = rect.left + scrollX;
+      const targetTop = rect.top - parentRect.top;
+      const targetLeft = rect.left - parentRect.left;
       const bWidth = bubble.offsetWidth || 180;
       const bHeight = bubble.offsetHeight || 30;
       const winW = win.innerWidth || doc.documentElement.clientWidth || 1024;
       const winH = win.innerHeight || doc.documentElement.clientHeight || 768;
       let pos = pop.position || 'right';
 
-      if (pos === 'right' && (targetLeft + rect.width + bWidth + 16) > winW) {
-        if (targetLeft - bWidth - 12 >= 10) {
+      if (!pop.forcePosition && pos === 'right' && (rect.left + rect.width + bWidth + 16) > winW) {
+        if (rect.left - bWidth - 12 >= 10) {
           pos = 'left';
         }
       }
@@ -1492,13 +1890,19 @@
   }
 
   // ── Hook cho Simulator Save ──────────────────────────────────────
-  window.onSimulatorSave = function(simWin) {
+  window.onSimulatorSave = function (simWin, modalTitle) {
+    if (currentDeviceId === 'ax3000gz' && _currentLesson && _currentLesson.id === 'LAB_AX3000GZ_02') {
+      if (modalTitle !== 'WLAN SSID Configuration') {
+        return;
+      }
+    }
+
     window._hasClickedSaveInGuide = true;
 
     if (_currentLesson && typeof _currentLesson.onSimSave === 'function') {
       try {
         _currentLesson.onSimSave(simWin);
-      } catch(e) {}
+      } catch (e) { }
     }
 
     // Đánh giá tức thì để mở nút Nộp bài ngay không cần chờ setInterval
@@ -1507,12 +1911,19 @@
       const lesson = getCurrentLesson();
       if (device && lesson) {
         const evalResult = evaluateLesson(device, lesson);
+        console.error('[FTC-DEBUG] onSimulatorSave evalResult:', JSON.stringify(evalResult));
         if (evalResult && evalResult.passed) {
           btnSubmitLab.disabled = false;
           btnSubmitLab.style.opacity = '1';
           btnSubmitLab.style.cursor = 'pointer';
+        } else if (evalResult) {
+          console.error('[FTC-DEBUG] Grading FAILED — details:', JSON.stringify(evalResult.details));
         }
+      } else {
+        console.error('[FTC-DEBUG] device or lesson is null. device:', !!device, 'lesson:', !!lesson, 'currentDeviceId:', currentDeviceId, 'currentLessonId:', currentLessonId);
       }
+    } else {
+      console.error('[FTC-DEBUG] onSimulatorSave skipped — mode:', currentMode, 'btnDisabled:', btnSubmitLab && btnSubmitLab.disabled);
     }
   };
 

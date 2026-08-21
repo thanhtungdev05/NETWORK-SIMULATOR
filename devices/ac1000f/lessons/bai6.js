@@ -7,7 +7,7 @@ window.DEVICE_AC1000F_LESSONS = window.DEVICE_AC1000F_LESSONS || [];
 
 window.DEVICE_AC1000F_LESSONS.push({
   id: 'LAB_AC1000F_06',
-  title: 'Bài 6: Cấu hình Remote Web',
+  title: 'Bài 6 - Cấu hình Remote Web',
   subtitle: 'Cấu hình quản lý thiết bị từ xa qua Web',
   instructions: [
     '<b>Yêu cầu:</b> Cấu hình quản lý thiết bị từ xa (Remote Web) với tài khoản:',

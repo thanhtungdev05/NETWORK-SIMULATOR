@@ -1,4 +1,4 @@
-/**
+﻿/**
  * devices/be15000/lessons/bai7.js
  * Bài 7 - Nâng cấp Firmware trên BE15000
  */

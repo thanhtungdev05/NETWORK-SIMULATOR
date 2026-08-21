@@ -1,7 +1,7 @@
 if (!window.TOOLTIPS_AX3000HV2) window.TOOLTIPS_AX3000HV2 = {};
-window.TOOLTIPS_AX3000HV2['ax3hv2-bai2'] = [
+window.TOOLTIPS_AX3000HV2['LAB_AX3000HV2_02'] = [
     {
-        selector: '#topmenu a:contains("Network"), a:contains("Network")',
+        selector: '#MainMenu a:contains("Network")',
         text: 'Bước 1: Chọn Network',
         position: 'top'
     },
@@ -12,27 +12,31 @@ window.TOOLTIPS_AX3000HV2['ax3hv2-bai2'] = [
     },
     {
         selector: 'input[name="ESSID"]',
-        text: 'Bước 3: Nhập tên Wifi<br>ví dụ: FPT Telecom',
-        position: 'right'
+        text: 'Bước 3: Nhập tên Wifi: FPT Telecom',
+        position: 'right',
+        forcePosition: true
     },
     {
         selector: 'input[name="PreSharedKey"]',
-        text: 'Bước 4: Nhập mật khẩu Wifi<br>ví dụ: 19006600',
-        position: 'right'
+        text: 'Bước 4: Nhập mật khẩu Wifi: fpt12345',
+        position: 'right',
+        forcePosition: true
     },
     {
         selector: 'input[name="ESSID_5g"]',
-        text: 'Bước 5: Nhập tên Wifi<br>ví dụ: FPT Telecom',
-        position: 'right'
+        text: 'Bước 5: Nhập tên Wifi 5G: FPT Telecom',
+        position: 'right',
+        forcePosition: true
     },
     {
         selector: 'input[name="PreSharedKey_5g"]',
-        text: 'Bước 6: Nhập mật khẩu Wifi<br>ví dụ: 19006600',
-        position: 'right'
+        text: 'Bước 6: Nhập mật khẩu Wifi 5G: fpt12345',
+        position: 'right',
+        forcePosition: true
     },
     {
         selector: 'input[value="Save"], input[name="SaveBtn"]',
         text: 'Bước 7: Chọn Save',
-        position: 'bottom'
+        position: 'top'
     }
 ];

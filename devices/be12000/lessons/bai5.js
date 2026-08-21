@@ -1,4 +1,4 @@
-/**
+﻿/**
  * devices/be12000/lessons/bai5.js
  * Bài 5 - Quản lý Tài Khoản & Mật Khẩu trên BE12000
  */
@@ -6,7 +6,7 @@
 window.DEVICE_BE12000_LESSONS = window.DEVICE_BE12000_LESSONS || [];
 
 window.DEVICE_BE12000_LESSONS.push({
-  id: 'be12-bai5',
+  id: 'LAB_BE12000_05',
   title: 'Bài 5 - Quản lý Tài Khoản & Mật Khẩu',
   subtitle: 'Thay đổi mật khẩu đăng nhập admin',
   instructions: [

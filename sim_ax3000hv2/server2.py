@@ -41,6 +41,99 @@ def get_nav_and_tab_for_page(page_name):
         return "/cgi-bin/navigation-status.asp", "Status"
     return "/cgi-bin/navigation-basic.asp", "Network"
 
+SIM_STATE = {}
+
+def apply_sim_state_to_html(html_str, show_success=False):
+    if show_success:
+        # Inject: alert thành công + đánh dấu _ftcIsSaved + gọi onSimulatorSave lên Portal
+        save_js = """<script type="text/javascript">
+window.addEventListener("DOMContentLoaded", function() {
+    alert("Operate successfully!");
+    // Đánh dấu đã lưu cấu hình thành công để hệ thống chấm điểm nhận biết
+    document._ftcIsSaved = true;
+    // Lắng nghe thay đổi input → reset cờ nếu người dùng sửa lại
+    document.addEventListener('input', function() { document._ftcIsSaved = false; });
+    document.addEventListener('change', function() { document._ftcIsSaved = false; });
+    // Thông báo lên Portal (app.js) qua postMessage để vượt qua giới hạn cross-origin
+    try {
+        window.top.postMessage({ type: 'FTC_SAVE_SUCCESS', source: 'ax3000hv2' }, '*');
+    } catch(e) {}
+});
+</script>"""
+        if re.search(r'</head>', html_str, re.IGNORECASE):
+            html_str = re.sub(r'</head>', save_js + "</head>", html_str, flags=re.IGNORECASE)
+        else:
+            html_str = save_js + html_str
+
+
+    if not SIM_STATE:
+        return html_str
+
+    # 1. Replace JavaScript variables to prevent inline script overrides
+    VAR_MAPPINGS = {
+        "pppoe_name": "pppUserName",
+        "pppoe_pwd": "pppPassword",
+        "wifi_ssid_2g": "ESSID",
+        "wifi_pwd_2g": "PreSharedKey",
+        "wifi_ssid_5g": "ESSID_5g",
+        "wifi_pwd_5g": "PreSharedKey_5g",
+        "wifi_enable_2g": "enable_SSID",
+        "wifi_enable_5g": "enable_SSID_5g",
+        "wifi5_ssid_2g": "wifi5SSid_2G",
+        "wifi5_psk_2g": "wifi5Pwd_2G",
+        "wifi5_ssid_5g": "wifi5SSid_5G",
+        "wifi5_psk_5g": "wifi5Pwd_5G",
+        "wifi5_enable_2g": "Enable_Wifi5_2G",
+        "wifi5_enable_5g": "Enable_Wifi5_5G",
+        "lan_ip": "uiViewIPAddr",
+        "lan_netmask": "uiViewNetMask",
+        "dhcpd_start": "StartIp",
+        "dhcpd_pool_count": "PoolSize",
+        "dhcpd_lease": "dhcp_LeaseTime",
+    }
+    
+    for var_name, param_name in VAR_MAPPINGS.items():
+        if param_name in SIM_STATE:
+            val = SIM_STATE[param_name]
+            escaped_val = val.replace('\\', '\\\\').replace('"', '\\"')
+            html_str = re.sub(rf'(var\s+{var_name}\s*=\s*["\'])[^"\']*?(["\'])', rf'\g<1>{escaped_val}\2', html_str, flags=re.IGNORECASE)
+            html_str = re.sub(rf'\b({var_name}\s*=\s*["\'])[^"\']*?(["\'])', rf'\g<1>{escaped_val}\2', html_str, flags=re.IGNORECASE)
+
+    # 2. Replace HTML inputs directly
+    for name, val in SIM_STATE.items():
+        escaped_val = val.replace('\\', '\\\\').replace('"', '\\"')
+
+        def input_callback(match):
+            tag = match.group(0)
+            
+            # Check input type
+            type_match = re.search(r'type=["\'](.*?)["\']', tag, flags=re.IGNORECASE)
+            itype = type_match.group(1).lower() if type_match else 'text'
+            
+            if itype in ('radio', 'checkbox'):
+                val_match = re.search(rf'value=["\'](.*?)["\']', tag, flags=re.IGNORECASE)
+                tag_clean = re.sub(r'\s+checked(=["\']?checked["\']?)?', '', tag, flags=re.IGNORECASE)
+                if val_match and val_match.group(1) == val:
+                    if tag_clean.endswith('/>'):
+                        return tag_clean[:-2] + ' checked="checked" />'
+                    else:
+                        return tag_clean[:-1] + ' checked="checked" >'
+                return tag_clean
+            else:
+                if re.search(r'value=["\']', tag, flags=re.IGNORECASE):
+                    tag_clean = re.sub(r'(value=["\'])[^"\']*?(["\'])', rf'\g<1>{escaped_val}\2', tag, flags=re.IGNORECASE)
+                    return tag_clean
+                else:
+                    if tag.endswith('/>'):
+                        return tag[:-2] + f' value="{escaped_val}" />'
+                    else:
+                        return tag[:-1] + f' value="{escaped_val}" >'
+
+        pattern_input = rf'<input[^>]*?name=["\']{name}["\'][^>]*?>'
+        html_str = re.sub(pattern_input, input_callback, html_str, flags=re.IGNORECASE)
+        
+    return html_str
+
 
 class H(BaseHTTPRequestHandler):
     def _send(self, data, ctype, code=200):
@@ -61,6 +154,7 @@ class H(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
+        global SIM_STATE
         parsed = urlparse(self.path)
         p = unquote(parsed.path)
 
@@ -70,8 +164,11 @@ class H(BaseHTTPRequestHandler):
         if p in ("/cgi-bin/requestFromLoginPage", "/cgi-bin/reqLogin", "/cgi-bin/logincheck.cgi"):
             return self._redirect("/cgi-bin/index.asp")
 
-        if "logout" in p.lower() or p.endswith("/doLogout"):
+        if "logout" in self.path.lower() or "resetsession" in self.path.lower():
+            SIM_STATE.clear()
             return self._redirect("/cgi-bin/login.asp")
+
+        show_success = "save_success=1" in self.path
 
         # Xu ly dac biet cho /cgi-bin/index.asp (ho tro render full frameset theo page)
         if p == "/cgi-bin/index.asp":
@@ -95,6 +192,7 @@ class H(BaseHTTPRequestHandler):
                     html = re.sub(r'src=["\']/cgi-bin/navigation-status\.asp["\']', f'src="{final_nav}"', html)
                     html = re.sub(r'src=["\']/cgi-bin/status_deviceinfo\.asp["\']', f'src="{clean_page}"', html)
 
+                html = apply_sim_state_to_html(html, show_success)
                 return self._send(html.encode("utf-8"), "text/html; charset=utf-8")
 
         # Xu ly dac biet cho /cgi-bin/status.asp de active tab truyen qua URL (?tab=Network)
@@ -126,25 +224,53 @@ class H(BaseHTTPRequestHandler):
                     }});
                     </script>
                     """
-                    html = html.replace('</head>', tab_script + '</head>')
+                    if re.search(r'</head>', html, re.IGNORECASE):
+                        html = re.sub(r'</head>', tab_script + "</head>", html, flags=re.IGNORECASE)
+                    else:
+                        html = tab_script + html
 
+                html = apply_sim_state_to_html(html, show_success)
                 return self._send(html.encode("utf-8"), "text/html; charset=utf-8")
 
         # Duong dan file trong www2
         f = os.path.join(WWW, p.lstrip("/"))
         if os.path.isfile(f):
             ext = os.path.splitext(f)[1].lower()
-            with open(f, "rb") as fh:
-                content = fh.read()
-
-            return self._send(content, CT.get(ext, "application/octet-stream"))
+            if ext in (".asp", ".html", ".htm"):
+                with open(f, "r", encoding="utf-8", errors="replace") as fh:
+                    text_content = fh.read()
+                text_content = apply_sim_state_to_html(text_content, show_success)
+                return self._send(text_content.encode("utf-8"), CT.get(ext, "text/html; charset=utf-8"))
+            else:
+                with open(f, "rb") as fh:
+                    content = fh.read()
+                return self._send(content, CT.get(ext, "application/octet-stream"))
 
         return self._send(b"Not found: " + p.encode(), "text/plain", 404)
 
     def do_POST(self):
-        # cac form Apply cua thiet bi POST ve CGI; ban gia lap chi bao thanh cong
-        # (khong ghi cau hinh). Tra ve trang chinh de khong loi.
-        self._redirect(self.headers.get("Referer") or "/cgi-bin/index.asp")
+        global SIM_STATE
+        try:
+            length = int(self.headers.get("Content-Length", 0) or 0)
+            if length > 0:
+                body_bytes = self.rfile.read(length)
+                params = parse_qs(body_bytes.decode("utf-8", errors="replace"))
+                for k, v in params.items():
+                    if v:
+                        SIM_STATE[k] = v[0]
+                        if k == "Username":
+                            SIM_STATE["pppUserName"] = v[0]
+                        elif k == "Password":
+                            SIM_STATE["pppPassword"] = v[0]
+        except Exception as e:
+            pass
+        
+        referer = self.headers.get("Referer") or "/cgi-bin/index.asp"
+        if "save_success=1" in referer:
+            redirect_to = referer
+        else:
+            redirect_to = referer + ("&" if "?" in referer else "?") + "save_success=1"
+        self._redirect(redirect_to)
 
     def log_message(self, *a):
         pass

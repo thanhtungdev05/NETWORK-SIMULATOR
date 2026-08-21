@@ -14,7 +14,9 @@ else
 {vpnEntry="<tr><td colspan='7'>No data yet...</td></tr>";$("#seletall").attr("disabled",true);}
 $("#vpn_entry_list").append(vpnEntry);}
 function changeSel()
-{with(document.forms[0])
+{var f = document.forms[0];
+var L2tpAdvTable = f.L2tpAdvTable, MPPEEnable = f.MPPEEnable, PreShareKey = f.PreShareKey, Sky_Apply = f.Sky_Apply, Sky_Cancel = f.Sky_Cancel, btn_add = f.btn_add, btn_del = f.btn_del, btn_edit = f.btn_edit, ca_div = f.ca_div, enableMPPE = f.enableMPPE, enableVPN = f.enableVPN, enableencrypt = f.enableencrypt, encryptEnable = f.encryptEnable, encryptMode = f.encryptMode, encrypt_table = f.encrypt_table, filename1 = f.filename1, fullapply = f.fullapply, mppe_div = f.mppe_div, privKeyPaswd_upload = f.privKeyPaswd_upload, psk_div = f.psk_div, seletall = f.seletall, serverIpaddr = f.serverIpaddr, serverName = f.serverName, uPsd = f.uPsd, userName = f.userName, vpnEnble = f.vpnEnble, vpnMode = f.vpnMode, vpn_config = f.vpn_config, vpn_info = f.vpn_info, vpntittleinfo = f.vpntittleinfo;
+if(true)
 {var selectnum=0;var selist=$("input[name='rml']");if(selist.length==0||selist.length===undefined)
 {seletall.checked=false;btn_edit.disabled=true;btn_del.disabled=true;return;}
 else
@@ -44,7 +46,9 @@ function vpnaction(obj)
 function check_quotation_mark_existed(str)
 {return str.includes("'")||str.includes('"');}
 function btnSave()
-{var ubusparam=new Array();var jsonparam={};var servername;var serveripaddr;var username;var password;var psk;apply_data={};with(document.forms[0])
+{var ubusparam=new Array();var jsonparam={};var servername;var serveripaddr;var username;var password;var psk;apply_data={};var f = document.forms[0];
+var L2tpAdvTable = f.L2tpAdvTable, MPPEEnable = f.MPPEEnable, PreShareKey = f.PreShareKey, Sky_Apply = f.Sky_Apply, Sky_Cancel = f.Sky_Cancel, btn_add = f.btn_add, btn_del = f.btn_del, btn_edit = f.btn_edit, ca_div = f.ca_div, enableMPPE = f.enableMPPE, enableVPN = f.enableVPN, enableencrypt = f.enableencrypt, encryptEnable = f.encryptEnable, encryptMode = f.encryptMode, encrypt_table = f.encrypt_table, filename1 = f.filename1, fullapply = f.fullapply, mppe_div = f.mppe_div, privKeyPaswd_upload = f.privKeyPaswd_upload, psk_div = f.psk_div, seletall = f.seletall, serverIpaddr = f.serverIpaddr, serverName = f.serverName, uPsd = f.uPsd, userName = f.userName, vpnEnble = f.vpnEnble, vpnMode = f.vpnMode, vpn_config = f.vpn_config, vpn_info = f.vpn_info, vpntittleinfo = f.vpntittleinfo;
+if(true)
 {if(enableVPN.checked==true)
 apply_data.enable=1;else
 apply_data.enable=0;if(vpnMode.value=="0")

@@ -60,10 +60,11 @@
 
   function oRadio(t) {   // ListValue dang radio (widget='radio'), vd On/Off
     var w = el('span');
+    var groupName = 'r_' + Math.random().toString(36).slice(2, 7);
     (t.chon || []).forEach(function (c, i) {
       var lb = el('label'); lb.style.marginRight = '14px';
       var r = document.createElement('input');
-      r.type = 'radio'; r.name = 'r_' + Math.random().toString(36).slice(2, 7);
+      r.type = 'radio'; r.name = groupName;
       r.className = 'cbi-input-radio'; r.value = c.v;
       if (t.macdinh !== undefined ? c.v === t.macdinh : i === 0) r.checked = true;
       lb.appendChild(r); lb.appendChild(document.createTextNode(' ' + c.n));
@@ -76,15 +77,16 @@
     var w = el('div');
     var all = el('label', '', '');
     var ca = document.createElement('input');
-    ca.type = 'checkbox'; ca.className = 'cbi-input-checkbox';
+    ca.type = 'checkbox'; ca.className = 'cbi-input-checkbox'; ca.value = 'ALL';
     all.appendChild(ca); all.appendChild(document.createTextNode(' Everyday'));
     w.appendChild(all);
     var hang = el('div'); hang.style.marginTop = '10px';
+    var valMap = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     ['Sun.', 'Mon.', 'Tues.', 'Wed.', 'Thur.', 'Fri.', 'Sat.'].forEach(function (t, i) {
       var lb = el('label'); lb.style.marginRight = '12px';
       if (i === 0 || i === 6) lb.style.color = '#d33';   // Sun. va Sat. mau do nhu that
       var c = document.createElement('input');
-      c.type = 'checkbox'; c.className = 'cbi-input-checkbox';
+      c.type = 'checkbox'; c.className = 'cbi-input-checkbox'; c.value = valMap[i];
       lb.appendChild(c); lb.appendChild(document.createTextNode(' ' + t));
       hang.appendChild(lb);
     });
@@ -132,7 +134,7 @@
 
   function oWidget(t, gt, them) {
     var w;
-    if (t.ten === 'week_days') w = oNgay();
+    if (t.ten === 'week_days' || t.ten === 'weekdays') w = oNgay();
     else if (t.ten === 'TimeRange') w = oThoiLuong();
     else if (t.kieu === 'Flag') {
       w = document.createElement('input');
@@ -198,7 +200,16 @@
       than.innerHTML = '';
       dn.truong.forEach(function (t) {
         if (tabId !== null && t.tab && t.tab !== tabId) return;
-        than.appendChild(dong(t, oWidget(t, gt[t.ten], (gt._chonThem || {})[t.ten])));
+        var val = gt[t.ten];
+        var parentWin = window.parent;
+        if (parentWin && parentWin._currentLesson && Array.isArray(parentWin._currentLesson.clearFields)) {
+          var selector1 = '[id="modal_field_' + t.ten + '"]';
+          var selector2 = '[id="modal_field_' + t.ten + '"] input';
+          if (parentWin._currentLesson.clearFields.indexOf(selector1) >= 0 || parentWin._currentLesson.clearFields.indexOf(selector2) >= 0) {
+            val = '';
+          }
+        }
+        than.appendChild(dong(t, oWidget(t, val, (gt._chonThem || {})[t.ten])));
       });
     }
 
@@ -228,8 +239,31 @@
     huy.style.cssFloat = 'left';
     huy.addEventListener('click', dongModal);
     ap.addEventListener('click', function () {
-      alert('Ban gia lap: cau hinh khong duoc ghi vao thiet bi that.');
-      dongModal();
+      var msgId = 'fakeModalSaveMsg';
+      var oldMsg = document.getElementById(msgId);
+      if (oldMsg) oldMsg.remove();
+      
+      var msg = document.createElement('span');
+      msg.id = msgId;
+      msg.style.color = '#15803d';
+      msg.style.fontWeight = 'bold';
+      msg.style.fontSize = '13px';
+      msg.style.marginLeft = '10px';
+      msg.style.verticalAlign = 'middle';
+      msg.innerHTML = '✔ Saved successfully!';
+      ap.parentNode.insertBefore(msg, ap.nextSibling);
+      
+      var w = window.parent || window;
+      if (w.onSimulatorSave) {
+        try {
+          w.onSimulatorSave(window, dn.tieuDe);
+        } catch (e) {}
+      }
+      
+      setTimeout(function () {
+        if (msg && msg.parentNode) msg.parentNode.removeChild(msg);
+        dongModal();
+      }, 1000);
     });
     hd.appendChild(huy); hd.appendChild(ap);
     hop.appendChild(hd);
@@ -307,6 +341,9 @@
       if (!/^(Add|Edit|Modify)$/i.test(t)) return;
       b.addEventListener('click', function (e) {
         e.preventDefault();
+        var w = window.parent || window;
+        w._hasClickedSaveInGuide = false;
+        
         var dn = ds[0];
         if (ds.length > 1) {
           var muc = mucCuaNut(b);
@@ -328,6 +365,24 @@
   }
 
   function chay() {
+    var style = document.createElement('style');
+    style.innerHTML = '\
+      #modal_overlay > .modal.cbi-modal {\
+        margin: 1.5em auto !important;\
+        padding: 0.8em 1.2em 0.6em !important;\
+        max-width: 650px !important;\
+      }\
+      #modal_overlay > .modal.cbi-modal .cbi-value {\
+        margin-bottom: 10px !important;\
+      }\
+      #modal_overlay > .modal.cbi-modal h4 {\
+        margin-top: 0 !important;\
+        margin-bottom: 12px !important;\
+        line-height: 1.2 !important;\
+      }\
+    ';
+    document.head.appendChild(style);
+
     Promise.all([
       fetch('/modal-defs.json').then(function (r) { return r.json(); }),
       window.__FIRSTCHILD ||

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * devices/ax3000c/lessons/bai2.js
  * Bài 2: Cấu hình WiFi trên AX3000C
  */
@@ -7,7 +7,7 @@ window.DEVICE_AX3000C_LESSONS = window.DEVICE_AX3000C_LESSONS || [];
 
 window.DEVICE_AX3000C_LESSONS.push({
   id: 'LAB_AX3000CV2_02',
-  title: 'Bài 2-Cấu hình WiFi',
+  title: 'Bài 2 - Cấu hình WiFi',
   subtitle: 'Kích hoạt Band Steering và thiết lập Wi-Fi',
   instructions: [
     '<b>Yêu cầu:</b>',
@@ -70,7 +70,7 @@ window.DEVICE_AX3000C_LESSONS.push({
     },
     {
       selector: '#pp, input[type="password"]',
-      text: 'Bước 2: Đặt mật khẩu WIFI VD: fpt123456',
+      text: 'Bước 2: Đặt mật khẩu WIFI VD: fpt12345',
       position: 'right',
       page: 'wifi'
     },

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * devices/ax3000gz/lessons/bai6.js
  * Bài 6: Cấu hình DDNS trên AX3000GZ
  */
@@ -7,7 +7,7 @@ window.DEVICE_AX3000GZ_LESSONS = window.DEVICE_AX3000GZ_LESSONS || [];
 
 window.DEVICE_AX3000GZ_LESSONS.push({
   id: 'LAB_AX3000GZ_06',
-  title: 'Bài 6 - Cấu hình DDNS',
+  title: 'Bài 6: Cấu hình DDNS',
   subtitle: 'Đăng ký tên miền động để truy cập từ Internet',
   instructions: [
     '<b>Yêu cầu:</b>',

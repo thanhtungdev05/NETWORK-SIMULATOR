@@ -1,4 +1,4 @@
-﻿/**
+/**
  * devices/ax3000hv2/lessons/bai5.js
  * Bài 5: Cấu hình LAN Based trên AX3000H v2
  */
@@ -7,7 +7,7 @@ window.DEVICE_AX3000HV2_LESSONS = window.DEVICE_AX3000HV2_LESSONS || [];
 
 window.DEVICE_AX3000HV2_LESSONS.push({
   id: 'LAB_AX3000HV2_05',
-  title: 'Bài 5 - Cấu hình LAN Based',
+  title: 'Bài 5: Cấu hình LAN Based',
   subtitle: 'Thay đổi địa chỉ IP LAN và dải DHCP Pool',
   instructions: [
     '<b>Yêu cầu:</b>',

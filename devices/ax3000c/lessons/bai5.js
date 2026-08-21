@@ -1,4 +1,4 @@
-﻿/**
+/**
  * devices/ax3000c/lessons/bai5.js
  * Bài 5: Cấu hình NAT Port trên AX3000C
  */
@@ -7,7 +7,7 @@ window.DEVICE_AX3000C_LESSONS = window.DEVICE_AX3000C_LESSONS || [];
 
 window.DEVICE_AX3000C_LESSONS.push({
   id: 'LAB_AX3000CV2_05',
-  title: 'Bài 5 - Cấu hình NAT Port',
+  title: 'Bài 5-Cấu hình NAT Port',
   subtitle: 'Mở Port (Port Forwarding) trên thiết bị',
   instructions: [
     '<b>Yêu cầu:</b>',

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * devices/ax3000c/lessons/bai3.js
  * Bài 3: Cấu hình đổi IP LAN trên AX3000C
  */
@@ -7,7 +7,7 @@ window.DEVICE_AX3000C_LESSONS = window.DEVICE_AX3000C_LESSONS || [];
 
 window.DEVICE_AX3000C_LESSONS.push({
   id: 'LAB_AX3000CV2_03',
-  title: 'Bài 3 - Cấu hình đổi IP LAN',
+  title: 'Bài 3-Cấu hình đổi IP LAN',
   subtitle: 'Thay đổi địa chỉ IP LAN và dải DHCP Pool',
   instructions: [
     '<b>Yêu cầu:</b>',

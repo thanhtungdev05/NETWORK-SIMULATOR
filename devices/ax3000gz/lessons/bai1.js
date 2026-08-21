@@ -1,4 +1,4 @@
-﻿/**
+/**
  * devices/ax3000gz/lessons/bai1.js
  * Bài 1: Cấu hình ONT trên AX3000GZ
  */
@@ -7,7 +7,7 @@ window.DEVICE_AX3000GZ_LESSONS = window.DEVICE_AX3000GZ_LESSONS || [];
 
 window.DEVICE_AX3000GZ_LESSONS.push({
   id: 'LAB_AX3000GZ_01',
-  title: 'Bài 1 - Cấu hình ONT',
+  title: 'Bài 1: Cấu hình ONT',
   subtitle: 'Thiết lập kết nối WAN/ONT trên AX3000GZ',
   instructions: [
     '<b>Yêu cầu:</b>',

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * devices/be15000/lessons/bai2.js
  * Bài 2 - Trạng thái mạng cục bộ trên BE15000
  */

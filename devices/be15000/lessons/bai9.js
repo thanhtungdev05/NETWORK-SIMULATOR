@@ -1,4 +1,4 @@
-﻿/**
+/**
  * devices/be15000/lessons/bai9.js
  * Bài 9 - Khởi động lại & Reset trên BE15000
  */

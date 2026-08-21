@@ -1,4 +1,4 @@
-﻿/**
+/**
  * devices/vigor2927/lessons/bai1.js
  * Bài 1: Khám phá Vigor2927
  */
@@ -7,7 +7,7 @@ window.DEVICE_VIGOR2927_LESSONS = window.DEVICE_VIGOR2927_LESSONS || [];
 
 window.DEVICE_VIGOR2927_LESSONS.push({
   id: 'vg2927-bai1',
-  title: 'Bài 1 - Khám phá Vigor2927',
+  title: 'Bài 1: Khám phá Vigor2927',
   subtitle: 'Đăng nhập và xem trạng thái',
   instructions: [
     '<b>Yêu cầu:</b>',

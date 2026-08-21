@@ -1,4 +1,4 @@
-﻿/**
+/**
  * devices/ax3000gz/lessons/bai9.js
  * Bài 9: Cấu hình Chặn MAC trên AX3000GZ
  */
@@ -7,7 +7,7 @@ window.DEVICE_AX3000GZ_LESSONS = window.DEVICE_AX3000GZ_LESSONS || [];
 
 window.DEVICE_AX3000GZ_LESSONS.push({
   id: 'LAB_AX3000GZ_09',
-  title: 'Bài 9 - Cấu hình Chặn MAC',
+  title: 'Bài 9: Cấu hình Chặn MAC',
   subtitle: 'Lọc và quản lý quyền truy cập qua địa chỉ MAC',
   instructions: [
     '<b>Yêu cầu:</b>',

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * devices/ax3000s/lessons/bai7.js
  * Bài 7: Cấu hình Mesh wifi trên AX3000S
  */
@@ -7,7 +7,7 @@ window.DEVICE_AX3000S_LESSONS = window.DEVICE_AX3000S_LESSONS || [];
 
 window.DEVICE_AX3000S_LESSONS.push({
   id: 'LAB_AX3000S_07',
-  title: 'Bài 7 - Cấu hình Mesh wifi',
+  title: 'Bài 7-Cấu hình Mesh wifi',
   subtitle: 'Thiết lập và quản lý mạng Mesh WiFi',
   instructions: [
     '<b>Yêu cầu:</b>',

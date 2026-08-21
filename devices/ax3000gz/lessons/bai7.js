@@ -1,4 +1,4 @@
-﻿/**
+/**
  * devices/ax3000gz/lessons/bai7.js
  * Bài 7: Cấu hình SNTP trên AX3000GZ
  */
@@ -7,7 +7,7 @@ window.DEVICE_AX3000GZ_LESSONS = window.DEVICE_AX3000GZ_LESSONS || [];
 
 window.DEVICE_AX3000GZ_LESSONS.push({
   id: 'LAB_AX3000GZ_07',
-  title: 'Bài 7 - Cấu hình SNTP',
+  title: 'Bài 7: Cấu hình SNTP',
   subtitle: 'Đồng bộ thời gian hệ thống qua máy chủ SNTP',
   instructions: [
     '<b>Yêu cầu:</b>',

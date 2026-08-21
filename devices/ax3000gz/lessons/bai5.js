@@ -1,4 +1,4 @@
-﻿/**
+/**
  * devices/ax3000gz/lessons/bai5.js
  * Bài 5: Cấu hình IGMP trên AX3000GZ
  */
@@ -7,7 +7,7 @@ window.DEVICE_AX3000GZ_LESSONS = window.DEVICE_AX3000GZ_LESSONS || [];
 
 window.DEVICE_AX3000GZ_LESSONS.push({
   id: 'LAB_AX3000GZ_05',
-  title: 'Bài 5 - Cấu hình IGMP',
+  title: 'Bài 5: Cấu hình IGMP',
   subtitle: 'Cấu hình IGMP Snooping / Proxy cho truyền hình IPTV',
   instructions: [
     '<b>Yêu cầu:</b>',

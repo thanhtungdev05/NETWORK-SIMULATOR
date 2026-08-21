@@ -1,4 +1,4 @@
-﻿/**
+/**
  * devices/be12000/lessons/bai5.js
  * Bài 5 - Quản lý Tài Khoản & Mật Khẩu trên BE12000
  */

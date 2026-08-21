@@ -1,16 +1,16 @@
-/**
+﻿/**
  * devices/ac1000f/lessons/bai10.js
- * B�i 10: C?u h�nh ch?n Web
+ * Bài 10: Cấu hình chặn Web
  */
 
 window.DEVICE_AC1000F_LESSONS = window.DEVICE_AC1000F_LESSONS || [];
 
 window.DEVICE_AC1000F_LESSONS.push({
   id: 'LAB_AC1000F_10',
-  title: 'B�i 10 - C?u h�nh ch?n Web',
-  subtitle: 'Thi?t l?p quy t?c l?c v� ch?n truy c?p Web',
+  title: 'Bài 10: Cấu hình chặn Web',
+  subtitle: 'Thiết lập quy tắc lọc và chặn truy cập Web',
     instructions: [
-    '<b>Y�u c?u:</b> C?u h�nh t�nh nang ch?n Website (URL Filter):',
+    '<b>Yêu cầu:</b> Cấu hình tính năng chặn Website (URL Filter):',
     '- Filter Type Selection: <span class="val">URL Filter</span>',
     '- Active: <span class="val">Enable</span>',
     '- URL Index: <span class="val">1</span>',
@@ -19,9 +19,9 @@ window.DEVICE_AC1000F_LESSONS.push({
   ],
   practiceUrl: '/sim_ac1000f/cgi-bin/index.asp?page=access_ipfilter.asp',
 
-  // R�ng bu?c di?u ki?n ch?m d�ng đúng
+  // Ràng buộc điều kiện chấm đúng Ä‘Ãºng
     grading: {
-    description: 'Ki?m tra c?u h�nh ch?n Web',
+    description: 'Kiểm tra cấu hình chặn Web',
     customGrading: function(allDocs) {
       var doc = null;
       for (var i = 0; i < allDocs.length; i++) {
@@ -57,10 +57,10 @@ window.DEVICE_AC1000F_LESSONS.push({
       }
       
       var activeRadio = getRadioVal('RuleIndex_active');
-      var activeText = activeRadio === '1' ? 'Enable' : (activeRadio === '0' ? 'Disable' : 'Chua ch?n');
+      var activeText = activeRadio === '1' ? 'Enable' : (activeRadio === '0' ? 'Disable' : 'Chưa chọn');
       
       var singleRadio = getRadioVal('SingleRule_active');
-      var singleText = singleRadio === '1' ? 'Enable' : (singleRadio === '0' ? 'Disable' : 'Chua ch?n');
+      var singleText = singleRadio === '1' ? 'Enable' : (singleRadio === '0' ? 'Disable' : 'Chưa chọn');
       
       var rules = [
         { id: '1', name: 'Filter Type Selection', expected: 'URL Filter', actual: getVal('select[name="FILTERTYPE_index"]') },

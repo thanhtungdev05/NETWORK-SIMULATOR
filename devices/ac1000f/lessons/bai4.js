@@ -1,4 +1,4 @@
-﻿/**
+/**
  * devices/ac1000f/lessons/bai4.js
  * Bài 4: Cấu hình Mở Port trên ONT AC1000F
  */
@@ -7,7 +7,7 @@ window.DEVICE_AC1000F_LESSONS = window.DEVICE_AC1000F_LESSONS || [];
 
 window.DEVICE_AC1000F_LESSONS.push({
   id: 'LAB_AC1000F_04',
-  title: 'Bài 4 - Cấu hình Mở Port',
+  title: 'Bài 4: Cấu hình Mở Port',
   subtitle: 'Mở Port (Port Forwarding) trên thiết bị',
   instructions: [
     '<b>Yêu cầu:</b>',

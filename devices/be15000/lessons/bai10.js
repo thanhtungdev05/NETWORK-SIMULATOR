@@ -1,4 +1,4 @@
-﻿/**
+/**
  * devices/be15000/lessons/bai10.js
  * Bài 10 - Cấu hình SNTP trên BE15000
  */

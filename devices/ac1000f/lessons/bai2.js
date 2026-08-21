@@ -1,4 +1,4 @@
-﻿/**
+/**
  * devices/ac1000f/lessons/bai2.js
  * Bài 2: Cấu hình mạng Wi-Fi trên ONT AC1000F
  */
@@ -8,7 +8,7 @@
 
   window.DEVICE_AC1000F_LESSONS.push({
     id: 'LAB_AC1000F_02',
-    title: 'Bài 2 - Cấu hình mạng Wi-Fi',
+    title: 'Bài 2: Cấu hình mạng Wi-Fi',
     subtitle: 'Thiết lập Wi-Fi 2.4G + 5G đúng chuẩn FPT Telecom',
     instructions: [
       '<b>Yêu cầu:</b>',

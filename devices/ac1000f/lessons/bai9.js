@@ -1,24 +1,24 @@
-/**
+﻿/**
  * devices/ac1000f/lessons/bai9.js
- * B�i 9: C?u h�nh Reboot Timer
+ * Bài 9: Cấu hình Reboot Timer
  */
 
 window.DEVICE_AC1000F_LESSONS = window.DEVICE_AC1000F_LESSONS || [];
 
 window.DEVICE_AC1000F_LESSONS.push({
   id: 'LAB_AC1000F_09',
-  title: 'B�i 9 - C?u h�nh Reboot Timer',
-  subtitle: 'L�n l?ch kh?i d?ng l?i thi?t b? t? d?ng',
+  title: 'Bài 9: Cấu hình Reboot Timer',
+  subtitle: 'Lên lịch khởi động lại thiết bị tự động',
     instructions: [
-    '<b>Y�u c?u:</b> C�i d?t th?i gian t? d?ng kh?i d?ng l?i (Reboot) thi?t b? v�o l�c:',
+    '<b>Yêu cầu:</b> Cài đặt thời gian tự động khởi động lại (Reboot) thiết bị vào lúc:',
     '- Reboot Time: <span class="val">3:00</span>',
-    '- Choose Date: <span class="val">Kh�ng du?c d? tr?ng ph?i ch?n</span>'
+    '- Choose Date: <span class="val">Không được để trống phải chọn</span>'
   ],
   practiceUrl: '/sim_ac1000f/cgi-bin/index.asp?page=tools_reboottimer.asp',
 
-  // R�ng bu?c di?u ki?n ch?m d�ng đúng
+  // Ràng buộc điều kiện chấm đúng Ä‘Ãºng
     grading: {
-    description: 'Ki?m tra l�n l?ch Reboot',
+    description: 'Kiểm tra lên lịch Reboot',
     customGrading: function(allDocs) {
       var doc = null;
       for (var i = 0; i < allDocs.length; i++) {
@@ -59,13 +59,13 @@ window.DEVICE_AC1000F_LESSONS.push({
       }
       
       var rtimer = getRadioVal('reboottimer_enable');
-      var rtimerText = rtimer === '1' ? 'Enable' : (rtimer === '0' ? 'Disable' : 'Chua ch?n');
-      var dateVal = hasCheckedDate() ? 'Kh�ng du?c d? tr?ng ph?i ch?n' : 'Tr?ng';
+      var rtimerText = rtimer === '1' ? 'Enable' : (rtimer === '0' ? 'Disable' : 'Chưa chọn');
+      var dateVal = hasCheckedDate() ? 'Không được để trống phải chọn' : 'Trống';
       
       var rules = [
         { id: '1', name: 'Reboot Timer Status', expected: 'Enable', actual: rtimerText },
         { id: '2', name: 'Reboot Time', expected: '3:00', actual: getVal('input[name="time"]') },
-        { id: '3', name: 'Choose Date', expected: 'Kh�ng du?c d? tr?ng ph?i ch?n', actual: dateVal }
+        { id: '3', name: 'Choose Date', expected: 'Không được để trống phải chọn', actual: dateVal }
       ];
 
       var passedCount = 0;

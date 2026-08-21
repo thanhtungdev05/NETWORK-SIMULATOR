@@ -1,31 +1,31 @@
-/**
+﻿/**
  * devices/ac1000f/lessons/bai1.js
- * B�i 1: C?u h�nh PPPoE tr�n ONT AC1000F
+ * Bài 1: Cấu hình PPPoE trên ONT AC1000F
  */
 
 window.DEVICE_AC1000F_LESSONS = window.DEVICE_AC1000F_LESSONS || [];
 
 window.DEVICE_AC1000F_LESSONS.push({
   id: 'LAB_AC1000F_01',
-  title: 'B�i 1 - C?u h�nh PPPoE',
-  subtitle: 'Thi?t l?p k?t n?i WAN/Internet v?i t�i kho?n PPPoE',
+  title: 'Bài 1: Cấu hình PPPoE',
+  subtitle: 'Thiết lập kết nối WAN/Internet với tài khoản PPPoE',
   instructions: [
-    '<b>Y�u c?u:</b>',
-    'Th?c hi?n c?u h�nh k?t n?i WAN/Internet tr�n thi?t b? v� thi?t l?p k?t n?i PPPoE theo c�c th�ng s? du?c cung c?p du?i d�y:',
+    '<b>Yêu cầu:</b>',
+    'Thực hiện cấu hình kết nối WAN/Internet trên thiết bị và thiết lập kết nối PPPoE theo các thông số được cung cấp dưới đây:',
     '- Username: <span class="val">Sgfdl-210208-218</span>',
     '- Password: <span class="val">fpt12345</span>',
   ],
   practiceUrl: '/sim_ac1000f/cgi-bin/index.asp?page=home_wan.asp',
 
-  // X�a tr?ng c�c � nh?p li?u khi b�i lab m? (h?c vi�n ph?i t? nh?p)
+  // Xóa trắng các ô nhập liệu khi bài lab mở (học viên phải tự nhập)
   clearFields: [
     'input[name="wan_PPPUsername"]',
     'input[name="wan_PPPPassword"]',
   ],
 
-  // R�ng bu?c di?u ki?n ch?m d�ng (10 ti�u ch�)
+  // Ràng buộc điều kiện chấm đúng (10 tiêu chí)
   grading: {
-    description: 'Ki?m tra c?u h�nh PPPoE tr�n AC1000F',
+    description: 'Kiểm tra cấu hình PPPoE trên AC1000F',
     rules: [
       {
         id: 'wanTypeRadio',

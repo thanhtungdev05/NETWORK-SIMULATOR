@@ -1,4 +1,4 @@
-﻿/**
+/**
  * devices/be12000/lessons/bai2.js
  * Bài 2 - Cấu hình Wi-Fi MLO (Wi-Fi 7) trên BE12000
  */

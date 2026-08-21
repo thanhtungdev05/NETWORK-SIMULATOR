@@ -1,4 +1,4 @@
-﻿/**
+/**
  * devices/ax3000s/lessons/bai5.js
  * Bài 5: Cấu hình DNS trên AX3000S
  */
@@ -7,7 +7,7 @@ window.DEVICE_AX3000S_LESSONS = window.DEVICE_AX3000S_LESSONS || [];
 
 const lessonObj5 = {
   id: 'LAB_AX3000S_05',
-  title: 'Bài 5 - Cấu hình DNS',
+  title: 'Bài 5-Cấu hình DNS',
   subtitle: 'Cấu hình máy chủ phân giải tên miền (DNS)',
   instructions: [
     '<b>Yêu cầu:</b>',

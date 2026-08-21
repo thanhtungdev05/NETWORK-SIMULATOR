@@ -1,4 +1,4 @@
-﻿/**
+/**
  * devices/be15000/lessons/bai5.js
  * Bài 5 - Bảng ARP trên BE15000
  */

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * devices/ax3000hv2/lessons/bai3.js
  * Bài 3: Cấu hình Wi-Fi Guest trên AX3000H v2
  */
@@ -7,7 +7,7 @@ window.DEVICE_AX3000HV2_LESSONS = window.DEVICE_AX3000HV2_LESSONS || [];
 
 window.DEVICE_AX3000HV2_LESSONS.push({
   id: 'LAB_AX3000HV2_03',
-  title: 'Bài 3 - Cấu hình Wi-Fi Guest',
+  title: 'Bài 3: Cấu hình Wi-Fi Guest',
   subtitle: 'Thiết lập mạng Wi-Fi phụ cho khách (Guest)',
   instructions: [
     '<b>Yêu cầu:</b>',

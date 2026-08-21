@@ -108,6 +108,25 @@
       if (currentIframeUrl) window.open(currentIframeUrl, '_blank', 'noopener');
     });
     if (btnSubmitLab) btnSubmitLab.addEventListener('click', submitLab);
+    const btnGuideErrors = document.getElementById('btn-guide-errors');
+    if (btnGuideErrors) {
+      btnGuideErrors.addEventListener('click', () => {
+        const device = DEVICES.find(d => d.id === currentDeviceId);
+        const lesson = getCurrentLesson();
+        if (device && lesson) {
+          const evalResult = evaluateLesson(device, lesson);
+          
+          // Lấy thời gian thực để hiển thị trên bảng báo lỗi
+          let elapsed = 0;
+          if (typeof _practiceStartTime !== 'undefined' && _practiceStartTime) {
+             elapsed = Math.floor((new Date() - _practiceStartTime) / 1000);
+          }
+          
+          // Show modal but don't record to DB (since it's Guide mode preview)
+          showGradingModal(evalResult, device, lesson, currentMode, elapsed);
+        }
+      });
+    }
 
     // ── Grading Modal Events ──────────────────────────────────────────
 
@@ -218,36 +237,61 @@
                     if ((el.tagName === 'INPUT' || el.tagName === 'BUTTON') && 
                         (el.type === 'submit' || (el.value || el.textContent || '').toLowerCase().includes('save') || (el.value || el.textContent || '').toLowerCase().includes('apply'))) {
                       window._hasClickedSaveInGuide = true;
-                      
-                      // Đối với AX3000S (chạy SPA không reload trang vật lý), tự động đánh dấu và cập nhật tức thì
                       if (currentDeviceId === 'ax3000s') {
                         doc._ftcIsSaved = true;
-                        if (typeof window.onSimulatorSave === 'function') {
-                          window.onSimulatorSave(doc.defaultView || doc.parentWindow);
-                        }
+                        if (typeof window.onSimulatorSave === 'function') window.onSimulatorSave(doc.defaultView || doc.parentWindow);
                       }
                     }
                     el = el.parentNode;
                   }
                 }, true);
 
-                // Lắng nghe thay đổi trường để hủy cờ đã lưu và đánh dấu người dùng đã tự nhập
+                // Đánh dấu người dùng đã chạm vào ô nhập liệu để tránh bị clear tự động
+                // Đồng thời hủy bỏ trạng thái "Đã Save" nếu người dùng sửa lại dữ liệu
                 doc.addEventListener('input', function(e) {
                   if (e.target) {
                     e.target._ftcUserModified = true;
                   }
+                  window._hasClickedSaveInGuide = false;
                   if (currentDeviceId === 'ax3000s') {
                     doc._ftcIsSaved = false;
                   }
-                });
+                }, true);
                 doc.addEventListener('change', function(e) {
                   if (e.target) {
                     e.target._ftcUserModified = true;
                   }
+                  window._hasClickedSaveInGuide = false;
                   if (currentDeviceId === 'ax3000s') {
                     doc._ftcIsSaved = false;
                   }
-                });
+                }, true);
+
+                // === BẮT LỖI TƯƠNG TÁC CHÍNH XÁC TUYỆT ĐỐI (Dành riêng cho SPAs) ===
+                if (!doc._ftcOriginalValues) doc._ftcOriginalValues = {};
+                
+                const captureBeforeEdit = function(e) {
+                    if (!e.isTrusted) return; // Chỉ bắt người dùng thật
+                    let el = e.target;
+                    // Nếu click vào thẻ label bọc input, lấy input bên trong
+                    if (el.tagName === 'LABEL') {
+                        const input = el.querySelector('input, select, textarea');
+                        if (input) el = input;
+                    }
+                    if (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA') {
+                        if (!el.dataset.ftcId) el.dataset.ftcId = 'ftc_' + Math.random().toString(36).substr(2, 9);
+                        const uid = el.dataset.ftcId;
+                        // Lưu lại giá trị của field NGAY TRƯỚC KHI người dùng kịp thay đổi nó
+                        if (doc._ftcOriginalValues[uid] === undefined) {
+                            doc._ftcOriginalValues[uid] = (el.type === 'checkbox' || el.type === 'radio') ? el.checked : el.value;
+                        }
+                    }
+                };
+                
+                // Mousedown và Focusin kích hoạt ngay trước khi giá trị kịp thay đổi
+                doc.addEventListener('mousedown', captureBeforeEdit, true);
+                doc.addEventListener('focusin', captureBeforeEdit, true);
+                // =================================================================
 
                 doc._ftcSaveListenerAttached = true;
               }
@@ -258,27 +302,60 @@
             applyGuidePopups();
 
             // Tự động kiểm tra hoàn thành để mở nút Nộp bài trong chế độ Hướng dẫn
-            if (btnSubmitLab && btnSubmitLab.disabled) {
-              const device = DEVICES.find(d => d.id === currentDeviceId);
-              const lesson = getCurrentLesson();
-              if (device && lesson) {
-                const evalResult = evaluateLesson(device, lesson);
-                
-                // Kiểm tra xem bài học có yêu cầu bấm Save/Apply không thông qua tooltip
-                let requiresSave = false;
-                const popups = getLessonPopupsForDoc(device.id, lesson, null) || [];
-                const popupsStr = JSON.stringify(popups).toLowerCase();
-                if (popupsStr.includes('save') || popupsStr.includes('apply')) {
-                  requiresSave = true;
-                }
+            const device = DEVICES.find(d => d.id === currentDeviceId);
+            const lesson = getCurrentLesson();
+            if (device && lesson) {
+              const evalResult = evaluateLesson(device, lesson);
+              // === GUIDE MODE: AUTO-BASELINE UI ===
+              let btnGuideErrors = document.getElementById('btn-guide-errors');
+              if (btnGuideErrors) {
+                 if (currentMode === 'guide' && evalResult) {
+                    const unexpectedError = evalResult.details.find(d => d.id.startsWith('unexpected_change'));
+                    const hasMissingSteps = !evalResult.passed;
+                    
+                    if (unexpectedError || hasMissingSteps) {
+                       btnGuideErrors.style.display = 'flex';
+                       
+                       // Ẩn xám nút nếu học viên chưa bấm Save
+                       if (!window._hasClickedSaveInGuide) {
+                          btnGuideErrors.disabled = true;
+                          btnGuideErrors.style.opacity = '0.5';
+                          btnGuideErrors.style.cursor = 'not-allowed';
+                          btnGuideErrors.style.background = '#f3f4f6';
+                          btnGuideErrors.style.color = '#9ca3af';
+                          btnGuideErrors.style.borderColor = '#d1d5db';
+                       } else {
+                          btnGuideErrors.disabled = false;
+                          btnGuideErrors.style.opacity = '1';
+                          btnGuideErrors.style.cursor = 'pointer';
+                          btnGuideErrors.style.background = '#fee2e2';
+                          btnGuideErrors.style.color = '#ef4444';
+                          btnGuideErrors.style.borderColor = '#fca5a5';
+                       }
+                    } else {
+                       btnGuideErrors.style.display = 'none';
+                    }
+                 } else {
+                    btnGuideErrors.style.display = 'none';
+                 }
+              }
+              // ====================================
 
+              if (btnSubmitLab && btnSubmitLab.disabled) {
                 if (evalResult && evalResult.passed) {
-                  // Chỉ bật nút nếu (Không cần Save) HOẶC (Đã bấm Save)
-                  if (!requiresSave || window._hasClickedSaveInGuide) {
+                  // Chỉ bật nút nếu Đã bấm Save
+                  if (window._hasClickedSaveInGuide) {
                     btnSubmitLab.disabled = false;
                     btnSubmitLab.style.opacity = '1';
                     btnSubmitLab.style.cursor = 'pointer';
                   }
+                }
+              } else if (btnSubmitLab && !btnSubmitLab.disabled) {
+                // Tự động tắt nút nếu học viên lỡ tay làm sai sau khi đã làm đúng hoặc chưa save lại
+                if (evalResult && (!evalResult.passed || !window._hasClickedSaveInGuide)) {
+                    btnSubmitLab.disabled = true;
+                    btnSubmitLab.style.opacity = '0.5';
+                    btnSubmitLab.style.cursor = 'not-allowed';
                 }
               }
             }
@@ -803,14 +880,123 @@
       });
     });
 
-    const score = Math.round((passedCount / rules.length) * 100);
-    const passed = passedCount === rules.length;
+    function getLabelForElement(el, doc) {
+       if (el.labels && el.labels.length > 0) return el.labels[0].textContent.trim().replace(/:$/, '');
+       if (el.id) {
+           const label = doc.querySelector(`label[for="${el.id}"]`);
+           if (label) return label.textContent.trim().replace(/:$/, '');
+       }
+       const tr = el.closest('tr');
+       if (tr) {
+           const th = tr.querySelector('th, td.head, td.label, .dt');
+           if (th && th !== el.parentElement) return th.textContent.trim().replace(/:$/, '');
+           const firstTd = tr.querySelector('td');
+           if (firstTd && firstTd !== el.closest('td')) return firstTd.textContent.trim().replace(/:$/, '');
+       }
+       const dl = el.closest('dl');
+       if (dl) {
+           const dt = dl.querySelector('dt, .dt');
+           if (dt) return dt.textContent.trim().replace(/:$/, '');
+       }
+       let parent = el.parentElement;
+       let depth = 0;
+       while (parent && parent !== doc.body && depth < 4) {
+           const prev = parent.previousElementSibling;
+           if (prev && (prev.tagName === 'LABEL' || prev.className.includes('label') || prev.className.includes('title') || prev.className.includes('dt'))) {
+               return prev.textContent.trim().replace(/:$/, '');
+           }
+           const labelEl = parent.querySelector('label, .label, .dt, .title, .head');
+           if (labelEl && labelEl !== el && !labelEl.contains(el)) {
+               return labelEl.textContent.trim().replace(/:$/, '');
+           }
+           parent = parent.parentElement;
+           depth++;
+       }
+       let fallback = el.id || el.name || el.placeholder;
+       if (fallback) return fallback.replace(/_/g, ' ');
+       return 'Trường ẩn/Không xác định';
+    }
+
+    // === BỘ LỌC AUTO-BASELINE (TÌM THAO TÁC THỪA) ===
+    let unexpectedErrors = [];
+
+    allDocs.forEach(doc => {
+       if (doc._ftcOriginalValues) {
+          Object.keys(doc._ftcOriginalValues).forEach(uid => {
+             const originalValue = doc._ftcOriginalValues[uid];
+             const el = doc.querySelector(`[data-ftc-id="${uid}"]`);
+             if (el) {
+                // Kiểm tra xem input này có thuộc về các bước yêu cầu (rules) không?
+                const isExpected = rules.some(r => {
+                   try { return doc.querySelector(r.selector) === el; } catch(e) { return false; }
+                });
+                
+                // Nếu KHÔNG nằm trong rule, nhưng lại bị sửa giá trị khác gốc
+                if (!isExpected) {
+                   const currentValue = (el.type === 'checkbox' || el.type === 'radio') ? el.checked : el.value;
+                   if (String(currentValue) !== String(originalValue)) {
+                      // Bỏ qua đánh giá radio bị tắt để tránh 1 lần click sinh 2 lỗi trùng lặp
+                      if (el.type === 'radio' && !el.checked) return;
+
+                      let labelText = getLabelForElement(el, doc);
+                      let formattedOriginal = '';
+                      let formattedCurrent = '';
+
+                      if (el.type === 'checkbox' || el.type === 'radio') {
+                          formattedOriginal = (originalValue === true || String(originalValue) === 'true') ? 'Bật/Enable' : 'Tắt/Disable';
+                          formattedCurrent = currentValue ? 'Bật/Enable' : 'Tắt/Disable';
+                      } else if (el.tagName === 'SELECT') {
+                          try {
+                             let optOrig = el.querySelector(`option[value="${originalValue}"]`);
+                             let optCurr = el.querySelector(`option[value="${currentValue}"]`);
+                             formattedOriginal = optOrig ? optOrig.textContent.trim() : originalValue;
+                             formattedCurrent = optCurr ? optCurr.textContent.trim() : currentValue;
+                          } catch(e) {
+                             formattedOriginal = originalValue;
+                             formattedCurrent = currentValue;
+                          }
+                      } else {
+                          formattedOriginal = originalValue || 'Trống';
+                          formattedCurrent = currentValue || 'Trống';
+                      }
+                      
+                      unexpectedErrors.push({
+                         label: labelText,
+                         expected: formattedOriginal,
+                         actual: formattedCurrent
+                      });
+                   }
+                }
+             }
+          });
+       }
+    });
+
+    // Cập nhật kết quả passed: Chỉ pass khi đủ rule VÀ không có thao tác thừa
+    const hasUnexpected = unexpectedErrors.length > 0;
+    const passed = (passedCount === rules.length) && !hasUnexpected;
+    const score = passed ? 100 : Math.round((passedCount / rules.length) * (hasUnexpected ? 99 : 100));
+
+    let finalTotalRules = rules.length + unexpectedErrors.length;
+    
+    // Đẩy TẤT CẢ lỗi thao tác thừa vào danh sách details
+    unexpectedErrors.forEach(err => {
+       details.push({
+         id: 'unexpected_change_' + Math.random(),
+         name: err.label,
+         expected: err.expected,
+         actual: err.actual,
+         passed: false,
+         message: 'Thao tác thừa ngoài yêu cầu'
+       });
+    });
+    // ===============================================
 
     return {
       passed: passed,
       score: score,
       passedCount: passedCount,
-      totalRules: rules.length,
+      totalRules: finalTotalRules,
       details: details
     };
   }

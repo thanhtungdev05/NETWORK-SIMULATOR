@@ -5,7 +5,7 @@
 
 window.DEVICE_VIGOR2927 = {
   id: 'vigor2927',
-  name: 'Vigor2927',
+  name: 'DrayTek Vigor2927',
   shortName: 'Vigor2927',
   port: 8080,
   folder: 'sim_vigor2927',

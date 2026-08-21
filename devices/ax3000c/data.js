@@ -5,8 +5,8 @@
 
 window.DEVICE_AX3000C = {
   id: 'ax3000c',
-  name: 'AX3000C',
-  shortName: 'AX3000C',
+  name: 'ONT AX3000CV2',
+  shortName: 'AX3000CV2',
   port: 8080,
   folder: 'sim_ax3000c',
   serverBat: 'chay_server.bat',

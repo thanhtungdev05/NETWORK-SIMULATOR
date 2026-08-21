@@ -150,14 +150,41 @@ Các lệnh CLI hữu ích để quản lý cơ sở dữ liệu:
 
 ---
 
-## 🛑 7. Hướng Dẫn Dừng Hệ Thống
+## 🆕 7. Cập Nhật Cấu Trúc & Logic Mới Nhất (Dành Cho Developer)
+
+Để giúp các lập trình viên tiếp quản dự án dễ dàng nắm bắt, dưới đây là các thay đổi quan trọng về luồng logic và UI/UX đã được triển khai gần đây:
+
+### A. Chuẩn Hóa Tên Danh Mục Thiết Bị
+- Tên thiết bị trên Dropdown Menu đã được cấu trúc lại với các tiền tố rõ ràng để KTV dễ phân biệt chủng loại:
+  - **Dòng ONT:** `ONT AC1000F`, `ONT AX3000CV2`, `ONT AX3000GZ`, `ONT AX3000HV2`, `ONT BE12000`, `ONT BE15000`
+  - **Dòng Khác:** `Internet Hub AX3000S`, `Router MikroTik`, `DrayTek Vigor2927`
+- Thứ tự (Order) hiển thị trên giao diện đã được sắp xếp đồng bộ thành một khối logic chuẩn (ONT -> Hub -> Router) quản lý tập trung trong file `data.js`.
+
+### B. Auto-Baseline Tracker (Tối ưu thiết bị SPA)
+- Thay vì lấy Baseline toàn bộ DOM ngay lúc load (gây lỗi với các thiết bị dạng SPA sinh form trễ do AJAX như AX3000S), hệ thống đổi sang **Interaction-Based Baseline**.
+- Hàm `captureBeforeEdit` sẽ lưu lại giá trị mặc định của ô nhập liệu *ngay khoảnh khắc KTV chạm vào ô đó* (`mousedown` / `focusin`).
+- Đảm bảo cơ chế chấm lỗi "Cấu hình sai trường ngoài yêu cầu" (`unexpected_change`) chính xác tuyệt đối mà không bị xung đột với lifecycle của giả lập.
+
+### C. Giam Kẹp Logic "Nộp Bài" & "Xem Lỗi Sai"
+- **Bắt buộc Save:** Các nút chức năng đánh giá (Nộp bài / Xem lỗi sai) mặc định bị vô hiệu hóa (disabled, ẩn xám). Chúng chỉ kích hoạt khi KTV đã thực sự bấm nút **Save/Apply** trên giao diện của thiết bị giả lập.
+- **Reset trạng thái lập tức:** Bất kỳ thao tác gõ phím (`input`) hay thay đổi tùy chọn (`change`) nào cũng sẽ lập tức thu hồi trạng thái "Đã Save". Sự kiện được bắt ở cấp cao nhất (Capture phase `true`) để tránh tình trạng Javascript của Emulator ẩn event.
+- **UX Layout:** Nút "Xem lỗi sai" và "Nộp bài" được gom về cạnh nhau phía góc phải màn hình, đẩy đồng hồ đếm ngược sang trái giúp KTV thao tác thuận tay hơn.
+
+### D. Multi-Error Reporting (Bảng Báo Lỗi Chi Tiết)
+- Trong chế độ Hướng dẫn (Guide Mode), thay vì hiển thị tooltip sơ sài, KTV nhấn "Xem lỗi sai" sẽ thấy Modal liệt kê toàn bộ các tiêu chí cấu hình sai dưới dạng Bảng.
+- Hệ thống hỗ trợ lấy định danh Text thân thiện (`getLabelForElement`) và dịch ngược option của thẻ Select thay vì hiển thị value thô báo lỗi cho KTV.
+- Thời gian làm bài trên bảng lỗi được lấy Realtime đúng theo đồng hồ đếm ngược.
+
+---
+
+## 🛑 8. Hướng Dẫn Dừng Hệ Thống
 
 - **Windows (CMD/PowerShell)**: Đóng cửa sổ CMD đang chạy (hoặc nhấn `Ctrl + C`).
 - **Terminal (macOS/Linux)**: Nhấn `Ctrl + C` tại cửa sổ Terminal đang chạy script để dừng toàn bộ dịch vụ Python và PHP nội bộ.
 
 ---
 
-## 📝 Ghi Chú
+## 📝 9. Ghi Chú
 
 - Giữ nguyên cửa sổ terminal/CMD trong suốt quá trình thực hành.
 - Nếu bạn có thay đổi cấu trúc thiết bị và luồng lưu file, hãy chạy lại lệnh vá file của Python để giả lập hoạt động đúng với Portal.

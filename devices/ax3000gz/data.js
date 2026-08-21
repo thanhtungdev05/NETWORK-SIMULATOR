@@ -5,7 +5,7 @@
 
 window.DEVICE_AX3000GZ = {
   id: 'ax3000gz',
-  name: 'AX3000GZ',
+  name: 'ONT AX3000GZ',
   shortName: 'AX3000GZ',
   port: 8080,
   folder: 'sim_ax3000gz',

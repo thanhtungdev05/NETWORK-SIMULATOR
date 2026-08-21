@@ -192,21 +192,19 @@
               <span id="practice-mode-label" class="practice-badge">⚡ Thực hành:</span>
               <span id="practice-lesson-title" class="practice-title">Bài 1: Cấu hình PPPoE</span>
             </div>
+            <span id="practice-timer" class="practice-timer" style="margin-left: 20px;">⏱ 00:00</span>
           </div>
 
           <div class="practice-toolbar-right">
-            <span id="practice-timer" class="practice-timer">⏱ 00:00</span>
+            <!-- Nút xem danh sách lỗi dành riêng cho chế độ Hướng dẫn (Mặc định ẩn) -->
+            <button id="btn-guide-errors" class="btn-toolbar" style="display: none; background: #fee2e2; color: #ef4444; border: 1px solid #fca5a5; margin-right: 8px;" title="Xem danh sách các lỗi cấu hình sai">
+              <span class="btn-icon">⚠️</span>
+              <span class="btn-text">Xem lỗi sai</span>
+            </button>
+            
             <button id="btn-submit-lab" class="btn-toolbar btn-submit" title="Nộp bài và chấm điểm">
               <span class="btn-icon">📝</span>
               <span class="btn-text">Nộp bài & Chấm điểm</span>
-            </button>
-            <button id="btn-open-new-tab" class="btn-toolbar btn-tab" title="Mở trong tab mới">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                <polyline points="15 3 21 3 21 9"/>
-                <line x1="10" y1="14" x2="21" y2="3"/>
-              </svg>
-              <span>Tab mới</span>
             </button>
           </div>
         </div>

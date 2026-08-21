@@ -1,4 +1,4 @@
-/**
+﻿/**
  * devices/be12000/lessons/bai4.js
  * Bài 4 - Chẩn đoán mạng (Network Diag) trên BE12000
  */

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * devices/ax3000s/lessons/bai6.js
  * Bài 6: Cấu hình Port Forwarding trên AX3000S
  */
@@ -7,7 +7,7 @@ window.DEVICE_AX3000S_LESSONS = window.DEVICE_AX3000S_LESSONS || [];
 
 const lessonObj6 = {
   id: 'LAB_AX3000S_06',
-  title: 'Bài 6-Cấu hình Port Forwarding',
+  title: 'Bài 6 - Cấu hình Port Forwarding',
   subtitle: 'Thiết lập chuyển tiếp cổng mạng (Port Forwarding)',
   instructions: [
     '<b>Yêu cầu:</b>',

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * devices/ax3000gz/lessons/bai3.js
  * Bài 3: Tính năng BandSteering trên AX3000GZ
  */
@@ -7,7 +7,7 @@ window.DEVICE_AX3000GZ_LESSONS = window.DEVICE_AX3000GZ_LESSONS || [];
 
 window.DEVICE_AX3000GZ_LESSONS.push({
   id: 'LAB_AX3000GZ_03',
-  title: 'Bài 3: Tính năng BandSteering',
+  title: 'Bài 3 - Tính năng BandSteering',
   subtitle: 'Kích hoạt và cấu hình tính năng Band Steering',
   instructions: [
     '<b>Yêu cầu:</b>',

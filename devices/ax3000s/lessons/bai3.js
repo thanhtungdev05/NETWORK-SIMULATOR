@@ -1,4 +1,4 @@
-/**
+﻿/**
  * devices/ax3000s/lessons/bai3.js
  * Bài 3: Cấu hình WIFI IOT trên AX3000S
  */
@@ -7,7 +7,7 @@ window.DEVICE_AX3000S_LESSONS = window.DEVICE_AX3000S_LESSONS || [];
 
 const lessonObj3 = {
   id: 'LAB_AX3000S_03',
-  title: 'Bài 3-Cấu hình WIFI IOT',
+  title: 'Bài 3 - Cấu hình WIFI IOT',
   subtitle: 'Thiết lập mạng Wi-Fi dành riêng cho thiết bị IoT',
   instructions: [
     '<b>Yêu cầu:</b>',

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * devices/ax3000gz/lessons/bai4.js
  * Bài 4: Cấu hình Mesh WiFi trên AX3000GZ
  */
@@ -7,7 +7,7 @@ window.DEVICE_AX3000GZ_LESSONS = window.DEVICE_AX3000GZ_LESSONS || [];
 
 window.DEVICE_AX3000GZ_LESSONS.push({
   id: 'LAB_AX3000GZ_04',
-  title: 'Bài 4: Cấu hình Mesh WiFi',
+  title: 'Bài 4 - Cấu hình Mesh WiFi',
   subtitle: 'Thiết lập và quản lý mạng Mesh WiFi',
   instructions: [
     '<b>Yêu cầu:</b>',

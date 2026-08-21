@@ -1,4 +1,4 @@
-/**
+﻿/**
  * devices/ax3000s/lessons/bai2.js
  * Bài 2: Cấu hình WIFI trên AX3000S
  */
@@ -7,7 +7,7 @@ window.DEVICE_AX3000S_LESSONS = window.DEVICE_AX3000S_LESSONS || [];
 
 window.DEVICE_AX3000S_LESSONS.push({
   id: 'LAB_AX3000S_02',
-  title: 'Bài 2-Cấu hình WIFI',
+  title: 'Bài 2 - Cấu hình WIFI',
   subtitle: 'Thiết lập mạng Wi-Fi 2.4GHz và 5GHz',
   instructions: [
     '<b>Yêu cầu:</b>',

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * devices/ax3000c/lessons/bai4.js
  * Bài 4: Cấu hình DNS trên AX3000C
  */
@@ -7,7 +7,7 @@ window.DEVICE_AX3000C_LESSONS = window.DEVICE_AX3000C_LESSONS || [];
 
 window.DEVICE_AX3000C_LESSONS.push({
   id: 'LAB_AX3000CV2_04',
-  title: 'Bài 4-Cấu hình DNS',
+  title: 'Bài 4 - Cấu hình DNS',
   subtitle: 'Cấu hình máy chủ DNS của FPT và Google',
   instructions: [
     '<b>Yêu cầu:</b>',

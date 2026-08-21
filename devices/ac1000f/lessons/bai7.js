@@ -7,7 +7,7 @@ window.DEVICE_AC1000F_LESSONS = window.DEVICE_AC1000F_LESSONS || [];
 
 window.DEVICE_AC1000F_LESSONS.push({
   id: 'LAB_AC1000F_07',
-  title: 'Bài 7: Cấu hình Backup/Restore',
+  title: 'Bài 7 - Cấu hình Backup/Restore',
   subtitle: 'Sao lưu và phục hồi cấu hình thiết bị',
   instructions: [
     '<b>Yêu cầu:</b> Thực hiện thao tác tải về (Download) file cấu hình hiện tại của thiết bị (Backup).',

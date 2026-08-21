@@ -1,4 +1,4 @@
-/**
+﻿/**
  * devices/ax3000hv2/lessons/bai4.js
  * Bài 4: Cấu hình Wi-Fi IoT trên AX3000H v2
  */
@@ -7,7 +7,7 @@ window.DEVICE_AX3000HV2_LESSONS = window.DEVICE_AX3000HV2_LESSONS || [];
 
 window.DEVICE_AX3000HV2_LESSONS.push({
   id: 'LAB_AX3000HV2_04',
-  title: 'Bài 4: Cấu hình Wi-Fi IoT',
+  title: 'Bài 4 - Cấu hình Wi-Fi IoT',
   subtitle: 'Thiết lập mạng Wi-Fi dành riêng cho thiết bị IoT',
   instructions: [
     '<b>Yêu cầu:</b>',

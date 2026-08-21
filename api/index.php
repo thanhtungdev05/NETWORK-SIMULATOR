@@ -72,7 +72,25 @@ function json_body(): array
 function respond(array $payload = [], int $status = 200): void
 {
     http_response_code($status);
-    echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $json = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    if ($json === false) {
+        http_response_code(500);
+        echo '{"error":{"code":"json-encode-failed","message":"Unable to encode API response."}}';
+        exit;
+    }
+
+    $acceptEncoding = strtolower((string)($_SERVER['HTTP_ACCEPT_ENCODING'] ?? ''));
+    if (strlen($json) >= 1024 && str_contains($acceptEncoding, 'gzip') && function_exists('gzencode')) {
+        $compressed = gzencode($json, 6);
+        if ($compressed !== false) {
+            header('Content-Encoding: gzip');
+            header('Vary: Accept-Encoding');
+            echo $compressed;
+            exit;
+        }
+    }
+
+    echo $json;
     exit;
 }
 
@@ -136,7 +154,9 @@ function is_local_request(): bool
 function dev_bypass_enabled(): bool
 {
     if (env_value('APP_ENV', '') === 'production') {
-        return is_local_request();
+        // HTTP_HOST is controlled by the requester and must never grant
+        // administrator access in production.
+        return false;
     }
     return is_local_request() || env_bool('AUTH_BYPASS_DEV', false);
 }
@@ -369,6 +389,8 @@ function user_response(?array $row): ?array
         'training_end_date' => $row['training_end_date'] ?? null,
         'classCode' => $row['class_code'] ?? null,
         'class_code' => $row['class_code'] ?? null,
+        'className' => $row['class_name'] ?? null,
+        'class_name' => $row['class_name'] ?? null,
         'sourceClassCode' => $row['source_class_code'] ?? ($row['class_code'] ?? null),
         'source_class_code' => $row['source_class_code'] ?? ($row['class_code'] ?? null),
         'isTerminated' => database_boolean($row['is_terminated'] ?? false),
@@ -1127,7 +1149,8 @@ function roster_item_response(array $row): array
 function roster_base_where(array &$params, bool $includeFilters = true): array
 {
     $where = [
-        'users.employee_id IS NOT NULL',
+        "(users.employee_id IS NOT NULL OR users.employee_source LIKE 'firestore:%')",
+        "users.role = 'user'",
         "(users.job_title = 'CB Kỹ thuật TKBT' OR users.employee_source IS NOT NULL)",
     ];
 
@@ -1667,6 +1690,38 @@ function handle_dashboard(array $segments, string $method): void
         }
     }
 
+    if ($action === 'version') {
+        $pdo = db();
+        try {
+            $version = $pdo->query(
+                <<<'SQL'
+                SELECT CONCAT(
+                           TO_CHAR(
+                               GREATEST(
+                                   COALESCE((SELECT MAX(updated_at) FROM users), 'epoch'::timestamptz),
+                                   COALESCE((SELECT MAX(updated_at) FROM lab_assignments), 'epoch'::timestamptz),
+                                   COALESCE((SELECT MAX(updated_at) FROM lab_attempts), 'epoch'::timestamptz),
+                                   COALESCE((SELECT MAX(created_at) FROM timer_sessions), 'epoch'::timestamptz),
+                                   COALESCE((SELECT MAX(updated_at) FROM training_classes), 'epoch'::timestamptz),
+                                   COALESCE((SELECT MAX(updated_at) FROM device_catalog), 'epoch'::timestamptz),
+                                   COALESCE((SELECT MAX(updated_at) FROM lab_catalog), 'epoch'::timestamptz)
+                               ),
+                               'YYYYMMDDHH24MISS.US'
+                           ),
+                           ':', (SELECT COUNT(*) FROM users),
+                           ':', (SELECT COUNT(*) FROM timer_sessions),
+                           ':', (SELECT COUNT(*) FROM lab_assignments),
+                           ':', (SELECT COUNT(*) FROM lab_attempts)
+                       )
+                SQL
+            )->fetchColumn();
+            respond(['data' => ['data_version' => is_string($version) ? $version : '']]);
+        } catch (Throwable $exception) {
+            report_exception($exception, 'dashboard-version');
+            fail(500, 'dashboard-version-failed', 'Unable to load dashboard version.');
+        }
+    }
+
     if ($action !== 'all') {
         fail(404, 'not-found', 'Dashboard endpoint not found.');
     }
@@ -1699,21 +1754,23 @@ function handle_dashboard(array $segments, string $method): void
                     timer.name,
                     timer.email,
                     COALESCE(timer.started_at, timer.finished_at) AS started_at,
-                    COALESCE(timer.duration_sec, 0) AS duration_sec,
+                    timer.duration_sec,
                     timer.mode,
                     timer.device AS device_name,
                     timer.lab_id,
                     timer.lab_name,
-                    timer.finished_at,
                     timer.is_passed,
-                    timer.score,
                     timer.status,
                     timer.completed_first_try,
-                    timer.last_action,
-                    timer.is_mock,
-                    timer.seed_batch
+                    timer.last_action
                  FROM timer_sessions timer
-                 WHERE NOT (
+                 WHERE EXISTS (
+                     SELECT 1
+                       FROM users dashboard_user
+                      WHERE dashboard_user.user_id = timer.user_id
+                        AND dashboard_user.role = \'user\'
+                 )
+                   AND NOT (
                      timer.user_id IS NULL
                      AND (
                          timer.technician_id = :bypass_anon
@@ -1764,9 +1821,10 @@ function handle_dashboard(array $segments, string $method): void
             ->query(
                 'SELECT ' . USER_COLUMNS . '
                    FROM users
-                  WHERE employee_id IS NOT NULL
+                  WHERE (employee_id IS NOT NULL OR employee_source LIKE \'firestore:%\')
                     AND is_terminated = FALSE
-                    AND job_title = \'CB Kỹ thuật TKBT\'
+                    AND role = \'user\'
+                    AND (job_title = \'CB Kỹ thuật TKBT\' OR employee_source LIKE \'firestore:%\')
                   ORDER BY class_code NULLS LAST, display_name NULLS LAST, email'
             )
             ->fetchAll();
@@ -1793,30 +1851,37 @@ function handle_dashboard(array $segments, string $method): void
         $currentClass = $currentClasses[(string)$technicianRow['user_id']] ?? null;
         if ($currentClass) {
             $technicianRow['class_code'] = $currentClass['class_code'];
+            $technicianRow['class_name'] = $currentClass['class_name'];
         }
     }
     unset($technicianRow);
 
     $sessions = [];
     $deviceMap = [];
+    $deviceById = [];
     $labMap = [];
     try {
         $catalogRows = $pdo
             ->query(
                 'SELECT d.device_id, d.model, d.device_name, l.lab_id, l.lab_name
                  FROM device_catalog d
-                 LEFT JOIN lab_catalog l ON l.device_id = d.device_id
+                 LEFT JOIN lab_catalog l ON l.device_id = d.device_id AND l.is_active = TRUE
+                 WHERE d.is_active = TRUE
                  ORDER BY d.device_name, l.lab_name'
             )
             ->fetchAll();
         foreach ($catalogRows as $row) {
             $deviceName = (string)($row['device_name'] ?? '');
             if ($deviceName !== '' && !isset($deviceMap[$deviceName])) {
-                $deviceMap[$deviceName] = [
+                $device = [
                     'device_id' => (string)($row['device_id'] ?? ('DEV_' . count($deviceMap))),
                     'model' => (string)($row['model'] ?? ''),
                     'device_name' => $deviceName,
                 ];
+                $deviceMap[$deviceName] = $device;
+                if ($device['device_id'] !== '') {
+                    $deviceById[$device['device_id']] = $device;
+                }
             }
             $labId = (string)($row['lab_id'] ?? '');
             if ($labId !== '' && !isset($labMap[$labId])) {
@@ -1833,52 +1898,35 @@ function handle_dashboard(array $segments, string $method): void
 
     foreach ($rows as $row) {
         $roster = $resolveRoster($row);
-        $currentClass = ($roster && isset($roster['user_id']))
-            ? ($currentClasses[(string)$roster['user_id']] ?? null)
-            : null;
+        $labKey = (string)($row['lab_id'] ?? '');
+        $catalogDeviceId = (string)($labMap[$labKey]['device_id'] ?? '');
+        $device = (string)($deviceById[$catalogDeviceId]['device_name'] ?? ($row['device_name'] ?? ''));
         $sessions[] = [
             'session_id' => (string)$row['session_id'],
-            'user_id' => ($roster && isset($roster['user_id']) && $roster['user_id'] !== '')
-                ? (string)$roster['user_id']
-                : (isset($row['user_id']) && $row['user_id'] !== '' ? (string)$row['user_id'] : null),
             'technician_id' => (string)($roster['employee_id'] ?? ($row['technician_id'] ?? '')),
             'full_name' => (string)($roster['display_name'] ?? ($row['name'] ?? '')),
             'email' => (string)($roster['email'] ?? ($row['email'] ?? '')),
-            'region_name' => (string)($roster['dashboard_region'] ?? ''),
-            'class_code' => (string)($currentClass['class_code'] ?? ($roster['class_code'] ?? '')),
-            'source_class_code' => (string)($roster['class_code'] ?? ''),
-            'job_title' => (string)($roster['job_title'] ?? ''),
-            'unit_code' => (string)($roster['unit_code'] ?? ''),
-            'unit_name' => (string)($roster['unit_name'] ?? ''),
-            'region_code' => (string)($roster['region_code'] ?? ''),
-            'branch_code' => '',
-            'is_terminated' => database_boolean($roster['is_terminated'] ?? false),
             'started_at' => safe_datetime($row['started_at']),
-            'finished_at' => safe_datetime($row['finished_at']),
-            'duration_sec' => (int)$row['duration_sec'],
+            'duration_sec' => $row['duration_sec'] !== null ? (int)$row['duration_sec'] : null,
             'mode' => (string)($row['mode'] ?? 'Thực hành'),
-            'device_name' => (string)($row['device_name'] ?? ''),
-            'lab_id' => (string)($row['lab_id'] ?? ''),
-            'lab_name' => isset($labMap[(string)($row['lab_id'] ?? '')]) ? $labMap[(string)($row['lab_id'] ?? '')]['lab_name'] : (string)($row['lab_name'] ?? ''),
+            'device_name' => $device,
+            'lab_name' => isset($labMap[$labKey]) ? $labMap[$labKey]['lab_name'] : (string)($row['lab_name'] ?? ''),
             'is_passed' => isset($row['is_passed']) ? (bool)$row['is_passed'] : null,
-            'score' => isset($row['score']) ? (float)$row['score'] : null,
             'status' => (string)($row['status'] ?? ((isset($row['is_passed']) && $row['is_passed'] === false) ? 'failed' : 'completed')),
             'completed_first_try' => database_nullable_boolean($row['completed_first_try'] ?? null),
             'last_action' => (string)($row['last_action'] ?? ''),
-            'is_mock' => database_boolean($row['is_mock'] ?? false),
-            'seed_batch' => (string)($row['seed_batch'] ?? ''),
         ];
 
-        $device = (string)($row['device_name'] ?? '');
         if ($device !== '' && !isset($deviceMap[$device])) {
-            $deviceMap[$device] = [
+            $catalogDevice = [
                 'device_id' => 'DEV_' . count($deviceMap),
                 'model' => $device,
                 'device_name' => $device,
             ];
+            $deviceMap[$device] = $catalogDevice;
+            $deviceById[$catalogDevice['device_id']] = $catalogDevice;
         }
 
-        $labKey = (string)($row['lab_id'] ?? '');
         $labName = (string)($row['lab_name'] ?? $labKey);
         if ($labKey !== '' && !isset($labMap[$labKey])) {
             $labMap[$labKey] = [
@@ -1890,70 +1938,68 @@ function handle_dashboard(array $segments, string $method): void
     }
 
     $assignments = [];
-    try {
-        $assignmentRows = $pdo
-            ->query(
+    $includeAssignments = !array_key_exists('include_assignments', $_GET)
+        || filter_var($_GET['include_assignments'], FILTER_VALIDATE_BOOLEAN);
+    if ($includeAssignments) {
+        try {
+            $assignmentRows = $pdo
+                ->query(
                 <<<'SQL'
                 SELECT
-                    p.assignment_id,
-                    p.employee_code AS employee_id,
-                    p.full_name,
                     p.email,
-                    p.class_id,
                     p.class_code,
-                    p.region_id,
-                    p.region_name,
-                    p.device_id,
+                    p.class_name,
                     p.device_name,
-                    p.lab_id,
                     p.lab_name,
-                    p.assigned_at,
-                    p.due_at,
                     p.assignment_status AS status,
-                    p.completed_at,
-                    p.first_pass_attempt_no,
-                    CASE WHEN p.first_try_success IS NOT NULL THEN TRUE ELSE FALSE END AS first_try_evaluated,
-                    p.practice_attempt_count AS attempt_count,
-                    0 AS avg_duration_sec
+                    p.completed_at
                   FROM v_lab_assignment_progress p
+                  JOIN users dashboard_user
+                    ON dashboard_user.user_id = p.user_id
+                   AND dashboard_user.role = 'user'
                  WHERE p.assignment_status <> 'waived'
-                 ORDER BY p.assigned_at DESC
+                 ORDER BY p.class_code, p.email, p.device_name, p.lab_name
                 SQL
-            )
-            ->fetchAll();
-        foreach ($assignmentRows as $row) {
-            $assignments[] = [
-                'assignment_id' => (string)$row['assignment_id'],
-                'employee_id' => (string)($row['employee_id'] ?? ''),
-                'display_name' => (string)($row['display_name'] ?? ''),
-                'email' => (string)($row['email'] ?? ''),
-                'class_id' => (string)$row['class_id'],
-                'class_code' => (string)$row['class_code'],
-                'region_id' => (string)($row['region_id'] ?? ''),
-                'region_name' => (string)($row['region_name'] ?? ''),
-                'device_id' => (string)$row['device_id'],
-                'device_name' => (string)$row['device_name'],
-                'lab_id' => (string)$row['lab_id'],
-                'lab_name' => (string)$row['lab_name'],
-                'assigned_at' => safe_datetime($row['assigned_at']),
-                'due_at' => safe_datetime($row['due_at']),
-                'status' => (string)$row['status'],
-                'completed_at' => safe_datetime($row['completed_at']),
-                'first_pass_attempt_no' => $row['first_pass_attempt_no'] !== null ? (int)$row['first_pass_attempt_no'] : null,
-                'first_try_evaluated' => (bool)($row['first_try_evaluated'] ?? false),
-                'attempt_count' => (int)($row['attempt_count'] ?? 0),
-                'avg_duration_sec' => (int)($row['avg_duration_sec'] ?? 0),
-            ];
+                )
+                ->fetchAll();
+            foreach ($assignmentRows as $row) {
+                $assignments[] = [
+                    'email' => (string)($row['email'] ?? ''),
+                    'class_code' => (string)$row['class_code'],
+                    'class_name' => (string)($row['class_name'] ?? ''),
+                    'device_name' => (string)$row['device_name'],
+                    'lab_name' => (string)$row['lab_name'],
+                    'status' => (string)$row['status'],
+                    'completed_at' => safe_datetime($row['completed_at']),
+                ];
+            }
+        } catch (Throwable $e) {
+            report_exception($e, 'dashboard-assignments');
         }
-    } catch (Throwable $e) {
-        report_exception($e, 'dashboard-assignments');
     }
+
+    $dashboardTechnicians = array_map(static fn(array $row): array => [
+        'user_id' => (string)$row['user_id'],
+        'email' => (string)($row['email'] ?? ''),
+        'display_name' => $row['display_name'] ?? null,
+        'employee_id' => $row['employee_id'] ?? null,
+        'job_title' => $row['job_title'] ?? null,
+        'class_code' => $row['class_code'] ?? null,
+        'class_name' => $row['class_name'] ?? null,
+        'unit_code' => $row['unit_code'] ?? null,
+        'unit_name' => $row['unit_name'] ?? null,
+        'region_code' => $row['region_code'] ?? null,
+        'branch_code' => $row['branch_code'] ?? null,
+        'dashboard_region' => $row['dashboard_region'] ?? null,
+        'is_terminated' => database_boolean($row['is_terminated'] ?? false),
+        'updated_at' => $row['updated_at'] ?? null,
+    ], $technicianRows);
 
     respond(['data' => [
         'sessions' => $sessions,
         'devices' => array_values($deviceMap),
         'labs' => array_values($labMap),
-        'technicians' => array_map('user_response', $technicianRows),
+        'technicians' => $dashboardTechnicians,
         'assignments' => $assignments,
     ]]);
 }

@@ -79,16 +79,6 @@ const state = {
     detailLabsTouched: false,
     detailSearchLab: '',
 
-    // Lab detail filter & sort
-    labSelectedDevices: new Set(),
-    labSearchDevice: '',
-    labSort: 'attempts_desc',
-    analyticsLabsExpanded: false,
-
-    // Device detail filter & sort
-    deviceSelectedDevices: new Set(),
-    deviceSearchDevice: '',
-    deviceSort: 'sessions_desc',
     detailReportExpandedRegions: new Set(['TDDT', 'TNMT']),
 
     filtersBound: false,
@@ -115,13 +105,8 @@ const state = {
 };
 
 const els = {
-    activeRangeText: document.getElementById('activeRangeText'),
-    kpiRangeLabel: document.getElementById('kpiRangeLabel'),
     sessionsBody: document.getElementById('sessionsBody'),
     learnerTableMeta: document.getElementById('learnerTableMeta'),
-    labBars: document.getElementById('labBars'),
-    deviceGrid: document.getElementById('deviceGrid'),
-    regionBars: document.getElementById('regionBars'),
     detailReportHead: document.getElementById('detailReportHead'),
     detailReportBody: document.getElementById('detailReportBody'),
     detailReportFoot: document.getElementById('detailReportFoot'),
@@ -213,18 +198,6 @@ function escapeHTML(value) {
         '"': '&quot;',
         "'": '&#039;'
     }[char]));
-}
-
-function fillSelect(id, values, defaultLabel) {
-    const select = document.getElementById(id);
-    if (!select) return;
-    const currentValue = select.value;
-    select.innerHTML = `<option value="">${defaultLabel}</option>` + values
-        .map(value => `<option value="${escapeHTML(value)}">${escapeHTML(value)}</option>`)
-        .join('');
-    if ([...select.options].some(option => option.value === currentValue)) {
-        select.value = currentValue;
-    }
 }
 
 function getStatusClass(status) {
@@ -357,35 +330,78 @@ function getKpiComparisonPeriods() {
     };
 }
 
+const MIN_DURATION_SAMPLE_COUNT = 30;
+const MIN_DURATION_COVERAGE_RATE = 10;
+
+function mapReportMetrics(metric) {
+    const practiceAttempts = Number(metric?.practice_attempts) || 0;
+    const durationKnown = Number(metric?.duration_known_count) || 0;
+    const durationCoverage = metric?.duration_coverage_rate === null || metric?.duration_coverage_rate === undefined
+        ? (practiceAttempts ? Math.round((durationKnown / practiceAttempts) * 1000) / 10 : null)
+        : Number(metric.duration_coverage_rate);
+    const durationReliable = durationKnown >= MIN_DURATION_SAMPLE_COUNT
+        && durationCoverage !== null
+        && durationCoverage >= MIN_DURATION_COVERAGE_RATE;
+
+    return {
+        totalSessions: practiceAttempts,
+        guideSessions: Number(metric?.guide_attempts) || 0,
+        learners: Number(metric?.participating_technicians) || 0,
+        completed: Number(metric?.completed_count) || 0,
+        rate: metric?.completion_rate === null || metric?.completion_rate === undefined
+            ? null
+            : Number(metric.completion_rate),
+        passRate: metric?.pass_rate === null || metric?.pass_rate === undefined
+            ? null
+            : Number(metric.pass_rate),
+        firstTryRate: metric?.first_try_rate === null || metric?.first_try_rate === undefined
+            ? null
+            : Number(metric.first_try_rate),
+        avgDuration: durationReliable && metric?.avg_duration_sec !== null && metric?.avg_duration_sec !== undefined
+            ? Number(metric.avg_duration_sec)
+            : null,
+        durationKnown,
+        durationAttempts: practiceAttempts,
+        durationCoverage,
+        durationReliable
+    };
+}
+
 function renderKpis() {
     const periods = getKpiComparisonPeriods();
     const practiceOnly = item => item.mode === 'Thực hành';
     const periodMetrics = rows => {
         const all = computeMetrics(rows);
-        const practice = computeMetrics(rows.filter(practiceOnly));
+        const practiceRows = rows.filter(practiceOnly);
+        const practice = computeMetrics(practiceRows);
+        const gradedRows = practiceRows.filter(item => item.isPassed === true || item.isPassed === false);
+        const passedRows = gradedRows.filter(item => item.isPassed === true);
+        const durationRows = practiceRows.filter(item => Number(item.duration) > 0);
+        const durationCoverage = practiceRows.length
+            ? Math.round((durationRows.length / practiceRows.length) * 1000) / 10
+            : null;
+        const durationReliable = durationRows.length >= MIN_DURATION_SAMPLE_COUNT
+            && durationCoverage !== null
+            && durationCoverage >= MIN_DURATION_COVERAGE_RATE;
         return {
-            totalSessions: all.totalSessions,
+            totalSessions: practice.totalSessions,
+            guideSessions: rows.filter(item => item.mode === 'Hướng dẫn').length,
             learners: all.learners,
             completed: practice.completed,
             rate: practice.rate,
+            passRate: gradedRows.length ? Math.round((passedRows.length / gradedRows.length) * 1000) / 10 : null,
             firstTryRate: practice.firstTryRate,
-            avgDuration: all.avgDuration
+            avgDuration: durationReliable
+                ? Math.round(durationRows.reduce((sum, item) => sum + Number(item.duration), 0) / durationRows.length)
+                : null,
+            durationKnown: durationRows.length,
+            durationAttempts: practiceRows.length,
+            durationCoverage,
+            durationReliable
         };
     };
     const currentRows = filterSessionsByDate(periods.currentStart, periods.currentEnd);
     const previousRows = filterSessionsByDate(periods.previousStart, periods.previousEnd);
-    const mapReportMetrics = metric => ({
-        totalSessions: Number(metric?.practice_attempts) || 0,
-        learners: Number(metric?.participating_technicians) || 0,
-        completed: Number(metric?.passed_count) || 0,
-        rate: metric?.completion_rate === null || metric?.completion_rate === undefined
-            ? null
-            : Number(metric.completion_rate),
-        firstTryRate: metric?.first_try_rate === null || metric?.first_try_rate === undefined
-            ? null
-            : Number(metric.first_try_rate),
-        avgDuration: Number(metric?.avg_duration_sec) || 0
-    });
     const authoritativeSummary = dashboardReport?.summary;
     const currentMetrics = authoritativeSummary
         ? mapReportMetrics(authoritativeSummary.current)
@@ -399,9 +415,11 @@ function renderKpis() {
 
     const definitions = [
         { key: 'totalSessions', valueId: 'kpiSessions', comparisonId: 'kpiSessionsComparison', contextId: 'kpiSessionsContext', type: 'count', unit: 'phiên' },
+        { key: 'guideSessions', valueId: 'kpiGuideSessions', comparisonId: 'kpiGuideSessionsComparison', contextId: 'kpiGuideSessionsContext', type: 'count', unit: 'lượt' },
         { key: 'learners', valueId: 'kpiLearners', comparisonId: 'kpiLearnersComparison', contextId: 'kpiLearnersContext', type: 'count', unit: 'KTV' },
         { key: 'completed', valueId: 'kpiCompleted', comparisonId: 'kpiCompletedComparison', contextId: 'kpiCompletedContext', type: 'count', unit: 'bài' },
         { key: 'rate', valueId: 'kpiCompletionRate', comparisonId: 'kpiCompletionRateComparison', contextId: 'kpiCompletionRateContext', type: 'rate', unit: '%' },
+        { key: 'passRate', valueId: 'kpiPassRate', comparisonId: 'kpiPassRateComparison', contextId: 'kpiPassRateContext', type: 'rate', unit: '%' },
         { key: 'firstTryRate', valueId: 'kpiFirstTryRate', comparisonId: 'kpiFirstTryRateComparison', contextId: 'kpiFirstTryRateContext', type: 'rate', unit: '%' },
         { key: 'avgDuration', valueId: 'kpiAvgDuration', comparisonId: 'kpiAvgDurationComparison', contextId: 'kpiAvgDurationContext', type: 'duration', unit: 'giây', lowerIsBetter: true }
     ];
@@ -462,7 +480,13 @@ function renderKpis() {
                 ? Number(authoritativeSummary.current?.assigned_count || authoritativeSummary.current?.practice_attempts) > 0
                 : currentRows.length > 0;
             const noDataLabel = hasCurrentData ? '' : ' • Chưa có dữ liệu';
-            contextElement.textContent = `${periods.currentLabel}${noDataLabel} • Lũy kế ${formatMetric(lifetimeValue, definition)}${definition.type === 'count' ? ` ${definition.unit}` : ''}`;
+            if (definition.key === 'avgDuration' && !currentMetrics.durationReliable) {
+                const known = formatNumber.format(currentMetrics.durationKnown || 0);
+                const attempts = formatNumber.format(currentMetrics.durationAttempts || 0);
+                contextElement.textContent = `${periods.currentLabel} • ${known}/${attempts} lượt có thời lượng • Chưa đủ mẫu tin cậy`;
+            } else {
+                contextElement.textContent = `${periods.currentLabel}${noDataLabel} • Lũy kế ${formatMetric(lifetimeValue, definition)}${definition.type === 'count' ? ` ${definition.unit}` : ''}`;
+            }
         }
     });
 }
@@ -507,7 +531,7 @@ function buildLearnerSummaries(rows) {
             lastDateTimeMs: latest ? sessionTimestampMs(latest) : 0,
             lastDateTimeFormatted: formatDateTime(latest?.date, latest?.time),
             lastAction: latest?.lastAction || 'N/A',
-            latestDuration: latest?.duration || 0,
+            latestDuration: latest?.duration ?? null,
             completion: item.rows.length ? Math.round((completed / item.rows.length) * 100) : 0
         };
     });
@@ -679,18 +703,19 @@ function renderOverviewMonthlyTrend(rows) {
             ? (reportMonth ? {
                 totalSessions: Number(reportMonth.practice_attempts) || 0,
                 learners: Number(reportMonth.participating_technicians) || 0,
-                completed: Number(reportMonth.passed_count) || 0,
+                completed: Number(reportMonth.completed_count) || 0,
                 rate: reportMonth.completion_rate === null ? null : Number(reportMonth.completion_rate),
+                passRate: reportMonth.pass_rate === null ? null : Number(reportMonth.pass_rate),
                 firstTryRate: reportMonth.first_try_rate === null ? null : Number(reportMonth.first_try_rate),
-                avgDuration: Number(reportMonth.avg_duration_sec) || 0
-            } : { totalSessions: 0, learners: 0, completed: 0, rate: null, firstTryRate: null, avgDuration: 0 })
+                avgDuration: reportMonth.avg_duration_sec === null ? null : Number(reportMonth.avg_duration_sec)
+            } : { totalSessions: 0, learners: 0, completed: 0, rate: null, passRate: null, firstTryRate: null, avgDuration: null })
             : fallbackMetrics;
         return {
             date,
             key: `${date.getFullYear()}-${date.getMonth()}`,
             label: `${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`,
             shortLabel: `T${String(date.getMonth() + 1).padStart(2, '0')}`,
-            isFuture: date > new Date(today.getFullYear(), today.getMonth(), 1),
+            isFuture: Boolean(reportMonth?.is_future) || date > new Date(today.getFullYear(), today.getMonth(), 1),
             ...metrics
         };
     });
@@ -707,7 +732,7 @@ function renderOverviewMonthlyTrend(rows) {
         const height = period.totalSessions ? Math.max(12, Math.round((period.totalSessions / maxSessions) * 100)) : 0;
         const isSelected = period.key === selectedKey;
         return `
-            <div class="ktv-month-column ${isSelected ? 'selected' : ''} ${period.isFuture ? 'future' : ''}" title="${period.label}: ${period.totalSessions} lượt Thực hành, ${period.completed} assignment đạt">
+            <div class="ktv-month-column ${isSelected ? 'selected' : ''} ${period.isFuture ? 'future' : ''}" title="${period.label}: ${period.totalSessions} lượt thực hành, ${period.completed} bài hoàn thành lũy kế">
                 <strong>${period.totalSessions}</strong>
                 <div class="ktv-month-bar-track">
                     <div class="ktv-month-bar" style="height: ${height}%;"></div>
@@ -1072,114 +1097,21 @@ function aggregateBy(rows, key) {
     const map = new Map();
     rows.forEach(item => {
         if (!map.has(item[key])) {
-            map.set(item[key], { name: item[key], sessions: 0, completed: 0, duration: 0 });
+            map.set(item[key], { name: item[key], sessions: 0, completed: 0, duration: 0, durationCount: 0 });
         }
         const row = map.get(item[key]);
         row.sessions += 1;
         row.completed += item.status === 'Hoàn thành' ? 1 : 0;
-        row.duration += item.duration || 0;
+        if (Number(item.duration) > 0) {
+            row.duration += Number(item.duration);
+            row.durationCount += 1;
+        }
     });
     return [...map.values()].map(item => ({
         ...item,
         completion: item.sessions ? Math.round((item.completed / item.sessions) * 100) : 0,
-        avgDuration: item.sessions ? Math.round(item.duration / item.sessions) : 0
+        avgDuration: item.durationCount ? Math.round(item.duration / item.durationCount) : null
     }));
-}
-
-function renderLabs(rows) {
-    if (!els.labBars) return;
-
-    let filteredRows = rows.filter(item => state.labSelectedDevices.has(item.device));
-
-    const sortSelect = document.getElementById('labSortSelect');
-    const sort = sortSelect ? sortSelect.value : 'attempts_desc';
-    const labs = aggregateBy(filteredRows, 'lab').sort((a, b) => {
-        if (sort === 'completion_asc') return a.completion - b.completion;
-        if (sort === 'duration_desc') return b.avgDuration - a.avgDuration;
-        return b.sessions - a.sessions; // attempts_desc
-    });
-
-    const maxSessions = Math.max(...labs.map(item => item.sessions), 1);
-    if (!labs.length) {
-        els.labBars.innerHTML = '<div class="empty">Không có dữ liệu lab.</div>';
-        return;
-    }
-    const visibleLabs = state.analyticsLabsExpanded ? labs : labs.slice(0, 8);
-    const labRows = visibleLabs.map(item => {
-        const width = item.sessions ? Math.max(10, Math.round((item.sessions / maxSessions) * 100)) : 0;
-        return `
-            <div class="bar-row">
-                <div style="font-weight: 600;">${escapeHTML(item.name)}</div>
-                <div class="bar-track"><div class="bar-fill" style="width: ${width}%; background: var(--blue);"></div></div>
-                <div style="font-weight: 700;">${item.sessions} lần làm</div>
-            </div>
-        `;
-    }).join('');
-
-    const expandControl = labs.length > 8
-        ? `<button class="analytics-expand-btn" id="analyticsLabsToggle" type="button">
-                ${state.analyticsLabsExpanded ? 'Thu gọn danh sách' : `Xem tất cả ${labs.length} bài lab`}
-           </button>`
-        : '';
-
-    els.labBars.innerHTML = `${labRows}${expandControl}`;
-    document.getElementById('analyticsLabsToggle')?.addEventListener('click', () => {
-        state.analyticsLabsExpanded = !state.analyticsLabsExpanded;
-        renderLabs(rows);
-    });
-}
-
-function aggregateDevices(rows) {
-    const map = new Map();
-    rows.forEach(item => {
-        if (!map.has(item.device)) {
-            map.set(item.device, { name: item.device, sessions: 0, completed: 0, duration: 0, labsSet: new Set() });
-        }
-        const row = map.get(item.device);
-        row.sessions += 1;
-        row.completed += item.status === 'Hoàn thành' ? 1 : 0;
-        row.duration += item.duration || 0;
-        if (item.lab) row.labsSet.add(item.lab);
-    });
-    return [...map.values()].map(item => {
-        const catalogItem = deviceCatalog.find(d => d.device === item.name || d.device_name === item.name || d.model === item.name);
-        const labsCount = catalogItem?.totalLabs || catalogItem?.labs?.length || item.labsSet.size;
-        return {
-            ...item,
-            labsCount,
-            completion: item.sessions ? Math.round((item.completed / item.sessions) * 100) : 0,
-            avgDuration: item.sessions ? Math.round(item.duration / item.sessions) : 0
-        };
-    });
-}
-
-function renderDevices(rows) {
-    if (!els.deviceGrid) return;
-
-    let filteredRows = rows.filter(item => state.deviceSelectedDevices.has(item.device));
-
-    const sortSelect = document.getElementById('deviceSortSelect');
-    const sort = sortSelect ? sortSelect.value : 'sessions_desc';
-    const devices = aggregateDevices(filteredRows).sort((a, b) => {
-        if (sort === 'completion_asc') return a.completion - b.completion;
-        if (sort === 'duration_desc') return b.avgDuration - a.avgDuration;
-        return b.sessions - a.sessions;
-    });
-    if (!devices.length) {
-        els.deviceGrid.innerHTML = '<div class="empty">Không có dữ liệu thiết bị.</div>';
-        return;
-    }
-    els.deviceGrid.innerHTML = devices.map(item => `
-        <div class="device-box">
-            <div class="device-name">${escapeHTML(item.name)}</div>
-            <div class="device-metrics">
-                <div class="metric-small"><strong>${item.sessions}</strong><span>Lượt làm</span></div>
-                <div class="metric-small"><strong>${item.labsCount}</strong><span>Số bài lab</span></div>
-                <div class="metric-small"><strong>${item.completion}%</strong><span>Hoàn thành</span></div>
-                <div class="metric-small"><strong>${formatDurationCompact(item.avgDuration)}</strong><span>Thời gian TB</span></div>
-            </div>
-        </div>
-    `).join('');
 }
 
 const BASE_REGION_CATALOG = [
@@ -1209,72 +1141,6 @@ function normalizeRegionName(region, learner) {
     if (!value) return getLearnerRegion(learner);
     const directMatch = REGION_FILTER_OPTIONS.find(option => option.toLowerCase() === value.toLowerCase());
     return directMatch || value;
-}
-
-function aggregateRegions(rows) {
-    const map = new Map();
-    rows.forEach(item => {
-        const region = item.region || getLearnerRegion(item.learner);
-        if (!map.has(region)) {
-            map.set(region, { name: region, sessions: 0, completed: 0, duration: 0 });
-        }
-        const row = map.get(region);
-        row.sessions += 1;
-        row.completed += item.status === 'Hoàn thành' ? 1 : 0;
-        row.duration += item.duration || 0;
-    });
-    return [...map.values()].map(item => ({
-        ...item,
-        completion: item.sessions ? Math.round((item.completed / item.sessions) * 100) : 0,
-        avgDuration: item.sessions ? Math.round(item.duration / item.sessions) : 0
-    }));
-}
-
-function renderRegions(rows) {
-    if (!els.regionBars) return;
-    const regionMap = new Map(aggregateRegions(rows).map(region => [region.name, region]));
-    const emptyRegion = name => ({ name, sessions: 0, completed: 0, duration: 0, completion: 0, avgDuration: 0 });
-    const combineRegions = (name, childNames) => {
-        const children = childNames.map(child => regionMap.get(child) || emptyRegion(child));
-        const sessions = children.reduce((sum, child) => sum + child.sessions, 0);
-        const completed = children.reduce((sum, child) => sum + child.completed, 0);
-        const duration = children.reduce((sum, child) => sum + child.duration, 0);
-        return {
-            name,
-            sessions,
-            completed,
-            duration,
-            completion: sessions ? Math.round((completed / sessions) * 100) : 0,
-            avgDuration: sessions ? Math.round(duration / sessions) : 0,
-            isParent: true
-        };
-    };
-    const regions = REGION_CATALOG.flatMap(region => {
-        if (!region.children) return [{ ...(regionMap.get(region.code) || emptyRegion(region.code)) }];
-        return [
-            combineRegions(region.code, region.children),
-            ...region.children.map(child => ({ ...(regionMap.get(child) || emptyRegion(child)), isChild: true }))
-        ];
-    });
-
-    const maxSessions = Math.max(...regions.map(item => item.sessions), 1);
-    if (!regions.length) {
-        els.regionBars.innerHTML = '<div class="empty">Không có dữ liệu vùng.</div>';
-        return;
-    }
-    els.regionBars.innerHTML = regions.map(item => {
-        const width = Math.max(10, Math.round((item.sessions / maxSessions) * 100));
-        return `
-            <div class="bar-row region-tree-row ${item.isParent ? 'region-parent' : ''} ${item.isChild ? 'region-child' : ''}">
-                <div class="region-tree-name" title="${escapeHTML(item.name)}">
-                    ${item.isParent ? '<span class="region-tree-toggle">▼</span>' : (item.isChild ? '<span class="region-tree-bullet">•</span>' : '')}
-                    <span>${escapeHTML(item.name)}</span>
-                </div>
-                <div class="bar-track"><div class="bar-fill" style="width: ${width}%; background: var(--blue);"></div></div>
-                <div style="font-weight: 700;">${item.sessions} lần làm</div>
-            </div>
-        `;
-    }).join('');
 }
 
 function getDetailReportDeviceGroups(rows) {
@@ -1324,7 +1190,7 @@ function renderAuthoritativeDetailedReport(reportMatrix) {
     })));
     const metricCell = (cell = {}, extraClass = '') => {
         const assigned = Number(cell.assigned_count) || 0;
-        const passed = Number(cell.passed_count) || 0;
+        const completed = Number(cell.completed_count) || 0;
         const rate = cell.completion_rate === null || cell.completion_rate === undefined
             ? null
             : Number(cell.completion_rate);
@@ -1334,7 +1200,7 @@ function renderAuthoritativeDetailedReport(reportMatrix) {
         const cssClass = rate >= 80 ? 'report-cell-high' : (rate >= 50 ? 'report-cell-medium' : 'report-cell-low');
         const attempted = Number(cell.attempted_count) || 0;
         const attempts = Number(cell.attempt_count) || 0;
-        return `<td class="report-metric-cell ${cssClass} ${extraClass}" title="${escapeHTML(`${passed}/${assigned} KTV đạt • ${attempted} KTV đã làm • ${attempts} lần làm`)}"><strong>${passed}/${assigned}</strong><span>${rate}% HT</span></td>`;
+        return `<td class="report-metric-cell ${cssClass} ${extraClass}" title="${escapeHTML(`${completed}/${assigned} KTV hoàn thành • ${attempted} KTV đã thực hành • ${attempts} lượt thực hành`)}"><strong>${completed}/${assigned}</strong><span>${rate}% HT</span></td>`;
     };
     els.detailReportHead.innerHTML = `
         <tr class="report-device-header-row">
@@ -1579,7 +1445,6 @@ function updateRangeText(rows) {
     const label = getRangeLabel();
     const dateRangeText = document.getElementById('dateRangeText');
     if (dateRangeText) dateRangeText.textContent = label;
-    if (els.kpiRangeLabel) els.kpiRangeLabel.textContent = label;
 }
 
 function statusToVietnamese(status) {
@@ -1612,33 +1477,12 @@ function timeOnly(value) {
 }
 
 function formatDuration(seconds) {
+    if (seconds === null || seconds === undefined || seconds === '') return '—';
     const total = Math.max(0, Math.round(Number(seconds) || 0));
     if (total < 60) return `${total} giây`;
     const minutes = Math.floor(total / 60);
     const rem = total % 60;
     return rem ? `${minutes} phút ${rem} giây` : `${minutes} phút`;
-}
-
-function formatDurationCompact(seconds) {
-    const total = Math.max(0, Math.round(Number(seconds) || 0));
-    if (total < 60) return `${total}s`;
-    const minutes = Math.floor(total / 60);
-    const rem = total % 60;
-    return rem ? `${minutes}m${rem}s` : `${minutes}m`;
-}
-
-function formatMetricValue(unit, key, value) {
-    if (unit === '%') return `${value}%`;
-    if (key === 'avgDuration') return formatDuration(value);
-    return formatNumber.format(value) + (unit ? ` ${unit}` : '');
-}
-
-function formatMetricDelta(unit, key, value) {
-    const sign = value > 0 ? '+' : (value < 0 ? '-' : '');
-    const abs = Math.abs(Math.round(value * 10) / 10);
-    if (unit === '%') return `${sign}${abs}%`;
-    if (key === 'avgDuration') return `${sign}${formatDuration(abs)}`;
-    return `${sign}${abs}${unit ? ` ${unit}` : ''}`;
 }
 
 let learnerNameMap = new Map();
@@ -1651,41 +1495,26 @@ function normalizeTechnicianCatalog(apiTechnicians = []) {
         displayName: item.display_name || item.displayName || item.email || 'KTV chưa xác định',
         jobTitle: item.job_title || item.jobTitle || '',
         classCode: item.class_code || item.classCode || '',
+        className: item.class_name || item.className || item.class_code || item.classCode || '',
         unitCode: item.unit_code || item.unitCode || '',
         unitName: item.unit_name || item.unitName || '',
         regionCode: item.region_code || item.regionCode || '',
         branchCode: item.branch_code || item.branchCode || '',
-        dashboardRegion: item.dashboard_region || item.dashboardRegion || '',
+        dashboardRegion: item.dashboard_region || item.dashboardRegion || 'Chưa phân vùng',
         isTerminated: Boolean(item.is_terminated ?? item.isTerminated)
     }));
 }
 
 function normalizeTrainingAssignments(apiAssignments = []) {
     return apiAssignments.map(item => ({
-        assignmentId: item.assignment_id || item.assignmentId || '',
-        employeeId: item.employee_id || item.employeeId || '',
         learner: String(item.email || item.learner || '').trim().toLowerCase(),
-        displayName: item.display_name || item.displayName || item.email || '',
-        classId: item.class_id || item.classId || '',
         classCode: item.class_code || item.classCode || '',
-        regionId: item.region_id || item.regionId || '',
-        region: normalizeRegionName(item.region_name || item.regionName || item.region_code || '', item.email),
-        deviceId: item.device_id || item.deviceId || '',
+        className: item.class_name || item.className || item.class_code || item.classCode || '',
         device: item.device_name || item.deviceName || item.device || 'N/A',
-        labId: item.lab_id || item.labId || '',
         lab: item.lab_name || item.labName || item.lab || 'N/A',
-        assignedDate: dateOnly(item.assigned_at || item.assignedAt),
-        dueDate: dateOnly(item.due_at || item.dueAt),
         status: item.status || 'assigned',
-        passed: item.status === 'passed' || Boolean(item.passed),
-        completedAt: item.completed_at || item.completedAt || null,
-        firstPassAttemptNo: item.first_pass_attempt_no === null || item.first_pass_attempt_no === undefined
-            ? null
-            : Number(item.first_pass_attempt_no),
-        firstTryEvaluated: Boolean(item.first_try_evaluated ?? item.firstTryEvaluated),
-        attemptCount: Number(item.attempt_count || item.attemptCount) || 0,
-        attempted: Number(item.attempt_count || item.attemptCount) > 0,
-        avgDuration: Number(item.avg_duration_sec || item.avgDurationSec) || 0
+        completed: ['completed', 'passed'].includes(item.status) || Boolean(item.completed),
+        completedAt: item.completed_at || item.completedAt || null
     }));
 }
 
@@ -1752,7 +1581,13 @@ function mapApiSessions(apiSessions = []) {
             skill: item.skill?.skill_name || item.skill?.skill_id || item.lab?.lab_name || item.lab_name || 'N/A',
             mode: item.mode || 'Thực hành',
             status: statusToVietnamese(item.status),
-            duration: Number(item.duration_sec) || 0,
+            duration: item.duration_sec === null || item.duration_sec === undefined
+                ? null
+                : Number(item.duration_sec),
+            isPassed: item.is_passed === null || item.is_passed === undefined
+                ? null
+                : item.is_passed === true || item.is_passed === 1
+                    || ['1', 't', 'true', 'yes'].includes(String(item.is_passed).trim().toLowerCase()),
             firstTry: item.completed_first_try === null || item.completed_first_try === undefined
                 ? null
                 : item.completed_first_try === true || item.completed_first_try === 1
@@ -1795,6 +1630,7 @@ function setDashboardLoading(visible) {
 let dashboardPollTimer = null;
 let dashboardRefreshInFlight = false;
 let lastDashboardSignature = '';
+let lastDashboardVersion = '';
 let dashboardReportRequestSequence = 0;
 const DASHBOARD_POLL_INTERVAL_MS = 30000;
 
@@ -1805,7 +1641,7 @@ function dashboardReportQuery() {
         to: periods.currentEnd,
         compare_from: periods.previousStart,
         compare_to: periods.previousEnd,
-        cohort: 'due_in_period'
+        cohort: 'assigned_as_of_period_end'
     });
 }
 
@@ -1814,6 +1650,13 @@ async function fetchDashboardReport(query = dashboardReportQuery()) {
     if (!response.ok) throw new Error(`API báo cáo trả về HTTP ${response.status}`);
     const payload = await response.json();
     return payload.data || null;
+}
+
+async function fetchDashboardVersion() {
+    const response = await fetch(`${API_BASE_URL}/dashboard/version`);
+    if (!response.ok) throw new Error(`API phiên bản dashboard trả về HTTP ${response.status}`);
+    const payload = await response.json();
+    return String(payload.data?.data_version || '');
 }
 
 async function reloadDashboardReport() {
@@ -1843,9 +1686,9 @@ function buildDashboardSignature(data) {
     return [
         list.length,
         first?.session_id || '',
-        first?.finished_at || '',
+        first?.started_at || '',
         last?.session_id || '',
-        last?.finished_at || '',
+        last?.started_at || '',
         (data.devices || []).length,
         technicians.length,
         latestTechnicianUpdate,
@@ -1858,15 +1701,20 @@ function buildDashboardSignature(data) {
 
 async function fetchDashboardData() {
     const allParams = new URLSearchParams();
-    if (state.startDate) allParams.set('from', state.startDate);
-    if (state.endDate) allParams.set('to', state.endDate);
-    const [response, reportResponse] = await Promise.all([
+    allParams.set('include_assignments', activeDashboardView === 'instructors' ? '1' : '0');
+    const [response, reportResponse, versionResponse] = await Promise.all([
         fetch(`${API_BASE_URL}/dashboard/all?${allParams}`),
-        fetch(`${API_BASE_URL}/dashboard/report?${dashboardReportQuery()}`)
+        fetch(`${API_BASE_URL}/dashboard/report?${dashboardReportQuery()}`),
+        fetch(`${API_BASE_URL}/dashboard/version`)
     ]);
     if (!response.ok) throw new Error(`API dữ liệu chi tiết trả về HTTP ${response.status}`);
     if (!reportResponse.ok) throw new Error(`API báo cáo trả về HTTP ${reportResponse.status}`);
-    const [payload, reportPayload] = await Promise.all([response.json(), reportResponse.json()]);
+    if (!versionResponse.ok) throw new Error(`API phiên bản dashboard trả về HTTP ${versionResponse.status}`);
+    const [payload, reportPayload, versionPayload] = await Promise.all([
+        response.json(),
+        reportResponse.json(),
+        versionResponse.json()
+    ]);
     const data = payload.data || {};
     const report = reportPayload.data || null;
     const techniciansAuthoritative = Array.isArray(data.technicians);
@@ -1883,6 +1731,7 @@ async function fetchDashboardData() {
         techniciansAuthoritative,
         assignments: normalizeTrainingAssignments(data.assignments || []),
         report,
+        version: String(versionPayload.data?.data_version || ''),
         raw: { ...data, report_meta: report?.meta || null }
     };
 }
@@ -1907,8 +1756,6 @@ function mergeUntouchedFilterSets(allKtvs, allDevices, allLabs, allRegions) {
     if (!state.learnerLabsTouched) state.learnerSelectedLabs = new Set([...state.learnerSelectedLabs, ...allLabs]);
     if (!state.realtimeDevicesTouched) state.realtimeSelectedDevices = new Set([...state.realtimeSelectedDevices, ...allDevices]);
     if (!state.realtimeLabsTouched) state.realtimeSelectedLabs = new Set([...state.realtimeSelectedLabs, ...allLabs]);
-    if (!state.labDevicesTouched) state.labSelectedDevices = new Set([...state.labSelectedDevices, ...allDevices]);
-    if (!state.deviceDevicesTouched) state.deviceSelectedDevices = new Set([...state.deviceSelectedDevices, ...allDevices]);
 }
 
 function mergeDefaultClassLearners() {
@@ -1936,18 +1783,19 @@ function refreshFilterOptionLists() {
     populatePopoverOptions('learnerRegionOptions', allRegions, state.learnerSelectedRegions, () => { state.learnerRegionsTouched = true; });
     populatePopoverOptions('learnerDeviceOptions', allDevices, state.learnerSelectedDevices, () => { state.learnerDevicesTouched = true; });
     populatePopoverOptions('learnerLabOptions', allLabs, state.learnerSelectedLabs, () => { state.learnerLabsTouched = true; });
-    populatePopoverOptions('labDeviceOptions', allDevices, state.labSelectedDevices, () => { state.labDevicesTouched = true; }, state.labSearchDevice);
-    populatePopoverOptions('deviceOptions', allDevices, state.deviceSelectedDevices, () => { state.deviceDevicesTouched = true; }, state.deviceSearchDevice);
 }
 
 async function refreshDashboardData() {
     if (dashboardRefreshInFlight || document.hidden) return;
     dashboardRefreshInFlight = true;
     try {
+        const version = await fetchDashboardVersion();
+        if (version !== '' && version === lastDashboardVersion) return;
         const data = await fetchDashboardData();
         const signature = buildDashboardSignature(data.raw);
         if (signature === lastDashboardSignature) return;
         lastDashboardSignature = signature;
+        lastDashboardVersion = data.version || version;
         applyDashboardData(data);
         const allKtvs = [...new Set(sessions.map(item => item.learner))].sort();
         const allDevices = [...new Set(sessions.map(item => item.device))].sort();
@@ -1977,6 +1825,7 @@ async function loadDashboardFromApi() {
 
         const data = await fetchDashboardData();
         lastDashboardSignature = buildDashboardSignature(data.raw);
+        lastDashboardVersion = data.version || '';
         applyDashboardData(data);
 
         state.selectedLearner = '';
@@ -2011,16 +1860,27 @@ async function guardDashboardAdmin() {
     try {
         response = await fetch(`${API_BASE_URL}/auth/session`);
     } catch (error) {
-        return;
+        console.warn('Không thể xác minh phiên quản trị.', error);
+        setDataSourceLabel('Không thể xác minh phiên quản trị');
+        setDashboardLoading(false);
+        return false;
     }
     const isAdmin = response.ok && (await response.json().catch(() => null))?.user?.role === 'admin';
     if (!isAdmin) {
         window.location.replace(`${window.location.origin}/`);
+        return false;
     }
+    return true;
 }
 
 async function loadInitialDashboardData() {
-    await guardDashboardAdmin();
+    if (!(await guardDashboardAdmin())) return;
+    if (activeDashboardView === 'roster') {
+        setDataSourceLabel('Hồ sơ KTV từ cơ sở dữ liệu');
+        await loadRosterList();
+        setDashboardLoading(false);
+        return;
+    }
     await loadDashboardFromApi();
 
     const requestedLearner = new URLSearchParams(window.location.search).get('learner');
@@ -2030,25 +1890,12 @@ async function loadInitialDashboardData() {
         renderAll();
     }
 
-    initializeInlineComparison();
 }
 
 function initFilters() {
-    fillSelect('deviceFilter', [...new Set(sessions.map(item => item.device))].sort(), 'Tất cả thiết bị');
-    fillSelect('labDeviceFilter', [...new Set(sessions.map(item => item.device))].sort(), 'Tất cả thiết bị');
-
     if (state.filtersBound) return;
     state.filtersBound = true;
 
-    document.getElementById('deviceFilter')?.addEventListener('change', (e) => {
-        state.deviceFilter = e.target.value;
-        renderAll();
-    });
-
-    document.getElementById('labDeviceFilter')?.addEventListener('change', (e) => {
-        state.labDeviceFilter = e.target.value;
-        renderAll();
-    });
 }
 
 let suppressFilterRender = false;
@@ -2233,13 +2080,6 @@ function initPopovers() {
     if (state.realtimeSelectedDevices.size === 0 && !state.realtimeDevicesTouched) {
         state.realtimeSelectedDevices = new Set(allDevices);
     }
-    if (state.labSelectedDevices.size === 0 && !state.labDevicesTouched) {
-        state.labSelectedDevices = new Set(allDevices);
-    }
-    if (state.deviceSelectedDevices.size === 0 && !state.deviceDevicesTouched) {
-        state.deviceSelectedDevices = new Set(allDevices);
-    }
-
     // 1. Realtime KTV Popover
     populatePopoverOptions('realtimeKtvOptions', allKtvs, state.realtimeSelectedKtvs, () => { state.realtimeKtvsTouched = true; }, state.realtimeSearchKtv, getLearnerName);
     document.getElementById('realtimeKtvSearch')?.addEventListener('input', (e) => {
@@ -2496,40 +2336,6 @@ function initPopovers() {
         renderAll();
     });
 
-    // 10. Lab Device Popover
-    populatePopoverOptions('labDeviceOptions', allDevices, state.labSelectedDevices, () => { state.labDevicesTouched = true; }, state.labSearchDevice);
-    document.getElementById('labDeviceSearch')?.addEventListener('input', (e) => {
-        state.labSearchDevice = e.target.value;
-        populatePopoverOptions('labDeviceOptions', allDevices, state.labSelectedDevices, () => { state.labDevicesTouched = true; }, state.labSearchDevice);
-    });
-    document.getElementById('labDeviceClear')?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        state.labSelectedDevices = new Set(allDevices);
-        state.labDevicesTouched = false;
-        state.labSearchDevice = '';
-        const input = document.getElementById('labDeviceSearch');
-        if (input) input.value = '';
-        populatePopoverOptions('labDeviceOptions', allDevices, state.labSelectedDevices, () => { state.labDevicesTouched = true; });
-        renderAll();
-    });
-
-    // 11. Device Section Popover
-    populatePopoverOptions('deviceOptions', allDevices, state.deviceSelectedDevices, () => { state.deviceDevicesTouched = true; }, state.deviceSearchDevice);
-    document.getElementById('deviceSearch')?.addEventListener('input', (e) => {
-        state.deviceSearchDevice = e.target.value;
-        populatePopoverOptions('deviceOptions', allDevices, state.deviceSelectedDevices, () => { state.deviceDevicesTouched = true; }, state.deviceSearchDevice);
-    });
-    document.getElementById('deviceClear')?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        state.deviceSelectedDevices = new Set(allDevices);
-        state.deviceDevicesTouched = false;
-        state.deviceSearchDevice = '';
-        const input = document.getElementById('deviceSearch');
-        if (input) input.value = '';
-        populatePopoverOptions('deviceOptions', allDevices, state.deviceSelectedDevices, () => { state.deviceDevicesTouched = true; });
-        renderAll();
-    });
-
     // Bind triggers toggle
     document.querySelectorAll('.popover-filter-wrapper').forEach(wrapper => {
         const btn = wrapper.querySelector('.popover-trigger-btn, .select-popover-btn, .compact-trigger');
@@ -2654,21 +2460,29 @@ function getDatabaseInstructorClasses() {
     technicianCatalog
         .filter(item => !item.isTerminated && item.email)
         .forEach(item => {
-            const className = item.classCode || 'Chưa xếp lớp';
-            if (!classes.has(className)) classes.set(className, []);
-            classes.get(className).push(item.email);
+            const classCode = item.classCode || '';
+            const key = classCode || '__unassigned__';
+            if (!classes.has(key)) {
+                classes.set(key, {
+                    code: classCode,
+                    name: item.className || classCode || 'Chưa xếp lớp',
+                    members: []
+                });
+            }
+            classes.get(key).members.push(item.email);
         });
     return [...classes.entries()]
-        .sort(([left], [right]) => left.localeCompare(right, 'vi'))
-        .map(([name, members]) => ({
-            id: `db-class-${name}`,
-            name,
-            members: [...new Set(members)].sort((a, b) => a.localeCompare(b, 'vi')),
+        .sort(([, left], [, right]) => left.name.localeCompare(right.name, 'vi'))
+        .map(([key, item]) => ({
+            id: `db-class-${key}`,
+            code: item.code,
+            name: item.name,
+            members: [...new Set(item.members)].sort((a, b) => a.localeCompare(b, 'vi')),
             source: 'database'
         }));
 }
 
-function getInstructorDeviceGroups() {
+function getInstructorDeviceGroups(selectedClass = null) {
     const groups = [];
     const groupMap = new Map();
     const ensureGroup = (deviceName) => {
@@ -2680,6 +2494,17 @@ function getInstructorDeviceGroups() {
         }
         return groupMap.get(name);
     };
+
+    if (trainingAssignments.length && selectedClass) {
+        const members = new Set(selectedClass.members || []);
+        trainingAssignments
+            .filter(item => item.classCode === selectedClass.code && members.has(item.learner))
+            .forEach(item => {
+                const group = ensureGroup(item.device);
+                if (item.lab && !group.labs.includes(item.lab)) group.labs.push(item.lab);
+            });
+        return groups.filter(group => group.labs.length);
+    }
 
     deviceCatalog.forEach(item => {
         const group = ensureGroup(item.device || item.device_name || item.model);
@@ -2765,13 +2590,13 @@ function getInstructorClassProgress(selectedClass, selectedGroups) {
         const selectedMembers = new Set(selectedClass?.members || []);
         const assignmentByLearnerLab = new Map();
         trainingAssignments
-            .filter(item => selectedMembers.has(item.learner))
+            .filter(item => item.classCode === selectedClass?.code && selectedMembers.has(item.learner))
             .forEach(item => assignmentByLearnerLab.set(`${item.learner}\u001f${item.device}\u001f${item.lab}`, item));
         return (selectedClass?.members || []).map(learner => {
             const deviceResults = selectedGroups.map(group => {
                 const labResults = group.labs.map(lab => {
                     const assignment = assignmentByLearnerLab.get(`${learner}\u001f${group.device}\u001f${lab}`);
-                    return { lab, assigned: Boolean(assignment), completed: Boolean(assignment?.passed) };
+                    return { lab, assigned: Boolean(assignment), completed: Boolean(assignment?.completed) };
                 });
                 const assignedResults = labResults.filter(item => item.assigned);
                 const completed = assignedResults.filter(item => item.completed).length;
@@ -2817,8 +2642,8 @@ function getInstructorClassProgress(selectedClass, selectedGroups) {
 }
 
 function getInstructorLabCellClass(completed, assigned = true) {
-    if (!assigned) return 'instructor-progress-zero';
-    return completed ? 'instructor-progress-complete' : 'instructor-progress-zero';
+    if (!assigned) return 'instructor-progress-unassigned';
+    return completed ? 'instructor-progress-complete' : 'instructor-progress-pending';
 }
 
 function getInstructorRateClass(rate) {
@@ -2848,7 +2673,8 @@ function renderInstructorClassProgress() {
     classSelect.value = state.instructorActiveClassId;
     classSelect.disabled = !state.instructorClasses.length;
 
-    const allGroups = getInstructorDeviceGroups();
+    const selectedClass = state.instructorClasses.find(item => item.id === state.instructorActiveClassId);
+    const allGroups = getInstructorDeviceGroups(selectedClass);
     const selectedDeviceStillExists = !state.instructorSelectedDevice || allGroups.some(item => item.device === state.instructorSelectedDevice);
     if (!selectedDeviceStillExists) state.instructorSelectedDevice = '';
     deviceSelect.innerHTML = '<option value="">Tất cả thiết bị</option>' + allGroups
@@ -2856,7 +2682,6 @@ function renderInstructorClassProgress() {
         .join('');
     deviceSelect.value = state.instructorSelectedDevice;
 
-    const selectedClass = state.instructorClasses.find(item => item.id === state.instructorActiveClassId);
     const deleteButton = document.getElementById('instructorClassDelete');
     const exportButton = document.getElementById('instructorClassExport');
     if (deleteButton) deleteButton.disabled = !state.instructorClasses.length || selectedClass?.source === 'database';
@@ -3002,7 +2827,7 @@ async function handleInstructorClassFile(file) {
 function exportInstructorClassCsv() {
     const selectedClass = state.instructorClasses.find(item => item.id === state.instructorActiveClassId);
     if (!selectedClass) return;
-    const groups = getInstructorDeviceGroups().filter(item => !state.instructorSelectedDevice || item.device === state.instructorSelectedDevice);
+    const groups = getInstructorDeviceGroups(selectedClass).filter(item => !state.instructorSelectedDevice || item.device === state.instructorSelectedDevice);
     const progressRows = getInstructorClassProgress(selectedClass, groups);
     const escapeCsv = value => `"${String(value ?? '').replace(/"/g, '""')}"`;
     const header = ['STT', 'KTV', ...groups.flatMap(group => group.labs.map(lab => `${group.device} - ${lab}`)), 'Hoàn thành', 'Tỷ lệ'];
@@ -3090,18 +2915,6 @@ function updatePopoverTriggerLabels() {
     document.getElementById('learnerLabPopoverWrapper')?.classList.toggle('has-filter', labFiltered);
     if (learnerReset) learnerReset.hidden = !ktvFiltered && !emailFiltered && !regionFiltered && !deviceFiltered && !labFiltered && !state.learnerSearchKtv.trim();
 
-    const labLabel = document.getElementById('labDeviceTriggerLabel');
-    if (labLabel) {
-        if (state.labSelectedDevices.size === allDevices.length) labLabel.textContent = 'Tất cả thiết bị';
-        else if (state.labSelectedDevices.size === 0) labLabel.textContent = 'Chưa chọn thiết bị';
-        else labLabel.textContent = `${state.labSelectedDevices.size} thiết bị`;
-    }
-    const devLabel = document.getElementById('deviceTriggerLabel');
-    if (devLabel) {
-        if (state.deviceSelectedDevices.size === allDevices.length) devLabel.textContent = 'Tất cả thiết bị';
-        else if (state.deviceSelectedDevices.size === 0) devLabel.textContent = 'Chưa chọn thiết bị';
-        else devLabel.textContent = `${state.deviceSelectedDevices.size} thiết bị`;
-    }
 }
 
 function initSort() {
@@ -3138,8 +2951,6 @@ function initSort() {
             renderAll();
         });
     });
-    document.getElementById('labSortSelect')?.addEventListener('change', renderAll);
-    document.getElementById('deviceSortSelect')?.addEventListener('change', renderAll);
 }
 
 function populateCalendarSelects() {
@@ -3740,8 +3551,6 @@ function initEvents() {
     });
 }
 
-let currentCompareTableTab = 'overview';
-
 function populatePopoverOptions(containerId, values, selectedSet, onCheckChange, searchVal = '', labelFn = null) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -3777,7 +3586,7 @@ function populatePopoverOptions(containerId, values, selectedSet, onCheckChange,
                 if (suppressFilterRender) deferredFilterCallback = onCheckChange;
                 else onCheckChange();
             }
-            if (!containerId.startsWith('compare') && !suppressFilterRender) {
+            if (!suppressFilterRender) {
                 state.realtimePage = 1;
                 state.learnerTablePage = 1;
                 state.learnerDetailPage = 1;
@@ -3817,10 +3626,11 @@ function computeMetrics(rows) {
 
     const evaluatedCompletions = rows.filter(item => item.status === 'Hoàn thành' && item.firstTry !== null);
     const firstTryCount = evaluatedCompletions.filter(item => item.firstTry).length;
-    const firstTryRate = evaluatedCompletions.length ? Math.round((firstTryCount / evaluatedCompletions.length) * 100) : 0;
+    const firstTryRate = evaluatedCompletions.length ? Math.round((firstTryCount / evaluatedCompletions.length) * 100) : null;
 
-    const totalDuration = rows.reduce((sum, item) => sum + (item.duration || 0), 0);
-    const avgDuration = totalSessions ? Math.round(totalDuration / totalSessions) : 0;
+    const durationRows = rows.filter(item => Number(item.duration) > 0);
+    const totalDuration = durationRows.reduce((sum, item) => sum + Number(item.duration), 0);
+    const avgDuration = durationRows.length ? Math.round(totalDuration / durationRows.length) : null;
 
     return {
         totalSessions,
@@ -3831,729 +3641,6 @@ function computeMetrics(rows) {
         evaluatedFirstTry: evaluatedCompletions.length,
         avgDuration
     };
-}
-
-function formatDateRangeLabel(startStr, endStr) {
-    if (!startStr && !endStr) return 'Toàn bộ thời gian';
-    if (startStr && endStr) return `${formatDate(startStr)} - ${formatDate(endStr)}`;
-    if (startStr) return `Từ ${formatDate(startStr)}`;
-    return `Đến ${formatDate(endStr)}`;
-}
-
-function formatDateShortRange(startStr, endStr) {
-    if (!startStr || !endStr) return '';
-    const dStart = parseDate(startStr);
-    const dEnd = parseDate(endStr);
-    const sDay = String(dStart.getDate()).padStart(2, '0');
-    const sMonth = String(dStart.getMonth() + 1).padStart(2, '0');
-    const eDay = String(dEnd.getDate()).padStart(2, '0');
-    const eMonth = String(dEnd.getMonth() + 1).padStart(2, '0');
-    return `${sDay}/${sMonth} - ${eDay}/${eMonth}`;
-}
-
-const ALL_METRIC_MAP = {
-    totalSessions: 'Tổng số phiên làm lab',
-    learners: 'Số KTV tham gia',
-    completed: 'Số lab đã hoàn thành',
-    rate: 'Tỷ lệ hoàn thành',
-    firstTryRate: 'Hoàn thành lần đầu',
-    avgDuration: 'Thời gian trung bình'
-};
-
-const compareState = {
-    sortKey: 'name',
-    sortDir: 'asc',
-    selectedMetrics: new Set(Object.keys(ALL_METRIC_MAP)),
-    searchMetric: '',
-    selectedRegions: new Set(),
-    searchRegion: '',
-    selectedKtvs: new Set(),
-    searchKtv: ''
-};
-
-function renderCompareCards(metricsA, metricsB, startA, endA) {
-    const cardsGrid = document.getElementById('compareCardsGrid');
-    if (!cardsGrid) return;
-
-    const shortA = formatDateShortRange(startA, endA);
-    const labelSubtextSuffix = shortA ? ` (Kỳ A: ${shortA})` : ' so với Kỳ A';
-
-    const cardsDef = [
-        {
-            key: 'totalSessions',
-            title: 'Tổng số phiên làm lab',
-            unit: 'phiên',
-            icon: `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>`,
-            isHigherBetter: true
-        },
-        {
-            key: 'learners',
-            title: 'Số KTV tham gia thực hành',
-            unit: 'người',
-            icon: `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>`,
-            isHigherBetter: true
-        },
-        {
-            key: 'completed',
-            title: 'Số bài lab đã hoàn thành',
-            unit: 'bài',
-            icon: `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
-            isHigherBetter: true
-        },
-        {
-            key: 'rate',
-            title: 'Tỷ lệ hoàn thành tổng thể',
-            unit: '%',
-            icon: `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>`,
-            isHigherBetter: true
-        },
-        {
-            key: 'firstTryRate',
-            title: 'Hoàn thành ngay lần đầu',
-            unit: '%',
-            icon: `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>`,
-            isHigherBetter: true
-        },
-        {
-            key: 'avgDuration',
-            title: 'Thời gian làm bài trung bình',
-            unit: 'giây',
-            icon: `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
-            isHigherBetter: false
-        }
-    ];
-
-    cardsGrid.innerHTML = cardsDef.map(card => {
-        const valA = metricsA[card.key];
-        const valB = metricsB[card.key];
-        const diff = Math.round((valB - valA) * 10) / 10;
-
-        let subtext = '';
-        let subClass = 'sub-neutral';
-
-        if (diff > 0) {
-            const isGood = card.isHigherBetter;
-            subClass = isGood ? 'sub-positive' : 'sub-negative';
-            subtext = `${formatMetricDelta(card.unit, card.key, diff)}${labelSubtextSuffix}`;
-        } else if (diff < 0) {
-            const isGood = !card.isHigherBetter;
-            subClass = isGood ? 'sub-positive' : 'sub-negative';
-            subtext = `${formatMetricDelta(card.unit, card.key, diff)}${labelSubtextSuffix}`;
-        } else {
-            subtext = `Bằng với Kỳ A${shortA ? ' (' + shortA + ')' : ''}`;
-        }
-
-        const valFormatted = formatMetricValue(card.unit, card.key, valB);
-
-        return `
-            <div class="compare-stat-card">
-                <div class="compare-card-top">
-                    <div class="compare-card-title">${card.title}</div>
-                    <div class="compare-card-icon">${card.icon}</div>
-                </div>
-                <div class="compare-card-value">${valFormatted}</div>
-                <div class="compare-card-subtext ${subClass}">${subtext}</div>
-                <div class="compare-card-watermark"></div>
-            </div>
-        `;
-    }).join('');
-}
-
-function renderCompareTable(rowsA, rowsB, metricsA, metricsB, startA, endA, startB, endB) {
-    const tableHead = document.getElementById('compareTableHead');
-    const tableBody = document.getElementById('compareTableBody');
-    const tableFoot = document.getElementById('compareTableFoot');
-    if (!tableHead || !tableBody) return;
-
-    const labelA = formatDateRangeLabel(startA, endA);
-    const labelB = formatDateRangeLabel(startB, endB);
-
-    if (currentCompareTableTab === 'overview') {
-        const allMetricEntries = Object.entries(ALL_METRIC_MAP);
-        if (compareState.selectedMetrics.size === 0) {
-            allMetricEntries.forEach(([k]) => compareState.selectedMetrics.add(k));
-        }
-
-        tableHead.innerHTML = `
-            <tr>
-                <th>
-                    <div class="popover-filter-wrapper" id="compareMetricPopoverWrapper">
-                        <button class="sort-button popover-trigger-btn" type="button" data-compare-key="label">
-                            Chỉ số <span class="sort-mark">${compareState.sortKey === 'label' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span>
-                        </button>
-                        <div class="popover-dropdown" id="compareMetricDropdown">
-                            <input type="text" class="popover-search" id="compareMetricSearch" value="${escapeHTML(compareState.searchMetric)}" placeholder="Tìm chỉ số...">
-                            <div class="popover-options" id="compareMetricOptions"></div>
-                            <div class="popover-footer">
-                                <button type="button" class="popover-btn-clear" id="compareMetricClear">Xóa lọc</button>
-                            </div>
-                        </div>
-                    </div>
-                </th>
-                <th><button class="sort-button" type="button" data-compare-key="valA">Kỳ A <span class="sort-mark">${compareState.sortKey === 'valA' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>
-                <th><button class="sort-button" type="button" data-compare-key="valB">Kỳ B <span class="sort-mark">${compareState.sortKey === 'valB' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>
-                <th><button class="sort-button" type="button" data-compare-key="diff">Chênh lệch <span class="sort-mark">${compareState.sortKey === 'diff' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>
-                <th><button class="sort-button" type="button" data-compare-key="pct">Tỷ lệ thay đổi <span class="sort-mark">${compareState.sortKey === 'pct' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>
-            </tr>
-        `;
-
-        populatePopoverOptions('compareMetricOptions', allMetricEntries.map(([k, v]) => v), new Set([...compareState.selectedMetrics].map(k => ALL_METRIC_MAP[k])), () => {
-            const selectedLabels = new Set();
-            document.querySelectorAll('#compareMetricOptions input:checked').forEach(cb => selectedLabels.add(cb.value));
-            compareState.selectedMetrics = new Set(allMetricEntries.filter(([k, v]) => selectedLabels.has(v)).map(([k]) => k));
-            renderCompareResults();
-        }, compareState.searchMetric);
-
-        let metricsDef = [
-            { key: 'totalSessions', label: 'Tổng số phiên làm lab', unit: 'phiên', isHigherBetter: true },
-            { key: 'learners', label: 'Số KTV tham gia', unit: 'người', isHigherBetter: true },
-            { key: 'completed', label: 'Số lab đã hoàn thành', unit: 'bài', isHigherBetter: true },
-            { key: 'rate', label: 'Tỷ lệ hoàn thành', unit: '%', isHigherBetter: true },
-            { key: 'firstTryRate', label: 'Hoàn thành lần đầu', unit: '%', isHigherBetter: true },
-            { key: 'avgDuration', label: 'Thời gian trung bình', unit: 'giây', isHigherBetter: false }
-        ]
-        .filter(m => compareState.selectedMetrics.has(m.key))
-        .map(m => {
-            const valA = metricsA[m.key];
-            const valB = metricsB[m.key];
-            const diff = Math.round((valB - valA) * 10) / 10;
-            const pct = valA > 0 ? Math.round(((valB - valA) / valA) * 100) : (valB > 0 ? 100 : 0);
-            return { ...m, valA, valB, diff, pct };
-        });
-
-        metricsDef.sort((a, b) => compareValues(a[compareState.sortKey || 'label'], b[compareState.sortKey || 'label'], compareState.sortDir));
-
-        tableBody.innerHTML = metricsDef.map(m => {
-            const valAFormatted = formatMetricValue(m.unit, m.key, m.valA);
-            const valBFormatted = formatMetricValue(m.unit, m.key, m.valB);
-
-            let diffText = formatMetricDelta(m.unit, m.key, m.diff);
-            if (m.diff !== 0 && m.unit !== '%' && m.key !== 'avgDuration' && m.unit) diffText += ` ${m.unit}`;
-
-            let pctText = m.pct > 0 ? `+${m.pct}%` : `${m.pct}%`;
-            if (m.diff === 0) {
-                diffText = '0';
-                pctText = '0%';
-            }
-
-            return `
-                <tr>
-                    <td><strong>${m.label}</strong></td>
-                    <td>${valAFormatted}</td>
-                    <td>${valBFormatted}</td>
-                    <td><strong style="color: ${m.diff > 0 ? '#16a34a' : (m.diff < 0 ? '#dc2626' : 'inherit')};">${diffText}</strong></td>
-                    <td><span class="compare-metric-delta ${m.pct > 0 ? (m.isHigherBetter ? 'delta-up' : 'delta-down') : (m.pct < 0 ? (m.isHigherBetter ? 'delta-down' : 'delta-up') : 'delta-neutral')}">${pctText}</span></td>
-                </tr>
-            `;
-        }).join('');
-
-        if (tableFoot) {
-            const totalDiff = rowsB.length - rowsA.length;
-            const totalPct = rowsA.length > 0 ? Math.round(((rowsB.length - rowsA.length) / rowsA.length) * 100) : (rowsB.length > 0 ? 100 : 0);
-
-            tableFoot.innerHTML = `
-                <tr>
-                    <td>Tổng (${metricsDef.length} chỉ số)</td>
-                    <td>${formatNumber.format(rowsA.length)} phiên</td>
-                    <td>${formatNumber.format(rowsB.length)} phiên</td>
-                    <td><strong style="color: ${totalDiff > 0 ? '#16a34a' : (totalDiff < 0 ? '#dc2626' : 'inherit')};">${totalDiff > 0 ? '+' : ''}${totalDiff} phiên</strong></td>
-                    <td><span class="compare-metric-delta ${totalPct > 0 ? 'delta-up' : (totalPct < 0 ? 'delta-down' : 'delta-neutral')}">${totalPct > 0 ? '+' : ''}${totalPct}%</span></td>
-                </tr>
-            `;
-        }
-    } else if (currentCompareTableTab === 'region') {
-        const allRegions = [...new Set(sessions.map(s => s.region || 'Chưa phân vùng'))].sort();
-        if (compareState.selectedRegions.size === 0) {
-            allRegions.forEach(r => compareState.selectedRegions.add(r));
-        }
-
-        tableHead.innerHTML = `
-            <tr>
-                <th>
-                    <div class="popover-filter-wrapper" id="compareRegionPopoverWrapper">
-                        <button class="sort-button popover-trigger-btn" type="button" data-compare-key="name">
-                            Vùng <span class="sort-mark">${compareState.sortKey === 'name' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span>
-                        </button>
-                        <div class="popover-dropdown" id="compareRegionDropdown">
-                            <input type="text" class="popover-search" id="compareRegionSearch" value="${escapeHTML(compareState.searchRegion)}" placeholder="Tìm vùng...">
-                            <div class="popover-options" id="compareRegionOptions"></div>
-                            <div class="popover-footer">
-                                <button type="button" class="popover-btn-clear" id="compareRegionClear">Xóa lọc</button>
-                            </div>
-                        </div>
-                    </div>
-                </th>
-                <th><button class="sort-button" type="button" data-compare-key="totA">Kỳ A <span class="sort-mark">${compareState.sortKey === 'totA' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>
-                <th><button class="sort-button" type="button" data-compare-key="totB">Kỳ B <span class="sort-mark">${compareState.sortKey === 'totB' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>
-                <th><button class="sort-button" type="button" data-compare-key="rateA">Tỷ lệ HT (A) <span class="sort-mark">${compareState.sortKey === 'rateA' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>
-                <th><button class="sort-button" type="button" data-compare-key="rateB">Tỷ lệ HT (B) <span class="sort-mark">${compareState.sortKey === 'rateB' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>
-                <th><button class="sort-button" type="button" data-compare-key="diff">Chênh lệch <span class="sort-mark">${compareState.sortKey === 'diff' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>
-                <th><button class="sort-button" type="button" data-compare-key="pct">Thay đổi (%) <span class="sort-mark">${compareState.sortKey === 'pct' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>
-            </tr>
-        `;
-
-        populatePopoverOptions('compareRegionOptions', allRegions, compareState.selectedRegions, () => {
-            renderCompareResults();
-        }, compareState.searchRegion);
-
-        const mapA = new Map();
-        rowsA.forEach(r => {
-            const reg = r.region || 'Chưa phân vùng';
-            if (!mapA.has(reg)) mapA.set(reg, { total: 0, completed: 0 });
-            const item = mapA.get(reg);
-            item.total++;
-            if (r.status === 'Hoàn thành') item.completed++;
-        });
-
-        const mapB = new Map();
-        rowsB.forEach(r => {
-            const reg = r.region || 'Chưa phân vùng';
-            if (!mapB.has(reg)) mapB.set(reg, { total: 0, completed: 0 });
-            const item = mapB.get(reg);
-            item.total++;
-            if (r.status === 'Hoàn thành') item.completed++;
-        });
-
-        let list = [...new Set([...mapA.keys(), ...mapB.keys()])]
-            .filter(reg => compareState.selectedRegions.has(reg))
-            .map(reg => {
-                const a = mapA.get(reg) || { total: 0, completed: 0 };
-                const b = mapB.get(reg) || { total: 0, completed: 0 };
-                const rateA = a.total ? Math.round((a.completed / a.total) * 100) : 0;
-                const rateB = b.total ? Math.round((b.completed / b.total) * 100) : 0;
-                const diff = b.total - a.total;
-                const pct = a.total > 0 ? Math.round(((b.total - a.total) / a.total) * 100) : (b.total > 0 ? 100 : 0);
-                return { name: reg, totA: a.total, compA: a.completed, totB: b.total, compB: b.completed, rateA, rateB, diff, pct };
-            });
-
-        list.sort((a, b) => compareValues(a[compareState.sortKey || 'name'], b[compareState.sortKey || 'name'], compareState.sortDir));
-
-        if (!list.length) {
-            tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; color: var(--muted);">Không có dữ liệu vùng phù hợp.</td></tr>';
-            if (tableFoot) tableFoot.innerHTML = '';
-            return;
-        }
-
-        tableBody.innerHTML = list.map(item => `
-            <tr>
-                <td><strong title="${escapeHTML(item.name)}">${escapeHTML(getLearnerName(item.name))}</strong></td>
-                <td>${item.totA} phiên (${item.compA} HT)</td>
-                <td>${item.totB} phiên (${item.compB} HT)</td>
-                <td>${item.rateA}%</td>
-                <td>${item.rateB}%</td>
-                <td><strong style="color: ${item.diff > 0 ? '#16a34a' : (item.diff < 0 ? '#dc2626' : 'inherit')};">${item.diff > 0 ? '+' : ''}${item.diff}</strong></td>
-                <td><span class="compare-metric-delta ${item.pct > 0 ? 'delta-up' : (item.pct < 0 ? 'delta-down' : 'delta-neutral')}">${item.pct > 0 ? '+' : ''}${item.pct}%</span></td>
-            </tr>
-        `).join('');
-
-        if (tableFoot) {
-            const sumTotA = list.reduce((s, i) => s + i.totA, 0);
-            const sumCompA = list.reduce((s, i) => s + i.compA, 0);
-            const sumTotB = list.reduce((s, i) => s + i.totB, 0);
-            const sumCompB = list.reduce((s, i) => s + i.compB, 0);
-
-            const avgRateA = sumTotA ? Math.round((sumCompA / sumTotA) * 100) : 0;
-            const avgRateB = sumTotB ? Math.round((sumCompB / sumTotB) * 100) : 0;
-            const sumDiff = sumTotB - sumTotA;
-            const sumPct = sumTotA > 0 ? Math.round(((sumTotB - sumTotA) / sumTotA) * 100) : (sumTotB > 0 ? 100 : 0);
-
-            tableFoot.innerHTML = `
-                <tr>
-                    <td>Tổng (${list.length} Vùng)</td>
-                    <td>${sumTotA} phiên (${sumCompA} HT)</td>
-                    <td>${sumTotB} phiên (${sumCompB} HT)</td>
-                    <td>${avgRateA}%</td>
-                    <td>${avgRateB}%</td>
-                    <td><strong style="color: ${sumDiff > 0 ? '#16a34a' : (sumDiff < 0 ? '#dc2626' : 'inherit')};">${sumDiff > 0 ? '+' : ''}${sumDiff}</strong></td>
-                    <td><span class="compare-metric-delta ${sumPct > 0 ? 'delta-up' : (sumPct < 0 ? 'delta-down' : 'delta-neutral')}">${sumPct > 0 ? '+' : ''}${sumPct}%</span></td>
-                </tr>
-            `;
-        }
-    } else if (currentCompareTableTab === 'learner') {
-        const allKtvs = [...new Set(sessions.map(s => s.learner || 'Unknown'))].sort();
-        if (compareState.selectedKtvs.size === 0) {
-            allKtvs.forEach(k => compareState.selectedKtvs.add(k));
-        }
-
-        tableHead.innerHTML = `
-            <tr>
-                <th>
-                    <div class="popover-filter-wrapper" id="compareKtvPopoverWrapper">
-                        <button class="sort-button popover-trigger-btn" type="button" data-compare-key="name">
-                            Technician (KTV) <span class="sort-mark">${compareState.sortKey === 'name' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span>
-                        </button>
-                        <div class="popover-dropdown" id="compareKtvDropdown">
-                            <input type="text" class="popover-search" id="compareKtvSearch" value="${escapeHTML(compareState.searchKtv)}" placeholder="Tìm KTV...">
-                            <div class="popover-options" id="compareKtvOptions"></div>
-                            <div class="popover-footer">
-                                <button type="button" class="popover-btn-clear" id="compareKtvClear">Xóa lọc</button>
-                            </div>
-                        </div>
-                    </div>
-                </th>
-                <th><button class="sort-button" type="button" data-compare-key="region">Vùng <span class="sort-mark">${compareState.sortKey === 'region' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>
-                <th><button class="sort-button" type="button" data-compare-key="totA">Kỳ A <span class="sort-mark">${compareState.sortKey === 'totA' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>
-                <th><button class="sort-button" type="button" data-compare-key="totB">Kỳ B <span class="sort-mark">${compareState.sortKey === 'totB' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>
-                <th><button class="sort-button" type="button" data-compare-key="compA">HT (A) <span class="sort-mark">${compareState.sortKey === 'compA' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>
-                <th><button class="sort-button" type="button" data-compare-key="compB">HT (B) <span class="sort-mark">${compareState.sortKey === 'compB' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>
-                <th><button class="sort-button" type="button" data-compare-key="diff">Chênh lệch <span class="sort-mark">${compareState.sortKey === 'diff' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>
-                <th><button class="sort-button" type="button" data-compare-key="pct">Thay đổi (%) <span class="sort-mark">${compareState.sortKey === 'pct' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>
-            </tr>
-        `;
-
-        populatePopoverOptions('compareKtvOptions', allKtvs, compareState.selectedKtvs, () => {
-            renderCompareResults();
-        }, compareState.searchKtv);
-
-        const mapA = new Map();
-        rowsA.forEach(r => {
-            const learner = r.learner || 'N/A';
-            if (!mapA.has(learner)) mapA.set(learner, { total: 0, completed: 0, region: r.region });
-            const item = mapA.get(learner);
-            item.total++;
-            if (r.status === 'Hoàn thành') item.completed++;
-        });
-
-        const mapB = new Map();
-        rowsB.forEach(r => {
-            const learner = r.learner || 'N/A';
-            if (!mapB.has(learner)) mapB.set(learner, { total: 0, completed: 0, region: r.region });
-            const item = mapB.get(learner);
-            item.total++;
-            if (r.status === 'Hoàn thành') item.completed++;
-        });
-
-        let list = [...new Set([...mapA.keys(), ...mapB.keys()])]
-            .filter(learner => compareState.selectedKtvs.has(learner))
-            .map(learner => {
-                const a = mapA.get(learner) || { total: 0, completed: 0, region: '' };
-                const b = mapB.get(learner) || { total: 0, completed: 0, region: '' };
-                const region = b.region || a.region || 'N/A';
-                const diff = b.total - a.total;
-                const pct = a.total > 0 ? Math.round(((b.total - a.total) / a.total) * 100) : (b.total > 0 ? 100 : 0);
-                return { name: learner, region, totA: a.total, compA: a.completed, totB: b.total, compB: b.completed, diff, pct };
-            });
-
-        list.sort((a, b) => compareValues(a[compareState.sortKey || 'name'], b[compareState.sortKey || 'name'], compareState.sortDir));
-
-        if (!list.length) {
-            tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center; color: var(--muted);">Không có dữ liệu KTV phù hợp.</td></tr>';
-            if (tableFoot) tableFoot.innerHTML = '';
-            return;
-        }
-
-        tableBody.innerHTML = list.map(item => `
-            <tr>
-                <td><strong title="${escapeHTML(item.name)}">${escapeHTML(getLearnerName(item.name))}</strong></td>
-                <td>${escapeHTML(item.region)}</td>
-                <td>${item.totA}</td>
-                <td>${item.totB}</td>
-                <td>${item.compA}</td>
-                <td>${item.compB}</td>
-                <td><strong style="color: ${item.diff > 0 ? '#16a34a' : (item.diff < 0 ? '#dc2626' : 'inherit')};">${item.diff > 0 ? '+' : ''}${item.diff}</strong></td>
-                <td><span class="compare-metric-delta ${item.pct > 0 ? 'delta-up' : (item.pct < 0 ? 'delta-down' : 'delta-neutral')}">${item.pct > 0 ? '+' : ''}${item.pct}%</span></td>
-            </tr>
-        `).join('');
-
-        if (tableFoot) {
-            const sumTotA = list.reduce((s, i) => s + i.totA, 0);
-            const sumCompA = list.reduce((s, i) => s + i.compA, 0);
-            const sumTotB = list.reduce((s, i) => s + i.totB, 0);
-            const sumCompB = list.reduce((s, i) => s + i.compB, 0);
-            const sumDiff = sumTotB - sumTotA;
-            const sumPct = sumTotA > 0 ? Math.round(((sumTotB - sumTotA) / sumTotA) * 100) : (sumTotB > 0 ? 100 : 0);
-
-            tableFoot.innerHTML = `
-                <tr>
-                    <td>Tổng (${list.length} KTV)</td>
-                    <td>-</td>
-                    <td>${sumTotA}</td>
-                    <td>${sumTotB}</td>
-                    <td>${sumCompA}</td>
-                    <td>${sumCompB}</td>
-                    <td><strong style="color: ${sumDiff > 0 ? '#16a34a' : (sumDiff < 0 ? '#dc2626' : 'inherit')};">${sumDiff > 0 ? '+' : ''}${sumDiff}</strong></td>
-                    <td><span class="compare-metric-delta ${sumPct > 0 ? 'delta-up' : (sumPct < 0 ? 'delta-down' : 'delta-neutral')}">${sumPct > 0 ? '+' : ''}${sumPct}%</span></td>
-                </tr>
-            `;
-        }
-    }
-
-    // Attach click listeners for sorting on table headers
-    tableHead.querySelectorAll('.sort-button[data-compare-key]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const key = btn.dataset.compareKey;
-            if (compareState.sortKey === key) {
-                compareState.sortDir = compareState.sortDir === 'asc' ? 'desc' : 'asc';
-            } else {
-                compareState.sortKey = key;
-                compareState.sortDir = ['totA', 'totB', 'compA', 'compB', 'diff', 'pct', 'valA', 'valB'].includes(key) ? 'desc' : 'asc';
-            }
-            renderCompareResults();
-        });
-    });
-
-    // Attach search & clear event listeners for compare popovers
-    document.getElementById('compareMetricSearch')?.addEventListener('input', (e) => {
-        compareState.searchMetric = e.target.value;
-        const allMetricEntries = Object.entries(ALL_METRIC_MAP);
-        populatePopoverOptions('compareMetricOptions', allMetricEntries.map(([k, v]) => v), new Set([...compareState.selectedMetrics].map(k => ALL_METRIC_MAP[k])), () => {
-            const selectedLabels = new Set();
-            document.querySelectorAll('#compareMetricOptions input:checked').forEach(cb => selectedLabels.add(cb.value));
-            compareState.selectedMetrics = new Set(allMetricEntries.filter(([k, v]) => selectedLabels.has(v)).map(([k]) => k));
-            renderCompareResults();
-        }, compareState.searchMetric);
-    });
-
-    document.getElementById('compareMetricClear')?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        compareState.searchMetric = '';
-        compareState.selectedMetrics = new Set(Object.keys(ALL_METRIC_MAP));
-        renderCompareResults();
-    });
-
-    document.getElementById('compareRegionSearch')?.addEventListener('input', (e) => {
-        compareState.searchRegion = e.target.value;
-        const allRegions = [...new Set(sessions.map(s => s.region || 'Chưa phân vùng'))].sort();
-        populatePopoverOptions('compareRegionOptions', allRegions, compareState.selectedRegions, () => {
-            renderCompareResults();
-        }, compareState.searchRegion);
-    });
-
-    document.getElementById('compareRegionClear')?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        compareState.searchRegion = '';
-        const allRegions = [...new Set(sessions.map(s => s.region || 'Chưa phân vùng'))].sort();
-        compareState.selectedRegions = new Set(allRegions);
-        renderCompareResults();
-    });
-
-    document.getElementById('compareKtvSearch')?.addEventListener('input', (e) => {
-        compareState.searchKtv = e.target.value;
-        const allKtvs = [...new Set(sessions.map(s => s.learner || 'Unknown'))].sort();
-        populatePopoverOptions('compareKtvOptions', allKtvs, compareState.selectedKtvs, () => {
-            renderCompareResults();
-        }, compareState.searchKtv);
-    });
-
-    document.getElementById('compareKtvClear')?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        compareState.searchKtv = '';
-        const allKtvs = [...new Set(sessions.map(s => s.learner || 'Unknown'))].sort();
-        compareState.selectedKtvs = new Set(allKtvs);
-        renderCompareResults();
-    });
-
-    // Re-bind click event for compare popover trigger buttons inside modal header
-    tableHead.querySelectorAll('.popover-filter-wrapper').forEach(wrapper => {
-        const btn = wrapper.querySelector('.popover-trigger-btn');
-        btn?.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const isOpen = wrapper.classList.contains('open');
-            document.querySelectorAll('.popover-filter-wrapper').forEach(w => w.classList.remove('open'));
-            if (!isOpen) wrapper.classList.add('open');
-        });
-        wrapper.querySelector('.popover-dropdown')?.addEventListener('click', (e) => {
-            e.stopPropagation();
-        });
-    });
-}
-
-function renderCompareResults() {
-    const startA = document.getElementById('compareStartA')?.value || '';
-    const endA = document.getElementById('compareEndA')?.value || '';
-    const startB = document.getElementById('compareStartB')?.value || '';
-    const endB = document.getElementById('compareEndB')?.value || '';
-
-    const rowsA = filterSessionsByDate(startA, endA).filter(item => item.mode === 'Thực hành');
-    const rowsB = filterSessionsByDate(startB, endB).filter(item => item.mode === 'Thực hành');
-
-    const metricsA = computeMetrics(rowsA);
-    const metricsB = computeMetrics(rowsB);
-
-    const labelA = formatDateRangeLabel(startA, endA);
-    const labelB = formatDateRangeLabel(startB, endB);
-
-    const dataNotice = document.getElementById('compareDataNotice');
-    if (dataNotice) {
-        const emptyPeriods = [];
-        if (!rowsA.length) emptyPeriods.push(`Kỳ A (${labelA})`);
-        if (!rowsB.length) emptyPeriods.push(`Kỳ B (${labelB})`);
-        dataNotice.hidden = emptyPeriods.length === 0;
-        dataNotice.textContent = emptyPeriods.length
-            ? `${emptyPeriods.join(' và ')} chưa có dữ liệu; các chỉ số tương ứng được hiển thị là 0.`
-            : '';
-    }
-
-    const legendContainer = document.getElementById('compareLegend');
-    if (legendContainer) {
-        legendContainer.innerHTML = `
-            <span class="legend-item"><span class="period-dot dot-a"></span> Kỳ A (${escapeHTML(labelA)})</span>
-            <span class="legend-item"><span class="period-dot dot-b"></span> Kỳ B (${escapeHTML(labelB)})</span>
-        `;
-    }
-
-    // 1. Render Section 1 Views (Cards & Bars)
-    renderCompareCards(metricsA, metricsB, startA, endA);
-
-    const metricsDef = [
-        { key: 'totalSessions', label: 'Tổng số phiên làm lab', unit: 'phiên', isHigherBetter: true },
-        { key: 'learners', label: 'Số KTV tham gia', unit: 'người', isHigherBetter: true },
-        { key: 'completed', label: 'Số lab đã hoàn thành', unit: 'bài', isHigherBetter: true },
-        { key: 'rate', label: 'Tỷ lệ hoàn thành', unit: '%', isHigherBetter: true },
-        { key: 'firstTryRate', label: 'Hoàn thành lần đầu', unit: '%', isHigherBetter: true },
-        { key: 'avgDuration', label: 'Thời gian trung bình', unit: 'giây', isHigherBetter: false }
-    ];
-
-    const barsGrid = document.getElementById('compareBarsGrid');
-    if (barsGrid) {
-        barsGrid.innerHTML = metricsDef.map(m => {
-            const valA = metricsA[m.key];
-            const valB = metricsB[m.key];
-            const maxVal = Math.max(valA, valB, 1);
-
-            const widthA = valA ? Math.max(8, Math.round((valA / maxVal) * 100)) : 0;
-            const widthB = valB ? Math.max(8, Math.round((valB / maxVal) * 100)) : 0;
-
-            const diff = Math.round((valB - valA) * 10) / 10;
-            let pct = valA > 0 ? Math.round(((valB - valA) / valA) * 100) : (valB > 0 ? 100 : 0);
-
-            let deltaHtml = '';
-            if (diff > 0) {
-                const isGood = m.isHigherBetter;
-                const cls = isGood ? 'delta-up' : 'delta-down';
-                const sign = '+';
-                deltaHtml = `<span class="compare-metric-delta ${cls}">↑ ${formatMetricDelta(m.unit, m.key, diff)} (${sign}${pct}%)</span>`;
-            } else if (diff < 0) {
-                const isGood = !m.isHigherBetter;
-                const cls = isGood ? 'delta-up' : 'delta-down';
-                deltaHtml = `<span class="compare-metric-delta ${cls}">↓ ${formatMetricDelta(m.unit, m.key, diff)} (${pct}%)</span>`;
-            } else {
-                deltaHtml = `<span class="compare-metric-delta delta-neutral">Không thay đổi</span>`;
-            }
-
-            const valAFormatted = formatMetricValue(m.unit, m.key, valA);
-            const valBFormatted = formatMetricValue(m.unit, m.key, valB);
-
-            return `
-                <div class="compare-metric-block">
-                    <div class="compare-metric-header">
-                        <span class="compare-metric-title">${m.label}</span>
-                        ${deltaHtml}
-                    </div>
-                    <div class="compare-bar-pair">
-                        <div class="compare-bar-row">
-                            <span class="compare-bar-label">Kỳ A</span>
-                            <div class="compare-bar-track">
-                                <div class="compare-bar-fill fill-a" style="width: ${widthA}%;">${valA > 0 ? valAFormatted : ''}</div>
-                            </div>
-                            <span class="compare-bar-val">${valAFormatted}</span>
-                        </div>
-                        <div class="compare-bar-row">
-                            <span class="compare-bar-label">Kỳ B</span>
-                            <div class="compare-bar-track">
-                                <div class="compare-bar-fill fill-b" style="width: ${widthB}%;">${valB > 0 ? valBFormatted : ''}</div>
-                            </div>
-                            <span class="compare-bar-val">${valBFormatted}</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-    }
-
-    // 2. Render Section 2 Detailed Table
-    renderCompareTable(rowsA, rowsB, metricsA, metricsB, startA, endA, startB, endB);
-}
-
-function setDefaultComparisonDates() {
-    const startAInput = document.getElementById('compareStartA');
-    const endAInput = document.getElementById('compareEndA');
-    const startBInput = document.getElementById('compareStartB');
-    const endBInput = document.getElementById('compareEndB');
-    if (!startAInput || !endAInput || !startBInput || !endBInput) return;
-
-    const today = new Date();
-    const currentYear = today.getFullYear();
-    const currentMonth = today.getMonth();
-
-    startAInput.value = toDateKey(new Date(currentYear, currentMonth - 1, 1));
-    endAInput.value = toDateKey(new Date(currentYear, currentMonth, 0));
-    startBInput.value = toDateKey(new Date(currentYear, currentMonth, 1));
-    endBInput.value = toDateKey(new Date(currentYear, currentMonth + 1, 0));
-}
-
-function initializeInlineComparison() {
-    const comparison = document.getElementById('compareModal');
-    if (activeDashboardView !== 'overview' || !comparison?.classList.contains('compare-inline')) return;
-
-    const hasDates = document.getElementById('compareStartA')?.value
-        && document.getElementById('compareEndA')?.value
-        && document.getElementById('compareStartB')?.value
-        && document.getElementById('compareEndB')?.value;
-    if (!hasDates) setDefaultComparisonDates();
-    renderCompareResults();
-}
-
-function initCompareModal() {
-    const compareBtn = document.getElementById('compareBtn');
-    const compareModal = document.getElementById('compareModal');
-    const compareModalClose = document.getElementById('compareModalClose');
-    const compareApplyBtn = document.getElementById('compareApplyBtn');
-    const compareResetBtn = document.getElementById('compareResetBtn');
-
-    const startAInput = document.getElementById('compareStartA');
-    const endAInput = document.getElementById('compareEndA');
-    const startBInput = document.getElementById('compareStartB');
-    const endBInput = document.getElementById('compareEndB');
-
-    // Bind Section 2 Table Tabs (Overview vs Region vs Learner)
-    document.querySelectorAll('.compare-table-tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.compare-table-tab-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-
-            currentCompareTableTab = btn.dataset.tableTab || 'overview';
-            renderCompareResults();
-        });
-    });
-
-    compareBtn?.addEventListener('click', () => {
-        if (!startAInput.value || !endAInput.value || !startBInput.value || !endBInput.value) {
-            setDefaultComparisonDates();
-        }
-        compareModal?.classList.add('visible');
-        compareModal?.setAttribute('aria-hidden', 'false');
-        renderCompareResults();
-    });
-
-    compareModalClose?.addEventListener('click', () => {
-        compareModal?.classList.remove('visible');
-        compareModal?.setAttribute('aria-hidden', 'true');
-    });
-
-    compareApplyBtn?.addEventListener('click', () => {
-        renderCompareResults();
-    });
-
-    compareResetBtn?.addEventListener('click', () => {
-        setDefaultComparisonDates();
-        renderCompareResults();
-    });
-
-    compareModal?.addEventListener('click', (e) => {
-        if (e.target === compareModal && !compareModal.classList.contains('compare-inline')) {
-            compareModal.classList.remove('visible');
-            compareModal.setAttribute('aria-hidden', 'true');
-        }
-    });
-
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && compareModal?.classList.contains('visible')) {
-            compareModal.classList.remove('visible');
-            compareModal.setAttribute('aria-hidden', 'true');
-        }
-    });
 }
 
 const DASHBOARD_VIEWS = {
@@ -4598,15 +3685,6 @@ function initDashboardViewRouting() {
         section.hidden = section.dataset.pageView !== activeDashboardView;
     });
 
-    const comparisonWorkspace = document.getElementById('comparisonWorkspace');
-    const comparison = document.getElementById('compareModal');
-    if (comparisonWorkspace && comparison) {
-        comparisonWorkspace.appendChild(comparison);
-        comparison.classList.add('compare-inline');
-        comparison.classList.remove('visible');
-        comparison.setAttribute('aria-hidden', String(activeDashboardView !== 'overview'));
-    }
-
     const viewCopy = DASHBOARD_VIEWS[activeDashboardView];
     const eyebrow = document.getElementById('pageEyebrow');
     const title = document.getElementById('pageTitle');
@@ -4616,12 +3694,6 @@ function initDashboardViewRouting() {
     if (subtitle) subtitle.textContent = viewCopy.subtitle;
     document.title = `${viewCopy.title} | FTC`;
 
-    const comparePageLink = document.getElementById('comparePageLink');
-    if (comparePageLink) {
-        comparePageLink.href = '?view=overview#comparisonWorkspace';
-        comparePageLink.textContent = 'So sánh thời gian';
-    }
-
     document.querySelectorAll('.sidebar-link[data-dashboard-view]').forEach(link => {
         const isActive = link.dataset.dashboardView === activeDashboardView;
         link.classList.toggle('active', isActive);
@@ -4629,12 +3701,6 @@ function initDashboardViewRouting() {
         else link.removeAttribute('aria-current');
     });
 
-    if (activeDashboardView === 'roster') {
-        const loadIfReady = () => {
-            if (typeof loadRosterList === 'function' && !state.rosterLoaded) loadRosterList();
-        };
-        loadIfReady();
-    }
 }
 
 function initSidebarNavigation() {
@@ -4754,6 +3820,10 @@ async function loadRosterList() {
         renderRosterList();
     } catch (err) {
         console.error('loadRosterList error:', err);
+        const tbody = document.getElementById('rosterTableBody');
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:#b91c1c">Không tải được danh sách KTV. Vui lòng thử lại.</td></tr>';
+        }
     }
 }
 
@@ -4773,17 +3843,23 @@ function renderRosterTableBody() {
         const terminated = item.is_terminated || item.isTerminated;
         const badge = terminated ? '<span class="badge-terminated">Đã nghỉ</span>' : '<span class="badge-active">Đang làm</span>';
         const dateStr = d => d ? new Date(d).toLocaleDateString('vi-VN') : '-';
-        const eid = escapeHTML(item.employee_id || item.employeeId || '');
+        const rawEmployeeId = item.employee_id || item.employeeId || '';
+        const eid = escapeHTML(rawEmployeeId);
+        const employeeCell = eid || '<span title="Có thể bổ sung qua lần import hồ sơ nhân sự sau">Chưa cập nhật</span>';
+        const region = escapeHTML(item.dashboard_region || item.dashboardRegion || 'Chưa phân vùng');
+        const editButton = rawEmployeeId
+            ? `<button type="button" class="button secondary roster-edit-btn" style="padding:3px 8px;font-size:12px" data-employee-id="${eid}">Sửa</button>`
+            : '<button type="button" class="button secondary" style="padding:3px 8px;font-size:12px" title="Bổ sung mã nhân viên bằng chức năng import hồ sơ" disabled>Chờ MNV</button>';
         return `<tr>
-            <td>${eid}</td>
+            <td>${employeeCell}</td>
             <td>${escapeHTML(item.display_name || item.displayName || '')}</td>
             <td>${escapeHTML(item.email || '')}</td>
             <td>${escapeHTML(item.job_title || item.jobTitle || '')}</td>
-            <td>${escapeHTML(item.dashboard_region || item.dashboardRegion || '')}</td>
+            <td>${region}</td>
             <td>${escapeHTML(item.class_code || item.classCode || '')}</td>
             <td>${escapeHTML(dateStr(item.training_start_date || item.trainingStartDate))}</td>
             <td>${badge}</td>
-            <td><button type="button" class="button secondary roster-edit-btn" style="padding:3px 8px;font-size:12px" data-employee-id="${eid}">Sửa</button></td>
+            <td>${editButton}</td>
         </tr>`;
     }).join('');
 }
@@ -4832,8 +3908,9 @@ async function doRosterPreview(file) {
     formData.append('dry_run', 'true');
     try {
         const resp = await fetch(`${API_BASE_URL}/roster/import`, { method: 'POST', body: formData });
-        const json = await resp.json();
-        const data = json.data || json.error || {};
+        const json = await resp.json().catch(() => ({}));
+        if (!resp.ok) throw new Error(json.error?.message || `Preview thất bại (HTTP ${resp.status})`);
+        const data = json.data || {};
         state.rosterPreviewData = data;
         renderRosterPreview(data);
     } catch (err) {
@@ -4960,6 +4037,13 @@ async function loadRosterHistory() {
         renderRosterHistory();
     } catch (err) {
         console.error('loadRosterHistory error:', err);
+        const tbody = document.getElementById('rosterHistoryBody');
+        const emptyEl = document.getElementById('rosterHistoryEmpty');
+        if (tbody) tbody.innerHTML = '';
+        if (emptyEl) {
+            emptyEl.hidden = false;
+            emptyEl.textContent = 'Không tải được lịch sử import. Vui lòng thử lại.';
+        }
     }
 }
 
@@ -4969,7 +4053,10 @@ function renderRosterHistory() {
     if (!tbody) return;
     if (!state.rosterHistoryItems.length) {
         tbody.innerHTML = '';
-        if (emptyEl) emptyEl.hidden = false;
+        if (emptyEl) {
+            emptyEl.hidden = false;
+            emptyEl.textContent = 'Chưa có lịch sử import nào.';
+        }
         return;
     }
     if (emptyEl) emptyEl.hidden = true;
@@ -5068,6 +4155,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initRoster();
     initEvents();
     initSubModalEvents();
-    initCompareModal();
     loadInitialDashboardData();
 });

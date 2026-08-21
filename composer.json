@@ -2,13 +2,15 @@
   "name": "ftc/virtual-devices",
   "description": "FTC Virtual Devices portal and IAM integration",
   "type": "project",
+  "license": "proprietary",
   "require": {
     "php": "^8.0",
     "ext-curl": "*",
     "ext-json": "*",
     "ext-pdo": "*",
     "ext-pdo_pgsql": "*",
+    "firebase/php-jwt": "^7.0",
     "vlucas/phpdotenv": "^5.5",
-    "stevenmaguire/oauth2-keycloak": "^3.0"
+    "stevenmaguire/oauth2-keycloak": "^6.1"
   }
 }

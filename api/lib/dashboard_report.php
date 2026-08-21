@@ -86,34 +86,46 @@ function dashboard_report_period_values(array $periods): array
 function dashboard_report_normalize_metric(array $row, string $cohort): array
 {
     $assigned = (int)($row['assigned_count'] ?? 0);
+    $completed = (int)($row['completed_count'] ?? 0);
+    $graded = (int)($row['graded_count'] ?? 0);
     $passed = (int)($row['passed_count'] ?? 0);
     $firstTryEvaluable = (int)($row['first_try_evaluable_count'] ?? 0);
     $firstTryPass = (int)($row['first_try_pass_count'] ?? 0);
+    $practiceAttempts = (int)($row['practice_attempts'] ?? 0);
+    $durationKnown = (int)($row['duration_known_count'] ?? 0);
 
     return [
         'cohort_basis' => $cohort,
         'assigned_count' => $assigned,
         'assigned_technicians' => (int)($row['assigned_technicians'] ?? 0),
+        'completed_count' => $completed,
         'passed_count' => $passed,
-        'completion_rate' => dashboard_report_rate($passed, $assigned),
+        'graded_count' => $graded,
+        'completion_rate' => dashboard_report_rate($completed, $assigned),
+        'pass_rate' => dashboard_report_rate($passed, $graded),
         'first_try_evaluable_count' => $firstTryEvaluable,
         'first_try_pass_count' => $firstTryPass,
         'first_try_unknown_count' => (int)($row['first_try_unknown_count'] ?? 0),
         'first_try_rate' => dashboard_report_rate($firstTryPass, $firstTryEvaluable),
-        'practice_attempts' => (int)($row['practice_attempts'] ?? 0),
+        'practice_attempts' => $practiceAttempts,
+        'guide_attempts' => (int)($row['guide_attempts'] ?? 0),
         'participating_technicians' => (int)($row['participating_technicians'] ?? 0),
-        'avg_duration_sec' => (int)($row['avg_duration_sec'] ?? 0),
+        'duration_known_count' => $durationKnown,
+        'duration_coverage_rate' => dashboard_report_rate($durationKnown, $practiceAttempts),
+        'avg_duration_sec' => ($row['avg_duration_sec'] ?? null) !== null
+            ? (int)$row['avg_duration_sec']
+            : null,
         'inferred_assignment_count' => (int)($row['inferred_assignment_count'] ?? 0),
     ];
 }
 
 /** @return array<string, int|float|null|string> */
-function dashboard_report_matrix_metric(int $assigned, int $passed, int $attempted, int $attempts): array
+function dashboard_report_matrix_metric(int $assigned, int $completed, int $attempted, int $attempts): array
 {
     $state = 'not_assigned';
-    if ($assigned > 0 && $passed === 0) {
-        $state = 'assigned_none_passed';
-    } elseif ($assigned > 0 && $passed < $assigned) {
+    if ($assigned > 0 && $completed === 0) {
+        $state = 'assigned_none_completed';
+    } elseif ($assigned > 0 && $completed < $assigned) {
         $state = 'partial';
     } elseif ($assigned > 0) {
         $state = 'complete';
@@ -121,10 +133,10 @@ function dashboard_report_matrix_metric(int $assigned, int $passed, int $attempt
 
     return [
         'assigned_count' => $assigned,
-        'passed_count' => $passed,
+        'completed_count' => $completed,
         'attempted_count' => $attempted,
         'attempt_count' => $attempts,
-        'completion_rate' => dashboard_report_rate($passed, $assigned),
+        'completion_rate' => dashboard_report_rate($completed, $assigned),
         'state' => $state,
     ];
 }
@@ -227,10 +239,18 @@ function build_dashboard_report(PDO $pdo, array $query): array
             SELECT period.period_key,
                    period.period_start,
                    period.period_end,
+                   COALESCE(
+                       NULLIF(progress.employee_code::text, ''),
+                       NULLIF(LOWER(progress.email), ''),
+                       'assignment:' || progress.assignment_id::text
+                   ) AS subject_key,
                    progress.*
               FROM periods period
               JOIN v_lab_assignment_progress progress
                 ON $cohortCondition
+              JOIN users dashboard_user
+                ON dashboard_user.user_id = progress.user_id
+               AND dashboard_user.role = 'user'
               JOIN curriculum_labs curriculum_lab
                 ON curriculum_lab.curriculum_lab_id = progress.curriculum_lab_id
                AND curriculum_lab.required_mode IN ('practice', 'both')
@@ -238,49 +258,71 @@ function build_dashboard_report(PDO $pdo, array $query): array
         ), attempt_stats AS (
             SELECT eligible.period_key,
                    eligible.assignment_id,
-                   COUNT(attempt.attempt_id) AS attempt_count,
-                   COUNT(attempt.duration_seconds) AS duration_count,
-                   COALESCE(SUM(attempt.duration_seconds), 0) AS duration_sum
+                   COUNT(attempt.attempt_id) FILTER (
+                       WHERE attempt.mode = 'practice'
+                   ) AS practice_attempt_count,
+                   COUNT(attempt.attempt_id) FILTER (
+                       WHERE attempt.mode = 'guide'
+                   ) AS guide_attempt_count,
+                   COUNT(attempt.duration_seconds) FILTER (
+                       WHERE attempt.mode = 'practice' AND attempt.duration_seconds > 0
+                   ) AS duration_count,
+                   COALESCE(SUM(attempt.duration_seconds) FILTER (
+                       WHERE attempt.mode = 'practice' AND attempt.duration_seconds > 0
+                   ), 0) AS duration_sum
+              FROM eligible
+              JOIN lab_attempts attempt
+                ON attempt.assignment_id = eligible.assignment_id
+               AND attempt.started_at >= eligible.period_start
+               AND attempt.started_at < eligible.period_end
+             GROUP BY eligible.period_key, eligible.assignment_id
+        ), grading_stats AS (
+            SELECT eligible.period_key,
+                   eligible.assignment_id,
+                   BOOL_OR(attempt.outcome IS NOT NULL) AS was_graded,
+                   BOOL_OR(attempt.outcome = 'passed') AS was_passed
               FROM eligible
               JOIN lab_attempts attempt
                 ON attempt.assignment_id = eligible.assignment_id
                AND attempt.mode = 'practice'
-               AND attempt.started_at >= eligible.period_start
-               AND attempt.started_at < eligible.period_end
+               AND attempt.finished_at IS NOT NULL
+               AND attempt.finished_at < eligible.period_end
              GROUP BY eligible.period_key, eligible.assignment_id
         )
         SELECT period.period_key,
                COUNT(eligible.assignment_id) AS assigned_count,
-               COUNT(DISTINCT eligible.employee_code) AS assigned_technicians,
+               COUNT(DISTINCT eligible.subject_key) AS assigned_technicians,
                COUNT(eligible.assignment_id) FILTER (
                    WHERE eligible.completed_at IS NOT NULL
                      AND eligible.completed_at < period.period_end
+               ) AS completed_count,
+               COUNT(eligible.assignment_id) FILTER (
+                   WHERE grading_stats.was_graded IS TRUE
+               ) AS graded_count,
+               COUNT(eligible.assignment_id) FILTER (
+                   WHERE grading_stats.was_passed IS TRUE
                ) AS passed_count,
                COUNT(eligible.assignment_id) FILTER (
-                   WHERE eligible.completed_at IS NOT NULL
-                     AND eligible.completed_at < period.period_end
+                   WHERE grading_stats.was_passed IS TRUE
                      AND eligible.first_try_success IS NOT NULL
                ) AS first_try_evaluable_count,
                COUNT(eligible.assignment_id) FILTER (
-                   WHERE eligible.completed_at IS NOT NULL
-                     AND eligible.completed_at < period.period_end
+                   WHERE grading_stats.was_passed IS TRUE
                      AND eligible.first_try_success IS TRUE
                ) AS first_try_pass_count,
                COUNT(eligible.assignment_id) FILTER (
-                   WHERE eligible.completed_at IS NOT NULL
-                     AND eligible.completed_at < period.period_end
+                   WHERE grading_stats.was_passed IS TRUE
                      AND eligible.first_try_success IS NULL
                ) AS first_try_unknown_count,
-               COALESCE(SUM(attempt_stats.attempt_count), 0) AS practice_attempts,
-               COUNT(DISTINCT eligible.employee_code) FILTER (
-                   WHERE COALESCE(attempt_stats.attempt_count, 0) > 0
+               COALESCE(SUM(attempt_stats.practice_attempt_count), 0) AS practice_attempts,
+               COALESCE(SUM(attempt_stats.guide_attempt_count), 0) AS guide_attempts,
+               COUNT(DISTINCT eligible.subject_key) FILTER (
+                   WHERE COALESCE(attempt_stats.practice_attempt_count, 0) > 0
                ) AS participating_technicians,
-               COALESCE(
-                   ROUND(
-                       SUM(attempt_stats.duration_sum)::numeric
-                       / NULLIF(SUM(attempt_stats.duration_count), 0)
-                   ),
-                   0
+               SUM(attempt_stats.duration_count) AS duration_known_count,
+               ROUND(
+                   SUM(attempt_stats.duration_sum)::numeric
+                   / NULLIF(SUM(attempt_stats.duration_count), 0)
                ) AS avg_duration_sec,
                COUNT(eligible.assignment_id) FILTER (WHERE eligible.is_inferred) AS inferred_assignment_count
           FROM periods period
@@ -288,6 +330,9 @@ function build_dashboard_report(PDO $pdo, array $query): array
           LEFT JOIN attempt_stats
             ON attempt_stats.period_key = eligible.period_key
            AND attempt_stats.assignment_id = eligible.assignment_id
+          LEFT JOIN grading_stats
+            ON grading_stats.period_key = eligible.period_key
+           AND grading_stats.assignment_id = eligible.assignment_id
          GROUP BY period.period_key
         SQL;
     $metricStatement = $pdo->prepare($metricSql);
@@ -302,9 +347,15 @@ function build_dashboard_report(PDO $pdo, array $query): array
     $previousMetric = $metricRows['previous'] ?? $emptyMetric;
     $lifetimeMetric = $metricRows['lifetime'] ?? $emptyMetric;
     $monthly = [];
+    $currentMonthStart = $today->modify('first day of this month');
     for ($month = 1; $month <= 12; $month++) {
         $monthKey = sprintf('%04d-%02d', $reportYear, $month);
-        $monthly[] = ['month' => $monthKey] + ($metricRows[$monthKey] ?? $emptyMetric);
+        $monthStart = new DateTimeImmutable($monthKey . '-01');
+        $isFuture = $monthStart > $currentMonthStart;
+        $monthly[] = [
+            'month' => $monthKey,
+            'is_future' => $isFuture,
+        ] + ($isFuture ? $emptyMetric : ($metricRows[$monthKey] ?? $emptyMetric));
     }
 
     $catalogStatement = $pdo->query(
@@ -365,12 +416,19 @@ function build_dashboard_report(PDO $pdo, array $query): array
             SELECT period.period_start,
                    period.period_end,
                    progress.*,
-                   COALESCE(progress.employee_code::text, 'assignment:' || progress.assignment_id::text) AS subject_key,
+                   COALESCE(
+                       NULLIF(progress.employee_code::text, ''),
+                       NULLIF(LOWER(progress.email), ''),
+                       'assignment:' || progress.assignment_id::text
+                   ) AS subject_key,
                    progress.completed_at IS NOT NULL
-                       AND progress.completed_at < period.period_end AS passed_before_end
+                       AND progress.completed_at < period.period_end AS completed_before_end
               FROM periods period
               JOIN v_lab_assignment_progress progress
                 ON $matrixCohortCondition
+              JOIN users dashboard_user
+                ON dashboard_user.user_id = progress.user_id
+               AND dashboard_user.role = 'user'
               JOIN curriculum_labs curriculum_lab
                 ON curriculum_lab.curriculum_lab_id = progress.curriculum_lab_id
                AND curriculum_lab.required_mode IN ('practice', 'both')
@@ -393,7 +451,7 @@ function build_dashboard_report(PDO $pdo, array $query): array
                    eligible.device_id,
                    eligible.lab_id,
                    eligible.subject_key,
-                   BOOL_OR(eligible.passed_before_end) AS passed,
+                   BOOL_OR(eligible.completed_before_end) AS completed,
                    SUM(COALESCE(assignment_attempts.attempt_count, 0)) AS attempt_count
               FROM eligible
               LEFT JOIN assignment_attempts
@@ -409,7 +467,7 @@ function build_dashboard_report(PDO $pdo, array $query): array
             SELECT device_id,
                    lab_id,
                    subject_key,
-                   BOOL_OR(passed) AS passed,
+                   BOOL_OR(completed) AS completed,
                    SUM(attempt_count) AS attempt_count
               FROM region_subject_lab
              GROUP BY device_id, lab_id, subject_key
@@ -422,7 +480,7 @@ function build_dashboard_report(PDO $pdo, array $query): array
                    device_id,
                    lab_id,
                    COUNT(*) AS assigned_count,
-                   COUNT(*) FILTER (WHERE passed) AS passed_count,
+                   COUNT(*) FILTER (WHERE completed) AS completed_count,
                    COUNT(*) FILTER (WHERE attempt_count > 0) AS attempted_count,
                    SUM(attempt_count) AS attempt_count
               FROM region_subject_lab
@@ -436,7 +494,7 @@ function build_dashboard_report(PDO $pdo, array $query): array
                    device_id,
                    lab_id,
                    COUNT(*) AS assigned_count,
-                   COUNT(*) FILTER (WHERE passed) AS passed_count,
+                   COUNT(*) FILTER (WHERE completed) AS completed_count,
                    COUNT(*) FILTER (WHERE attempt_count > 0) AS attempted_count,
                    SUM(attempt_count) AS attempt_count
               FROM system_subject_lab
@@ -457,7 +515,7 @@ function build_dashboard_report(PDO $pdo, array $query): array
         if (($row['scope'] ?? '') === 'grand') {
             $grandCells[$labId] = dashboard_report_matrix_metric(
                 (int)$row['assigned_count'],
-                (int)$row['passed_count'],
+                (int)$row['completed_count'],
                 (int)$row['attempted_count'],
                 (int)$row['attempt_count']
             );
@@ -483,25 +541,44 @@ function build_dashboard_report(PDO $pdo, array $query): array
         }
         $regions[$regionKey]['cells'][$labId] = dashboard_report_matrix_metric(
             (int)$row['assigned_count'],
-            (int)$row['passed_count'],
+            (int)$row['completed_count'],
             (int)$row['attempted_count'],
             (int)$row['attempt_count']
         );
     }
 
+    // Do not render catalog-only columns that have no assignment in the
+    // selected cohort.  The active catalog can be much wider than a class's
+    // actual curriculum and made the matrix unnecessarily hard to use.
+    $reportedLabIds = array_fill_keys(array_keys($grandCells), true);
+    $deviceGroups = array_values(array_filter(array_map(
+        static function (array $group) use ($reportedLabIds): array {
+            $group['labs'] = array_values(array_filter(
+                $group['labs'],
+                static fn(array $lab): bool => isset($reportedLabIds[(string)$lab['lab_id']])
+            ));
+            return $group;
+        },
+        $deviceGroups
+    ), static fn(array $group): bool => count($group['labs']) > 0));
+    $orderedLabIds = [];
+    foreach ($deviceGroups as $group) {
+        foreach ($group['labs'] as $lab) $orderedLabIds[] = (string)$lab['lab_id'];
+    }
+
     $emptyCell = dashboard_report_matrix_metric(0, 0, 0, 0);
     $sumMetrics = static function (array $cells): array {
         $assigned = 0;
-        $passed = 0;
+        $completed = 0;
         $attempted = 0;
         $attempts = 0;
         foreach ($cells as $cell) {
             $assigned += (int)($cell['assigned_count'] ?? 0);
-            $passed += (int)($cell['passed_count'] ?? 0);
+            $completed += (int)($cell['completed_count'] ?? 0);
             $attempted += (int)($cell['attempted_count'] ?? 0);
             $attempts += (int)($cell['attempt_count'] ?? 0);
         }
-        return dashboard_report_matrix_metric($assigned, $passed, $attempted, $attempts);
+        return dashboard_report_matrix_metric($assigned, $completed, $attempted, $attempts);
     };
 
     foreach ($regions as &$region) {
@@ -551,11 +628,11 @@ function build_dashboard_report(PDO $pdo, array $query): array
         $start->format('d/m/Y') . ' - ' . $end->format('d/m/Y');
 
     return [
-        'schema_version' => '2.0',
+        'schema_version' => '2.2',
         'mode' => 'practice',
         'cohort_basis' => $cohort,
         'meta' => [
-            'schema_version' => '2.0',
+            'schema_version' => '2.2',
             'data_version' => is_string($version) ? $version : '',
             'mode' => 'practice',
             'cohort_basis' => $cohort,

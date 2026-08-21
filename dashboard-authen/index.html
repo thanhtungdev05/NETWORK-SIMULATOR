@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard giám sát thực hành KTV | FTC</title>
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/styles.css?v=20260821-2">
 </head>
 
 <body>
@@ -152,10 +152,16 @@
 
                     <div class="kpi-grid">
                         <div class="kpi-card">
-                            <div class="kpi-label">Phiên làm lab trong kỳ</div>
+                            <div class="kpi-label">Lượt thực hành trong kỳ</div>
                             <div class="kpi-value blue" id="kpiSessions">0</div>
                             <div class="kpi-comparison" id="kpiSessionsComparison"></div>
                             <div class="kpi-note" id="kpiSessionsContext">Đang tính dữ liệu so sánh</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">Lượt xem hướng dẫn trong kỳ</div>
+                            <div class="kpi-value violet" id="kpiGuideSessions">0</div>
+                            <div class="kpi-comparison" id="kpiGuideSessionsComparison"></div>
+                            <div class="kpi-note" id="kpiGuideSessionsContext">Đang tính dữ liệu so sánh</div>
                         </div>
                         <div class="kpi-card">
                             <div class="kpi-label">KTV tham gia trong kỳ</div>
@@ -164,16 +170,22 @@
                             <div class="kpi-note" id="kpiLearnersContext">Đang tính dữ liệu so sánh</div>
                         </div>
                         <div class="kpi-card">
-                            <div class="kpi-label">Lab hoàn thành trong kỳ</div>
+                            <div class="kpi-label">Lab thực hành hoàn thành lũy kế</div>
                             <div class="kpi-value violet" id="kpiCompleted">0</div>
                             <div class="kpi-comparison" id="kpiCompletedComparison"></div>
                             <div class="kpi-note" id="kpiCompletedContext">Đang tính dữ liệu so sánh</div>
                         </div>
                         <div class="kpi-card">
-                            <div class="kpi-label">Tỷ lệ phiên thực hành hoàn thành</div>
+                            <div class="kpi-label">Tiến độ hoàn thành thực hành</div>
                             <div class="kpi-value cyan" id="kpiCompletionRate">0%</div>
                             <div class="kpi-comparison" id="kpiCompletionRateComparison"></div>
                             <div class="kpi-note" id="kpiCompletionRateContext">Đang tính dữ liệu so sánh</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">Tỷ lệ đạt (trên bài đã chấm)</div>
+                            <div class="kpi-value cyan" id="kpiPassRate">—</div>
+                            <div class="kpi-comparison" id="kpiPassRateComparison"></div>
+                            <div class="kpi-note" id="kpiPassRateContext">Chưa có kết quả chấm</div>
                         </div>
                         <div class="kpi-card">
                             <div class="kpi-label">Đạt lần đầu (đã đánh giá)</div>
@@ -182,7 +194,7 @@
                             <div class="kpi-note" id="kpiFirstTryRateContext">Đang tính dữ liệu so sánh</div>
                         </div>
                         <div class="kpi-card">
-                            <div class="kpi-label">Thời gian trung bình</div>
+                            <div class="kpi-label">Thời gian trung bình (khi đủ mẫu)</div>
                             <div class="kpi-value blue" id="kpiAvgDuration">0m</div>
                             <div class="kpi-comparison" id="kpiAvgDurationComparison"></div>
                             <div class="kpi-note" id="kpiAvgDurationContext">Đang tính dữ liệu so sánh</div>
@@ -193,7 +205,7 @@
                         <div class="detail-section-header ktv-monthly-header">
                             <div>
                                 <h4>Xu hướng hoạt động theo tháng</h4>
-                                <span>Số phiên và tỷ lệ hoàn thành Thực hành trong 12 tháng của năm báo cáo</span>
+                                <span>Lượt thực hành trong tháng và tiến độ hoàn thành lũy kế đến cuối tháng</span>
                             </div>
                             <div class="ktv-monthly-summary" id="overviewMonthlySummary"></div>
                         </div>
@@ -229,10 +241,15 @@
                     <div class="instructor-progress-card">
                         <div class="instructor-progress-header">
                             <div>
-                                <div class="instructor-progress-title-row">
-                                    <h2>Ma trận tiến độ lab theo lớp</h2>
-                                </div>
-                                <p>Đối chiếu từng bài lab của từng thiết bị với từng KTV. Ô chưa thực hiện hiển thị 0%.</p>
+                                 <div class="instructor-progress-title-row">
+                                     <h2>Ma trận tiến độ lab theo lớp</h2>
+                                 </div>
+                                <p>Đối chiếu từng bài lab của từng thiết bị với từng KTV; màu ô thể hiện trạng thái thực hiện.</p>
+                                 <div class="detail-report-legend instructor-progress-legend" aria-label="Chú thích màu trạng thái bài lab">
+                                     <span><i class="legend-high"></i> Hoàn thành</span>
+                                     <span><i class="legend-low"></i> Đã giao, chưa hoàn thành</span>
+                                     <span><i class="legend-unassigned"></i> Chưa giao</span>
+                                 </div>
                             </div>
                             <div class="instructor-progress-tools">
                                 <label class="instructor-select-field">
@@ -383,7 +400,7 @@
                             <div>
                                 <span class="detail-report-eyebrow">Báo cáo vận hành</span>
                                 <h2>Chi tiết thiết bị và bài lab theo khu vực</h2>
-                                <p>Đối chiếu số KTV hoàn thành từng bài lab thực hành trên tổng KTV của mỗi Khu vực/CNx.</p>
+                                <p>Đối chiếu số KTV hoàn thành từng bài lab trên tổng KTV được giao của mỗi Khu vực/CNx.</p>
                             </div>
                             <div class="detail-report-period">
                                 <span>Kỳ báo cáo</span>
@@ -398,11 +415,11 @@
                                 <strong id="detailReportSessions">0</strong>
                             </div>
                             <div class="detail-report-stat report-stat-purple">
-                                <span>Khu vực/CNx hoạt động</span>
+                                <span>Nhóm vùng trong dữ liệu</span>
                                 <strong id="detailReportRegions">0</strong>
                             </div>
                             <div class="detail-report-stat report-stat-cyan">
-                                <span>Bài lab có lượt thực hiện</span>
+                                <span>Bài lab được giao</span>
                                 <strong id="detailReportLabs">0</strong>
                             </div>
                             <div class="detail-report-stat report-stat-green">
@@ -415,7 +432,7 @@
                             <div class="detail-report-table-header">
                                 <div>
                                     <h3>Ma trận thực hành theo Khu vực/CNx</h3>
-                                    <span>Mỗi ô hiển thị KTV hoàn thành / tổng KTV khu vực; “—” là chưa có dữ liệu trong kỳ.</span>
+                                    <span>Mỗi ô hiển thị KTV hoàn thành / KTV được giao. Một KTV–lab được tính một lần dù xuất hiện ở nhiều lớp; “—” là chưa được giao.</span>
                                 </div>
                                 <div class="detail-report-legend" aria-label="Chú thích màu tỷ lệ hoàn thành">
                                     <span><i class="legend-high"></i> Từ 80%</span>
@@ -927,105 +944,7 @@
         </div>
     </div>
 
-    <!-- Modal so sánh 2 khoảng thời gian -->
-    <div class="sub-modal-backdrop compare-modal-backdrop" id="compareModal" aria-hidden="true">
-        <div class="sub-modal-card compare-modal-card">
-            <div class="sub-modal-header">
-                <div>
-                    <h3>So sánh chỉ số giữa 2 khoảng thời gian</h3>
-                    <div class="sub-modal-subtitle">Đối chiếu hiệu suất thực hành giữa 2 khoảng thời gian cụ thể</div>
-                </div>
-                <button type="button" class="detail-close" id="compareModalClose" aria-label="Đóng so sánh">×</button>
-            </div>
-            <div class="sub-modal-body">
-                <div class="compare-period-picker">
-                    <div class="compare-period-box period-a">
-                        <div class="compare-period-label">
-                            <span class="period-dot dot-a"></span>
-                            <strong>Tháng trước (Kỳ cơ sở)</strong>
-                        </div>
-                        <div class="compare-date-inputs">
-                            <div>
-                                <label>Từ ngày</label>
-                                <input type="date" id="compareStartA" class="compare-input-date">
-                            </div>
-                            <div>
-                                <label>Đến ngày</label>
-                                <input type="date" id="compareEndA" class="compare-input-date">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="compare-vs-badge">VS</div>
-
-                    <div class="compare-period-box period-b">
-                        <div class="compare-period-label">
-                            <span class="period-dot dot-b"></span>
-                            <strong>Tháng hiện tại (Kỳ so sánh)</strong>
-                        </div>
-                        <div class="compare-date-inputs">
-                            <div>
-                                <label>Từ ngày</label>
-                                <input type="date" id="compareStartB" class="compare-input-date">
-                            </div>
-                            <div>
-                                <label>Đến ngày</label>
-                                <input type="date" id="compareEndB" class="compare-input-date">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="compare-action-bar">
-                    <button type="button" class="button" id="compareApplyBtn">Áp dụng so sánh</button>
-                    <button type="button" class="button secondary" id="compareResetBtn">Đặt lại mặc định</button>
-                </div>
-
-                <div class="compare-data-notice" id="compareDataNotice" hidden></div>
-
-                <div class="compare-results-container" id="compareResultsContainer">
-                    <!-- Phần 1: Thẻ chỉ số & Biểu đồ đối chiếu -->
-                    <div class="compare-section-header">
-                        <h4>1. Thẻ chỉ số KPI (3x3) & Biểu đồ đối chiếu</h4>
-                        <span class="compare-legend" id="compareLegend">
-                            <span class="legend-item"><span class="period-dot dot-a"></span> <span id="legendTextA">Kỳ A (Kỳ cơ sở)</span></span>
-                            <span class="legend-item"><span class="period-dot dot-b"></span> <span id="legendTextB">Kỳ B (Kỳ so sánh)</span></span>
-                        </span>
-                    </div>
-
-                    <!-- 3x3 Stat Cards (Hiển thị đồng thời) -->
-                    <div class="compare-cards-grid grid-3x3" id="compareCardsGrid"></div>
-
-                    <!-- Biểu đồ Bar đối chiếu (Hiển thị đồng thời) -->
-                    <div class="compare-bars-container" style="margin-top: 18px;">
-                        <h5 class="compare-sub-title">Biểu đồ so sánh trực quan từng chỉ số</h5>
-                        <div class="compare-bars-grid" id="compareBarsGrid"></div>
-                    </div>
-
-                    <!-- Phần 2: Bảng chi tiết chênh lệch -->
-                    <div class="compare-section-header" style="margin-top: 32px;">
-                        <h4>2. Bảng tổng hợp chênh lệch chi tiết giữa 2 kỳ</h4>
-                        <div class="compare-table-tabs" id="compareTableTabs">
-                            <button type="button" class="compare-table-tab-btn active" data-table-tab="overview">Theo Chỉ số</button>
-                            <button type="button" class="compare-table-tab-btn" data-table-tab="region">Theo Vùng</button>
-                            <button type="button" class="compare-table-tab-btn" data-table-tab="learner">Theo KTV</button>
-                        </div>
-                    </div>
-
-                    <div class="compare-table-wrapper" id="compareTableWrapper">
-                        <table class="compare-detail-table">
-                            <thead id="compareTableHead"></thead>
-                            <tbody id="compareTableBody"></tbody>
-                            <tfoot id="compareTableFoot"></tfoot>
-                        </table>
-                    </div>
-                    <div class="compare-bottom-space"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="js/app.js?v=20260813-2"></script>
+    <script src="js/app.js?v=20260821-2"></script>
 </body>
 
 </html>

@@ -1,22 +1,22 @@
-﻿/**
+/**
  * devices/ac1000f/lessons/bai7.js
- * Bài 7: Cấu hình Backup/Restore
+ * B�i 7: C?u h�nh Backup/Restore
  */
 
 window.DEVICE_AC1000F_LESSONS = window.DEVICE_AC1000F_LESSONS || [];
 
 window.DEVICE_AC1000F_LESSONS.push({
   id: 'LAB_AC1000F_07',
-  title: 'Bài 7: Cấu hình Backup/Restore',
-  subtitle: 'Sao lưu và phục hồi cấu hình thiết bị',
+  title: 'B�i 7 - C?u h�nh Backup/Restore',
+  subtitle: 'Sao luu v� ph?c h?i c?u h�nh thi?t b?',
   instructions: [
-    '<b>Yêu cầu:</b> Thực hiện thao tác tải về (Download) file cấu hình hiện tại của thiết bị (Backup).',
+    '<b>Y�u c?u:</b> Th?c hi?n thao t�c t?i v? (Download) file c?u h�nh hi?n t?i c?a thi?t b? (Backup).',
   ],
   practiceUrl: '/sim_ac1000f/cgi-bin/index.asp?page=tools_update.asp',
 
-  // Ràng buộc điều kiện chấm đúng Ä‘Ãºng
+  // R�ng bu?c di?u ki?n ch?m d�ng đúng
   grading: {
-    description: 'Kiểm tra Backup cấu hình',
+    description: 'Ki?m tra Backup c?u h�nh',
     rules: [
       {
         id: 'tools_update',

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * devices/ax3000s/lessons/bai4.js
  * Bài 4: Cấu hình địa chỉ IP LAN trên AX3000S
  */
@@ -7,7 +7,7 @@ window.DEVICE_AX3000S_LESSONS = window.DEVICE_AX3000S_LESSONS || [];
 
 const lessonObj4 = {
   id: 'LAB_AX3000S_04',
-  title: 'Bài 4-Cấu hình địa chỉ IP LAN',
+  title: 'Bài 4 - Cấu hình địa chỉ IP LAN',
   subtitle: 'Thiết lập địa chỉ IP mạng nội bộ và DHCP Server',
   instructions: [
     '<b>Yêu cầu:</b>',

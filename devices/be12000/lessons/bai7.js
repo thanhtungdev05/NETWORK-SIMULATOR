@@ -1,4 +1,4 @@
-/**
+﻿/**
  * devices/be12000/lessons/bai7.js
  * Bài 7 - Khởi Động Lại & Khôi Phục Cài Đặt Gốc trên BE12000
  */

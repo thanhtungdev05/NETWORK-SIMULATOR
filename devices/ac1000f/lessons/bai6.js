@@ -1,24 +1,24 @@
-﻿/**
+/**
  * devices/ac1000f/lessons/bai6.js
- * Bài 6: Cấu hình Remote Web
+ * B�i 6: C?u h�nh Remote Web
  */
 
 window.DEVICE_AC1000F_LESSONS = window.DEVICE_AC1000F_LESSONS || [];
 
 window.DEVICE_AC1000F_LESSONS.push({
   id: 'LAB_AC1000F_06',
-  title: 'Bài 6: Cấu hình Remote Web',
-  subtitle: 'Cấu hình quản lý thiết bị từ xa qua Web',
+  title: 'B�i 6 - C?u h�nh Remote Web',
+  subtitle: 'C?u h�nh qu?n l� thi?t b? t? xa qua Web',
   instructions: [
-    '<b>Yêu cầu:</b> Cấu hình quản lý thiết bị từ xa (Remote Web) với tài khoản:',
+    '<b>Y�u c?u:</b> C?u h�nh qu?n l� thi?t b? t? xa (Remote Web) v?i t�i kho?n:',
     '- Remote Username: <span class="val">admin99</span>',
     '- Remote Password: <span class="val">ftc12345</span>',
   ],
   practiceUrl: '/sim_ac1000f/cgi-bin/index.asp?page=adv_firewall.asp',
 
-  // Ràng buộc điều kiện chấm đúng Ä‘Ãºng
+  // R�ng bu?c di?u ki?n ch?m d�ng đúng
     grading: {
-    description: 'Kiểm tra cấu hình Remote Web',
+    description: 'Ki?m tra c?u h�nh Remote Web',
     customGrading: function(allDocs) {
       var doc = null;
       for (var i = 0; i < allDocs.length; i++) {
@@ -50,19 +50,19 @@ window.DEVICE_AC1000F_LESSONS.push({
       
       // 1. Firewall
       var firewall = getRadioVal('firewallEnable');
-      var firewallText = firewall === '1' ? 'Enable' : (firewall === '0' ? 'Disable' : 'Chưa chọn');
+      var firewallText = firewall === '1' ? 'Enable' : (firewall === '0' ? 'Disable' : 'Chua ch?n');
       
       // 2. SPI
       var spi = getRadioVal('spiEnable');
-      var spiText = spi === '1' ? 'Enable' : (spi === '0' ? 'Disable' : 'Chưa chọn');
+      var spiText = spi === '1' ? 'Enable' : (spi === '0' ? 'Disable' : 'Chua ch?n');
       
       // 3. Remote Web
       var remoteWeb = getRadioVal('wanAccessLanWebRadio');
-      var remoteWebText = remoteWeb === 'Yes' ? 'Enable' : (remoteWeb === 'No' ? 'Disable' : 'Chưa chọn');
+      var remoteWebText = remoteWeb === 'Yes' ? 'Enable' : (remoteWeb === 'No' ? 'Disable' : 'Chua ch?n');
       
       // 4. Remote SSH
       var remoteSsh = getRadioVal('sshradio');
-      var remoteSshText = remoteSsh === '1' ? 'Enable' : (remoteSsh === '0' ? 'Disable' : 'Chưa chọn');
+      var remoteSshText = remoteSsh === '1' ? 'Enable' : (remoteSsh === '0' ? 'Disable' : 'Chua ch?n');
       
       var rules = [
         { id: '1', name: 'Firewall', expected: 'Enable', actual: firewallText },

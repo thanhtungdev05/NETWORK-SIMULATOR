@@ -1,24 +1,24 @@
-﻿/**
+/**
  * devices/ac1000f/lessons/bai8.js
- * Bài 8: Cấu hình WiFi Timer
+ * B�i 8: C?u h�nh WiFi Timer
  */
 
 window.DEVICE_AC1000F_LESSONS = window.DEVICE_AC1000F_LESSONS || [];
 
 window.DEVICE_AC1000F_LESSONS.push({
   id: 'LAB_AC1000F_08',
-  title: 'Bài 8: Cấu hình WiFi Timer',
-  subtitle: 'Lên lịch tắt/bật Wi-Fi tự động',
+  title: 'B�i 8 - C?u h�nh WiFi Timer',
+  subtitle: 'L�n l?ch t?t/b?t Wi-Fi t? d?ng',
     instructions: [
-    '<b>Yêu cầu:</b> Lên lịch tự động bật/tắt Wi-Fi với khoảng thời gian:',
+    '<b>Y�u c?u:</b> L�n l?ch t? d?ng b?t/t?t Wi-Fi v?i kho?ng th?i gian:',
     '- Start Time: <span class="val">8:00</span>',
     '- End Time: <span class="val">17:00</span>'
   ],
   practiceUrl: '/sim_ac1000f/cgi-bin/index.asp?page=tools_wifitimer.asp',
 
-  // Ràng buộc điều kiện chấm đúng Ä‘Ãºng
+  // R�ng bu?c di?u ki?n ch?m d�ng đúng
     grading: {
-    description: 'Kiểm tra lên lịch WiFi',
+    description: 'Ki?m tra l�n l?ch WiFi',
     customGrading: function(allDocs) {
       var doc = null;
       for (var i = 0; i < allDocs.length; i++) {
@@ -49,7 +49,7 @@ window.DEVICE_AC1000F_LESSONS.push({
       }
       
       var wtimer = getRadioVal('wifitimer_enable');
-      var wtimerText = wtimer === '1' ? 'Enable' : (wtimer === '0' ? 'Disable' : 'Chưa chọn');
+      var wtimerText = wtimer === '1' ? 'Enable' : (wtimer === '0' ? 'Disable' : 'Chua ch?n');
       
       var rules = [
         { id: '1', name: 'WiFi Timer Status', expected: 'Enable', actual: wtimerText },

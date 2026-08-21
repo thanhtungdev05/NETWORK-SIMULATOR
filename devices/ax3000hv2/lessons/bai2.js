@@ -1,4 +1,4 @@
-/**
+﻿/**
  * devices/ax3000hv2/lessons/bai2.js
  * Bài 2: Cấu hình Wi-Fi Host trên AX3000H v2
  */
@@ -7,7 +7,7 @@ window.DEVICE_AX3000HV2_LESSONS = window.DEVICE_AX3000HV2_LESSONS || [];
 
 window.DEVICE_AX3000HV2_LESSONS.push({
   id: 'LAB_AX3000HV2_02',
-  title: 'Bài 2: Cấu hình Wi-Fi Host',
+  title: 'Bài 2 - Cấu hình Wi-Fi Host',
   subtitle: 'Thiết lập mạng Wi-Fi chính (Host)',
   instructions: [
     '<b>Yêu cầu:</b>',

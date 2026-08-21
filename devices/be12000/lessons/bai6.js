@@ -1,4 +1,4 @@
-/**
+﻿/**
  * devices/be12000/lessons/bai6.js
  * Bài 6 - Cấu hình SNTP Đồng Bộ Thời Gian trên BE12000
  */

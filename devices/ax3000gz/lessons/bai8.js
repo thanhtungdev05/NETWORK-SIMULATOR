@@ -1,4 +1,4 @@
-/**
+﻿/**
  * devices/ax3000gz/lessons/bai8.js
  * Bài 8: Cấu hình Port Forwarding trên AX3000GZ
  */
@@ -7,7 +7,7 @@ window.DEVICE_AX3000GZ_LESSONS = window.DEVICE_AX3000GZ_LESSONS || [];
 
 window.DEVICE_AX3000GZ_LESSONS.push({
   id: 'LAB_AX3000GZ_08',
-  title: 'Bài 8: Cấu hình Port Forwarding',
+  title: 'Bài 8 - Cấu hình Port Forwarding',
   subtitle: 'Mở cổng NAT để máy trong LAN nhận kết nối từ ngoài',
   instructions: [
     '<b>Yêu cầu:</b>',

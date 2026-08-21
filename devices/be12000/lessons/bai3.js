@@ -1,4 +1,4 @@
-/**
+﻿/**
  * devices/be12000/lessons/bai3.js
  * Bài 3 - Trạng thái WAN Ethernet trên BE12000
  */

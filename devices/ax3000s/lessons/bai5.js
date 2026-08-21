@@ -1,55 +1,56 @@
 /**
  * devices/ax3000s/lessons/bai5.js
- * Bài 5: Cấu hình địa chỉ IP LAN trên AX3000S
+ * Bài 5: Cấu hình DNS trên AX3000S
  */
 
 window.DEVICE_AX3000S_LESSONS = window.DEVICE_AX3000S_LESSONS || [];
 
-window.DEVICE_AX3000S_LESSONS.push({
+const lessonObj5 = {
   id: 'LAB_AX3000S_05',
-  title: 'Bài 5-Cấu hình địa chỉ IP LAN',
-  subtitle: 'Thay đổi địa chỉ IP LAN và dải DHCP Pool',
+  title: 'Bài 5-Cấu hình DNS',
+  subtitle: 'Cấu hình máy chủ phân giải tên miền (DNS)',
   instructions: [
     '<b>Yêu cầu:</b>',
-    'Thực hiện thay đổi cấu hình địa chỉ IP LAN trên thiết bị theo các thông số được cung cấp dưới đây:',
-    '- IP Address: <span class="val">192.168.1.1</span>',
-    '- IP Subnet Mask: <span class="val">255.255.255.0</span>',
-    '- Start IP: <span class="val">192.168.1.2</span>',
-    '- IP Pool Count: <span class="val">253</span>',
-    '- Lease Time: <span class="val">2 minute or 1 hour</span>',
+    'Thực hiện cấu hình DNS trên thiết bị và cấu hình các máy chủ DNS theo yêu cầu sau:',
+    '- DNS Server 1: <span class="val">210.245.31.220</span> (DNS của FPT)',
+    '- DNS Server 2: <span class="val">8.8.8.8</span> (DNS của Google)',
+    '<br>',
+    '<i>Gợi ý IP DNS FPT: 210.245.31.220, 210.245.31.221 (Nam), 210.31.1.253, 21.31.1.254 (Bắc)</i>',
+    '<i>Gợi ý IP DNS Google: 8.8.8.8, 8.8.4.4 (GG)</i>',
+    '<i>Gợi ý IP DNS Cloudflare: 1.1.1.1 (CF)</i>'
   ],
   practiceUrl: '/sim_ax3000s/app.html#lancfgv4',
   clearFields: [
-    'input[name="ethIpAddress"]',
-    'input[name="ethSubnetMask"]',
-    'input[name="dhcpEthStart"]'
+    '#dnsPrimary',
+    '#dnsSecondary'
   ],
   grading: {
-    description: 'Kiểm tra LAN Configuration IPv4 trên AX3000S',
+    description: 'Kiểm tra cấu hình máy chủ DNS',
     rules: [
       {
-        id: 'lan_ip',
-        name: 'IP Address',
-        selector: 'input[name="ethIpAddress"], #ethIpAddress',
-        expected: '192.168.1.1',
+        id: 'dns_mode',
+        name: 'IPv4 DNS Mode',
+        selector: '#dnsmode2',
+        expected: ['1', 'on', 'true', 'ON'],
+        type: 'any_of',
+        trim: true,
+        required: true,
+        errorMessage: 'Bạn cần chọn chế độ DNS là Static'
+      },
+      {
+        id: 'dns_primary',
+        name: 'Primary DNS',
+        selector: '#dnsPrimary',
+        expected: '210.245.31.220',
         type: 'text_exact',
         trim: true,
         required: true
       },
       {
-        id: 'lan_mask',
-        name: 'Subnet Mask',
-        selector: 'input[name="ethSubnetMask"], #ethSubnetMask',
-        expected: '255.255.255.0',
-        type: 'text_exact',
-        trim: true,
-        required: true
-      },
-      {
-        id: 'dhcp_start',
-        name: 'Start IP',
-        selector: 'input[name="dhcpEthStart"], #dhcpEthStart',
-        expected: '192.168.1.2',
+        id: 'dns_secondary',
+        name: 'Secondary DNS',
+        selector: '#dnsSecondary',
+        expected: '8.8.8.8',
         type: 'text_exact',
         trim: true,
         required: true
@@ -57,4 +58,11 @@ window.DEVICE_AX3000S_LESSONS.push({
     ]
   },
   guidePopups: []
-});
+};
+
+const existingIndex5 = window.DEVICE_AX3000S_LESSONS.findIndex(l => l.id === 'LAB_AX3000S_05');
+if (existingIndex5 !== -1) {
+    window.DEVICE_AX3000S_LESSONS[existingIndex5] = lessonObj5;
+} else {
+    window.DEVICE_AX3000S_LESSONS.push(lessonObj5);
+}

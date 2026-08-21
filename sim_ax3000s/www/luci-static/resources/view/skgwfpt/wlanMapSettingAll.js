@@ -126,6 +126,8 @@ if(!checkSSIDRepid(ssid_2G,"2.4G",index))
 if(!checkSSIDRepid(ssid_5G,"5G",index))
 {parent.warninfo_show(_("wlanMapSettingAll_ssidduplicated5G"));return;}
 ret1=isValidPassword(password_2G);ret2=isValidPassword(password_5G);if(ret1==-1||ret2==-1){parent.warninfo_show(_("basicSetting2g_pwdempty"));return;}else if(ret1==-2||ret2==-2){parent.warninfo_show(_("basicSetting2g_pwdlengthlimit"));return;}else if(ret1==-3||ret2==-3){parent.warninfo_show(_("basicSetting2g_pwdcharlimit"));return;}else if(ret1==-4||ret2==-4){parent.warninfo_show(_("basicSetting2g_pwdspacelimit"));return;}
-var bs_enable_id="Chk_BandSteeringEnable_"+(index+1);var enable_id_2G="Chk_SsidEnable_2G_"+(index+1);var enable_id_5G="Chk_SsidEnable_5G_"+(index+1);if(false==getChecked(bs_enable_id)&&ssid_2G==ssid_5G&&true==getChecked(enable_id_2G)&&true==getChecked(enable_id_5G))
-{parent.warninfo_show(_("wlanMapSettingAll_bandsteeringwarn"));return;}
+var bs_enable_id="Chk_BandSteeringEnable_"+(index+1);var enable_id_2G="Chk_SsidEnable_2G_"+(index+1);var enable_id_5G="Chk_SsidEnable_5G_"+(index+1);
+// Bỏ cảnh báo bắt buộc bật Band Steering khi 2 mạng trùng tên theo yêu cầu bài học FPT
+// if(false==getChecked(bs_enable_id)&&ssid_2G==ssid_5G&&true==getChecked(enable_id_2G)&&true==getChecked(enable_id_5G))
+// {parent.warninfo_show(_("wlanMapSettingAll_bandsteeringwarn"));return;}
 setBssInfo(index);}

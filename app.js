@@ -229,7 +229,119 @@
           try {
             const allDocs = getAllAccessibleDocuments(deviceIframe.contentWindow);
             allDocs.forEach(doc => {
+              // Liên tục Tắt gợi ý mật khẩu/tự động điền (Autocomplete/Saved Info) bằng phương pháp mạnh (readonly hack)
+              try {
+                doc.querySelectorAll('form:not([data-autofill-disabled]), input:not([data-autofill-disabled])').forEach(el => {
+                  el.setAttribute('data-autofill-disabled', 'true');
+                  el.setAttribute('autocomplete', 'off'); // Chuẩn chung
+                  el.setAttribute('data-lpignore', 'true'); // Chặn LastPass
+                  el.setAttribute('data-form-type', 'other');
+                  
+                  if (el.tagName === 'INPUT' && (el.type === 'text' || el.type === 'password' || el.type === 'number')) {
+                    // Bỏ qua các ô vốn dĩ đã bị khóa (readonly / disabled) từ mã HTML gốc
+                    if (el.hasAttribute('readonly') || el.hasAttribute('disabled')) {
+                       return;
+                    }
+
+                    // Cài cắm cạm bẫy readonly: Edge/Chrome sẽ không hiện popup Saved Info trên ô readonly.
+                    // Khi người dùng thực sự bấm vào hoặc tab vào, ta mới gỡ readonly ra.
+                    el.setAttribute('readonly', 'readonly');
+                    
+                    const removeReadonly = function() {
+                      if (el.hasAttribute('readonly')) {
+                        el.removeAttribute('readonly');
+                      }
+                    };
+                    
+                    el.addEventListener('focus', removeReadonly);
+                    el.addEventListener('click', removeReadonly);
+                    el.addEventListener('mousedown', removeReadonly);
+                    
+                    // Khôi phục readonly khi rời chuột/focus để đảm bảo chặn triệt để
+                    el.addEventListener('blur', function() {
+                      if (el.value === '') {
+                        el.setAttribute('readonly', 'readonly');
+                      }
+                    });
+                  }
+                });
+              } catch(e) {}
+
               if (!doc._ftcSaveListenerAttached) {
+
+                // Ràng buộc đăng nhập thiết bị bắt buộc nhập admin / admin
+                const loc = (doc.location && doc.location.href) ? doc.location.href.toLowerCase() : '';
+                const hsh = (doc.location && doc.location.hash) ? doc.location.hash.toLowerCase() : '';
+                const isMainPage = hsh.includes('#/home') || hsh.includes('#/network') || hsh.includes('#/system') || hsh.includes('#/status') || hsh.includes('#/device');
+                const isLogin = !isMainPage && (loc.includes('login') || hsh.includes('login') || doc.querySelector('.login-fpt, form[action*="login"]'));
+                
+                if (isLogin) {
+                  const checkLoginFields = function(e, triggerEl) {
+                    // Cố gắng tìm các ô nhập liệu user/pass trên trang (lấy mọi input không bị ẩn)
+                    const inputs = Array.from(doc.querySelectorAll('input')).filter(i => i.type !== 'hidden' && i.style.display !== 'none' && !i.disabled);
+                    let isOk = false;
+                    
+                    let hasAdminPass = false;
+                    let hasAdminUser = false;
+                    let hasPasswordType = false;
+
+                    inputs.forEach(i => {
+                      if (i.type === 'password') {
+                        hasPasswordType = true;
+                        if (i.value.trim() === 'admin') hasAdminPass = true;
+                      } else if (i.tagName === 'INPUT' && (i.type === 'text' || !i.type)) {
+                        if (i.value.trim() === 'admin') hasAdminUser = true;
+                      }
+                    });
+
+                    // Xác định hợp lệ:
+                    if (hasPasswordType) {
+                      if (inputs.length > 1) {
+                        if (hasAdminPass && hasAdminUser) isOk = true;
+                      } else {
+                        if (hasAdminPass) isOk = true;
+                      }
+                    } else {
+                      if (inputs.length >= 2 && inputs[0].value.trim() === 'admin' && inputs[1].value.trim() === 'admin') {
+                        isOk = true;
+                      } else if (inputs.length === 1 && inputs[0].value.trim() === 'admin') {
+                        isOk = true;
+                      }
+                    }
+
+                    if (!isOk && inputs.length > 0) {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      e.stopImmediatePropagation();
+                      alert("Tên đăng nhập hoặc mật khẩu không chính xác! (Gợi ý: admin / admin)");
+                      return false;
+                    }
+                    return true;
+                  };
+
+                  doc.addEventListener('click', function(e) {
+                    let el = e.target;
+                    while(el && el !== doc) {
+                      const txt = (el.value || el.textContent || el.innerText || '').toLowerCase();
+                      const cls = (el.className && typeof el.className === 'string') ? el.className.toLowerCase() : '';
+                      const id = (el.id || '').toLowerCase();
+                      
+                      if ((el.tagName === 'INPUT' || el.tagName === 'BUTTON' || el.tagName === 'A' || el.tagName === 'SPAN') && 
+                          (el.type === 'submit' || txt.includes('login') || txt.includes('log in') || txt.includes('đăng nhập') || id.includes('login') || cls.includes('login') || cls.includes('btn-primary') || cls.includes('submit'))) {
+                        
+                        if (!checkLoginFields(e, el)) return false;
+                      }
+                      el = el.parentNode;
+                    }
+                  }, true);
+
+                  doc.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.keyCode === 13) {
+                       if (!checkLoginFields(e, e.target)) return false;
+                    }
+                  }, true);
+                }
+
                 // Sự kiện click nút Save/Apply
                 doc.addEventListener('click', function(e) {
                   let el = e.target;

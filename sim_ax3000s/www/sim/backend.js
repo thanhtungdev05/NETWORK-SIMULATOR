@@ -58,11 +58,11 @@
   ];
 
   var LAN = {
-    ipaddr: "",
-    netmask: "",
+    ipaddr: "192.168.1.1",
+    netmask: "255.255.255.0",
     dhcp_enable: 0,
-    dhcp_start: "",
-    dhcp_end: "",
+    dhcp_start: "192.168.1.2",
+    dhcp_end: "192.168.1.254",
     dhcp_lease: 86400,
     dns1: "",
     dns2: ""
@@ -325,14 +325,14 @@
             bandsteering_enable: i === 0 ? 1 : 0, // Enable Band Steering for primary SSID
             "2.4G": {
               enable: i > 0 ? 0 : 1,
-              ssid: i === 0 ? RADIOS[0].ssid : (i === 1 ? "Guest WiFi" : (i === 2 ? "FPT Telecom-IoT" : "Wi-Fi 4")),
-              password: i === 0 ? RADIOS[0].password : "12345678",
+              ssid: i === 0 ? RADIOS[0].ssid : (i === 1 ? "Guest WiFi" : (i === 2 ? "" : "Wi-Fi 4")),
+              password: i === 0 ? RADIOS[0].password : (i === 2 ? "" : "12345678"),
               securityMode: "WPA2-PSK"
             },
             "5G": {
               enable: i > 0 ? 0 : 1,
-              ssid: i === 0 ? RADIOS[1].ssid : (i === 1 ? "Guest WiFi" : (i === 2 ? "FPT Telecom-IoT" : "Wi-Fi 4")),
-              password: i === 0 ? RADIOS[1].password : "12345678",
+              ssid: i === 0 ? RADIOS[1].ssid : (i === 1 ? "Guest WiFi" : (i === 2 ? "" : "Wi-Fi 4")),
+              password: i === 0 ? RADIOS[1].password : (i === 2 ? "" : "12345678"),
               securityMode: "WPA2-PSK"
             }
           };

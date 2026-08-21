@@ -5,37 +5,86 @@
 
 window.DEVICE_AX3000S_LESSONS = window.DEVICE_AX3000S_LESSONS || [];
 
-window.DEVICE_AX3000S_LESSONS.push({
+const lessonObj3 = {
   id: 'LAB_AX3000S_03',
   title: 'Bài 3-Cấu hình WIFI IOT',
   subtitle: 'Thiết lập mạng Wi-Fi dành riêng cho thiết bị IoT',
   instructions: [
     '<b>Yêu cầu:</b>',
     'Thực hiện cấu hình mạng Wi-Fi IoT theo các thông số dưới đây:',
-    '- SSID Name: <span class="val">FPT Telecom_IoT</span>',
+    '- SSID Name: <span class="val">FPT Telecom-IoT</span>',
     '- WPA Key: <span class="val">19006600</span>',
+    '- Bật cả 2 băng tần 2.4GHz và 5GHz',
+    '- Tắt Band Steering'
   ],
   practiceUrl: '/sim_ax3000s/app.html#wlanMapSettingAll',
   clearFields: [
     'input[name="Txt_SSID_2G_3"]',
-    'input[name="Pwd_WpaPsk_2G_3"]'
+    'input[name="Pwd_WpaPsk_2G_3"]',
+    'input[name="Txt_SSID_5G_3"]',
+    'input[name="Pwd_WpaPsk_5G_3"]'
   ],
   grading: {
-    description: 'Kiểm tra SSID IoT và WPA Key trên AX3000S',
+    description: 'Kiểm tra cấu hình Wi-Fi IOT (Network 3) trên AX3000S',
     rules: [
       {
-        id: 'iot_ssid',
-        name: 'Tên Wi-Fi IoT',
-        selector: 'input[name="Txt_SSID_2G_3"], #Txt_SSID_2G_3',
-        expected: 'FPT Telecom_IoT',
+        id: 'iot_bs',
+        name: 'Tắt Band Steering',
+        selector: '#Chk_BandSteeringEnable_3',
+        expected: ['false', 'off', 'OFF', ''],
+        type: 'any_of',
+        trim: true,
+        required: true
+      },
+      {
+        id: 'iot_enable_2g',
+        name: 'Bật 2.4GHz',
+        selector: '#Chk_SsidEnable_2G_3',
+        expected: ['on', 'true', 'ON'],
+        type: 'any_of',
+        trim: true,
+        required: true
+      },
+      {
+        id: 'iot_ssid_2g',
+        name: 'Tên Wi-Fi IoT (2.4GHz)',
+        selector: '#Txt_SSID_2G_3',
+        expected: 'FPT Telecom-IoT',
         type: 'text_exact',
         trim: true,
         required: true
       },
       {
-        id: 'iot_key',
-        name: 'Mật khẩu Wi-Fi IoT',
-        selector: 'input[name="Pwd_WpaPsk_2G_3"], #Pwd_WpaPsk_2G_3',
+        id: 'iot_key_2g',
+        name: 'Mật khẩu Wi-Fi IoT (2.4GHz)',
+        selector: '#Pwd_WpaPsk_2G_3',
+        expected: '19006600',
+        type: 'text_exact',
+        trim: true,
+        required: true
+      },
+      {
+        id: 'iot_enable_5g',
+        name: 'Bật 5GHz',
+        selector: '#Chk_SsidEnable_5G_3',
+        expected: ['on', 'true', 'ON'],
+        type: 'any_of',
+        trim: true,
+        required: true
+      },
+      {
+        id: 'iot_ssid_5g',
+        name: 'Tên Wi-Fi IoT (5GHz)',
+        selector: '#Txt_SSID_5G_3',
+        expected: 'FPT Telecom-IoT',
+        type: 'text_exact',
+        trim: true,
+        required: true
+      },
+      {
+        id: 'iot_key_5g',
+        name: 'Mật khẩu Wi-Fi IoT (5GHz)',
+        selector: '#Pwd_WpaPsk_5G_3',
         expected: '19006600',
         type: 'text_exact',
         trim: true,
@@ -44,4 +93,11 @@ window.DEVICE_AX3000S_LESSONS.push({
     ]
   },
   guidePopups: []
-});
+};
+
+const existingIndex3 = window.DEVICE_AX3000S_LESSONS.findIndex(l => l.id === 'LAB_AX3000S_03');
+if (existingIndex3 !== -1) {
+    window.DEVICE_AX3000S_LESSONS[existingIndex3] = lessonObj3;
+} else {
+    window.DEVICE_AX3000S_LESSONS.push(lessonObj3);
+}

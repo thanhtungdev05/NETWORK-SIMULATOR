@@ -6,9 +6,9 @@
 window.DEVICE_AX3000C_LESSONS = window.DEVICE_AX3000C_LESSONS || [];
 
 window.DEVICE_AX3000C_LESSONS.push({
-  id: 'LAB_AX3000CV2_02',
-  title: 'Bài 2 - Cấu hình WiFi',
-  subtitle: 'Kích hoạt Band Steering và thiết lập Wi-Fi',
+  id: 'LAB_AX3000C_02',
+  title: 'Cấu hình wifi',
+  subtitle: 'Cấu hình wifi',
   instructions: [
     '<b>Yêu cầu:</b>',
     'Thực hiện cấu hình mạng Wi-Fi Band Steering trên thiết bị. Kích hoạt tính năng Band Steering và cấu hình các thông số mạng Wi-Fi theo đúng yêu cầu dưới đây:',

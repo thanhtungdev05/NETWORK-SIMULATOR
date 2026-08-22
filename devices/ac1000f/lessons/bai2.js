@@ -8,8 +8,8 @@
 
   window.DEVICE_AC1000F_LESSONS.push({
     id: 'LAB_AC1000F_02',
-    title: 'Bài 2 - Cấu hình mạng Wi-Fi',
-    subtitle: 'Thiết lập Wi-Fi 2.4G + 5G đúng chuẩn FPT Telecom',
+    title: 'Cấu hình wifi',
+    subtitle: 'Cấu hình wifi',
     instructions: [
       '<b>Yêu cầu:</b>',
       'Cấu hình đúng cho cả 2 băng tần <b>2.4G</b> và <b>5G</b> theo thông số:',

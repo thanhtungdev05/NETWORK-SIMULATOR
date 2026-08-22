@@ -7,8 +7,8 @@ window.DEVICE_AX3000HV2_LESSONS = window.DEVICE_AX3000HV2_LESSONS || [];
 
 window.DEVICE_AX3000HV2_LESSONS.push({
   id: 'LAB_AX3000HV2_01',
-  title: 'Bài 1 - Cấu hình PPPoE',
-  subtitle: 'Thiết lập kết nối Internet PPPoE cho AX3000H v2',
+  title: 'Cấu hình PPPoE',
+  subtitle: 'Cấu hình PPPoE',
   instructions: [
     '<b>Yêu cầu:</b>',
     'Thực hiện cấu hình kết nối WAN/Internet trên thiết bị và thiết lập kết nối PPPoE theo các thông số được cung cấp dưới đây:',

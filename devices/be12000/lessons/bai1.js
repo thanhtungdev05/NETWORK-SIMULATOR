@@ -7,8 +7,8 @@ window.DEVICE_BE12000_LESSONS = window.DEVICE_BE12000_LESSONS || [];
 
 window.DEVICE_BE12000_LESSONS.push({
   id: 'LAB_BE12000_01',
-  title: 'Bài 1 - Quản lý LAN IPv4',
-  subtitle: 'Cấu hình địa chỉ IP LAN và DHCP Server',
+  title: 'Cấu hình PPPoE',
+  subtitle: 'Cấu hình PPPoE',
   instructions: [
     'Truy cập <b>/sim_be12000</b> và đăng nhập',
     'Chọn menu <b>Local Network > LAN > IPv4</b>',

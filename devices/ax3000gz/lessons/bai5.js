@@ -1,46 +1,35 @@
-/**
- * devices/ax3000gz/lessons/bai8.js
- * Bài 5 - Cấu hình Port Forwarding trên AX3000GZ
+﻿/**
+ * devices/ax3000gz/lessons/bai9.js
+ * Bài 9: Cấu hình Chặn MAC trên AX3000GZ
  */
 
 window.DEVICE_AX3000GZ_LESSONS = window.DEVICE_AX3000GZ_LESSONS || [];
 
 window.DEVICE_AX3000GZ_LESSONS.push({
   id: 'LAB_AX3000GZ_05',
-  title: 'Bài 5 - Cấu hình Port Forwarding',
-  subtitle: 'Mở cổng NAT để máy trong LAN nhận kết nối từ ngoài',
+  title: 'Cấu hình DHCP',
+  subtitle: 'Cấu hình DHCP',
   instructions: [
     '<b>Yêu cầu:</b>',
-    'Thực hiện cấu hình Mở Port trên thiết bị theo các thông số được cung cấp dưới đây:',
-    '- Name: <span class="val">FPT Telecom</span>',
+    'Thực hiện cấu hình chặn địa chỉ MAC truy cập mạng:',
     '- Enable: <span class="val">On</span>',
-    '- Protocol: <span class="val">TCP/UDP</span>',
-    '- WAN Host IP Address: <span class="val">21.143.157.184</span>',
-    '- LAN Host: <span class="val">192.168.1.254</span>',
-    '- WAN Port: <span class="val">8080</span>',
-    '- LAN Host Port: <span class="val">8080</span>'
+    '- Name: <span class="val">Blacklist / Deny</span>',
+    '- Source MAC Address: <span class="val">AA:BB:CC:DD:EE:FF</span>',
+    '- Start Time: <span class="val">08:00:00 AM</span>',
+    '- End Time: <span class="val">05:00:00 PM</span>',
+    '- Week Days: chọn các ngày trong tuần từ <span class="val">Thứ 2 đến Thứ 6</span>'
   ],
-  practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/internet/security/forwards',
+  practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/internet/security/filterCriteria',
   clearFields: [
     '[id="modal_field_name"]',
-    '[id="modal_field_proto"]',
-    '[id="modal_field_src_ip"]',
-    '[id="modal_field_dest_ip"]',
-    '[id="modal_field_src_dport"]',
-    '[id="modal_field_dest_port"]'
+    '[id="modal_field_src_mac"]',
+    '[id="modal_field_start_time"]',
+    '[id="modal_field_stop_time"]',
+    '[id="modal_field_weekdays"] input'
   ],
   grading: {
-    description: 'Kiểm tra Port Forwarding rules trên AX3000GZ',
+    description: 'Kiểm tra MAC Filter configuration',
     rules: [
-      {
-        id: 'pf_name',
-        name: 'Name',
-        selector: '[id="modal_field_name"]',
-        expected: 'FPT Telecom',
-        type: 'text_exact',
-        trim: true,
-        required: true
-      },
       {
         id: 'pf_enabled',
         name: 'Enable Status',
@@ -51,46 +40,100 @@ window.DEVICE_AX3000GZ_LESSONS.push({
         required: true
       },
       {
-        id: 'pf_proto',
-        name: 'Protocol',
-        selector: '[id="modal_field_proto"]',
-        expected: 'tcp udp',
+        id: 'pf_name',
+        name: 'Name',
+        selector: '[id="modal_field_name"]',
+        expected: 'Blacklist / Deny',
         type: 'text_exact',
         trim: true,
         required: true
       },
       {
-        id: 'pf_wan_ip',
-        name: 'WAN Host IP Address',
-        selector: '[id="modal_field_src_ip"]',
-        expected: '21.143.157.184',
+        id: 'pf_src_mac',
+        name: 'Source MAC Address',
+        selector: '[id="modal_field_src_mac"]',
+        expected: 'AA:BB:CC:DD:EE:FF',
+        type: 'case_insensitive',
+        trim: true,
+        required: true
+      },
+      {
+        id: 'pf_start_time',
+        name: 'Start Time',
+        selector: '[id="modal_field_start_time"]',
+        expected: '08:00:00 AM',
         type: 'text_exact',
         trim: true,
         required: true
       },
       {
-        id: 'pf_lan_ip',
-        name: 'LAN Host',
-        selector: '[id="modal_field_dest_ip"]',
-        expected: '192.168.1.254',
+        id: 'pf_stop_time',
+        name: 'End Time',
+        selector: '[id="modal_field_stop_time"]',
+        expected: '05:00:00 PM',
         type: 'text_exact',
         trim: true,
         required: true
       },
       {
-        id: 'pf_wan_port',
-        name: 'WAN Port',
-        selector: '[id="modal_field_src_dport"]',
-        expected: '8080',
+        id: 'pf_weekdays_mon',
+        name: 'Monday Checked',
+        selector: '[id="modal_field_weekdays"] input[value="Mon"]',
+        expected: 'Mon',
         type: 'text_exact',
         trim: true,
         required: true
       },
       {
-        id: 'pf_lan_port',
-        name: 'LAN Host Port',
-        selector: '[id="modal_field_dest_port"]',
-        expected: '8080',
+        id: 'pf_weekdays_tue',
+        name: 'Tuesday Checked',
+        selector: '[id="modal_field_weekdays"] input[value="Tue"]',
+        expected: 'Tue',
+        type: 'text_exact',
+        trim: true,
+        required: true
+      },
+      {
+        id: 'pf_weekdays_wed',
+        name: 'Wednesday Checked',
+        selector: '[id="modal_field_weekdays"] input[value="Wed"]',
+        expected: 'Wed',
+        type: 'text_exact',
+        trim: true,
+        required: true
+      },
+      {
+        id: 'pf_weekdays_thu',
+        name: 'Thursday Checked',
+        selector: '[id="modal_field_weekdays"] input[value="Thu"]',
+        expected: 'Thu',
+        type: 'text_exact',
+        trim: true,
+        required: true
+      },
+      {
+        id: 'pf_weekdays_fri',
+        name: 'Friday Checked',
+        selector: '[id="modal_field_weekdays"] input[value="Fri"]',
+        expected: 'Fri',
+        type: 'text_exact',
+        trim: true,
+        required: true
+      },
+      {
+        id: 'pf_weekdays_sat',
+        name: 'Saturday Unchecked',
+        selector: '[id="modal_field_weekdays"] input[value="Sat"]',
+        expected: 'false',
+        type: 'text_exact',
+        trim: true,
+        required: true
+      },
+      {
+        id: 'pf_weekdays_sun',
+        name: 'Sunday Unchecked',
+        selector: '[id="modal_field_weekdays"] input[value="Sun"]',
+        expected: 'false',
         type: 'text_exact',
         trim: true,
         required: true

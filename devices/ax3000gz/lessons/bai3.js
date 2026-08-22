@@ -1,42 +1,42 @@
 ﻿/**
- * devices/ax3000gz/lessons/bai3.js
- * Bài 3: Tính năng BandSteering trên AX3000GZ
+ * devices/ax3000gz/lessons/bai2.js
+ * Bài 2: Cấu hình WiFi trên AX3000GZ
  */
 
 window.DEVICE_AX3000GZ_LESSONS = window.DEVICE_AX3000GZ_LESSONS || [];
 
 window.DEVICE_AX3000GZ_LESSONS.push({
   id: 'LAB_AX3000GZ_03',
-  title: 'Bài 3 - Tính năng BandSteering',
-  subtitle: 'Kích hoạt và cấu hình tính năng Band Steering',
+  title: 'Cấu hình wifi IoT',
+  subtitle: 'Cấu hình wifi IoT',
   instructions: [
     '<b>Yêu cầu:</b>',
-    'Thực hiện cấu hình tính năng Band Steering tự động phân bổ băng tần:',
-    '- RSSI Threshold(2.4g): <span class="val">-65</span>',
-    '- RSSI Threshold(5g): <span class="val">-65</span>',
+    'Thực hiện cấu hình các thông số mạng Wi-Fi theo đúng yêu cầu dưới đây:',
+    '- SSID Name: <span class="val">FPT Telecom</span>',
+    '- WPA Key: <span class="val">fpt12345</span>',
   ],
-  practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/localnetwork/WLAN/BandSteering',
+  practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/localnetwork/WLAN/WLANbasic',
   clearFields: [
-    '[id="widget.cbid.json.BandSteering.RssiThreshold2g"]',
-    '[id="widget.cbid.json.BandSteering.RssiThreshold5g"]'
+    '[id="modal_field_SSID"]',
+    '[id="modal_field_KeyPassphrase"] input'
   ],
   grading: {
-    description: 'Kiểm tra Band Steering trên AX3000GZ',
+    description: 'Kiểm tra SSID và WPA Key trên AX3000GZ',
     rules: [
       {
-        id: 'rssi_24g',
-        name: 'RSSI Threshold 2.4G',
-        selector: '[id="widget.cbid.json.BandSteering.RssiThreshold2g"]',
-        expected: '-65',
+        id: 'wlan_ssid',
+        name: 'Tên Wi-Fi (SSID)',
+        selector: '[id="modal_field_SSID"]',
+        expected: 'FPT Telecom',
         type: 'text_exact',
         trim: true,
         required: true
       },
       {
-        id: 'rssi_5g',
-        name: 'RSSI Threshold 5G',
-        selector: '[id="widget.cbid.json.BandSteering.RssiThreshold5g"]',
-        expected: '-65',
+        id: 'wlan_key',
+        name: 'Mật khẩu Wi-Fi (WPA Key)',
+        selector: '[id="modal_field_KeyPassphrase"] input',
+        expected: 'fpt12345',
         type: 'text_exact',
         trim: true,
         required: true

@@ -6,9 +6,9 @@
 window.DEVICE_AX3000C_LESSONS = window.DEVICE_AX3000C_LESSONS || [];
 
 window.DEVICE_AX3000C_LESSONS.push({
-  id: 'LAB_AX3000CV2_04',
-  title: 'Bài 4 - Cấu hình DNS',
-  subtitle: 'Cấu hình máy chủ DNS của FPT và Google',
+  id: 'LAB_AX3000C_04',
+  title: 'Cấu hình DNS',
+  subtitle: 'Cấu hình DNS',
   instructions: [
     '<b>Yêu cầu:</b>',
     'Thực hiện cấu hình DNS trên thiết bị và cấu hình các máy chủ DNS theo yêu cầu sau:',

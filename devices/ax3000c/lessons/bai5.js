@@ -1,38 +1,64 @@
 ﻿/**
- * devices/ax3000c/lessons/bai5.js
- * Bài 5: Cấu hình NAT Port trên AX3000C
+ * devices/ax3000c/lessons/bai3.js
+ * Bài 3: Cấu hình đổi IP LAN trên AX3000C
  */
 
 window.DEVICE_AX3000C_LESSONS = window.DEVICE_AX3000C_LESSONS || [];
 
 window.DEVICE_AX3000C_LESSONS.push({
-  id: 'LAB_AX3000CV2_05',
-  title: 'Bài 5 - Cấu hình NAT Port',
-  subtitle: 'Mở Port (Port Forwarding) trên thiết bị',
+  id: 'LAB_AX3000C_05',
+  title: 'Cấu hình DHCP',
+  subtitle: 'Cấu hình DHCP',
   instructions: [
     '<b>Yêu cầu:</b>',
-    'Thực hiện cấu hình Mở Port trên thiết bị theo các thông số được cung cấp dưới đây.',
-    '- External Port: <span class="val">8080</span>',
-    '- Internal Port: <span class="val">80</span>',
+    'Thực hiện thay đổi cấu hình địa chỉ IP LAN trên thiết bị theo các thông số được cung cấp dưới đây.',
+    '- Router LAN IPv4 Address: <span class="val">192.168.100.1</span>',
+    '- Subnet mask: <span class="val">255.255.255.0</span>',
+    '- DHCP start address: <span class="val">192.168.100.2</span>',
+    '- DHCP end address: <span class="val">192.168.100.249</span>',
   ],
-  practiceUrl: '/sim_ax3000c/#/network/portfwd',
+  practiceUrl: '/sim_ax3000c/#/network/dhcp',
+  clearFields: [
+    '.card .bd .row:nth-child(1) input',
+    '.card .bd .row:nth-child(2) input',
+    '.card .bd .row:nth-child(3) input',
+    '.card .bd .row:nth-child(4) input'
+  ],
   grading: {
-    description: 'Kiểm tra Port Forwarding Rules trên AX3000C',
+    description: 'Kiểm tra IP LAN và dải DHCP Pool trên AX3000C',
     rules: [
       {
-        id: 'ext_port',
-        name: 'External Port',
-        selector: 'table tr td:nth-child(3) input, input[placeholder*="8080"]',
-        expected: '8080',
+        id: 'lan_ip',
+        name: 'Router LAN IP Address',
+        selector: '.card .bd .row:nth-child(1) input, input[value="192.168.100.1"]',
+        expected: '192.168.100.1',
         type: 'text_exact',
         trim: true,
         required: true
       },
       {
-        id: 'int_port',
-        name: 'Internal Port',
-        selector: 'table tr td:nth-child(5) input, input[placeholder*="80"]',
-        expected: '80',
+        id: 'subnet_mask',
+        name: 'Subnet Mask',
+        selector: '.card .bd .row:nth-child(2) input, input[value="255.255.255.0"]',
+        expected: '255.255.255.0',
+        type: 'text_exact',
+        trim: true,
+        required: true
+      },
+      {
+        id: 'dhcp_start',
+        name: 'DHCP Start Address',
+        selector: '.card .bd .row:nth-child(3) input, input[value="192.168.100.2"]',
+        expected: '192.168.100.2',
+        type: 'text_exact',
+        trim: true,
+        required: true
+      },
+      {
+        id: 'dhcp_end',
+        name: 'DHCP End Address',
+        selector: '.card .bd .row:nth-child(4) input, input[value="192.168.100.249"]',
+        expected: '192.168.100.249',
         type: 'text_exact',
         trim: true,
         required: true
@@ -41,58 +67,52 @@ window.DEVICE_AX3000C_LESSONS.push({
   },
   guidePopups: [
     {
-      selector: '.el-submenu__title:contains("Network")',
+      selector: '.el-submenu__title:contains("Network"), .el-submenu:contains("Network")',
       text: 'Chọn Network',
       position: 'right',
-      hideOnPage: 'portfwd'
+      hideOnPage: 'lan'
     },
     {
-      selector: '.el-submenu__title:contains("Access")',
-      text: 'Chọn Access',
+      selector: '.el-submenu:contains("Network") .el-submenu__title:contains("LAN"), li.el-submenu:contains("LAN") .el-submenu__title',
+      text: 'Chọn LAN',
       position: 'right',
-      hideOnPage: 'portfwd'
+      hideOnPage: 'lan'
     },
     {
-      selector: '.el-menu-item:contains("Port Forwarding"), [index*="/network/portfwd"]',
-      text: 'Chọn Port Forwarding',
+      selector: '.el-menu-item:contains("LAN"), li.el-menu-item:contains("LAN"), [index*="/network/lan"], [index*="/network/dhcp"]',
+      text: 'Chọn LAN',
       position: 'right',
-      hideOnPage: 'portfwd'
+      hideOnPage: 'lan'
     },
     {
-      selector: '.sw input[type="checkbox"], .sw, table input[type="checkbox"]',
-      text: 'Bước 1: chọn Enable',
-      position: 'left',
-      page: 'portfwd'
+      selector: '.card .bd .row:nth-child(1) input, input[value="192.168.100.1"]',
+      text: 'Bước 1: đặt IP cho Router ví dụ: 192.168.100.1',
+      position: 'right',
+      page: 'lan'
     },
     {
-      selector: 'table select, td select',
-      text: 'Bước 2: chọn TCP/UDP',
-      position: 'top',
-      page: 'portfwd'
+      selector: '.card .bd .row:nth-child(2) input, input[value="255.255.255.0"]',
+      text: 'Bước 2: đặt Subnet mask ví dụ: 255.255.255.0',
+      position: 'right',
+      page: 'lan'
     },
     {
-      selector: 'table tr td:nth-child(3) input, input[placeholder*="8080"]',
-      text: 'Bước 3: nhập External port ví dụ: 8080',
-      position: 'bottom',
-      page: 'portfwd'
+      selector: '.card .bd .row:nth-child(3) input, input[value="192.168.100.2"]',
+      text: 'Bước 3: đặt IP động đầu tiên ví dụ: 192.168.100.2',
+      position: 'right',
+      page: 'lan'
     },
     {
-      selector: 'table tr td:nth-child(4) select, table tr td:nth-child(4) input, input[placeholder*="192.168.100"]',
-      text: 'Bước 4: chọn thiết bị ví dụ: 192.168.100.20',
-      position: 'top',
-      page: 'portfwd'
-    },
-    {
-      selector: 'table tr td:nth-child(5) input, input[placeholder*="80"]',
-      text: 'Bước 5: nhập Internal port ví dụ: 80',
-      position: 'bottom',
-      page: 'portfwd'
+      selector: '.card .bd .row:nth-child(4) input, input[value="192.168.100.249"]',
+      text: 'Bước 4: đặt IP động sau cùng ví dụ: 192.168.100.249',
+      position: 'right',
+      page: 'lan'
     },
     {
       selector: 'button.apply, button.btn.apply, button[onclick*="save"], input[type="submit"]',
-      text: 'Bước 6: chọn Apply',
+      text: 'Bước 5: chọn Apply',
       position: 'right',
-      page: 'portfwd'
+      page: 'lan'
     }
   ]
 });

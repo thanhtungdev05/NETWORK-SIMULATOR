@@ -1,42 +1,42 @@
 ﻿/**
- * devices/ax3000hv2/lessons/bai6.js
- * Bài 6: Cấu hình DHCP Reservation trên AX3000H v2
+ * devices/ax3000hv2/lessons/bai1.js
+ * Bài 1: Cấu hình PPPoE trên AX3000H v2
  */
 
 window.DEVICE_AX3000HV2_LESSONS = window.DEVICE_AX3000HV2_LESSONS || [];
 
 window.DEVICE_AX3000HV2_LESSONS.push({
   id: 'LAB_AX3000HV2_06',
-  title: 'Bài 6 - Cấu hình DHCP Reservation',
-  subtitle: 'Gán địa chỉ IP cố định (Static DHCP) cho thiết bị',
+  title: 'Cấu hình Port Forwarding',
+  subtitle: 'Cấu hình Port Forwarding',
   instructions: [
     '<b>Yêu cầu:</b>',
-    'Thực hiện cấu hình DHCP Reservation (Gán IP cố định) theo thông số:',
-    '- MAC Address: <span class="val">AA:BB:CC:DD:EE:FF</span>',
-    '- IP Address: <span class="val">192.168.1.100</span>',
+    'Thực hiện cấu hình kết nối WAN/Internet trên thiết bị và thiết lập kết nối PPPoE theo các thông số được cung cấp dưới đây:',
+    '- Username: <span class="val">fpt</span>',
+    '- Password: <span class="val">fpt12345</span>',
   ],
-  practiceUrl: '/sim_ax3000hv2/cgi-bin/index.asp?page=home_lan.asp',
+  practiceUrl: '/sim_ax3000hv2/cgi-bin/index.asp?page=home_wan.asp',
   clearFields: [
-    'input[name="IpAddr"]',
-    'input[name="MACAddr"]'
+    'input[name="pppUserName"]',
+    'input[name="pppPassword"]'
   ],
   grading: {
-    description: 'Kiểm tra DHCP Reservation settings',
+    description: 'Kiểm tra cấu hình PPPoE trên AX3000H v2',
     rules: [
       {
-        id: 'res_mac',
-        name: 'Địa chỉ MAC',
-        selector: 'input[name="MACAddr"]',
-        expected: 'AA:BB:CC:DD:EE:FF',
-        type: 'case_insensitive',
+        id: 'wan_username',
+        name: 'PPPoE Username',
+        selector: 'input[name="wan_PPPUsername"], input[name="pppUserName"], input[name="username"]',
+        expected: 'fpt',
+        type: 'text_exact',
         trim: true,
         required: true
       },
       {
-        id: 'res_ip',
-        name: 'Địa chỉ IP gán',
-        selector: 'input[name="IpAddr"]',
-        expected: '192.168.1.100',
+        id: 'wan_password',
+        name: 'PPPoE Password',
+        selector: 'input[name="wan_PPPPassword"], input[name="pppPassword"], input[name="password"]',
+        expected: 'fpt12345',
         type: 'text_exact',
         trim: true,
         required: true

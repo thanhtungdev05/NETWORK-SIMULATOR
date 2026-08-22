@@ -1,38 +1,34 @@
 ﻿/**
- * devices/ac1000f/lessons/bai4.js
- * Bài 4: Cấu hình Mở Port trên ONT AC1000F
+ * devices/ac1000f/lessons/bai5.js
+ * Bài 5: Cấu hình DNS
  */
 
 window.DEVICE_AC1000F_LESSONS = window.DEVICE_AC1000F_LESSONS || [];
 
 window.DEVICE_AC1000F_LESSONS.push({
   id: 'LAB_AC1000F_04',
-  title: 'Bài 4 - Cấu hình Mở Port',
-  subtitle: 'Mở Port (Port Forwarding) trên thiết bị',
+  title: 'Cấu hình DNS',
+  subtitle: 'Cấu hình DNS',
   instructions: [
-    '<b>Yêu cầu:</b>',
-    'Thực hiện cấu hình Mở Port trên thiết bị theo các thông số được cung cấp dưới đây.',
-    '- Start External Port: <span class="val">3389</span>',
-    '- End External Port: <span class="val">3389</span>',
-    '- IP Address: <span class="val">192.168.1.254</span>',
-    '- Start Internal Port: <span class="val">3389</span>',
-    '- End Internal Port: <span class="val">3389</span>',
+    '<b>Yêu cầu:</b> Thực hiện cấu hình máy chủ DDNS trên thiết bị với các thông số sau:',
+    '- Tên Host: <span class="val">ac1000f.ddns.net</span>',
+    '- Username: <span class="val">truongconghau04111994@gmail.com</span>',
+    '- Password: <span class="val">fpt12345</span>',
   ],
-  practiceUrl: '/sim_ac1000f/cgi-bin/index.asp?page=adv_nat_top.asp',
+  practiceUrl: '/sim_ac1000f/cgi-bin/index.asp?page=access_ddns.asp',
 
-  // Ràng buộc điều kiện chấm đúng
-  grading: {
-    description: 'Kiểm tra cấu hình Mở Port (7 tiêu chí)',
+  // Ràng buộc điều kiện chấm đúng Ä‘Ãºng
+    grading: {
+    description: 'Kiểm tra cấu hình DDNS',
     customGrading: function(allDocs) {
       var doc = null;
       for (var i = 0; i < allDocs.length; i++) {
-        if (allDocs[i].URL.toLowerCase().indexOf('adv_nat_top.asp') !== -1) {
+        if (allDocs[i].URL.toLowerCase().indexOf('access_ddns.asp') !== -1) {
           doc = allDocs[i];
           break;
         }
       }
       
-      // Hàm tiện ích lấy value
       function getVal(selector) {
         if (!doc) return '';
         try {
@@ -42,7 +38,6 @@ window.DEVICE_AC1000F_LESSONS.push({
         return '';
       }
       
-      // Hàm tiện ích lấy text của thẻ select
       function getSelectText(selector) {
         if (!doc) return '';
         try {
@@ -51,32 +46,59 @@ window.DEVICE_AC1000F_LESSONS.push({
         } catch(e) {}
         return '';
       }
-
+      
+      function getRadioVal(name) {
+        if (!doc) return '';
+        try {
+          var radios = doc.querySelectorAll('input[name="' + name + '"]');
+          for (var i = 0; i < radios.length; i++) {
+            if (radios[i].checked) return radios[i].value;
+          }
+        } catch(e) {}
+        return '';
+      }
+      
+      var dyDns = getRadioVal('Enable_DyDNS');
+      var dyDnsText = dyDns === 'Yes' ? 'Enable' : (dyDns === 'No' ? 'Disable' : 'Chưa chọn');
+      
+      var provider = getSelectText('select[name="ddns_ServerName"]');
+      
+      var wildcard = getRadioVal('Enable_Wildcard');
+      var wildcardText = wildcard === 'Yes' ? 'Enable' : (wildcard === 'No' ? 'Disable' : 'Chưa chọn');
+      
       var rules = [
-        { id: '1', name: 'IPv4 NAT Type', expected: 'Virtual Server', actual: getSelectText('select[name="NATtyleChange"]') },
-        { id: '2', name: 'Start External Port', expected: '3389', actual: getVal('input[name="start_port1"]') },
-        { id: '3', name: 'End External Port', expected: '3389', actual: getVal('input[name="end_port1"]') },
-        { id: '4', name: 'Local IP Address', expected: 'Manually Enter IP Address', actual: getSelectText('select[name="Virsvr_IP_select"]') },
-        { id: '5', name: 'IP Address', expected: '192.168.1.254', actual: getVal('input[name="Addr1"]') },
-        { id: '6', name: 'Start Internal Port', expected: '3389', actual: getVal('input[name="local_sport"]') },
-        { id: '7', name: 'End Internal Port', expected: '3389', actual: getVal('input[name="local_eport"]') }
+        { id: '1', name: 'Dynamic DNS', expected: 'Enable', actual: dyDnsText },
+        { id: '2', name: 'Service Provider', expected: 'WWW.noip.com', actual: provider },
+        { id: '3', name: 'My Host Name', expected: 'ac1000f.ddns.net', actual: getVal('input[name="sysDNSHost"]') },
+        { id: '4', name: 'Username', expected: 'truongconghau04111994@gmail.com', actual: getVal('input[name="sysDNSUser"]') },
+        { id: '5', name: 'Password', expected: 'ftc12345', actual: getVal('input[name="sysDNSPassword"]') },
+        { id: '6', name: 'Wildcard support', expected: 'Disable', actual: wildcardText }
       ];
 
       var passedCount = 0;
       var details = [];
       rules.forEach(function(r) {
-        var isMatch = (r.actual === r.expected);
+        var actualVal = (r.actual || '').toString().trim();
+        var expectVal = (r.expected || '').toString().trim();
+        
+        var isMatch = false;
+        if (r.id === '5') {
+          // Password: case-sensitive
+          isMatch = (actualVal === expectVal);
+        } else {
+          // Others: case-insensitive
+          isMatch = (actualVal.toLowerCase() === expectVal.toLowerCase());
+        }
+        
         if (isMatch) passedCount++;
         details.push({
           id: r.id,
           name: r.name,
           expected: r.expected,
-          actual: r.actual || '(Chưa nhập / Chưa chọn)',
-          passed: isMatch,
-          message: isMatch ? 'Chính xác' : ('Mong muốn: "' + r.expected + '", Thực tế: "' + (r.actual || 'Trống') + '"')
+          actual: r.actual,
+          passed: isMatch
         });
       });
-
       return {
         passed: passedCount === rules.length,
         score: Math.round((passedCount / rules.length) * 100),
@@ -87,5 +109,6 @@ window.DEVICE_AC1000F_LESSONS.push({
     }
   }
 });
+
 
 

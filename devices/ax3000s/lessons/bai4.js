@@ -1,84 +1,56 @@
 ﻿/**
- * devices/ax3000s/lessons/bai4.js
- * Bài 4: Cấu hình địa chỉ IP LAN trên AX3000S
+ * devices/ax3000s/lessons/bai5.js
+ * Bài 5: Cấu hình DNS trên AX3000S
  */
 
 window.DEVICE_AX3000S_LESSONS = window.DEVICE_AX3000S_LESSONS || [];
 
-const lessonObj4 = {
+const lessonObj5 = {
   id: 'LAB_AX3000S_04',
-  title: 'Bài 4 - Cấu hình địa chỉ IP LAN',
-  subtitle: 'Thiết lập địa chỉ IP mạng nội bộ và DHCP Server',
+  title: 'Cấu hình DNS',
+  subtitle: 'Cấu hình DNS',
   instructions: [
     '<b>Yêu cầu:</b>',
-    'Thực hiện cấu hình IPv4 LAN theo các thông số dưới đây:',
-    '- IP Address (Gateway): <span class="val">192.168.1.1</span>',
-    '- Subnet Mask: <span class="val">255.255.255.0</span>',
-    '- DHCP Server: <span class="val">Enable</span>',
-    '- Start IP: <span class="val">192.168.1.2</span>',
-    '- End IP: <span class="val">192.168.1.254</span>',
-    '- Lease Time: <span class="val">2 minute</span>'
+    'Thực hiện cấu hình DNS trên thiết bị và cấu hình các máy chủ DNS theo yêu cầu sau:',
+    '- DNS Server 1: <span class="val">210.245.31.220</span> (DNS của FPT)',
+    '- DNS Server 2: <span class="val">8.8.8.8</span> (DNS của Google)',
+    '<br>',
+    '<i>Gợi ý IP DNS FPT: 210.245.31.220, 210.245.31.221 (Nam), 210.31.1.253, 21.31.1.254 (Bắc)</i>',
+    '<i>Gợi ý IP DNS Google: 8.8.8.8, 8.8.4.4 (GG)</i>',
+    '<i>Gợi ý IP DNS Cloudflare: 1.1.1.1 (CF)</i>'
   ],
   practiceUrl: '/sim_ax3000s/app.html#lancfgv4',
   clearFields: [
-    '#ethIpAddress',
-    '#ethSubnetMask',
-    '#dhcpEthStart',
-    '#dhcpEthEnd'
+    '#dnsPrimary',
+    '#dnsSecondary'
   ],
   grading: {
-    description: 'Kiểm tra cấu hình IP LAN và DHCP trên AX3000S',
+    description: 'Kiểm tra cấu hình máy chủ DNS',
     rules: [
       {
-        id: 'lan_ip',
-        name: 'IP Address (Gateway)',
-        selector: '#ethIpAddress',
-        expected: '192.168.1.1',
-        type: 'text_exact',
-        trim: true,
-        required: true
-      },
-      {
-        id: 'lan_subnet',
-        name: 'Subnet Mask',
-        selector: '#ethSubnetMask',
-        expected: '255.255.255.0',
-        type: 'text_exact',
-        trim: true,
-        required: true
-      },
-      {
-        id: 'lan_dhcp_enable',
-        name: 'DHCP Server',
-        selector: '#dhcpSrvType2',
+        id: 'dns_mode',
+        name: 'IPv4 DNS Mode',
+        selector: '#dnsmode2',
         expected: ['1', 'on', 'true', 'ON'],
         type: 'any_of',
         trim: true,
-        required: true
+        required: true,
+        errorMessage: 'Bạn cần chọn chế độ DNS là Static'
       },
       {
-        id: 'lan_dhcp_start',
-        name: 'Start IP',
-        selector: '#dhcpEthStart',
-        expected: '192.168.1.2',
+        id: 'dns_primary',
+        name: 'Primary DNS',
+        selector: '#dnsPrimary',
+        expected: '210.245.31.220',
         type: 'text_exact',
         trim: true,
         required: true
       },
       {
-        id: 'lan_dhcp_end',
-        name: 'End IP',
-        selector: '#dhcpEthEnd',
-        expected: '192.168.1.254',
-        type: 'text_exact',
-        trim: true,
-        required: true
-      },
-      {
-        id: 'lan_dhcp_lease',
-        name: 'Lease Time',
-        selector: '#dhcpLeasedTime',
-        expected: '120',
+        id: 'dns_secondary',
+        name: 'Secondary DNS',
+        selector: '#dnsSecondary',
+        expected: '8.8.8.8',
         type: 'text_exact',
         trim: true,
         required: true
@@ -88,9 +60,9 @@ const lessonObj4 = {
   guidePopups: []
 };
 
-const existingIndex4 = window.DEVICE_AX3000S_LESSONS.findIndex(l => l.id === 'LAB_AX3000S_04');
-if (existingIndex4 !== -1) {
-    window.DEVICE_AX3000S_LESSONS[existingIndex4] = lessonObj4;
+const existingIndex5 = window.DEVICE_AX3000S_LESSONS.findIndex(l => l.id === 'LAB_AX3000S_05');
+if (existingIndex5 !== -1) {
+    window.DEVICE_AX3000S_LESSONS[existingIndex5] = lessonObj5;
 } else {
-    window.DEVICE_AX3000S_LESSONS.push(lessonObj4);
+    window.DEVICE_AX3000S_LESSONS.push(lessonObj5);
 }

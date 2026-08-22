@@ -45,16 +45,16 @@ SIM_STATE = {}
 
 def apply_sim_state_to_html(html_str, show_success=False):
     if show_success:
-        # Inject: alert thành công + đánh dấu _ftcIsSaved + gọi onSimulatorSave lên Portal
+        # Inject: alert thÃ nh cÃ´ng + Ä‘Ã¡nh dáº¥u _ftcIsSaved + gá»i onSimulatorSave lÃªn Portal
         save_js = """<script type="text/javascript">
 window.addEventListener("DOMContentLoaded", function() {
     alert("Operate successfully!");
-    // Đánh dấu đã lưu cấu hình thành công để hệ thống chấm điểm nhận biết
+    // ÄÃ¡nh dáº¥u Ä‘Ã£ lÆ°u cáº¥u hÃ¬nh thÃ nh cÃ´ng Ä‘á»ƒ há»‡ thá»‘ng cháº¥m Ä‘iá»ƒm nháº­n biáº¿t
     document._ftcIsSaved = true;
-    // Lắng nghe thay đổi input → reset cờ nếu người dùng sửa lại
+    // Láº¯ng nghe thay Ä‘á»•i input â†’ reset cá» náº¿u ngÆ°á»i dÃ¹ng sá»­a láº¡i
     document.addEventListener('input', function() { document._ftcIsSaved = false; });
     document.addEventListener('change', function() { document._ftcIsSaved = false; });
-    // Thông báo lên Portal (app.js) qua postMessage để vượt qua giới hạn cross-origin
+    // ThÃ´ng bÃ¡o lÃªn Portal (app.js) qua postMessage Ä‘á»ƒ vÆ°á»£t qua giá»›i háº¡n cross-origin
     try {
         window.top.postMessage({ type: 'FTC_SAVE_SUCCESS', source: 'ax3000hv2' }, '*');
     } catch(e) {}
@@ -67,7 +67,11 @@ window.addEventListener("DOMContentLoaded", function() {
 
 
     if not SIM_STATE:
+        print("[AX3000HV2 RENDER] SIM_STATE is empty, no state to apply")
         return html_str
+    else:
+        dns_keys = {k: SIM_STATE[k] for k in ['dnsTypeRadio', 'PrimaryDns', 'SecondDns', 'dhcpd_type'] if k in SIM_STATE}
+        print(f"[AX3000HV2 RENDER] Applying SIM_STATE ({len(SIM_STATE)} keys), DNS: {dns_keys}")
 
     # 1. Replace JavaScript variables to prevent inline script overrides
     VAR_MAPPINGS = {
@@ -99,7 +103,18 @@ window.addEventListener("DOMContentLoaded", function() {
             html_str = re.sub(rf'(var\s+{var_name}\s*=\s*["\'])[^"\']*?(["\'])', rf'\g<1>{escaped_val}\2', html_str, flags=re.IGNORECASE)
             html_str = re.sub(rf'\b({var_name}\s*=\s*["\'])[^"\']*?(["\'])', rf'\g<1>{escaped_val}\2', html_str, flags=re.IGNORECASE)
 
+    if "dnsTypeRadio" in SIM_STATE:
+        val = SIM_STATE["dnsTypeRadio"]
+        html_str = re.sub(r'(var\s+dhcpd_type\s*=\s*["\'])[^"\']*?(["\'])', fr'\g<1>{val}\g<2>', html_str, flags=re.IGNORECASE)
+        
+    if "PrimaryDns" in SIM_STATE or "SecondDns" in SIM_STATE:
+        pri = SIM_STATE.get("PrimaryDns", "")
+        sec = SIM_STATE.get("SecondDns", "")
+        val_dns = f"N/A,{pri},{sec}"
+        html_str = re.sub(r'(var\s+dhcpd_dns_all\s*=\s*["\'])[^"\']*?(["\'])', fr'\g<1>{val_dns}\g<2>', html_str, flags=re.IGNORECASE)
+
     # 2. Replace HTML inputs directly
+
     for name, val in SIM_STATE.items():
         escaped_val = val.replace('\\', '\\\\').replace('"', '\\"')
 
@@ -255,6 +270,7 @@ class H(BaseHTTPRequestHandler):
             if length > 0:
                 body_bytes = self.rfile.read(length)
                 params = parse_qs(body_bytes.decode("utf-8", errors="replace"))
+                print(f"[AX3000HV2 POST] Received keys: {list(params.keys())}")
                 for k, v in params.items():
                     if v:
                         SIM_STATE[k] = v[0]
@@ -262,14 +278,18 @@ class H(BaseHTTPRequestHandler):
                             SIM_STATE["pppUserName"] = v[0]
                         elif k == "Password":
                             SIM_STATE["pppPassword"] = v[0]
+                # Log DNS-related state
+                dns_keys = {k: SIM_STATE[k] for k in ['dnsTypeRadio', 'PrimaryDns', 'SecondDns'] if k in SIM_STATE}
+                print(f"[AX3000HV2 POST] DNS state after save: {dns_keys}")
         except Exception as e:
-            pass
+            print(f"[AX3000HV2 POST] Error: {e}")
         
         referer = self.headers.get("Referer") or "/cgi-bin/index.asp"
         if "save_success=1" in referer:
             redirect_to = referer
         else:
             redirect_to = referer + ("&" if "?" in referer else "?") + "save_success=1"
+        print(f"[AX3000HV2 POST] Redirecting to: {redirect_to}")
         self._redirect(redirect_to)
 
     def log_message(self, *a):
@@ -306,3 +326,4 @@ if __name__ == "__main__":
         srv.serve_forever()
     except KeyboardInterrupt:
         print("\nDa dung.")
+

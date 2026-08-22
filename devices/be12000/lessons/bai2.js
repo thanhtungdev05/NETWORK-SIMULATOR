@@ -7,8 +7,8 @@ window.DEVICE_BE12000_LESSONS = window.DEVICE_BE12000_LESSONS || [];
 
 window.DEVICE_BE12000_LESSONS.push({
   id: 'LAB_BE12000_02',
-  title: 'Bài 2 - Cấu hình Wi-Fi MLO (Wi-Fi 7)',
-  subtitle: 'Cấu hình Multi-Link Operation (MLO) trên BE12000',
+  title: 'Cấu hình wifi',
+  subtitle: 'Cấu hình wifi',
   instructions: [
     'Chọn menu <b>Local Network > WLAN > MLO</b>',
     '- MLO Enable: <span class="val">On</span>',

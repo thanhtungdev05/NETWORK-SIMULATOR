@@ -7,8 +7,8 @@ window.DEVICE_AX3000HV2_LESSONS = window.DEVICE_AX3000HV2_LESSONS || [];
 
 window.DEVICE_AX3000HV2_LESSONS.push({
   id: 'LAB_AX3000HV2_03',
-  title: 'Bài 3 - Cấu hình Wi-Fi Guest',
-  subtitle: 'Thiết lập mạng Wi-Fi phụ cho khách (Guest)',
+  title: 'Cấu hình wifi IoT',
+  subtitle: 'Cấu hình wifi IoT',
   instructions: [
     '<b>Yêu cầu:</b>',
     'Thực hiện cấu hình mạng Wi-Fi Guest (Khách) theo các thông số dưới đây:',

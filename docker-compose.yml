@@ -10,12 +10,6 @@ services:
       PORT: "8080"
       API_PORT: "8081"
       DJANGO_PORT: "8083"
-    volumes:
-      - ./api:/app/api
-      - ./app.js:/app/app.js
-      - ./portal.html:/app/portal.html
-      - ./run_all.py:/app/run_all.py
-      - ./dashboard-authen:/app/dashboard-authen
     ports:
       - "8080:8080"
     restart: unless-stopped

@@ -347,7 +347,7 @@
                   let el = e.target;
                   while(el && el !== doc) {
                     if ((el.tagName === 'INPUT' || el.tagName === 'BUTTON') && 
-                        (el.type === 'submit' || (el.value || el.textContent || '').toLowerCase().includes('save') || (el.value || el.textContent || '').toLowerCase().includes('apply'))) {
+                        (el.type === 'submit' || (el.value || el.textContent || '').toLowerCase().includes('save') || (el.value || el.textContent || '').toLowerCase().includes('apply') || (el.value || el.textContent || '').toLowerCase() === 'add' || el.name === 'AddBtn')) {
                       window._hasClickedSaveInGuide = true;
                       if (currentDeviceId === 'ax3000s') {
                         doc._ftcIsSaved = true;

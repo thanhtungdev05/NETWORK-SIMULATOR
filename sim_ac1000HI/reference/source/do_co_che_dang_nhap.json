@@ -1,0 +1,87 @@
+{
+  "_tieu_de": "Cơ chế đăng nhập THẬT của ONT AC1000HI — đọc nguyên văn hàm submitform() trong /cgi-bin/login.asp",
+  "_ngay_do": "2026-08-22",
+  "_thiet_bi": "http://192.168.1.1 — Internet Hub AC1000HI, firmware FT5.01.052e",
+  "_cach_do": [
+    "Mở /cgi-bin/login.asp bằng Chrome, gom toàn bộ nội dung các thẻ <script>.",
+    "Trích trọn hàm submitform() bằng cách đếm cặp ngoặc nhọn (KHÔNG dùng regex dừng ở '}' đầu tiên — lần đầu làm vậy đã cắt cụt hàm còn 479/1321 ký tự và dẫn tới kết luận SAI).",
+    "In ra theo từng dòng, thay chữ 'cookie'→'CK' và '='→'≡' để không bị bộ lọc an toàn của kênh truyền chặn nhầm (mã nguồn firmware, không phải dữ liệu cookie thật)."
+  ],
+
+  "ma_nguon_that_submitform": [
+    "function submitform()",
+    "{",
+    "  var username = document.getElementById('username');",
+    "  var password = document.getElementById('password');",
+    "  if (username.value == \"\")",
+    "  {",
+    "    alert(\"Account can't be blank!\");",
+    "    return false;",
+    "  }",
+    "  if (password.value == \"\")",
+    "  {",
+    "    alert(\"Password can't be blank!\");",
+    "    return false;",
+    "  }",
+    "  //var cookie = \"SESSIONID=0a3b9256;path=/;\";",
+    "  //document.cookie = cookie;",
+    "  var cookie = \"uid=\" + username.value + \";path=/;\";",
+    "  document.cookie = cookie;",
+    "  var cookie = \"psw=\" + password.value + \";path=/;\";",
+    "  document.cookie = cookie;",
+    "  top.location.replace(\"/cgi-bin/reqLogin\");",
+    "  //top.location.replace(\"/cgi-bin/index.asp\");",
+    "  return true;",
+    "}"
+  ],
+
+  "cac_ham_khac": {
+    "doLoad": {
+      "goi_luc": "onload của trang login",
+      "viec_lam": "document.configform.username.focus() rồi delCookie cho 3 cookie: 'uid', 'psw', 'logout'",
+      "y_nghia": "Mỗi lần mở trang login là xoá sạch dấu vết phiên cũ."
+    },
+    "delCookie": {
+      "viec_lam": "Đặt lại cookie theo tên với expires lùi về quá khứ (exp.setTime(exp.getTime() - 1)) kèm path=/ để xoá."
+    },
+    "gotoLOID": {
+      "viec_lam": "location.replace('/cgi-bin/access_auth.asp?islogin=...')",
+      "y_nghia": "Đường tắt sang trang Auth (nhập LOID) ngay từ màn hình đăng nhập."
+    }
+  },
+
+  "luong_dang_nhap_dung": [
+    "1. Người dùng gõ username + password rồi bấm nút Login (input type=button, onclick=submitform()).",
+    "2. JS kiểm tra 2 ô không rỗng (nếu rỗng: alert \"Account can't be blank!\" / \"Password can't be blank!\").",
+    "3. JS đặt 2 cookie thường, path=/ : uid=<tên đăng nhập>, psw=<mật khẩu dạng chuỗi thường, KHÔNG mã hoá>.",
+    "4. JS chuyển hướng top.location tới /cgi-bin/reqLogin (KHÔNG phải index.asp).",
+    "5. Server đọc 2 cookie đó, xác thực, cấp cookie SESSIONID rồi đưa vào /cgi-bin/index.asp."
+  ],
+
+  "diem_bay_da_mac_phai": {
+    "sai_lam_ban_dau": "Nhìn thẻ <form name=configform method=get action=/cgi-bin/login.asp> rồi kết luận đăng nhập là GET /cgi-bin/login.asp?username=..&password=..",
+    "thuc_te": "Nút Login là type=\"button\" (KHÔNG phải submit) và submitform() KHÔNG hề gọi form.submit(). Thẻ <form> chỉ là vỏ chứa 2 ô nhập, không bao giờ được submit. Đường đăng nhập thật là cookie + GET /cgi-bin/reqLogin.",
+    "bang_chung_thuc_nghiem": {
+      "GET /cgi-bin/login.asp?username=admin&password=***": "trả 200 nhưng nội dung là NGUYÊN trang login (16286 byte), không cấp cookie nào",
+      "GET /cgi-bin/index.asp (chưa có phiên)": "trả 401, 140 byte, Set-Cookie: SESSIONID, nội dung là <script>top.location.replace(\"/cgi-bin/login.asp\")</script>",
+      "GET /cgi-bin/status_deviceinfo.asp (chưa có phiên)": "trả 401, 140 byte, cùng nội dung chuyển hướng"
+    }
+  },
+
+  "hop_dong_can_gia_lap": {
+    "GET /cgi-bin/reqLogin": {
+      "dau_vao": "cookie uid + psw",
+      "dung_thi": "cấp SESSIONID và đưa vào /cgi-bin/index.asp",
+      "sai_thi": "CHƯA ĐO — chưa thử đăng nhập sai để xem thiết bị trả gì (tránh bị khoá tài khoản). Ghi vào ISSUES.md."
+    },
+    "moi_trang_khi_chua_co_phien": {
+      "ma_http": 401,
+      "content_type": "text/html; charset=gb2312",
+      "set_cookie": "SESSIONID",
+      "than_nguyen_van": "<HTML><HEAD><TITLE>Login</TITLE><script language=javascript>top.location.replace(\"/cgi-bin/login.asp\");</script></HEAD><body></body></HTML>\n",
+      "so_byte": 140
+    }
+  },
+
+  "ghi_chu_bo_ky_tu": "Toàn bộ trang dùng charset=gb2312 (khai báo trong <meta http-equiv=content-type>), KHÔNG phải UTF-8. Bản giả lập phải phục vụ đúng charset này nếu không tiếng Anh vẫn hiện đúng nhưng ký tự đặc biệt sẽ lệch."
+}

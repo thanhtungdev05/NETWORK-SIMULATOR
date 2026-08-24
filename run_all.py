@@ -159,7 +159,7 @@ class MasterDispatcher(SimpleHTTPRequestHandler):
         self.send_header('Referrer-Policy', 'strict-origin-when-cross-origin')
         self.send_header('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
         self.send_header("Content-Security-Policy", "frame-ancestors 'self'")
-        super().end_headers()
+        SimpleHTTPRequestHandler.end_headers(self)
 
     def list_directory(self, path):
         self.send_error(404, 'Not Found')

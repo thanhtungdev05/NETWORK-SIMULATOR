@@ -87,8 +87,8 @@ function handle_tracking(array $segments, string $method): void
 
     $trackingActor = verify_tracking_access();
 
-    // POST /tracking/timer
-    if ($sub === 'timer' && $method === 'POST') {
+    // POST /tracking/timer or /tracking/timers or /tracking
+    if (($sub === 'timer' || $sub === 'timers' || $sub === '') && $method === 'POST') {
         $input = json_body();
 
         $technicianId = optional_text($input, 'technician_id', 50) ?? optional_text($input, 'technicianId', 50);

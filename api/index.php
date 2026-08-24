@@ -182,6 +182,15 @@ function app_origin(string $url): ?string
     return $scheme . '://' . strtolower($host) . $port;
 }
 
+function is_local_origin(?string $origin): bool
+{
+    if (!$origin) {
+        return false;
+    }
+    $host = parse_url($origin, PHP_URL_HOST);
+    return in_array(strtolower((string)$host), ['localhost', '127.0.0.1', '::1'], true);
+}
+
 function enforce_write_origin(string $resource, string $method): void
 {
     if (!in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
@@ -196,9 +205,16 @@ function enforce_write_origin(string $resource, string $method): void
         return;
     }
 
+    if (dev_bypass_enabled()) {
+        return;
+    }
+
     $suppliedOrigin = app_origin((string)($_SERVER['HTTP_ORIGIN'] ?? ''));
     if (!$suppliedOrigin) {
         $suppliedOrigin = app_origin((string)($_SERVER['HTTP_REFERER'] ?? ''));
+    }
+    if (is_local_request() && is_local_origin($suppliedOrigin)) {
+        return;
     }
     $allowedOrigins = array_values(array_filter([
         app_origin(env_value('APP_BASE_URL', '')),

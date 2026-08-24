@@ -611,15 +611,21 @@ function build_dashboard_report(PDO $pdo, array $query): array
                    TO_CHAR(
                        GREATEST(
                            COALESCE((SELECT MAX(updated_at) FROM lab_assignments), 'epoch'::timestamptz),
-                           COALESCE((SELECT MAX(updated_at) FROM lab_attempts), 'epoch'::timestamptz),
-                           COALESCE((SELECT MAX(updated_at) FROM training_classes), 'epoch'::timestamptz),
-                           COALESCE((SELECT MAX(updated_at) FROM device_catalog), 'epoch'::timestamptz),
+                            COALESCE((SELECT MAX(updated_at) FROM lab_attempts), 'epoch'::timestamptz),
+                            COALESCE((SELECT MAX(updated_at) FROM training_classes), 'epoch'::timestamptz),
+                            COALESCE((SELECT MAX(updated_at) FROM class_enrollments), 'epoch'::timestamptz),
+                            COALESCE((SELECT MAX(updated_at) FROM users), 'epoch'::timestamptz),
+                            COALESCE((SELECT MAX(updated_at) FROM regions), 'epoch'::timestamptz),
+                            COALESCE((SELECT MAX(updated_at) FROM device_catalog), 'epoch'::timestamptz),
                            COALESCE((SELECT MAX(updated_at) FROM lab_catalog), 'epoch'::timestamptz)
                        ),
                        'YYYYMMDDHH24MISS.US'
                    ),
                    ':', (SELECT COUNT(*) FROM lab_assignments),
-                   ':', (SELECT COUNT(*) FROM lab_attempts)
+                   ':', (SELECT COUNT(*) FROM lab_attempts),
+                   ':', (SELECT COUNT(*) FROM class_enrollments),
+                   ':', (SELECT COUNT(*) FROM users),
+                   ':', (SELECT COUNT(*) FROM regions)
            ) AS data_version
         SQL
     )->fetchColumn();

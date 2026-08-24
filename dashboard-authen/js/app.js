@@ -7,6 +7,7 @@ let trainingAssignments = [];
 let dashboardReport = null;
 let technicianByIdentity = new Map();
 let technicianCatalogAuthoritative = false;
+let instructorSearchTimer = null;
 
 const formatNumber = new Intl.NumberFormat('vi-VN');
 const LEARNER_TABLE_PAGE_SIZE = 4;
@@ -50,6 +51,8 @@ const state = {
     instructorClassesLoaded: false,
     instructorActiveClassId: '',
     instructorSelectedDevice: '',
+    instructorSearchKtv: '',
+    instructorCompletionFilter: 'all',
     instructorImportMembers: [],
     instructorImportFileName: '',
     instructorWorkspaceBound: false,
@@ -349,6 +352,8 @@ function mapReportMetrics(metric) {
         && durationCoverage >= MIN_DURATION_COVERAGE_RATE;
 
     return {
+        assigned: Number(metric?.assigned_count) || 0,
+        graded: Number(metric?.graded_count) || 0,
         totalSessions: practiceAttempts,
         guideSessions: Number(metric?.guide_attempts) || 0,
         learners: Number(metric?.participating_technicians) || 0,
@@ -389,6 +394,8 @@ function renderKpis() {
             && durationCoverage !== null
             && durationCoverage >= MIN_DURATION_COVERAGE_RATE;
         return {
+            assigned: 0,
+            graded: gradedRows.length,
             totalSessions: practice.totalSessions,
             guideSessions: rows.filter(item => item.mode === 'Hướng dẫn').length,
             learners: all.learners,
@@ -494,6 +501,49 @@ function renderKpis() {
             }
         }
     });
+
+    renderDashboardDataNotice(currentMetrics);
+}
+
+function renderDashboardDataNotice(currentMetrics) {
+    const notice = document.getElementById('dashboardDataNotice');
+    if (!notice) return;
+
+    const messages = [];
+    const unassignedRegions = (dashboardReport?.matrix?.rows || []).filter(row => {
+        const region = row?.region || {};
+        return !region.region_id || String(region.code || region.region_code || '').toUpperCase() === 'UNASSIGNED';
+    });
+    const unassignedAssignments = unassignedRegions.reduce(
+        (sum, row) => sum + Number(row?.total?.assigned_count || row?.total?.eligible || 0),
+        0
+    );
+    if (unassignedAssignments > 0) {
+        messages.push(`${formatNumber.format(unassignedAssignments)} lượt KTV–lab chưa có khu vực nên đang được gom vào “Chưa xác định”.`);
+    }
+    if (currentMetrics.completed > 0 && currentMetrics.graded === 0) {
+        messages.push('Có dữ liệu hoàn thành nhưng chưa có kết quả chấm; tỷ lệ đạt và đạt lần đầu chưa thể tính tin cậy.');
+    }
+
+    notice.hidden = messages.length === 0;
+    notice.replaceChildren();
+    if (!messages.length) return;
+
+    const icon = document.createElement('span');
+    icon.className = 'dashboard-data-notice-icon';
+    icon.setAttribute('aria-hidden', 'true');
+    icon.textContent = '!';
+    const content = document.createElement('div');
+    const title = document.createElement('strong');
+    title.textContent = 'Cần hoàn thiện dữ liệu trước khi dùng báo cáo chính thức';
+    const list = document.createElement('ul');
+    messages.forEach(message => {
+        const item = document.createElement('li');
+        item.textContent = message;
+        list.appendChild(item);
+    });
+    content.append(title, list);
+    notice.append(icon, content);
 }
 
 function buildLearnerSummaries(rows) {
@@ -1209,17 +1259,17 @@ function renderAuthoritativeDetailedReport(reportMatrix) {
     };
     els.detailReportHead.innerHTML = `
         <tr class="report-device-header-row">
-            <th class="report-region-head" rowspan="2"><strong>Khu vực/CNx</strong></th>
-            ${groups.map((group, index) => `<th class="report-device-group report-device-tone-${index % 5}" colspan="${(group.labs || []).length}">${escapeHTML(group.device?.name || group.device_name || '')}<span>${(group.labs || []).length} bài lab</span></th>`).join('')}
-            <th class="report-summary-head" rowspan="2">Tổng</th>
+            <th class="report-region-head" rowspan="2" scope="col"><strong>Khu vực/CNx</strong></th>
+            ${groups.map((group, index) => `<th class="report-device-group report-device-tone-${index % 5}" colspan="${(group.labs || []).length}" scope="colgroup">${escapeHTML(group.device?.name || group.device_name || '')}<span>${(group.labs || []).length} bài lab</span></th>`).join('')}
+            <th class="report-summary-head" rowspan="2" scope="col">Tổng</th>
         </tr>
-        <tr class="report-lab-header-row">${columns.map(column => `<th class="report-lab-head report-device-tone-${column.groupIndex % 5} ${column.isFirst ? 'group-start' : ''} ${column.isLast ? 'group-end' : ''}" title="${escapeHTML(`${column.device} • ${column.lab}`)}">${escapeHTML(column.lab)}</th>`).join('')}</tr>`;
+        <tr class="report-lab-header-row">${columns.map(column => `<th class="report-lab-head report-device-tone-${column.groupIndex % 5} ${column.isFirst ? 'group-start' : ''} ${column.isLast ? 'group-end' : ''}" scope="col" title="${escapeHTML(`${column.device} • ${column.lab}`)}">${escapeHTML(column.lab)}</th>`).join('')}</tr>`;
     els.detailReportBody.innerHTML = (reportMatrix.rows || []).map(row => {
         const region = row.region || {};
-        return `<tr><th class="report-region-cell"><div class="report-region-label"><span class="report-region-spacer"></span>${escapeHTML(region.name || region.region_name || region.code || region.region_code || '')}</div></th>${columns.map(column => metricCell(row.cells?.[column.labId], column.isFirst ? 'group-start' : '')).join('')}${metricCell(row.total, 'report-row-total')}</tr>`;
-    }).join('');
+        return `<tr><th class="report-region-cell" scope="row"><div class="report-region-label"><span class="report-region-spacer"></span>${escapeHTML(region.name || region.region_name || region.code || region.region_code || '')}</div></th>${columns.map(column => metricCell(row.cells?.[column.labId], column.isFirst ? 'group-start' : '')).join('')}${metricCell(row.total, 'report-row-total')}</tr>`;
+    }).join('') || `<tr><td colspan="${columns.length + 2}" class="empty">Không có assignment phù hợp với kỳ báo cáo.</td></tr>`;
     const grand = reportMatrix.grand_total || {};
-    els.detailReportFoot.innerHTML = `<tr><th class="report-region-cell report-grand-label">Tổng hệ thống</th>${columns.map(column => metricCell(grand.cells?.[column.labId], column.isFirst ? 'group-start' : '')).join('')}${metricCell(grand.total || grand, 'report-row-total report-grand-total')}</tr>`;
+    els.detailReportFoot.innerHTML = `<tr><th class="report-region-cell report-grand-label" scope="row">Tổng hệ thống</th>${columns.map(column => metricCell(grand.cells?.[column.labId], column.isFirst ? 'group-start' : '')).join('')}${metricCell(grand.total || grand, 'report-row-total report-grand-total')}</tr>`;
     const summaryValues = {
         detailReportPeriod: dashboardReport?.meta?.period?.label || getRangeLabel(),
         detailReportSessions: formatNumber.format(Number(grand.total?.attempt_count || grand.attempt_count) || 0),
@@ -2487,6 +2537,57 @@ function getDatabaseInstructorClasses() {
         }));
 }
 
+function normalizeInstructorSearchText(value) {
+    return String(value || '')
+        .trim()
+        .toLocaleLowerCase('vi')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/đ/g, 'd');
+}
+
+function getInstructorLabNumber(label) {
+    const match = String(label || '').match(/(?:^|\s)bài\s*0*(\d+)/i);
+    return match ? Number(match[1]) : Number.POSITIVE_INFINITY;
+}
+
+function compareInstructorLabels(left, right) {
+    const leftNumber = getInstructorLabNumber(left);
+    const rightNumber = getInstructorLabNumber(right);
+    if (leftNumber !== rightNumber) return leftNumber - rightNumber;
+    return String(left || '').localeCompare(String(right || ''), 'vi', { numeric: true, sensitivity: 'base' });
+}
+
+function sortInstructorDeviceGroups(groups) {
+    const deviceOrder = new Map();
+    const labOrderByDevice = new Map();
+    deviceCatalog.forEach((item, deviceIndex) => {
+        const deviceName = item.device || item.device_name || item.model || '';
+        if (!deviceName || deviceOrder.has(deviceName)) return;
+        deviceOrder.set(deviceName, deviceIndex);
+        labOrderByDevice.set(deviceName, new Map((item.labs || []).map((lab, labIndex) => [lab, labIndex])));
+    });
+
+    const rank = (map, key) => map?.has(key) ? map.get(key) : Number.POSITIVE_INFINITY;
+    return groups
+        .map(group => {
+            const labOrder = labOrderByDevice.get(group.device);
+            const labs = [...group.labs].sort((left, right) => {
+                const leftRank = rank(labOrder, left);
+                const rightRank = rank(labOrder, right);
+                if (leftRank !== rightRank) return leftRank - rightRank;
+                return compareInstructorLabels(left, right);
+            });
+            return { ...group, labs };
+        })
+        .sort((left, right) => {
+            const leftRank = rank(deviceOrder, left.device);
+            const rightRank = rank(deviceOrder, right.device);
+            if (leftRank !== rightRank) return leftRank - rightRank;
+            return left.device.localeCompare(right.device, 'vi', { numeric: true, sensitivity: 'base' });
+        });
+}
+
 function getInstructorDeviceGroups(selectedClass = null) {
     const groups = [];
     const groupMap = new Map();
@@ -2508,7 +2609,7 @@ function getInstructorDeviceGroups(selectedClass = null) {
                 const group = ensureGroup(item.device);
                 if (item.lab && !group.labs.includes(item.lab)) group.labs.push(item.lab);
             });
-        return groups.filter(group => group.labs.length);
+        return sortInstructorDeviceGroups(groups.filter(group => group.labs.length));
     }
 
     deviceCatalog.forEach(item => {
@@ -2521,7 +2622,7 @@ function getInstructorDeviceGroups(selectedClass = null) {
         const group = ensureGroup(item.device);
         if (item.lab && !group.labs.includes(item.lab)) group.labs.push(item.lab);
     });
-    return groups.filter(group => group.labs.length);
+    return sortInstructorDeviceGroups(groups.filter(group => group.labs.length));
 }
 
 function saveInstructorClasses() {
@@ -2657,15 +2758,73 @@ function getInstructorRateClass(rate) {
     return 'instructor-rate-low';
 }
 
+function getInstructorCompletionStatus(row) {
+    if (!row.total || row.rate === null) return 'unassigned';
+    if (row.completed >= row.total) return 'completed';
+    if (row.completed > 0) return 'in_progress';
+    return 'not_started';
+}
+
+function filterInstructorProgressRows(rows) {
+    const search = normalizeInstructorSearchText(state.instructorSearchKtv);
+    return rows
+        .filter(row => {
+            const technician = technicianByIdentity.get(String(row.learner || '').trim().toLowerCase());
+            const searchable = normalizeInstructorSearchText([
+                getLearnerName(row.learner),
+                row.learner,
+                technician?.employeeId
+            ].filter(Boolean).join(' '));
+            const matchesSearch = !search || searchable.includes(search);
+            const status = getInstructorCompletionStatus(row);
+            const matchesStatus = state.instructorCompletionFilter === 'all' || status === state.instructorCompletionFilter;
+            return matchesSearch && matchesStatus;
+        })
+        .sort((left, right) => {
+            const byName = getLearnerName(left.learner).localeCompare(getLearnerName(right.learner), 'vi', { numeric: true, sensitivity: 'base' });
+            return byName || left.learner.localeCompare(right.learner, 'vi', { numeric: true, sensitivity: 'base' });
+        });
+}
+
+function renderInstructorLabHeader(label) {
+    const text = String(label || '');
+    const match = text.match(/^(Bài\s*\d+)\s*[:.\-–]?\s*(.*)$/i);
+    if (!match) return `<span class="instructor-lab-name">${escapeHTML(text)}</span>`;
+    return `
+        <span class="instructor-lab-order">${escapeHTML(match[1])}</span>
+        ${match[2] ? `<span class="instructor-lab-name">${escapeHTML(match[2])}</span>` : ''}
+    `;
+}
+
+function renderInstructorLearner(learner) {
+    const name = getLearnerName(learner);
+    const technician = technicianByIdentity.get(String(learner || '').trim().toLowerCase());
+    const showEmail = normalizeInstructorSearchText(name) !== normalizeInstructorSearchText(learner);
+    return `
+        <span class="instructor-progress-learner-name">${escapeHTML(name)}</span>
+        ${showEmail ? `<span class="instructor-progress-learner-email">${escapeHTML(learner)}</span>` : ''}
+        ${technician?.employeeId ? `<span class="instructor-progress-learner-id">Mã NV: ${escapeHTML(technician.employeeId)}</span>` : ''}
+    `;
+}
+
 function renderInstructorClassProgress() {
     const classSelect = document.getElementById('instructorClassSelect');
     const deviceSelect = document.getElementById('instructorDeviceSelect');
     const head = document.getElementById('instructorProgressHead');
     const body = document.getElementById('instructorProgressBody');
+    const foot = document.getElementById('instructorProgressFoot');
     const summary = document.getElementById('instructorProgressSummary');
     const scroll = document.getElementById('instructorProgressScroll');
+    const scrollHint = document.getElementById('instructorProgressScrollHint');
     const empty = document.getElementById('instructorProgressEmpty');
-    if (!classSelect || !deviceSelect || !head || !body || !summary || !scroll || !empty) return;
+    const searchInput = document.getElementById('instructorKtvSearch');
+    const completionFilter = document.getElementById('instructorCompletionFilter');
+    const filterReset = document.getElementById('instructorProgressFilterReset');
+    const filterMeta = document.getElementById('instructorProgressFilterMeta');
+    if (!classSelect || !deviceSelect || !head || !body || !foot || !summary || !scroll || !empty) return;
+
+    if (searchInput && searchInput.value !== state.instructorSearchKtv) searchInput.value = state.instructorSearchKtv;
+    if (completionFilter) completionFilter.value = state.instructorCompletionFilter;
 
     initializeInstructorClasses();
     if (state.instructorActiveClassId && !state.instructorClasses.some(item => item.id === state.instructorActiveClassId)) {
@@ -2679,6 +2838,8 @@ function renderInstructorClassProgress() {
     classSelect.disabled = !state.instructorClasses.length;
 
     const selectedClass = state.instructorClasses.find(item => item.id === state.instructorActiveClassId);
+    if (searchInput) searchInput.disabled = !selectedClass;
+    if (completionFilter) completionFilter.disabled = !selectedClass;
     const allGroups = getInstructorDeviceGroups(selectedClass);
     const selectedDeviceStillExists = !state.instructorSelectedDevice || allGroups.some(item => item.device === state.instructorSelectedDevice);
     if (!selectedDeviceStillExists) state.instructorSelectedDevice = '';
@@ -2695,8 +2856,12 @@ function renderInstructorClassProgress() {
     if (!selectedClass) {
         head.innerHTML = '';
         body.innerHTML = '';
+        foot.innerHTML = '';
         summary.innerHTML = '';
+        if (filterMeta) filterMeta.textContent = '';
+        if (filterReset) filterReset.hidden = true;
         scroll.hidden = true;
+        if (scrollHint) scrollHint.hidden = true;
         empty.hidden = false;
         empty.textContent = technicianCatalogAuthoritative
             ? 'Chưa có lớp học trong hồ sơ nhân viên trên cơ sở dữ liệu.'
@@ -2707,10 +2872,11 @@ function renderInstructorClassProgress() {
     const selectedGroups = state.instructorSelectedDevice
         ? allGroups.filter(item => item.device === state.instructorSelectedDevice)
         : allGroups;
-    const progressRows = getInstructorClassProgress(selectedClass, selectedGroups);
+    const allProgressRows = getInstructorClassProgress(selectedClass, selectedGroups);
+    const progressRows = filterInstructorProgressRows(allProgressRows);
     const completed = progressRows.reduce((sum, item) => sum + item.completed, 0);
     const total = progressRows.reduce((sum, item) => sum + item.total, 0);
-    const rate = total ? Math.round((completed / total) * 100) : 0;
+    const rate = total ? Math.round((completed / total) * 100) : null;
 
     const columns = selectedGroups.flatMap((group, groupIndex) => group.labs.map((lab, labIndex) => ({
         device: group.device,
@@ -2719,12 +2885,21 @@ function renderInstructorClassProgress() {
         isFirst: labIndex === 0
     })));
 
+    const filtersActive = Boolean(state.instructorSearchKtv.trim()) || state.instructorCompletionFilter !== 'all';
+    if (filterReset) filterReset.hidden = !filtersActive;
+    if (filterMeta) {
+        filterMeta.textContent = filtersActive
+            ? `Đang hiển thị ${progressRows.length}/${allProgressRows.length} KTV`
+            : `${allProgressRows.length} KTV trong lớp`;
+    }
+    if (exportButton) exportButton.disabled = !progressRows.length;
+
     summary.innerHTML = `
-        <span class="instructor-summary-chip"><strong>${progressRows.length}</strong> KTV</span>
+        <span class="instructor-summary-chip"><strong>${progressRows.length}${filtersActive ? `/${allProgressRows.length}` : ''}</strong> KTV hiển thị</span>
         <span class="instructor-summary-chip"><strong>${selectedGroups.length}</strong> thiết bị</span>
         <span class="instructor-summary-chip"><strong>${columns.length}</strong> bài lab</span>
         <span class="instructor-summary-chip"><strong>${completed}/${total}</strong> bài hoàn thành</span>
-        <span class="instructor-summary-chip"><strong>${rate}%</strong> tiến độ lớp</span>
+        <span class="instructor-summary-chip"><strong>${rate === null ? '—' : `${rate}%`}</strong> tiến độ lớp</span>
     `;
 
     head.innerHTML = `
@@ -2742,25 +2917,60 @@ function renderInstructorClassProgress() {
         </tr>
         <tr class="instructor-progress-lab-row">
             ${columns.map(column => `
-                <th class="instructor-progress-lab instructor-progress-lab-tone-${column.groupIndex % 5} ${column.isFirst ? 'group-start' : ''}" scope="col" title="${escapeHTML(`${column.device} • ${column.lab}`)}">${escapeHTML(column.lab)}</th>
+                <th class="instructor-progress-lab instructor-progress-lab-tone-${column.groupIndex % 5} ${column.isFirst ? 'group-start' : ''}" scope="col" title="${escapeHTML(`${column.device} • ${column.lab}`)}">${renderInstructorLabHeader(column.lab)}</th>
             `).join('')}
         </tr>
     `;
-    body.innerHTML = progressRows.map((row, index) => `
+    body.innerHTML = progressRows.length ? progressRows.map((row, index) => `
         <tr>
             <td class="instructor-progress-index">${index + 1}</td>
-            <th class="instructor-progress-email" scope="row" title="${escapeHTML(row.learner)}">${escapeHTML(getLearnerName(row.learner))}</th>
+            <th class="instructor-progress-email" scope="row" title="${escapeHTML(row.learner)}">${renderInstructorLearner(row.learner)}</th>
             ${row.deviceResults.flatMap(item => item.labResults.map(lab => `
                 <td class="instructor-progress-lab instructor-lab-cell ${getInstructorLabCellClass(lab.completed, lab.assigned !== false)}" title="${escapeHTML(`${item.device} • ${lab.lab}: ${lab.assigned === false ? 'Chưa giao' : (lab.completed ? 'Hoàn thành' : 'Chưa hoàn thành')}`)}">
-                    ${lab.assigned === false ? '—' : (lab.completed ? '✓' : '')}
+                    ${lab.assigned === false ? '—' : (lab.completed ? '✓' : '○')}
                 </td>
             `)).join('')}
             <td class="instructor-progress-total">${row.completed}/${row.total}</td>
             <td class="instructor-progress-rate ${getInstructorRateClass(row.rate || 0)}">${row.rate === null ? '—' : `${row.rate}%`}</td>
         </tr>
-    `).join('');
+    `).join('') : `
+        <tr>
+            <td class="instructor-progress-filter-empty" colspan="${columns.length + 4}">
+                Không có KTV phù hợp với tìm kiếm hoặc trạng thái đã chọn.
+            </td>
+        </tr>
+    `;
+
+    if (progressRows.length) {
+        const columnTotals = columns.map((column, columnIndex) => progressRows.reduce((result, row) => {
+            const lab = row.deviceResults.flatMap(item => item.labResults)[columnIndex];
+            if (lab && lab.assigned !== false) result.assigned++;
+            if (lab?.completed) result.completed++;
+            return result;
+        }, { assigned: 0, completed: 0 }));
+        foot.innerHTML = `
+            <tr>
+                <th class="instructor-progress-index instructor-progress-grand-index" scope="row">Σ</th>
+                <th class="instructor-progress-email instructor-progress-grand-label" scope="row">Tổng ${progressRows.length} KTV</th>
+                ${columnTotals.map((item, index) => {
+                    const columnRate = item.assigned ? Math.round((item.completed / item.assigned) * 100) : null;
+                    return `
+                        <td class="instructor-progress-lab instructor-progress-column-total ${columns[index].isFirst ? 'group-start' : ''}" title="${escapeHTML(`${columns[index].device} • ${columns[index].lab}: ${item.completed}/${item.assigned} KTV hoàn thành`)}">
+                            <strong>${item.assigned ? `${item.completed}/${item.assigned}` : '—'}</strong>
+                            ${columnRate === null ? '' : `<small>${columnRate}%</small>`}
+                        </td>
+                    `;
+                }).join('')}
+                <td class="instructor-progress-total">${completed}/${total}</td>
+                <td class="instructor-progress-rate ${getInstructorRateClass(rate || 0)}">${rate === null ? '—' : `${rate}%`}</td>
+            </tr>
+        `;
+    } else {
+        foot.innerHTML = '';
+    }
 
     scroll.hidden = false;
+    if (scrollHint) scrollHint.hidden = false;
     empty.hidden = true;
 }
 
@@ -2833,15 +3043,15 @@ function exportInstructorClassCsv() {
     const selectedClass = state.instructorClasses.find(item => item.id === state.instructorActiveClassId);
     if (!selectedClass) return;
     const groups = getInstructorDeviceGroups(selectedClass).filter(item => !state.instructorSelectedDevice || item.device === state.instructorSelectedDevice);
-    const progressRows = getInstructorClassProgress(selectedClass, groups);
+    const progressRows = filterInstructorProgressRows(getInstructorClassProgress(selectedClass, groups));
     const escapeCsv = value => `"${String(value ?? '').replace(/"/g, '""')}"`;
     const header = ['STT', 'KTV', ...groups.flatMap(group => group.labs.map(lab => `${group.device} - ${lab}`)), 'Hoàn thành', 'Tỷ lệ'];
     const csvRows = progressRows.map((row, index) => [
         index + 1,
         row.learner,
-        ...row.deviceResults.flatMap(item => item.labResults.map(lab => (lab.completed ? '1' : '0'))),
+        ...row.deviceResults.flatMap(item => item.labResults.map(lab => (lab.assigned === false ? '' : (lab.completed ? '1' : '0')))),
         `${row.completed}/${row.total}`,
-        `${row.rate}%`
+        row.rate === null ? '' : `${row.rate}%`
     ]);
     const blob = new Blob([`\uFEFF${[header, ...csvRows].map(row => row.map(escapeCsv).join(',')).join('\n')}`], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -2872,6 +3082,21 @@ function initInstructorWorkspace() {
     document.getElementById('instructorDeviceSelect')?.addEventListener('change', event => {
         state.instructorSelectedDevice = event.target.value;
         renderInstructorClassProgress();
+    });
+    document.getElementById('instructorKtvSearch')?.addEventListener('input', event => {
+        state.instructorSearchKtv = event.target.value;
+        window.clearTimeout(instructorSearchTimer);
+        instructorSearchTimer = window.setTimeout(renderInstructorClassProgress, 160);
+    });
+    document.getElementById('instructorCompletionFilter')?.addEventListener('change', event => {
+        state.instructorCompletionFilter = event.target.value;
+        renderInstructorClassProgress();
+    });
+    document.getElementById('instructorProgressFilterReset')?.addEventListener('click', () => {
+        state.instructorSearchKtv = '';
+        state.instructorCompletionFilter = 'all';
+        renderInstructorClassProgress();
+        document.getElementById('instructorKtvSearch')?.focus();
     });
     document.getElementById('instructorClassDelete')?.addEventListener('click', () => {
         const selectedClass = state.instructorClasses.find(item => item.id === state.instructorActiveClassId);
@@ -4478,12 +4703,26 @@ async function confirmRosterImport() {
         alert('Vui lòng sửa lỗi trước khi import.');
         return;
     }
+    if (data.canImport === false || data.can_import === false || Number(data.totalRows || data.total_rows || 0) <= 0) {
+        alert('File không có dòng KTV hợp lệ để import.');
+        return;
+    }
+    const terminationCount = Number(data.terminated || 0);
+    if (terminationCount > 0) {
+        const confirmed = window.confirm(
+            `Cảnh báo: ${terminationCount} KTV không còn trong file sẽ bị đánh dấu Đã nghỉ. Bạn có chắc muốn tiếp tục?`
+        );
+        if (!confirmed) return;
+    }
     state.rosterImportBusy = true;
+    let importSucceeded = false;
     const btn = document.getElementById('rosterConfirmImportBtn');
     if (btn) { btn.disabled = true; btn.textContent = 'Đang import...'; }
 
     const formData = new FormData();
     formData.append('file', state.rosterImportFile);
+    if (data.batch_id || data.batchId) formData.append('batch_id', data.batch_id || data.batchId);
+    if (terminationCount > 0) formData.append('confirm_termination', 'true');
     try {
         const resp = await fetch(`${API_BASE_URL}/roster/import`, { method: 'POST', body: formData });
         const json = await resp.json();
@@ -4492,18 +4731,29 @@ async function confirmRosterImport() {
             showRosterResult(errData.message || 'Import thất bại.', false, errData.details);
         } else {
             const result = json.data || {};
+            importSucceeded = true;
+            const batchId = result.batch_id || result.batchId || '';
             showRosterResult(
-                `Import thành công: ${result.inserted || 0} thêm, ${result.updated || 0} cập nhật, ${result.terminated || 0} nghỉ, ${result.reactivated || 0} khôi phục.`,
+                `Đã thêm ${result.inserted || 0}, cập nhật ${result.updated || 0}, đánh dấu nghỉ ${result.terminated || 0} và khôi phục ${result.reactivated || 0} KTV.${batchId ? ` Mã đợt: ${batchId}.` : ''}`,
                 true
             );
             state.rosterLoaded = false;
             state.rosterHistoryLoaded = false;
+            await Promise.allSettled([loadRosterList(), loadRosterHistory(), refreshDashboardData()]);
         }
     } catch (err) {
         showRosterResult('Lỗi khi import: ' + err.message, false);
     } finally {
         state.rosterImportBusy = false;
-        if (btn) { btn.disabled = false; btn.textContent = 'Xác nhận Import'; }
+        if (btn) {
+            btn.disabled = importSucceeded;
+            btn.textContent = importSucceeded ? 'Đã import' : 'Xác nhận Import';
+        }
+        if (importSucceeded) {
+            state.rosterImportFile = null;
+            const fileInput = document.getElementById('rosterFileInput');
+            if (fileInput) fileInput.value = '';
+        }
     }
 }
 
@@ -4512,13 +4762,33 @@ function showRosterResult(message, success, details) {
     if (!el) return;
     el.hidden = false;
     el.className = 'roster-import-result ' + (success ? 'result-success' : 'result-error');
-    let html = `<p>${escapeHTML(message)}</p>`;
+    el.setAttribute('role', success ? 'status' : 'alert');
+    el.setAttribute('aria-live', success ? 'polite' : 'assertive');
+
+    const title = success ? 'Import thành công' : 'Import không thành công';
+    const icon = success ? '✓' : '!';
+    let html = `
+        <div class="roster-import-result-icon" aria-hidden="true">${icon}</div>
+        <div class="roster-import-result-content">
+            <h3>${title}</h3>
+            <p>${escapeHTML(message)}</p>
+    `;
     if (details && details.length) {
-        html += '<ul style="margin:8px 0 0;padding-left:18px;font-size:13px">';
+        html += '<ul class="roster-import-result-details">';
         details.forEach(d => { html += `<li>${escapeHTML(d.message || d)}</li>`; });
         html += '</ul>';
     }
+    if (success) {
+        html += '<p class="roster-import-result-hint">Kiểm tra lại tại Danh sách KTV hoặc Lịch sử import.</p>';
+    }
+    html += '</div>';
     el.innerHTML = html;
+
+    window.requestAnimationFrame(() => {
+        const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+        el.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
+        el.focus({ preventScroll: true });
+    });
 }
 
 function cancelRosterImport() {

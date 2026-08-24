@@ -1,6 +1,7 @@
 # Python dependencies for FTC Virtual Devices
-django>=4.2,<5.0
-psycopg2-binary>=2.9
-dj-database-url>=2.1
-whitenoise>=6.6
+Django==5.2.17
+psycopg[binary]==3.3.4
+dj-database-url==3.1.2
+whitenoise==6.12.0
+gunicorn==26.0.0
 

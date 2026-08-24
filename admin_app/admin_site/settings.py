@@ -5,6 +5,7 @@ Chỉ dùng nội bộ - /admin/* được proxy bởi run_all.py dispatcher.
 """
 import os
 import sys
+from urllib.parse import urlparse
 import dj_database_url
 
 # BASE_DIR = thư mục admin_app/ (cha của admin_site/)
@@ -23,18 +24,53 @@ SECRET_KEY = os.environ.get(
 )
 DEBUG = os.environ.get('DJANGO_DEBUG', '0') == '1'
 
-ALLOWED_HOSTS = ['*']
-CSRF_TRUSTED_ORIGINS = [
-    'https://*.onrender.com',
+APP_ENV = os.environ.get('APP_ENV', 'development').strip().lower()
+APP_BASE_URL = os.environ.get('APP_BASE_URL', '').strip()
+IS_PRODUCTION = APP_ENV == 'production'
+if IS_PRODUCTION and SECRET_KEY == 'ftc-dev-secret-key-change-in-production-please':
+    raise RuntimeError('DJANGO_SECRET_KEY must be configured in production.')
+
+_configured_hosts = [
+    host.strip()
+    for host in os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',')
+    if host.strip()
+]
+_app_url = urlparse(APP_BASE_URL) if APP_BASE_URL else None
+_app_host = _app_url.hostname if _app_url else None
+ALLOWED_HOSTS = list(dict.fromkeys(_configured_hosts + [
+    host for host in [_app_host, 'localhost', '127.0.0.1', '[::1]'] if host
+]))
+
+_configured_csrf_origins = [
+    origin.strip().rstrip('/')
+    for origin in os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',')
+    if origin.strip()
+]
+_app_origin = f'{_app_url.scheme}://{_app_url.netloc}' if _app_url and _app_url.scheme and _app_url.netloc else None
+CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(_configured_csrf_origins + [origin for origin in [
+    _app_origin,
     'http://localhost:8080',
     'http://127.0.0.1:8080',
     'http://localhost:8083',
     'http://127.0.0.1:8083',
-]
+] if origin]))
 
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SESSION_COOKIE_PATH = '/'
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SECURE = IS_PRODUCTION
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SECURE = IS_PRODUCTION
+SECURE_SSL_REDIRECT = IS_PRODUCTION
+SECURE_HSTS_SECONDS = 31536000 if IS_PRODUCTION else 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = IS_PRODUCTION
+SECURE_HSTS_PRELOAD = IS_PRODUCTION
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+X_FRAME_OPTIONS = 'DENY'
 
 
 # ===========================================================
@@ -91,6 +127,7 @@ if _db_url:
         'default': dj_database_url.parse(
             _db_url,
             conn_max_age=60,
+            conn_health_checks=True,
             ssl_require=True,
         )
     }
@@ -110,7 +147,10 @@ else:
 # Auth
 # ===========================================================
 AUTH_PASSWORD_VALIDATORS = [
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
 # ===========================================================
@@ -126,7 +166,10 @@ USE_TZ = True
 # ===========================================================
 STATIC_URL = '/admin-static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STORAGES = {
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage'},
+}
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

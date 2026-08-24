@@ -16,6 +16,7 @@
   // Lưu thông tin phiên thực hành hiện tại để gửi Tracking API khi kết thúc
   let _trackingSession = null; // { device, lesson, mode, startedAt }
   let _currentUser = null;    // { technician_id, name, email } — lấy từ API auth/session
+  let _lastTrackingPayload = null; // Giữ nguyên payload/idempotency key khi retry lỗi mạng
 
   function escapeHTML(str) {
     if (!str) return '';
@@ -76,9 +77,11 @@
   const gmStatusTitle = document.getElementById('gm-status-title');
   const gmStatusDesc = document.getElementById('gm-status-desc');
   const gmChecklistBody = document.getElementById('gm-checklist-body');
+  const gmSaveStatus = document.getElementById('gm-save-status');
 
   // Track current iframe URL
   let currentIframeUrl = '';
+  let trackingSaveInFlight = false;
 
   // ── Init ─────────────────────────────────────────────────────────
   function init() {
@@ -774,6 +777,7 @@
       startedAt: new Date().toISOString(),
       submissionId: crypto.randomUUID ? crypto.randomUUID() : ('sub-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10))
     };
+    _lastTrackingPayload = null;
 
     // ── Khởi động đồng hồ realtime trên toolbar ──
     startPracticeTimer();
@@ -841,6 +845,7 @@
     // Reset đồng hồ và session tracking
     resetPracticeTimer();
     _trackingSession = null;
+    _lastTrackingPayload = null;
     _lastEvalResult = null;
     _lastSubmitDurationSec = 0;
 
@@ -1166,8 +1171,11 @@
     //     Các lần KTV nộp thử bị Rớt (FAIL) sẽ bị bỏ qua để tránh rác DB.
     //   + Chế độ Thực hành (practice): LUÔN gửi log (Cả PASS và FAIL) ngay lúc bấm.
     // =========================================================================
+    setTrackingSaveStatus('', '');
     if (currentMode === 'practice' || (currentMode === 'guide' && evalResult.passed)) {
       sendTrackingTimer(evalResult, durationSec);
+    } else {
+      setTrackingSaveStatus('warning', 'Lần thử ở chế độ Hướng dẫn chưa đạt nên không được ghi vào tiến độ.');
     }
 
     // Hiển thị modal kết quả cho KTV xem
@@ -1285,6 +1293,10 @@
 
     gradingModal.style.display = 'flex';
     gradingModal.setAttribute('aria-hidden', 'false');
+    window.requestAnimationFrame(() => {
+      const target = btnModalClose && btnModalClose.style.display !== 'none' ? btnModalClose : btnModalRetry;
+      target?.focus();
+    });
   }
 
   function hideGradingModal() {
@@ -1301,8 +1313,42 @@
    * @param {object|null} evalResult - Kết quả chấm điểm
    * @param {number} durationSec - Thời gian làm bài (giây), lấy từ đồng hồ đã dừng
    */
-  function sendTrackingTimer(evalResult, durationSec) {
+  function setTrackingSaveStatus(status, message, allowRetry) {
+    if (!gmSaveStatus) return;
+    gmSaveStatus.hidden = !message;
+    gmSaveStatus.className = `gm-save-status${status ? ` is-${status}` : ''}`;
+    gmSaveStatus.replaceChildren();
+    if (!message) return;
+
+    const text = document.createElement('span');
+    text.textContent = message;
+    gmSaveStatus.appendChild(text);
+    if (allowRetry) {
+      const retry = document.createElement('button');
+      retry.type = 'button';
+      retry.className = 'gm-save-retry';
+      retry.textContent = 'Thử lưu lại';
+      retry.addEventListener('click', () => sendTrackingTimer(_lastEvalResult, _lastSubmitDurationSec, _lastTrackingPayload));
+      gmSaveStatus.appendChild(retry);
+    }
+  }
+
+  function setTrackingActionsDisabled(disabled) {
+    [btnModalRetry, btnModalClose].forEach(button => {
+      if (button) button.disabled = disabled;
+    });
+  }
+
+  function sendTrackingTimer(evalResult, durationSec, retryPayload = null) {
     if (!_trackingSession) return; // Chưa có phiên nào được bắt đầu
+    if (trackingSaveInFlight) return;
+    if (!_currentUser) {
+      setTrackingSaveStatus('error', 'Phiên đăng nhập không còn hợp lệ. Hãy đăng nhập lại trước khi nộp bài.');
+      return Promise.resolve(false);
+    }
+    trackingSaveInFlight = true;
+    setTrackingActionsDisabled(true);
+    setTrackingSaveStatus('saving', 'Đang lưu kết quả và cập nhật tiến độ...');
 
     const session = _trackingSession;
 
@@ -1314,14 +1360,10 @@
     // Lấy lab_id chính xác từ lesson.id (khớp với data.js)
     const labId = session.lesson && session.lesson.id ? session.lesson.id : (session.lesson && session.lesson.title ? session.lesson.title : 'Unknown');
 
-    // Thông tin KTV — dùng từ user đã đăng nhập, fallback về anonymous
-    const user = _currentUser || {
-      technician_id: 'ANONYMOUS',
-      name: 'Người dùng chưa đăng nhập',
-      email: ''
-    };
+    // Thông tin KTV từ phiên đăng nhập; server đối chiếu lại danh tính này.
+    const user = _currentUser;
 
-    const payload = {
+    const payload = retryPayload ? { ...retryPayload } : {
       submission_id: session.submissionId,
       technician_id: user.technician_id,
       name: user.name,
@@ -1334,7 +1376,8 @@
       duration_sec: durationSec || 0
     };
 
-    if (evalResult) {
+    if (!retryPayload && evalResult) {
+      payload.status = evalResult.passed ? 'completed' : 'failed';
       payload.is_passed = evalResult.passed;
       payload.score = evalResult.score;
       payload.grading_details = evalResult.details;
@@ -1344,8 +1387,9 @@
     Object.keys(payload).forEach(function (k) {
       if (payload[k] === undefined) delete payload[k];
     });
+    if (!retryPayload) _lastTrackingPayload = payload;
 
-    fetch('/api/index.php/tracking/timer', {
+    return fetch('/api/index.php/tracking/timer', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -1353,17 +1397,30 @@
     })
       .then(function (res) {
         if (!res.ok) {
-          return res.json().then(function (err) {
-            console.warn('[Tracking] API trả về lỗi:', err);
+          return res.json().catch(function () { return {}; }).then(function (err) {
+            const message = err && err.error && err.error.message
+              ? err.error.message
+              : `Không lưu được kết quả (HTTP ${res.status}).`;
+            throw new Error(message);
           });
         }
         return res.json().then(function (data) {
           console.info('[Tracking] Đã ghi phiên thực hành & chấm điểm:', data);
+          const item = data && data.item ? data.item : {};
+          if (item.normalized_saved === false) {
+            setTrackingSaveStatus('warning', 'Đã lưu lịch sử làm bài, nhưng bài này chưa được giao trong lớp nên chưa cộng vào tiến độ.');
+          } else {
+            setTrackingSaveStatus('success', item.duplicate ? 'Kết quả này đã được lưu trước đó.' : 'Đã lưu kết quả và cập nhật tiến độ thành công.');
+          }
         });
       })
       .catch(function (err) {
-        // Không hiển thị lỗi cho người dùng — portal vẫn hoạt động bình thường
         console.warn('[Tracking] Không thể gửi dữ liệu tracking:', err);
+        setTrackingSaveStatus('error', `Chưa lưu được kết quả: ${err.message || 'lỗi kết nối.'}`, true);
+      })
+      .finally(function () {
+        trackingSaveInFlight = false;
+        setTrackingActionsDisabled(false);
       });
   }
 

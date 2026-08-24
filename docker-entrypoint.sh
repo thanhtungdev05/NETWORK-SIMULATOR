@@ -27,36 +27,62 @@ if [ -n "$DATABASE_URL" ] || [ -n "$PGHOST" ]; then
     done
 
     echo "Running Django Admin migrations (auth, sessions, contenttypes only)..."
-    DJANGO_SETTINGS_MODULE=admin_site.settings \
-        python admin_app/manage.py migrate --run-syncdb 2>&1 | \
-        grep -v "No migrations to apply\|Running migrations\|OK" || true
+    if ! DJANGO_SETTINGS_MODULE=admin_site.settings \
+        python admin_app/manage.py migrate --run-syncdb --noinput; then
+        echo "ERROR: Django migrations failed; refusing to start."
+        exit 1
+    fi
 
     echo "Creating Django superuser (if DJANGO_SUPERUSER_PASSWORD is set)..."
-    DJANGO_SETTINGS_MODULE=admin_site.settings \
-        python admin_app/create_superuser.py || true
+    if ! DJANGO_SETTINGS_MODULE=admin_site.settings \
+        python admin_app/create_superuser.py; then
+        echo "ERROR: Unable to create or verify Django superuser."
+        exit 1
+    fi
 else
     echo "No database configured (DATABASE_URL/PG*); skipping migrations."
 fi
 
 # 2. PHP API server (built-in, PATH_INFO routing: /api/index.php/<resource>).
 #    Chi lang nghe noi bo 127.0.0.1 — dispatcher proxy /api/* ra single-port 8080.
-php -S 127.0.0.1:${API_PORT} -t /app > /dev/null 2>&1 &
+PHP_CLI_SERVER_WORKERS="${PHP_API_WORKERS:-4}" \
+    php -S 127.0.0.1:${API_PORT} -t /app > /tmp/php_api.log 2>&1 &
+PHP_PID=$!
 
-# 3. Django Admin server — lang nghe noi bo 127.0.0.1:DJANGO_PORT
+# 3. Django Admin — production WSGI server, internal-only.
 DJANGO_SETTINGS_MODULE=admin_site.settings \
-    python admin_app/manage.py runserver 127.0.0.1:${DJANGO_PORT} \
-    --noreload > /tmp/django_admin.log 2>&1 &
+    gunicorn admin_site.wsgi:application \
+    --chdir /app/admin_app \
+    --bind 127.0.0.1:${DJANGO_PORT} \
+    --workers "${DJANGO_WORKERS:-2}" \
+    --threads "${DJANGO_THREADS:-4}" \
+    --timeout 30 \
+    --access-logfile - \
+    --error-logfile - > /tmp/django_admin.log 2>&1 &
+DJANGO_PID=$!
 
 echo "Django Admin running on 127.0.0.1:${DJANGO_PORT} (proxied as /admin/)"
 
 # 4. Master Dispatcher: portal + all device simulators + proxy /api/* + /admin/*
 START_PHP=0 API_PORT=${API_PORT} DJANGO_PORT=${DJANGO_PORT} python3 run_all.py &
+MASTER_PID=$!
 
 echo "============================================================="
 echo "  Portal + Devices + API + Admin: http://localhost:${PORT}  (single-port)"
 echo "  Admin panel: http://localhost:${PORT}/admin/"
 echo "============================================================="
 
-trap 'echo "Stopping servers..."; kill 0 2>/dev/null' EXIT INT TERM
-wait
+cleanup() {
+    echo "Stopping servers..."
+    kill "$MASTER_PID" "$PHP_PID" "$DJANGO_PID" 2>/dev/null || true
+}
+trap cleanup EXIT INT TERM
 
+while kill -0 "$MASTER_PID" 2>/dev/null \
+   && kill -0 "$PHP_PID" 2>/dev/null \
+   && kill -0 "$DJANGO_PID" 2>/dev/null; do
+    sleep 2
+done
+
+echo "ERROR: A required service exited unexpectedly."
+exit 1

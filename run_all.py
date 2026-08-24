@@ -6,6 +6,7 @@ Master Server (Port 8080) cho Hệ thống giả lập mạng FPT.
 và proxy /api/* sang PHP nội bộ — toàn bộ chạy trên 1 cổng duy nhất (8080).
 """
 import os
+import posixpath
 import re
 import sys
 import threading
@@ -15,8 +16,9 @@ import socket
 import shutil
 import subprocess
 import http.client
+import ipaddress
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 
 # Reconfigure stdout cho UTF-8 trên Windows
 if hasattr(sys.stdout, 'reconfigure'):
@@ -89,8 +91,24 @@ PORTAL_PATHS = {'/', '/index.html', '/styles.css', '/app.js', '/data.js', '/port
                 '/favicon.ico', '/login', '/login/index.html', '/api',
                 '/dashboard', '/dashboard/', '/dashboard-authen', '/dashboard-authen/',
                 '/admin', '/admin/'}
-PORTAL_PREFIXES = ('/devices/', '/assets/', '/login/', '/api/', '/vendor/',
+PORTAL_PREFIXES = ('/devices/', '/assets/', '/login/', '/api/',
                    '/dashboard/', '/dashboard-authen/', '/admin/', '/admin-static/')
+
+PUBLIC_ROOT_FILES = {
+    '/index.html', '/portal.html', '/styles.css', '/app.js', '/data.js', '/favicon.ico'
+}
+PUBLIC_ROOT_PREFIXES = ('/devices/', '/assets/', '/login/')
+DASHBOARD_PUBLIC_PATHS = {'/', '/index.html', '/css/styles.css', '/js/app.js'}
+SENSITIVE_EXTENSIONS = {
+    '.env', '.ini', '.log', '.lock', '.md', '.php', '.py', '.pyc', '.sql',
+    '.toml', '.yaml', '.yml', '.sh', '.ps1', '.bat', '.cmd'
+}
+SENSITIVE_BASENAMES = {
+    '.dockerignore', '.env', '.env.example', '.gitattributes', '.gitignore',
+    'dockerfile', 'composer.json', 'composer.lock', 'docker-compose.yml',
+    'requirements.txt'
+}
+SIM_DISPATCH_LOCK = threading.RLock()
 
 
 def is_portal_path(path):
@@ -102,13 +120,61 @@ def is_portal_path(path):
             return True
     return False
 
+
+def is_sensitive_path(path):
+    """Block source, configuration, logs and dot-directories from HTTP access."""
+    decoded_path = unquote(urlparse(path).path).replace('\\', '/')
+    segments = [segment for segment in decoded_path.split('/') if segment]
+    if any(segment.startswith('.') for segment in segments):
+        return True
+    basename = segments[-1].lower() if segments else ''
+    if basename in SENSITIVE_BASENAMES:
+        return True
+    _, extension = os.path.splitext(basename)
+    return extension.lower() in SENSITIVE_EXTENSIONS
+
+
+def is_public_root_path(path):
+    decoded_path = unquote(urlparse(path).path).replace('\\', '/')
+    if '\x00' in decoded_path:
+        return False
+    normalized_path = '/' + posixpath.normpath(decoded_path).lstrip('/')
+    if normalized_path == '/':
+        return True
+    if normalized_path in PUBLIC_ROOT_FILES:
+        return True
+    return any(normalized_path.startswith(prefix) for prefix in PUBLIC_ROOT_PREFIXES)
+
 class MasterDispatcher(SimpleHTTPRequestHandler):
+    server_version = 'FTC'
+    sys_version = ''
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=BASE_DIR, **kwargs)
 
     def end_headers(self):
         self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+        self.send_header('X-Content-Type-Options', 'nosniff')
+        self.send_header('X-Frame-Options', 'SAMEORIGIN')
+        self.send_header('Referrer-Policy', 'strict-origin-when-cross-origin')
+        self.send_header('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+        self.send_header("Content-Security-Policy", "frame-ancestors 'self'")
         super().end_headers()
+
+    def list_directory(self, path):
+        self.send_error(404, 'Not Found')
+        return None
+
+    def _trusted_client_ip(self):
+        remote_ip = str(self.client_address[0]) if getattr(self, 'client_address', None) else ''
+        if os.environ.get('TRUST_UPSTREAM_PROXY', '0') == '1':
+            forwarded_ip = self.headers.get('X-Forwarded-For', '').split(',', 1)[0].strip()
+            try:
+                ipaddress.ip_address(forwarded_ip)
+                return forwarded_ip
+            except ValueError:
+                pass
+        return remote_ip
 
     def detect_simulator(self):
         # 0. Các file/thư mục Portal luôn do Portal phục vụ (chống bị 'cướp' bởi Referer/Cookie)
@@ -161,10 +227,16 @@ class MasterDispatcher(SimpleHTTPRequestHandler):
 
         host_hdr = self.headers.get('Host', f'127.0.0.1:{PORT}')
         headers['X-Forwarded-Host'] = host_hdr
-        headers['X-Forwarded-Proto'] = 'http'
-        headers['X-Forwarded-Port'] = str(PORT)
-        if hasattr(self, 'client_address') and self.client_address:
-            headers['X-Forwarded-For'] = str(self.client_address[0])
+        forwarded_proto = self.headers.get('X-Forwarded-Proto', '').split(',', 1)[0].strip().lower()
+        if forwarded_proto not in ('http', 'https'):
+            forwarded_proto = 'https' if os.environ.get('APP_BASE_URL', '').lower().startswith('https://') else 'http'
+        headers['X-Forwarded-Proto'] = forwarded_proto
+        forwarded_port = self.headers.get('X-Forwarded-Port', '').split(',', 1)[0].strip()
+        headers['X-Forwarded-Port'] = forwarded_port if forwarded_port.isdigit() else ('443' if forwarded_proto == 'https' else str(PORT))
+        client_ip = self._trusted_client_ip()
+        if client_ip:
+            headers['X-Forwarded-For'] = client_ip
+            headers['X-FTC-Client-IP'] = client_ip
 
         body = b''
         if method in ('POST', 'PUT', 'PATCH', 'DELETE'):
@@ -216,6 +288,18 @@ class MasterDispatcher(SimpleHTTPRequestHandler):
                 continue
             headers[k] = v
 
+        forwarded_proto = self.headers.get('X-Forwarded-Proto', '').split(',', 1)[0].strip().lower()
+        if forwarded_proto not in ('http', 'https'):
+            forwarded_proto = 'https' if os.environ.get('APP_BASE_URL', '').lower().startswith('https://') else 'http'
+        headers['X-Forwarded-Proto'] = forwarded_proto
+        forwarded_port = self.headers.get('X-Forwarded-Port', '').split(',', 1)[0].strip()
+        headers['X-Forwarded-Port'] = forwarded_port if forwarded_port.isdigit() else ('443' if forwarded_proto == 'https' else str(PORT))
+
+        client_ip = self._trusted_client_ip()
+        if client_ip:
+            headers['X-Forwarded-For'] = client_ip
+            headers['X-FTC-Client-IP'] = client_ip
+
         body = b''
         if method in ('POST', 'PUT', 'PATCH', 'DELETE'):
             try:
@@ -256,6 +340,9 @@ class MasterDispatcher(SimpleHTTPRequestHandler):
     def dispatch(self, method):
         # Chuyen tiep /api/* -> PHP noi bo (browser chi can 1 cong 8080)
         path_only = self.path.split('?')[0]
+        if is_sensitive_path(path_only):
+            self.send_error(404, 'Not Found')
+            return
         if path_only == '/api' or path_only.startswith('/api/'):
             return self._proxy_api(method)
 
@@ -266,7 +353,7 @@ class MasterDispatcher(SimpleHTTPRequestHandler):
 
         # Mount dashboard (thu muc dashboard-authen) thanh /dashboard/*.
         # Xu ly TRUOC detect_simulator de tranh bi cookie current_sim cua sim 'cuop' request.
-        if method == 'GET' and (path_only == '/dashboard' or path_only.startswith('/dashboard/') or path_only == '/dashboard-authen' or path_only.startswith('/dashboard-authen/')):
+        if method in ('GET', 'HEAD') and (path_only == '/dashboard' or path_only.startswith('/dashboard/') or path_only == '/dashboard-authen' or path_only.startswith('/dashboard-authen/')):
             parts = self.path.split('?', 1)
             prefix = '/dashboard-authen' if path_only.startswith('/dashboard-authen') else '/dashboard'
             sub = parts[0][len(prefix):]
@@ -274,92 +361,81 @@ class MasterDispatcher(SimpleHTTPRequestHandler):
                 sub = '/'
             if not sub.startswith('/'):
                 sub = '/' + sub
+            if sub not in DASHBOARD_PUBLIC_PATHS:
+                self.send_error(404, 'Not Found')
+                return
             self.path = sub + (('?' + parts[1]) if len(parts) > 1 else '')
             self.directory = DASHBOARD_DIR
-            return super().do_GET()
+            return super().do_HEAD() if method == 'HEAD' else super().do_GET()
 
         sim_id = self.detect_simulator()
         if sim_id:
-            # Gán thư mục gốc cho SimpleHTTPRequestHandler (được dùng bởi một số handler con)
-            mod = SIM_MODULES[sim_id]
-            if hasattr(mod, 'ROOT'):
-                self.directory = mod.ROOT
-            
-            # Đổi current working directory (CWD) vì một số handler dùng cwd
-            old_cwd = os.getcwd()
-            if hasattr(mod, 'ROOT'):
-                os.chdir(mod.ROOT)
-            elif hasattr(mod, 'BASE'):
-                os.chdir(mod.BASE)
-
-            original_class = self.__class__
-            original_directory = getattr(self, 'directory', None)
-            try:
-                handler_class = SIM_HANDLERS[sim_id]
-                self.__class__ = handler_class
-                
-                sim_module = SIM_MODULES[sim_id]
-                if hasattr(sim_module, 'ROOT'):
-                    self.directory = getattr(sim_module, 'ROOT')
-                elif hasattr(sim_module, 'WWW'):
-                    self.directory = getattr(sim_module, 'WWW')
-                else:
-                    self.directory = os.path.join(BASE_DIR, sim_id, "www")
-                
-                # -------------------------------------------------------------
-                # MONKEY PATCH ĐỂ FIX LỖI MẤT PREFIX KHI REDIRECT VÀ GIỮ COOKIE
-                # -------------------------------------------------------------
+            # A few legacy handlers read relative paths from process-wide CWD.
+            # Serialize only simulator dispatches so concurrent requests cannot
+            # switch each other's working directory or handler class mid-flight.
+            with SIM_DISPATCH_LOCK:
+                mod = SIM_MODULES[sim_id]
+                original_class = self.__class__
+                original_directory = getattr(self, 'directory', None)
                 original_send_header = self.send_header
                 original_end_headers = self.end_headers
+                old_cwd = os.getcwd()
+                try:
+                    if hasattr(mod, 'ROOT'):
+                        self.directory = mod.ROOT
+                        os.chdir(mod.ROOT)
+                    elif hasattr(mod, 'BASE'):
+                        os.chdir(mod.BASE)
 
-                def custom_send_header(keyword, value):
-                    if keyword.lower() == 'location' and value.startswith('/'):
-                        value = '/' + sim_id + value
-                    original_send_header(keyword, value)
-                self.send_header = custom_send_header
-                
-                def custom_end_headers():
-                    # Đảm bảo Cookie lưu ở thư mục gốc / để toàn bộ trang đều gửi
-                    original_send_header('Set-Cookie', f'current_sim={sim_id}; Path=/')
-                    original_send_header('Cache-Control', 'no-cache, must-revalidate')
-                    original_end_headers()
-                self.end_headers = custom_end_headers
-                # -------------------------------------------------------------
+                    handler_class = SIM_HANDLERS[sim_id]
+                    self.__class__ = handler_class
+                    if hasattr(mod, 'ROOT'):
+                        self.directory = getattr(mod, 'ROOT')
+                    elif hasattr(mod, 'WWW'):
+                        self.directory = getattr(mod, 'WWW')
+                    else:
+                        self.directory = os.path.join(BASE_DIR, sim_id, 'www')
 
-                print(f"[DISPATCH] {method} {self.path} -> {sim_id}")
+                    def custom_send_header(keyword, value):
+                        if keyword.lower() == 'location' and value.startswith('/'):
+                            value = '/' + sim_id + value
+                        original_send_header(keyword, value)
+                    self.send_header = custom_send_header
 
-                if method == 'GET':
-                    return self.do_GET()
-                elif method == 'POST':
-                    return self.do_POST()
-                elif method == 'DELETE':
-                    if hasattr(self, 'do_DELETE'):
-                        return self.do_DELETE()
-                else:
-                    self.send_error(501, "Unsupported method")
+                    def custom_end_headers():
+                        original_send_header('Set-Cookie', f'current_sim={sim_id}; Path=/; SameSite=Lax')
+                        original_send_header('Cache-Control', 'no-cache, must-revalidate')
+                        original_end_headers()
+                    self.end_headers = custom_end_headers
+
+                    print(f"[DISPATCH] {method} {self.path} -> {sim_id}")
+                    handler_method = getattr(self, 'do_' + method, None)
+                    if handler_method is None:
+                        self.send_error(501, 'Unsupported method')
+                        return
+                    return handler_method()
+                except Exception as e:
+                    import traceback
+                    print(f"Error in {sim_id} {method}: {e}")
+                    traceback.print_exc()
+                    self.__class__ = original_class
+                    self.send_error(500, 'Internal Server Error')
                     return
-            except Exception as e:
-                import traceback
-                print(f"Error in {sim_id} {method}: {e}")
-                traceback.print_exc()
-                self.__class__ = original_class
-                self.send_error(500, "Internal Server Error")
-                return
-            finally:
-                self.send_header = original_send_header
-                self.end_headers = original_end_headers
-                self.__class__ = original_class
-                if original_directory is not None:
-                    self.directory = original_directory
-                os.chdir(old_cwd)
+                finally:
+                    self.send_header = original_send_header
+                    self.end_headers = original_end_headers
+                    self.__class__ = original_class
+                    if original_directory is not None:
+                        self.directory = original_directory
+                    os.chdir(old_cwd)
         
         # Nếu không trúng simulator nào -> phục vụ file tĩnh của Portal
-        if method == 'GET':
+        if method in ('GET', 'HEAD') and is_public_root_path(path_only):
             # Set default index.html if pointing to a directory
             path = self.path.split('?')[0]
             if path == '/':
                 self.path = '/index.html'
-            return super().do_GET()
+            return super().do_HEAD() if method == 'HEAD' else super().do_GET()
         else:
             self.send_error(404, "Not Found")
 
@@ -371,6 +447,18 @@ class MasterDispatcher(SimpleHTTPRequestHandler):
         
     def do_DELETE(self):
         self.dispatch('DELETE')
+
+    def do_HEAD(self):
+        self.dispatch('HEAD')
+
+    def do_OPTIONS(self):
+        self.dispatch('OPTIONS')
+
+    def do_PUT(self):
+        self.dispatch('PUT')
+
+    def do_PATCH(self):
+        self.dispatch('PATCH')
 
 
 class DualStackServer(ThreadingHTTPServer):

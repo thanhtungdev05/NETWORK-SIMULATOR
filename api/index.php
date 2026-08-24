@@ -17,12 +17,9 @@ $GLOBALS['request_id'] = bin2hex(random_bytes(8));
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 header('X-Request-ID: ' . $GLOBALS['request_id']);
-$corsOrigin = env_value('APP_BASE_URL', '');
-if ($corsOrigin !== '') {
-    header('Access-Control-Allow-Origin: ' . $corsOrigin);
-} else {
-    header('Access-Control-Allow-Origin: ' . request_origin());
-}
+$corsOrigin = app_origin(env_value('APP_BASE_URL', '')) ?? request_origin();
+header('Access-Control-Allow-Origin: ' . $corsOrigin);
+header('Vary: Origin');
 header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Tracking-Key');
 header('Access-Control-Max-Age: 86400');
@@ -145,8 +142,9 @@ function is_https_request(): bool
 
 function is_local_request(): bool
 {
-    $host = strtolower((string)($_SERVER['HTTP_HOST'] ?? ''));
-    $host = explode(':', $host)[0] ?? $host;
+    $hostHeader = (string)($_SERVER['HTTP_HOST'] ?? '');
+    $parsedHost = parse_url('http://' . $hostHeader, PHP_URL_HOST);
+    $host = strtolower(trim((string)$parsedHost, '[]'));
 
     return in_array($host, ['localhost', '127.0.0.1', '::1'], true);
 }
@@ -165,6 +163,51 @@ function request_origin(): string
 {
     $scheme = is_https_request() ? 'https' : 'http';
     return $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
+}
+
+function app_origin(string $url): ?string
+{
+    $parts = parse_url(trim($url));
+    if (!is_array($parts)) {
+        return null;
+    }
+    $scheme = strtolower((string)($parts['scheme'] ?? ''));
+    if (!in_array($scheme, ['http', 'https'], true)) {
+        return null;
+    }
+    $host = (string)($parts['host'] ?? '');
+    if ($host === '' || preg_match('/[\r\n]/', $host)) {
+        return null;
+    }
+    $port = isset($parts['port']) ? ':' . (int)$parts['port'] : '';
+    return $scheme . '://' . strtolower($host) . $port;
+}
+
+function enforce_write_origin(string $resource, string $method): void
+{
+    if (!in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
+        return;
+    }
+
+    // External tracking uses a secret header and is authenticated again by the
+    // handler. Every cookie-authenticated browser write must be same-origin.
+    $hasTrackingCredential = !empty($_SERVER['HTTP_X_TRACKING_KEY'])
+        || preg_match('/^Bearer\s+\S+/i', (string)($_SERVER['HTTP_AUTHORIZATION'] ?? '')) === 1;
+    if ($resource === 'tracking' && $hasTrackingCredential) {
+        return;
+    }
+
+    $suppliedOrigin = app_origin((string)($_SERVER['HTTP_ORIGIN'] ?? ''));
+    if (!$suppliedOrigin) {
+        $suppliedOrigin = app_origin((string)($_SERVER['HTTP_REFERER'] ?? ''));
+    }
+    $allowedOrigins = array_values(array_filter([
+        app_origin(env_value('APP_BASE_URL', '')),
+        is_local_request() ? app_origin(request_origin()) : null,
+    ]));
+    if (!$suppliedOrigin || !in_array($suppliedOrigin, $allowedOrigins, true)) {
+        fail(403, 'security/origin-rejected', 'This write request did not originate from the application.');
+    }
 }
 
 function base64url_encode(string $value): string
@@ -219,6 +262,8 @@ function is_root_iam_callback(string $resource, string $method): bool
         && $method === 'GET'
         && (isset($_GET['code']) || isset($_GET['error']) || isset($_GET['state']));
 }
+
+enforce_write_origin($resource, $method);
 
 $requiresSession = api_resource_requires_session($resource) || $resource === 'dev' || is_root_iam_callback($resource, $method);
 
@@ -282,6 +327,10 @@ function require_user(): array
         }
         unset($_SESSION['user_id'], $_SESSION['user_email'], $_SESSION['iam_subject']);
         fail(401, 'auth/unauthenticated', 'Session user no longer exists.');
+    }
+    if (database_boolean($user['is_terminated'] ?? false)) {
+        unset($_SESSION['user_id'], $_SESSION['user_email'], $_SESSION['iam_subject']);
+        fail(403, 'auth/account-inactive', 'This employee account is no longer active.');
     }
     return $user;
 }
@@ -586,6 +635,10 @@ function iam_post_login_url(array $user): string
 
 function request_ip(): ?string
 {
+    $dispatcherClient = trim((string)($_SERVER['HTTP_X_FTC_CLIENT_IP'] ?? ''));
+    if ($dispatcherClient !== '' && filter_var($dispatcherClient, FILTER_VALIDATE_IP)) {
+        return $dispatcherClient;
+    }
     if (is_local_request() || env_bool('TRUST_X_FORWARDED_FOR', false)) {
         $forwarded = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '';
         if ($forwarded) {
@@ -644,6 +697,10 @@ function handle_auth(array $segments, string $method): void
             $user = find_user_by_id((string)current_user_id());
         } elseif (current_email()) {
             $user = find_user((string)current_email());
+        }
+        if ($user && database_boolean($user['is_terminated'] ?? false)) {
+            unset($_SESSION['user_id'], $_SESSION['user_email'], $_SESSION['iam_subject']);
+            $user = null;
         }
         if (!$user && dev_bypass_enabled()) {
             $user = mock_bypass_user();
@@ -726,6 +783,10 @@ function process_iam_callback(): void
     $owner = $provider->getResourceOwner($token);
     $profile = $owner->toArray();
     $user = upsert_iam_user($profile);
+    if (database_boolean($user['is_terminated'] ?? false)) {
+        unset($_SESSION['user_id'], $_SESSION['user_email'], $_SESSION['iam_subject']);
+        fail(403, 'auth/account-inactive', 'This employee account is no longer active.');
+    }
 
     session_regenerate_id(true);
     $_SESSION['user_id'] = $user['user_id'];
@@ -1024,13 +1085,22 @@ function handle_health(string $method): void
         $latestMigration = $pdo->query('SELECT version FROM schema_migrations ORDER BY version DESC LIMIT 1')->fetchColumn() ?: null;
     }
 
+    $migrationFiles = glob(__DIR__ . '/migrations/*.sql') ?: [];
+    sort($migrationFiles, SORT_STRING);
+    $expectedMigration = $migrationFiles
+        ? basename($migrationFiles[array_key_last($migrationFiles)], '.sql')
+        : null;
+    $schemaReady = $expectedMigration !== null && $latestMigration === $expectedMigration;
+
     $version = env_value('RENDER_GIT_COMMIT', env_value('APP_VERSION', 'development'));
     respond([
-        'ok' => true,
+        'ok' => $schemaReady,
         'service' => 'postgres-api',
         'version' => $version ? substr($version, 0, 12) : 'development',
         'latestMigration' => $latestMigration,
-    ]);
+        'expectedMigration' => $expectedMigration,
+        'schemaReady' => $schemaReady,
+    ], $schemaReady ? 200 : 503);
 }
 
 function handle_dev(array $segments, string $method): void
@@ -1261,12 +1331,13 @@ function handle_roster_import(array $actor): void
 
     $pdo = db();
     $parseErrors = $parsed['errors'] ?? [];
+    $parsedRows = $parsed['rows'] ?? [];
     if ($dryRun) {
-        $preview = sync_ktv_roster($pdo, $parsed['rows'] ?? [], $batch, true);
+        $preview = sync_ktv_roster($pdo, $parsedRows, $batch, true);
         $preview['errors'] = array_merge($parseErrors, $preview['errors'] ?? []);
         $preview['error_count'] = count($preview['errors']);
         $preview['errorCount'] = count($preview['errors']);
-        $preview['canImport'] = $preview['error_count'] === 0 && count($parsed['rows'] ?? []) > 0;
+        $preview['canImport'] = $preview['error_count'] === 0 && count($parsedRows) > 0;
         $preview['can_import'] = $preview['canImport'];
         $preview['headers'] = $parsed['headers'] ?? [];
         $preview['fileName'] = $file['name'];
@@ -1285,7 +1356,11 @@ function handle_roster_import(array $actor): void
         ], 400);
     }
 
-    $preflight = sync_ktv_roster($pdo, $parsed['rows'] ?? [], $batch, true);
+    if (!$parsedRows) {
+        fail(400, 'empty-roster', 'Roster workbook does not contain any valid employee rows.');
+    }
+
+    $preflight = sync_ktv_roster($pdo, $parsedRows, $batch, true);
     if (($preflight['error_count'] ?? 0) > 0) {
         respond([
             'error' => [
@@ -1296,10 +1371,20 @@ function handle_roster_import(array $actor): void
             ],
         ], 409);
     }
+    if (($preflight['terminated'] ?? 0) > 0 && !roster_parse_bool_query('confirm_termination')) {
+        respond([
+            'error' => [
+                'code' => 'termination-confirmation-required',
+                'message' => 'This import will mark employees as terminated. Preview and explicitly confirm this change.',
+                'requestId' => $GLOBALS['request_id'] ?? null,
+                'details' => $preflight['changes']['terminated'] ?? [],
+            ],
+        ], 409);
+    }
 
     $pdo->beginTransaction();
     try {
-        $result = sync_ktv_roster($pdo, $parsed['rows'] ?? [], $batch, false);
+        $result = sync_ktv_roster($pdo, $parsedRows, $batch, false);
         if (($result['error_count'] ?? 0) > 0) {
             $pdo->rollBack();
             respond([
@@ -1703,6 +1788,8 @@ function handle_dashboard(array $segments, string $method): void
                                    COALESCE((SELECT MAX(updated_at) FROM lab_attempts), 'epoch'::timestamptz),
                                    COALESCE((SELECT MAX(created_at) FROM timer_sessions), 'epoch'::timestamptz),
                                    COALESCE((SELECT MAX(updated_at) FROM training_classes), 'epoch'::timestamptz),
+                                   COALESCE((SELECT MAX(updated_at) FROM class_enrollments), 'epoch'::timestamptz),
+                                   COALESCE((SELECT MAX(updated_at) FROM regions), 'epoch'::timestamptz),
                                    COALESCE((SELECT MAX(updated_at) FROM device_catalog), 'epoch'::timestamptz),
                                    COALESCE((SELECT MAX(updated_at) FROM lab_catalog), 'epoch'::timestamptz)
                                ),
@@ -1711,7 +1798,9 @@ function handle_dashboard(array $segments, string $method): void
                            ':', (SELECT COUNT(*) FROM users),
                            ':', (SELECT COUNT(*) FROM timer_sessions),
                            ':', (SELECT COUNT(*) FROM lab_assignments),
-                           ':', (SELECT COUNT(*) FROM lab_attempts)
+                           ':', (SELECT COUNT(*) FROM lab_attempts),
+                           ':', (SELECT COUNT(*) FROM class_enrollments),
+                           ':', (SELECT COUNT(*) FROM regions)
                        )
                 SQL
             )->fetchColumn();
@@ -1863,11 +1952,13 @@ function handle_dashboard(array $segments, string $method): void
     try {
         $catalogRows = $pdo
             ->query(
-                'SELECT d.device_id, d.model, d.device_name, l.lab_id, l.lab_name
+                'SELECT d.device_id, d.model, d.device_name, d.sort_order AS device_sort_order,
+                        l.lab_id, l.lab_name, l.sort_order AS lab_sort_order
                  FROM device_catalog d
                  LEFT JOIN lab_catalog l ON l.device_id = d.device_id AND l.is_active = TRUE
                  WHERE d.is_active = TRUE
-                 ORDER BY d.device_name, l.lab_name'
+                 ORDER BY d.sort_order, d.device_name, d.device_id,
+                          l.sort_order, l.lab_name, l.lab_id'
             )
             ->fetchAll();
         foreach ($catalogRows as $row) {

@@ -201,6 +201,8 @@
                         </div>
                     </div>
 
+                    <div class="dashboard-data-notice" id="dashboardDataNotice" role="status" aria-live="polite" hidden></div>
+
                     <div class="detail-section-card ktv-monthly-card overview-monthly-card">
                         <div class="detail-section-header ktv-monthly-header">
                             <div>
@@ -272,12 +274,37 @@
                                 </button>
                             </div>
                         </div>
+                        <div class="instructor-progress-filterbar" aria-label="Tìm kiếm và lọc tiến độ KTV">
+                            <label class="instructor-filter-field instructor-search-field" for="instructorKtvSearch">
+                                <span>Tìm KTV</span>
+                                <span class="instructor-filter-control">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 5 5"></path></svg>
+                                    <input type="search" id="instructorKtvSearch" placeholder="Tên, email hoặc mã NV..." autocomplete="off">
+                                </span>
+                            </label>
+                            <label class="instructor-filter-field" for="instructorCompletionFilter">
+                                <span>Trạng thái hoàn thành</span>
+                                <select id="instructorCompletionFilter">
+                                    <option value="all">Tất cả trạng thái</option>
+                                    <option value="completed">Hoàn thành 100%</option>
+                                    <option value="in_progress">Đang thực hiện (1–99%)</option>
+                                    <option value="not_started">Chưa hoàn thành (0%)</option>
+                                    <option value="unassigned">Chưa được giao</option>
+                                </select>
+                            </label>
+                            <button type="button" class="instructor-filter-reset" id="instructorProgressFilterReset" hidden>Xóa bộ lọc</button>
+                            <div class="instructor-progress-filter-meta" id="instructorProgressFilterMeta" aria-live="polite"></div>
+                        </div>
                         <div class="instructor-progress-summary" id="instructorProgressSummary"></div>
-                        <div class="instructor-progress-scroll" id="instructorProgressScroll" tabindex="0" aria-label="Ma trận tiến độ lab theo lớp, có thể cuộn ngang">
+                        <div class="instructor-progress-scroll" id="instructorProgressScroll" tabindex="0" aria-label="Ma trận tiến độ lab theo lớp, có thể cuộn ngang và dọc">
                             <table class="instructor-progress-table">
                                 <thead id="instructorProgressHead"></thead>
                                 <tbody id="instructorProgressBody"></tbody>
+                                <tfoot id="instructorProgressFoot"></tfoot>
                             </table>
+                        </div>
+                        <div class="instructor-progress-scroll-hint" id="instructorProgressScrollHint" hidden>
+                            Cuộn ngang để xem các bài lab; tiêu đề, cột KTV và tổng kết luôn được giữ cố định.
                         </div>
                         <div class="instructor-progress-empty" id="instructorProgressEmpty" hidden></div>
                     </div>
@@ -703,13 +730,14 @@
                             <button type="button" class="button secondary" id="rosterCancelImportBtn">Hủy</button>
                         </div>
                     </div>
+                    <div class="roster-import-result" id="rosterImportResult" role="status" aria-live="polite"
+                        aria-atomic="true" tabindex="-1" hidden></div>
                     <div class="roster-preview" id="rosterPreview" hidden>
                         <h3 class="roster-preview-title">Kết quả preview</h3>
                         <div class="roster-preview-stats" id="rosterPreviewStats"></div>
                         <div class="roster-preview-errors" id="rosterPreviewErrors" hidden></div>
                         <div class="roster-preview-changes" id="rosterPreviewChanges"></div>
                     </div>
-                    <div class="roster-import-result" id="rosterImportResult" hidden></div>
                 </div>
 
                 <!-- Sub-tab: Lịch sử import -->

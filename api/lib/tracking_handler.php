@@ -344,12 +344,17 @@ function handle_tracking(array $segments, string $method): void
             }
         }
         if (is_array($trackingActor)) {
-            $resolvedUserId = (string)$trackingActor['user_id'];
+            $actorId = (string)($trackingActor['user_id'] ?? '');
+            $actorExists = $actorId !== '' && (bool)$pdo->query('SELECT 1 FROM users WHERE user_id = ' . $pdo->quote($actorId))->fetchColumn();
+            $resolvedUserId = $actorExists ? $actorId : null;
             $timer['technician_id'] = (string)(($trackingActor['employee_id'] ?? null) ?: $timer['technician_id']);
             $timer['email'] = (string)(($trackingActor['email'] ?? null) ?: $timer['email']);
             $timer['name'] = (string)(($trackingActor['display_name'] ?? null) ?: $timer['name']);
-        } elseif (!$resolvedUserId) {
-            fail(422, 'tracking/identity-unresolved', 'technician_id or email must match an existing user.');
+        } elseif ($resolvedUserId) {
+            $userExists = (bool)$pdo->query('SELECT 1 FROM users WHERE user_id = ' . $pdo->quote($resolvedUserId))->fetchColumn();
+            if (!$userExists) {
+                $resolvedUserId = null;
+            }
         }
 
         $timer['started_at'] = $startedAt;
@@ -374,7 +379,7 @@ function handle_tracking(array $segments, string $method): void
                     :grading_details, :client_ip, :user_agent, :session_type,
                     :submission_id
                 )
-                ON CONFLICT (submission_id) DO NOTHING
+                ON CONFLICT (submission_id) WHERE submission_id IS NOT NULL DO NOTHING
                 RETURNING id
                 SQL
             );

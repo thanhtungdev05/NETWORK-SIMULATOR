@@ -1789,11 +1789,7 @@ function handle_dashboard(array $segments, string $method): void
                            TO_CHAR(
                                GREATEST(
                                    COALESCE((SELECT MAX(updated_at) FROM users), 'epoch'::timestamptz),
-                                   COALESCE((SELECT MAX(updated_at) FROM lab_assignments), 'epoch'::timestamptz),
-                                   COALESCE((SELECT MAX(updated_at) FROM lab_attempts), 'epoch'::timestamptz),
                                    COALESCE((SELECT MAX(created_at) FROM timer_sessions), 'epoch'::timestamptz),
-                                   COALESCE((SELECT MAX(updated_at) FROM training_classes), 'epoch'::timestamptz),
-                                   COALESCE((SELECT MAX(updated_at) FROM class_enrollments), 'epoch'::timestamptz),
                                    COALESCE((SELECT MAX(updated_at) FROM regions), 'epoch'::timestamptz),
                                    COALESCE((SELECT MAX(updated_at) FROM device_catalog), 'epoch'::timestamptz),
                                    COALESCE((SELECT MAX(updated_at) FROM lab_catalog), 'epoch'::timestamptz)
@@ -1802,9 +1798,6 @@ function handle_dashboard(array $segments, string $method): void
                            ),
                            ':', (SELECT COUNT(*) FROM users),
                            ':', (SELECT COUNT(*) FROM timer_sessions),
-                           ':', (SELECT COUNT(*) FROM lab_assignments),
-                           ':', (SELECT COUNT(*) FROM lab_attempts),
-                           ':', (SELECT COUNT(*) FROM class_enrollments),
                            ':', (SELECT COUNT(*) FROM regions)
                        )
                 SQL

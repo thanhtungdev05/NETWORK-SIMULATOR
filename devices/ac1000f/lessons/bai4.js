@@ -1,29 +1,33 @@
-﻿/**
- * devices/ac1000f/lessons/bai5.js
- * Bài 5: Cấu hình DNS
+/**
+ * devices/ac1000f/lessons/bai4.js
+ * Bài 4: Cấu hình DNS
  */
 
 window.DEVICE_AC1000F_LESSONS = window.DEVICE_AC1000F_LESSONS || [];
 
-window.DEVICE_AC1000F_LESSONS.push({
+var idx = window.DEVICE_AC1000F_LESSONS.findIndex(function(l) { return l.id === 'LAB_AC1000F_04'; });
+var lesson = {
   id: 'LAB_AC1000F_04',
   title: 'Cấu hình DNS',
   subtitle: 'Cấu hình DNS',
   instructions: [
-    '<b>Yêu cầu:</b> Thực hiện cấu hình máy chủ DDNS trên thiết bị với các thông số sau:',
-    '- Tên Host: <span class="val">ac1000f.ddns.net</span>',
-    '- Username: <span class="val">truongconghau04111994@gmail.com</span>',
-    '- Password: <span class="val">fpt12345</span>',
+    '<b>Yêu cầu:</b> Thiết lập thông số DNS thủ công (Manually) trên cổng LAN:',
+    '- Primary DNS: <span class="val">8.8.8.8</span>',
+    '- Secondary DNS: <span class="val">8.8.4.4</span>',
+    '<br><b>Cách làm:</b>',
+    '1. Vào mục Network → LAN',
+    '2. Tìm mục DNS Relay chọn <b>Manually</b>',
+    '3. Nhập <b>8.8.8.8</b> vào Primary DNS và <b>8.8.4.4</b> vào Secondary DNS',
+    '4. Bấm <b>Save</b> để lưu cấu hình'
   ],
-  practiceUrl: '/sim_ac1000f/cgi-bin/index.asp?page=access_ddns.asp',
+  practiceUrl: '/sim_ac1000f/cgi-bin/index.asp?page=home_lan.asp',
 
-  // Ràng buộc điều kiện chấm đúng Ä‘Ãºng
-    grading: {
-    description: 'Kiểm tra cấu hình DDNS',
+  grading: {
+    description: 'Kiểm tra thông số cấu hình DNS trên LAN',
     customGrading: function(allDocs) {
       var doc = null;
       for (var i = 0; i < allDocs.length; i++) {
-        if (allDocs[i].URL.toLowerCase().indexOf('access_ddns.asp') !== -1) {
+        if (allDocs[i].URL.toLowerCase().indexOf('home_lan.asp') !== -1) {
           doc = allDocs[i];
           break;
         }
@@ -47,32 +51,12 @@ window.DEVICE_AC1000F_LESSONS.push({
         return '';
       }
       
-      function getRadioVal(name) {
-        if (!doc) return '';
-        try {
-          var radios = doc.querySelectorAll('input[name="' + name + '"]');
-          for (var i = 0; i < radios.length; i++) {
-            if (radios[i].checked) return radios[i].value;
-          }
-        } catch(e) {}
-        return '';
-      }
-      
-      var dyDns = getRadioVal('Enable_DyDNS');
-      var dyDnsText = dyDns === 'Yes' ? 'Enable' : (dyDns === 'No' ? 'Disable' : 'Chưa chọn');
-      
-      var provider = getSelectText('select[name="ddns_ServerName"]');
-      
-      var wildcard = getRadioVal('Enable_Wildcard');
-      var wildcardText = wildcard === 'Yes' ? 'Enable' : (wildcard === 'No' ? 'Disable' : 'Chưa chọn');
+      var dnsRelay = getSelectText('select[name="dnsTypeRadio"]');
       
       var rules = [
-        { id: '1', name: 'Dynamic DNS', expected: 'Enable', actual: dyDnsText },
-        { id: '2', name: 'Service Provider', expected: 'WWW.noip.com', actual: provider },
-        { id: '3', name: 'My Host Name', expected: 'ac1000f.ddns.net', actual: getVal('input[name="sysDNSHost"]') },
-        { id: '4', name: 'Username', expected: 'truongconghau04111994@gmail.com', actual: getVal('input[name="sysDNSUser"]') },
-        { id: '5', name: 'Password', expected: 'ftc12345', actual: getVal('input[name="sysDNSPassword"]') },
-        { id: '6', name: 'Wildcard support', expected: 'Disable', actual: wildcardText }
+        { id: '1', name: 'DNS Relay', expected: 'Manually', actual: dnsRelay },
+        { id: '2', name: 'Primary DNS', expected: '8.8.8.8', actual: getVal('input[name="PrimaryDns"]') },
+        { id: '3', name: 'Secondary DNS', expected: '8.8.4.4', actual: getVal('input[name="SecondDns"]') }
       ];
 
       var passedCount = 0;
@@ -81,21 +65,14 @@ window.DEVICE_AC1000F_LESSONS.push({
         var actualVal = (r.actual || '').toString().trim();
         var expectVal = (r.expected || '').toString().trim();
         
-        var isMatch = false;
-        if (r.id === '5') {
-          // Password: case-sensitive
-          isMatch = (actualVal === expectVal);
-        } else {
-          // Others: case-insensitive
-          isMatch = (actualVal.toLowerCase() === expectVal.toLowerCase());
-        }
+        var isMatch = (actualVal.toLowerCase() === expectVal.toLowerCase());
         
         if (isMatch) passedCount++;
         details.push({
           id: r.id,
           name: r.name,
           expected: r.expected,
-          actual: r.actual,
+          actual: r.actual || '(Trống)',
           passed: isMatch
         });
       });
@@ -108,7 +85,10 @@ window.DEVICE_AC1000F_LESSONS.push({
       };
     }
   }
-});
+};
 
-
-
+if (idx !== -1) {
+    window.DEVICE_AC1000F_LESSONS[idx] = lesson;
+} else {
+    window.DEVICE_AC1000F_LESSONS.push(lesson);
+}

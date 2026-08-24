@@ -3653,3 +3653,111 @@ function doWirelessTxStreamChange(){
 
 </body>
 </html>
+
+<!-- BẮT ĐẦU SCRIPT CHẶN RELOAD TRANG KHI SAVE (TỰ ĐỘNG THÊM VÀO) -->
+<script>
+(function() {
+    var STORE_KEY = 'ftc_sim_wifi5g';
+
+    // ── Lưu toàn bộ form vào localStorage ──
+    function saveFormToStorage() {
+        try {
+            var form = document.WLAN || document.forms[0];
+            if (!form) return;
+            var data = {};
+            for (var i = 0; i < form.elements.length; i++) {
+                var el = form.elements[i];
+                if (!el.name) continue;
+                if (el.type === 'radio' || el.type === 'checkbox') {
+                    if (el.checked) data[el.name] = el.value;
+                } else {
+                    data[el.name] = el.value;
+                }
+            }
+            localStorage.setItem(STORE_KEY, JSON.stringify(data));
+        } catch(e) {}
+    }
+
+    // ── Phục hồi form từ localStorage ──
+    function restoreFormFromStorage() {
+        try {
+            var raw = localStorage.getItem(STORE_KEY);
+            if (!raw) return;
+            var data = JSON.parse(raw);
+            var form = document.WLAN || document.forms[0];
+            if (!form) return;
+            for (var name in data) {
+                var elements = form.elements[name];
+                if (!elements) continue;
+                var list = elements.length !== undefined && elements.tagName === undefined ? elements : [elements];
+                for (var i = 0; i < list.length; i++) {
+                    var el = list[i];
+                    if (el.type === 'radio' || el.type === 'checkbox') {
+                        el.checked = (el.value === data[name]);
+                    } else {
+                        el.value = data[name];
+                    }
+                }
+            }
+        } catch(e) {}
+    }
+
+    // ── Hàm hiển thị thông báo và lưu dữ liệu ──
+    function showFakeSaveMsg(formEl) {
+        // LƯU VÀO LOCALSTORAGE
+        saveFormToStorage();
+
+        var target = document.getElementById('firstDiv') || document.getElementById('firstDiv0') || document.getElementById('firstDiv2') || document.getElementById('buttoncolor') || document.getElementById('button0');
+        if (!target) {
+            var btns = formEl ? formEl.querySelectorAll('.button1') : [];
+            if (btns.length > 0) {
+                target = document.createElement('span');
+                btns[0].parentNode.insertBefore(target, btns[0].nextSibling);
+            } else {
+                target = document.body;
+            }
+        }
+        if (!document.getElementById('fakeSaveMsg')) {
+            var msg = document.createElement('span');
+            msg.id = 'fakeSaveMsg';
+            msg.style.color = '#15803d';
+            msg.style.fontWeight = 'bold';
+            msg.style.fontSize = '12px';
+            msg.style.marginLeft = '10px';
+            msg.style.lineHeight = '24px';
+            target.appendChild(msg);
+        }
+        var msgEl = document.getElementById('fakeSaveMsg');
+        msgEl.innerHTML = '✔ Saved successfully!';
+        setTimeout(function() { msgEl.innerHTML = ''; }, 2500);
+
+        // BÁO CÁO RA PORTAL
+        if (window.parent && window.parent.onSimulatorSave) {
+            try { window.parent.onSimulatorSave(window); } catch(e) {}
+        }
+    }
+
+    // 1. Chặn submit HTML native
+    document.addEventListener('submit', function(e) {
+        e.preventDefault();
+        showFakeSaveMsg(e.target);
+    });
+
+    // 2. Chặn submit bằng JS (document.form.submit())
+    if (typeof HTMLFormElement !== 'undefined') {
+        HTMLFormElement.prototype.submit = function() {
+            showFakeSaveMsg(this);
+        };
+    }
+
+    // 3. Phục hồi dữ liệu khi trang load xong
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', restoreFormFromStorage);
+    } else {
+        restoreFormFromStorage();
+    }
+    // Phục hồi thêm lần nữa sau 800ms (đề phòng ASP JS render lại sau)
+    setTimeout(restoreFormFromStorage, 800);
+})();
+</script>
+<!-- KẾT THÚC SCRIPT CHẶN RELOAD -->

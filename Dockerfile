@@ -41,7 +41,9 @@ COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN dos2unix /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh
 
 # The public dispatcher and its internal workers do not require root access.
-RUN useradd --system --uid 10001 --create-home ftc
+RUN useradd --system --uid 10001 --create-home ftc \
+    && mkdir -p /app/scratch/sessions \
+    && chown -R ftc:ftc /app
 USER ftc
 
 EXPOSE 8080

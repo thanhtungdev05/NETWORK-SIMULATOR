@@ -73,12 +73,14 @@ sim_be12000/reference/source/
 **/tools_kiem_thu.py
 **/Chay-server.bat
 
-#html thừa
+# HTML ERD / Docs (dev only)
 database_erd_visualizer.html
+database_erd.html
+erd_viewer.html
 
 # ── Django Admin Panel ────────────────────────────────────────
 admin_app/staticfiles/
 admin_app/admin_site/__pycache__/
 admin_app/admin_portal/__pycache__/
 admin_app/*.pyc
-admin_app/.env.admin
+admin_app/.env.admin

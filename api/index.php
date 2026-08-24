@@ -8,7 +8,6 @@ require_once __DIR__ . '/lib/runtime.php';
 require_once __DIR__ . '/lib/PostgresSessionHandler.php';
 require_once __DIR__ . '/lib/iam_identity.php';
 require_once __DIR__ . '/lib/tracking_handler.php';
-require_once __DIR__ . '/lib/dashboard_report.php';
 require_once __DIR__ . '/lib/ktv_roster_import.php';
 load_app_environment($root);
 
@@ -235,8 +234,14 @@ function initialize_session(string $root): void
         session_set_save_handler(new PostgresSessionHandler(fn(): PDO => db(), $ttlSeconds), true);
     } elseif ($driver === 'files') {
         $sessionPath = env_value('SESSION_SAVE_PATH', $root . DIRECTORY_SEPARATOR . 'scratch' . DIRECTORY_SEPARATOR . 'sessions');
-        if (!is_dir((string)$sessionPath) && !@mkdir((string)$sessionPath, 0775, true) && !is_dir((string)$sessionPath)) {
-            fail(500, 'session-config-error', 'Unable to initialize the session store.');
+        if (!is_dir((string)$sessionPath) && !@mkdir((string)$sessionPath, 0777, true) && !is_dir((string)$sessionPath)) {
+            $sessionPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'ftc_sessions';
+            if (!is_dir((string)$sessionPath) && !@mkdir((string)$sessionPath, 0777, true) && !is_dir((string)$sessionPath)) {
+                $sessionPath = sys_get_temp_dir();
+            }
+        }
+        if (!is_writable((string)$sessionPath)) {
+            $sessionPath = sys_get_temp_dir();
         }
         if (!is_writable((string)$sessionPath)) {
             fail(500, 'session-config-error', 'The session store is not writable.');
@@ -1917,31 +1922,13 @@ function handle_dashboard(array $segments, string $method): void
                   ORDER BY class_code NULLS LAST, display_name NULLS LAST, email'
             )
             ->fetchAll();
-
-        $currentClassRows = $pdo
-            ->query(
-                <<<'SQL'
-                SELECT user_id, class_code, class_name, region_name
-                  FROM v_current_training_class
-                 ORDER BY user_id
-                SQL
-            )
-            ->fetchAll();
     } catch (Throwable $e) {
         report_exception($e, 'dashboard-core-queries');
         fail(500, 'dashboard-query-failed', 'Unable to load dashboard data.');
     }
-    $currentClasses = [];
-    foreach ($currentClassRows as $classRow) {
-        $currentClasses[(string)$classRow['user_id']] = $classRow;
-    }
     foreach ($technicianRows as &$technicianRow) {
         $technicianRow['source_class_code'] = $technicianRow['class_code'] ?? null;
-        $currentClass = $currentClasses[(string)$technicianRow['user_id']] ?? null;
-        if ($currentClass) {
-            $technicianRow['class_code'] = $currentClass['class_code'];
-            $technicianRow['class_name'] = $currentClass['class_name'];
-        }
+        $technicianRow['class_name'] = $technicianRow['class_code'] ?? 'Lớp chung';
     }
     unset($technicianRow);
 
@@ -2037,19 +2024,25 @@ function handle_dashboard(array $segments, string $method): void
                 ->query(
                 <<<'SQL'
                 SELECT
-                    p.email,
-                    p.class_code,
-                    p.class_name,
-                    p.device_name,
-                    p.lab_name,
-                    p.assignment_status AS status,
-                    p.completed_at
-                  FROM v_lab_assignment_progress p
-                  JOIN users dashboard_user
-                    ON dashboard_user.user_id = p.user_id
-                   AND dashboard_user.role = 'user'
-                 WHERE p.assignment_status <> 'waived'
-                 ORDER BY p.class_code, p.email, p.device_name, p.lab_name
+                    u.email,
+                    u.class_code,
+                    COALESCE(u.class_code, 'Lớp chung') AS class_name,
+                    device.device_name,
+                    lab.lab_name,
+                    CASE WHEN bool_or(s.status IN ('completed', 'Hoàn thành')) THEN 'completed' ELSE 'assigned' END AS status,
+                    min(s.finished_at) FILTER (WHERE s.status IN ('completed', 'Hoàn thành')) AS completed_at
+                  FROM users u
+                  CROSS JOIN lab_catalog lab
+                  JOIN device_catalog device ON device.device_id = lab.device_id
+                  LEFT JOIN timer_sessions s ON (
+                      (s.user_id = u.user_id OR LOWER(s.email) = LOWER(u.email))
+                      AND (s.device = device.device_name OR s.device_id = device.device_id)
+                      AND (s.lab_name = lab.lab_name OR s.lab_id = lab.lab_id)
+                      AND s.mode = 'Thực hành'
+                  )
+                 WHERE u.role = 'user' AND u.is_terminated = FALSE
+                 GROUP BY u.email, u.class_code, device.device_name, lab.lab_name
+                 ORDER BY u.class_code, u.email, device.device_name, lab.lab_name
                 SQL
                 )
                 ->fetchAll();

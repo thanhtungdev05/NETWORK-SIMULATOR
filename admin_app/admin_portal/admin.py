@@ -10,8 +10,7 @@ from django.utils.html import format_html
 
 from .models import (
     DeviceCatalog, LabCatalog, FtcUser, TimerSession,
-    Region, Curricula, TrainingClass, ClassEnrollment,
-    LabGradingCriteria, SchemaMigration,
+    Region, SchemaMigration,
 )
 
 
@@ -374,82 +373,7 @@ class RegionAdmin(admin.ModelAdmin):
     list_per_page = 100
 
 
-# ===========================================================
-# Curricula Admin
-# ===========================================================
 
-@admin.register(Curricula)
-class CurriculaAdmin(admin.ModelAdmin):
-    list_display = ['curriculum_code', 'version', 'curriculum_name', 'status', 'is_default']
-    list_filter = ['status', 'is_default']
-    search_fields = ['curriculum_code', 'curriculum_name']
-    readonly_fields = ['curriculum_id', 'created_at', 'updated_at']
-
-
-# ===========================================================
-# TrainingClass Admin
-# ===========================================================
-
-class EnrollmentInline(admin.TabularInline):
-    model = ClassEnrollment
-    extra = 0
-    readonly_fields = ['enrollment_id', 'user', 'status', 'valid_from', 'valid_to', 'is_mock']
-    can_delete = False
-    max_num = 0
-
-    def has_add_permission(self, request, obj=None):
-        return False
-
-
-@admin.register(TrainingClass)
-class TrainingClassAdmin(admin.ModelAdmin):
-    list_display = ['class_code', 'class_name', 'region_name', 'curriculum',
-                    'start_date', 'end_date', 'status', 'enrollment_count_badge', 'is_mock']
-    list_filter = ['status', 'is_mock']
-    search_fields = ['class_code', 'class_name', 'region_name']
-    readonly_fields = ['class_id', 'created_at', 'updated_at']
-    inlines = [EnrollmentInline]
-    date_hierarchy = 'start_date'
-    list_per_page = 50
-
-    def enrollment_count_badge(self, obj):
-        count = obj.classenrollment_set.filter(is_mock=False).count()
-        bg = '#1d4ed8' if count > 0 else '#6b7280'
-        return format_html(
-            '<span style="background:{};color:#fff;padding:2px 8px;'
-            'border-radius:4px;font-size:12px;font-weight:500;">{} KTV</span>',
-            bg, count
-        )
-    enrollment_count_badge.short_description = 'Số KTV'
-
-
-# ===========================================================
-# ClassEnrollment Admin
-# ===========================================================
-
-@admin.register(ClassEnrollment)
-class ClassEnrollmentAdmin(admin.ModelAdmin):
-    list_display = ['enrollment_id', 'user', 'training_class',
-                    'status', 'valid_from', 'valid_to', 'is_mock']
-    list_filter = ['status', 'is_mock']
-    search_fields = ['user__email', 'user__display_name',
-                     'training_class__class_code']
-    readonly_fields = ['enrollment_id', 'created_at', 'updated_at']
-    list_per_page = 100
-
-
-# ===========================================================
-# LabGradingCriteria Admin
-# ===========================================================
-
-@admin.register(LabGradingCriteria)
-class LabGradingCriteriaAdmin(admin.ModelAdmin):
-    list_display = ['lab', 'step_code', 'step_name', 'weight_score',
-                    'is_mandatory', 'sort_order', 'is_active']
-    list_filter = ['is_active', 'is_mandatory', 'lab__device']
-    search_fields = ['step_code', 'step_name', 'lab__lab_name']
-    readonly_fields = ['criterion_id', 'created_at', 'updated_at']
-    list_per_page = 50
 
 
 # ===========================================================

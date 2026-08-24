@@ -26,8 +26,8 @@ class DeviceCatalog(models.Model):
         managed = False
         db_table = 'device_catalog'
         ordering = ['sort_order', 'device_name']
-        verbose_name = 'Thiết bị'
-        verbose_name_plural = 'Danh Mục Thiết Bị'
+        verbose_name = 'device_catalog'
+        verbose_name_plural = 'device_catalog'
 
     def __str__(self):
         return f"{self.device_name} ({self.device_id})"
@@ -51,8 +51,8 @@ class LabCatalog(models.Model):
         managed = False
         db_table = 'lab_catalog'
         ordering = ['device_id', 'sort_order']
-        verbose_name = 'Bài Lab'
-        verbose_name_plural = 'Danh Mục Bài Lab'
+        verbose_name = 'lab_catalog'
+        verbose_name_plural = 'lab_catalog'
 
     def __str__(self):
         return f"{self.lab_name} [{self.lab_id}]"
@@ -95,8 +95,8 @@ class FtcUser(models.Model):
         managed = False
         db_table = 'users'
         ordering = ['-created_at']
-        verbose_name = 'Người dùng / KTV'
-        verbose_name_plural = 'Người Dùng & KTV'
+        verbose_name = 'users'
+        verbose_name_plural = 'users'
 
     def __str__(self):
         return f"{self.display_name or self.email} ({self.employee_id or '—'})"
@@ -157,8 +157,8 @@ class TimerSession(models.Model):
         managed = False
         db_table = 'timer_sessions'
         ordering = ['-finished_at', '-id']
-        verbose_name = 'Phiên Làm Bài'
-        verbose_name_plural = 'Phiên Làm Bài (Timer Sessions)'
+        verbose_name = 'timer_sessions'
+        verbose_name_plural = 'timer_sessions'
 
     def __str__(self):
         return f"Session #{self.id} - {self.name or self.email} ({self.lab_name})"
@@ -182,8 +182,8 @@ class Region(models.Model):
         managed = False
         db_table = 'regions'
         ordering = ['region_code']
-        verbose_name = 'Khu vực'
-        verbose_name_plural = 'Khu Vực'
+        verbose_name = 'regions'
+        verbose_name_plural = 'regions'
 
     def __str__(self):
         return f"{self.region_name} ({self.region_code})"
@@ -208,8 +208,8 @@ class Curricula(models.Model):
         managed = False
         db_table = 'curricula'
         ordering = ['curriculum_code', 'version']
-        verbose_name = 'Chương trình đào tạo'
-        verbose_name_plural = 'Chương Trình Đào Tạo'
+        verbose_name = 'curricula'
+        verbose_name_plural = 'curricula'
 
     def __str__(self):
         return f"{self.curriculum_name} ({self.curriculum_code} {self.version})"
@@ -250,8 +250,8 @@ class TrainingClass(models.Model):
         managed = False
         db_table = 'training_classes'
         ordering = ['-start_date']
-        verbose_name = 'Lớp đào tạo'
-        verbose_name_plural = 'Lớp Đào Tạo'
+        verbose_name = 'training_classes'
+        verbose_name_plural = 'training_classes'
 
     def __str__(self):
         return f"{self.class_name} ({self.class_code})"
@@ -287,8 +287,8 @@ class ClassEnrollment(models.Model):
         managed = False
         db_table = 'class_enrollments'
         ordering = ['-valid_from', '-enrollment_id']
-        verbose_name = 'Ghi danh'
-        verbose_name_plural = 'Danh Sách Ghi Danh'
+        verbose_name = 'class_enrollments'
+        verbose_name_plural = 'class_enrollments'
 
     def __str__(self):
         return f"{self.user} -> {self.training_class}"
@@ -321,8 +321,8 @@ class LabGradingCriteria(models.Model):
         db_table = 'lab_grading_criteria'
         ordering = ['lab_id', 'sort_order']
         unique_together = [('lab', 'step_code')]
-        verbose_name = 'Tiêu chí chấm điểm'
-        verbose_name_plural = 'Tiêu Chí Chấm Điểm Lab'
+        verbose_name = 'lab_grading_criteria'
+        verbose_name_plural = 'lab_grading_criteria'
 
     def __str__(self):
         return f"{self.lab} | {self.step_name} ({self.weight_score}đ)"
@@ -342,8 +342,8 @@ class SchemaMigration(models.Model):
         managed = False
         db_table = 'schema_migrations'
         ordering = ['version']
-        verbose_name = 'Lịch sử Migration'
-        verbose_name_plural = 'Lịch Sử Migration (PHP)'
+        verbose_name = 'schema_migrations'
+        verbose_name_plural = 'schema_migrations'
 
     def __str__(self):
         return self.version

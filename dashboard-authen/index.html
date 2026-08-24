@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard giám sát thực hành KTV | FTC</title>
-    <link rel="stylesheet" href="css/styles.css?v=20260821-2">
+    <link rel="stylesheet" href="css/styles.css?v=20260824-2">
 </head>
 
 <body>
@@ -32,19 +32,19 @@
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h6V4H4v9zm0 7h6v-4H4v4zm10 0h6v-9h-6v9zm0-16v4h6V4h-6z" /></svg>
                     <span>Tổng quan</span>
                 </a>
-                <a class="sidebar-link" href="?view=instructors" data-dashboard-view="instructors" aria-label="Không gian giảng viên">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18V9m5 9V5m5 13v-7m5 7V3" /></svg>
-                    <span>Giảng viên</span>
-                </a>
 
                 <span class="sidebar-nav-label">Phân tích</span>
-                <a class="sidebar-link" href="?view=analytics" data-dashboard-view="analytics" aria-label="Báo cáo chi tiết">
+                <a class="sidebar-link" href="?view=analytics" data-dashboard-view="analytics" aria-label="Báo cáo chi nhánh">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9m5 10V5m5 14v-6m5 6V8M3 19h18" /></svg>
-                    <span>Báo cáo chi tiết</span>
+                    <span>Báo cáo chi nhánh</span>
+                </a>
+                <a class="sidebar-link" href="?view=class_matrix" data-dashboard-view="class_matrix" aria-label="Báo cáo KTV theo lớp">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                    <span>Báo cáo KTV theo lớp</span>
                 </a>
                 <a class="sidebar-link" href="?view=technicians" data-dashboard-view="technicians" aria-label="Kỹ thuật viên">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm13 10v-2a4 4 0 0 0-3-3.87M16 2.13a4 4 0 0 1 0 7.75" /></svg>
-                    <span>Kỹ thuật viên</span>
+                    <span>Tra cứu KTV</span>
                 </a>
 
                 <span class="sidebar-nav-label">Quản trị</span>
@@ -396,6 +396,17 @@
                 <!-- Báo cáo ma trận thiết bị và bài lab theo Khu vực/CNx -->
                 <section class="section detail-report-page dashboard-page-view" id="analytics" data-page-view="analytics">
                     <div class="detail-report-shell">
+                        <div class="matrix-view-toggle-bar">
+                            <button type="button" class="matrix-toggle-btn active" data-matrix-tab-target="analytics">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>
+                                <span>Báo cáo theo Khu vực/CNx</span>
+                            </button>
+                            <button type="button" class="matrix-toggle-btn" data-matrix-tab-target="class_matrix">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm14 10v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                <span>Báo cáo KTV theo Lớp học</span>
+                            </button>
+                        </div>
+
                         <div class="detail-report-header">
                             <div>
                                 <span class="detail-report-eyebrow">Báo cáo vận hành</span>
@@ -448,6 +459,95 @@
                                     <tfoot id="detailReportFoot"></tfoot>
                                 </table>
                             </div>
+                            <div class="detail-report-hint">Giữ Shift và lăn chuột hoặc kéo thanh cuộn để xem thêm thiết bị và bài lab.</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Báo cáo ma trận thực hành KTV theo Lớp học -->
+                <section class="section detail-report-page dashboard-page-view" id="classMatrix" data-page-view="class_matrix">
+                    <div class="detail-report-shell">
+                        <div class="matrix-view-toggle-bar">
+                            <button type="button" class="matrix-toggle-btn" data-matrix-tab-target="analytics">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>
+                                <span>Báo cáo theo Khu vực/CNx</span>
+                            </button>
+                            <button type="button" class="matrix-toggle-btn active" data-matrix-tab-target="class_matrix">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm14 10v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                <span>Báo cáo KTV theo Lớp học</span>
+                            </button>
+                        </div>
+
+                        <div class="detail-report-header">
+                            <div>
+                                <span class="detail-report-eyebrow">Báo cáo đào tạo</span>
+                                <h2>Chi tiết tiến độ thực hành KTV theo Lớp</h2>
+                                <p>Đối chiếu từng bài lab của từng thiết bị với từng Kỹ thuật viên trong lớp học.</p>
+                            </div>
+                            <div class="class-matrix-toolbar">
+                                <label class="instructor-select-field">
+                                    <span>Lớp học</span>
+                                    <select id="classMatrixClassSelect" aria-label="Chọn lớp học"></select>
+                                </label>
+                                <label class="instructor-select-field">
+                                    <span>Thiết bị</span>
+                                    <select id="classMatrixDeviceSelect" aria-label="Lọc thiết bị">
+                                        <option value="">Tất cả thiết bị</option>
+                                    </select>
+                                </label>
+                                <label class="instructor-select-field class-matrix-search-field">
+                                    <span>Tìm kiếm KTV</span>
+                                    <input type="search" id="classMatrixSearchInput" placeholder="Tìm tên, email, mã NV..." autocomplete="off">
+                                </label>
+                                <button type="button" class="button export" id="classMatrixExportBtn">
+                                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3v12m-4-4 4 4 4-4M5 19h14"/></svg>
+                                    Xuất báo cáo
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="detail-report-summary" aria-label="Tóm tắt ma trận KTV theo lớp">
+                            <div class="detail-report-stat report-stat-blue">
+                                <span>Tổng lượt làm</span>
+                                <strong id="classMatrixTotalSessions">0</strong>
+                            </div>
+                            <div class="detail-report-stat report-stat-purple">
+                                <span>Tổng KTV trong lớp</span>
+                                <strong id="classMatrixTotalKtvs">0</strong>
+                            </div>
+                            <div class="detail-report-stat report-stat-cyan">
+                                <span>Bài lab được giao</span>
+                                <strong id="classMatrixTotalLabs">0</strong>
+                            </div>
+                            <div class="detail-report-stat report-stat-green">
+                                <span>Độ phủ hoàn thành</span>
+                                <strong id="classMatrixCompletionRate">0%</strong>
+                            </div>
+                        </div>
+
+                        <div class="detail-report-table-card">
+                            <div class="detail-report-table-header">
+                                <div>
+                                    <h3 id="classMatrixTableTitle">Ma trận thực hành theo Kỹ thuật viên</h3>
+                                    <span>Mỗi ô hiển thị kết quả làm bài của KTV; màu ô thể hiện trạng thái (Xanh: Hoàn thành, Vàng/Đỏ: Chưa đạt/Đang làm, Xám: Chưa làm, “—” là Chưa giao).</span>
+                                </div>
+                                <div class="detail-report-legend" aria-label="Chú thích màu trạng thái">
+                                    <span><i class="legend-high"></i> Từ 80% (Đạt)</span>
+                                    <span><i class="legend-medium"></i> 50–79%</span>
+                                    <span><i class="legend-low"></i> Dưới 50%</span>
+                                    <span><i class="legend-notstarted"></i> Chưa làm</span>
+                                    <span><i class="legend-unassigned"></i> Chưa giao</span>
+                                </div>
+                            </div>
+                            <div class="detail-report-scroll class-matrix-scroll" id="classMatrixScroll" tabindex="0"
+                                aria-label="Bảng ma trận KTV theo lớp, có thể cuộn ngang">
+                                <table class="detail-report-table class-matrix-table">
+                                    <thead id="classMatrixHead"></thead>
+                                    <tbody id="classMatrixBody"></tbody>
+                                    <tfoot id="classMatrixFoot"></tfoot>
+                                </table>
+                            </div>
+                            <div class="class-matrix-empty" id="classMatrixEmpty" hidden></div>
                             <div class="detail-report-hint">Giữ Shift và lăn chuột hoặc kéo thanh cuộn để xem thêm thiết bị và bài lab.</div>
                         </div>
                     </div>
@@ -944,7 +1044,7 @@
         </div>
     </div>
 
-    <script src="js/app.js?v=20260821-2"></script>
+    <script src="js/app.js?v=20260824-2"></script>
 </body>
 
 </html>

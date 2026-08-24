@@ -494,13 +494,21 @@
 
     if (_currentUser) {
       const initials = (_currentUser.name || 'K').substring(0, 2).toUpperCase();
+      let roleLabel = 'Kỹ thuật viên';
+      if (_currentUser.role === 'admin') {
+        roleLabel = 'Quản trị viên';
+      } else if (_currentUser.role === 'instructor') {
+        roleLabel = 'Giảng viên';
+      } else if (_currentUser.job_title) {
+        roleLabel = _currentUser.job_title;
+      }
       section.innerHTML = `
         <div class="auth-container">
           <div class="auth-user-info">
             <div class="auth-avatar">${initials}</div>
             <div class="auth-details">
               <span class="auth-name" title="${escapeHTML(_currentUser.name)}">${escapeHTML(_currentUser.name)}</span>
-              <span class="auth-role">${escapeHTML(_currentUser.technician_id)}</span>
+              <span class="auth-role" title="${escapeHTML(roleLabel)}">${escapeHTML(roleLabel)}</span>
             </div>
           </div>
           <button class="btn-auth btn-logout" id="btn-iam-logout" title="Đăng xuất">Đăng xuất</button>
@@ -544,9 +552,11 @@
         if (u) {
           _currentUser = {
             technician_id: u.user_id || u.id || 'UNKNOWN',
+            employee_id: u.employee_id || u.employeeId || '',
             name: u.displayName || u.display_name || u.email || 'KTV',
             email: u.email || '',
-            role: u.role || 'user'
+            role: u.role || 'user',
+            job_title: u.job_title || u.jobTitle || ''
           };
         }
         renderUserProfile();

@@ -54,6 +54,11 @@ const state = {
     instructorImportFileName: '',
     instructorWorkspaceBound: false,
 
+    // Class Matrix state
+    classMatrixSelectedClass: '',
+    classMatrixSelectedDevice: '',
+    classMatrixSearch: '',
+
     // Learner table filters & sort
     learnerSelectedKtvs: new Set(),
     learnerSelectedDevices: new Set(),
@@ -1701,7 +1706,7 @@ function buildDashboardSignature(data) {
 
 async function fetchDashboardData() {
     const allParams = new URLSearchParams();
-    allParams.set('include_assignments', activeDashboardView === 'instructors' ? '1' : '0');
+    allParams.set('include_assignments', ['instructors', 'class_matrix', 'analytics'].includes(activeDashboardView) ? '1' : '0');
     const [response, reportResponse, versionResponse] = await Promise.all([
         fetch(`${API_BASE_URL}/dashboard/all?${allParams}`),
         fetch(`${API_BASE_URL}/dashboard/report?${dashboardReportQuery()}`),
@@ -2880,6 +2885,441 @@ function initInstructorWorkspace() {
     document.getElementById('instructorClassExport')?.addEventListener('click', exportInstructorClassCsv);
 }
 
+/* ============================================================
+   Báo cáo Ma trận Thực hành KTV theo Lớp học
+   ============================================================ */
+
+function getClassMatrixData() {
+    initializeInstructorClasses();
+
+    let classes = state.instructorClasses || [];
+    if (!classes.length) {
+        classes = getDatabaseInstructorClasses();
+    }
+
+    if (!state.classMatrixSelectedClass && classes.length) {
+        state.classMatrixSelectedClass = classes[0].id;
+    }
+
+    let selectedClass = classes.find(c => c.id === state.classMatrixSelectedClass) || null;
+    let learners = [];
+    if (state.classMatrixSelectedClass === 'all') {
+        learners = getInstructorLearners();
+    } else if (selectedClass) {
+        learners = selectedClass.members || [];
+    } else if (classes.length) {
+        selectedClass = classes[0];
+        state.classMatrixSelectedClass = selectedClass.id;
+        learners = selectedClass.members || [];
+    } else {
+        learners = getInstructorLearners();
+    }
+
+    const allGroups = getInstructorDeviceGroups(selectedClass);
+    const selectedGroups = state.classMatrixSelectedDevice
+        ? allGroups.filter(g => g.device === state.classMatrixSelectedDevice)
+        : allGroups;
+
+    const columns = selectedGroups.flatMap((group, groupIndex) => (group.labs || []).map((lab, labIndex) => ({
+        device: group.device,
+        lab,
+        groupIndex,
+        isFirst: labIndex === 0,
+        isLast: labIndex === group.labs.length - 1
+    })));
+
+    // Filter learners by search
+    const search = (state.classMatrixSearch || '').trim().toLowerCase();
+    const mappedLearners = learners.map(email => {
+        const tech = technicianByIdentity.get(String(email).toLowerCase());
+        const name = tech?.displayName || getLearnerName(email) || email;
+        const code = tech?.employeeId || '';
+        const region = tech?.dashboardRegion || getLearnerRegion(email) || '';
+        const classCode = tech?.classCode || selectedClass?.code || '';
+        const className = tech?.className || selectedClass?.name || '';
+        return { email, tech, name, code, region, classCode, className };
+    });
+
+    const filteredLearners = search
+        ? mappedLearners.filter(l =>
+            l.name.toLowerCase().includes(search) ||
+            l.email.toLowerCase().includes(search) ||
+            l.code.toLowerCase().includes(search) ||
+            l.region.toLowerCase().includes(search)
+        )
+        : mappedLearners;
+
+    // Build assignment map if trainingAssignments exists
+    const assignmentMap = new Map();
+    if (trainingAssignments.length) {
+        trainingAssignments.forEach(a => {
+            const key = `${String(a.learner || '').toLowerCase()}\u001f${a.device}\u001f${a.lab}`;
+            assignmentMap.set(key, a);
+        });
+    }
+
+    // Map sessions by learner
+    const sessionsByLearner = new Map();
+    sessions.forEach(s => {
+        if (s.mode === 'Hướng dẫn') return;
+        const learnerKey = String(s.learner || '').toLowerCase();
+        if (!sessionsByLearner.has(learnerKey)) sessionsByLearner.set(learnerKey, []);
+        sessionsByLearner.get(learnerKey).push(s);
+    });
+
+    let totalClassAttempts = 0;
+    const labStats = new Map(); // colKey -> { assigned, completed, attempted, attempts }
+    columns.forEach(col => {
+        labStats.set(`${col.device}\u001f${col.lab}`, { assigned: 0, completed: 0, attempted: 0, attempts: 0 });
+    });
+
+    const rows = filteredLearners.map(l => {
+        const learnerSessions = sessionsByLearner.get(l.email.toLowerCase()) || [];
+        let ktvCompleted = 0;
+        let ktvAssigned = 0;
+        let ktvAttempts = 0;
+
+        const cells = columns.map(col => {
+            const colKey = `${col.device}\u001f${col.lab}`;
+            const assignKey = `${l.email.toLowerCase()}\u001f${col.device}\u001f${col.lab}`;
+            const assign = assignmentMap.get(assignKey);
+            const labSessions = learnerSessions.filter(s => s.device === col.device && s.lab === col.lab);
+            const isCompleted = Boolean(assign?.completed) || labSessions.some(s => s.status === 'Hoàn thành' || s.status === 'completed');
+            const isAssigned = trainingAssignments.length === 0 ? true : Boolean(assign);
+            const attempts = labSessions.length;
+            const attempted = attempts > 0;
+
+            if (isAssigned) {
+                ktvAssigned += 1;
+                const stat = labStats.get(colKey);
+                if (stat) stat.assigned += 1;
+            }
+            if (isCompleted) {
+                ktvCompleted += 1;
+                const stat = labStats.get(colKey);
+                if (stat) stat.completed += 1;
+            }
+            if (attempted) {
+                const stat = labStats.get(colKey);
+                if (stat) {
+                    stat.attempted += 1;
+                    stat.attempts += attempts;
+                }
+            }
+            ktvAttempts += attempts;
+            totalClassAttempts += attempts;
+
+            return {
+                device: col.device,
+                lab: col.lab,
+                assigned: isAssigned,
+                completed: isCompleted,
+                attempts,
+                lastSession: labSessions[labSessions.length - 1] || null
+            };
+        });
+
+        const rate = ktvAssigned > 0 ? Math.round((ktvCompleted / ktvAssigned) * 100) : null;
+
+        return {
+            ...l,
+            cells,
+            completed: ktvCompleted,
+            assigned: ktvAssigned,
+            attempts: ktvAttempts,
+            rate
+        };
+    });
+
+    const totalAssignedAll = rows.reduce((s, r) => s + r.assigned, 0);
+    const totalCompletedAll = rows.reduce((s, r) => s + r.completed, 0);
+    const overallRate = totalAssignedAll > 0 ? Math.round((totalCompletedAll / totalAssignedAll) * 100) : 0;
+
+    return {
+        classes,
+        selectedClass,
+        allGroups,
+        selectedGroups,
+        columns,
+        rows,
+        filteredCount: rows.length,
+        totalKtv: mappedLearners.length,
+        totalSessions: totalClassAttempts,
+        totalAssignedAll,
+        totalCompletedAll,
+        overallRate,
+        labStats
+    };
+}
+
+function renderClassMatrixReport() {
+    const classSelect = document.getElementById('classMatrixClassSelect');
+    const deviceSelect = document.getElementById('classMatrixDeviceSelect');
+    const head = document.getElementById('classMatrixHead');
+    const body = document.getElementById('classMatrixBody');
+    const foot = document.getElementById('classMatrixFoot');
+    const emptyEl = document.getElementById('classMatrixEmpty');
+    const scrollEl = document.getElementById('classMatrixScroll');
+    if (!head || !body || !foot) return;
+
+    const data = getClassMatrixData();
+
+    // Populate class select
+    if (classSelect) {
+        const optionsHtml = [
+            `<option value="all">Tất cả lớp (${getInstructorLearners().length} KTV)</option>`,
+            ...data.classes.map(c => `<option value="${escapeHTML(c.id)}">${escapeHTML(c.name)} · ${c.members.length} KTV</option>`)
+        ].join('');
+        if (classSelect.innerHTML !== optionsHtml) {
+            classSelect.innerHTML = optionsHtml;
+        }
+        classSelect.value = state.classMatrixSelectedClass || 'all';
+    }
+
+    // Populate device select
+    if (deviceSelect) {
+        const deviceOptionsHtml = '<option value="">Tất cả thiết bị</option>' + data.allGroups
+            .map(g => `<option value="${escapeHTML(g.device)}">${escapeHTML(g.device)}</option>`)
+            .join('');
+        if (deviceSelect.innerHTML !== deviceOptionsHtml) {
+            deviceSelect.innerHTML = deviceOptionsHtml;
+        }
+        deviceSelect.value = state.classMatrixSelectedDevice || '';
+    }
+
+    // Update KPI summary cards
+    const setEl = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+    };
+    setEl('classMatrixTotalSessions', formatNumber.format(data.totalSessions));
+    setEl('classMatrixTotalKtvs', formatNumber.format(data.rows.length));
+    setEl('classMatrixTotalLabs', formatNumber.format(data.columns.length));
+    setEl('classMatrixCompletionRate', `${data.overallRate}%`);
+
+    // Title
+    const titleEl = document.getElementById('classMatrixTableTitle');
+    if (titleEl) {
+        const className = data.selectedClass?.name || 'Tất cả lớp học';
+        titleEl.textContent = `Ma trận thực hành KTV — ${className}`;
+    }
+
+    if (!data.rows.length) {
+        head.innerHTML = '';
+        body.innerHTML = '';
+        foot.innerHTML = '';
+        if (scrollEl) scrollEl.hidden = true;
+        if (emptyEl) {
+            emptyEl.hidden = false;
+            emptyEl.textContent = state.classMatrixSearch
+                ? `Không tìm thấy KTV nào phù hợp với từ khóa "${state.classMatrixSearch}".`
+                : 'Chưa có KTV trong lớp này.';
+        }
+        return;
+    }
+
+    if (scrollEl) scrollEl.hidden = false;
+    if (emptyEl) emptyEl.hidden = true;
+
+    // Render thead
+    head.innerHTML = `
+        <tr class="report-device-header-row">
+            <th class="ktv-stt-head" rowspan="2">STT</th>
+            <th class="ktv-info-head" rowspan="2">Kỹ thuật viên</th>
+            ${data.selectedGroups.map((group, index) => `
+                <th class="report-device-group report-device-tone-${index % 5}" colspan="${(group.labs || []).length}">
+                    ${escapeHTML(group.device)}
+                    <span>${(group.labs || []).length} bài lab</span>
+                </th>
+            `).join('')}
+            <th class="ktv-total-head" rowspan="2">Hoàn thành</th>
+            <th class="ktv-rate-head" rowspan="2">Tỷ lệ</th>
+        </tr>
+        <tr class="report-lab-header-row">
+            ${data.columns.map(col => `
+                <th class="report-lab-head report-device-tone-${col.groupIndex % 5} ${col.isFirst ? 'group-start' : ''} ${col.isLast ? 'group-end' : ''}" title="${escapeHTML(`${col.device} • ${col.lab}`)}">
+                    ${escapeHTML(col.lab)}
+                </th>
+            `).join('')}
+        </tr>
+    `;
+
+    // Render tbody
+    body.innerHTML = data.rows.map((row, index) => {
+        const rateClass = row.rate === null ? 'report-cell-zero' : (row.rate >= 80 ? 'report-cell-high' : (row.rate >= 50 ? 'report-cell-medium' : 'report-cell-low'));
+        return `
+            <tr>
+                <td class="ktv-stt-cell">${index + 1}</td>
+                <td class="ktv-info-cell" title="${escapeHTML(`${row.name} (${row.email})`)}">
+                    <div class="ktv-info-wrap">
+                        <div class="ktv-info-top">
+                            <span class="ktv-info-name">${escapeHTML(row.name)}</span>
+                            ${row.region ? `<span class="ktv-info-badge">${escapeHTML(row.region)}</span>` : ''}
+                        </div>
+                        <div class="ktv-info-meta">
+                            ${row.code ? `<span class="ktv-info-code">${escapeHTML(row.code)}</span> • ` : ''}
+                            <span>${escapeHTML(row.email)}</span>
+                        </div>
+                    </div>
+                </td>
+                ${row.cells.map(cell => {
+                    if (!cell.assigned) {
+                        return `<td class="report-metric-cell report-cell-zero" title="Bài lab chưa được giao"><strong>—</strong><span>Chưa giao</span></td>`;
+                    }
+                    if (cell.completed) {
+                        const tooltip = `${row.name} • ${cell.device} • ${cell.lab}: Đã hoàn thành (${cell.attempts} lượt thực hành)`;
+                        return `<td class="report-metric-cell report-cell-high" title="${escapeHTML(tooltip)}"><strong>1/1</strong><span>100% HT</span></td>`;
+                    }
+                    if (cell.attempts > 0) {
+                        const tooltip = `${row.name} • ${cell.device} • ${cell.lab}: Đang làm / Chưa đạt (${cell.attempts} lượt thực hành)`;
+                        return `<td class="report-metric-cell report-cell-low" title="${escapeHTML(tooltip)}"><strong>0/1</strong><span>0% HT</span></td>`;
+                    }
+                    const tooltip = `${row.name} • ${cell.device} • ${cell.lab}: Chưa thực hiện`;
+                    return `<td class="report-metric-cell report-cell-zero" title="${escapeHTML(tooltip)}"><strong>0/1</strong><span>Chưa làm</span></td>`;
+                }).join('')}
+                <td class="ktv-total-cell ${rateClass}">
+                    <strong>${row.completed}/${row.assigned}</strong>
+                </td>
+                <td class="ktv-rate-cell ${rateClass}">
+                    ${row.rate === null ? '—' : `${row.rate}%`}
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    // Render tfoot
+    foot.innerHTML = `
+        <tr>
+            <th class="ktv-footer-label" colspan="2">Tổng lớp (${data.rows.length} KTV)</th>
+            ${data.columns.map(col => {
+                const colKey = `${col.device}\u001f${col.lab}`;
+                const stat = data.labStats.get(colKey) || { assigned: 0, completed: 0, attempts: 0 };
+                const rate = stat.assigned > 0 ? Math.round((stat.completed / stat.assigned) * 100) : null;
+                const cellClass = rate === null ? 'report-cell-zero' : (rate >= 80 ? 'report-cell-high' : (rate >= 50 ? 'report-cell-medium' : 'report-cell-low'));
+                const tooltip = `${stat.completed}/${stat.assigned} KTV hoàn thành • ${stat.attempts} lượt thực hành`;
+                if (!stat.assigned) {
+                    return `<td class="report-metric-cell report-cell-zero ${col.isFirst ? 'group-start' : ''}" title="Chưa giao trong lớp này"><strong>—</strong><span>Chưa giao</span></td>`;
+                }
+                return `
+                    <td class="report-metric-cell ${cellClass} ${col.isFirst ? 'group-start' : ''}" title="${escapeHTML(tooltip)}">
+                        <strong>${stat.completed}/${stat.assigned}</strong>
+                        <span>${rate}% HT</span>
+                    </td>
+                `;
+            }).join('')}
+            <td class="ktv-footer-total report-row-total">
+                <strong>${data.totalCompletedAll}/${data.totalAssignedAll}</strong>
+            </td>
+            <td class="ktv-footer-rate report-grand-total">
+                <strong>${data.overallRate}%</strong>
+            </td>
+        </tr>
+    `;
+
+    // Bind horizontal wheel scroll
+    if (scrollEl && scrollEl.dataset.wheelBound !== 'true') {
+        scrollEl.dataset.wheelBound = 'true';
+        scrollEl.addEventListener('wheel', (event) => {
+            if (!event.shiftKey || Math.abs(event.deltaY) < Math.abs(event.deltaX)) return;
+            event.preventDefault();
+            scrollEl.scrollLeft += event.deltaY;
+        }, { passive: false });
+    }
+}
+
+function exportClassMatrixCsv() {
+    const data = getClassMatrixData();
+    if (!data.rows.length) {
+        alert('Không có dữ liệu để xuất CSV.');
+        return;
+    }
+    const escapeCsv = (val) => {
+        const text = String(val ?? '');
+        return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+    };
+
+    const header = [
+        'STT',
+        'Mã NV',
+        'Họ và tên',
+        'Email',
+        'Khu vực/CNx',
+        'Lớp học',
+        ...data.columns.map(c => `${c.device} - ${c.lab}`),
+        'Tổng hoàn thành',
+        'Tổng bài được giao',
+        'Tỷ lệ hoàn thành (%)'
+    ];
+
+    const csvRows = data.rows.map((r, idx) => [
+        idx + 1,
+        r.code,
+        r.name,
+        r.email,
+        r.region,
+        r.className || r.classCode,
+        ...r.cells.map(c => c.assigned ? (c.completed ? 'Hoàn thành' : (c.attempts > 0 ? 'Đang làm' : 'Chưa làm')) : 'Chưa giao'),
+        r.completed,
+        r.assigned,
+        r.rate !== null ? `${r.rate}%` : '—'
+    ]);
+
+    // Footer row in CSV
+    csvRows.push([
+        'TỔNG',
+        '',
+        `Tổng lớp (${data.rows.length} KTV)`,
+        '',
+        '',
+        '',
+        ...data.columns.map(col => {
+            const stat = data.labStats.get(`${col.device}\u001f${col.lab}`);
+            return stat?.assigned ? `${stat.completed}/${stat.assigned} (${Math.round(stat.completed / stat.assigned * 100)}%)` : '—';
+        }),
+        data.totalCompletedAll,
+        data.totalAssignedAll,
+        `${data.overallRate}%`
+    ]);
+
+    const blob = new Blob([`\uFEFF${[header, ...csvRows].map(row => row.map(escapeCsv).join(',')).join('\n')}`], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    const className = (data.selectedClass?.name || 'lop_ktv').replace(/[^a-zA-Z0-9_-]+/g, '_');
+    link.download = `Ma_tran_KTV_${className}_${fmtDate(new Date())}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+}
+
+function initClassMatrix() {
+    document.getElementById('classMatrixClassSelect')?.addEventListener('change', (e) => {
+        state.classMatrixSelectedClass = e.target.value;
+        renderClassMatrixReport();
+    });
+    document.getElementById('classMatrixDeviceSelect')?.addEventListener('change', (e) => {
+        state.classMatrixSelectedDevice = e.target.value;
+        renderClassMatrixReport();
+    });
+    let searchDebounce;
+    document.getElementById('classMatrixSearchInput')?.addEventListener('input', (e) => {
+        clearTimeout(searchDebounce);
+        searchDebounce = setTimeout(() => {
+            state.classMatrixSearch = e.target.value;
+            renderClassMatrixReport();
+        }, 200);
+    });
+    document.getElementById('classMatrixExportBtn')?.addEventListener('click', exportClassMatrixCsv);
+
+    // Matrix view toggle buttons (tab switch between Region matrix & KTV Class matrix)
+    document.querySelectorAll('[data-matrix-tab-target]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const target = btn.dataset.matrixTabTarget;
+            switchDashboardView(target);
+        });
+    });
+}
+
 function renderAll() {
     const dateSessions = getDateFilteredSessions();
 
@@ -2890,6 +3330,7 @@ function renderAll() {
     renderSessions(sessions);
     renderLearnerDetail(sessions);
     renderDetailedReport(dateSessions.filter(item => item.mode === 'Thực hành'));
+    renderClassMatrixReport();
     renderSortMarks();
     updatePopoverTriggerLabels();
     updateRangeText(dateSessions);
@@ -3656,8 +4097,13 @@ const DASHBOARD_VIEWS = {
     },
     analytics: {
         eyebrow: 'Báo cáo vận hành',
-        title: 'Báo cáo chi tiết',
+        title: 'Báo cáo chi nhánh',
         subtitle: 'Ma trận thiết bị và bài lab theo từng Khu vực/CNx'
+    },
+    class_matrix: {
+        eyebrow: 'Báo cáo đào tạo',
+        title: 'Báo cáo KTV theo lớp',
+        subtitle: 'Ma trận tiến độ thực hành bài lab theo từng Kỹ thuật viên'
     },
     technicians: {
         eyebrow: 'Technician performance',
@@ -3673,12 +4119,15 @@ const DASHBOARD_VIEWS = {
 
 let activeDashboardView = 'overview';
 
-function initDashboardViewRouting() {
-    const requestedView = new URLSearchParams(window.location.search).get('view') || 'overview';
-    activeDashboardView = Object.hasOwn(DASHBOARD_VIEWS, requestedView) ? requestedView : 'overview';
+function switchDashboardView(viewName) {
+    if (!Object.hasOwn(DASHBOARD_VIEWS, viewName)) return;
+    activeDashboardView = viewName;
+    const url = new URL(window.location.href);
+    url.searchParams.set('view', viewName);
+    window.history.pushState({}, '', url.toString());
 
     const masterContainer = document.querySelector('.dashboard-master-container');
-    const masterViews = new Set(['overview', 'instructors', 'analytics']);
+    const masterViews = new Set(['overview', 'instructors', 'analytics', 'class_matrix']);
     if (masterContainer) masterContainer.hidden = !masterViews.has(activeDashboardView);
 
     document.querySelectorAll('.dashboard-page-view').forEach(section => {
@@ -3701,6 +4150,64 @@ function initDashboardViewRouting() {
         else link.removeAttribute('aria-current');
     });
 
+    // Update matrix tab toggle buttons active state
+    document.querySelectorAll('[data-matrix-tab-target]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.matrixTabTarget === activeDashboardView);
+    });
+
+    if (activeDashboardView === 'class_matrix') {
+        renderClassMatrixReport();
+    }
+    if (activeDashboardView === 'roster' && !state.rosterLoaded) {
+        loadRosterList();
+    }
+}
+
+function initDashboardViewRouting() {
+    let requestedView = new URLSearchParams(window.location.search).get('view') || 'overview';
+    if (requestedView === 'instructors') requestedView = 'class_matrix';
+    activeDashboardView = Object.hasOwn(DASHBOARD_VIEWS, requestedView) ? requestedView : 'overview';
+
+    const masterContainer = document.querySelector('.dashboard-master-container');
+    const masterViews = new Set(['overview', 'analytics', 'class_matrix']);
+    if (masterContainer) masterContainer.hidden = !masterViews.has(activeDashboardView);
+
+    document.querySelectorAll('.dashboard-page-view').forEach(section => {
+        section.hidden = section.dataset.pageView !== activeDashboardView;
+    });
+
+    const viewCopy = DASHBOARD_VIEWS[activeDashboardView];
+    const eyebrow = document.getElementById('pageEyebrow');
+    const title = document.getElementById('pageTitle');
+    const subtitle = document.getElementById('pageSubtitle');
+    if (eyebrow) eyebrow.textContent = viewCopy.eyebrow;
+    if (title) title.textContent = viewCopy.title;
+    if (subtitle) subtitle.textContent = viewCopy.subtitle;
+    document.title = `${viewCopy.title} | FTC`;
+
+    document.querySelectorAll('.sidebar-link[data-dashboard-view]').forEach(link => {
+        const isActive = link.dataset.dashboardView === activeDashboardView;
+        link.classList.toggle('active', isActive);
+        if (isActive) link.setAttribute('aria-current', 'page');
+        else link.removeAttribute('aria-current');
+
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const view = link.dataset.dashboardView;
+            if (view) switchDashboardView(view);
+        });
+    });
+
+    document.querySelectorAll('[data-matrix-tab-target]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.matrixTabTarget === activeDashboardView);
+    });
+
+    window.addEventListener('popstate', () => {
+        const currentView = new URLSearchParams(window.location.search).get('view') || 'overview';
+        if (Object.hasOwn(DASHBOARD_VIEWS, currentView) && currentView !== activeDashboardView) {
+            switchDashboardView(currentView);
+        }
+    });
 }
 
 function initSidebarNavigation() {
@@ -4152,6 +4659,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initHourlyDatePicker();
     initExport();
     initInstructorWorkspace();
+    initClassMatrix();
     initRoster();
     initEvents();
     initSubModalEvents();

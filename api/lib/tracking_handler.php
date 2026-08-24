@@ -238,9 +238,6 @@ function handle_tracking(array $segments, string $method): void
         if (!$catalog) {
             fail(422, 'tracking/unknown-lab', 'lab_id is not in the active catalog.');
         }
-        if ($deviceId && $deviceId !== (string)$catalog['device_id']) {
-            fail(409, 'tracking/device-lab-conflict', 'device_id does not match the lab catalog.');
-        }
         $deviceId = (string)$catalog['device_id'];
         $device = (string)$catalog['device_name'];
 

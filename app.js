@@ -325,15 +325,29 @@
 
                   doc.addEventListener('click', function (e) {
                     let el = e.target;
-                    while (el && el !== doc) {
-                      const txt = (el.value || el.textContent || el.innerText || '').toLowerCase();
+                    // Bỏ qua nếu click vào các ô nhập liệu văn bản/mật khẩu
+                    if (el && el.tagName === 'INPUT' && el.type !== 'submit' && el.type !== 'button') {
+                      return;
+                    }
+
+                    while (el && el !== doc && el !== doc.body) {
+                      // Dừng nếu duyệt lên tới form/table/container lớn
+                      if (el.tagName === 'FORM' || el.tagName === 'TABLE' || el.tagName === 'BODY' || el.tagName === 'HTML') {
+                        break;
+                      }
+
+                      const txt = (el.value || el.textContent || el.innerText || '').toLowerCase().trim();
                       const cls = (el.className && typeof el.className === 'string') ? el.className.toLowerCase() : '';
                       const id = (el.id || '').toLowerCase();
 
-                      if ((el.tagName === 'INPUT' || el.tagName === 'BUTTON' || el.tagName === 'A' || el.tagName === 'SPAN') &&
-                        (el.type === 'submit' || txt.includes('login') || txt.includes('log in') || txt.includes('đăng nhập') || id.includes('login') || cls.includes('login') || cls.includes('btn-primary') || cls.includes('submit'))) {
+                      const isSubmitInput = el.tagName === 'INPUT' && (el.type === 'submit' || el.type === 'button') &&
+                        (txt.includes('login') || txt.includes('log in') || txt.includes('đăng nhập') || id.includes('login') || cls.includes('login') || cls.includes('submit'));
+                      const isButton = (el.tagName === 'BUTTON' || el.tagName === 'A' || el.tagName === 'SPAN') &&
+                        (txt.includes('login') || txt.includes('log in') || txt.includes('đăng nhập') || id.includes('login') || cls.includes('login') || cls.includes('btn-primary') || cls.includes('submit'));
 
+                      if (isSubmitInput || isButton) {
                         if (!checkLoginFields(e, el)) return false;
+                        break;
                       }
                       el = el.parentNode;
                     }

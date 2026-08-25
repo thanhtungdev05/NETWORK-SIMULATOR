@@ -505,6 +505,15 @@
     fetchCurrentUser();
   }
 
+  function redirectToLogin() {
+    const isLocalHost = ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
+    if (isLocalHost) {
+      window.location.replace('/api/index.php/dev/bypass?next=' + encodeURIComponent(window.location.origin + '/portal.html'));
+    } else {
+      window.location.replace('/login/index.html');
+    }
+  }
+
   function renderUserProfile() {
     const section = document.getElementById('user-profile-section');
     if (!section) return;
@@ -536,7 +545,7 @@
         btnIamLogout.addEventListener('click', function () {
           fetch('/api/index.php/auth/logout', { method: 'POST', credentials: 'include' })
             .then(function () {
-              window.location.href = '/';
+              window.location.href = '/login/index.html';
             });
         });
       }
@@ -549,7 +558,7 @@
       const btnIamLogin = document.getElementById('btn-iam-login');
       if (btnIamLogin) {
         btnIamLogin.addEventListener('click', function () {
-          window.location.href = '/api/index.php/auth/login?next=' + encodeURIComponent(window.location.pathname);
+          redirectToLogin();
         });
       }
     }
@@ -559,7 +568,7 @@
   /**
    * Lấy thông tin user đang đăng nhập từ API auth/session.
    * Kết quả được cache vào _currentUser để dùng khi gửi Tracking API.
-   * Không block UI nếu API lỗi — chỉ log warning.
+   * Nếu chưa đăng nhập, tự động chuyển hướng về trang login.
    */
   function fetchCurrentUser() {
     fetch('/api/index.php/auth/session', { credentials: 'include' })
@@ -575,16 +584,25 @@
             role: u.role || 'user',
             job_title: u.job_title || u.jobTitle || ''
           };
-        }
-        renderUserProfile();
-        if (_currentUser && _currentUser.role === 'admin') {
-          const btnDashboard = document.getElementById('btn-dashboard');
-          if (btnDashboard) btnDashboard.style.display = '';
+          renderUserProfile();
+          if (_currentUser && _currentUser.role === 'admin') {
+            const btnDashboard = document.getElementById('btn-dashboard');
+            if (btnDashboard) {
+              btnDashboard.style.display = '';
+              btnDashboard.onclick = function () {
+                window.location.href = '/dashboard-authen/';
+              };
+            }
+          }
+        } else {
+          _currentUser = null;
+          renderUserProfile();
+          redirectToLogin();
         }
       })
       .catch(function () {
-        // Không làm gì — portal vẫn hoạt động bình thường
         console.warn('[Tracking] Không thể lấy thông tin user từ API.');
+        redirectToLogin();
       });
   }
 
@@ -694,6 +712,10 @@
     // 💡 Hướng dẫn — mở giao diện thiết bị và BẬT POPUP HƯỚNG DẪN TỪNG BƯỚC
     const device = DEVICES.find(d => d.id === currentDeviceId);
     btnGuide.onclick = () => {
+      if (!_currentUser) {
+        redirectToLogin();
+        return;
+      }
       currentMode = 'guide';
       // Reset session trước rồi mở trang login
       const resetUrl = device.resetSessionUrl || null;
@@ -712,6 +734,10 @@
 
     // ⚡ Thực hành — mở trang login của thiết bị và TẮT POPUP (bắt buộc học viên login vào)
     btnPrac.onclick = () => {
+      if (!_currentUser) {
+        redirectToLogin();
+        return;
+      }
       currentMode = 'practice';
       const resetUrl = device.resetSessionUrl || null;
       const loginUrl = device.loginUrl + (device.loginUrl.includes('?') ? '&' : '?') + 'logout=1&_t=' + Date.now();

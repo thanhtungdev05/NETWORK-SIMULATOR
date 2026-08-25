@@ -1,4 +1,4 @@
-﻿/**
+/**
  * devices/ax3000c/lessons/bai3.js
  * Bài 3: Cấu hình đổi IP LAN trên AX3000C
  */
@@ -17,7 +17,7 @@ window.DEVICE_AX3000C_LESSONS.push({
     '- DHCP start address: <span class="val">192.168.100.2</span>',
     '- DHCP end address: <span class="val">192.168.100.249</span>',
   ],
-  practiceUrl: '/sim_ax3000c/#/network/dhcp',
+  practiceUrl: '/sim_ax3000c/#/network/lan',
   clearFields: [
     '.card .bd .row:nth-child(1) input',
     '.card .bd .row:nth-child(2) input',
@@ -67,19 +67,19 @@ window.DEVICE_AX3000C_LESSONS.push({
   },
   guidePopups: [
     {
-      selector: '.el-submenu__title:contains("Network"), .el-submenu:contains("Network")',
+      selector: 'li.el-submenu:not(.is-opened) .el-submenu__title:contains("Network")',
       text: 'Chọn Network',
       position: 'right',
       hideOnPage: 'lan'
     },
     {
-      selector: '.el-submenu:contains("Network") .el-submenu__title:contains("LAN"), li.el-submenu:contains("LAN") .el-submenu__title',
+      selector: 'li.el-submenu.is-opened li.el-submenu:not(.is-opened) .el-submenu__title:contains("LAN")',
       text: 'Chọn LAN',
       position: 'right',
       hideOnPage: 'lan'
     },
     {
-      selector: '.el-menu-item:contains("LAN"), li.el-menu-item:contains("LAN"), [index*="/network/lan"], [index*="/network/dhcp"]',
+      selector: 'li.el-submenu.is-opened li.el-submenu.is-opened li.el-menu-item:contains("LAN"), li.el-submenu.is-opened li.el-menu-item:contains("LAN")',
       text: 'Chọn LAN',
       position: 'right',
       hideOnPage: 'lan'

@@ -45,38 +45,44 @@ window.DEVICE_AX3000C_LESSONS.push({
   },
   guidePopups: [
     {
-      selector: '.el-submenu__title:contains("Network"), .el-submenu:contains("Network")',
+      selector: 'li.el-submenu:not(.is-opened) .el-submenu__title:contains("Network")',
       text: 'Chọn Network',
       position: 'right',
       hideOnPage: 'wifi'
     },
     {
-      selector: '.el-submenu:contains("Network") .el-submenu__title:contains("Wi-Fi"), .el-submenu:contains("Network") .el-submenu__title:contains("WIFI")',
+      selector: 'li.el-submenu.is-opened li.el-submenu:not(.is-opened) .el-submenu__title:contains("Wi-Fi"), li.el-submenu.is-opened li.el-submenu:not(.is-opened) .el-submenu__title:contains("WIFI")',
       text: 'Chọn WIFI',
       position: 'right',
       hideOnPage: 'wifi'
     },
     {
-      selector: '.el-menu-item:contains("Wi-Fi"), .el-menu-item:contains("WIFI"), [index*="/network/wifi"]',
+      selector: 'li.el-submenu.is-opened li.el-submenu.is-opened li.el-menu-item:contains("Wi-Fi"), li.el-submenu.is-opened li.el-menu-item:contains("Wi-Fi"), li.el-submenu.is-opened li.el-menu-item:contains("WIFI")',
       text: 'Chọn WIFI',
       position: 'right',
       hideOnPage: 'wifi'
     },
     {
-      selector: '.card .row input[type="text"], input[value*="FPT"]',
-      text: 'Bước 1: Đặt tên WIFI VD: FPT Telecom',
+      selector: '.tabs:not(:has(.tab.active[data-t="host"])) .tab[data-t="host"]',
+      text: 'Bước 1: Cấu hình mạng Host SSID',
+      position: 'top',
+      page: 'wifi'
+    },
+    {
+      selector: '.tabs:has(.tab.active[data-t="host"]) ~ .card .row input[type="text"]',
+      text: 'Bước 2: Đặt tên WIFI VD: FPT Telecom',
       position: 'right',
       page: 'wifi'
     },
     {
-      selector: '#pp, input[type="password"]',
-      text: 'Bước 2: Đặt mật khẩu WIFI VD: fpt12345',
+      selector: '.tabs:has(.tab.active[data-t="host"]) ~ .card #pp',
+      text: 'Bước 3: Đặt mật khẩu WIFI VD: fpt12345',
       position: 'right',
       page: 'wifi'
     },
     {
-      selector: 'button.apply, button.btn.apply, button[onclick*="save"], input[type="submit"]',
-      text: 'Bước 3: Chọn Apply',
+      selector: '.tabs:has(.tab.active[data-t="host"]) ~ .actions button.apply',
+      text: 'Bước 4: Chọn Apply',
       position: 'right',
       page: 'wifi'
     }

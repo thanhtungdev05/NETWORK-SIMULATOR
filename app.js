@@ -225,6 +225,10 @@
           // Xóa trắng trường của bài học cho cả Hướng dẫn và Thực hành khi load trang mới
           clearLessonFields();
 
+            if (currentMode === 'guide') {
+              applyGuidePopups();
+            }
+
           // Theo dõi sự kiện click vào nút Save/Apply trong iframe (chạy cho cả Hướng dẫn và Thực hành)
           try {
             const allDocs = getAllAccessibleDocuments(deviceIframe.contentWindow);
@@ -347,11 +351,11 @@
                   let el = e.target;
                   while(el && el !== doc) {
                     if ((el.tagName === 'INPUT' || el.tagName === 'BUTTON') && 
-                        (el.type === 'submit' || (el.value || el.textContent || '').toLowerCase().includes('save') || (el.value || el.textContent || '').toLowerCase().includes('apply') || (el.value || el.textContent || '').toLowerCase() === 'add' || el.name === 'AddBtn')) {
+                        (el.type === 'submit' || (el.value || el.textContent || '').toLowerCase().includes('save') || (el.value || el.textContent || '').toLowerCase().includes('apply') || el.name === 'AddBtn')) {
                       window._hasClickedSaveInGuide = true;
                       if (currentDeviceId === 'ax3000s') {
                         doc._ftcIsSaved = true;
-                        if (typeof window.onSimulatorSave === 'function') window.onSimulatorSave(doc.defaultView || doc.parentWindow);
+                        try { if (typeof window.onSimulatorSave === 'function') window.onSimulatorSave(doc.defaultView || doc.parentWindow); } catch(ex) { console.warn('[FTC] onSimulatorSave error:', ex); }
                       }
                     }
                     el = el.parentNode;

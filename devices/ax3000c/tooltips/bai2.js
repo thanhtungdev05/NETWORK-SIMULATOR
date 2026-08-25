@@ -26,24 +26,31 @@ window.TOOLTIPS_AX3000C['LAB_AX3000CV2_02'] = [
     position: 'right',
     hideOnPage: 'wifi'
   },
-  // Bước 1: Đặt tên WIFI VD: FPT Telecom (chỉ hiện khi đã vào trang Wi-Fi)
+  // Bước 1: Khuyến khích đổi tab
   {
-    selector: '.card .row input[type="text"], input[value*="FPT"]',
-    text: 'Bước 1: Đặt tên WIFI VD: FPT Telecom',
+    selector: '.tabs:not(:has(.tab.active[data-t="host"])) .tab[data-t="host"]',
+    text: 'Bước 1:Cấu hình mạng Host SSID',
+    position: 'top',
+    page: 'wifi'
+  },
+  // Bước 2: Đặt tên WIFI
+  {
+    selector: '.tabs:has(.tab.active[data-t="host"]) ~ .card .row input[type="text"]',
+    text: 'Bước 2: Đặt tên WIFI VD: FPT Telecom',
     position: 'right',
     page: 'wifi'
   },
-  // Bước 2: Đặt mật khẩu WIFI VD: fpt123456 (chỉ hiện khi đã vào trang Wi-Fi)
+  // Bước 3: Đặt mật khẩu WIFI
   {
-    selector: '#pp, input[type="password"]',
-    text: 'Bước 2: Đặt mật khẩu WIFI VD: fpt12345',
+    selector: '.tabs:has(.tab.active[data-t="host"]) ~ .card #pp',
+    text: 'Bước 3: Đặt mật khẩu WIFI VD: fpt12345',
     position: 'right',
     page: 'wifi'
   },
-  // Bước 3: Chọn Apply (chỉ hiện khi đã vào trang Wi-Fi)
+  // Bước 4: Chọn Apply
   {
-    selector: 'button.apply, button.btn.apply, button[onclick*="save"], input[type="submit"]',
-    text: 'Bước 3: Chọn Apply',
+    selector: '.tabs:has(.tab.active[data-t="host"]) ~ .actions button.apply',
+    text: 'Bước 4: Chọn Apply',
     position: 'right',
     page: 'wifi'
   }

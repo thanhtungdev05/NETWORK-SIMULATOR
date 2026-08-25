@@ -1,19 +1,21 @@
 ﻿/**
- * devices/ax3000c/lessons/bai2.js
- * Bài 2: Cấu hình WiFi trên AX3000C
+ * devices/ax3000c/lessons/bai3.js
+ * Bài 3: Cấu hình WiFi IoT trên AX3000C
  */
 
 window.DEVICE_AX3000C_LESSONS = window.DEVICE_AX3000C_LESSONS || [];
 
-window.DEVICE_AX3000C_LESSONS.push({
+// Loại bỏ bài bị trùng nếu đang load lại (HMR/reload)
+var idx = window.DEVICE_AX3000C_LESSONS.findIndex(function (l) { return l.id === 'LAB_AX3000C_03'; });
+var lessonObj = {
   id: 'LAB_AX3000C_03',
   title: 'Cấu hình wifi IoT',
   subtitle: 'Cấu hình wifi IoT',
   instructions: [
     '<b>Yêu cầu:</b>',
-    'Thực hiện cấu hình mạng Wi-Fi Band Steering trên thiết bị. Kích hoạt tính năng Band Steering và cấu hình các thông số mạng Wi-Fi theo đúng yêu cầu dưới đây:',
-    '- SSID Name: <span class="val">FPT Telecom</span>',
-    '- WPA Key: <span class="val">fpt12345</span>',
+    'Thực hiện cấu hình một mạng Wi-Fi riêng biệt dành riêng cho các thiết bị IoT (Smart Home, Camera, v.v.). Cấu hình các thông số mạng Wi-Fi IoT theo đúng yêu cầu dưới đây:',
+    '- SSID Name: <span class="val">FPT IoT</span>',
+    '- WPA Key: <span class="val">fptiot123</span>',
   ],
   practiceUrl: '/sim_ax3000c/#/network/wifi',
   clearFields: [
@@ -21,22 +23,22 @@ window.DEVICE_AX3000C_LESSONS.push({
     '#pp'
   ],
   grading: {
-    description: 'Kiểm tra SSID và WPA Key trên AX3000C',
+    description: 'Kiểm tra SSID và WPA Key (dành cho IoT) trên AX3000C',
     rules: [
       {
         id: 'wifi_ssid',
-        name: 'Tên Wi-Fi (SSID)',
+        name: 'Tên Wi-Fi IoT (SSID)',
         selector: '.card .row input[type="text"], input[value*="FPT"]',
-        expected: 'FPT Telecom',
+        expected: 'FPT IoT',
         type: 'text_exact',
         trim: true,
         required: true
       },
       {
         id: 'wifi_key',
-        name: 'Mật khẩu Wi-Fi (WPA Key)',
+        name: 'Mật khẩu Wi-Fi IoT (WPA Key)',
         selector: '#pp, input[type="password"]',
-        expected: 'fpt12345',
+        expected: 'fptiot123',
         type: 'text_exact',
         trim: true,
         required: true
@@ -45,40 +47,52 @@ window.DEVICE_AX3000C_LESSONS.push({
   },
   guidePopups: [
     {
-      selector: '.el-submenu__title:contains("Network"), .el-submenu:contains("Network")',
+      selector: 'li.el-submenu:not(.is-opened) .el-submenu__title:contains("Network")',
       text: 'Chọn Network',
       position: 'right',
       hideOnPage: 'wifi'
     },
     {
-      selector: '.el-submenu:contains("Network") .el-submenu__title:contains("Wi-Fi"), .el-submenu:contains("Network") .el-submenu__title:contains("WIFI")',
+      selector: 'li.el-submenu.is-opened li.el-submenu:not(.is-opened) .el-submenu__title:contains("Wi-Fi"), li.el-submenu.is-opened li.el-submenu:not(.is-opened) .el-submenu__title:contains("WIFI")',
       text: 'Chọn WIFI',
       position: 'right',
       hideOnPage: 'wifi'
     },
     {
-      selector: '.el-menu-item:contains("Wi-Fi"), .el-menu-item:contains("WIFI"), [index*="/network/wifi"]',
+      selector: 'li.el-submenu.is-opened li.el-submenu.is-opened li.el-menu-item:contains("Wi-Fi"), li.el-submenu.is-opened li.el-menu-item:contains("Wi-Fi"), li.el-submenu.is-opened li.el-menu-item:contains("WIFI")',
       text: 'Chọn WIFI',
       position: 'right',
       hideOnPage: 'wifi'
     },
     {
-      selector: '.card .row input[type="text"], input[value*="FPT"]',
-      text: 'Bước 1: Đặt tên WIFI VD: FPT Telecom',
+      selector: '.tabs:not(:has(.tab.active[data-t="guest"])) .tab[data-t="guest"]',
+      text: 'Bước 1:Cấu hình mạng Guest SSID (cho IoT)',
+      position: 'top',
+      page: 'wifi'
+    },
+    {
+      selector: '.tabs:has(.tab.active[data-t="guest"]) ~ .card .row input[type="text"]',
+      text: 'Bước 2: Đặt tên WIFI IoT VD: FPT IoT',
       position: 'right',
       page: 'wifi'
     },
     {
-      selector: '#pp, input[type="password"]',
-      text: 'Bước 2: Đặt mật khẩu WIFI VD: fpt12345',
+      selector: '.tabs:has(.tab.active[data-t="guest"]) ~ .card #pp',
+      text: 'Bước 3: Đặt mật khẩu WIFI IoT VD: fptiot123',
       position: 'right',
       page: 'wifi'
     },
     {
-      selector: 'button.apply, button.btn.apply, button[onclick*="save"], input[type="submit"]',
-      text: 'Bước 3: Chọn Apply',
+      selector: '.tabs:has(.tab.active[data-t="guest"]) ~ .actions button.apply',
+      text: 'Bước 4: Chọn Apply',
       position: 'right',
       page: 'wifi'
     }
   ]
-});
+};
+
+if (idx !== -1) {
+  window.DEVICE_AX3000C_LESSONS[idx] = lessonObj;
+} else {
+  window.DEVICE_AX3000C_LESSONS.push(lessonObj);
+}

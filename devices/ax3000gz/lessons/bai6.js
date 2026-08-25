@@ -1,11 +1,12 @@
 /**
- * devices/ax3000gz/lessons/bai8.js
- * Bài 5 - Cấu hình Port Forwarding trên AX3000GZ
+ * devices/ax3000gz/lessons/bai6.js
+ * Bài 6: Cấu hình Port Forwarding trên AX3000GZ
  */
 
 window.DEVICE_AX3000GZ_LESSONS = window.DEVICE_AX3000GZ_LESSONS || [];
 
-window.DEVICE_AX3000GZ_LESSONS.push({
+var idx = window.DEVICE_AX3000GZ_LESSONS.findIndex(function (l) { return l.id === 'LAB_AX3000GZ_06'; });
+var lessonObj = {
   id: 'LAB_AX3000GZ_06',
   title: 'Cấu hình Port Forwarding',
   subtitle: 'Cấu hình Port Forwarding',
@@ -97,5 +98,86 @@ window.DEVICE_AX3000GZ_LESSONS.push({
       }
     ]
   },
-  guidePopups: []
-});
+  guidePopups: [
+    {
+      selector: '#topmenu a[href*="internet"]',
+      text: 'Chọn Internet',
+      position: 'bottom',
+      hideOnPage: 'internet'
+    },
+    {
+      selector: '#sidebarmenu a[href*="/internet/security"]',
+      text: 'Chọn Security',
+      position: 'right',
+      page: 'internet',
+      hideOnPage: 'security'
+    },
+    {
+      selector: '.tabs a[href*="forwards"]',
+      text: 'Chọn tab Port Forwards',
+      position: 'bottom',
+      page: 'security',
+      hideOnPage: 'forwards'
+    },
+    {
+      selector: '.cbi-button-add',
+      text: 'Bấm Add để thêm Port Forwarding',
+      position: 'top',
+      page: 'forwards'
+    },
+    {
+      selector: '[id="modal_field_name"]',
+      text: 'Nhập Name: FPT Telecom',
+      position: 'right',
+      page: 'forwards'
+    },
+    {
+      selector: '[id="modal_field_enabled"] label:nth-child(2)',
+      text: 'Chọn Enable: On',
+      position: 'right',
+      page: 'forwards'
+    },
+    {
+      selector: '[id="modal_field_proto"]',
+      text: 'Chọn Protocol: TCP/UDP',
+      position: 'right',
+      page: 'forwards'
+    },
+    {
+      selector: '[id="modal_field_src_ip"]',
+      text: 'Nhập WAN Host IP Address: 21.143.157.184',
+      position: 'right',
+      page: 'forwards'
+    },
+    {
+      selector: '[id="modal_field_dest_ip"]',
+      text: 'Nhập LAN Host: 192.168.1.254',
+      position: 'right',
+      page: 'forwards'
+    },
+    {
+      selector: '[id="modal_field_src_dport"]',
+      text: 'Nhập WAN Port: 8080',
+      position: 'right',
+      page: 'forwards'
+    },
+    {
+      selector: '[id="modal_field_dest_port"]',
+      text: 'Nhập LAN Host Port: 8080',
+      position: 'right',
+      page: 'forwards'
+    },
+    {
+      selector: '#modal_overlay .cbi-button-save, .modal .cbi-button-save',
+      text: 'Chọn Apply để lưu',
+      position: 'bottom',
+      page: 'forwards'
+    }
+  ]
+};
+
+if (idx !== -1) {
+  window.DEVICE_AX3000GZ_LESSONS[idx] = lessonObj;
+} else {
+  window.DEVICE_AX3000GZ_LESSONS.push(lessonObj);
+}

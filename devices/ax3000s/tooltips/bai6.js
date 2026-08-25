@@ -51,7 +51,7 @@ window.TOOLTIPS_AX3000S['LAB_AX3000S_06'] = [
   },
   // Bước 4: Nhập Internal IP 192.168.1.100
   {
-    selector: '#dmzOpt',
+    selector: '#sIp',
     text: 'Bước 4: Nhập Internal IP 192.168.1.100',
     position: 'right',
     page: 'portforward',

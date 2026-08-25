@@ -1,4 +1,4 @@
-﻿/**
+/**
  * devices/ax3000c/lessons/bai4.js
  * Bài 4: Cấu hình DNS trên AX3000C
  */
@@ -17,7 +17,7 @@ window.DEVICE_AX3000C_LESSONS.push({
     '<i>Gợi ý IP DNS FPT: 210.245.31.220, 210.245.31.221, 210.31.1.253, 210.31.1.254</i>',
     '<i>Gợi ý IP DNS Google: 8.8.8.8, 8.8.4.4</i>',
   ],
-  practiceUrl: '/sim_ax3000c/#/network/dhcp',
+  practiceUrl: '/sim_ax3000c/#/network/lan',
   clearFields: [
     '.card .bd .row:nth-child(7) input',
     '.card .bd .row:nth-child(8) input'
@@ -47,19 +47,19 @@ window.DEVICE_AX3000C_LESSONS.push({
   },
   guidePopups: [
     {
-      selector: '.el-submenu__title:contains("Network"), .el-submenu:contains("Network")',
+      selector: 'li.el-submenu:not(.is-opened) .el-submenu__title:contains("Network")',
       text: 'Chọn Network',
       position: 'right',
       hideOnPage: 'lan'
     },
     {
-      selector: '.el-submenu:contains("Network") .el-submenu__title:contains("LAN"), li.el-submenu:contains("LAN") .el-submenu__title',
+      selector: 'li.el-submenu.is-opened li.el-submenu:not(.is-opened) .el-submenu__title:contains("LAN")',
       text: 'Chọn LAN',
       position: 'right',
       hideOnPage: 'lan'
     },
     {
-      selector: '.el-menu-item:contains("LAN"), li.el-menu-item:contains("LAN"), [index*="/network/lan"], [index*="/network/dhcp"]',
+      selector: 'li.el-submenu.is-opened li.el-submenu.is-opened li.el-menu-item:contains("LAN"), li.el-submenu.is-opened li.el-menu-item:contains("LAN")',
       text: 'Chọn LAN',
       position: 'right',
       hideOnPage: 'lan'

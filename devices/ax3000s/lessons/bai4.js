@@ -1,11 +1,11 @@
 ﻿/**
- * devices/ax3000s/lessons/bai5.js
- * Bài 5: Cấu hình DNS trên AX3000S
+ * devices/ax3000s/lessons/bai4.js
+ * Bài 4: Cấu hình DNS trên AX3000S
  */
 
 window.DEVICE_AX3000S_LESSONS = window.DEVICE_AX3000S_LESSONS || [];
 
-const lessonObj5 = {
+const lessonObj4 = {
   id: 'LAB_AX3000S_04',
   title: 'Cấu hình DNS',
   subtitle: 'Cấu hình DNS',
@@ -60,9 +60,9 @@ const lessonObj5 = {
   guidePopups: []
 };
 
-const existingIndex5 = window.DEVICE_AX3000S_LESSONS.findIndex(l => l.id === 'LAB_AX3000S_05');
-if (existingIndex5 !== -1) {
-    window.DEVICE_AX3000S_LESSONS[existingIndex5] = lessonObj5;
+const existingIndex4 = window.DEVICE_AX3000S_LESSONS.findIndex(l => l.id === 'LAB_AX3000S_04');
+if (existingIndex4 !== -1) {
+    window.DEVICE_AX3000S_LESSONS[existingIndex4] = lessonObj4;
 } else {
-    window.DEVICE_AX3000S_LESSONS.push(lessonObj5);
+    window.DEVICE_AX3000S_LESSONS.push(lessonObj4);
 }

@@ -1,11 +1,11 @@
 ﻿/**
- * devices/ax3000s/lessons/bai4.js
- * Bài 4: Cấu hình địa chỉ IP LAN trên AX3000S
+ * devices/ax3000s/lessons/bai5.js
+ * Bài 5: Cấu hình địa chỉ IP LAN trên AX3000S
  */
 
 window.DEVICE_AX3000S_LESSONS = window.DEVICE_AX3000S_LESSONS || [];
 
-const lessonObj4 = {
+const lessonObj5 = {
   id: 'LAB_AX3000S_05',
   title: 'Cấu hình DHCP',
   subtitle: 'Cấu hình DHCP',
@@ -88,9 +88,9 @@ const lessonObj4 = {
   guidePopups: []
 };
 
-const existingIndex4 = window.DEVICE_AX3000S_LESSONS.findIndex(l => l.id === 'LAB_AX3000S_04');
-if (existingIndex4 !== -1) {
-    window.DEVICE_AX3000S_LESSONS[existingIndex4] = lessonObj4;
+const existingIndex5 = window.DEVICE_AX3000S_LESSONS.findIndex(l => l.id === 'LAB_AX3000S_05');
+if (existingIndex5 !== -1) {
+    window.DEVICE_AX3000S_LESSONS[existingIndex5] = lessonObj5;
 } else {
-    window.DEVICE_AX3000S_LESSONS.push(lessonObj4);
+    window.DEVICE_AX3000S_LESSONS.push(lessonObj5);
 }

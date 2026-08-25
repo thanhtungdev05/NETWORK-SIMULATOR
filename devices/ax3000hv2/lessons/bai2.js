@@ -5,7 +5,7 @@
 
 window.DEVICE_AX3000HV2_LESSONS = window.DEVICE_AX3000HV2_LESSONS || [];
 
-window.DEVICE_AX3000HV2_LESSONS.push({
+var lessonObj = {
   id: 'LAB_AX3000HV2_02',
   title: 'Cấu hình wifi',
   subtitle: 'Cấu hình wifi',
@@ -47,4 +47,11 @@ window.DEVICE_AX3000HV2_LESSONS.push({
     ]
   },
   guidePopups: []
-});
+};
+
+var idx = window.DEVICE_AX3000HV2_LESSONS.findIndex(function(l) { return l.id === lessonObj.id; });
+if (idx !== -1) {
+  window.DEVICE_AX3000HV2_LESSONS[idx] = lessonObj;
+} else {
+  window.DEVICE_AX3000HV2_LESSONS.push(lessonObj);
+}

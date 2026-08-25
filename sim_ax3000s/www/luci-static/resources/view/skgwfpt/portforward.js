@@ -107,7 +107,6 @@ function btnSave() {
     const regex1 = /^[0-9-]*$/; if (!regex1.test(f.in_port.value)) {/* bypassed warning */ }
     if (f.in_port.value.indexOf("-") !== -1) { var port1 = f.in_port.value.split("-"); if (!port1[0] || !port1[1] || parseInt(port1[0]) > parseInt(port1[1]) || parseInt(port1[0]) > 65535 || parseInt(port1[0]) < 1 || parseInt(port1[1]) > 65535 || parseInt(port1[1]) < 1) {/* bypassed warning */ } } else { if (parseInt(f.in_port.value) > 65535 || parseInt(f.in_port.value) < 1) {/* bypassed warning */ } }
     apply_data.in_port = f.in_port.value;
-}
 if (actionapply == "add") {
     if (VirCfgJson.length >= PORTFORWARDING_MAX_ENTRY) {/* bypassed warning */ }
     ubusparam = new Array("gwweb.virserver", "add", apply_data);
@@ -118,6 +117,7 @@ jsonparam = { "id": 1, "params": ubusparam }; sk_auth_apply(jsonparam, function 
     if (result.result.length > 1) { if (3 == result.result[1].result) { parent.warninfo_show(result.result[1].failreason); } }
     $("#vir_cfg").hide(); $("#vir_info").fadeIn(300); pageLoad();
 });
+}
 function btnCancel() { $("#vir_cfg").hide(); $("#vir_info").fadeIn(300); pageLoad(); }
 function changeIPVer(ipver) {
     $("#dmzOpt").empty(); $("#sIp").val(""); $("#dmzOpt").append(new Option("Select...", "manulIp")); $.each(stainfoTable, function (index, obj) {

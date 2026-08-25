@@ -42,6 +42,7 @@ class DispatcherSecurityTests(unittest.TestCase):
     def test_public_portal_and_dashboard_assets_are_available(self):
         for path in (
             '/',
+            '/portal.html',
             '/styles.css',
             '/dashboard/',
             '/dashboard/css/dashboard-professional.css',
@@ -51,6 +52,48 @@ class DispatcherSecurityTests(unittest.TestCase):
             with self.subTest(path=path):
                 status, _, _ = self.request(path)
                 self.assertEqual(status, 200)
+
+    def test_dashboard_can_return_to_portal_on_same_keep_alive_connection(self):
+        connection = http.client.HTTPConnection('127.0.0.1', self.port, timeout=5)
+        try:
+            connection.request('GET', '/dashboard/')
+            dashboard_response = connection.getresponse()
+            dashboard_response.read()
+            self.assertEqual(dashboard_response.status, 200)
+
+            connection.request(
+                'GET',
+                '/portal.html',
+                headers={'Referer': f'http://127.0.0.1:{self.port}/dashboard/'},
+            )
+            portal_response = connection.getresponse()
+            portal_body = portal_response.read()
+
+            self.assertEqual(portal_response.status, 200)
+            self.assertIn(b'FTC device simulator portal', portal_body)
+        finally:
+            connection.close()
+
+    def test_roster_template_download_is_an_attachment(self):
+        template_path = '/templates/Mau_Import_KTV.xlsx'
+        status, headers, body = self.request(template_path)
+        normalized_headers = {key.lower(): value for key, value in headers.items()}
+
+        self.assertEqual(status, 200)
+        self.assertEqual(
+            normalized_headers.get('content-type'),
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+        self.assertTrue(normalized_headers.get('content-disposition', '').startswith('attachment;'))
+        self.assertIn('filename="Mau_Import_KTV.xlsx"', normalized_headers['content-disposition'])
+        self.assertNotIn('location', normalized_headers)
+        self.assertTrue(body.startswith(b'PK\x03\x04'))
+
+        status, headers, body = self.request(template_path, method='HEAD')
+        normalized_headers = {key.lower(): value for key, value in headers.items()}
+        self.assertEqual(status, 200)
+        self.assertTrue(normalized_headers.get('content-disposition', '').startswith('attachment;'))
+        self.assertEqual(body, b'')
 
     def test_source_configuration_and_directory_listing_are_not_public(self):
         for path in (

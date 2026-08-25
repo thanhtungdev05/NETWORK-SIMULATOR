@@ -46,7 +46,8 @@ fi
 # 2. PHP API server (built-in, PATH_INFO routing: /api/index.php/<resource>).
 #    Chi lang nghe noi bo 127.0.0.1 — dispatcher proxy /api/* ra single-port 8080.
 PHP_CLI_SERVER_WORKERS="${PHP_API_WORKERS:-4}" \
-    php -d post_max_size=20M -d memory_limit=256M -S 127.0.0.1:${API_PORT} -t /app > /tmp/php_api.log 2>&1 &
+    php -d post_max_size=20M -d upload_max_filesize=20M -d memory_limit=256M \
+    -S 127.0.0.1:${API_PORT} -t /app > /tmp/php_api.log 2>&1 &
 PHP_PID=$!
 
 # 3. Django Admin — production WSGI server, internal-only.

@@ -55,6 +55,11 @@ load_env()
 PORT = int(os.environ.get('PORT', '8080'))
 API_PORT = int(os.environ.get('API_PORT', '8082'))
 DJANGO_PORT = int(os.environ.get('DJANGO_PORT', '8083'))
+try:
+    API_PROXY_TIMEOUT_SECONDS = int(os.environ.get('API_PROXY_TIMEOUT_SECONDS', '90'))
+except ValueError:
+    API_PROXY_TIMEOUT_SECONDS = 90
+API_PROXY_TIMEOUT_SECONDS = max(10, min(API_PROXY_TIMEOUT_SECONDS, 300))
 
 # Import các Handler của từng thiết bị
 import sim_ac1000f.server2 as ac1000f
@@ -98,6 +103,9 @@ PORTAL_PREFIXES = ('/devices/', '/assets/', '/login/', '/api/',
 PUBLIC_ROOT_FILES = {
     '/index.html', '/portal.html', '/styles.css', '/app.js', '/data.js', '/favicon.ico',
     '/templates/Mau_Import_KTV.xlsx'
+}
+DOWNLOADABLE_ROOT_FILES = {
+    '/templates/Mau_Import_KTV.xlsx': 'Mau_Import_KTV.xlsx',
 }
 PUBLIC_ROOT_PREFIXES = ('/devices/', '/assets/', '/login/')
 DASHBOARD_PUBLIC_PATHS = {
@@ -205,10 +213,15 @@ class MasterDispatcher(SimpleHTTPRequestHandler):
     def end_headers(self):
         request_url = urlparse(self.path)
         extension = os.path.splitext(request_url.path.lower())[1]
+        download_filename = DOWNLOADABLE_ROOT_FILES.get(unquote(request_url.path))
         versioned_asset = extension in {'.css', '.js', '.svg', '.png', '.jpg', '.jpeg', '.webp', '.woff', '.woff2'} \
             and any(part.startswith('v=') for part in request_url.query.split('&'))
         has_cache_control = any(
             header.lower().startswith(b'cache-control:')
+            for header in getattr(self, '_headers_buffer', [])
+        )
+        has_content_disposition = any(
+            header.lower().startswith(b'content-disposition:')
             for header in getattr(self, '_headers_buffer', [])
         )
         if not has_cache_control:
@@ -218,6 +231,11 @@ class MasterDispatcher(SimpleHTTPRequestHandler):
                 self.send_header('Cache-Control', 'no-cache')
             else:
                 self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+        if download_filename and not has_content_disposition:
+            self.send_header(
+                'Content-Disposition',
+                f'attachment; filename="{download_filename}"; filename*=UTF-8\'\'{download_filename}',
+            )
         self.send_header('X-Content-Type-Options', 'nosniff')
         self.send_header('X-Frame-Options', 'SAMEORIGIN')
         self.send_header('Referrer-Policy', 'strict-origin-when-cross-origin')
@@ -378,7 +396,11 @@ class MasterDispatcher(SimpleHTTPRequestHandler):
 
         conn = None
         try:
-            conn = http.client.HTTPConnection('127.0.0.1', API_PORT, timeout=30)
+            conn = http.client.HTTPConnection(
+                '127.0.0.1',
+                API_PORT,
+                timeout=API_PROXY_TIMEOUT_SECONDS,
+            )
             conn.request(method, self.path, body=body, headers=headers)
             resp = conn.getresponse()
             response_status = resp.status
@@ -457,9 +479,18 @@ class MasterDispatcher(SimpleHTTPRequestHandler):
             if sub not in DASHBOARD_PUBLIC_PATHS:
                 self.send_error(404, 'Not Found')
                 return
-            self.path = sub + (('?' + parts[1]) if len(parts) > 1 else '')
-            self.directory = DASHBOARD_DIR
-            return super().do_HEAD() if method == 'HEAD' else super().do_GET()
+            original_path = self.path
+            original_directory = self.directory
+            try:
+                self.path = sub + (('?' + parts[1]) if len(parts) > 1 else '')
+                self.directory = DASHBOARD_DIR
+                return super().do_HEAD() if method == 'HEAD' else super().do_GET()
+            finally:
+                # A handler instance can serve multiple HTTP/1.1 requests on
+                # the same keep-alive connection. Never leak the dashboard
+                # document root into the next Portal request.
+                self.path = original_path
+                self.directory = original_directory
 
         sim_id = self.detect_simulator()
         if sim_id:

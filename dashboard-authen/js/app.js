@@ -5638,13 +5638,27 @@ async function doRosterPreview(file) {
         if (state.rosterImportFile !== file) return;
         state.rosterPreviewData = null;
         console.error('Preview error:', err);
-        const el = document.getElementById('rosterPreview');
-        if (el) { el.hidden = false; el.innerHTML = `<div class="roster-preview-errors is-visible"><h4>Không thể đọc file</h4><p>${escapeHTML(err.message || String(err))}</p></div>`; }
+        renderRosterPreviewFailure(err.message || String(err));
         const importButton = document.getElementById('rosterConfirmImportBtn');
         if (importButton) {
             importButton.disabled = true;
             importButton.textContent = 'Không thể import';
         }
+    }
+}
+
+function renderRosterPreviewFailure(message) {
+    const container = document.getElementById('rosterPreview');
+    if (!container) return;
+    container.hidden = false;
+
+    document.getElementById('rosterPreviewStats')?.replaceChildren();
+    document.getElementById('rosterPreviewChanges')?.replaceChildren();
+    const errorsEl = document.getElementById('rosterPreviewErrors');
+    if (errorsEl) {
+        errorsEl.hidden = false;
+        errorsEl.classList.add('is-visible');
+        errorsEl.innerHTML = `<h4>Không thể đọc file</h4><p>${escapeHTML(message)}</p>`;
     }
 }
 
@@ -5667,6 +5681,7 @@ function renderRosterPreview(data) {
     const errorsEl = document.getElementById('rosterPreviewErrors');
     if (errorsEl) {
         const errors = data.errors || [];
+        errorsEl.classList.toggle('is-visible', errors.length > 0);
         if (errors.length) {
             errorsEl.hidden = false;
             errorsEl.innerHTML = `<h4>Lỗi (${errors.length})</h4><ul>${errors.map(e => `<li>Dòng ${e.row || '?'}: ${escapeHTML(e.message || '')}</li>`).join('')}</ul>`;

@@ -405,31 +405,134 @@ function ktv_roster_compact_change(array $row): array
     ];
 }
 
-function ktv_roster_resolve_region(PDO $pdo, array $row, bool $dryRun = false): ?string
+function ktv_roster_load_region_cache(PDO $pdo): array
+{
+    $stmt = $pdo->query(
+        'SELECT region_id, region_code, dashboard_group, region_name
+           FROM regions
+          ORDER BY region_code'
+    );
+    $cache = [
+        'by_code' => [],
+        'by_dashboard_group' => [],
+        'by_name' => [],
+    ];
+    foreach ($stmt->fetchAll() as $region) {
+        $regionId = (string)($region['region_id'] ?? '');
+        if ($regionId === '') {
+            continue;
+        }
+        $regionCode = trim((string)($region['region_code'] ?? ''));
+        $dashboardGroup = trim((string)($region['dashboard_group'] ?? ''));
+        $regionName = trim((string)($region['region_name'] ?? ''));
+        if ($regionCode !== '') {
+            $cache['by_code'][$regionCode] = $regionId;
+        }
+        if ($dashboardGroup !== '' && !isset($cache['by_dashboard_group'][$dashboardGroup])) {
+            $cache['by_dashboard_group'][$dashboardGroup] = $regionId;
+        }
+        if ($regionName !== '' && !isset($cache['by_name'][$regionName])) {
+            $cache['by_name'][$regionName] = $regionId;
+        }
+    }
+    return $cache;
+}
+
+function ktv_roster_load_user_match_cache(PDO $pdo, array $rows, bool $forUpdate): array
+{
+    $cache = [
+        'by_employee_id' => [],
+        'by_email' => [],
+    ];
+    if (!$rows) {
+        return $cache;
+    }
+
+    $lookupRows = array_map(static fn(array $row): array => [
+        'employee_id' => (string)$row['employee_id'],
+        'email' => strtolower((string)$row['email']),
+    ], $rows);
+    $encodedRows = json_encode($lookupRows, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
+    $sql = <<<'SQL'
+        SELECT existing_user.user_id,
+               existing_user.email,
+               existing_user.employee_id,
+               existing_user.display_name,
+               existing_user.is_terminated,
+               existing_user.employee_source
+          FROM users AS existing_user
+         WHERE EXISTS (
+               SELECT 1
+                 FROM jsonb_to_recordset(CAST(:roster_rows AS jsonb))
+                      AS roster_row(employee_id text, email text)
+                WHERE existing_user.employee_id = roster_row.employee_id
+                   OR LOWER(existing_user.email) = roster_row.email
+         )
+        SQL;
+    if ($forUpdate) {
+        $sql .= ' FOR UPDATE OF existing_user';
+    }
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute(['roster_rows' => $encodedRows]);
+
+    foreach ($stmt->fetchAll() as $user) {
+        $employeeId = trim((string)($user['employee_id'] ?? ''));
+        $email = strtolower(trim((string)($user['email'] ?? '')));
+        if ($employeeId !== '') {
+            $cache['by_employee_id'][$employeeId][] = $user;
+        }
+        if ($email !== '') {
+            $cache['by_email'][$email][] = $user;
+        }
+    }
+    return $cache;
+}
+
+function ktv_roster_cached_user_matches(array $cache, array $row): array
+{
+    $matches = [];
+    $employeeId = (string)$row['employee_id'];
+    $email = strtolower((string)$row['email']);
+    foreach (array_merge(
+        $cache['by_employee_id'][$employeeId] ?? [],
+        $cache['by_email'][$email] ?? []
+    ) as $match) {
+        $userId = (string)($match['user_id'] ?? '');
+        if ($userId !== '') {
+            $matches[$userId] = $match;
+        }
+    }
+    return array_values($matches);
+}
+
+function ktv_roster_resolve_region(
+    PDO $pdo,
+    array $row,
+    bool $dryRun = false,
+    ?array &$cache = null
+): ?string
 {
     $regionCode = (string)$row['region_code'];
     $dashboardRegion = (string)$row['dashboard_region'];
     $branchName = $row['branch'] ?: null;
 
+    if ($cache === null) {
+        $cache = $dryRun ? ktv_roster_load_region_cache($pdo) : [
+            'by_code' => [],
+            'by_dashboard_group' => [],
+            'by_name' => [],
+        ];
+    }
+
     if ($dryRun) {
-        $stmt = $pdo->prepare(
-            'SELECT region_id
-               FROM regions
-              WHERE region_code = :rc_code
-                 OR BTRIM(COALESCE(dashboard_group, \'\')) = BTRIM(:dg_name)
-                 OR BTRIM(region_name) = BTRIM(:rg_name)
-              ORDER BY CASE WHEN region_code = :rc_code2 THEN 0 ELSE 1 END,
-                       region_code
-              LIMIT 1'
-        );
-        $stmt->execute([
-            'rc_code' => $regionCode,
-            'dg_name' => $dashboardRegion,
-            'rg_name' => $dashboardRegion,
-            'rc_code2' => $regionCode,
-        ]);
-        $regionId = $stmt->fetchColumn();
-        return is_string($regionId) && $regionId !== '' ? $regionId : null;
+        return $cache['by_code'][$regionCode]
+            ?? $cache['by_dashboard_group'][$dashboardRegion]
+            ?? $cache['by_name'][$dashboardRegion]
+            ?? null;
+    }
+
+    if (isset($cache['by_code'][$regionCode])) {
+        return $cache['by_code'][$regionCode];
     }
 
     $stmt = $pdo->prepare(
@@ -457,7 +560,13 @@ function ktv_roster_resolve_region(PDO $pdo, array $row, bool $dryRun = false): 
         'branch_name' => $branchName,
     ]);
     $regionId = $stmt->fetchColumn();
-    return is_string($regionId) && $regionId !== '' ? $regionId : null;
+    if (!is_string($regionId) || $regionId === '') {
+        return null;
+    }
+    $cache['by_code'][$regionCode] = $regionId;
+    $cache['by_dashboard_group'][$dashboardRegion] ??= $regionId;
+    $cache['by_name'][$dashboardRegion] ??= $regionId;
+    return $regionId;
 }
 
 function ktv_roster_find_matching_user(PDO $pdo, array $row, bool $forUpdate): array
@@ -500,6 +609,12 @@ function sync_ktv_roster(PDO $pdo, array $rows, string $batch, bool $dryRun = fa
 
     $activeEmployeeIds = [];
     $activeEmails = [];
+    $regionCache = $dryRun ? ktv_roster_load_region_cache($pdo) : [
+        'by_code' => [],
+        'by_dashboard_group' => [],
+        'by_name' => [],
+    ];
+    $userMatchCache = ktv_roster_load_user_match_cache($pdo, $rows, !$dryRun);
 
     $insertUser = null;
     $updateUser = null;
@@ -553,8 +668,8 @@ function sync_ktv_roster(PDO $pdo, array $rows, string $batch, bool $dryRun = fa
         $activeEmails[strtolower((string)$row['email'])] = true;
 
         try {
-            $regionId = ktv_roster_resolve_region($pdo, $row, $dryRun);
-            $matches = ktv_roster_find_matching_user($pdo, $row, !$dryRun);
+            $regionId = ktv_roster_resolve_region($pdo, $row, $dryRun, $regionCache);
+            $matches = ktv_roster_cached_user_matches($userMatchCache, $row);
             $userIds = array_values(array_unique(array_map(static fn(array $match): string => (string)$match['user_id'], $matches)));
             if (count($userIds) > 1) {
                 $result['errors'][] = [

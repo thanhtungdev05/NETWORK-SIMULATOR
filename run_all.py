@@ -17,6 +17,7 @@ import shutil
 import subprocess
 import http.client
 import ipaddress
+import gzip
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import unquote, urlparse
 
@@ -99,7 +100,9 @@ PUBLIC_ROOT_FILES = {
     '/templates/Mau_Import_KTV.xlsx'
 }
 PUBLIC_ROOT_PREFIXES = ('/devices/', '/assets/', '/login/')
-DASHBOARD_PUBLIC_PATHS = {'/', '/index.html', '/css/styles.css', '/js/app.js'}
+DASHBOARD_PUBLIC_PATHS = {
+    '/', '/index.html', '/css/styles.css', '/css/dashboard-professional.css', '/js/app.js'
+}
 SENSITIVE_EXTENSIONS = {
     '.env', '.ini', '.log', '.lock', '.md', '.php', '.py', '.pyc', '.sql',
     '.toml', '.yaml', '.yml', '.sh', '.ps1', '.bat', '.cmd'
@@ -110,6 +113,51 @@ SENSITIVE_BASENAMES = {
     'requirements.txt'
 }
 SIM_DISPATCH_LOCK = threading.RLock()
+API_GZIP_MIN_BYTES = 1024
+API_GZIP_CONTENT_TYPES = {
+    'application/javascript',
+    'application/json',
+    'application/problem+json',
+    'application/xml',
+    'image/svg+xml',
+}
+
+
+def accepts_gzip(header_value):
+    """Return True when an Accept-Encoding header permits gzip."""
+    for part in str(header_value or '').lower().split(','):
+        fields = [field.strip() for field in part.split(';') if field.strip()]
+        if not fields or fields[0] not in ('gzip', '*'):
+            continue
+        quality = 1.0
+        for parameter in fields[1:]:
+            if parameter.startswith('q='):
+                try:
+                    quality = float(parameter[2:])
+                except ValueError:
+                    quality = 0.0
+        if quality > 0:
+            return True
+    return False
+
+
+def encode_api_response(data, content_type='', accept_encoding='', content_encoding='',
+                        method='GET', status=200):
+    """Compress large textual API responses when the client supports gzip."""
+    media_type = str(content_type or '').split(';', 1)[0].strip().lower()
+    compressible = media_type.startswith('text/') or media_type in API_GZIP_CONTENT_TYPES
+    eligible = (
+        method != 'HEAD'
+        and 200 <= int(status) < 300
+        and int(status) != 204
+        and not content_encoding
+        and len(data) >= API_GZIP_MIN_BYTES
+        and compressible
+        and accepts_gzip(accept_encoding)
+    )
+    if not eligible:
+        return data, False
+    return gzip.compress(data, compresslevel=5, mtime=0), True
 
 
 def is_portal_path(path):
@@ -149,12 +197,27 @@ def is_public_root_path(path):
 class MasterDispatcher(SimpleHTTPRequestHandler):
     server_version = 'FTC'
     sys_version = ''
+    protocol_version = 'HTTP/1.1'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=BASE_DIR, **kwargs)
 
     def end_headers(self):
-        self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+        request_url = urlparse(self.path)
+        extension = os.path.splitext(request_url.path.lower())[1]
+        versioned_asset = extension in {'.css', '.js', '.svg', '.png', '.jpg', '.jpeg', '.webp', '.woff', '.woff2'} \
+            and any(part.startswith('v=') for part in request_url.query.split('&'))
+        has_cache_control = any(
+            header.lower().startswith(b'cache-control:')
+            for header in getattr(self, '_headers_buffer', [])
+        )
+        if not has_cache_control:
+            if versioned_asset:
+                self.send_header('Cache-Control', 'public, max-age=31536000, immutable')
+            elif extension in {'.css', '.js', '.svg', '.png', '.jpg', '.jpeg', '.webp', '.woff', '.woff2'}:
+                self.send_header('Cache-Control', 'no-cache')
+            else:
+                self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
         self.send_header('X-Content-Type-Options', 'nosniff')
         self.send_header('X-Frame-Options', 'SAMEORIGIN')
         self.send_header('Referrer-Policy', 'strict-origin-when-cross-origin')
@@ -263,7 +326,10 @@ class MasterDispatcher(SimpleHTTPRequestHandler):
                 conn.close()
 
         self.send_response(resp.status)
-        hop_by_hop = {'connection', 'keep-alive', 'proxy-connection', 'transfer-encoding', 'upgrade'}
+        hop_by_hop = {
+            'connection', 'keep-alive', 'proxy-connection', 'transfer-encoding', 'upgrade',
+            'host', 'date', 'server', 'x-powered-by'
+        }
         for k, v in resp.getheaders():
             if k.lower() in hop_by_hop or k.lower() == 'content-length':
                 continue
@@ -315,6 +381,8 @@ class MasterDispatcher(SimpleHTTPRequestHandler):
             conn = http.client.HTTPConnection('127.0.0.1', API_PORT, timeout=30)
             conn.request(method, self.path, body=body, headers=headers)
             resp = conn.getresponse()
+            response_status = resp.status
+            response_headers = resp.getheaders()
             data = resp.read()
         except Exception as e:
             print('[API-PROXY] Loi chuyen tiep /api/* -> PHP: %s' % e)
@@ -324,12 +392,36 @@ class MasterDispatcher(SimpleHTTPRequestHandler):
             if conn is not None:
                 conn.close()
 
-        self.send_response(resp.status)
-        hop_by_hop = {'connection', 'keep-alive', 'proxy-connection', 'transfer-encoding', 'upgrade'}
-        for k, v in resp.getheaders():
-            if k.lower() in hop_by_hop or k.lower() == 'content-length':
+        response_header_map = {key.lower(): value for key, value in response_headers}
+        data, compressed = encode_api_response(
+            data,
+            content_type=response_header_map.get('content-type', ''),
+            accept_encoding=self.headers.get('Accept-Encoding', ''),
+            content_encoding=response_header_map.get('content-encoding', ''),
+            method=method,
+            status=response_status,
+        )
+
+        self.send_response(response_status)
+        hop_by_hop = {
+            'connection', 'keep-alive', 'proxy-connection', 'transfer-encoding', 'upgrade',
+            'host', 'date', 'server', 'x-powered-by'
+        }
+        vary_values = []
+        for k, v in response_headers:
+            header_name = k.lower()
+            if header_name in hop_by_hop or header_name == 'content-length':
+                continue
+            if header_name == 'vary':
+                vary_values.extend(item.strip() for item in v.split(',') if item.strip())
                 continue
             self.send_header(k, v)
+        if compressed:
+            self.send_header('Content-Encoding', 'gzip')
+            if not any(value.lower() == 'accept-encoding' for value in vary_values):
+                vary_values.append('Accept-Encoding')
+        if vary_values:
+            self.send_header('Vary', ', '.join(dict.fromkeys(vary_values)))
         self.send_header('Content-Length', str(len(data)))
         self.end_headers()
         if method != 'HEAD':

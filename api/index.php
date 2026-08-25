@@ -9,6 +9,7 @@ require_once __DIR__ . '/lib/PostgresSessionHandler.php';
 require_once __DIR__ . '/lib/iam_identity.php';
 require_once __DIR__ . '/lib/tracking_handler.php';
 require_once __DIR__ . '/lib/ktv_roster_import.php';
+require_once __DIR__ . '/lib/report_xlsx.php';
 load_app_environment($root);
 
 $GLOBALS['request_id'] = bin2hex(random_bytes(8));
@@ -39,9 +40,8 @@ if ($path === '') {
 $segments = array_values(array_filter(explode('/', $path), fn($part) => $part !== ''));
 $resource = $segments[0] ?? '';
 
-function json_body(): array
+function json_body_with_limit(int $maximumBytes): array
 {
-    $maximumBytes = env_int('API_MAX_BODY_BYTES', 65536, 1024, 1048576);
     $contentLength = filter_var($_SERVER['CONTENT_LENGTH'] ?? null, FILTER_VALIDATE_INT);
     if ($contentLength !== false && $contentLength > $maximumBytes) {
         fail(413, 'payload-too-large', 'Request body exceeds the allowed size.');
@@ -58,11 +58,25 @@ function json_body(): array
     if ($raw === false || trim($raw) === '') {
         return [];
     }
-    $decoded = json_decode($raw, true);
-    if (!is_array($decoded)) {
+    try {
+        $decoded = json_decode($raw, true, 512, JSON_THROW_ON_ERROR | JSON_BIGINT_AS_STRING);
+    } catch (JsonException) {
         fail(400, 'bad-request', 'Invalid JSON body.');
     }
+    if (!is_array($decoded)) {
+        fail(400, 'bad-request', 'JSON body must be an object.');
+    }
     return $decoded;
+}
+
+function json_body(): array
+{
+    return json_body_with_limit(env_int('API_MAX_BODY_BYTES', 65536, 1024, 1048576));
+}
+
+function report_json_body(): array
+{
+    return json_body_with_limit(env_int('API_MAX_REPORT_BODY_BYTES', 8388608, 1048576, 16777216));
 }
 
 function respond(array $payload = [], int $status = 200): void
@@ -1375,7 +1389,7 @@ function roster_item_response(array $row): array
     return $item;
 }
 
-function roster_base_where(array &$params, bool $includeFilters = true): array
+function roster_base_where(array &$params, bool $includeFilters = true, ?array $filters = null): array
 {
     $where = [
         "(ktv.employee_id IS NOT NULL OR ktv.employee_source LIKE 'firestore:%')",
@@ -1386,7 +1400,12 @@ function roster_base_where(array &$params, bool $includeFilters = true): array
         return $where;
     }
 
-    $status = strtolower(trim((string)($_GET['status'] ?? 'active')));
+    $filterSource = $filters ?? $_GET;
+    $statusValue = $filterSource['status'] ?? 'active';
+    if (!is_scalar($statusValue) && $statusValue !== null) {
+        fail(400, 'bad-filter', 'Invalid roster status filter.');
+    }
+    $status = strtolower(trim((string)$statusValue));
     if ($status !== '' && $status !== 'all') {
         if (!in_array($status, ['active', 'terminated'], true)) {
             fail(400, 'bad-filter', 'Invalid roster status filter.');
@@ -1396,7 +1415,14 @@ function roster_base_where(array &$params, bool $includeFilters = true): array
             : 'ktv.is_terminated = FALSE';
     }
 
-    $search = trim((string)($_GET['search'] ?? ''));
+    $searchValue = $filterSource['search'] ?? '';
+    if (!is_scalar($searchValue) && $searchValue !== null) {
+        fail(400, 'bad-filter', 'Invalid roster search filter.');
+    }
+    $search = trim((string)$searchValue);
+    if (mb_strlen($search, 'UTF-8') > 200) {
+        fail(400, 'bad-filter', 'Roster search filter is too long.');
+    }
     if ($search !== '') {
         $searchPattern = '%' . $search . '%';
         $where[] = '(
@@ -1690,15 +1716,6 @@ function handle_roster_history(): void
     respond(['data' => ['items' => $items, 'total' => $total, 'page' => $page, 'limit' => $limit]]);
 }
 
-function sanitize_csv_cell(mixed $value): string
-{
-    $text = (string)($value ?? '');
-    if ($text !== '' && in_array($text[0], ['=', '+', '-', '@', "\t", "\r"], true)) {
-        $text = "\t" . $text;
-    }
-    return $text;
-}
-
 function roster_optional_date_input(array $input, string $key): ?string
 {
     if (!array_key_exists($key, $input) || $input[$key] === null || trim((string)$input[$key]) === '') {
@@ -1885,11 +1902,20 @@ function handle_roster_update(string $employeeId): void
     }
 }
 
-function handle_roster_export(): void
+function build_roster_report_input(array $input = []): array
 {
+    $filters = $input['filters'] ?? null;
+    if ($filters !== null && !is_array($filters)) {
+        fail(400, 'bad-filter', 'Roster filters must be an object.');
+    }
+    $filters = $filters ?? [
+        'status' => $_GET['status'] ?? 'active',
+        'search' => $_GET['search'] ?? '',
+    ];
+
     $pdo = db();
     $params = [];
-    $where = roster_base_where($params, true);
+    $where = roster_base_where($params, true, $filters);
     $whereSql = implode(' AND ', $where);
     $stmt = $pdo->prepare(
         "SELECT ktv.*
@@ -1900,61 +1926,87 @@ function handle_roster_export(): void
     $stmt->execute($params);
     $rows = $stmt->fetchAll();
 
-    $timezone = new DateTimeZone(normalize_app_timezone(env_value('APP_TIMEZONE')));
-    $dateStamp = (new DateTimeImmutable('now', $timezone))->format('Ymd-His');
-    header('Content-Type: text/csv; charset=utf-8', true);
-    header('Content-Disposition: attachment; filename="ktv_roster_' . $dateStamp . '.csv"');
-    echo "\xEF\xBB\xBF";
-    $out = fopen('php://output', 'wb');
-    if ($out === false) {
-        fail(500, 'export-failed', 'Unable to open output stream for CSV export.');
-    }
-    fputcsv($out, [
-        'employee_id',
-        'display_name',
-        'email',
-        'job_title',
-        'branch',
-        'region_code',
-        'region_name',
-        'dashboard_region',
-        'unit_code',
-        'unit_name',
-        'class_code',
-        'training_start_date',
-        'training_end_date',
-        'is_terminated',
-        'termination_date',
-        'termination_reason',
-        'employee_source',
-        'employee_seed_batch',
-        'employee_synced_at',
-    ]);
-    foreach ($rows as $row) {
-        fputcsv($out, array_map('sanitize_csv_cell', [
+    $status = strtolower(trim((string)($filters['status'] ?? 'active')));
+    $statusLabel = match ($status) {
+        'terminated' => 'Đã nghỉ',
+        'all' => 'Tất cả trạng thái',
+        default => 'Đang làm',
+    };
+    $search = trim((string)($filters['search'] ?? ''));
+    $dataRows = [];
+    foreach ($rows as $index => $row) {
+        $dataRows[] = [
+            $index + 1,
             $row['employee_id'] ?? '',
             $row['display_name'] ?? '',
             $row['email'] ?? '',
             $row['job_title'] ?? '',
+            $row['dashboard_region'] ?? $row['region_name'] ?? '',
             $row['branch_name'] ?? '',
-            $row['region_code'] ?? '',
-            $row['region_name'] ?? '',
-            $row['dashboard_region'] ?? '',
-            $row['unit_code'] ?? '',
-            $row['unit_name'] ?? '',
             $row['class_code'] ?? '',
-            $row['training_start_date'] ?? '',
-            $row['training_end_date'] ?? '',
-            database_boolean($row['is_terminated'] ?? false) ? 'TRUE' : 'FALSE',
-            $row['termination_date'] ?? '',
-            $row['termination_reason'] ?? '',
-            $row['employee_source'] ?? '',
-            $row['employee_seed_batch'] ?? '',
-            $row['employee_synced_at'] ?? '',
-        ]));
+            database_boolean($row['is_terminated'] ?? false) ? 'Đã nghỉ' : 'Đang làm',
+        ];
     }
-    fclose($out);
-    exit;
+
+    return [
+        'type' => 'roster',
+        'period' => 'Tại thời điểm xuất',
+        'scope' => $search !== '' ? $statusLabel . ' · Tìm kiếm: “' . $search . '”' : $statusLabel,
+        'filename' => $input['filename'] ?? 'FTC_Danh_sach_KTV',
+        'metadata' => [
+            ['Trạng thái', $statusLabel],
+            ['Từ khóa tìm kiếm', $search !== '' ? $search : 'Không áp dụng'],
+        ],
+        'headers' => [
+            'STT', 'Mã NV', 'Họ và tên', 'Email', 'Vị trí',
+            'Khu vực/CNx', 'Chi nhánh', 'Lớp', 'Trạng thái',
+        ],
+        'columnTypes' => ['integer', 'text', 'text', 'text', 'text', 'text', 'text', 'text', 'text'],
+        'rows' => $dataRows,
+    ];
+}
+
+function stream_report_input(array $input, array $actor): void
+{
+    try {
+        $timezone = new DateTimeZone(normalize_app_timezone(env_value('APP_TIMEZONE')));
+        $report = ftc_report_xlsx_normalize_descriptor($input, $actor, $timezone);
+        ftc_report_xlsx_stream($report);
+    } catch (InvalidArgumentException $exception) {
+        fail(400, 'invalid-report', $exception->getMessage());
+    } catch (Throwable $exception) {
+        report_exception($exception, 'report-export');
+        fail(500, 'report-export-failed', 'Không thể tạo file Excel. Vui lòng thử lại.');
+    }
+}
+
+function handle_roster_export(array $actor): void
+{
+    stream_report_input(build_roster_report_input(), $actor);
+}
+
+function handle_reports(array $segments, string $method): void
+{
+    $action = $segments[1] ?? '';
+    if ($action !== 'export') {
+        fail(404, 'not-found', 'Report endpoint not found.');
+    }
+    if ($method !== 'POST') {
+        fail(405, 'method-not-allowed', 'Report export only supports POST.');
+    }
+
+    // Kiểm tra quyền trước khi đọc body báo cáo có thể lớn.
+    $actor = require_report_export();
+    $input = report_json_body();
+    $typeValue = $input['type'] ?? '';
+    if (!is_string($typeValue)) {
+        fail(400, 'invalid-report', 'Loại báo cáo không hợp lệ.');
+    }
+    $type = strtolower(trim($typeValue));
+    if ($type === 'roster') {
+        $input = build_roster_report_input($input);
+    }
+    stream_report_input($input, $actor);
 }
 
 function handle_roster(array $segments, string $method): void
@@ -1972,7 +2024,7 @@ function handle_roster(array $segments, string $method): void
         handle_roster_history();
     } elseif ($action === 'export' && $method === 'GET') {
         require_report_export($actor);
-        handle_roster_export();
+        handle_roster_export($actor);
     } elseif ($action !== '' && $method === 'PATCH') {
         handle_roster_update(rawurldecode($action));
     }
@@ -2316,6 +2368,8 @@ try {
         handle_dev($segments, $method);
     } elseif ($resource === 'roster') {
         handle_roster($segments, $method);
+    } elseif ($resource === 'reports') {
+        handle_reports($segments, $method);
     } elseif ($resource === 'dashboard') {
         handle_dashboard($segments, $method);
     } elseif ($resource === 'health') {

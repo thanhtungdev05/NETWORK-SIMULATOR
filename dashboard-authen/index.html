@@ -4,22 +4,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f3f6fb">
+    <meta name="color-scheme" content="light">
     <title>Dashboard giám sát thực hành KTV | FTC</title>
-    <link rel="stylesheet" href="css/styles.css?v=20260825-1">
+    <link rel="stylesheet" href="css/styles.css?v=20260825-7">
+    <link rel="stylesheet" href="css/dashboard-professional.css?v=20260825-1">
 </head>
 
 <body>
+    <a class="skip-link" href="#dashboardContent">Bỏ qua điều hướng</a>
     <div class="dashboard-loading" id="dashboardLoading" role="status" aria-live="polite">
-        <div class="dashboard-loading-spinner"></div>
-        <div class="dashboard-loading-text">Đang tải dữ liệu từ timer_sessions...</div>
+        <div class="dashboard-loading-spinner" aria-hidden="true"></div>
+        <div class="dashboard-loading-text">Đang đồng bộ dữ liệu dashboard...</div>
     </div>
-    <div class="page" id="appPage">
+    <div class="page" id="appPage" aria-busy="true">
         <aside class="sidebar" aria-label="Điều hướng dashboard">
             <div class="sidebar-brand">
                 <div class="sidebar-logo">FTC</div>
                 <div class="sidebar-brand-copy">
-                    <strong>KTV Supervisor</strong>
-                    <span>Internal Portal</span>
+                    <strong>Giám sát KTV</strong>
+                    <span>Trung tâm vận hành</span>
                 </div>
                 <button class="sidebar-toggle" type="button" id="sidebarToggle" aria-label="Thu gọn thanh điều hướng"
                     aria-expanded="true">
@@ -75,8 +79,8 @@
             </nav>
 
             <div class="sidebar-footer">
-                <span class="sidebar-status-dot"></span>
-                <span id="dataSourceLabel">Dữ liệu thực từ timer_sessions</span>
+                <span class="sidebar-status-dot" id="sidebarStatusDot" aria-hidden="true"></span>
+                <span id="dataSourceLabel">Đang đồng bộ dữ liệu</span>
             </div>
         </aside>
 
@@ -85,25 +89,47 @@
                 <div class="brand">
                     <div class="brand-mark">FTC</div>
                     <div>
-                        <div class="page-eyebrow" id="pageEyebrow">Dashboard home</div>
-                        <h1 id="pageTitle">Dashboard giám sát thực hành KTV</h1>
+                        <div class="page-eyebrow" id="pageEyebrow">Tổng quan vận hành</div>
+                        <h1 id="pageTitle" tabindex="-1">Dashboard giám sát thực hành KTV</h1>
                         <div class="subtitle" id="pageSubtitle">Theo dõi hoạt động, tiến độ và chất lượng thực hành
                         </div>
                     </div>
                 </div>
                 <div class="top-actions">
+                    <div class="dashboard-sync-status is-syncing" id="dashboardSyncStatus" role="status"
+                        aria-live="polite" aria-atomic="true">
+                        <span class="dashboard-sync-dot" aria-hidden="true"></span>
+                        <span class="dashboard-sync-copy">
+                            <strong id="dashboardSyncTitle">Đang đồng bộ</strong>
+                            <small id="dashboardSyncDetail">Đang kiểm tra dữ liệu mới nhất</small>
+                        </span>
+                    </div>
+                    <button class="button secondary dashboard-refresh-button" type="button" id="refreshDashboardBtn"
+                        aria-label="Làm mới dữ liệu dashboard" title="Làm mới dữ liệu">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+                            stroke-width="2.2" aria-hidden="true">
+                            <path d="M20 6v5h-5M4 18v-5h5M18.5 9A7 7 0 0 0 6.2 6.2L4 8m16 8-2.2 1.8A7 7 0 0 1 5.5 15" />
+                        </svg>
+                        <span>Làm mới</span>
+                    </button>
                     <a href="/portal.html" class="button secondary" id="backToPortalBtn">
                         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
                             stroke-width="2.5">
                             <polyline points="15 18 9 12 15 6" />
                         </svg>
-                        Portal
+                        Cổng nội bộ
                     </a>
-                    <button class="button" type="button" id="exportBtn">Xuất báo cáo</button>
+                    <button class="button report-export-trigger" type="button" id="exportBtn" hidden aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+                            stroke-width="2.3" aria-hidden="true">
+                            <path d="M12 3v12m-4-4 4 4 4-4M5 19h14" />
+                        </svg>
+                        Xuất báo cáo
+                    </button>
                 </div>
             </header>
 
-            <main class="content">
+            <main class="content" id="dashboardContent" tabindex="-1">
                 <div class="dashboard-master-container">
                     <!-- Tổng quan hoạt động -->
                     <section class="section dashboard-page-view" id="overview" data-page-view="overview">
@@ -117,17 +143,19 @@
                                     <span>Tháng báo cáo</span>
                                     <input type="hidden" id="overviewMonthSelect">
                                     <button type="button" class="overview-month-trigger" id="overviewMonthTrigger"
-                                        aria-label="Chọn tháng báo cáo" aria-haspopup="dialog" aria-expanded="false">
+                                        aria-label="Chọn tháng báo cáo" aria-haspopup="dialog" aria-expanded="false"
+                                        aria-controls="overviewMonthPanel">
                                         <span>Tháng <strong id="overviewMonthLabel">08/2026</strong></span>
                                         <svg viewBox="0 0 24 24" aria-hidden="true">
                                             <path d="m6 9 6 6 6-6" />
                                         </svg>
                                     </button>
                                     <div class="overview-month-panel" id="overviewMonthPanel" role="dialog"
-                                        aria-label="Bộ lọc tháng báo cáo">
+                                        aria-label="Bộ lọc tháng báo cáo" tabindex="-1">
                                         <select class="overview-year-select" id="overviewYearSelect"
                                             aria-label="Chọn năm báo cáo"></select>
-                                        <div class="overview-month-grid" id="overviewMonthGrid"></div>
+                                        <div class="overview-month-grid" id="overviewMonthGrid" role="group"
+                                            aria-label="Chọn tháng"></div>
                                         <button type="button" class="overview-current-month"
                                             id="overviewMonthToday">Tháng này</button>
                                     </div>
@@ -141,7 +169,8 @@
                                     </span>
                                     <span>⌄</span>
                                 </button>
-                                <div class="date-range-panel" id="dateRangePanel">
+                                <div class="date-range-panel" id="dateRangePanel" role="dialog"
+                                    aria-label="Chọn khoảng thời gian báo cáo">
                                     <div class="date-range-header">
                                         <button type="button" class="calendar-nav" id="dateRangePrev"
                                             aria-label="Tháng trước">‹</button>
@@ -308,12 +337,6 @@
                                             <option value="">Tất cả thiết bị</option>
                                         </select>
                                     </label>
-                                    <button type="button" class="instructor-button export" id="instructorClassExport">
-                                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                                            <path d="M12 3v12m-4-4 4 4 4-4M5 19h14" />
-                                        </svg>
-                                        Xuất CSV
-                                    </button>
                                 </div>
                             </div>
                             <div class="instructor-progress-filterbar" aria-label="Tìm kiếm và lọc tiến độ KTV">
@@ -348,6 +371,7 @@
                             <div class="instructor-progress-scroll" id="instructorProgressScroll" tabindex="0"
                                 aria-label="Ma trận tiến độ lab theo lớp, có thể cuộn ngang và dọc">
                                 <table class="instructor-progress-table">
+                                    <caption class="sr-only">Tiến độ lớp học theo kỹ thuật viên</caption>
                                     <thead id="instructorProgressHead"></thead>
                                     <tbody id="instructorProgressBody"></tbody>
                                     <tfoot id="instructorProgressFoot"></tfoot>
@@ -376,6 +400,7 @@
                             </div>
                             <div class="panel-body">
                                 <table>
+                                    <caption class="sr-only">Danh sách bài nộp gần đây</caption>
                                     <thead>
                                         <tr>
                                             <th style="width: 18%;">
@@ -476,16 +501,17 @@
                     <section class="section detail-report-page dashboard-page-view" id="analytics"
                         data-page-view="analytics">
                         <div class="detail-report-shell">
-                            <div class="matrix-view-toggle-bar">
+                            <div class="matrix-view-toggle-bar" hidden aria-hidden="true">
                                 <button type="button" class="matrix-toggle-btn active"
-                                    data-matrix-tab-target="analytics">
+                                    data-matrix-tab-target="analytics" aria-pressed="true">
                                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
                                         stroke-width="2">
                                         <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4" />
                                     </svg>
                                     <span>Báo cáo theo Khu vực/CNx</span>
                                 </button>
-                                <button type="button" class="matrix-toggle-btn" data-matrix-tab-target="class_matrix">
+                                <button type="button" class="matrix-toggle-btn" data-matrix-tab-target="class_matrix"
+                                    aria-pressed="false">
                                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
                                         stroke-width="2">
                                         <path
@@ -544,6 +570,7 @@
                                 <div class="detail-report-scroll" id="detailReportScroll" tabindex="0"
                                     aria-label="Bảng báo cáo chi tiết, có thể cuộn ngang">
                                     <table class="detail-report-table">
+                                        <caption class="sr-only">Ma trận hoàn thành bài lab theo khu vực và chi nhánh</caption>
                                         <thead id="detailReportHead"></thead>
                                         <tbody id="detailReportBody"></tbody>
                                         <tfoot id="detailReportFoot"></tfoot>
@@ -559,8 +586,9 @@
                     <section class="section detail-report-page dashboard-page-view" id="classMatrix"
                         data-page-view="class_matrix">
                         <div class="detail-report-shell">
-                            <div class="matrix-view-toggle-bar">
-                                <button type="button" class="matrix-toggle-btn" data-matrix-tab-target="analytics">
+                            <div class="matrix-view-toggle-bar" hidden aria-hidden="true">
+                                <button type="button" class="matrix-toggle-btn" data-matrix-tab-target="analytics"
+                                    aria-pressed="false">
                                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
                                         stroke-width="2">
                                         <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4" />
@@ -568,7 +596,7 @@
                                     <span>Báo cáo theo Khu vực/CNx</span>
                                 </button>
                                 <button type="button" class="matrix-toggle-btn active"
-                                    data-matrix-tab-target="class_matrix">
+                                    data-matrix-tab-target="class_matrix" aria-pressed="true">
                                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
                                         stroke-width="2">
                                         <path
@@ -601,13 +629,6 @@
                                         <input type="search" id="classMatrixSearchInput"
                                             placeholder="Tìm tên, email, mã NV..." autocomplete="off">
                                     </label>
-                                    <button type="button" class="button export" id="classMatrixExportBtn">
-                                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none"
-                                            stroke="currentColor" stroke-width="2.5">
-                                            <path d="M12 3v12m-4-4 4 4 4-4M5 19h14" />
-                                        </svg>
-                                        Xuất báo cáo
-                                    </button>
                                 </div>
                             </div>
 
@@ -649,6 +670,7 @@
                                 <div class="detail-report-scroll class-matrix-scroll" id="classMatrixScroll"
                                     tabindex="0" aria-label="Bảng ma trận KTV theo lớp, có thể cuộn ngang">
                                     <table class="detail-report-table class-matrix-table">
+                                        <caption class="sr-only">Ma trận tiến độ thực hành kỹ thuật viên theo lớp học</caption>
                                         <thead id="classMatrixHead"></thead>
                                         <tbody id="classMatrixBody"></tbody>
                                         <tfoot id="classMatrixFoot"></tfoot>
@@ -685,6 +707,7 @@
                                     lọc</button>
                             </div>
                             <table>
+                                <caption class="sr-only">Danh sách kỹ thuật viên và hoạt động gần nhất</caption>
                                 <thead>
                                     <tr>
                                         <th style="width: 22%;">
@@ -762,22 +785,28 @@
                                 </thead>
                                 <tbody id="sessionsBody"></tbody>
                             </table>
-                            <div class="table-meta" id="learnerTableMeta"></div>
+                        <div class="table-meta" id="learnerTableMeta" role="status" aria-live="polite"></div>
                         </div>
                     </div>
                 </section>
 
                 <!-- Quản lý KTV (Admin) -->
                 <section class="section dashboard-page-view" id="roster" data-page-view="roster">
-                    <div class="roster-tab-bar" id="rosterTabBar">
-                        <button type="button" class="roster-tab-btn active" data-roster-tab="list">Danh sách
+                    <div class="roster-tab-bar" id="rosterTabBar" role="tablist" aria-label="Chức năng quản lý KTV">
+                        <button type="button" class="roster-tab-btn active" id="rosterListTab" role="tab"
+                            aria-selected="true" aria-controls="rosterListPanel" tabindex="0" data-roster-tab="list">Danh sách
                             KTV</button>
-                        <button type="button" class="roster-tab-btn" data-roster-tab="import">Import Excel</button>
-                        <button type="button" class="roster-tab-btn" data-roster-tab="history">Lịch sử import</button>
+                        <button type="button" class="roster-tab-btn" id="rosterImportTab" role="tab"
+                            aria-selected="false" aria-controls="rosterImportPanel" tabindex="-1"
+                            data-roster-tab="import">Import Excel</button>
+                        <button type="button" class="roster-tab-btn" id="rosterHistoryTab" role="tab"
+                            aria-selected="false" aria-controls="rosterHistoryPanel" tabindex="-1"
+                            data-roster-tab="history">Lịch sử import</button>
                     </div>
 
                     <!-- Sub-tab: Danh sách KTV -->
-                    <div class="roster-panel" id="rosterListPanel">
+                    <div class="roster-panel" id="rosterListPanel" role="tabpanel" aria-labelledby="rosterListTab"
+                        tabindex="0">
                         <div class="roster-toolbar">
                             <label class="roster-search-field" for="rosterSearchInput">
                                 <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -787,27 +816,26 @@
                                 <input type="search" id="rosterSearchInput"
                                     placeholder="Tìm tên, email, mã NV, khu vực, chi nhánh..." autocomplete="off">
                             </label>
-                            <select id="rosterStatusFilter" class="roster-select">
+                            <select id="rosterStatusFilter" class="roster-select" aria-label="Lọc trạng thái KTV">
                                 <option value="active">Đang làm</option>
                                 <option value="terminated">Đã nghỉ</option>
                                 <option value="all">Tất cả</option>
                             </select>
-                            <button type="button" class="button secondary" id="rosterExportBtn">Xuất CSV</button>
                         </div>
-                        <div class="roster-table-wrapper">
+                        <div class="roster-table-wrapper" tabindex="0" aria-label="Danh sách hồ sơ KTV, có thể cuộn ngang">
                             <table class="roster-table">
+                                <caption class="sr-only">Danh sách hồ sơ kỹ thuật viên</caption>
                                 <thead>
                                     <tr>
-                                        <th style="width:70px">Mã NV</th>
-                                        <th style="width:16%">Họ tên</th>
-                                        <th style="width:20%">Email</th>
-                                        <th style="width:14%">Vị trí</th>
-                                        <th style="width:10%">Khu vực</th>
-                                        <th style="width:7%">Chi nhánh</th>
-                                        <th style="width:7%">Lớp</th>
-                                        <th style="width:10%">Ngày BĐ</th>
-                                        <th style="width:8%">Trạng thái</th>
-                                        <th style="width:50px"></th>
+                                        <th scope="col" style="width:96px">Mã NV</th>
+                                        <th scope="col" style="width:17%">Họ tên</th>
+                                        <th scope="col" style="width:22%">Email</th>
+                                        <th scope="col" style="width:15%">Vị trí</th>
+                                        <th scope="col" style="width:11%">Khu vực</th>
+                                        <th scope="col" style="width:8%">Chi nhánh</th>
+                                        <th scope="col" style="width:8%">Lớp</th>
+                                        <th scope="col" style="width:104px">Trạng thái</th>
+                                        <th scope="col" style="width:68px"><span class="sr-only">Thao tác</span></th>
                                     </tr>
                                 </thead>
                                 <tbody id="rosterTableBody"></tbody>
@@ -817,7 +845,8 @@
                     </div>
 
                     <!-- Sub-tab: Import -->
-                    <div class="roster-panel" id="rosterImportPanel" hidden>
+                    <div class="roster-panel" id="rosterImportPanel" role="tabpanel"
+                        aria-labelledby="rosterImportTab" tabindex="0" hidden>
                         <div class="roster-import-layout">
                             <div class="upload-zone" id="rosterUploadZone">
                                 <svg viewBox="0 0 24 24" aria-hidden="true" class="upload-icon">
@@ -855,21 +884,24 @@
                     </div>
 
                     <!-- Sub-tab: Lịch sử import -->
-                    <div class="roster-panel" id="rosterHistoryPanel" hidden>
-                        <div class="roster-table-wrapper">
+                    <div class="roster-panel" id="rosterHistoryPanel" role="tabpanel"
+                        aria-labelledby="rosterHistoryTab" tabindex="0" hidden>
+                        <div class="roster-table-wrapper" tabindex="0"
+                            aria-label="Lịch sử import KTV, có thể cuộn ngang">
                             <table class="roster-table">
+                                <caption class="sr-only">Lịch sử import danh sách kỹ thuật viên</caption>
                                 <thead>
                                     <tr>
-                                        <th>Batch ID</th>
-                                        <th>File</th>
-                                        <th>Người import</th>
-                                        <th>Tổng dòng</th>
-                                        <th>Thêm mới</th>
-                                        <th>Cập nhật</th>
-                                        <th>Nghỉ việc</th>
-                                        <th>Khôi phục</th>
-                                        <th>Lỗi</th>
-                                        <th>Thời gian</th>
+                                        <th scope="col">Batch ID</th>
+                                        <th scope="col">File</th>
+                                        <th scope="col">Người import</th>
+                                        <th scope="col">Tổng dòng</th>
+                                        <th scope="col">Thêm mới</th>
+                                        <th scope="col">Cập nhật</th>
+                                        <th scope="col">Nghỉ việc</th>
+                                        <th scope="col">Khôi phục</th>
+                                        <th scope="col">Lỗi</th>
+                                        <th scope="col">Thời gian</th>
                                     </tr>
                                 </thead>
                                 <tbody id="rosterHistoryBody"></tbody>
@@ -880,10 +912,11 @@
 
                     <!-- Edit KTV Modal -->
                     <div class="sub-modal-backdrop" id="rosterEditBackdrop" aria-hidden="true">
-                        <div class="sub-modal-card roster-edit-card">
+                        <div class="sub-modal-card roster-edit-card" id="rosterEditDialog" role="dialog" aria-modal="true"
+                            aria-labelledby="rosterEditTitle" aria-describedby="rosterEditSubtitle" tabindex="-1">
                             <div class="sub-modal-header">
                                 <div>
-                                    <h3>Sửa thông tin KTV</h3>
+                                    <h3 id="rosterEditTitle">Sửa thông tin KTV</h3>
                                     <div class="sub-modal-subtitle" id="rosterEditSubtitle"></div>
                                 </div>
                                 <button type="button" class="detail-close" id="rosterEditClose"
@@ -893,15 +926,15 @@
                                 <form id="rosterEditForm" class="roster-edit-form">
                                     <input type="hidden" id="rosterEditEmployeeId">
                                     <div class="roster-form-row">
-                                        <label>Họ tên</label>
+                                        <label for="rosterEditDisplayName">Họ tên</label>
                                         <input type="text" id="rosterEditDisplayName" required>
                                     </div>
                                     <div class="roster-form-row">
-                                        <label>Email</label>
+                                        <label for="rosterEditEmail">Email</label>
                                         <input type="email" id="rosterEditEmail" required>
                                     </div>
                                     <div class="roster-form-row">
-                                        <label>Vị trí</label>
+                                        <label for="rosterEditJobTitle">Vị trí</label>
                                         <input type="text" id="rosterEditJobTitle">
                                     </div>
                                     <div class="roster-form-row">
@@ -915,27 +948,19 @@
                                         <input type="text" id="rosterEditBranchName" readonly>
                                     </div>
                                     <div class="roster-form-row">
-                                        <label>Mã đơn vị</label>
+                                        <label for="rosterEditUnitCode">Mã đơn vị</label>
                                         <input type="text" id="rosterEditUnitCode" maxlength="100">
                                     </div>
                                     <div class="roster-form-row">
-                                        <label>Tên đơn vị</label>
+                                        <label for="rosterEditUnitName">Tên đơn vị</label>
                                         <input type="text" id="rosterEditUnitName" maxlength="200">
                                     </div>
                                     <div class="roster-form-row">
-                                        <label>Lớp</label>
+                                        <label for="rosterEditClassCode">Lớp</label>
                                         <input type="text" id="rosterEditClassCode" maxlength="50">
                                     </div>
                                     <div class="roster-form-row">
-                                        <label>Ngày bắt đầu</label>
-                                        <input type="date" id="rosterEditTrainingStart">
-                                    </div>
-                                    <div class="roster-form-row">
-                                        <label>Ngày kết thúc</label>
-                                        <input type="date" id="rosterEditTrainingEnd">
-                                    </div>
-                                    <div class="roster-form-row">
-                                        <label>Nghỉ việc</label>
+                                        <label for="rosterEditTerminated">Nghỉ việc</label>
                                         <select id="rosterEditTerminated">
                                             <option value="0">Đang làm</option>
                                             <option value="1">Đã nghỉ việc</option>
@@ -957,7 +982,7 @@
 
     <!-- Modal chi tiết KTV khi click vào dòng KTV -->
     <section class="section learner-detail-card" id="learnerDetailCard" role="dialog" aria-modal="true"
-        aria-hidden="true">
+        aria-labelledby="learnerDetailTitle" aria-describedby="learnerDetailSubtitle" tabindex="-1" aria-hidden="true">
         <div class="detail-header">
             <div>
                 <h3 id="learnerDetailTitle">Chi tiết KTV</h3>
@@ -1005,13 +1030,15 @@
                     <h4>Tần suất làm bài theo khung giờ</h4>
                     <div class="date-range-picker" id="hourlyDatePicker">
                         <button type="button" class="date-range-trigger" id="hourlyDateTrigger"
-                            aria-label="Bộ lọc thời gian">
+                            aria-label="Bộ lọc thời gian" aria-haspopup="dialog" aria-expanded="false"
+                            aria-controls="hourlyDatePanel">
                             <span class="date-range-meta">
                                 <span class="date-range-value" id="hourlyDateText">Tất cả thời gian</span>
                             </span>
                             <span>⌄</span>
                         </button>
-                        <div class="date-range-panel" id="hourlyDatePanel" style="z-index: 1000;">
+                        <div class="date-range-panel" id="hourlyDatePanel" role="dialog"
+                            aria-label="Chọn khoảng thời gian thống kê theo giờ" tabindex="-1">
                             <div class="date-range-header">
                                 <button type="button" class="calendar-nav" id="hourlyPrevMonth"
                                     aria-label="Tháng trước">‹</button>
@@ -1027,7 +1054,8 @@
                             <div class="date-range-weekdays">
                                 <span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span><span>CN</span>
                             </div>
-                            <div class="date-range-days" id="hourlyDays"></div>
+                            <div class="date-range-days" id="hourlyDays" role="grid"
+                                aria-label="Lịch chọn ngày"></div>
                             <div class="date-range-summary">
                                 <div>
                                     <span>Bắt đầu</span>
@@ -1053,6 +1081,7 @@
             <h4>Nhật ký phiên làm bài</h4>
             <div class="learner-history">
                 <table>
+                    <caption class="sr-only">Nhật ký phiên thực hành của kỹ thuật viên</caption>
                     <thead>
                         <tr>
                             <th style="width: 22%;">
@@ -1138,7 +1167,7 @@
                     <tbody id="learnerHistoryBody"></tbody>
                 </table>
             </div>
-            <div class="table-meta" id="learnerHistoryMeta"></div>
+            <div class="table-meta" id="learnerHistoryMeta" role="status" aria-live="polite"></div>
         </div>
     </section>
 
@@ -1146,7 +1175,8 @@
 
     <!-- Sub modal chi tiết bài lab của thiết bị -->
     <div class="sub-modal-backdrop" id="deviceSubModal" aria-hidden="true">
-        <div class="sub-modal-card">
+        <div class="sub-modal-card" role="dialog" aria-modal="true" aria-labelledby="subModalDeviceTitle"
+            aria-describedby="subModalDeviceSubtitle" tabindex="-1">
             <div class="sub-modal-header">
                 <div>
                     <h3 id="subModalDeviceTitle">Chi tiết thiết bị</h3>
@@ -1174,14 +1204,14 @@
                     </div>
                 </div>
 
-                <div class="sub-modal-filter-bar">
-                    <button type="button" class="sub-filter-btn active" data-sub-filter="all">Tất cả bài lab (<span
+                <div class="sub-modal-filter-bar" role="group" aria-label="Lọc bài lab theo trạng thái">
+                    <button type="button" class="sub-filter-btn active" data-sub-filter="all" aria-pressed="true">Tất cả bài lab (<span
                             id="cntAll">0</span>)</button>
-                    <button type="button" class="sub-filter-btn" data-sub-filter="done">Đã hoàn thành (<span
+                    <button type="button" class="sub-filter-btn" data-sub-filter="done" aria-pressed="false">Đã hoàn thành (<span
                             id="cntDone">0</span>)</button>
-                    <button type="button" class="sub-filter-btn" data-sub-filter="pending">Đang làm (<span
+                    <button type="button" class="sub-filter-btn" data-sub-filter="pending" aria-pressed="false">Đang làm (<span
                             id="cntPending">0</span>)</button>
-                    <button type="button" class="sub-filter-btn" data-sub-filter="not_started">Chưa làm (<span
+                    <button type="button" class="sub-filter-btn" data-sub-filter="not_started" aria-pressed="false">Chưa làm (<span
                             id="cntNotStarted">0</span>)</button>
                 </div>
 
@@ -1190,7 +1220,84 @@
         </div>
     </div>
 
-    <script src="js/app.js?v=20260825-2"></script>
+    <!-- Một điểm xuất báo cáo thống nhất cho toàn bộ dashboard -->
+    <div class="report-export-backdrop" id="reportExportBackdrop" aria-hidden="true" hidden>
+        <section class="report-export-dialog" role="dialog" aria-modal="true" tabindex="-1"
+            aria-labelledby="reportExportTitle" aria-describedby="reportExportDescription">
+            <header class="report-export-header">
+                <div class="report-export-heading">
+                    <span class="report-export-eyebrow">Trung tâm báo cáo</span>
+                    <h2 id="reportExportTitle">Xuất báo cáo</h2>
+                    <p id="reportExportDescription">Chọn loại báo cáo, kiểm tra phạm vi rồi tải workbook Excel đã định dạng.</p>
+                </div>
+                <button type="button" class="report-export-close" id="reportExportClose"
+                    aria-label="Đóng hộp xuất báo cáo">×</button>
+            </header>
+
+            <div class="report-export-body">
+                <fieldset class="report-export-options" id="reportExportOptions">
+                    <legend>Loại báo cáo</legend>
+                    <label class="report-export-option" data-report-option="activity">
+                        <input type="radio" name="reportExportType" value="activity">
+                        <span class="report-export-option-icon report-export-option-blue" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="M4 19V9m5 10V5m5 14v-7m5 7V3" /></svg>
+                        </span>
+                        <span><strong>Chi tiết hoạt động KTV</strong><small>Phiên thực hành, kết quả và thời lượng.</small></span>
+                    </label>
+                    <label class="report-export-option" data-report-option="region">
+                        <input type="radio" name="reportExportType" value="region">
+                        <span class="report-export-option-icon report-export-option-cyan" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="M4 20h16M6 20V8l6-4 6 4v12M9 11h2m2 0h2m-6 4h2m2 0h2" /></svg>
+                        </span>
+                        <span><strong>Tiến độ theo chi nhánh</strong><small>Ma trận Khu vực/CNx theo thiết bị và bài lab.</small></span>
+                    </label>
+                    <label class="report-export-option" data-report-option="class_matrix">
+                        <input type="radio" name="reportExportType" value="class_matrix">
+                        <span class="report-export-option-icon report-export-option-purple" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m7-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8m8-3v6m3-3h-6" /></svg>
+                        </span>
+                        <span><strong>Tiến độ KTV theo lớp</strong><small>Chi tiết trạng thái từng bài lab của từng KTV.</small></span>
+                    </label>
+                    <label class="report-export-option" data-report-option="roster">
+                        <input type="radio" name="reportExportType" value="roster">
+                        <span class="report-export-option-icon report-export-option-green" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2m4-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8m10-4v6m3-3h-6" /></svg>
+                        </span>
+                        <span><strong>Danh sách hồ sơ KTV</strong><small>Đúng các cột nghiệp vụ và bộ lọc quản lý KTV.</small></span>
+                    </label>
+                </fieldset>
+
+                <div class="report-export-summary" aria-label="Thông tin file xuất">
+                    <div><span>Kỳ / phạm vi</span><strong id="reportExportPeriod">—</strong></div>
+                    <div><span>Bộ lọc áp dụng</span><strong id="reportExportScope">—</strong></div>
+                    <div><span>Dữ liệu dự kiến</span><strong id="reportExportCount">—</strong></div>
+                    <div><span>Định dạng</span><strong>Excel (.xlsx)</strong></div>
+                </div>
+
+                <div class="report-export-file-preview">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l4 4v16H6zM14 2v5h5M9 13h6m-6 4h6" /></svg>
+                    <span><small>Tên file</small><strong id="reportExportFilename">FTC_Bao_cao.xlsx</strong></span>
+                </div>
+                <p class="report-export-note">Workbook giữ đúng tiếng Việt, kiểu ngày/giờ, độ rộng cột và có sẵn bộ lọc, cố định tiêu đề.</p>
+                <div class="report-export-status" id="reportExportStatus" role="status" aria-live="polite" hidden></div>
+            </div>
+
+            <footer class="report-export-footer">
+                <button type="button" class="button secondary" id="reportExportCancel">Hủy</button>
+                <button type="button" class="button report-export-download" id="reportExportDownload">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+                        stroke-width="2.3" aria-hidden="true">
+                        <path d="M12 3v12m-4-4 4 4 4-4M5 19h14" />
+                    </svg>
+                    <span>Tải báo cáo</span>
+                </button>
+            </footer>
+        </section>
+    </div>
+
+    <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
+
+    <script src="js/app.js?v=20260825-8"></script>
 </body>
 
 </html>

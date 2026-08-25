@@ -8,6 +8,13 @@ let dashboardReport = null;
 let technicianByIdentity = new Map();
 let technicianCatalogAuthoritative = false;
 let instructorSearchTimer = null;
+let reportExportReturnFocus = null;
+let reportExportBusy = false;
+let activeToastTimer = null;
+let rosterEditReturnFocus = null;
+let dashboardLoadRequest = null;
+let deviceSubModalReturnFocus = null;
+let learnerDetailReturnIdentity = '';
 
 const formatNumber = new Intl.NumberFormat('vi-VN');
 const LEARNER_TABLE_PAGE_SIZE = 4;
@@ -32,7 +39,8 @@ const state = {
     hourlyEndDate: '',
     hourlyTempStartDate: '',
     hourlyTempEndDate: '',
-    hourlyCalendarMonth: new Date(2026, 6, 1),
+    hourlyCalendarMonth: new Date(now.getFullYear(), now.getMonth(), 1),
+    hourlyCalendarFocusDate: fmtDate(now),
 
     selectedLearner: '',
 
@@ -59,6 +67,7 @@ const state = {
     instructorImportMembers: [],
     instructorImportFileName: '',
     instructorWorkspaceBound: false,
+    assignmentsLoaded: false,
 
     // Class Matrix state
     classMatrixSelectedClass: '',
@@ -94,7 +103,9 @@ const state = {
 
     filtersBound: false,
     popoversInitialized: false,
-    dataSourceLabel: 'Đang tải dữ liệu từ timer_sessions',
+    dataSourceLabel: 'Đang đồng bộ dữ liệu vận hành',
+    dashboardDataLoaded: false,
+    lastSuccessfulRefreshAt: null,
 
     // Roster (Quản lý KTV) — Admin
     rosterTab: 'list',
@@ -115,6 +126,8 @@ const state = {
     rosterHistoryLoaded: false,
     rosterEditEmployeeId: '',
     rosterInitialized: false,
+    rosterRequestSequence: 0,
+    rosterHistoryRequestSequence: 0,
 };
 
 const els = {
@@ -213,6 +226,80 @@ function escapeHTML(value) {
     }[char]));
 }
 
+function safeStorageGet(key) {
+    try {
+        return window.localStorage.getItem(key);
+    } catch (error) {
+        return null;
+    }
+}
+
+function safeStorageSet(key, value) {
+    try {
+        window.localStorage.setItem(key, value);
+    } catch (error) {
+        // Storage có thể bị vô hiệu hóa bởi chính sách trình duyệt; giao diện vẫn hoạt động bình thường.
+    }
+}
+
+function showToast(message, type = 'info', duration = 4200) {
+    const region = document.getElementById('toastRegion');
+    if (!region || !message) return;
+    window.clearTimeout(activeToastTimer);
+    region.setAttribute('aria-live', type === 'error' ? 'assertive' : 'polite');
+
+    const toast = document.createElement('div');
+    toast.className = `dashboard-toast is-${type}`;
+    toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+    const icon = document.createElement('span');
+    icon.className = 'dashboard-toast-icon';
+    icon.setAttribute('aria-hidden', 'true');
+    icon.textContent = type === 'success' ? '✓' : (type === 'error' ? '!' : 'i');
+    const copy = document.createElement('span');
+    copy.className = 'dashboard-toast-copy';
+    copy.textContent = message;
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'dashboard-toast-close';
+    close.setAttribute('aria-label', 'Đóng thông báo');
+    close.textContent = '×';
+    close.addEventListener('click', () => toast.remove());
+    toast.append(icon, copy, close);
+    region.replaceChildren(toast);
+
+    requestAnimationFrame(() => toast.classList.add('is-visible'));
+    activeToastTimer = window.setTimeout(() => {
+        toast.classList.remove('is-visible');
+        window.setTimeout(() => toast.remove(), 180);
+    }, duration);
+}
+
+function getFocusableElements(container) {
+    if (!container) return [];
+    return [...container.querySelectorAll(
+        'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )].filter(element => !element.hidden && element.offsetParent !== null);
+}
+
+function trapDialogFocus(event, container) {
+    if (event.key !== 'Tab' || !container) return;
+    const focusable = getFocusableElements(container);
+    if (!focusable.length) {
+        event.preventDefault();
+        container.focus();
+        return;
+    }
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+    }
+}
+
 function getStatusClass(status) {
     if (status === 'Hoàn thành') return 'status-done';
     if (status === 'Đang làm') return 'status-running';
@@ -276,9 +363,11 @@ function sortRows(rows, sortState) {
 function renderSortMarks() {
     document.querySelectorAll('.sort-button').forEach(button => {
         const table = button.dataset.table;
+        const header = button.closest('th');
         if (table === 'realtime') {
             const mark = button.querySelector('.sort-mark');
             if (mark) mark.textContent = state.realtimeTimeSortDir === 'asc' ? '↑' : '↓';
+            if (header) header.setAttribute('aria-sort', state.realtimeTimeSortDir === 'asc' ? 'ascending' : 'descending');
             return;
         }
         const sortState = state.sessionsSort;
@@ -287,13 +376,22 @@ function renderSortMarks() {
             const isActive = sortState.key === button.dataset.key;
             mark.textContent = isActive ? (sortState.direction === 'asc' ? '↑' : '↓') : '↕';
             button.classList.toggle('is-sorted', isActive);
+            if (header) header.setAttribute('aria-sort', isActive ? (sortState.direction === 'asc' ? 'ascending' : 'descending') : 'none');
         }
     });
 
     const timeMark = document.querySelector('#detailTimeSort .sort-mark');
     if (timeMark) timeMark.textContent = state.detailSortKey === 'time' ? (state.detailTimeSortDir === 'asc' ? '↑' : '↓') : '↕';
+    document.getElementById('detailTimeSort')?.closest('th')?.setAttribute(
+        'aria-sort',
+        state.detailSortKey === 'time' ? (state.detailTimeSortDir === 'asc' ? 'ascending' : 'descending') : 'none'
+    );
     const durMark = document.querySelector('#detailDurationSort .sort-mark');
     if (durMark) durMark.textContent = state.detailSortKey === 'duration' ? (state.detailDurationSortDir === 'asc' ? '↑' : '↓') : '↕';
+    document.getElementById('detailDurationSort')?.closest('th')?.setAttribute(
+        'aria-sort',
+        state.detailSortKey === 'duration' ? (state.detailDurationSortDir === 'asc' ? 'ascending' : 'descending') : 'none'
+    );
 }
 
 function getKpiComparisonPeriods() {
@@ -627,9 +725,9 @@ function renderSessions(rows) {
     state.learnerTablePage = pageData.currentPage;
     if (els.sessionsBody) {
         els.sessionsBody.innerHTML = pageData.rows.map(item => `
-            <tr class="clickable-row ${state.selectedLearner === item.learner ? 'active' : ''}" data-learner="${escapeHTML(item.learner)}" title="Bấm để xem chi tiết KTV">
+            <tr class="clickable-row ${state.selectedLearner === item.learner ? 'active' : ''}">
                 <td>
-                    <div class="learner-link" title="${escapeHTML(item.learner)}">${escapeHTML(getLearnerName(item.learner))}</div>
+                    <button type="button" class="learner-link" data-open-learner data-learner="${escapeHTML(item.learner)}" title="Mở chi tiết ${escapeHTML(item.learner)}">${escapeHTML(getLearnerName(item.learner))}</button>
                     <div class="item-sub">${item.completion}% hoàn thành</div>
                 </td>
                 <td>${escapeHTML(item.learner)}</td>
@@ -643,13 +741,15 @@ function renderSessions(rows) {
                 </td>
             </tr>
         `).join('');
-        els.sessionsBody.querySelectorAll('[data-learner]').forEach(row => {
-            row.addEventListener('click', () => {
-                const nextLearner = row.getAttribute('data-learner');
+        els.sessionsBody.querySelectorAll('[data-open-learner]').forEach(button => {
+            const openLearner = () => {
+                const nextLearner = button.getAttribute('data-learner');
                 if (state.selectedLearner !== nextLearner) state.learnerDetailPage = 1;
+                learnerDetailReturnIdentity = nextLearner;
                 state.selectedLearner = nextLearner;
                 renderAll();
-            });
+            };
+            button.addEventListener('click', openLearner);
         });
     }
     renderLearnerTableMeta(pageData);
@@ -719,11 +819,23 @@ function renderLearnerHistoryMeta(pageData) {
 }
 
 function hideLearnerDetail() {
+    const returnIdentity = state.selectedLearner || learnerDetailReturnIdentity;
     state.selectedLearner = '';
     state.learnerDetailPage = 1;
     document.body.classList.remove('detail-open');
     els.learnerDetailCard?.classList.remove('visible');
     els.learnerDetailCard?.setAttribute('aria-hidden', 'true');
+    state.currentLearnerRows = null;
+    document.getElementById('learnerDeviceDonut')?.replaceChildren();
+    document.getElementById('learnerDeviceLegend')?.replaceChildren();
+    learnerDetailReturnIdentity = '';
+    if (returnIdentity) {
+        window.requestAnimationFrame(() => {
+            [...(els.sessionsBody?.querySelectorAll('[data-open-learner]') || [])]
+                .find(button => button.dataset.learner === returnIdentity)
+                ?.focus({ preventScroll: true });
+        });
+    }
 }
 
 function renderOverviewMonthlyTrend(rows) {
@@ -828,6 +940,7 @@ function renderLearnerDetail(rows) {
         return;
     }
 
+    const wasVisible = els.learnerDetailCard?.classList.contains('visible');
     const allLearnerRows = rows.filter(item => item.learner === state.selectedLearner);
 
     if (!allLearnerRows.length) {
@@ -918,6 +1031,7 @@ function renderLearnerDetail(rows) {
     els.learnerDetailCard?.classList.add('visible');
     els.learnerDetailCard?.setAttribute('aria-hidden', 'false');
     document.body.classList.add('detail-open');
+    if (!wasVisible) window.requestAnimationFrame(() => els.learnerDetailClose?.focus());
 }
 
 function sameDay(a, b) {
@@ -950,6 +1064,8 @@ function renderHourlyCalendar() {
     const firstOfMonth = new Date(year, month, 1);
     const mondayOffset = (firstOfMonth.getDay() + 6) % 7;
     const gridStart = new Date(year, month, 1 - mondayOffset);
+    const todayKey = fmtDate(new Date());
+    const focusKey = state.hourlyCalendarFocusDate || todayKey;
     const days = [];
     for (let i = 0; i < 42; i += 1) {
         const day = new Date(gridStart);
@@ -959,8 +1075,10 @@ function renderHourlyCalendar() {
         const selectedEnd = state.hourlyTempEndDate ? parseDate(state.hourlyTempEndDate) : null;
         const inRange = selectedStart && selectedEnd && day >= selectedStart && day <= selectedEnd;
         const isSelected = sameDay(day, selectedStart) || sameDay(day, selectedEnd);
+        const fullDateLabel = day.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
         days.push(`
-            <button type="button" class="date-day ${day.getMonth() !== month ? 'outside' : ''} ${inRange ? 'in-range' : ''} ${isSelected ? 'selected' : ''}" data-hourly-date="${key}">
+            <button type="button" role="gridcell" class="date-day ${day.getMonth() !== month ? 'outside' : ''} ${inRange ? 'in-range' : ''} ${isSelected ? 'selected' : ''}" data-hourly-date="${key}"
+                tabindex="${key === focusKey ? '0' : '-1'}" aria-label="${escapeHTML(fullDateLabel)}" aria-selected="${isSelected ? 'true' : 'false'}" ${key === todayKey ? 'aria-current="date"' : ''}>
                 ${day.getDate()}
             </button>
         `);
@@ -979,7 +1097,29 @@ function renderHourlyCalendar() {
             } else {
                 state.hourlyTempEndDate = selected;
             }
+            state.hourlyCalendarFocusDate = selected;
             renderHourlyCalendar();
+            document.querySelector(`[data-hourly-date="${selected}"]`)?.focus();
+        });
+        button.addEventListener('keydown', event => {
+            const offsets = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 };
+            let nextDate = parseDate(button.dataset.hourlyDate);
+            if (Object.hasOwn(offsets, event.key)) {
+                nextDate.setDate(nextDate.getDate() + offsets[event.key]);
+            } else if (event.key === 'PageUp' || event.key === 'PageDown') {
+                nextDate.setMonth(nextDate.getMonth() + (event.key === 'PageUp' ? -1 : 1));
+            } else if (event.key === 'Home' || event.key === 'End') {
+                const weekday = (nextDate.getDay() + 6) % 7;
+                nextDate.setDate(nextDate.getDate() + (event.key === 'Home' ? -weekday : 6 - weekday));
+            } else {
+                return;
+            }
+            event.preventDefault();
+            const nextKey = fmtDate(nextDate);
+            state.hourlyCalendarFocusDate = nextKey;
+            state.hourlyCalendarMonth = new Date(nextDate.getFullYear(), nextDate.getMonth(), 1);
+            renderHourlyCalendar();
+            document.querySelector(`[data-hourly-date="${nextKey}"]`)?.focus();
         });
     });
 }
@@ -995,37 +1135,66 @@ function initHourlyDatePicker() {
     const applyBtn = document.getElementById('hourlyApplyDate');
     const clearBtn = document.getElementById('hourlyClearDate');
 
+    const closeHourlyPanel = ({ restoreFocus = false } = {}) => {
+        picker?.classList.remove('open');
+        trigger?.setAttribute('aria-expanded', 'false');
+        if (restoreFocus) trigger?.focus();
+    };
+
     renderHourlyCalendar();
 
     trigger?.addEventListener('click', (e) => {
         e.stopPropagation();
         state.hourlyTempStartDate = state.hourlyStartDate;
         state.hourlyTempEndDate = state.hourlyEndDate;
+        state.hourlyCalendarFocusDate = state.hourlyStartDate || fmtDate(new Date());
         renderHourlyCalendar();
-        picker?.classList.toggle('open');
+        const willOpen = !picker?.classList.contains('open');
+        picker?.classList.toggle('open', willOpen);
+        trigger.setAttribute('aria-expanded', String(willOpen));
+        if (willOpen) {
+            window.requestAnimationFrame(() => {
+                const focusDay = document.querySelector(`[data-hourly-date="${state.hourlyCalendarFocusDate}"]`);
+                if (focusDay) focusDay.focus();
+                else panel?.focus();
+            });
+        }
     });
 
     panel?.addEventListener('click', (e) => e.stopPropagation());
+    panel?.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            event.stopPropagation();
+            closeHourlyPanel({ restoreFocus: true });
+            return;
+        }
+        trapDialogFocus(event, panel);
+    });
 
     prevMonth?.addEventListener('click', (e) => {
         e.stopPropagation();
         state.hourlyCalendarMonth.setMonth(state.hourlyCalendarMonth.getMonth() - 1);
+        state.hourlyCalendarFocusDate = fmtDate(state.hourlyCalendarMonth);
         renderHourlyCalendar();
     });
 
     nextMonth?.addEventListener('click', (e) => {
         e.stopPropagation();
         state.hourlyCalendarMonth.setMonth(state.hourlyCalendarMonth.getMonth() + 1);
+        state.hourlyCalendarFocusDate = fmtDate(state.hourlyCalendarMonth);
         renderHourlyCalendar();
     });
 
     monthSelect?.addEventListener('change', (e) => {
         state.hourlyCalendarMonth.setMonth(parseInt(e.target.value, 10));
+        state.hourlyCalendarFocusDate = fmtDate(state.hourlyCalendarMonth);
         renderHourlyCalendar();
     });
 
     yearSelect?.addEventListener('change', (e) => {
         state.hourlyCalendarMonth.setFullYear(parseInt(e.target.value, 10));
+        state.hourlyCalendarFocusDate = fmtDate(state.hourlyCalendarMonth);
         renderHourlyCalendar();
     });
 
@@ -1033,7 +1202,7 @@ function initHourlyDatePicker() {
         e.stopPropagation();
         state.hourlyStartDate = state.hourlyTempStartDate;
         state.hourlyEndDate = state.hourlyTempEndDate;
-        picker?.classList.remove('open');
+        closeHourlyPanel({ restoreFocus: true });
         if (state.currentLearnerRows) {
             renderHourlyBarChart(state.currentLearnerRows);
         }
@@ -1046,14 +1215,14 @@ function initHourlyDatePicker() {
         state.hourlyTempStartDate = '';
         state.hourlyTempEndDate = '';
         renderHourlyCalendar();
-        picker?.classList.remove('open');
+        closeHourlyPanel({ restoreFocus: true });
         if (state.currentLearnerRows) {
             renderHourlyBarChart(state.currentLearnerRows);
         }
     });
 
     document.addEventListener('click', () => {
-        picker?.classList.remove('open');
+        closeHourlyPanel();
     });
 }
 
@@ -1685,11 +1854,46 @@ function setDataSourceLabel(text) {
     if (el) el.textContent = text;
 }
 
-function setDashboardLoading(visible) {
+function formatDashboardSyncDetail(date = new Date()) {
+    return `Cập nhật lúc ${date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+}
+
+function setDashboardSyncState(status = 'ready', detail = '') {
+    const sync = document.getElementById('dashboardSyncStatus');
+    const title = document.getElementById('dashboardSyncTitle');
+    const detailEl = document.getElementById('dashboardSyncDetail');
+    const sidebarDot = document.getElementById('sidebarStatusDot');
+    const titles = {
+        syncing: 'Đang đồng bộ',
+        ready: 'Dữ liệu mới nhất',
+        stale: 'Đang dùng dữ liệu gần nhất',
+        offline: 'Mất kết nối'
+    };
+    if (sync) sync.className = `dashboard-sync-status is-${status}`;
+    if (title) title.textContent = titles[status] || titles.ready;
+    if (detailEl) detailEl.textContent = detail || (state.lastSuccessfulRefreshAt
+        ? formatDashboardSyncDetail(state.lastSuccessfulRefreshAt)
+        : 'Chưa có dữ liệu đồng bộ');
+    if (sidebarDot) sidebarDot.className = `sidebar-status-dot is-${status}`;
+}
+
+function setRefreshButtonBusy(busy) {
+    const button = document.getElementById('refreshDashboardBtn');
+    if (!button) return;
+    button.disabled = busy;
+    button.classList.toggle('is-busy', busy);
+    button.setAttribute('aria-label', busy ? 'Đang làm mới dữ liệu dashboard' : 'Làm mới dữ liệu dashboard');
+}
+
+function setDashboardLoading(visible, message = '') {
     const el = document.getElementById('dashboardLoading');
-    if (!el) return;
-    el.hidden = !visible;
-    el.setAttribute('aria-hidden', String(!visible));
+    if (el) {
+        el.hidden = !visible;
+        el.setAttribute('aria-hidden', String(!visible));
+        const copy = el.querySelector('.dashboard-loading-text');
+        if (copy && message) copy.textContent = message;
+    }
+    document.getElementById('appPage')?.setAttribute('aria-busy', String(visible));
 }
 
 let dashboardPollTimer = null;
@@ -1764,24 +1968,29 @@ function buildDashboardSignature(data) {
     ].join('|');
 }
 
-async function fetchDashboardData() {
+async function fetchDashboardData(versionHint = '') {
     const allParams = new URLSearchParams();
-    allParams.set('include_assignments', ['instructors', 'class_matrix', 'analytics'].includes(activeDashboardView) ? '1' : '0');
-    const [response, reportResponse, versionResponse] = await Promise.all([
-        fetch(`${API_BASE_URL}/dashboard/all?${allParams}`),
-        fetch(`${API_BASE_URL}/dashboard/report?${dashboardReportQuery()}`),
-        fetch(`${API_BASE_URL}/dashboard/version`)
-    ]);
+    // The current curriculum assigns every active catalog lab to every active KTV.
+    // Sending the expanded KTV x lab matrix duplicates data already represented by
+    // technicianCatalog + deviceCatalog and can add tens of thousands of rows.
+    const assignmentsRequested = false;
+    allParams.set('include_assignments', '0');
+    const reportRequest = fetch(`${API_BASE_URL}/dashboard/report?${dashboardReportQuery()}`).then(async response => {
+        if (!response.ok) throw new Error(`API báo cáo trả về HTTP ${response.status}`);
+        return (await response.json()).data || null;
+    });
+    const versionRequest = versionHint
+        ? Promise.resolve(versionHint)
+        : fetchDashboardVersion();
+    const optionalRequests = Promise.allSettled([reportRequest, versionRequest]);
+    const response = await fetch(`${API_BASE_URL}/dashboard/all?${allParams}`);
     if (!response.ok) throw new Error(`API dữ liệu chi tiết trả về HTTP ${response.status}`);
-    if (!reportResponse.ok) throw new Error(`API báo cáo trả về HTTP ${reportResponse.status}`);
-    if (!versionResponse.ok) throw new Error(`API phiên bản dashboard trả về HTTP ${versionResponse.status}`);
-    const [payload, reportPayload, versionPayload] = await Promise.all([
-        response.json(),
-        reportResponse.json(),
-        versionResponse.json()
-    ]);
+    const [payload, [reportResult, versionResult]] = await Promise.all([response.json(), optionalRequests]);
     const data = payload.data || {};
-    const report = reportPayload.data || null;
+    const report = reportResult.status === 'fulfilled' ? reportResult.value : dashboardReport;
+    const version = versionResult.status === 'fulfilled' ? String(versionResult.value || '') : String(versionHint || lastDashboardVersion || '');
+    if (reportResult.status === 'rejected') console.warn('Không đồng bộ được báo cáo tổng hợp; giữ dữ liệu gần nhất.', reportResult.reason);
+    if (versionResult.status === 'rejected') console.warn('Không đọc được phiên bản dữ liệu dashboard.', versionResult.reason);
     const techniciansAuthoritative = Array.isArray(data.technicians);
     const technicians = normalizeTechnicianCatalog(techniciansAuthoritative ? data.technicians : []);
     technicianCatalog = technicians;
@@ -1795,8 +2004,9 @@ async function fetchDashboardData() {
         technicians,
         techniciansAuthoritative,
         assignments: normalizeTrainingAssignments(data.assignments || []),
+        assignmentsRequested,
         report,
-        version: String(versionPayload.data?.data_version || ''),
+        version,
         raw: { ...data, report_meta: report?.meta || null }
     };
 }
@@ -1805,22 +2015,26 @@ function applyDashboardData(data) {
     sessions = data.sessions;
     deviceCatalog = data.deviceCatalog;
     technicianCatalog = data.technicians || [];
-    trainingAssignments = data.assignments || [];
-    dashboardReport = data.report || null;
+    if (data.assignmentsRequested) {
+        trainingAssignments = data.assignments || [];
+        state.assignmentsLoaded = true;
+    }
+    if (data.report !== undefined) dashboardReport = data.report;
     technicianCatalogAuthoritative = Boolean(data.techniciansAuthoritative);
+    state.dashboardDataLoaded = true;
     rebuildTechnicianIndex();
     rebuildLearnerNameMap();
 }
 
 function mergeUntouchedFilterSets(allKtvs, allDevices, allLabs, allRegions) {
-    if (!state.realtimeKtvsTouched) state.realtimeSelectedKtvs = new Set([...state.realtimeSelectedKtvs, ...allKtvs]);
-    if (!state.learnerKtvsTouched) state.learnerSelectedKtvs = new Set([...state.learnerSelectedKtvs, ...allKtvs]);
-    if (!state.learnerEmailsTouched) state.learnerSelectedEmails = new Set([...state.learnerSelectedEmails, ...allKtvs]);
-    if (!state.learnerRegionsTouched) state.learnerSelectedRegions = new Set([...state.learnerSelectedRegions, ...allRegions]);
-    if (!state.learnerDevicesTouched) state.learnerSelectedDevices = new Set([...state.learnerSelectedDevices, ...allDevices]);
-    if (!state.learnerLabsTouched) state.learnerSelectedLabs = new Set([...state.learnerSelectedLabs, ...allLabs]);
-    if (!state.realtimeDevicesTouched) state.realtimeSelectedDevices = new Set([...state.realtimeSelectedDevices, ...allDevices]);
-    if (!state.realtimeLabsTouched) state.realtimeSelectedLabs = new Set([...state.realtimeSelectedLabs, ...allLabs]);
+    if (!state.realtimeKtvsTouched) state.realtimeSelectedKtvs = new Set(allKtvs);
+    if (!state.learnerKtvsTouched) state.learnerSelectedKtvs = new Set(allKtvs);
+    if (!state.learnerEmailsTouched) state.learnerSelectedEmails = new Set(allKtvs);
+    if (!state.learnerRegionsTouched) state.learnerSelectedRegions = new Set(allRegions);
+    if (!state.learnerDevicesTouched) state.learnerSelectedDevices = new Set(allDevices);
+    if (!state.learnerLabsTouched) state.learnerSelectedLabs = new Set(allLabs);
+    if (!state.realtimeDevicesTouched) state.realtimeSelectedDevices = new Set(allDevices);
+    if (!state.realtimeLabsTouched) state.realtimeSelectedLabs = new Set(allLabs);
 }
 
 function mergeDefaultClassLearners() {
@@ -1840,6 +2054,13 @@ function refreshFilterOptionLists() {
     const allDevices = [...new Set(sessions.map(item => item.device))].sort();
     const allLabs = [...new Set(sessions.map(item => item.lab))].sort((a, b) => a.localeCompare(b, 'vi'));
     const allRegions = [...new Set(sessions.map(item => item.region))].sort((a, b) => a.localeCompare(b, 'vi'));
+    const universes = state.popoverUniverses;
+    if (universes) {
+        universes.allKtvs.splice(0, universes.allKtvs.length, ...allKtvs);
+        universes.allDevices.splice(0, universes.allDevices.length, ...allDevices);
+        universes.allLabs.splice(0, universes.allLabs.length, ...allLabs);
+        universes.allRegions.splice(0, universes.allRegions.length, ...allRegions);
+    }
     populatePopoverOptions('realtimeKtvOptions', allKtvs, state.realtimeSelectedKtvs, () => { state.realtimeKtvsTouched = true; }, state.realtimeSearchKtv, getLearnerName);
     populatePopoverOptions('realtimeDeviceOptions', allDevices, state.realtimeSelectedDevices, () => { state.realtimeDevicesTouched = true; }, state.realtimeSearchDevice);
     populatePopoverOptions('realtimeLabOptions', allLabs, state.realtimeSelectedLabs, () => { state.realtimeLabsTouched = true; }, state.realtimeSearchLab);
@@ -1850,15 +2071,31 @@ function refreshFilterOptionLists() {
     populatePopoverOptions('learnerLabOptions', allLabs, state.learnerSelectedLabs, () => { state.learnerLabsTouched = true; });
 }
 
-async function refreshDashboardData() {
-    if (dashboardRefreshInFlight || document.hidden) return;
+async function refreshDashboardData({ force = false, announce = false } = {}) {
+    if (activeDashboardView === 'roster' && !force) return false;
+    if (dashboardRefreshInFlight || (document.hidden && !force)) return false;
     dashboardRefreshInFlight = true;
+    setRefreshButtonBusy(true);
+    setDashboardSyncState('syncing', 'Đang kiểm tra dữ liệu mới nhất');
     try {
-        const version = await fetchDashboardVersion();
-        if (version !== '' && version === lastDashboardVersion) return;
-        const data = await fetchDashboardData();
+        let version = '';
+        try {
+            version = await fetchDashboardVersion();
+        } catch (error) {
+            console.warn('Không đọc được phiên bản dashboard; tiếp tục đồng bộ dữ liệu chính.', error);
+        }
+        if (!force && version !== '' && version === lastDashboardVersion) {
+            state.lastSuccessfulRefreshAt = new Date();
+            setDashboardSyncState('ready');
+            return false;
+        }
+        const data = await fetchDashboardData(version);
         const signature = buildDashboardSignature(data.raw);
-        if (signature === lastDashboardSignature) return;
+        if (!force && signature === lastDashboardSignature) {
+            state.lastSuccessfulRefreshAt = new Date();
+            setDashboardSyncState('ready');
+            return false;
+        }
         lastDashboardSignature = signature;
         lastDashboardVersion = data.version || version;
         applyDashboardData(data);
@@ -1870,10 +2107,20 @@ async function refreshDashboardData() {
         refreshFilterOptionLists();
         mergeDefaultClassLearners();
         renderAll();
+        state.lastSuccessfulRefreshAt = new Date();
+        setDashboardSyncState('ready');
+        if (announce) showToast('Dashboard đã được cập nhật với dữ liệu mới nhất.', 'success');
+        return true;
     } catch (error) {
-        console.warn('Poll dữ liệu timer_sessions thất bại (giữ dữ liệu cũ).', error);
+        console.warn('Đồng bộ dashboard thất bại; giữ dữ liệu gần nhất.', error);
+        setDashboardSyncState(navigator.onLine ? 'stale' : 'offline', state.lastSuccessfulRefreshAt
+            ? formatDashboardSyncDetail(state.lastSuccessfulRefreshAt)
+            : 'Không thể kết nối tới máy chủ');
+        if (announce) showToast('Không thể làm mới dữ liệu. Dashboard vẫn giữ bản gần nhất.', 'error');
+        return false;
     } finally {
         dashboardRefreshInFlight = false;
+        setRefreshButtonBusy(false);
     }
 }
 
@@ -1883,41 +2130,60 @@ function startDashboardPolling() {
 }
 
 async function loadDashboardFromApi() {
-    setDashboardLoading(true);
-    try {
-        setDataSourceLabel('Đang tải dữ liệu từ timer_sessions');
-        renderAll();
+    if (dashboardLoadRequest) return dashboardLoadRequest;
+    dashboardLoadRequest = (async () => {
+        setDashboardLoading(!state.dashboardDataLoaded, 'Đang đồng bộ dữ liệu dashboard...');
+        setDashboardSyncState('syncing', 'Đang tải dữ liệu vận hành');
+        try {
+            setDataSourceLabel('Đang đồng bộ dữ liệu vận hành');
+            renderAll();
 
-        const data = await fetchDashboardData();
-        lastDashboardSignature = buildDashboardSignature(data.raw);
-        lastDashboardVersion = data.version || '';
-        applyDashboardData(data);
+            const data = await fetchDashboardData();
+            lastDashboardSignature = buildDashboardSignature(data.raw);
+            lastDashboardVersion = data.version || '';
+            applyDashboardData(data);
 
-        state.selectedLearner = '';
-        state.learnerTablePage = 1;
-        state.learnerDetailPage = 1;
-        setDataSourceLabel('Dữ liệu thực từ timer_sessions');
-        initFilters();
-        initPopovers();
-        renderAll();
-    } catch (error) {
-        console.warn('Không kết nối được dữ liệu timer_sessions.', error);
-        sessions = [];
-        deviceCatalog = [];
-        technicianCatalog = [];
-        trainingAssignments = [];
-        dashboardReport = null;
-        technicianCatalogAuthoritative = false;
-        rebuildTechnicianIndex();
-        rebuildLearnerNameMap();
-        setDataSourceLabel('Không tải được dữ liệu timer_sessions');
-        initFilters();
-        initPopovers();
-        renderAll();
-    } finally {
-        setDashboardLoading(false);
-        startDashboardPolling();
-    }
+            state.selectedLearner = '';
+            state.learnerTablePage = 1;
+            state.learnerDetailPage = 1;
+            state.lastSuccessfulRefreshAt = new Date();
+            setDataSourceLabel('Dữ liệu vận hành đã đồng bộ');
+            setDashboardSyncState('ready');
+            mergeUntouchedFilterSets(
+                [...new Set(sessions.map(item => item.learner))].sort(),
+                [...new Set(sessions.map(item => item.device))].sort(),
+                [...new Set(sessions.map(item => item.lab))].sort((a, b) => a.localeCompare(b, 'vi')),
+                [...new Set(sessions.map(item => item.region))].sort((a, b) => a.localeCompare(b, 'vi'))
+            );
+            initFilters();
+            initPopovers();
+            renderAll();
+            return true;
+        } catch (error) {
+            console.warn('Không kết nối được dữ liệu dashboard.', error);
+            if (!state.dashboardDataLoaded) {
+                sessions = [];
+                deviceCatalog = [];
+                technicianCatalog = [];
+                trainingAssignments = [];
+                dashboardReport = null;
+                technicianCatalogAuthoritative = false;
+                rebuildTechnicianIndex();
+                rebuildLearnerNameMap();
+            }
+            setDataSourceLabel('Không thể đồng bộ dữ liệu');
+            setDashboardSyncState(navigator.onLine ? 'stale' : 'offline', 'Không thể kết nối tới máy chủ');
+            initFilters();
+            initPopovers();
+            renderAll();
+            return false;
+        } finally {
+            setDashboardLoading(false);
+            dashboardLoadRequest = null;
+            startDashboardPolling();
+        }
+    })();
+    return dashboardLoadRequest;
 }
 
 async function guardDashboardAdmin() {
@@ -1951,18 +2217,16 @@ async function guardDashboardAdmin() {
 }
 
 function applyReportExportPermission() {
-    ['exportBtn', 'instructorClassExport', 'classMatrixExportBtn', 'rosterExportBtn'].forEach(id => {
-        const button = document.getElementById(id);
-        if (!button) return;
-        button.hidden = !state.canExportReports;
-        button.disabled = !state.canExportReports;
-        button.setAttribute('aria-hidden', state.canExportReports ? 'false' : 'true');
-    });
+    const button = document.getElementById('exportBtn');
+    if (!button) return;
+    button.hidden = !state.canExportReports;
+    button.disabled = !state.canExportReports;
+    button.setAttribute('aria-hidden', state.canExportReports ? 'false' : 'true');
 }
 
 function ensureReportExportAllowed() {
     if (state.canExportReports) return true;
-    alert('Chỉ tài khoản có role DEV mới được xuất báo cáo.');
+    showToast('Chỉ tài khoản có role DEV mới được xuất báo cáo.', 'error');
     return false;
 }
 
@@ -1993,6 +2257,37 @@ function initFilters() {
 
 let suppressFilterRender = false;
 let deferredFilterCallback = null;
+let headerFilterSequence = 0;
+
+function getHeaderFilterDropdown(wrapper) {
+    return wrapper?._floatingDropdown
+        || wrapper?._headerFilterDropdown
+        || wrapper?.querySelector('.popover-dropdown');
+}
+
+function closeHeaderFilterPopover(wrapper, { restoreFocus = false } = {}) {
+    if (!wrapper) return;
+    const trigger = wrapper.querySelector('.popover-trigger-btn, .select-popover-btn, .compact-trigger');
+    const dropdown = getHeaderFilterDropdown(wrapper);
+    wrapper.classList.remove('open');
+    dropdown?.classList.remove('open');
+    trigger?.setAttribute('aria-expanded', 'false');
+    if (restoreFocus) trigger?.focus();
+}
+
+function openHeaderFilterPopover(wrapper) {
+    if (!wrapper) return;
+    document.querySelectorAll('.header-filter-popover.open').forEach(openWrapper => {
+        if (openWrapper !== wrapper) closeHeaderFilterPopover(openWrapper);
+    });
+    wrapper.classList.add('open');
+    positionHeaderFilterDropdown(wrapper, true);
+    const dropdown = getHeaderFilterDropdown(wrapper);
+    window.requestAnimationFrame(() => {
+        const target = dropdown?.querySelector('.header-filter-search, input:not([disabled]), button:not([disabled])');
+        target?.focus();
+    });
+}
 
 function enhanceHeaderFilterPopovers(root = document) {
     root.querySelectorAll('thead .popover-filter-wrapper').forEach(wrapper => {
@@ -2005,8 +2300,13 @@ function enhanceHeaderFilterPopovers(root = document) {
         dropdown.classList.add('header-filter-menu');
         wrapper.classList.add('header-filter-popover');
         wrapper._headerFilterDropdown = dropdown;
+        if (!dropdown.id) dropdown.id = `headerFilterMenu${++headerFilterSequence}`;
+        dropdown.setAttribute('role', 'dialog');
+        dropdown.setAttribute('aria-modal', 'false');
+        dropdown.setAttribute('aria-label', `Bộ lọc ${trigger.textContent.trim() || 'bảng dữ liệu'}`);
         trigger.setAttribute('aria-haspopup', 'dialog');
         trigger.setAttribute('aria-expanded', 'false');
+        trigger.setAttribute('aria-controls', dropdown.id);
 
         const commandRow = document.createElement('div');
         commandRow.className = 'header-filter-command-row';
@@ -2024,6 +2324,7 @@ function enhanceHeaderFilterPopovers(root = document) {
             searchInput.placeholder = 'Tìm giá trị...';
             commandRow.insertAdjacentElement('afterend', searchInput);
         }
+        searchInput.setAttribute('aria-label', `Tìm trong ${dropdown.getAttribute('aria-label').toLocaleLowerCase('vi')}`);
 
         searchInput.addEventListener('input', () => {
             const keyword = searchInput.value.trim().toLocaleLowerCase('vi');
@@ -2072,15 +2373,22 @@ function enhanceHeaderFilterPopovers(root = document) {
         applyButton.className = 'header-filter-apply';
         applyButton.textContent = 'Áp dụng';
         applyButton.addEventListener('click', () => {
-            wrapper.classList.remove('open');
-            dropdown.classList.remove('open');
-            trigger.setAttribute('aria-expanded', 'false');
+            closeHeaderFilterPopover(wrapper, { restoreFocus: true });
             state.realtimePage = 1;
             state.learnerTablePage = 1;
             state.learnerDetailPage = 1;
             renderAll();
         });
         footer.appendChild(applyButton);
+        dropdown.addEventListener('keydown', event => {
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                event.stopPropagation();
+                closeHeaderFilterPopover(wrapper, { restoreFocus: true });
+                return;
+            }
+            trapDialogFocus(event, dropdown);
+        });
     });
 }
 
@@ -2143,10 +2451,19 @@ window.addEventListener('scroll', (event) => {
 }, true);
 
 function initPopovers() {
+    if (state.popoversInitialized) {
+        refreshFilterOptionLists();
+        return;
+    }
+    state.popoversInitialized = true;
     const allKtvs = [...new Set(sessions.map(item => item.learner))].sort();
     const allDevices = [...new Set(sessions.map(item => item.device))].sort();
     const allLabs = [...new Set(sessions.map(item => item.lab))].sort((a, b) => a.localeCompare(b, 'vi'));
     const allRegions = [...new Set(sessions.map(item => item.region))].sort((a, b) => a.localeCompare(b, 'vi'));
+    state.popoverUniverses = { allKtvs, allDevices, allLabs, allRegions };
+    let learnerSearchTimer = null;
+    let detailDeviceSearchTimer = null;
+    let detailLabSearchTimer = null;
 
     // Fill sets with all items by default on initial load
     if (state.realtimeSelectedKtvs.size === 0 && !state.realtimeKtvsTouched) {
@@ -2282,7 +2599,8 @@ function initPopovers() {
     document.getElementById('learnerKtvSearch')?.addEventListener('input', (e) => {
         state.learnerSearchKtv = e.target.value;
         state.learnerTablePage = 1;
-        renderAll();
+        window.clearTimeout(learnerSearchTimer);
+        learnerSearchTimer = window.setTimeout(renderAll, 180);
     });
     const repopulateLearnerFilters = () => {
         populatePopoverOptions('learnerKtvOptions', allKtvs, state.learnerSelectedKtvs, () => { state.learnerKtvsTouched = true; }, undefined, getLearnerName);
@@ -2383,7 +2701,8 @@ function initPopovers() {
     // 7. Learner Detail Device Search
     document.getElementById('detailDeviceSearch')?.addEventListener('input', (e) => {
         state.detailSearchDevice = e.target.value;
-        renderAll();
+        window.clearTimeout(detailDeviceSearchTimer);
+        detailDeviceSearchTimer = window.setTimeout(renderAll, 180);
     });
     document.getElementById('detailDeviceClear')?.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -2398,7 +2717,8 @@ function initPopovers() {
     // 8. Learner Detail Lab Search
     document.getElementById('detailLabSearch')?.addEventListener('input', (e) => {
         state.detailSearchLab = e.target.value;
-        renderAll();
+        window.clearTimeout(detailLabSearchTimer);
+        detailLabSearchTimer = window.setTimeout(renderAll, 180);
     });
     document.getElementById('detailLabClear')?.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -2436,14 +2756,20 @@ function initPopovers() {
             e.stopPropagation();
             const isOpen = wrapper.classList.contains('open');
             document.querySelectorAll('.popover-filter-wrapper').forEach(w => {
-                w.classList.remove('open');
-                w.querySelector('.popover-trigger-btn')?.setAttribute('aria-expanded', 'false');
-                positionHeaderFilterDropdown(w, false);
+                if (w.classList.contains('header-filter-popover')) closeHeaderFilterPopover(w);
+                else {
+                    w.classList.remove('open');
+                    w.querySelector('.popover-trigger-btn')?.setAttribute('aria-expanded', 'false');
+                    positionHeaderFilterDropdown(w, false);
+                }
             });
             if (!isOpen) {
-                wrapper.classList.add('open');
-                btn.setAttribute('aria-expanded', 'true');
-                positionHeaderFilterDropdown(wrapper, true);
+                if (wrapper.classList.contains('header-filter-popover')) openHeaderFilterPopover(wrapper);
+                else {
+                    wrapper.classList.add('open');
+                    btn.setAttribute('aria-expanded', 'true');
+                    positionHeaderFilterDropdown(wrapper, true);
+                }
             }
         });
         wrapper.querySelector('.popover-dropdown')?.addEventListener('click', (e) => {
@@ -2453,9 +2779,12 @@ function initPopovers() {
 
     document.addEventListener('click', () => {
         document.querySelectorAll('.popover-filter-wrapper').forEach(w => {
-            w.classList.remove('open');
-            w.querySelector('.popover-trigger-btn')?.setAttribute('aria-expanded', 'false');
-            positionHeaderFilterDropdown(w, false);
+            if (w.classList.contains('header-filter-popover')) closeHeaderFilterPopover(w);
+            else {
+                w.classList.remove('open');
+                w.querySelector('.popover-trigger-btn')?.setAttribute('aria-expanded', 'false');
+                positionHeaderFilterDropdown(w, false);
+            }
         });
     });
 
@@ -2887,9 +3216,7 @@ function renderInstructorClassProgress() {
     deviceSelect.value = state.instructorSelectedDevice;
 
     const deleteButton = document.getElementById('instructorClassDelete');
-    const exportButton = document.getElementById('instructorClassExport');
     if (deleteButton) deleteButton.disabled = !state.instructorClasses.length || selectedClass?.source === 'database';
-    if (exportButton) exportButton.disabled = !state.canExportReports || !state.instructorClasses.length;
 
     if (!selectedClass) {
         head.innerHTML = '';
@@ -2930,7 +3257,6 @@ function renderInstructorClassProgress() {
             ? `Đang hiển thị ${progressRows.length}/${allProgressRows.length} KTV`
             : `${allProgressRows.length} KTV trong lớp`;
     }
-    if (exportButton) exportButton.disabled = !state.canExportReports || !progressRows.length;
 
     summary.innerHTML = `
         <span class="instructor-summary-chip"><strong>${progressRows.length}${filtersActive ? `/${allProgressRows.length}` : ''}</strong> KTV hiển thị</span>
@@ -3077,30 +3403,6 @@ async function handleInstructorClassFile(file) {
     }
 }
 
-function exportInstructorClassCsv() {
-    if (!ensureReportExportAllowed()) return;
-    const selectedClass = state.instructorClasses.find(item => item.id === state.instructorActiveClassId);
-    if (!selectedClass) return;
-    const groups = getInstructorDeviceGroups(selectedClass).filter(item => !state.instructorSelectedDevice || item.device === state.instructorSelectedDevice);
-    const progressRows = filterInstructorProgressRows(getInstructorClassProgress(selectedClass, groups));
-    const escapeCsv = value => `"${String(value ?? '').replace(/"/g, '""')}"`;
-    const header = ['STT', 'KTV', ...groups.flatMap(group => group.labs.map(lab => `${group.device} - ${lab}`)), 'Hoàn thành', 'Tỷ lệ'];
-    const csvRows = progressRows.map((row, index) => [
-        index + 1,
-        row.learner,
-        ...row.deviceResults.flatMap(item => item.labResults.map(lab => (lab.assigned === false ? '' : (lab.completed ? '1' : '0')))),
-        `${row.completed}/${row.total}`,
-        row.rate === null ? '' : `${row.rate}%`
-    ]);
-    const blob = new Blob([`\uFEFF${[header, ...csvRows].map(row => row.map(escapeCsv).join(',')).join('\n')}`], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${selectedClass.name.replace(/[^a-zA-Z0-9_-]+/g, '_') || 'lop_ktv'}_tien_do.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
-}
-
 function initInstructorWorkspace() {
     if (state.instructorWorkspaceBound) return;
     state.instructorWorkspaceBound = true;
@@ -3146,7 +3448,6 @@ function initInstructorWorkspace() {
         setInstructorFeedback(`Đã xóa lớp “${selectedClass.name}”.`, 'success');
         renderInstructorClassProgress();
     });
-    document.getElementById('instructorClassExport')?.addEventListener('click', exportInstructorClassCsv);
 }
 
 /* ============================================================
@@ -3217,18 +3518,21 @@ function getClassMatrixData() {
     const assignmentMap = new Map();
     if (trainingAssignments.length) {
         trainingAssignments.forEach(a => {
-            const key = `${String(a.learner || '').toLowerCase()}\u001f${a.device}\u001f${a.lab}`;
+            const key = `${String(a.classCode || '')}\u001f${String(a.learner || '').toLowerCase()}\u001f${a.device}\u001f${a.lab}`;
             assignmentMap.set(key, a);
         });
     }
 
-    // Map sessions by learner
-    const sessionsByLearner = new Map();
+    // Index sessions once so every learner/lab cell is an O(1) lookup.
+    const sessionsByCell = new Map();
     sessions.forEach(s => {
         if (s.mode === 'Hướng dẫn') return;
+        const sessionClassCode = String(s.classCode || technicianByIdentity.get(String(s.learner || '').toLowerCase())?.classCode || '');
+        if (state.classMatrixSelectedClass !== 'all' && selectedClass?.code && sessionClassCode && sessionClassCode !== String(selectedClass.code)) return;
         const learnerKey = String(s.learner || '').toLowerCase();
-        if (!sessionsByLearner.has(learnerKey)) sessionsByLearner.set(learnerKey, []);
-        sessionsByLearner.get(learnerKey).push(s);
+        const cellKey = `${learnerKey}\u001f${s.device}\u001f${s.lab}`;
+        if (!sessionsByCell.has(cellKey)) sessionsByCell.set(cellKey, []);
+        sessionsByCell.get(cellKey).push(s);
     });
 
     let totalClassAttempts = 0;
@@ -3238,18 +3542,19 @@ function getClassMatrixData() {
     });
 
     const rows = filteredLearners.map(l => {
-        const learnerSessions = sessionsByLearner.get(l.email.toLowerCase()) || [];
+        const learnerKey = l.email.toLowerCase();
         let ktvCompleted = 0;
         let ktvAssigned = 0;
         let ktvAttempts = 0;
 
         const cells = columns.map(col => {
             const colKey = `${col.device}\u001f${col.lab}`;
-            const assignKey = `${l.email.toLowerCase()}\u001f${col.device}\u001f${col.lab}`;
+            const learnerClassCode = String(l.classCode || selectedClass?.code || '');
+            const assignKey = `${learnerClassCode}\u001f${l.email.toLowerCase()}\u001f${col.device}\u001f${col.lab}`;
             const assign = assignmentMap.get(assignKey);
-            const labSessions = learnerSessions.filter(s => s.device === col.device && s.lab === col.lab);
-            const isCompleted = Boolean(assign?.completed) || labSessions.some(s => s.status === 'Hoàn thành' || s.status === 'completed');
+            const labSessions = sessionsByCell.get(`${learnerKey}\u001f${col.device}\u001f${col.lab}`) || [];
             const isAssigned = trainingAssignments.length === 0 ? true : Boolean(assign);
+            const isCompleted = isAssigned && (Boolean(assign?.completed) || labSessions.some(s => s.status === 'Hoàn thành' || s.status === 'completed'));
             const attempts = labSessions.length;
             const attempted = attempts > 0;
 
@@ -3388,20 +3693,20 @@ function renderClassMatrixReport() {
     // Render thead
     head.innerHTML = `
         <tr class="report-device-header-row">
-            <th class="ktv-stt-head" rowspan="2">STT</th>
-            <th class="ktv-info-head" rowspan="2">Kỹ thuật viên</th>
+            <th class="ktv-stt-head" scope="col" rowspan="2">STT</th>
+            <th class="ktv-info-head" scope="col" rowspan="2">Kỹ thuật viên</th>
             ${data.selectedGroups.map((group, index) => `
-                <th class="report-device-group report-device-tone-${index % 5}" colspan="${(group.labs || []).length}">
+                <th class="report-device-group report-device-tone-${index % 5}" scope="colgroup" colspan="${(group.labs || []).length}">
                     ${escapeHTML(group.device)}
                     <span>${(group.labs || []).length} bài lab</span>
                 </th>
             `).join('')}
-            <th class="ktv-total-head" rowspan="2">Hoàn thành</th>
-            <th class="ktv-rate-head" rowspan="2">Tỷ lệ</th>
+            <th class="ktv-total-head" scope="col" rowspan="2">Hoàn thành</th>
+            <th class="ktv-rate-head" scope="col" rowspan="2">Tỷ lệ</th>
         </tr>
         <tr class="report-lab-header-row">
             ${data.columns.map(col => `
-                <th class="report-lab-head report-device-tone-${col.groupIndex % 5} ${col.isFirst ? 'group-start' : ''} ${col.isLast ? 'group-end' : ''}" title="${escapeHTML(`${col.device} • ${col.lab}`)}">
+                <th class="report-lab-head report-device-tone-${col.groupIndex % 5} ${col.isFirst ? 'group-start' : ''} ${col.isLast ? 'group-end' : ''}" scope="col" title="${escapeHTML(`${col.device} • ${col.lab}`)}">
                     ${escapeHTML(col.lab)}
                 </th>
             `).join('')}
@@ -3414,7 +3719,7 @@ function renderClassMatrixReport() {
         return `
             <tr>
                 <td class="ktv-stt-cell">${index + 1}</td>
-                <td class="ktv-info-cell" title="${escapeHTML(`${row.name} (${row.email})`)}">
+                <th class="ktv-info-cell" scope="row" title="${escapeHTML(`${row.name} (${row.email})`)}">
                     <div class="ktv-info-wrap">
                         <div class="ktv-info-top">
                             <span class="ktv-info-name">${escapeHTML(row.name)}</span>
@@ -3425,7 +3730,7 @@ function renderClassMatrixReport() {
                             <span>${escapeHTML(row.email)}</span>
                         </div>
                     </div>
-                </td>
+                </th>
                 ${row.cells.map(cell => {
                     if (!cell.assigned) {
                         return `<td class="report-metric-cell report-cell-zero" title="Bài lab chưa được giao"><strong>—</strong><span>Chưa giao</span></td>`;
@@ -3454,7 +3759,7 @@ function renderClassMatrixReport() {
     // Render tfoot
     foot.innerHTML = `
         <tr>
-            <th class="ktv-footer-label" colspan="2">Tổng lớp (${data.rows.length} KTV)</th>
+            <th class="ktv-footer-label" scope="row" colspan="2">Tổng lớp (${data.rows.length} KTV)</th>
             ${data.columns.map(col => {
                 const colKey = `${col.device}\u001f${col.lab}`;
                 const stat = data.labStats.get(colKey) || { assigned: 0, completed: 0, attempts: 0 };
@@ -3491,71 +3796,6 @@ function renderClassMatrixReport() {
     }
 }
 
-function exportClassMatrixCsv() {
-    if (!ensureReportExportAllowed()) return;
-    const data = getClassMatrixData();
-    if (!data.rows.length) {
-        alert('Không có dữ liệu để xuất CSV.');
-        return;
-    }
-    const escapeCsv = (val) => {
-        const text = String(val ?? '');
-        return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
-    };
-
-    const header = [
-        'STT',
-        'Mã NV',
-        'Họ và tên',
-        'Email',
-        'Khu vực/CNx',
-        'Lớp học',
-        ...data.columns.map(c => `${c.device} - ${c.lab}`),
-        'Tổng hoàn thành',
-        'Tổng bài được giao',
-        'Tỷ lệ hoàn thành (%)'
-    ];
-
-    const csvRows = data.rows.map((r, idx) => [
-        idx + 1,
-        r.code,
-        r.name,
-        r.email,
-        r.region,
-        r.className || r.classCode,
-        ...r.cells.map(c => c.assigned ? (c.completed ? 'Hoàn thành' : (c.attempts > 0 ? 'Đang làm' : 'Chưa làm')) : 'Chưa giao'),
-        r.completed,
-        r.assigned,
-        r.rate !== null ? `${r.rate}%` : '—'
-    ]);
-
-    // Footer row in CSV
-    csvRows.push([
-        'TỔNG',
-        '',
-        `Tổng lớp (${data.rows.length} KTV)`,
-        '',
-        '',
-        '',
-        ...data.columns.map(col => {
-            const stat = data.labStats.get(`${col.device}\u001f${col.lab}`);
-            return stat?.assigned ? `${stat.completed}/${stat.assigned} (${Math.round(stat.completed / stat.assigned * 100)}%)` : '—';
-        }),
-        data.totalCompletedAll,
-        data.totalAssignedAll,
-        `${data.overallRate}%`
-    ]);
-
-    const blob = new Blob([`\uFEFF${[header, ...csvRows].map(row => row.map(escapeCsv).join(',')).join('\n')}`], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    const className = (data.selectedClass?.name || 'lop_ktv').replace(/[^a-zA-Z0-9_-]+/g, '_');
-    link.download = `Ma_tran_KTV_${className}_${fmtDate(new Date())}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
-}
-
 function initClassMatrix() {
     document.getElementById('classMatrixClassSelect')?.addEventListener('change', (e) => {
         state.classMatrixSelectedClass = e.target.value;
@@ -3573,8 +3813,6 @@ function initClassMatrix() {
             renderClassMatrixReport();
         }, 200);
     });
-    document.getElementById('classMatrixExportBtn')?.addEventListener('click', exportClassMatrixCsv);
-
     // Matrix view toggle buttons (tab switch between Region matrix & KTV Class matrix)
     document.querySelectorAll('[data-matrix-tab-target]').forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -3588,17 +3826,25 @@ function initClassMatrix() {
 function renderAll() {
     const dateSessions = getDateFilteredSessions();
 
-    renderKpis();
-    renderOverviewMonthlyTrend(sessions);
-    renderInstructorClassProgress();
-    renderRealtimeSubmissions(dateSessions);
-    renderSessions(sessions);
-    renderLearnerDetail(sessions);
-    renderDetailedReport(dateSessions.filter(item => item.mode === 'Thực hành'));
-    renderClassMatrixReport();
+    if (activeDashboardView === 'overview') {
+        renderKpis();
+        renderOverviewMonthlyTrend(sessions);
+        updateRangeText(dateSessions);
+    } else if (activeDashboardView === 'instructors') {
+        renderInstructorClassProgress();
+        renderRealtimeSubmissions(dateSessions);
+        updateRangeText(dateSessions);
+    } else if (activeDashboardView === 'analytics') {
+        renderDetailedReport(dateSessions.filter(item => item.mode === 'Thực hành'));
+    } else if (activeDashboardView === 'class_matrix') {
+        renderClassMatrixReport();
+    } else if (activeDashboardView === 'technicians') {
+        renderSessions(sessions);
+        renderLearnerDetail(sessions);
+        updatePopoverTriggerLabels();
+        updateRangeText(dateSessions);
+    }
     renderSortMarks();
-    updatePopoverTriggerLabels();
-    updateRangeText(dateSessions);
     enhanceHeaderFilterPopovers();
 }
 
@@ -3765,6 +4011,7 @@ function initDateRangePicker() {
             if (closePanel) {
                 panel?.classList.remove('open');
                 trigger?.setAttribute('aria-expanded', 'false');
+                trigger?.focus();
             }
             renderMonthGrid(year);
             renderAll();
@@ -3778,7 +4025,7 @@ function initDateRangePicker() {
                 const isFuture = year > today.getFullYear()
                     || (year === today.getFullYear() && monthIndex > today.getMonth());
                 const isSelected = selectedBounds?.year === year && selectedBounds?.monthIndex === monthIndex;
-                return `<button type="button" class="overview-month-option ${isSelected ? 'selected' : ''}" data-report-month="${monthIndex}" ${isFuture ? 'disabled' : ''}>Th ${monthIndex + 1}</button>`;
+                return `<button type="button" class="overview-month-option ${isSelected ? 'selected' : ''}" data-report-month="${monthIndex}" aria-label="Tháng ${monthIndex + 1} năm ${year}" aria-pressed="${isSelected ? 'true' : 'false'}" ${isFuture ? 'disabled' : ''}>Th ${monthIndex + 1}</button>`;
             }).join('');
             monthGrid.querySelectorAll('[data-report-month]').forEach(button => {
                 button.addEventListener('click', () => {
@@ -3803,18 +4050,36 @@ function initDateRangePicker() {
             if (willOpen) {
                 positionMonthPanel();
                 renderMonthGrid(Number(yearSelect?.value) || today.getFullYear());
+                window.requestAnimationFrame(() => {
+                    const selectedMonth = monthGrid?.querySelector('[aria-pressed="true"]');
+                    if (selectedMonth) selectedMonth.focus();
+                    else yearSelect?.focus();
+                });
             }
         });
         panel?.addEventListener('click', event => event.stopPropagation());
+        panel?.addEventListener('keydown', event => {
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                event.stopPropagation();
+                panel.classList.remove('open');
+                trigger?.setAttribute('aria-expanded', 'false');
+                trigger?.focus();
+                return;
+            }
+            trapDialogFocus(event, panel);
+        });
         currentMonthButton?.addEventListener('click', () => applySelectedMonth(today.getFullYear(), today.getMonth()));
         document.addEventListener('click', () => {
             panel?.classList.remove('open');
             trigger?.setAttribute('aria-expanded', 'false');
         });
         document.addEventListener('keydown', event => {
-            if (event.key === 'Escape') {
+            if (event.key === 'Escape' && panel?.classList.contains('open')) {
+                event.preventDefault();
                 panel?.classList.remove('open');
                 trigger?.setAttribute('aria-expanded', 'false');
+                trigger?.focus();
             }
         });
         window.addEventListener('resize', () => {
@@ -3902,23 +4167,513 @@ function initDateRangePicker() {
     });
 }
 
-function initExport() {
-    document.getElementById('exportBtn')?.addEventListener('click', () => {
-        if (!ensureReportExportAllowed()) return;
-        const rows = getDateFilteredSessions();
-        const header = ['date', 'learner', 'device', 'lab', 'skill', 'status', 'duration'];
-        const csv = [header.join(',')]
-            .concat(rows.map(row => header.map(key => `"${String(row[key]).replace(/"/g, '""')}"`).join(',')))
-            .join('\n');
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        const today = new Date();
-        const dateStamp = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-        link.download = `bao_cao_ktv_${dateStamp}.csv`;
-        link.click();
-        URL.revokeObjectURL(url);
+const REPORT_EXPORT_TEMPLATE_VERSION = 'FTC-XLSX-1.0';
+const REPORT_EXPORT_DEFAULT_BY_VIEW = {
+    overview: 'activity',
+    technicians: 'activity',
+    analytics: 'region',
+    instructors: 'class_matrix',
+    class_matrix: 'class_matrix',
+    roster: 'roster'
+};
+
+function getDefaultReportExportType() {
+    return REPORT_EXPORT_DEFAULT_BY_VIEW[activeDashboardView] || 'activity';
+}
+
+function normalizeReportFilenamePart(value, fallback = 'bao_cao') {
+    const normalized = String(value || '')
+        .replace(/đ/g, 'd')
+        .replace(/Đ/g, 'D')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '')
+        .replace(/_+/g, '_')
+        .slice(0, 72);
+    return normalized || fallback;
+}
+
+function buildReportFilename(prefix, scope = '') {
+    const timestamp = new Date();
+    const timePart = `${String(timestamp.getHours()).padStart(2, '0')}${String(timestamp.getMinutes()).padStart(2, '0')}`;
+    const safePrefix = normalizeReportFilenamePart(prefix, 'FTC_Bao_cao');
+    const safeScope = scope ? `_${normalizeReportFilenamePart(scope, '')}` : '';
+    return `${safePrefix}${safeScope}_${fmtDate(timestamp)}_${timePart}.xlsx`;
+}
+
+function triggerReportDownload(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+
+function buildReportExportPayload(type, descriptor) {
+    const base = {
+        type,
+        version: REPORT_EXPORT_TEMPLATE_VERSION,
+        filename: descriptor.filename,
+        period: descriptor.period,
+        scope: descriptor.scope
+    };
+    if (type === 'roster') {
+        return {
+            ...base,
+            filters: {
+                status: state.rosterStatusFilter || 'active',
+                search: state.rosterSearch.trim()
+            }
+        };
+    }
+    if (!Array.isArray(descriptor.rows) || !descriptor.rows.length) {
+        throw new Error('Không có dữ liệu phù hợp để xuất báo cáo.');
+    }
+    if (!Array.isArray(descriptor.headers) || !descriptor.headers.length) {
+        throw new Error('Báo cáo chưa có cột dữ liệu để xuất.');
+    }
+    return {
+        ...base,
+        metadata: descriptor.metadata || [],
+        headers: descriptor.headers,
+        columnTypes: descriptor.columnTypes || descriptor.headers.map(() => 'text'),
+        rows: descriptor.rows
+    };
+}
+
+async function downloadXlsxReport(type, descriptor) {
+    const response = await fetch(`${API_BASE_URL}/reports/export`, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+            'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(buildReportExportPayload(type, descriptor))
+    });
+    if (!response.ok) throw new Error(await getReportResponseError(response));
+
+    const blob = await response.blob();
+    if (!blob.size) throw new Error('Máy chủ trả về file Excel rỗng.');
+    const signature = new Uint8Array(await blob.slice(0, 4).arrayBuffer());
+    if (signature.length !== 4 || signature[0] !== 0x50 || signature[1] !== 0x4B
+        || signature[2] !== 0x03 || signature[3] !== 0x04) {
+        throw new Error('File tải về không phải là workbook Excel hợp lệ.');
+    }
+
+    const filename = getResponseDownloadFilename(response, descriptor.filename);
+    triggerReportDownload(blob, filename);
+    return filename;
+}
+
+function getTechnicianFilteredExportRows() {
+    let rows = [...sessions];
+    const applySetFilter = (set, touched, getValue) => {
+        if (!touched && !set.size) return;
+        rows = rows.filter(item => set.has(getValue(item)));
+    };
+    applySetFilter(state.learnerSelectedKtvs, state.learnerKtvsTouched, item => item.learner);
+    applySetFilter(state.learnerSelectedEmails, state.learnerEmailsTouched, item => item.learner);
+    applySetFilter(state.learnerSelectedRegions, state.learnerRegionsTouched, item => item.region);
+    applySetFilter(state.learnerSelectedDevices, state.learnerDevicesTouched, item => item.device);
+    applySetFilter(state.learnerSelectedLabs, state.learnerLabsTouched, item => item.lab);
+    const keyword = state.learnerSearchKtv.trim().toLocaleLowerCase('vi');
+    if (keyword) {
+        rows = rows.filter(item => `${getLearnerName(item.learner)} ${item.learner}`.toLocaleLowerCase('vi').includes(keyword));
+    }
+    return rows;
+}
+
+function buildActivityReportDescriptor() {
+    const sourceRows = activeDashboardView === 'technicians'
+        ? getTechnicianFilteredExportRows()
+        : getDateFilteredSessions();
+    const orderedRows = [...sourceRows].sort((left, right) => sessionTimestampMs(right) - sessionTimestampMs(left));
+    const period = activeDashboardView === 'technicians' ? 'Dữ liệu lũy kế' : getRangeLabel();
+    const scope = activeDashboardView === 'technicians'
+        ? 'Các bộ lọc đang áp dụng tại trang Thống kê kỹ thuật viên'
+        : 'Tất cả phiên hoạt động trong kỳ đã chọn';
+    return {
+        type: 'activity',
+        title: 'FTC - BÁO CÁO CHI TIẾT HOẠT ĐỘNG KTV',
+        period,
+        scope,
+        filename: buildReportFilename('FTC_Chi_tiet_hoat_dong_KTV'),
+        countLabel: `${formatNumber.format(orderedRows.length)} phiên hoạt động`,
+        available: orderedRows.length > 0,
+        metadata: [
+            ['Quy ước thời lượng', 'Giây và định dạng đọc nhanh'],
+            ['Thứ tự dữ liệu', 'Mới nhất đến cũ nhất']
+        ],
+        headers: [
+            'STT', 'Ngày', 'Giờ', 'Mã phiên', 'Mã NV', 'Họ và tên', 'Email', 'Vị trí',
+            'Khu vực/CNx', 'Chi nhánh', 'Đơn vị', 'Lớp', 'Thiết bị', 'Bài lab', 'Kỹ năng',
+            'Chế độ', 'Trạng thái', 'Kết quả', 'Hoàn thành lần đầu', 'Thời lượng (giây)',
+            'Thời lượng', 'Hành động cuối'
+        ],
+        columnTypes: [
+            'integer', 'date', 'time', 'text', 'text', 'text', 'text', 'text',
+            'text', 'text', 'text', 'text', 'text', 'text', 'text', 'text',
+            'text', 'text', 'text', 'integer', 'text', 'text'
+        ],
+        rows: orderedRows.map((row, index) => {
+            const technician = technicianByIdentity.get(String(row.learner || '').trim().toLowerCase())
+                || technicianByIdentity.get(String(row.technicianId || '').trim().toLowerCase());
+            const email = technician?.email || (String(row.learner || '').includes('@') ? row.learner : '');
+            return [
+                index + 1,
+                row.date || '',
+                row.time || '',
+                row.sessionId || '',
+                technician?.employeeId || row.technicianId || '',
+                technician?.displayName || row.technicianName || getLearnerName(row.learner),
+                email,
+                technician?.jobTitle || row.jobTitle || '',
+                technician?.dashboardRegion || row.region || '',
+                technician?.branchName || row.branchName || '',
+                technician?.unitName || row.unitName || row.unitCode || '',
+                technician?.className || technician?.classCode || row.classCode || '',
+                row.device || '',
+                row.lab || '',
+                row.skill || '',
+                row.mode || '',
+                row.status || '',
+                row.isPassed === true ? 'Đạt' : (row.isPassed === false ? 'Không đạt' : ''),
+                row.firstTry === true ? 'Có' : (row.firstTry === false ? 'Không' : ''),
+                row.duration ?? '',
+                row.duration === null || row.duration === undefined ? '' : formatDuration(row.duration),
+                row.lastAction || ''
+            ];
+        })
+    };
+}
+
+function formatAuthoritativeRegionMetric(cell = {}) {
+    const assigned = Number(cell.assigned_count) || 0;
+    if (!assigned) return '—';
+    const completed = Number(cell.completed_count) || 0;
+    const attempts = Number(cell.attempt_count) || 0;
+    const rate = cell.completion_rate === null || cell.completion_rate === undefined
+        ? Math.round((completed / assigned) * 100)
+        : Number(cell.completion_rate);
+    return `${completed}/${assigned} (${rate}%) · ${attempts} lượt`;
+}
+
+function buildAuthoritativeRegionReportDescriptor(matrix) {
+    const groups = matrix.device_groups || [];
+    const columns = groups.flatMap(group => (group.labs || []).map(lab => ({
+        device: group.device?.name || group.device?.device_name || group.device_name || '',
+        lab: lab.name || lab.lab_name || '',
+        labId: lab.lab_id || ''
+    })));
+    const rows = (matrix.rows || []).map((row, index) => {
+        const region = row.region || {};
+        const regionName = region.name || region.region_name || region.code || region.region_code || '';
+        const location = region.branch_name ? `${region.branch_name} · ${regionName}` : regionName;
+        return [
+            index + 1,
+            location,
+            ...columns.map(column => formatAuthoritativeRegionMetric(row.cells?.[column.labId])),
+            formatAuthoritativeRegionMetric(row.total)
+        ];
+    });
+    return {
+        type: 'region',
+        title: 'FTC - BÁO CÁO TIẾN ĐỘ THỰC HÀNH THEO CHI NHÁNH',
+        period: dashboardReport?.meta?.period?.label || getRangeLabel(),
+        scope: 'Ma trận Khu vực/CNx theo thiết bị và bài lab',
+        filename: buildReportFilename('FTC_Tien_do_theo_chi_nhanh'),
+        countLabel: `${formatNumber.format(rows.length)} khu vực · ${formatNumber.format(columns.length)} bài lab`,
+        available: rows.length > 0 && columns.length > 0,
+        metadata: [['Quy ước ô dữ liệu', 'Hoàn thành/phạm vi (tỷ lệ) · lượt thực hành']],
+        headers: ['STT', 'Khu vực/CNx', ...columns.map(column => `${column.device} - ${column.lab}`), 'Tổng khu vực'],
+        columnTypes: ['integer', 'text', ...columns.map(() => 'text'), 'text'],
+        rows
+    };
+}
+
+function formatLocalRegionMetric(cell) {
+    if (!cell?.eligible) return '—';
+    if (!cell.attempts) return `0/${cell.eligible} (0%) · 0 lượt`;
+    return `${cell.completed}/${cell.eligible} (${cell.rate ?? 0}%) · ${cell.attempts} lượt`;
+}
+
+function buildRegionReportDescriptor() {
+    if (dashboardReport?.matrix) return buildAuthoritativeRegionReportDescriptor(dashboardReport.matrix);
+    const sourceRows = getDateFilteredSessions().filter(item => item.mode === 'Thực hành');
+    const groups = getDetailReportDeviceGroups(sourceRows);
+    const columns = groups.flatMap(group => group.labs.map(lab => ({ device: group.device, lab })));
+    const index = buildDetailReportIndex(sourceRows);
+    const regionNames = [...new Set([
+        ...REGION_FILTER_OPTIONS,
+        ...sourceRows.map(item => item.region).filter(Boolean)
+    ])];
+    const rows = regionNames.map((region, rowIndex) => {
+        const regionKeys = [region];
+        const total = getDetailReportTotal(index, regionKeys, columns);
+        return [
+            rowIndex + 1,
+            region,
+            ...columns.map(column => formatLocalRegionMetric(getDetailReportCell(index, regionKeys, column))),
+            formatLocalRegionMetric(total)
+        ];
+    });
+    return {
+        type: 'region',
+        title: 'FTC - BÁO CÁO TIẾN ĐỘ THỰC HÀNH THEO CHI NHÁNH',
+        period: getRangeLabel(),
+        scope: 'Ma trận Khu vực/CNx theo thiết bị và bài lab',
+        filename: buildReportFilename('FTC_Tien_do_theo_chi_nhanh'),
+        countLabel: `${formatNumber.format(rows.length)} khu vực · ${formatNumber.format(columns.length)} bài lab`,
+        available: rows.length > 0 && columns.length > 0,
+        metadata: [
+            ['Quy ước ô dữ liệu', 'Hoàn thành/phạm vi (tỷ lệ) · lượt thực hành'],
+            ['Nguồn phạm vi', 'Danh mục KTV đang hoạt động và danh mục bài lab']
+        ],
+        headers: ['STT', 'Khu vực/CNx', ...columns.map(column => `${column.device} - ${column.lab}`), 'Tổng khu vực'],
+        columnTypes: ['integer', 'text', ...columns.map(() => 'text'), 'text'],
+        rows
+    };
+}
+
+function buildClassMatrixReportDescriptor() {
+    const data = getClassMatrixData();
+    const classLabel = data.selectedClass?.name || (state.classMatrixSelectedClass === 'all' ? 'Tất cả lớp' : 'Chưa xếp lớp');
+    const deviceLabel = state.classMatrixSelectedDevice || 'Tất cả thiết bị';
+    const searchLabel = state.classMatrixSearch.trim() ? ` · Tìm kiếm: “${state.classMatrixSearch.trim()}”` : '';
+    const scope = `${classLabel} · ${deviceLabel}${searchLabel}`;
+    return {
+        type: 'class_matrix',
+        title: 'FTC - BÁO CÁO TIẾN ĐỘ KTV THEO LỚP',
+        period: 'Dữ liệu lũy kế',
+        scope,
+        filename: buildReportFilename('FTC_Tien_do_KTV_theo_lop', classLabel),
+        countLabel: `${formatNumber.format(data.rows.length)} KTV · ${formatNumber.format(data.columns.length)} bài lab`,
+        available: data.rows.length > 0 && data.columns.length > 0,
+        metadata: [
+            ['Lớp học', classLabel],
+            ['Thiết bị', deviceLabel],
+            ['Tiến độ tổng', `${data.totalCompletedAll}/${data.totalAssignedAll} (${data.overallRate}%)`],
+            ['Tổng lượt thực hành', data.totalSessions],
+            ['Quy ước trạng thái', 'Hoàn thành · Đang thực hiện · Chưa thực hiện · Ngoài phạm vi']
+        ],
+        headers: [
+            'STT', 'Mã NV', 'Họ và tên', 'Email', 'Khu vực/CNx', 'Lớp học',
+            ...data.columns.map(column => `${column.device} - ${column.lab}`),
+            'Bài hoàn thành', 'Bài trong phạm vi', 'Tỷ lệ hoàn thành (%)', 'Lượt thực hành'
+        ],
+        columnTypes: [
+            'integer', 'text', 'text', 'text', 'text', 'text',
+            ...data.columns.map(() => 'text'),
+            'integer', 'integer', 'percent', 'integer'
+        ],
+        rows: data.rows.map((row, index) => [
+            index + 1,
+            row.code || '',
+            row.name || '',
+            row.email || '',
+            row.region || '',
+            row.className || row.classCode || classLabel,
+            ...row.cells.map(cell => {
+                if (!cell.assigned) return 'Ngoài phạm vi';
+                if (cell.completed) return cell.attempts ? `Hoàn thành · ${cell.attempts} lượt` : 'Hoàn thành';
+                if (cell.attempts > 0) return `Đang thực hiện · ${cell.attempts} lượt`;
+                return 'Chưa thực hiện';
+            }),
+            row.completed,
+            row.assigned,
+            row.rate === null || row.rate === undefined ? '' : row.rate / 100,
+            row.attempts
+        ])
+    };
+}
+
+function getRosterExportScope() {
+    const statusLabels = { active: 'Đang làm', terminated: 'Đã nghỉ', all: 'Tất cả trạng thái' };
+    const status = statusLabels[state.rosterStatusFilter] || 'Đang làm';
+    const keyword = state.rosterSearch.trim();
+    return keyword ? `${status} · Tìm kiếm: “${keyword}”` : status;
+}
+
+function getRosterReportPreview() {
+    return {
+        type: 'roster',
+        period: 'Tại thời điểm xuất',
+        scope: getRosterExportScope(),
+        filename: buildReportFilename('FTC_Danh_sach_KTV'),
+        countLabel: state.rosterLoaded ? `${formatNumber.format(state.rosterTotal)} hồ sơ KTV` : 'Toàn bộ kết quả phù hợp',
+        available: true
+    };
+}
+
+function getReportExportPreview(type) {
+    if (type === 'region') return buildRegionReportDescriptor();
+    if (type === 'class_matrix') return buildClassMatrixReportDescriptor();
+    if (type === 'roster') return getRosterReportPreview();
+    return buildActivityReportDescriptor();
+}
+
+async function ensureTrainingAssignmentsLoaded({ force = false } = {}) {
+    if (state.assignmentsLoaded && !force) return trainingAssignments;
+    // Empty assignments intentionally activates the catalog-based calculation:
+    // every active lab is assigned and completion is derived from session data.
+    trainingAssignments = [];
+    state.assignmentsLoaded = true;
+    initializeInstructorClasses();
+    if (['instructors', 'class_matrix', 'analytics'].includes(activeDashboardView)) renderAll();
+    return trainingAssignments;
+}
+
+async function refreshAssignmentsForClassExport() {
+    return ensureTrainingAssignmentsLoaded({ force: true });
+}
+
+function getResponseDownloadFilename(response, fallback) {
+    const disposition = response.headers.get('Content-Disposition') || '';
+    const utf8Match = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+    if (utf8Match) {
+        try { return decodeURIComponent(utf8Match[1]); } catch (error) { /* use fallback below */ }
+    }
+    const plainMatch = disposition.match(/filename="?([^";]+)"?/i);
+    return plainMatch?.[1] || fallback;
+}
+
+async function getReportResponseError(response) {
+    const payload = await response.clone().json().catch(() => null);
+    return payload?.error?.message || payload?.message || `Yêu cầu xuất báo cáo thất bại (HTTP ${response.status}).`;
+}
+
+function getSelectedReportExportType() {
+    return document.querySelector('input[name="reportExportType"]:checked')?.value || getDefaultReportExportType();
+}
+
+function setReportExportStatus(message = '', type = 'info') {
+    const status = document.getElementById('reportExportStatus');
+    if (!status) return;
+    status.hidden = !message;
+    status.textContent = message;
+    status.classList.toggle('is-error', type === 'error');
+    status.classList.toggle('is-info', type === 'info');
+}
+
+function setReportExportBusy(busy) {
+    reportExportBusy = busy;
+    const download = document.getElementById('reportExportDownload');
+    const close = document.getElementById('reportExportClose');
+    const cancel = document.getElementById('reportExportCancel');
+    document.querySelectorAll('input[name="reportExportType"]').forEach(input => { input.disabled = busy; });
+    document.querySelectorAll('.report-export-option').forEach(option => option.classList.toggle('is-disabled', busy));
+    if (download) {
+        download.disabled = busy;
+        download.classList.toggle('is-busy', busy);
+        const label = download.querySelector('span');
+        if (label) label.textContent = busy ? 'Đang tạo file…' : 'Tải báo cáo';
+    }
+    if (close) close.disabled = busy;
+    if (cancel) cancel.disabled = busy;
+}
+
+function updateReportExportDialog() {
+    const type = getSelectedReportExportType();
+    document.querySelectorAll('.report-export-option').forEach(option => {
+        option.classList.toggle('is-selected', option.dataset.reportOption === type);
+    });
+    let preview;
+    try {
+        preview = getReportExportPreview(type);
+    } catch (error) {
+        preview = { period: '—', scope: 'Không thể đọc bộ lọc hiện tại', countLabel: 'Không có dữ liệu', filename: 'FTC_Bao_cao.xlsx', available: false };
+    }
+    const values = {
+        reportExportPeriod: preview.period,
+        reportExportScope: preview.scope,
+        reportExportCount: preview.countLabel,
+        reportExportFilename: preview.filename
+    };
+    Object.entries(values).forEach(([id, value]) => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = value || '—';
+    });
+    const download = document.getElementById('reportExportDownload');
+    if (download && !reportExportBusy) download.disabled = preview.available === false;
+}
+
+function openReportExportDialog() {
+    if (!ensureReportExportAllowed()) return;
+    const backdrop = document.getElementById('reportExportBackdrop');
+    if (!backdrop) return;
+    reportExportReturnFocus = document.activeElement;
+    const defaultType = getDefaultReportExportType();
+    const input = document.querySelector(`input[name="reportExportType"][value="${defaultType}"]`)
+        || document.querySelector('input[name="reportExportType"]');
+    if (input) input.checked = true;
+    setReportExportStatus();
+    setReportExportBusy(false);
+    updateReportExportDialog();
+    backdrop.hidden = false;
+    backdrop.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('report-export-open');
+    window.setTimeout(() => document.getElementById('reportExportClose')?.focus(), 0);
+}
+
+function closeReportExportDialog() {
+    if (reportExportBusy) return;
+    const backdrop = document.getElementById('reportExportBackdrop');
+    if (!backdrop || backdrop.hidden) return;
+    backdrop.hidden = true;
+    backdrop.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('report-export-open');
+    if (reportExportReturnFocus instanceof HTMLElement) reportExportReturnFocus.focus();
+    reportExportReturnFocus = null;
+}
+
+async function handleReportExportDownload() {
+    if (reportExportBusy || !ensureReportExportAllowed()) return;
+    const type = getSelectedReportExportType();
+    setReportExportBusy(true);
+    setReportExportStatus(type === 'class_matrix' ? 'Đang đồng bộ dữ liệu lớp mới nhất…' : 'Đang chuẩn bị file báo cáo…', 'info');
+    try {
+        if (type === 'class_matrix') await refreshAssignmentsForClassExport();
+        const descriptor = getReportExportPreview(type);
+        const filename = await downloadXlsxReport(type, descriptor);
+        setReportExportStatus(`Đã tạo “${filename}”. Trình duyệt đang tải file xuống.`, 'success');
+    } catch (error) {
+        console.error('Không thể xuất báo cáo.', error);
+        setReportExportStatus(error?.message || 'Không thể tạo báo cáo. Vui lòng thử lại.', 'error');
+    } finally {
+        setReportExportBusy(false);
+        updateReportExportDialog();
+    }
+}
+
+function initReportExport() {
+    document.getElementById('exportBtn')?.addEventListener('click', openReportExportDialog);
+    document.getElementById('reportExportClose')?.addEventListener('click', closeReportExportDialog);
+    document.getElementById('reportExportCancel')?.addEventListener('click', closeReportExportDialog);
+    document.getElementById('reportExportDownload')?.addEventListener('click', handleReportExportDownload);
+    document.querySelectorAll('input[name="reportExportType"]').forEach(input => {
+        input.addEventListener('change', () => {
+            setReportExportStatus();
+            updateReportExportDialog();
+        });
+    });
+    document.getElementById('reportExportBackdrop')?.addEventListener('click', event => {
+        if (event.target === event.currentTarget) closeReportExportDialog();
+    });
+    document.addEventListener('keydown', event => {
+        const backdrop = document.getElementById('reportExportBackdrop');
+        if (backdrop?.hidden) return;
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            closeReportExportDialog();
+            return;
+        }
+        trapDialogFocus(event, backdrop.querySelector('.report-export-dialog'));
     });
 }
 
@@ -3965,7 +4720,7 @@ function renderDeviceDonutChart(rows) {
     }).join('');
 
     donutContainer.innerHTML = `
-        <svg viewBox="0 0 160 160">
+        <svg viewBox="0 0 160 160" aria-hidden="true" focusable="false">
             ${svgPaths}
         </svg>
         <div class="donut-center-text">
@@ -3978,13 +4733,13 @@ function renderDeviceDonutChart(rows) {
         const color = DONUT_COLORS[index % DONUT_COLORS.length];
         const percent = Math.round((item.sessions / totalSessions) * 100);
         return `
-            <div class="legend-item" data-device="${escapeHTML(item.name)}" title="Click để xem chi tiết bài làm">
+            <button type="button" class="legend-item" data-device="${escapeHTML(item.name)}" title="Mở chi tiết bài làm">
                 <div class="legend-label-group">
                     <span class="legend-dot" style="background: ${color};"></span>
                     <span class="legend-name">${escapeHTML(item.name)}</span>
                 </div>
                 <span class="legend-val">${item.sessions} bài (${percent}%)</span>
-            </div>
+            </button>
         `;
     }).join('');
 
@@ -4030,6 +4785,7 @@ function openDeviceSubModal(deviceName, rows) {
     const subtitle = document.getElementById('subModalDeviceSubtitle');
     if (!modal) return;
 
+    deviceSubModalReturnFocus = document.activeElement;
     const catalogItem = deviceCatalog.find(d => d.device === deviceName || d.device_name === deviceName || d.model === deviceName);
     const assignedLabs = catalogItem?.labs || [];
     const deviceSessions = rows.filter(item => item.device === deviceName);
@@ -4142,13 +4898,29 @@ function openDeviceSubModal(deviceName, rows) {
     };
 
     document.querySelectorAll('.sub-filter-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.subFilter === 'all');
+        const isActive = btn.dataset.subFilter === 'all';
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-pressed', String(isActive));
     });
 
     renderSubModalLabList('all');
 
     modal.classList.add('visible');
     modal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('modal-open');
+    window.setTimeout(() => document.getElementById('subModalClose')?.focus(), 0);
+}
+
+function closeDeviceSubModal() {
+    const modal = document.getElementById('deviceSubModal');
+    if (!modal?.classList.contains('visible')) return;
+    modal.classList.remove('visible');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('modal-open');
+    currentSubModalData = { deviceName: '', allLabsList: [], activeFilter: 'all' };
+    document.getElementById('subModalLabList')?.replaceChildren();
+    if (deviceSubModalReturnFocus instanceof HTMLElement) deviceSubModalReturnFocus.focus();
+    deviceSubModalReturnFocus = null;
 }
 
 function renderSubModalLabList(filter) {
@@ -4207,31 +4979,35 @@ function initSubModalEvents() {
     const modal = document.getElementById('deviceSubModal');
     const closeBtn = document.getElementById('subModalClose');
     if (closeBtn) {
-        closeBtn.addEventListener('click', () => {
-            modal?.classList.remove('visible');
-            modal?.setAttribute('aria-hidden', 'true');
-        });
+        closeBtn.addEventListener('click', closeDeviceSubModal);
     }
 
     document.querySelectorAll('.sub-filter-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            document.querySelectorAll('.sub-filter-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.sub-filter-btn').forEach(b => {
+                b.classList.remove('active');
+                b.setAttribute('aria-pressed', 'false');
+            });
             btn.classList.add('active');
+            btn.setAttribute('aria-pressed', 'true');
             const filter = btn.dataset.subFilter;
             renderSubModalLabList(filter);
         });
     });
 
     document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && modal?.classList.contains('visible')) {
-            modal.classList.remove('visible');
-            modal.setAttribute('aria-hidden', 'true');
+        if (!modal?.classList.contains('visible')) return;
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            closeDeviceSubModal();
+            return;
         }
+        trapDialogFocus(event, modal.querySelector('.sub-modal-card'));
     });
     modal?.addEventListener('click', (event) => {
         if (event.target === modal) {
-            modal.classList.remove('visible');
-            modal.setAttribute('aria-hidden', 'true');
+            event.stopPropagation();
+            closeDeviceSubModal();
         }
     });
 }
@@ -4243,15 +5019,21 @@ function initEvents() {
     });
 
     document.addEventListener('keydown', (event) => {
-        if (event.key !== 'Escape' || !document.body.classList.contains('detail-open')) return;
-        hideLearnerDetail();
-        renderAll();
+        if (event.defaultPrevented || !document.body.classList.contains('detail-open')) return;
+        if (document.getElementById('deviceSubModal')?.classList.contains('visible')) return;
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            hideLearnerDetail();
+            renderAll();
+            return;
+        }
+        trapDialogFocus(event, els.learnerDetailCard);
     });
 
     document.addEventListener('click', (event) => {
         if (!document.body.classList.contains('detail-open')) return;
         const path = event.composedPath();
-        const insideCard = path.some(el => el.classList?.contains('learner-detail-card') || el.classList?.contains('sub-modal-card') || el.getAttribute?.('data-learner'));
+        const insideCard = path.some(el => el.classList?.contains('learner-detail-card') || el.classList?.contains('sub-modal-backdrop') || el.classList?.contains('sub-modal-card') || el.getAttribute?.('data-learner'));
         if (insideCard) return;
         hideLearnerDetail();
         renderAll();
@@ -4352,12 +5134,12 @@ function computeMetrics(rows) {
 
 const DASHBOARD_VIEWS = {
     overview: {
-        eyebrow: 'Dashboard home',
+        eyebrow: 'Tổng quan vận hành',
         title: 'Dashboard giám sát thực hành KTV',
         subtitle: 'Theo dõi hoạt động, tiến độ và chất lượng thực hành'
     },
     instructors: {
-        eyebrow: 'Instructor workspace',
+        eyebrow: 'Không gian giảng viên',
         title: 'Không gian theo dõi dành cho giảng viên',
         subtitle: 'Theo dõi bài nộp và trạng thái thực hành của KTV'
     },
@@ -4372,12 +5154,12 @@ const DASHBOARD_VIEWS = {
         subtitle: 'Ma trận tiến độ thực hành bài lab theo từng Kỹ thuật viên'
     },
     technicians: {
-        eyebrow: 'Technician performance',
+        eyebrow: 'Hiệu suất kỹ thuật viên',
         title: 'Thống kê kỹ thuật viên',
         subtitle: 'Tra cứu lịch sử, thiết bị và kết quả thực hành theo KTV'
     },
     roster: {
-        eyebrow: 'Admin roster',
+        eyebrow: 'Quản trị nhân sự',
         title: 'Quản lý KTV',
         subtitle: 'Import, theo dõi và quản lý danh sách kỹ thuật viên'
     },
@@ -4385,12 +5167,17 @@ const DASHBOARD_VIEWS = {
 
 let activeDashboardView = 'overview';
 
-function switchDashboardView(viewName) {
+function switchDashboardView(viewName, { updateHistory = true, focusHeading = true } = {}) {
     if (!Object.hasOwn(DASHBOARD_VIEWS, viewName)) return;
+    document.querySelectorAll('.header-filter-popover.open').forEach(wrapper => closeHeaderFilterPopover(wrapper));
     activeDashboardView = viewName;
-    const url = new URL(window.location.href);
-    url.searchParams.set('view', viewName);
-    window.history.pushState({}, '', url.toString());
+    if (updateHistory) {
+        const url = new URL(window.location.href);
+        if (url.searchParams.get('view') !== viewName) {
+            url.searchParams.set('view', viewName);
+            window.history.pushState({}, '', url.toString());
+        }
+    }
 
     const masterContainer = document.querySelector('.dashboard-master-container');
     const masterViews = new Set(['overview', 'instructors', 'analytics', 'class_matrix']);
@@ -4418,15 +5205,34 @@ function switchDashboardView(viewName) {
 
     // Update matrix tab toggle buttons active state
     document.querySelectorAll('[data-matrix-tab-target]').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.matrixTabTarget === activeDashboardView);
+        const isActive = btn.dataset.matrixTabTarget === activeDashboardView;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-pressed', String(isActive));
     });
 
-    if (activeDashboardView === 'class_matrix') {
-        renderClassMatrixReport();
+    renderAll();
+    if (activeDashboardView === 'roster') {
+        setDataSourceLabel('Hồ sơ KTV từ cơ sở dữ liệu');
+        if (!state.rosterLoaded) loadRosterList();
+    } else if (activeDashboardView !== 'roster' && state.isAdmin) {
+        setDataSourceLabel(state.dashboardDataLoaded ? 'Dữ liệu vận hành đã đồng bộ' : 'Đang đồng bộ dữ liệu vận hành');
+        if (!state.dashboardDataLoaded) {
+            loadDashboardFromApi().then(() => {
+                if (['instructors', 'class_matrix', 'analytics'].includes(activeDashboardView) && !state.assignmentsLoaded) {
+                    ensureTrainingAssignmentsLoaded().catch(error => {
+                        console.warn('Không đồng bộ được tiến độ lớp.', error);
+                        showToast('Chưa thể đồng bộ dữ liệu tiến độ lớp.', 'error');
+                    });
+                }
+            });
+        } else if (['instructors', 'class_matrix', 'analytics'].includes(activeDashboardView) && !state.assignmentsLoaded) {
+            ensureTrainingAssignmentsLoaded().catch(error => {
+                console.warn('Không đồng bộ được tiến độ lớp.', error);
+                showToast('Chưa thể đồng bộ dữ liệu tiến độ lớp.', 'error');
+            });
+        }
     }
-    if (activeDashboardView === 'roster' && !state.rosterLoaded) {
-        loadRosterList();
-    }
+    if (focusHeading) window.requestAnimationFrame(() => document.getElementById('pageTitle')?.focus({ preventScroll: true }));
 }
 
 function initDashboardViewRouting() {
@@ -4465,13 +5271,15 @@ function initDashboardViewRouting() {
     });
 
     document.querySelectorAll('[data-matrix-tab-target]').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.matrixTabTarget === activeDashboardView);
+        const isActive = btn.dataset.matrixTabTarget === activeDashboardView;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-pressed', String(isActive));
     });
 
     window.addEventListener('popstate', () => {
         const currentView = new URLSearchParams(window.location.search).get('view') || 'overview';
         if (Object.hasOwn(DASHBOARD_VIEWS, currentView) && currentView !== activeDashboardView) {
-            switchDashboardView(currentView);
+            switchDashboardView(currentView, { updateHistory: false, focusHeading: true });
         }
     });
 }
@@ -4480,10 +5288,52 @@ function initSidebarNavigation() {
     const page = document.getElementById('appPage');
     const toggle = document.getElementById('sidebarToggle');
 
+    const prefersCollapsed = safeStorageGet('ftc-dashboard-sidebar-collapsed') === 'true';
+    if (prefersCollapsed && window.matchMedia('(min-width: 961px)').matches) {
+        page?.classList.add('sidebar-collapsed');
+        toggle?.setAttribute('aria-expanded', 'false');
+        toggle?.setAttribute('aria-label', 'Mở rộng thanh điều hướng');
+    }
+
     toggle?.addEventListener('click', () => {
         const collapsed = page?.classList.toggle('sidebar-collapsed') || false;
         toggle.setAttribute('aria-expanded', String(!collapsed));
         toggle.setAttribute('aria-label', collapsed ? 'Mở rộng thanh điều hướng' : 'Thu gọn thanh điều hướng');
+        safeStorageSet('ftc-dashboard-sidebar-collapsed', String(collapsed));
+    });
+}
+
+function initDashboardExperience() {
+    document.getElementById('refreshDashboardBtn')?.addEventListener('click', async () => {
+        if (activeDashboardView === 'roster') {
+            setRefreshButtonBusy(true);
+            const succeeded = await loadRosterList();
+            if (state.rosterTab === 'history') await loadRosterHistory();
+            setRefreshButtonBusy(false);
+            showToast(succeeded ? 'Danh sách KTV đã được cập nhật.' : 'Không thể làm mới danh sách KTV.', succeeded ? 'success' : 'error');
+            return;
+        }
+        if (!state.dashboardDataLoaded) {
+            const succeeded = await loadDashboardFromApi();
+            showToast(succeeded ? 'Dashboard đã được cập nhật.' : 'Không thể tải dữ liệu dashboard.', succeeded ? 'success' : 'error');
+            return;
+        }
+        await refreshDashboardData({ force: true, announce: true });
+    });
+
+    window.addEventListener('offline', () => {
+        setDashboardSyncState('offline', state.lastSuccessfulRefreshAt
+            ? formatDashboardSyncDetail(state.lastSuccessfulRefreshAt)
+            : 'Thiết bị đang ngoại tuyến');
+    });
+    window.addEventListener('online', () => {
+        setDashboardSyncState('syncing', 'Đã có kết nối, đang đồng bộ lại');
+        if (activeDashboardView === 'roster') loadRosterList();
+        else if (state.dashboardDataLoaded) refreshDashboardData({ force: true });
+        else if (state.isAdmin) loadDashboardFromApi();
+    });
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && state.dashboardDataLoaded && activeDashboardView !== 'roster') refreshDashboardData();
     });
 }
 
@@ -4491,19 +5341,45 @@ function initSidebarNavigation() {
    Roster (Quản lý KTV) — Admin
    ============================================================ */
 
+function activateRosterTab(tabName, { focus = false } = {}) {
+    state.rosterTab = tabName;
+    const tabs = [...document.querySelectorAll('[data-roster-tab]')];
+    tabs.forEach(tab => {
+        const isActive = tab.dataset.rosterTab === tabName;
+        tab.classList.toggle('active', isActive);
+        tab.setAttribute('aria-selected', String(isActive));
+        tab.tabIndex = isActive ? 0 : -1;
+        if (isActive && focus) tab.focus();
+    });
+    const panels = {
+        list: document.getElementById('rosterListPanel'),
+        import: document.getElementById('rosterImportPanel'),
+        history: document.getElementById('rosterHistoryPanel')
+    };
+    Object.entries(panels).forEach(([name, panel]) => {
+        if (panel) panel.hidden = name !== tabName;
+    });
+    if (tabName === 'list' && !state.rosterLoaded) loadRosterList();
+    if (tabName === 'history' && !state.rosterHistoryLoaded) loadRosterHistory();
+}
+
 function initRoster() {
     if (state.rosterInitialized) return;
     state.rosterInitialized = true;
 
     document.querySelectorAll('[data-roster-tab]').forEach(btn => {
-        btn.addEventListener('click', () => {
-            state.rosterTab = btn.dataset.rosterTab;
-            document.querySelectorAll('[data-roster-tab]').forEach(b => b.classList.toggle('active', b.dataset.rosterTab === state.rosterTab));
-            document.getElementById('rosterListPanel').hidden = state.rosterTab !== 'list';
-            document.getElementById('rosterImportPanel').hidden = state.rosterTab !== 'import';
-            document.getElementById('rosterHistoryPanel').hidden = state.rosterTab !== 'history';
-            if (state.rosterTab === 'list' && !state.rosterLoaded) loadRosterList();
-            if (state.rosterTab === 'history' && !state.rosterHistoryLoaded) loadRosterHistory();
+        btn.addEventListener('click', () => activateRosterTab(btn.dataset.rosterTab));
+        btn.addEventListener('keydown', event => {
+            const tabs = [...document.querySelectorAll('[data-roster-tab]')];
+            const currentIndex = tabs.indexOf(btn);
+            let nextIndex = currentIndex;
+            if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % tabs.length;
+            else if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+            else if (event.key === 'Home') nextIndex = 0;
+            else if (event.key === 'End') nextIndex = tabs.length - 1;
+            else return;
+            event.preventDefault();
+            activateRosterTab(tabs[nextIndex].dataset.rosterTab, { focus: true });
         });
     });
 
@@ -4524,11 +5400,6 @@ function initRoster() {
         state.rosterStatusFilter = e.target.value;
         state.rosterPage = 1;
         loadRosterList();
-    });
-
-    document.getElementById('rosterExportBtn')?.addEventListener('click', () => {
-        if (!ensureReportExportAllowed()) return;
-        window.location.href = API_BASE_URL + '/roster/export?' + rosterFilterQuerystring();
     });
 
     const uploadZone = document.getElementById('rosterUploadZone');
@@ -4556,10 +5427,22 @@ function initRoster() {
     document.getElementById('rosterEditBackdrop')?.addEventListener('click', e => {
         if (e.target === e.currentTarget) closeRosterEdit();
     });
+    document.getElementById('rosterEditBackdrop')?.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            closeRosterEdit();
+            return;
+        }
+        trapDialogFocus(event, document.getElementById('rosterEditDialog'));
+    });
     document.getElementById('rosterEditForm')?.addEventListener('submit', submitRosterEdit);
     document.getElementById('rosterEditRegionId')?.addEventListener('change', updateRosterEditBranch);
 
     document.getElementById('rosterTableBody')?.addEventListener('click', e => {
+        if (e.target.closest('[data-roster-retry]')) {
+            loadRosterList();
+            return;
+        }
         const btn = e.target.closest('.roster-edit-btn');
         if (btn?.dataset.employeeId) openRosterEdit(btn.dataset.employeeId);
     });
@@ -4578,7 +5461,14 @@ function rosterFilterQuerystring() {
 }
 
 async function loadRosterList() {
+    const requestSequence = ++state.rosterRequestSequence;
     state.rosterLoaded = false;
+    const tbody = document.getElementById('rosterTableBody');
+    if (tbody) {
+        tbody.setAttribute('aria-busy', 'true');
+        tbody.innerHTML = '<tr class="table-loading-row"><td colspan="9"><div class="table-state"><span class="table-state-spinner" aria-hidden="true"></span><span>Đang tải danh sách KTV…</span></div></td></tr>';
+    }
+    if (activeDashboardView === 'roster') setDashboardSyncState('syncing', 'Đang tải hồ sơ KTV');
     try {
         const params = new URLSearchParams();
         params.set('status', state.rosterStatusFilter);
@@ -4587,18 +5477,28 @@ async function loadRosterList() {
         const resp = await fetch(`${API_BASE_URL}/roster/list?${params}`);
         if (!resp.ok) throw new Error('Failed to load roster');
         const json = await resp.json();
+        if (requestSequence !== state.rosterRequestSequence) return false;
         const data = json.data || {};
         state.rosterItems = data.items || [];
         state.rosterStats = data.stats || null;
         state.rosterTotal = data.total || 0;
         state.rosterLoaded = true;
         renderRosterList();
-    } catch (err) {
-        console.error('loadRosterList error:', err);
-        const tbody = document.getElementById('rosterTableBody');
-        if (tbody) {
-            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:24px;color:#b91c1c">Không tải được danh sách KTV. Vui lòng thử lại.</td></tr>';
+        if (activeDashboardView === 'roster') {
+            state.lastSuccessfulRefreshAt = new Date();
+            setDashboardSyncState('ready');
         }
+        return true;
+    } catch (err) {
+        if (requestSequence !== state.rosterRequestSequence) return false;
+        console.error('loadRosterList error:', err);
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="9"><div class="table-state is-error"><strong>Không tải được danh sách KTV</strong><span>Vui lòng kiểm tra kết nối và thử lại.</span><button type="button" class="button secondary" data-roster-retry>Thử lại</button></div></td></tr>';
+        }
+        if (activeDashboardView === 'roster') setDashboardSyncState(navigator.onLine ? 'stale' : 'offline', 'Không thể tải hồ sơ KTV');
+        return false;
+    } finally {
+        if (requestSequence === state.rosterRequestSequence) tbody?.removeAttribute('aria-busy');
     }
 }
 
@@ -4642,21 +5542,20 @@ function renderRosterTableBody() {
     const tbody = document.getElementById('rosterTableBody');
     if (!tbody) return;
     if (!state.rosterItems.length) {
-        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:24px;color:#9ca3af">Không có dữ liệu.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9"><div class="table-state"><strong>Không tìm thấy hồ sơ KTV</strong><span>Hãy thử thay đổi từ khóa hoặc bộ lọc trạng thái.</span></div></td></tr>';
         return;
     }
     tbody.innerHTML = state.rosterItems.map(item => {
         const terminated = item.is_terminated || item.isTerminated;
         const badge = terminated ? '<span class="badge-terminated">Đã nghỉ</span>' : '<span class="badge-active">Đang làm</span>';
-        const dateStr = d => d ? new Date(d).toLocaleDateString('vi-VN') : '-';
         const rawEmployeeId = item.employee_id || item.employeeId || '';
         const eid = escapeHTML(rawEmployeeId);
         const employeeCell = eid || '<span title="Có thể bổ sung qua lần import hồ sơ nhân sự sau">Chưa cập nhật</span>';
         const region = escapeHTML(item.region_name || item.regionName || item.dashboard_region || item.dashboardRegion || 'Chưa phân vùng');
         const branch = escapeHTML(item.branch_name || item.branchName || '—');
         const editButton = rawEmployeeId
-            ? `<button type="button" class="button secondary roster-edit-btn" style="padding:3px 8px;font-size:12px" data-employee-id="${eid}">Sửa</button>`
-            : '<button type="button" class="button secondary" style="padding:3px 8px;font-size:12px" title="Bổ sung mã nhân viên bằng chức năng import hồ sơ" disabled>Chờ MNV</button>';
+            ? `<button type="button" class="button secondary roster-edit-btn" data-employee-id="${eid}" aria-label="Sửa hồ sơ ${escapeHTML(item.display_name || item.displayName || rawEmployeeId)}">Sửa</button>`
+            : '<button type="button" class="button secondary roster-edit-btn" title="Bổ sung mã nhân viên bằng chức năng import hồ sơ" disabled>Chờ MNV</button>';
         return `<tr>
             <td>${employeeCell}</td>
             <td>${escapeHTML(item.display_name || item.displayName || '')}</td>
@@ -4665,7 +5564,6 @@ function renderRosterTableBody() {
             <td>${region}</td>
             <td>${branch}</td>
             <td>${escapeHTML(item.class_code || item.classCode || '')}</td>
-            <td>${escapeHTML(dateStr(item.training_start_date || item.trainingStartDate))}</td>
             <td>${badge}</td>
             <td>${editButton}</td>
         </tr>`;
@@ -4679,8 +5577,8 @@ function renderRosterPagination() {
     el.innerHTML = `
         <span>Trang ${state.rosterPage} / ${totalPages} — ${formatNumber.format(state.rosterTotal)} kết quả</span>
         <div class="roster-pagination-btns">
-            <button class="roster-page-btn" data-page="${state.rosterPage - 1}" ${state.rosterPage <= 1 ? 'disabled' : ''}>Trước</button>
-            <button class="roster-page-btn" data-page="${state.rosterPage + 1}" ${state.rosterPage >= totalPages ? 'disabled' : ''}>Sau</button>
+            <button type="button" class="roster-page-btn" data-page="${state.rosterPage - 1}" aria-label="Trang trước" ${state.rosterPage <= 1 ? 'disabled' : ''}>Trước</button>
+            <button type="button" class="roster-page-btn" data-page="${state.rosterPage + 1}" aria-label="Trang sau" ${state.rosterPage >= totalPages ? 'disabled' : ''}>Sau</button>
         </div>
     `;
 }
@@ -4694,7 +5592,7 @@ function rosterGoPage(page) {
 
 function handleRosterFile(file) {
     if (!file.name.toLowerCase().endsWith('.xlsx')) {
-        alert('Vui lòng chọn file .xlsx');
+        showToast('Vui lòng chọn đúng file Excel định dạng .xlsx.', 'error');
         return;
     }
     state.rosterImportFile = file;
@@ -4741,7 +5639,7 @@ async function doRosterPreview(file) {
         state.rosterPreviewData = null;
         console.error('Preview error:', err);
         const el = document.getElementById('rosterPreview');
-        if (el) { el.hidden = false; el.innerHTML = `<div class="roster-preview-errors" style="display:block"><h4>Lỗi preview</h4><p>${escapeHTML(String(err))}</p></div>`; }
+        if (el) { el.hidden = false; el.innerHTML = `<div class="roster-preview-errors is-visible"><h4>Không thể đọc file</h4><p>${escapeHTML(err.message || String(err))}</p></div>`; }
         const importButton = document.getElementById('rosterConfirmImportBtn');
         if (importButton) {
             importButton.disabled = true;
@@ -4786,7 +5684,7 @@ function renderRosterPreview(data) {
             if (!items.length) return;
             html += `<div class="roster-change-group"><h4 class="roster-preview-stat ${cls}">${label} (${items.length})</h4><table><thead><tr><th>Mã NV</th><th>Tên</th><th>Email</th><th>Khu vực</th><th>Chi nhánh</th></tr></thead><tbody>${items.map(i => `<tr><td>${escapeHTML(i.employee_id || '')}</td><td>${escapeHTML(i.display_name || '')}</td><td>${escapeHTML(i.email || '')}</td><td>${escapeHTML(i.region || '')}</td><td>${escapeHTML(i.branch || '')}</td></tr>`).join('')}</tbody></table></div>`;
         });
-        changesEl.innerHTML = html || '<p style="color:#9ca3af">Không có thay đổi nào.</p>';
+        changesEl.innerHTML = html || '<p class="roster-preview-empty">Không có thay đổi nào.</p>';
     }
 }
 
@@ -4794,15 +5692,15 @@ async function confirmRosterImport() {
     if (state.rosterImportBusy || !state.rosterImportFile) return;
     const data = state.rosterPreviewData;
     if (!data) {
-        alert('Vui lòng đợi preview hoàn tất trước khi import.');
+        showToast('Vui lòng đợi hệ thống kiểm tra file xong trước khi import.', 'info');
         return;
     }
     if ((data.error_count || data.errorCount || 0) > 0) {
-        alert('Vui lòng sửa lỗi trước khi import.');
+        showToast('File còn lỗi dữ liệu. Vui lòng sửa các dòng được đánh dấu trước khi import.', 'error');
         return;
     }
     if (data.canImport === false || data.can_import === false || Number(data.totalRows || data.total_rows || 0) <= 0) {
-        alert('File không có dòng KTV hợp lệ để import.');
+        showToast('File không có dòng KTV hợp lệ để import.', 'error');
         return;
     }
     const terminationCount = Number(data.terminated || 0);
@@ -4908,22 +5806,35 @@ function cancelRosterImport() {
 /* --- History --- */
 
 async function loadRosterHistory() {
+    const requestSequence = ++state.rosterHistoryRequestSequence;
+    const tbody = document.getElementById('rosterHistoryBody');
+    const emptyEl = document.getElementById('rosterHistoryEmpty');
+    tbody?.setAttribute('aria-busy', 'true');
+    if (emptyEl) {
+        emptyEl.hidden = false;
+        emptyEl.innerHTML = '<span class="table-state-spinner" aria-hidden="true"></span><span>Đang tải lịch sử import…</span>';
+    }
     try {
         const resp = await fetch(`${API_BASE_URL}/roster/history`);
         if (!resp.ok) throw new Error('Failed to load history');
         const json = await resp.json();
+        if (requestSequence !== state.rosterHistoryRequestSequence) return false;
         state.rosterHistoryItems = (json.data || {}).items || [];
         state.rosterHistoryLoaded = true;
         renderRosterHistory();
+        return true;
     } catch (err) {
+        if (requestSequence !== state.rosterHistoryRequestSequence) return false;
         console.error('loadRosterHistory error:', err);
-        const tbody = document.getElementById('rosterHistoryBody');
-        const emptyEl = document.getElementById('rosterHistoryEmpty');
         if (tbody) tbody.innerHTML = '';
         if (emptyEl) {
             emptyEl.hidden = false;
-            emptyEl.textContent = 'Không tải được lịch sử import. Vui lòng thử lại.';
+            emptyEl.innerHTML = '<strong>Không tải được lịch sử import</strong><button type="button" class="button secondary" data-roster-history-retry>Thử lại</button>';
+            emptyEl.querySelector('[data-roster-history-retry]')?.addEventListener('click', loadRosterHistory, { once: true });
         }
+        return false;
+    } finally {
+        if (requestSequence === state.rosterHistoryRequestSequence) tbody?.removeAttribute('aria-busy');
     }
 }
 
@@ -4948,10 +5859,10 @@ function renderRosterHistory() {
             <td>${escapeHTML(item.fileName || item.file_name || '')}</td>
             <td>${escapeHTML(item.importedByName || item.imported_by_name || item.importedByEmail || '-')}</td>
             <td>${formatNumber.format(Number(item.totalRows || item.total_rows || 0))}</td>
-            <td style="color:#166534">${formatNumber.format(Number(item.inserted || 0))}</td>
-            <td style="color:#1e40af">${formatNumber.format(Number(item.updated || 0))}</td>
-            <td style="color:#991b1b">${formatNumber.format(Number(item.terminated || 0))}</td>
-            <td style="color:#92400e">${formatNumber.format(Number(item.reactivated || 0))}</td>
+            <td class="roster-value-success">${formatNumber.format(Number(item.inserted || 0))}</td>
+            <td class="roster-value-info">${formatNumber.format(Number(item.updated || 0))}</td>
+            <td class="roster-value-danger">${formatNumber.format(Number(item.terminated || 0))}</td>
+            <td class="roster-value-warning">${formatNumber.format(Number(item.reactivated || 0))}</td>
             <td>${formatNumber.format(Number(item.errorCount || item.error_count || 0))}</td>
             <td>${dateStr}</td>
         </tr>`;
@@ -4966,9 +5877,10 @@ async function openRosterEdit(employeeId) {
     try {
         await loadRosterRegions();
     } catch (err) {
-        alert(err.message || 'Không tải được danh mục khu vực.');
+        showToast(err.message || 'Không tải được danh mục khu vực.', 'error');
         return;
     }
+    rosterEditReturnFocus = document.activeElement;
     state.rosterEditEmployeeId = employeeId;
     document.getElementById('rosterEditSubtitle').textContent = employeeId + ' — ' + (item.display_name || item.displayName || '');
     document.getElementById('rosterEditEmployeeId').value = employeeId;
@@ -4980,17 +5892,24 @@ async function openRosterEdit(employeeId) {
     document.getElementById('rosterEditUnitCode').value = item.unit_code || item.unitCode || '';
     document.getElementById('rosterEditUnitName').value = item.unit_name || item.unitName || '';
     document.getElementById('rosterEditClassCode').value = item.class_code || item.classCode || '';
-    document.getElementById('rosterEditTrainingStart').value = item.training_start_date || item.trainingStartDate || '';
-    document.getElementById('rosterEditTrainingEnd').value = item.training_end_date || item.trainingEndDate || '';
     document.getElementById('rosterEditTerminated').value = (item.is_terminated || item.isTerminated) ? '1' : '0';
     const backdrop = document.getElementById('rosterEditBackdrop');
-    if (backdrop) { backdrop.hidden = false; backdrop.classList.add('visible'); backdrop.setAttribute('aria-hidden', 'false'); }
+    if (backdrop) {
+        backdrop.hidden = false;
+        backdrop.classList.add('visible');
+        backdrop.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('modal-open');
+        window.setTimeout(() => document.getElementById('rosterEditDisplayName')?.focus(), 0);
+    }
 }
 
 function closeRosterEdit() {
     const backdrop = document.getElementById('rosterEditBackdrop');
     if (backdrop) { backdrop.hidden = true; backdrop.classList.remove('visible'); backdrop.setAttribute('aria-hidden', 'true'); }
+    document.body.classList.remove('modal-open');
     state.rosterEditEmployeeId = '';
+    if (rosterEditReturnFocus instanceof HTMLElement) rosterEditReturnFocus.focus();
+    rosterEditReturnFocus = null;
 }
 
 async function submitRosterEdit(e) {
@@ -5005,8 +5924,6 @@ async function submitRosterEdit(e) {
         unit_code: document.getElementById('rosterEditUnitCode').value.trim() || null,
         unit_name: document.getElementById('rosterEditUnitName').value.trim() || null,
         class_code: document.getElementById('rosterEditClassCode').value.trim() || null,
-        training_start_date: document.getElementById('rosterEditTrainingStart').value || null,
-        training_end_date: document.getElementById('rosterEditTrainingEnd').value || null,
         is_terminated: document.getElementById('rosterEditTerminated').value === '1',
     };
     try {
@@ -5016,26 +5933,28 @@ async function submitRosterEdit(e) {
             body: JSON.stringify(payload),
         });
         if (!resp.ok) {
-            const err = await resp.json();
-            alert(err.error?.message || 'Cập nhật thất bại.');
+            const err = await resp.json().catch(() => ({}));
+            showToast(err.error?.message || 'Cập nhật hồ sơ thất bại.', 'error');
             return;
         }
         closeRosterEdit();
         state.rosterLoaded = false;
-        loadRosterList();
+        await loadRosterList();
+        showToast('Đã cập nhật hồ sơ KTV.', 'success');
     } catch (err) {
-        alert('Lỗi: ' + err.message);
+        showToast(`Không thể cập nhật hồ sơ: ${err.message}`, 'error');
     }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     initDashboardViewRouting();
     initSidebarNavigation();
+    initDashboardExperience();
     initFilters();
     initSort();
     initDateRangePicker();
     initHourlyDatePicker();
-    initExport();
+    initReportExport();
     initInstructorWorkspace();
     initClassMatrix();
     initRoster();

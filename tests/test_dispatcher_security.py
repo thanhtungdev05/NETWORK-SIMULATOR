@@ -1,4 +1,5 @@
 import http.client
+import gzip
 import sys
 import threading
 import unittest
@@ -39,7 +40,14 @@ class DispatcherSecurityTests(unittest.TestCase):
             connection.close()
 
     def test_public_portal_and_dashboard_assets_are_available(self):
-        for path in ('/', '/styles.css', '/dashboard/', '/devices/ax3000s/data.js'):
+        for path in (
+            '/',
+            '/styles.css',
+            '/dashboard/',
+            '/dashboard/css/dashboard-professional.css',
+            '/dashboard/js/app.js',
+            '/devices/ax3000s/data.js',
+        ):
             with self.subTest(path=path):
                 status, _, _ = self.request(path)
                 self.assertEqual(status, 200)
@@ -68,6 +76,34 @@ class DispatcherSecurityTests(unittest.TestCase):
         self.assertEqual(normalized_headers.get('x-content-type-options'), 'nosniff')
         self.assertEqual(normalized_headers.get('x-frame-options'), 'SAMEORIGIN')
         self.assertIn("frame-ancestors 'self'", normalized_headers.get('content-security-policy', ''))
+
+        status, headers, body = self.request(
+            '/dashboard/css/dashboard-professional.css?v=20260825-1',
+            method='HEAD',
+        )
+        normalized_headers = {key.lower(): value for key, value in headers.items()}
+        self.assertEqual(status, 200)
+        self.assertEqual(body, b'')
+        self.assertIn('immutable', normalized_headers.get('cache-control', ''))
+
+    def test_large_json_response_supports_gzip_without_compressing_workbooks(self):
+        source = b'{"data":"' + (b'x' * 4096) + b'"}'
+        encoded, compressed = run_all.encode_api_response(
+            source,
+            content_type='application/json; charset=utf-8',
+            accept_encoding='br, gzip',
+        )
+        self.assertTrue(compressed)
+        self.assertLess(len(encoded), len(source))
+        self.assertEqual(gzip.decompress(encoded), source)
+
+        workbook, workbook_compressed = run_all.encode_api_response(
+            source,
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            accept_encoding='gzip',
+        )
+        self.assertFalse(workbook_compressed)
+        self.assertEqual(workbook, source)
 
 
 if __name__ == '__main__':

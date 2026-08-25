@@ -10,7 +10,7 @@ from django.utils.html import format_html
 
 from .models import (
     DeviceCatalog, LabCatalog, Role, FtcUser, TimerSession,
-    Region, SchemaMigration,
+    Region, LoginLog, RosterImportLog, SchemaMigration,
 )
 
 
@@ -59,7 +59,7 @@ class DeviceCatalogAdmin(admin.ModelAdmin):
     list_per_page = 50
 
     def lab_count_badge(self, obj):
-        count = obj.labcatalog_set.filter(is_active=True).count()
+        count = obj.labs.filter(is_active=True).count()
         bg = '#059669' if count > 0 else '#6b7280'
         return format_html(
             '<span style="background:{};color:#fff;padding:2px 8px;'
@@ -144,7 +144,7 @@ class FtcUserAdmin(admin.ModelAdmin):
                      'unit_code', 'unit_name', 'class_code',
                      'region__region_code', 'region__region_name',
                      'region__branch_name']
-    list_select_related = ['region']
+    list_select_related = ['role', 'region']
     readonly_fields = [
         'user_id', 'last_login_at', 'created_at', 'updated_at',
         'employee_source', 'employee_seed_batch', 'employee_synced_at',
@@ -210,7 +210,7 @@ class FtcUserAdmin(admin.ModelAdmin):
     employment_status_badge.short_description = 'Trạng thái'
 
     actions = [_make_csv_export('users',
-               ['employee_id', 'display_name', 'email', 'role',
+               ['employee_id', 'display_name', 'email', 'role_id',
                 'unit_code', 'unit_name', 'dashboard_region',
                 'class_code', 'is_terminated', 'last_login_at'])]
 
@@ -267,21 +267,22 @@ class TimerSessionAdmin(admin.ModelAdmin):
     ]
     list_filter = [
         'status', PassedFilter, MockDataFilter, 'mode', 'session_type',
-        'device_id',
+        'device',
     ]
     search_fields = [
-        'technician_id', 'name', 'email', 'lab_id', 'lab_name', 'device',
+        'technician_id', 'name', 'email', 'lab_id', 'lab_name',
+        'device__device_id', 'device__device_name', 'device_name_snapshot',
     ]
     readonly_fields = [
         'id', 'user', 'created_at', 'started_at', 'finished_at',
-        'client_ip', 'user_agent', 'device_id', 'grading_details_pretty',
+        'client_ip', 'user_agent', 'device', 'grading_details_pretty',
     ]
     fieldsets = [
         ('Định danh KTV', {
             'fields': ('id', 'user', 'technician_id', 'name', 'email')
         }),
         ('Bài thực hành', {
-            'fields': ('lab_id', 'lab_name', 'device', 'device_id',
+            'fields': ('lab_id', 'lab_name', 'device', 'device_name_snapshot',
                        'mode', 'session_type')
         }),
         ('Kết quả đánh giá', {
@@ -301,6 +302,7 @@ class TimerSessionAdmin(admin.ModelAdmin):
         }),
     ]
     date_hierarchy = 'finished_at'
+    list_select_related = ['user', 'device']
     list_per_page = 50
     show_full_result_count = True
 
@@ -378,13 +380,15 @@ class TimerSessionAdmin(admin.ModelAdmin):
         response['Content-Disposition'] = 'attachment; filename="timer_sessions_real.csv"'
         writer = csv.writer(response)
         writer.writerow(['session_id', 'technician_id', 'name', 'email',
-                         'lab_id', 'lab_name', 'device', 'mode', 'status',
+                         'lab_id', 'lab_name', 'device_id', 'device_snapshot',
+                         'mode', 'status',
                          'is_passed', 'score', 'duration_sec', 'finished_at',
                          'client_ip'])
         for obj in qs:
             writer.writerow([
                 str(obj.id), obj.technician_id, obj.name, obj.email,
-                obj.lab_id, obj.lab_name, obj.device, obj.mode, obj.status,
+                obj.lab_id, obj.lab_name, obj.device_id,
+                obj.device_name_snapshot, obj.mode, obj.status,
                 obj.is_passed, obj.score, obj.duration_sec, obj.finished_at,
                 obj.client_ip,
             ])
@@ -394,7 +398,8 @@ class TimerSessionAdmin(admin.ModelAdmin):
     actions = [export_real_csv,
                _make_csv_export('timer_sessions_all',
                ['id', 'technician_id', 'name', 'email', 'lab_id', 'lab_name',
-                'device', 'mode', 'status', 'is_passed', 'score',
+                'device_id', 'device_name_snapshot', 'mode', 'status',
+                'is_passed', 'score',
                 'duration_sec', 'finished_at', 'is_mock'])]
 
 
@@ -409,6 +414,57 @@ class RegionAdmin(admin.ModelAdmin):
     list_filter = ['is_active', 'dashboard_group']
     search_fields = ['region_code', 'region_name', 'branch_name']
     readonly_fields = ['region_id', 'created_at', 'updated_at']
+    list_per_page = 100
+
+
+# ===========================================================
+# Audit logs (read-only)
+# ===========================================================
+
+class ReadOnlyAuditAdmin(admin.ModelAdmin):
+    actions = None
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(LoginLog)
+class LoginLogAdmin(ReadOnlyAuditAdmin):
+    list_display = [
+        'created_at', 'event_type', 'user', 'employee_id', 'email', 'role',
+        'ip_address',
+    ]
+    list_filter = ['event_type', 'role', 'created_at']
+    search_fields = [
+        'user__email', 'user__employee_id', 'employee_id', 'email',
+        'display_name', 'iam_subject', 'ip_address',
+    ]
+    list_select_related = ['user']
+    date_hierarchy = 'created_at'
+    ordering = ['-created_at', '-id']
+    list_per_page = 100
+
+
+@admin.register(RosterImportLog)
+class RosterImportLogAdmin(ReadOnlyAuditAdmin):
+    list_display = [
+        'imported_at', 'batch_id', 'file_name', 'imported_by', 'total_rows',
+        'inserted', 'updated', 'terminated', 'reactivated', 'error_count',
+    ]
+    list_filter = ['imported_at']
+    search_fields = [
+        'batch_id', 'file_name', 'imported_by__email',
+        'imported_by__employee_id',
+    ]
+    list_select_related = ['imported_by']
+    date_hierarchy = 'imported_at'
+    ordering = ['-imported_at', '-id']
     list_per_page = 100
 
 

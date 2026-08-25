@@ -162,6 +162,9 @@ Dự án cung cấp một Dashboard quản trị hoàn chỉnh dành cho Admin/G
 
 Hệ thống sử dụng cơ sở dữ liệu quan hệ **PostgreSQL** (mặc định kết nối Neon Cloud qua biến môi trường `DATABASE_URL` trong file `.env`).
 
+Sơ đồ khóa ngoại, quy tắc xóa và các cột snapshot được mô tả tại
+[`docs/DATABASE_RELATIONSHIPS.md`](docs/DATABASE_RELATIONSHIPS.md).
+
 ### Quản lý Schema qua Migrations
 Mọi thay đổi cấu trúc bảng, view hay dữ liệu mẫu đều được quản lý thông qua các file di trú phiên bản đặt trong thư mục `api/migrations/`.
 Các lệnh CLI hữu ích để quản lý cơ sở dữ liệu:

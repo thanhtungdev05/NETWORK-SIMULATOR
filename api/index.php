@@ -2294,9 +2294,18 @@ function handle_dashboard(array $segments, string $method): void
                   CROSS JOIN lab_catalog lab
                   JOIN device_catalog device ON device.device_id = lab.device_id
                   LEFT JOIN timer_sessions s ON (
-                      (s.user_id = u.user_id OR LOWER(s.email) = LOWER(u.email))
-                      AND (s.device = device.device_name OR s.device_id = device.device_id)
-                      AND (s.lab_name = lab.lab_name OR s.lab_id = lab.lab_id)
+                      (
+                          s.user_id = u.user_id
+                          OR (s.user_id IS NULL AND LOWER(s.email) = LOWER(u.email))
+                      )
+                      AND (
+                          s.device_id = device.device_id
+                          OR (s.device_id IS NULL AND s.device = device.device_name)
+                      )
+                      AND (
+                          s.lab_id = lab.lab_id
+                          OR (s.lab_id IS NULL AND s.lab_name = lab.lab_name)
+                      )
                       AND s.mode = 'Thực hành'
                   )
                  WHERE u.role = 'KTV' AND u.is_terminated = FALSE

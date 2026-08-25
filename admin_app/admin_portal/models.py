@@ -38,7 +38,9 @@ class LabCatalog(models.Model):
     device = models.ForeignKey(
         DeviceCatalog,
         on_delete=models.CASCADE,
+        to_field='device_id',
         db_column='device_id',
+        related_name='labs',
         verbose_name='Thiết bị',
     )
     lab_name = models.CharField(max_length=150, verbose_name='Tên bài lab')
@@ -90,13 +92,12 @@ class FtcUser(models.Model):
     user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, verbose_name='User ID')
     email = models.EmailField(unique=True, max_length=254, verbose_name='Email')
     display_name = models.CharField(max_length=255, blank=True, null=True, verbose_name='Tên hiển thị')
-    role = models.CharField(
-        max_length=20,
-        choices=[
-            ('KTV', 'Kỹ thuật viên'),
-            ('ADMIN', 'Quản trị viên'),
-            ('DEV', 'Nhà phát triển'),
-        ],
+    role = models.ForeignKey(
+        Role,
+        on_delete=models.PROTECT,
+        to_field='role_code',
+        db_column='role',
+        related_name='users',
         default='KTV',
         verbose_name='Vai trò',
     )
@@ -108,10 +109,11 @@ class FtcUser(models.Model):
     dashboard_region = models.CharField(max_length=200, blank=True, null=True, verbose_name='Khu vực dashboard')
     region = models.ForeignKey(
         'Region',
-        on_delete=models.SET_NULL,
+        on_delete=models.PROTECT,
         null=True, blank=True,
+        to_field='region_id',
         db_column='region_id',
-        related_name='technicians',
+        related_name='users',
         verbose_name='Khu vực/chi nhánh hiện tại',
     )
     class_code = models.CharField(max_length=50, blank=True, null=True, verbose_name='Mã lớp')
@@ -148,7 +150,9 @@ class TimerSession(models.Model):
         FtcUser,
         on_delete=models.SET_NULL,
         null=True, blank=True,
+        to_field='user_id',
         db_column='user_id',
+        related_name='timer_sessions',
         verbose_name='KTV',
     )
     technician_id = models.CharField(max_length=50, blank=True, null=True, verbose_name='Mã KTV')
@@ -163,8 +167,27 @@ class TimerSession(models.Model):
         default='Thực hành',
         verbose_name='Chế độ',
     )
-    device = models.CharField(max_length=200, blank=True, null=True, verbose_name='Thiết bị')
-    device_id = models.CharField(max_length=50, blank=True, null=True, verbose_name='Device ID')
+    # `device` is the historical display-name snapshot. `device_id` is the
+    # canonical, database-enforced relationship to device_catalog.
+    device_name_snapshot = models.CharField(
+        max_length=200,
+        blank=True,
+        null=True,
+        db_column='device',
+        verbose_name='Tên thiết bị lúc ghi nhận',
+    )
+    device = models.ForeignKey(
+        DeviceCatalog,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        to_field='device_id',
+        db_column='device_id',
+        related_name='timer_sessions',
+        verbose_name='Thiết bị danh mục',
+    )
+    # lab_id and lab_name are historical values. PostgreSQL does not currently
+    # enforce a lab_catalog FK, so do not expose a relation the database lacks.
     lab_id = models.CharField(max_length=50, blank=True, null=True, verbose_name='Lab ID')
     lab_name = models.CharField(max_length=200, blank=True, null=True, verbose_name='Tên bài lab')
     session_type = models.CharField(max_length=30, default='practice', verbose_name='Loại phiên')
@@ -223,6 +246,78 @@ class Region(models.Model):
 
     def __str__(self):
         return f"{self.region_name} ({self.region_code})"
+
+
+# ===========================================================
+# Audit logs with user relationships
+# ===========================================================
+
+class LoginLog(models.Model):
+    id = models.BigAutoField(primary_key=True, verbose_name='ID đăng nhập')
+    created_at = models.DateTimeField(verbose_name='Thời điểm')
+    event_type = models.TextField(verbose_name='Loại sự kiện')
+    employee_id = models.TextField(blank=True, null=True, verbose_name='Mã nhân viên lúc đăng nhập')
+    display_name = models.TextField(blank=True, null=True, verbose_name='Tên lúc đăng nhập')
+    email = models.TextField(blank=True, null=True, verbose_name='Email lúc đăng nhập')
+    role = models.TextField(blank=True, null=True, verbose_name='Vai trò lúc đăng nhập')
+    iam_subject = models.TextField(blank=True, null=True, verbose_name='IAM subject')
+    ip_address = models.TextField(blank=True, null=True, verbose_name='Địa chỉ IP')
+    user_agent = models.TextField(blank=True, null=True, verbose_name='User Agent')
+    session_id_hash = models.TextField(blank=True, null=True, verbose_name='Mã băm phiên')
+    user = models.ForeignKey(
+        FtcUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        to_field='user_id',
+        db_column='user_id',
+        related_name='login_logs',
+        verbose_name='Người dùng',
+    )
+
+    class Meta:
+        managed = False
+        db_table = 'login_logs'
+        ordering = ['-created_at', '-id']
+        verbose_name = 'login_logs'
+        verbose_name_plural = 'login_logs'
+
+    def __str__(self):
+        return f"Login #{self.id} - {self.email or self.employee_id or '—'}"
+
+
+class RosterImportLog(models.Model):
+    id = models.BigAutoField(primary_key=True, verbose_name='ID import')
+    batch_id = models.CharField(max_length=100, unique=True, verbose_name='Mã batch')
+    imported_by = models.ForeignKey(
+        FtcUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        to_field='user_id',
+        db_column='imported_by',
+        related_name='roster_imports',
+        verbose_name='Người import',
+    )
+    file_name = models.TextField(blank=True, null=True, verbose_name='Tên file')
+    total_rows = models.IntegerField(default=0, verbose_name='Tổng số dòng')
+    inserted = models.IntegerField(default=0, verbose_name='Thêm mới')
+    updated = models.IntegerField(default=0, verbose_name='Cập nhật')
+    terminated = models.IntegerField(default=0, verbose_name='Nghỉ việc')
+    reactivated = models.IntegerField(default=0, verbose_name='Kích hoạt lại')
+    error_count = models.IntegerField(default=0, verbose_name='Số lỗi')
+    error_details = models.JSONField(default=list, verbose_name='Chi tiết lỗi')
+    imported_at = models.DateTimeField(verbose_name='Thời điểm import')
+
+    class Meta:
+        managed = False
+        db_table = 'roster_import_log'
+        ordering = ['-imported_at', '-id']
+        verbose_name = 'roster_import_log'
+        verbose_name_plural = 'roster_import_log'
+
+    def __str__(self):
+        return f"Import {self.batch_id}"
 
 
 # ===========================================================

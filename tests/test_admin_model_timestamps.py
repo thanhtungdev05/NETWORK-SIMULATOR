@@ -50,7 +50,7 @@ class AdminModelTimestampTests(unittest.TestCase):
         user = FtcUser(
             email='timestamp-regression@example.com',
             display_name='Timestamp Regression',
-            role='ADMIN',
+            role_id='ADMIN',
         )
 
         created_at = FtcUser._meta.get_field('created_at').pre_save(user, add=True)

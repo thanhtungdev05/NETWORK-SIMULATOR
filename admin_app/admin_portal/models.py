@@ -19,8 +19,8 @@ class DeviceCatalog(models.Model):
     device_name = models.CharField(max_length=100, unique=True, verbose_name='Tên thiết bị')
     is_active = models.BooleanField(default=True, verbose_name='Hoạt động')
     sort_order = models.IntegerField(default=0, verbose_name='Thứ tự')
-    created_at = models.DateTimeField(null=True, verbose_name='Ngày tạo')
-    updated_at = models.DateTimeField(null=True, verbose_name='Cập nhật')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Ngày tạo')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Cập nhật')
 
     class Meta:
         managed = False
@@ -44,8 +44,8 @@ class LabCatalog(models.Model):
     lab_name = models.CharField(max_length=150, verbose_name='Tên bài lab')
     is_active = models.BooleanField(default=True, verbose_name='Hoạt động')
     sort_order = models.IntegerField(default=0, verbose_name='Thứ tự')
-    created_at = models.DateTimeField(null=True, verbose_name='Ngày tạo')
-    updated_at = models.DateTimeField(null=True, verbose_name='Cập nhật')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Ngày tạo')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Cập nhật')
 
     class Meta:
         managed = False
@@ -68,8 +68,8 @@ class Role(models.Model):
     is_admin = models.BooleanField(default=False, verbose_name='Quyền quản trị')
     can_export_reports = models.BooleanField(default=False, verbose_name='Được xuất báo cáo')
     sort_order = models.SmallIntegerField(default=0, verbose_name='Thứ tự')
-    created_at = models.DateTimeField(null=True, verbose_name='Ngày tạo')
-    updated_at = models.DateTimeField(null=True, verbose_name='Cập nhật')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Ngày tạo')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Cập nhật')
 
     class Meta:
         managed = False
@@ -124,8 +124,8 @@ class FtcUser(models.Model):
     employee_seed_batch = models.CharField(max_length=160, blank=True, null=True, verbose_name='Batch seed')
     employee_synced_at = models.DateTimeField(blank=True, null=True, verbose_name='Đồng bộ lúc')
     last_login_at = models.DateTimeField(blank=True, null=True, verbose_name='Lần đăng nhập cuối')
-    created_at = models.DateTimeField(null=True, verbose_name='Ngày tạo')
-    updated_at = models.DateTimeField(null=True, verbose_name='Cập nhật')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Ngày tạo')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Cập nhật')
 
     class Meta:
         managed = False
@@ -187,7 +187,7 @@ class TimerSession(models.Model):
     user_agent = models.TextField(blank=True, null=True, verbose_name='User Agent')
     is_mock = models.BooleanField(default=False, verbose_name='Dữ liệu Test')
     seed_batch = models.CharField(max_length=160, blank=True, null=True, verbose_name='Batch Seed')
-    created_at = models.DateTimeField(null=True, verbose_name='Ngày tạo')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Ngày tạo')
 
     class Meta:
         managed = False
@@ -211,8 +211,8 @@ class Region(models.Model):
     branch_name = models.TextField(blank=True, null=True, verbose_name='Tên chi nhánh')
     dashboard_group = models.CharField(max_length=100, blank=True, null=True, verbose_name='Nhóm Dashboard')
     is_active = models.BooleanField(default=True, verbose_name='Hoạt động')
-    created_at = models.DateTimeField(null=True, verbose_name='Ngày tạo')
-    updated_at = models.DateTimeField(null=True, verbose_name='Cập nhật')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Ngày tạo')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Cập nhật')
 
     class Meta:
         managed = False

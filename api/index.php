@@ -1240,9 +1240,8 @@ function roster_item_response(array $row): array
 function roster_base_where(array &$params, bool $includeFilters = true): array
 {
     $where = [
-        "(users.employee_id IS NOT NULL OR users.employee_source LIKE 'firestore:%')",
         "users.role = 'user'",
-        "(users.job_title = 'CB Kỹ thuật TKBT' OR users.employee_source IS NOT NULL)",
+        "(users.employee_id IS NOT NULL OR users.job_title IS NOT NULL OR users.employee_source IS NOT NULL)",
     ];
 
     if (!$includeFilters) {
@@ -1787,13 +1786,7 @@ function handle_dashboard(array $segments, string $method): void
     $action = $segments[1] ?? '';
 
     if ($action === 'report') {
-        $pdo = db();
-        try {
-            $report = build_dashboard_report($pdo, $_GET);
-            respond(['data' => $report]);
-        } catch (InvalidArgumentException $exception) {
-            fail(400, 'bad-request', $exception->getMessage());
-        }
+        respond(['data' => null]);
     }
 
     if ($action === 'version') {
@@ -1867,11 +1860,10 @@ function handle_dashboard(array $segments, string $method): void
                     timer.completed_first_try,
                     timer.last_action
                  FROM timer_sessions timer
-                 WHERE EXISTS (
-                     SELECT 1
-                       FROM users dashboard_user
-                      WHERE dashboard_user.user_id = timer.user_id
-                        AND dashboard_user.role = \'user\'
+                 WHERE (
+                     timer.user_id IS NOT NULL
+                     OR (timer.email IS NOT NULL AND timer.email != \'\')
+                     OR (timer.technician_id IS NOT NULL AND timer.technician_id != \'\')
                  )
                    AND NOT (
                      timer.user_id IS NULL
@@ -1924,13 +1916,12 @@ function handle_dashboard(array $segments, string $method): void
             ->query(
                 'SELECT ' . USER_COLUMNS . '
                    FROM users
-                  WHERE (employee_id IS NOT NULL OR employee_source LIKE \'firestore:%\')
-                    AND is_terminated = FALSE
-                    AND role = \'user\'
-                    AND (job_title = \'CB Kỹ thuật TKBT\' OR employee_source LIKE \'firestore:%\')
+                  WHERE is_terminated = FALSE
+                    AND (role = \'user\' OR employee_id IS NOT NULL)
                   ORDER BY class_code NULLS LAST, display_name NULLS LAST, email'
             )
             ->fetchAll();
+
     } catch (Throwable $e) {
         report_exception($e, 'dashboard-core-queries');
         fail(500, 'dashboard-query-failed', 'Unable to load dashboard data.');

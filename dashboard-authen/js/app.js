@@ -19,6 +19,9 @@ const currentMonthLast = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 const fmtDate = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
 const state = {
+    currentUser: null,
+    isAdmin: false,
+    canExportReports: false,
     startDate: fmtDate(currentMonthFirst),
     endDate: fmtDate(currentMonthLast),
     tempStartDate: '',
@@ -96,6 +99,8 @@ const state = {
     // Roster (Quản lý KTV) — Admin
     rosterTab: 'list',
     rosterItems: [],
+    rosterRegions: [],
+    rosterRegionsLoaded: false,
     rosterStats: null,
     rosterPage: 1,
     rosterTotal: 0,
@@ -1266,7 +1271,9 @@ function renderAuthoritativeDetailedReport(reportMatrix) {
         <tr class="report-lab-header-row">${columns.map(column => `<th class="report-lab-head report-device-tone-${column.groupIndex % 5} ${column.isFirst ? 'group-start' : ''} ${column.isLast ? 'group-end' : ''}" scope="col" title="${escapeHTML(`${column.device} • ${column.lab}`)}">${escapeHTML(column.lab)}</th>`).join('')}</tr>`;
     els.detailReportBody.innerHTML = (reportMatrix.rows || []).map(row => {
         const region = row.region || {};
-        return `<tr><th class="report-region-cell" scope="row"><div class="report-region-label"><span class="report-region-spacer"></span>${escapeHTML(region.name || region.region_name || region.code || region.region_code || '')}</div></th>${columns.map(column => metricCell(row.cells?.[column.labId], column.isFirst ? 'group-start' : '')).join('')}${metricCell(row.total, 'report-row-total')}</tr>`;
+        const regionName = region.name || region.region_name || region.code || region.region_code || '';
+        const locationLabel = region.branch_name ? `${region.branch_name} · ${regionName}` : regionName;
+        return `<tr><th class="report-region-cell" scope="row"><div class="report-region-label"><span class="report-region-spacer"></span>${escapeHTML(locationLabel)}</div></th>${columns.map(column => metricCell(row.cells?.[column.labId], column.isFirst ? 'group-start' : '')).join('')}${metricCell(row.total, 'report-row-total')}</tr>`;
     }).join('') || `<tr><td colspan="${columns.length + 2}" class="empty">Không có assignment phù hợp với kỳ báo cáo.</td></tr>`;
     const grand = reportMatrix.grand_total || {};
     els.detailReportFoot.innerHTML = `<tr><th class="report-region-cell report-grand-label" scope="row">Tổng hệ thống</th>${columns.map(column => metricCell(grand.cells?.[column.labId], column.isFirst ? 'group-start' : '')).join('')}${metricCell(grand.total || grand, 'report-row-total report-grand-total')}</tr>`;
@@ -1553,9 +1560,12 @@ function normalizeTechnicianCatalog(apiTechnicians = []) {
         className: item.class_name || item.className || item.class_code || item.classCode || '',
         unitCode: item.unit_code || item.unitCode || '',
         unitName: item.unit_name || item.unitName || '',
+        regionId: item.region_id || item.regionId || '',
         regionCode: item.region_code || item.regionCode || '',
-        branchCode: item.branch_code || item.branchCode || '',
-        dashboardRegion: item.dashboard_region || item.dashboardRegion || 'Chưa phân vùng',
+        regionName: item.region_name || item.regionName || item.dashboard_region || item.dashboardRegion || 'Chưa phân vùng',
+        branchName: item.branch_name || item.branchName || '',
+        dashboardRegion: item.dashboard_region || item.dashboardRegion || item.region_name || item.regionName || 'Chưa phân vùng',
+        locationAssigned: Boolean(item.location_assigned ?? item.locationAssigned ?? item.region_id ?? item.regionId),
         isTerminated: Boolean(item.is_terminated ?? item.isTerminated)
     }));
 }
@@ -1625,12 +1635,12 @@ function mapApiSessions(apiSessions = []) {
             date: dateOnly(item.started_at),
             time: timeOnly(item.started_at),
             learner,
-            region: normalizeRegionName(technician?.dashboardRegion || item.region_name || item.region || item.technician?.region, learner),
+            region: normalizeRegionName(technician?.regionName || item.region_name || item.region || item.technician?.region, learner),
             classCode: technician?.classCode || item.class_code || '',
             jobTitle: technician?.jobTitle || item.job_title || '',
             unitCode: technician?.unitCode || item.unit_code || '',
             unitName: technician?.unitName || item.unit_name || '',
-            branchCode: technician?.branchCode || item.branch_code || '',
+            branchName: technician?.branchName || item.branch_name || '',
             device: item.device?.device_name || item.device_name || item.device_id || 'N/A',
             lab: item.lab?.lab_name || item.lab_name || item.lab_id || 'N/A',
             skill: item.skill?.skill_name || item.skill?.skill_id || item.lab?.lab_name || item.lab_name || 'N/A',
@@ -1920,12 +1930,40 @@ async function guardDashboardAdmin() {
         setDashboardLoading(false);
         return false;
     }
-    const isAdmin = response.ok && (await response.json().catch(() => null))?.user?.role === 'admin';
+    const user = response.ok ? (await response.json().catch(() => null))?.user : null;
+    const role = String(user?.role || '').toUpperCase();
+    const isAdmin = Boolean(user && (user.isAdmin ?? user.is_admin ?? user.permissions?.admin ?? ['ADMIN', 'DEV'].includes(role)));
     if (!isAdmin) {
         window.location.replace(`${window.location.origin}/`);
         return false;
     }
+    state.currentUser = user;
+    state.isAdmin = true;
+    state.canExportReports = Boolean(
+        user.canExportReports
+        ?? user.can_export_reports
+        ?? user.permissions?.exportReports
+        ?? user.permissions?.export_reports
+        ?? role === 'DEV'
+    );
+    applyReportExportPermission();
     return true;
+}
+
+function applyReportExportPermission() {
+    ['exportBtn', 'instructorClassExport', 'classMatrixExportBtn', 'rosterExportBtn'].forEach(id => {
+        const button = document.getElementById(id);
+        if (!button) return;
+        button.hidden = !state.canExportReports;
+        button.disabled = !state.canExportReports;
+        button.setAttribute('aria-hidden', state.canExportReports ? 'false' : 'true');
+    });
+}
+
+function ensureReportExportAllowed() {
+    if (state.canExportReports) return true;
+    alert('Chỉ tài khoản có role DEV mới được xuất báo cáo.');
+    return false;
 }
 
 async function loadInitialDashboardData() {
@@ -2851,7 +2889,7 @@ function renderInstructorClassProgress() {
     const deleteButton = document.getElementById('instructorClassDelete');
     const exportButton = document.getElementById('instructorClassExport');
     if (deleteButton) deleteButton.disabled = !state.instructorClasses.length || selectedClass?.source === 'database';
-    if (exportButton) exportButton.disabled = !state.instructorClasses.length;
+    if (exportButton) exportButton.disabled = !state.canExportReports || !state.instructorClasses.length;
 
     if (!selectedClass) {
         head.innerHTML = '';
@@ -2892,7 +2930,7 @@ function renderInstructorClassProgress() {
             ? `Đang hiển thị ${progressRows.length}/${allProgressRows.length} KTV`
             : `${allProgressRows.length} KTV trong lớp`;
     }
-    if (exportButton) exportButton.disabled = !progressRows.length;
+    if (exportButton) exportButton.disabled = !state.canExportReports || !progressRows.length;
 
     summary.innerHTML = `
         <span class="instructor-summary-chip"><strong>${progressRows.length}${filtersActive ? `/${allProgressRows.length}` : ''}</strong> KTV hiển thị</span>
@@ -3040,6 +3078,7 @@ async function handleInstructorClassFile(file) {
 }
 
 function exportInstructorClassCsv() {
+    if (!ensureReportExportAllowed()) return;
     const selectedClass = state.instructorClasses.find(item => item.id === state.instructorActiveClassId);
     if (!selectedClass) return;
     const groups = getInstructorDeviceGroups(selectedClass).filter(item => !state.instructorSelectedDevice || item.device === state.instructorSelectedDevice);
@@ -3453,6 +3492,7 @@ function renderClassMatrixReport() {
 }
 
 function exportClassMatrixCsv() {
+    if (!ensureReportExportAllowed()) return;
     const data = getClassMatrixData();
     if (!data.rows.length) {
         alert('Không có dữ liệu để xuất CSV.');
@@ -3864,6 +3904,7 @@ function initDateRangePicker() {
 
 function initExport() {
     document.getElementById('exportBtn')?.addEventListener('click', () => {
+        if (!ensureReportExportAllowed()) return;
         const rows = getDateFilteredSessions();
         const header = ['date', 'learner', 'device', 'lab', 'skill', 'status', 'duration'];
         const csv = [header.join(',')]
@@ -4486,6 +4527,7 @@ function initRoster() {
     });
 
     document.getElementById('rosterExportBtn')?.addEventListener('click', () => {
+        if (!ensureReportExportAllowed()) return;
         window.location.href = API_BASE_URL + '/roster/export?' + rosterFilterQuerystring();
     });
 
@@ -4515,6 +4557,7 @@ function initRoster() {
         if (e.target === e.currentTarget) closeRosterEdit();
     });
     document.getElementById('rosterEditForm')?.addEventListener('submit', submitRosterEdit);
+    document.getElementById('rosterEditRegionId')?.addEventListener('change', updateRosterEditBranch);
 
     document.getElementById('rosterTableBody')?.addEventListener('click', e => {
         const btn = e.target.closest('.roster-edit-btn');
@@ -4554,9 +4597,40 @@ async function loadRosterList() {
         console.error('loadRosterList error:', err);
         const tbody = document.getElementById('rosterTableBody');
         if (tbody) {
-            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:#b91c1c">Không tải được danh sách KTV. Vui lòng thử lại.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:24px;color:#b91c1c">Không tải được danh sách KTV. Vui lòng thử lại.</td></tr>';
         }
     }
+}
+
+async function loadRosterRegions() {
+    if (state.rosterRegionsLoaded) return;
+    const resp = await fetch(`${API_BASE_URL}/roster/regions`);
+    if (!resp.ok) throw new Error('Không tải được danh mục khu vực.');
+    const json = await resp.json();
+    state.rosterRegions = json.data?.items || [];
+    state.rosterRegionsLoaded = true;
+}
+
+function renderRosterRegionOptions(selectedRegionId = '') {
+    const select = document.getElementById('rosterEditRegionId');
+    if (!select) return;
+    const options = state.rosterRegions.map(region => {
+        const id = region.region_id || region.regionId || '';
+        const name = region.region_name || region.regionName || region.region_code || region.regionCode || '';
+        const branch = region.branch_name || region.branchName || 'Chưa có chi nhánh';
+        const code = region.region_code || region.regionCode || '';
+        const label = `${name} · ${branch}${code ? ` (${code})` : ''}`;
+        return `<option value="${escapeHTML(id)}">${escapeHTML(label)}</option>`;
+    }).join('');
+    select.innerHTML = '<option value="">Chưa phân vùng</option>' + options;
+    select.value = selectedRegionId || '';
+}
+
+function updateRosterEditBranch() {
+    const regionId = document.getElementById('rosterEditRegionId')?.value || '';
+    const region = state.rosterRegions.find(item => (item.region_id || item.regionId) === regionId);
+    const branchInput = document.getElementById('rosterEditBranchName');
+    if (branchInput) branchInput.value = region?.branch_name || region?.branchName || '';
 }
 
 function renderRosterList() {
@@ -4568,7 +4642,7 @@ function renderRosterTableBody() {
     const tbody = document.getElementById('rosterTableBody');
     if (!tbody) return;
     if (!state.rosterItems.length) {
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:#9ca3af">Không có dữ liệu.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:24px;color:#9ca3af">Không có dữ liệu.</td></tr>';
         return;
     }
     tbody.innerHTML = state.rosterItems.map(item => {
@@ -4578,7 +4652,8 @@ function renderRosterTableBody() {
         const rawEmployeeId = item.employee_id || item.employeeId || '';
         const eid = escapeHTML(rawEmployeeId);
         const employeeCell = eid || '<span title="Có thể bổ sung qua lần import hồ sơ nhân sự sau">Chưa cập nhật</span>';
-        const region = escapeHTML(item.dashboard_region || item.dashboardRegion || 'Chưa phân vùng');
+        const region = escapeHTML(item.region_name || item.regionName || item.dashboard_region || item.dashboardRegion || 'Chưa phân vùng');
+        const branch = escapeHTML(item.branch_name || item.branchName || '—');
         const editButton = rawEmployeeId
             ? `<button type="button" class="button secondary roster-edit-btn" style="padding:3px 8px;font-size:12px" data-employee-id="${eid}">Sửa</button>`
             : '<button type="button" class="button secondary" style="padding:3px 8px;font-size:12px" title="Bổ sung mã nhân viên bằng chức năng import hồ sơ" disabled>Chờ MNV</button>';
@@ -4588,6 +4663,7 @@ function renderRosterTableBody() {
             <td>${escapeHTML(item.email || '')}</td>
             <td>${escapeHTML(item.job_title || item.jobTitle || '')}</td>
             <td>${region}</td>
+            <td>${branch}</td>
             <td>${escapeHTML(item.class_code || item.classCode || '')}</td>
             <td>${escapeHTML(dateStr(item.training_start_date || item.trainingStartDate))}</td>
             <td>${badge}</td>
@@ -4617,7 +4693,7 @@ function rosterGoPage(page) {
 /* --- Import --- */
 
 function handleRosterFile(file) {
-    if (!file.name.endsWith('.xlsx')) {
+    if (!file.name.toLowerCase().endsWith('.xlsx')) {
         alert('Vui lòng chọn file .xlsx');
         return;
     }
@@ -4631,6 +4707,11 @@ function handleRosterFile(file) {
     document.getElementById('rosterPreview').hidden = true;
     document.getElementById('rosterImportResult').hidden = true;
     document.getElementById('rosterImportActions').hidden = false;
+    const importButton = document.getElementById('rosterConfirmImportBtn');
+    if (importButton) {
+        importButton.disabled = true;
+        importButton.textContent = 'Đang kiểm tra file...';
+    }
     doRosterPreview(file);
 }
 
@@ -4642,13 +4723,30 @@ async function doRosterPreview(file) {
         const resp = await fetch(`${API_BASE_URL}/roster/import`, { method: 'POST', body: formData });
         const json = await resp.json().catch(() => ({}));
         if (!resp.ok) throw new Error(json.error?.message || `Preview thất bại (HTTP ${resp.status})`);
+        if (state.rosterImportFile !== file) return;
         const data = json.data || {};
         state.rosterPreviewData = data;
         renderRosterPreview(data);
+        const importButton = document.getElementById('rosterConfirmImportBtn');
+        if (importButton) {
+            const canImport = data.canImport !== false
+                && data.can_import !== false
+                && Number(data.totalRows || data.total_rows || 0) > 0
+                && Number(data.error_count || data.errorCount || 0) === 0;
+            importButton.disabled = !canImport;
+            importButton.textContent = canImport ? 'Import danh sách KTV' : 'File chưa hợp lệ';
+        }
     } catch (err) {
+        if (state.rosterImportFile !== file) return;
+        state.rosterPreviewData = null;
         console.error('Preview error:', err);
         const el = document.getElementById('rosterPreview');
         if (el) { el.hidden = false; el.innerHTML = `<div class="roster-preview-errors" style="display:block"><h4>Lỗi preview</h4><p>${escapeHTML(String(err))}</p></div>`; }
+        const importButton = document.getElementById('rosterConfirmImportBtn');
+        if (importButton) {
+            importButton.disabled = true;
+            importButton.textContent = 'Không thể import';
+        }
     }
 }
 
@@ -4686,7 +4784,7 @@ function renderRosterPreview(data) {
         [['inserted', 'Thêm mới', 'stat-insert'], ['updated', 'Cập nhật', 'stat-update'], ['terminated', 'Nghỉ việc', 'stat-terminate'], ['reactivated', 'Khôi phục', 'stat-reactivate']].forEach(([key, label, cls]) => {
             const items = changes[key] || [];
             if (!items.length) return;
-            html += `<div class="roster-change-group"><h4 class="roster-preview-stat ${cls}">${label} (${items.length})</h4><table><thead><tr><th>Mã NV</th><th>Tên</th><th>Email</th><th>Vùng</th></tr></thead><tbody>${items.map(i => `<tr><td>${escapeHTML(i.employee_id || '')}</td><td>${escapeHTML(i.display_name || '')}</td><td>${escapeHTML(i.email || '')}</td><td>${escapeHTML(i.region || '')}</td></tr>`).join('')}</tbody></table></div>`;
+            html += `<div class="roster-change-group"><h4 class="roster-preview-stat ${cls}">${label} (${items.length})</h4><table><thead><tr><th>Mã NV</th><th>Tên</th><th>Email</th><th>Khu vực</th><th>Chi nhánh</th></tr></thead><tbody>${items.map(i => `<tr><td>${escapeHTML(i.employee_id || '')}</td><td>${escapeHTML(i.display_name || '')}</td><td>${escapeHTML(i.email || '')}</td><td>${escapeHTML(i.region || '')}</td><td>${escapeHTML(i.branch || '')}</td></tr>`).join('')}</tbody></table></div>`;
         });
         changesEl.innerHTML = html || '<p style="color:#9ca3af">Không có thay đổi nào.</p>';
     }
@@ -4747,7 +4845,7 @@ async function confirmRosterImport() {
         state.rosterImportBusy = false;
         if (btn) {
             btn.disabled = importSucceeded;
-            btn.textContent = importSucceeded ? 'Đã import' : 'Xác nhận Import';
+            btn.textContent = importSucceeded ? 'Đã import' : 'Import danh sách KTV';
         }
         if (importSucceeded) {
             state.rosterImportFile = null;
@@ -4800,6 +4898,11 @@ function cancelRosterImport() {
     document.getElementById('rosterImportResult').hidden = true;
     document.getElementById('rosterImportActions').hidden = true;
     document.getElementById('rosterFileInput').value = '';
+    const importButton = document.getElementById('rosterConfirmImportBtn');
+    if (importButton) {
+        importButton.disabled = true;
+        importButton.textContent = 'Import danh sách KTV';
+    }
 }
 
 /* --- History --- */
@@ -4860,14 +4963,20 @@ function renderRosterHistory() {
 async function openRosterEdit(employeeId) {
     const item = state.rosterItems.find(i => (i.employee_id || i.employeeId) === employeeId);
     if (!item) return;
+    try {
+        await loadRosterRegions();
+    } catch (err) {
+        alert(err.message || 'Không tải được danh mục khu vực.');
+        return;
+    }
     state.rosterEditEmployeeId = employeeId;
     document.getElementById('rosterEditSubtitle').textContent = employeeId + ' — ' + (item.display_name || item.displayName || '');
     document.getElementById('rosterEditEmployeeId').value = employeeId;
     document.getElementById('rosterEditDisplayName').value = item.display_name || item.displayName || '';
     document.getElementById('rosterEditEmail').value = item.email || '';
     document.getElementById('rosterEditJobTitle').value = item.job_title || item.jobTitle || '';
-    document.getElementById('rosterEditRegionCode').value = item.region_code || item.regionCode || '';
-    document.getElementById('rosterEditDashboardRegion').value = item.dashboard_region || item.dashboardRegion || '';
+    renderRosterRegionOptions(item.region_id || item.regionId || '');
+    updateRosterEditBranch();
     document.getElementById('rosterEditUnitCode').value = item.unit_code || item.unitCode || '';
     document.getElementById('rosterEditUnitName').value = item.unit_name || item.unitName || '';
     document.getElementById('rosterEditClassCode').value = item.class_code || item.classCode || '';
@@ -4892,8 +5001,7 @@ async function submitRosterEdit(e) {
         display_name: document.getElementById('rosterEditDisplayName').value.trim(),
         email: document.getElementById('rosterEditEmail').value.trim(),
         job_title: document.getElementById('rosterEditJobTitle').value.trim() || null,
-        region_code: document.getElementById('rosterEditRegionCode').value.trim() || null,
-        dashboard_region: document.getElementById('rosterEditDashboardRegion').value.trim() || null,
+        region_id: document.getElementById('rosterEditRegionId').value || null,
         unit_code: document.getElementById('rosterEditUnitCode').value.trim() || null,
         unit_name: document.getElementById('rosterEditUnitName').value.trim() || null,
         class_code: document.getElementById('rosterEditClassCode').value.trim() || null,

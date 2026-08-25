@@ -9,7 +9,7 @@ from django.http import HttpResponse
 from django.utils.html import format_html
 
 from .models import (
-    DeviceCatalog, LabCatalog, FtcUser, TimerSession,
+    DeviceCatalog, LabCatalog, Role, FtcUser, TimerSession,
     Region, SchemaMigration,
 )
 
@@ -89,6 +89,28 @@ class LabCatalogAdmin(admin.ModelAdmin):
 
 
 # ===========================================================
+# Role Admin (system definitions are read-only)
+# ===========================================================
+
+@admin.register(Role)
+class RoleAdmin(admin.ModelAdmin):
+    list_display = ['role_code', 'role_name', 'is_admin', 'can_export_reports', 'sort_order']
+    list_filter = ['is_admin', 'can_export_reports']
+    search_fields = ['role_code', 'role_name']
+    ordering = ['sort_order', 'role_code']
+    readonly_fields = [
+        'role_code', 'role_name', 'is_admin', 'can_export_reports',
+        'sort_order', 'created_at', 'updated_at',
+    ]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+# ===========================================================
 # FtcUser Admin
 # ===========================================================
 
@@ -114,15 +136,19 @@ class TerminationFilter(admin.SimpleListFilter):
 class FtcUserAdmin(admin.ModelAdmin):
     list_display = [
         'display_name', 'employee_id', 'email', 'role',
-        'unit_name', 'region_badge', 'class_code',
+        'unit_name', 'region_badge', 'branch_badge', 'class_code',
         'employment_status_badge', 'last_login_at',
     ]
-    list_filter = ['role', TerminationFilter, 'dashboard_region']
+    list_filter = ['role', TerminationFilter, 'region']
     search_fields = ['email', 'display_name', 'employee_id',
-                     'unit_code', 'unit_name', 'class_code']
+                     'unit_code', 'unit_name', 'class_code',
+                     'region__region_code', 'region__region_name',
+                     'region__branch_name']
+    list_select_related = ['region']
     readonly_fields = [
         'user_id', 'last_login_at', 'created_at', 'updated_at',
         'employee_source', 'employee_seed_batch', 'employee_synced_at',
+        'region_code', 'dashboard_region',
     ]
     fieldsets = [
         ('Thông tin cơ bản', {
@@ -133,7 +159,7 @@ class FtcUserAdmin(admin.ModelAdmin):
                        'training_start_date', 'training_end_date')
         }),
         ('Đơn vị & Khu vực', {
-            'fields': ('unit_code', 'unit_name', 'region_code', 'dashboard_region')
+            'fields': ('unit_code', 'unit_name', 'region')
         }),
         ('Trạng thái công việc', {
             'fields': ('is_terminated', 'termination_date', 'termination_reason')
@@ -141,21 +167,34 @@ class FtcUserAdmin(admin.ModelAdmin):
         ('Metadata hệ thống', {
             'classes': ('collapse',),
             'fields': ('employee_source', 'employee_seed_batch',
-                       'employee_synced_at', 'created_at', 'updated_at')
+                       'employee_synced_at', 'region_code', 'dashboard_region',
+                       'created_at', 'updated_at')
         }),
     ]
     list_per_page = 50
     show_full_result_count = True
     date_hierarchy = 'created_at'
 
+    def save_model(self, request, obj, form, change):
+        # region_id is canonical; keep legacy import/display columns synchronized
+        # for older consumers while they are being phased out.
+        if obj.region_id and obj.region:
+            obj.region_code = obj.region.region_code
+            obj.dashboard_region = obj.region.dashboard_group or obj.region.region_name
+        super().save_model(request, obj, form, change)
+
     def region_badge(self, obj):
-        if obj.dashboard_region:
+        if obj.region_id and obj.region:
             return format_html(
                 '<span style="background:#1d4ed8;color:#fff;padding:2px 8px;'
                 'border-radius:4px;font-size:12px;font-weight:500;">{}</span>',
-                obj.dashboard_region
+                obj.region.region_name
             )
         return '-'
+
+    def branch_badge(self, obj):
+        return obj.region.branch_name if obj.region_id and obj.region else '-'
+    branch_badge.short_description = 'Chi nhánh'
     region_badge.short_description = 'Khu vực'
 
     def employment_status_badge(self, obj):

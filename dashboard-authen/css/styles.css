@@ -7965,6 +7965,21 @@ th:nth-last-child(2) .header-filter-popover .popover-dropdown {
     color: var(--muted, #9ca3af);
 }
 
+.roster-template-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.roster-template-download {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
 .upload-file-info {
     margin-top: 12px;
     padding: 8px 16px;

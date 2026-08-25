@@ -90,12 +90,13 @@ SIM_HANDLERS = {
 PORTAL_PATHS = {'/', '/index.html', '/styles.css', '/app.js', '/data.js', '/portal.html',
                 '/favicon.ico', '/login', '/login/index.html', '/api',
                 '/dashboard', '/dashboard/', '/dashboard-authen', '/dashboard-authen/',
-                '/admin', '/admin/'}
+                '/admin', '/admin/', '/templates/Mau_Import_KTV.xlsx'}
 PORTAL_PREFIXES = ('/devices/', '/assets/', '/login/', '/api/',
                    '/dashboard/', '/dashboard-authen/', '/admin/', '/admin-static/')
 
 PUBLIC_ROOT_FILES = {
-    '/index.html', '/portal.html', '/styles.css', '/app.js', '/data.js', '/favicon.ico'
+    '/index.html', '/portal.html', '/styles.css', '/app.js', '/data.js', '/favicon.ico',
+    '/templates/Mau_Import_KTV.xlsx'
 }
 PUBLIC_ROOT_PREFIXES = ('/devices/', '/assets/', '/login/')
 DASHBOARD_PUBLIC_PATHS = {'/', '/index.html', '/css/styles.css', '/js/app.js'}

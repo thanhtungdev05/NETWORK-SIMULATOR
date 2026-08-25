@@ -302,13 +302,80 @@ function mock_bypass_user(): array
     return [
         'user_id' => '00000000-0000-0000-0000-000000000001',
         'email' => 'dev-bypass@ftc.local',
-        'role' => 'admin',
-        'display_name' => 'KTV Admin (Bypass Mode)',
+        'role' => 'DEV',
+        'role_name' => 'Nhà phát triển',
+        'is_admin' => true,
+        'can_export_reports' => true,
+        'display_name' => 'KTV DEV (Bypass Mode)',
         'iam_subject' => 'dev-bypass-admin',
         'last_login_at' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
         'created_at' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
         'updated_at' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
     ];
+}
+
+function normalize_role_code(mixed $role): ?string
+{
+    if (!is_scalar($role)) {
+        return null;
+    }
+    $code = strtoupper(trim((string)$role));
+    if ($code === 'USER') {
+        $code = 'KTV';
+    }
+    return in_array($code, ['KTV', 'ADMIN', 'DEV'], true) ? $code : null;
+}
+
+function role_definition(mixed $role): array
+{
+    static $definitions = [];
+    $code = normalize_role_code($role) ?? 'KTV';
+    if (isset($definitions[$code])) {
+        return $definitions[$code];
+    }
+
+    $stmt = db()->prepare(
+        'SELECT role_code, role_name, is_admin, can_export_reports, sort_order
+           FROM roles
+          WHERE role_code = :role_code'
+    );
+    $stmt->execute(['role_code' => $code]);
+    $row = $stmt->fetch();
+    if (!$row) {
+        fail(500, 'role-config-missing', 'Role configuration is missing.');
+    }
+    $definitions[$code] = [
+        'role_code' => $code,
+        'role_name' => (string)$row['role_name'],
+        'is_admin' => database_boolean($row['is_admin']),
+        'can_export_reports' => database_boolean($row['can_export_reports']),
+        'sort_order' => (int)$row['sort_order'],
+    ];
+    return $definitions[$code];
+}
+
+function user_role_definition(array $user): array
+{
+    if (array_key_exists('is_admin', $user) && array_key_exists('can_export_reports', $user)) {
+        return [
+            'role_code' => normalize_role_code($user['role'] ?? null) ?? 'KTV',
+            'role_name' => (string)($user['role_name'] ?? ($user['role'] ?? 'KTV')),
+            'is_admin' => database_boolean($user['is_admin']),
+            'can_export_reports' => database_boolean($user['can_export_reports']),
+            'sort_order' => (int)($user['sort_order'] ?? 0),
+        ];
+    }
+    return role_definition($user['role'] ?? null);
+}
+
+function role_is_admin(array $user): bool
+{
+    return user_role_definition($user)['is_admin'];
+}
+
+function role_can_export_reports(array $user): bool
+{
+    return user_role_definition($user)['can_export_reports'];
 }
 
 function is_dev_bypass_session(): bool
@@ -363,11 +430,23 @@ function require_admin(): array
     }
 
     $user = require_user();
-    if (($user['role'] ?? 'user') !== 'admin') {
+    if (!role_is_admin($user)) {
         if (dev_bypass_enabled()) {
             return mock_bypass_user();
         }
         fail(403, 'permission-denied', 'Admin permission is required.');
+    }
+    return $user;
+}
+
+function require_report_export(?array $user = null): array
+{
+    $user = $user ?? require_admin();
+    if (!role_is_admin($user)) {
+        fail(403, 'permission-denied', 'Admin permission is required.');
+    }
+    if (!role_can_export_reports($user)) {
+        fail(403, 'report-export-forbidden', 'Only the DEV role can export reports.');
     }
     return $user;
 }
@@ -441,12 +520,24 @@ function user_response(?array $row): ?array
     if (!$row) {
         return null;
     }
+    $role = user_role_definition($row);
     return [
         'id' => $row['user_id'],
         'userId' => $row['user_id'],
         'user_id' => $row['user_id'],
         'email' => $row['email'],
-        'role' => $row['role'] ?? 'user',
+        'role' => $role['role_code'],
+        'roleName' => $role['role_name'],
+        'role_name' => $role['role_name'],
+        'isAdmin' => $role['is_admin'],
+        'is_admin' => $role['is_admin'],
+        'canExportReports' => $role['can_export_reports'],
+        'can_export_reports' => $role['can_export_reports'],
+        'permissions' => [
+            'admin' => $role['is_admin'],
+            'exportReports' => $role['can_export_reports'],
+            'export_reports' => $role['can_export_reports'],
+        ],
         'displayName' => $row['display_name'] ?? null,
         'display_name' => $row['display_name'] ?? null,
         'employeeId' => $row['employee_id'] ?? null,
@@ -475,12 +566,16 @@ function user_response(?array $row): ?array
         'unit_name' => $row['unit_name'] ?? null,
         'regionCode' => $row['region_code'] ?? null,
         'region_code' => $row['region_code'] ?? null,
-        'branchCode' => $row['branch_code'] ?? null,
-        'branch_code' => $row['branch_code'] ?? null,
+        'regionName' => $row['region_name'] ?? ($row['dashboard_region'] ?? null),
+        'region_name' => $row['region_name'] ?? ($row['dashboard_region'] ?? null),
+        'branchName' => $row['branch_name'] ?? null,
+        'branch_name' => $row['branch_name'] ?? null,
         'dashboardRegion' => $row['dashboard_region'] ?? null,
         'dashboard_region' => $row['dashboard_region'] ?? null,
         'regionId' => $row['region_id'] ?? null,
         'region_id' => $row['region_id'] ?? null,
+        'locationAssigned' => database_boolean($row['location_assigned'] ?? !empty($row['region_id'])),
+        'location_assigned' => database_boolean($row['location_assigned'] ?? !empty($row['region_id'])),
         'lastLoginAt' => $row['last_login_at'] ?? null,
         'last_login_at' => $row['last_login_at'] ?? null,
         'createdAt' => $row['created_at'] ?? null,
@@ -599,7 +694,7 @@ function upsert_iam_user(array $profile): array
     }
 
     if ($existing) {
-        $role = $existing['role'] === 'admin' ? 'admin' : 'user';
+        $role = normalize_role_code($existing['role'] ?? null) ?? 'KTV';
 
         $stmt = db()->prepare(
             'UPDATE users
@@ -637,7 +732,7 @@ function upsert_iam_user(array $profile): array
     );
     $stmt->execute([
         'email' => $identity['email'],
-        'role' => 'user',
+        'role' => 'KTV',
         'display_name' => $identity['display_name'],
         'employee_id' => $identity['employee_id'],
         'iam_profile' => $profileJson,
@@ -699,7 +794,7 @@ function record_login_log(array $user, string $eventType = 'iam_callback_success
         'employee_id' => $user['employee_id'] ?? null,
         'display_name' => $user['display_name'] ?? null,
         'iam_subject' => $user['iam_subject'] ?? null,
-        'role' => $user['role'] ?? 'user',
+        'role' => normalize_role_code($user['role'] ?? null) ?? 'KTV',
         'ip_address' => request_ip(),
         'user_agent' => request_user_agent(),
         'session_id_hash' => session_id_hash(),
@@ -933,7 +1028,8 @@ function handle_users(array $segments, string $method): void
 
         $role = trim((string)($_GET['role'] ?? ''));
         if ($role !== '') {
-            if (!in_array($role, ['user', 'admin'], true)) {
+            $role = normalize_role_code($role);
+            if ($role === null) {
                 fail(400, 'bad-filter', 'Invalid role filter.');
             }
             $where[] = 'role = :role';
@@ -971,7 +1067,7 @@ function handle_users(array $segments, string $method): void
     }
 
     if ($email && $method === 'GET') {
-        if (($current['role'] ?? 'user') !== 'admin' && $current['email'] !== $email) {
+        if (!role_is_admin($current) && $current['email'] !== $email) {
             fail(403, 'permission-denied', 'You can only read your own user profile.');
         }
         $user = find_user($email);
@@ -984,16 +1080,24 @@ function handle_users(array $segments, string $method): void
     if ($email && in_array($method, ['PUT', 'PATCH'], true)) {
         $actor = require_admin();
         $input = json_body();
-        $newRole = (string)($input['role'] ?? '');
-        if (!in_array($newRole, ['user', 'admin'], true)) {
-            fail(400, 'bad-request', 'Role must be user or admin.');
+        $newRole = normalize_role_code($input['role'] ?? null);
+        if ($newRole === null) {
+            fail(400, 'bad-request', 'Role must be KTV, ADMIN, or DEV.');
         }
+        $newRoleDefinition = role_definition($newRole);
 
         $pdo = db();
         $pdo->beginTransaction();
         try {
             $adminIds = $pdo
-                ->query("SELECT user_id FROM users WHERE role = 'admin' ORDER BY user_id FOR UPDATE")
+                ->query(
+                    'SELECT u.user_id
+                       FROM users u
+                       JOIN roles r ON r.role_code = u.role
+                      WHERE r.is_admin = TRUE
+                      ORDER BY u.user_id
+                      FOR UPDATE OF u'
+                )
                 ->fetchAll(PDO::FETCH_COLUMN);
             if (!in_array($actor['user_id'], $adminIds, true)) {
                 $pdo->rollBack();
@@ -1011,7 +1115,7 @@ function handle_users(array $segments, string $method): void
                 $pdo->commit();
                 respond(['item' => user_response($target)]);
             }
-            if ($target['role'] === 'admin' && $newRole === 'user' && count($adminIds) <= 1) {
+            if (role_is_admin($target) && !$newRoleDefinition['is_admin'] && count($adminIds) <= 1) {
                 $pdo->rollBack();
                 fail(409, 'last-admin', 'The last administrator cannot be demoted.');
             }
@@ -1035,6 +1139,38 @@ function handle_users(array $segments, string $method): void
     }
 
     fail(404, 'not-found', 'Users endpoint not found.');
+}
+
+function role_response(array $row): array
+{
+    return [
+        'code' => (string)$row['role_code'],
+        'roleCode' => (string)$row['role_code'],
+        'role_code' => (string)$row['role_code'],
+        'name' => (string)$row['role_name'],
+        'roleName' => (string)$row['role_name'],
+        'role_name' => (string)$row['role_name'],
+        'isAdmin' => database_boolean($row['is_admin']),
+        'is_admin' => database_boolean($row['is_admin']),
+        'canExportReports' => database_boolean($row['can_export_reports']),
+        'can_export_reports' => database_boolean($row['can_export_reports']),
+        'sortOrder' => (int)$row['sort_order'],
+        'sort_order' => (int)$row['sort_order'],
+    ];
+}
+
+function handle_roles(array $segments, string $method): void
+{
+    require_admin();
+    if (($segments[1] ?? '') !== '' || $method !== 'GET') {
+        fail(404, 'not-found', 'Roles endpoint not found.');
+    }
+    $rows = db()->query(
+        'SELECT role_code, role_name, is_admin, can_export_reports, sort_order
+           FROM roles
+          ORDER BY sort_order, role_code'
+    )->fetchAll();
+    respond(['items' => array_map('role_response', $rows)]);
 }
 
 function handle_login_logs(array $segments, string $method): void
@@ -1232,16 +1368,18 @@ function roster_item_response(array $row): array
     $item['employee_seed_batch'] = $row['employee_seed_batch'] ?? null;
     $item['employeeSyncedAt'] = $row['employee_synced_at'] ?? null;
     $item['employee_synced_at'] = $row['employee_synced_at'] ?? null;
-    $item['branchName'] = $row['roster_branch_name'] ?? $row['branch_name'] ?? null;
-    $item['branch_name'] = $row['roster_branch_name'] ?? $row['branch_name'] ?? null;
+    $item['sourceRegionCode'] = $row['source_region_code'] ?? null;
+    $item['source_region_code'] = $row['source_region_code'] ?? null;
+    $item['sourceDashboardRegion'] = $row['source_dashboard_region'] ?? null;
+    $item['source_dashboard_region'] = $row['source_dashboard_region'] ?? null;
     return $item;
 }
 
 function roster_base_where(array &$params, bool $includeFilters = true): array
 {
     $where = [
-        "users.role = 'user'",
-        "(users.employee_id IS NOT NULL OR users.job_title IS NOT NULL OR users.employee_source IS NOT NULL)",
+        "(ktv.employee_id IS NOT NULL OR ktv.employee_source LIKE 'firestore:%')",
+        "(ktv.job_title = 'CB Kỹ thuật TKBT' OR ktv.employee_source IS NOT NULL)",
     ];
 
     if (!$includeFilters) {
@@ -1254,20 +1392,22 @@ function roster_base_where(array &$params, bool $includeFilters = true): array
             fail(400, 'bad-filter', 'Invalid roster status filter.');
         }
         $where[] = $status === 'terminated'
-            ? 'users.is_terminated = TRUE'
-            : 'users.is_terminated = FALSE';
+            ? 'ktv.is_terminated = TRUE'
+            : 'ktv.is_terminated = FALSE';
     }
 
     $search = trim((string)($_GET['search'] ?? ''));
     if ($search !== '') {
         $searchPattern = '%' . $search . '%';
         $where[] = '(
-            users.employee_id ILIKE :search_eid
-            OR users.email ILIKE :search_email
-            OR users.display_name ILIKE :search_name
-            OR users.class_code ILIKE :search_class
-            OR users.unit_code ILIKE :search_unit
-            OR users.unit_name ILIKE :search_unitname
+            ktv.employee_id ILIKE :search_eid
+            OR ktv.email ILIKE :search_email
+            OR ktv.display_name ILIKE :search_name
+            OR ktv.class_code ILIKE :search_class
+            OR ktv.unit_code ILIKE :search_unit
+            OR ktv.unit_name ILIKE :search_unitname
+            OR ktv.region_name ILIKE :search_region
+            OR ktv.branch_name ILIKE :search_branch
         )';
         $params['search_eid'] = $searchPattern;
         $params['search_email'] = $searchPattern;
@@ -1275,6 +1415,8 @@ function roster_base_where(array &$params, bool $includeFilters = true): array
         $params['search_class'] = $searchPattern;
         $params['search_unit'] = $searchPattern;
         $params['search_unitname'] = $searchPattern;
+        $params['search_region'] = $searchPattern;
+        $params['search_branch'] = $searchPattern;
     }
 
     return $where;
@@ -1292,7 +1434,7 @@ function roster_stats(PDO $pdo): array
                 COUNT(*) AS total,
                 COUNT(*) FILTER (WHERE is_terminated = FALSE) AS active,
                 COUNT(*) FILTER (WHERE is_terminated = TRUE) AS terminated
-               FROM users
+               FROM v_ktv_directory ktv
               WHERE $whereSql"
         );
     $summary->execute($params);
@@ -1300,13 +1442,13 @@ function roster_stats(PDO $pdo): array
 
     $regionStmt = $pdo
         ->prepare(
-            "SELECT COALESCE(NULLIF(dashboard_region, ''), NULLIF(region_code, ''), 'Chưa phân vùng') AS region,
+            "SELECT COALESCE(NULLIF(ktv.region_name, ''), 'Chưa phân vùng') AS region,
                     COUNT(*) AS total,
                     COUNT(*) FILTER (WHERE is_terminated = FALSE) AS active,
                     COUNT(*) FILTER (WHERE is_terminated = TRUE) AS terminated
-               FROM users
+               FROM v_ktv_directory ktv
               WHERE $whereSql
-              GROUP BY COALESCE(NULLIF(dashboard_region, ''), NULLIF(region_code, ''), 'Chưa phân vùng')
+              GROUP BY COALESCE(NULLIF(ktv.region_name, ''), 'Chưa phân vùng')
               ORDER BY region"
         );
     $regionStmt->execute($params);
@@ -1440,15 +1582,14 @@ function handle_roster_list(): void
     $where = roster_base_where($params, true);
     $whereSql = implode(' AND ', $where);
 
-    $countStmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE $whereSql");
+    $countStmt = $pdo->prepare("SELECT COUNT(*) FROM v_ktv_directory ktv WHERE $whereSql");
     $countStmt->execute($params);
     $total = (int)$countStmt->fetchColumn();
 
-    $sortSql = 'users.is_terminated ASC, users.dashboard_region NULLS LAST, users.class_code NULLS LAST, users.display_name NULLS LAST, users.email';
+    $sortSql = 'ktv.is_terminated ASC, ktv.region_name NULLS LAST, ktv.branch_name NULLS LAST, ktv.class_code NULLS LAST, ktv.display_name NULLS LAST, ktv.email';
 
-    $sql = "SELECT users.*, regions.branch_name AS roster_branch_name
-              FROM users
-              LEFT JOIN regions ON regions.region_id = users.region_id
+    $sql = "SELECT ktv.*
+              FROM v_ktv_directory ktv
              WHERE $whereSql
              ORDER BY $sortSql
              LIMIT :limit OFFSET :offset";
@@ -1468,6 +1609,30 @@ function handle_roster_list(): void
         'limit' => $limit,
         'stats' => roster_stats($pdo),
     ]]);
+}
+
+function handle_roster_regions(): void
+{
+    $stmt = db()->query(
+        'SELECT region_id, region_code, region_name, branch_name, dashboard_group
+           FROM regions
+          WHERE is_active = TRUE
+          ORDER BY branch_name NULLS LAST, region_name, region_code'
+    );
+    $items = array_map(static fn(array $row): array => [
+        'regionId' => $row['region_id'],
+        'region_id' => $row['region_id'],
+        'regionCode' => $row['region_code'],
+        'region_code' => $row['region_code'],
+        'regionName' => $row['region_name'],
+        'region_name' => $row['region_name'],
+        'branchName' => $row['branch_name'] ?? null,
+        'branch_name' => $row['branch_name'] ?? null,
+        'dashboardGroup' => $row['dashboard_group'] ?? null,
+        'dashboard_group' => $row['dashboard_group'] ?? null,
+    ], $stmt->fetchAll());
+
+    respond(['data' => ['items' => $items]]);
 }
 
 function handle_roster_history(): void
@@ -1588,19 +1753,52 @@ function handle_roster_update(string $employeeId): void
             fail(400, 'bad-request', 'Display name is required.');
         }
 
-        $regionCode = optional_text($input, 'regionCode', 80)
-            ?? optional_text($input, 'region_code', 80)
-            ?? ($existing['region_code'] ?? null);
-        $dashboardRegion = optional_text($input, 'dashboardRegion', 100)
-            ?? optional_text($input, 'dashboard_region', 100)
-            ?? ($existing['dashboard_region'] ?? null);
+        $regionIdSupplied = array_key_exists('regionId', $input) || array_key_exists('region_id', $input);
         $regionId = $existing['region_id'] ?? null;
-        if ($regionCode && $dashboardRegion) {
-            $regionId = ktv_roster_resolve_region($pdo, [
-                'region_code' => strtoupper($regionCode),
-                'dashboard_region' => $dashboardRegion,
-                'branch' => null,
-            ], false);
+        $regionCode = $existing['region_code'] ?? null;
+        $dashboardRegion = $existing['dashboard_region'] ?? null;
+        if ($regionIdSupplied) {
+            $requestedRegionId = optional_text($input, 'regionId', 36)
+                ?? optional_text($input, 'region_id', 36);
+            if ($requestedRegionId === null) {
+                $regionId = null;
+                $regionCode = null;
+                $dashboardRegion = null;
+            } else {
+                if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', $requestedRegionId)) {
+                    $pdo->rollBack();
+                    fail(400, 'bad-request', 'Invalid region id.');
+                }
+                $regionStmt = $pdo->prepare(
+                    'SELECT region_id, region_code, region_name, dashboard_group
+                       FROM regions
+                      WHERE region_id = :region_id AND is_active = TRUE'
+                );
+                $regionStmt->execute(['region_id' => $requestedRegionId]);
+                $region = $regionStmt->fetch();
+                if (!$region) {
+                    $pdo->rollBack();
+                    fail(400, 'bad-request', 'Selected region is unavailable.');
+                }
+                $regionId = $region['region_id'];
+                $regionCode = $region['region_code'];
+                $dashboardRegion = $region['dashboard_group'] ?: $region['region_name'];
+            }
+        } else {
+            // Backward compatibility for older clients. New clients submit only region_id.
+            $regionCode = optional_text($input, 'regionCode', 80)
+                ?? optional_text($input, 'region_code', 80)
+                ?? $regionCode;
+            $dashboardRegion = optional_text($input, 'dashboardRegion', 100)
+                ?? optional_text($input, 'dashboard_region', 100)
+                ?? $dashboardRegion;
+            if ($regionCode && $dashboardRegion) {
+                $regionId = ktv_roster_resolve_region($pdo, [
+                    'region_code' => strtoupper($regionCode),
+                    'dashboard_region' => $dashboardRegion,
+                    'branch' => null,
+                ], false);
+            }
         }
 
         $isTerminated = array_key_exists('isTerminated', $input)
@@ -1674,8 +1872,11 @@ function handle_roster_update(string $employeeId): void
             $pdo->rollBack();
             fail(500, 'save-failed', 'Roster update returned no data.');
         }
+        $directoryStmt = $pdo->prepare('SELECT * FROM v_ktv_directory WHERE user_id = :user_id');
+        $directoryStmt->execute(['user_id' => $updated['user_id']]);
+        $directoryRow = $directoryStmt->fetch() ?: $updated;
         $pdo->commit();
-        respond(['item' => roster_item_response($updated)]);
+        respond(['item' => roster_item_response($directoryRow)]);
     } catch (Throwable $exception) {
         if ($pdo->inTransaction()) {
             $pdo->rollBack();
@@ -1691,11 +1892,10 @@ function handle_roster_export(): void
     $where = roster_base_where($params, true);
     $whereSql = implode(' AND ', $where);
     $stmt = $pdo->prepare(
-        "SELECT users.*, regions.branch_name AS roster_branch_name
-           FROM users
-           LEFT JOIN regions ON regions.region_id = users.region_id
+        "SELECT ktv.*
+           FROM v_ktv_directory ktv
           WHERE $whereSql
-          ORDER BY users.dashboard_region NULLS LAST, users.display_name NULLS LAST, users.email"
+          ORDER BY ktv.region_name NULLS LAST, ktv.branch_name NULLS LAST, ktv.display_name NULLS LAST, ktv.email"
     );
     $stmt->execute($params);
     $rows = $stmt->fetchAll();
@@ -1716,6 +1916,7 @@ function handle_roster_export(): void
         'job_title',
         'branch',
         'region_code',
+        'region_name',
         'dashboard_region',
         'unit_code',
         'unit_name',
@@ -1735,8 +1936,9 @@ function handle_roster_export(): void
             $row['display_name'] ?? '',
             $row['email'] ?? '',
             $row['job_title'] ?? '',
-            $row['roster_branch_name'] ?? '',
+            $row['branch_name'] ?? '',
             $row['region_code'] ?? '',
+            $row['region_name'] ?? '',
             $row['dashboard_region'] ?? '',
             $row['unit_code'] ?? '',
             $row['unit_name'] ?? '',
@@ -1764,9 +1966,12 @@ function handle_roster(array $segments, string $method): void
         handle_roster_import($actor);
     } elseif ($action === 'list' && $method === 'GET') {
         handle_roster_list();
+    } elseif ($action === 'regions' && $method === 'GET') {
+        handle_roster_regions();
     } elseif ($action === 'history' && $method === 'GET') {
         handle_roster_history();
     } elseif ($action === 'export' && $method === 'GET') {
+        require_report_export($actor);
         handle_roster_export();
     } elseif ($action !== '' && $method === 'PATCH') {
         handle_roster_update(rawurldecode($action));
@@ -1825,9 +2030,10 @@ function handle_dashboard(array $segments, string $method): void
     $pdo = db();
     try {
         $userLookupRows = $pdo->query(
-            'SELECT user_id, employee_id, email, display_name, class_code, job_title, unit_code, unit_name, region_code, dashboard_region, is_terminated
-               FROM users
-              WHERE employee_id IS NOT NULL OR user_id IS NOT NULL'
+            'SELECT user_id, employee_id, email, display_name, class_code, job_title,
+                    unit_code, unit_name, region_id, region_code, region_name,
+                    dashboard_region, dashboard_group, branch_name, is_terminated
+               FROM v_ktv_directory'
         )->fetchAll();
 
         $userByUserId = [];
@@ -1914,10 +2120,11 @@ function handle_dashboard(array $segments, string $method): void
 
         $technicianRows = $pdo
             ->query(
-                'SELECT ' . USER_COLUMNS . '
-                   FROM users
-                  WHERE is_terminated = FALSE
-                    AND (role = \'user\' OR employee_id IS NOT NULL)
+                'SELECT *
+                   FROM v_ktv_directory
+                  WHERE (employee_id IS NOT NULL OR employee_source LIKE \'firestore:%\')
+                    AND is_terminated = FALSE
+                    AND (job_title = \'CB Kỹ thuật TKBT\' OR employee_source LIKE \'firestore:%\')
                   ORDER BY class_code NULLS LAST, display_name NULLS LAST, email'
             )
             ->fetchAll();
@@ -2040,7 +2247,7 @@ function handle_dashboard(array $segments, string $method): void
                       AND (s.lab_name = lab.lab_name OR s.lab_id = lab.lab_id)
                       AND s.mode = 'Thực hành'
                   )
-                 WHERE u.role = 'user' AND u.is_terminated = FALSE
+                 WHERE u.role = 'KTV' AND u.is_terminated = FALSE
                  GROUP BY u.email, u.class_code, device.device_name, lab.lab_name
                  ORDER BY u.class_code, u.email, device.device_name, lab.lab_name
                 SQL
@@ -2072,9 +2279,13 @@ function handle_dashboard(array $segments, string $method): void
         'class_name' => $row['class_name'] ?? null,
         'unit_code' => $row['unit_code'] ?? null,
         'unit_name' => $row['unit_name'] ?? null,
+        'region_id' => $row['region_id'] ?? null,
         'region_code' => $row['region_code'] ?? null,
-        'branch_code' => $row['branch_code'] ?? null,
+        'region_name' => $row['region_name'] ?? null,
         'dashboard_region' => $row['dashboard_region'] ?? null,
+        'dashboard_group' => $row['dashboard_group'] ?? null,
+        'branch_name' => $row['branch_name'] ?? null,
+        'location_assigned' => database_boolean($row['location_assigned'] ?? false),
         'is_terminated' => database_boolean($row['is_terminated'] ?? false),
         'updated_at' => $row['updated_at'] ?? null,
     ], $technicianRows);
@@ -2095,6 +2306,8 @@ try {
         handle_iam($segments, $method);
     } elseif ($resource === 'users') {
         handle_users($segments, $method);
+    } elseif ($resource === 'roles') {
+        handle_roles($segments, $method);
     } elseif ($resource === 'login_logs') {
         handle_login_logs($segments, $method);
     } elseif ($resource === 'tracking') {

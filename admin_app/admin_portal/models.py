@@ -59,6 +59,30 @@ class LabCatalog(models.Model):
 
 
 # ===========================================================
+# Application roles
+# ===========================================================
+
+class Role(models.Model):
+    role_code = models.CharField(max_length=20, primary_key=True, verbose_name='Mã role')
+    role_name = models.CharField(max_length=100, verbose_name='Tên role')
+    is_admin = models.BooleanField(default=False, verbose_name='Quyền quản trị')
+    can_export_reports = models.BooleanField(default=False, verbose_name='Được xuất báo cáo')
+    sort_order = models.SmallIntegerField(default=0, verbose_name='Thứ tự')
+    created_at = models.DateTimeField(null=True, verbose_name='Ngày tạo')
+    updated_at = models.DateTimeField(null=True, verbose_name='Cập nhật')
+
+    class Meta:
+        managed = False
+        db_table = 'roles'
+        ordering = ['sort_order', 'role_code']
+        verbose_name = 'role'
+        verbose_name_plural = 'roles'
+
+    def __str__(self):
+        return f"{self.role_name} ({self.role_code})"
+
+
+# ===========================================================
 # User (ánh xạ bảng users của hệ thống IAM/PHP)
 # ===========================================================
 
@@ -68,8 +92,12 @@ class FtcUser(models.Model):
     display_name = models.CharField(max_length=255, blank=True, null=True, verbose_name='Tên hiển thị')
     role = models.CharField(
         max_length=20,
-        choices=[('user', 'KTV / Học viên'), ('admin', 'Quản trị viên')],
-        default='user',
+        choices=[
+            ('KTV', 'Kỹ thuật viên'),
+            ('ADMIN', 'Quản trị viên'),
+            ('DEV', 'Nhà phát triển'),
+        ],
+        default='KTV',
         verbose_name='Vai trò',
     )
     employee_id = models.CharField(max_length=50, blank=True, null=True, verbose_name='Mã nhân viên')
@@ -78,6 +106,14 @@ class FtcUser(models.Model):
     unit_name = models.CharField(max_length=200, blank=True, null=True, verbose_name='Tên đơn vị')
     region_code = models.CharField(max_length=80, blank=True, null=True, verbose_name='Mã khu vực')
     dashboard_region = models.CharField(max_length=200, blank=True, null=True, verbose_name='Khu vực dashboard')
+    region = models.ForeignKey(
+        'Region',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        db_column='region_id',
+        related_name='technicians',
+        verbose_name='Khu vực/chi nhánh hiện tại',
+    )
     class_code = models.CharField(max_length=50, blank=True, null=True, verbose_name='Mã lớp')
     training_start_date = models.DateField(blank=True, null=True, verbose_name='Bắt đầu đào tạo')
     training_end_date = models.DateField(blank=True, null=True, verbose_name='Kết thúc đào tạo')

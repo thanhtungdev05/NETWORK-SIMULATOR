@@ -26,6 +26,7 @@ sim_state.json
 # File Word / tài liệu (đặt vào Drive, không vào git)
 *.docx
 *.xlsx
+!templates/Mau_Import_KTV.xlsx
 *.pptx
 
 # PHP runtime

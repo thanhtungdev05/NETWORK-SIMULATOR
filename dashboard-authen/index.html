@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard giám sát thực hành KTV | FTC</title>
-    <link rel="stylesheet" href="css/styles.css?v=20260824-2">
+    <link rel="stylesheet" href="css/styles.css?v=20260825-1">
 </head>
 
 <body>
@@ -785,7 +785,7 @@
                                     <path d="m16 16 5 5"></path>
                                 </svg>
                                 <input type="search" id="rosterSearchInput"
-                                    placeholder="Tìm theo tên, email, mã NV, lớp..." autocomplete="off">
+                                    placeholder="Tìm tên, email, mã NV, khu vực, chi nhánh..." autocomplete="off">
                             </label>
                             <select id="rosterStatusFilter" class="roster-select">
                                 <option value="active">Đang làm</option>
@@ -802,7 +802,8 @@
                                         <th style="width:16%">Họ tên</th>
                                         <th style="width:20%">Email</th>
                                         <th style="width:14%">Vị trí</th>
-                                        <th style="width:9%">Vùng</th>
+                                        <th style="width:10%">Khu vực</th>
+                                        <th style="width:7%">Chi nhánh</th>
                                         <th style="width:7%">Lớp</th>
                                         <th style="width:10%">Ngày BĐ</th>
                                         <th style="width:8%">Trạng thái</th>
@@ -825,14 +826,21 @@
                                         stroke-linejoin="round" />
                                 </svg>
                                 <p>Kéo thả file Excel (.xlsx) vào đây</p>
-                                <p class="upload-hint">hoặc</p>
-                                <button type="button" class="button" id="rosterFileBtn">Chọn file</button>
+                                <p class="upload-hint">Sử dụng đúng mẫu KTV mới nhất để hệ thống đọc chính xác.</p>
+                                <div class="roster-template-actions">
+                                    <button type="button" class="button" id="rosterFileBtn">Chọn file Import</button>
+                                    <a class="button secondary roster-template-download"
+                                        href="/templates/Mau_Import_KTV.xlsx" download="Mau_Import_KTV.xlsx">
+                                        Tải mẫu Import KTV
+                                    </a>
+                                </div>
                                 <input type="file" id="rosterFileInput" accept=".xlsx" hidden>
                                 <div class="upload-file-info" id="rosterFileInfo" hidden></div>
                             </div>
                             <div class="roster-import-actions" id="rosterImportActions" hidden>
-                                <button type="button" class="button" id="rosterConfirmImportBtn">Xác nhận
-                                    Import</button>
+                                <button type="button" class="button" id="rosterConfirmImportBtn" disabled>
+                                    Import danh sách KTV
+                                </button>
                                 <button type="button" class="button secondary" id="rosterCancelImportBtn">Hủy</button>
                             </div>
                         </div>
@@ -897,12 +905,14 @@
                                         <input type="text" id="rosterEditJobTitle">
                                     </div>
                                     <div class="roster-form-row">
-                                        <label>Mã vùng</label>
-                                        <input type="text" id="rosterEditRegionCode" maxlength="80">
+                                        <label for="rosterEditRegionId">Khu vực / Chi nhánh</label>
+                                        <select id="rosterEditRegionId">
+                                            <option value="">Chưa phân vùng</option>
+                                        </select>
                                     </div>
                                     <div class="roster-form-row">
-                                        <label>Vùng dashboard</label>
-                                        <input type="text" id="rosterEditDashboardRegion" maxlength="100">
+                                        <label for="rosterEditBranchName">Chi nhánh</label>
+                                        <input type="text" id="rosterEditBranchName" readonly>
                                     </div>
                                     <div class="roster-form-row">
                                         <label>Mã đơn vị</label>
@@ -1180,7 +1190,7 @@
         </div>
     </div>
 
-    <script src="js/app.js?v=20260824-2"></script>
+    <script src="js/app.js?v=20260825-2"></script>
 </body>
 
 </html>

@@ -1,5 +1,10 @@
 # Báo cáo đánh giá DB và Dashboard giả lập thiết bị
 
+> **Tài liệu lịch sử:** Báo cáo này ghi lại đánh giá và schema mục tiêu tại
+> thời điểm migration 013. Schema hiện hành đã được đơn giản hóa; xem
+> `DATABASE_SCHEMA.md`. Hiện tại không còn bảng `branches`/`employees` riêng:
+> KTV nằm trong `users`, còn tên chi nhánh nằm trực tiếp trong `regions`.
+
 Ngày đánh giá: 13/08/2026  
 Phạm vi: DB/API/dashboard trong `FTC-VirtualDevices`, workbook `NhanVien-2026-08-13.xlsx`, và schema tham chiếu của web giám sát KTV tại `KTVsupervisor/backend/schema.sql`.
 

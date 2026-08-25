@@ -13,8 +13,6 @@ const KTV_ROSTER_REQUIRED_HEADERS = [
     'Child Department 1' => 'child_department_1',
     'Child Department 2' => 'child_department_2',
     'Ghi chú xếp lớp' => 'class_code',
-    'Ngày bắt đầu lý thuyết' => 'training_start_date',
-    'Ngày kết thúc lý thuyết' => 'training_end_date',
 ];
 
 const KTV_ROSTER_DASHBOARD_REGIONS = [
@@ -245,8 +243,6 @@ function ktv_roster_normalize_row(array $row, int $rowNumber, bool $uses1904Date
         'parent_department' => $sourceRegion,
         'child_department_1' => $childDepartment1,
         'child_department_2' => $childDepartment2,
-        'training_start_date' => ktv_roster_excel_date($row['training_start_date'] ?? null, $uses1904Dates),
-        'training_end_date' => ktv_roster_excel_date($row['training_end_date'] ?? null, $uses1904Dates),
         'class_code' => ktv_roster_nullable_text($row['class_code'] ?? null, 50),
         'unit_code' => $unitCode,
         'unit_name' => $unitCode,
@@ -403,6 +399,7 @@ function ktv_roster_compact_change(array $row): array
         'display_name' => $row['display_name'] ?? null,
         'email' => $row['email'] ?? null,
         'region' => $row['dashboard_region'] ?? null,
+        'branch' => $row['branch'] ?? null,
         'class_code' => $row['class_code'] ?? null,
         'source_row' => $row['source_row'] ?? null,
     ];
@@ -511,14 +508,14 @@ function sync_ktv_roster(PDO $pdo, array $rows, string $batch, bool $dryRun = fa
             <<<'SQL'
             INSERT INTO users (
                 email, display_name, role, iam_profile,
-                employee_id, job_title, training_start_date, training_end_date,
+                employee_id, job_title,
                 class_code, is_terminated, termination_date, termination_reason,
                 unit_code, unit_name, region_code, dashboard_region, region_id,
                 employee_source, employee_seed_batch, employee_synced_at,
                 created_at, updated_at
             ) VALUES (
-                :email, :display_name, 'user', '{}'::jsonb,
-                :employee_id, :job_title, :training_start_date, :training_end_date,
+                :email, :display_name, 'KTV', '{}'::jsonb,
+                :employee_id, :job_title,
                 :class_code, FALSE, NULL, NULL,
                 :unit_code, :unit_name, :region_code, :dashboard_region, :region_id,
                 :employee_source, :employee_seed_batch, NOW(),
@@ -533,8 +530,6 @@ function sync_ktv_roster(PDO $pdo, array $rows, string $batch, bool $dryRun = fa
                    display_name = :display_name,
                    employee_id = :employee_id,
                    job_title = :job_title,
-                   training_start_date = :training_start_date,
-                   training_end_date = :training_end_date,
                    class_code = :class_code,
                    is_terminated = FALSE,
                    termination_date = NULL,
@@ -587,8 +582,6 @@ function sync_ktv_roster(PDO $pdo, array $rows, string $batch, bool $dryRun = fa
                 'display_name' => $row['display_name'],
                 'employee_id' => $row['employee_id'],
                 'job_title' => $row['job_title'],
-                'training_start_date' => $row['training_start_date'],
-                'training_end_date' => $row['training_end_date'],
                 'class_code' => $row['class_code'],
                 'unit_code' => $row['unit_code'],
                 'unit_name' => $row['unit_name'],

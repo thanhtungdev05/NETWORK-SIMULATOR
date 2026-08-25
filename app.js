@@ -520,14 +520,10 @@
 
     if (_currentUser) {
       const initials = (_currentUser.name || 'K').substring(0, 2).toUpperCase();
-      let roleLabel = 'Kỹ thuật viên';
-      if (_currentUser.role === 'admin') {
-        roleLabel = 'Quản trị viên';
-      } else if (_currentUser.role === 'instructor') {
-        roleLabel = 'Giảng viên';
-      } else if (_currentUser.job_title) {
-        roleLabel = _currentUser.job_title;
-      }
+      const roleLabel = _currentUser.role_name
+        || ({ KTV: 'Kỹ thuật viên', ADMIN: 'Quản trị viên', DEV: 'Nhà phát triển' }[_currentUser.role])
+        || _currentUser.job_title
+        || 'Kỹ thuật viên';
       section.innerHTML = `
         <div class="auth-container">
           <div class="auth-user-info">
@@ -581,11 +577,14 @@
             employee_id: u.employee_id || u.employeeId || '',
             name: u.displayName || u.display_name || u.email || 'KTV',
             email: u.email || '',
-            role: u.role || 'user',
+            role: String(u.role || 'KTV').toUpperCase(),
+            role_name: u.roleName || u.role_name || '',
+            is_admin: Boolean(u.isAdmin ?? u.is_admin ?? u.permissions?.admin),
+            can_export_reports: Boolean(u.canExportReports ?? u.can_export_reports ?? u.permissions?.exportReports),
             job_title: u.job_title || u.jobTitle || ''
           };
           renderUserProfile();
-          if (_currentUser && _currentUser.role === 'admin') {
+          if (_currentUser && _currentUser.is_admin) {
             const btnDashboard = document.getElementById('btn-dashboard');
             if (btnDashboard) {
               btnDashboard.style.display = '';

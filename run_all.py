@@ -95,7 +95,13 @@ class MasterDispatcher(SimpleHTTPRequestHandler):
     def detect_simulator(self):
         # 0. Các file/thư mục Portal luôn do Portal phục vụ (chống bị 'cướp' bởi Referer/Cookie)
         path = self.path.split('?')[0]
-        if is_portal_path(path):
+        
+        # Ngoại lệ cho BE12000: thiết bị này dùng /?_type=... cho mọi AJAX request.
+        # Nếu path là / nhưng có tham số _type=, ta bỏ qua check Portal để nó được
+        # route xuống simulator dựa vào Referer/Cookie.
+        if path == '/' and ('?_type=' in self.path or '&_type=' in self.path):
+            pass
+        elif is_portal_path(path):
             return None
 
         # 1. Kiểm tra prefix trong URL path

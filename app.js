@@ -831,7 +831,14 @@
    */
   function clearLessonFields() {
     if (window._hasClickedSaveInGuide) return;
-    if (!_currentLesson || !Array.isArray(_currentLesson.clearFields) || _currentLesson.clearFields.length === 0) return;
+    if (!_currentLesson) return;
+    
+    // Nếu lesson có hàm customClear riêng thì chạy hàm đó
+    if (typeof _currentLesson.customClear === 'function') {
+      try { _currentLesson.customClear(); } catch (e) { console.error(e); }
+    }
+
+    if (!Array.isArray(_currentLesson.clearFields) || _currentLesson.clearFields.length === 0) return;
     try {
       const allDocs = getAllAccessibleDocuments(deviceIframe.contentWindow);
       allDocs.forEach(doc => {
@@ -1553,7 +1560,7 @@
   }
 
   function applyGuidePopups() {
-    if (currentMode !== 'guide') {
+    if (currentMode !== 'guide' || window._hasClickedSaveInGuide) {
       clearGuidePopups();
       return;
     }

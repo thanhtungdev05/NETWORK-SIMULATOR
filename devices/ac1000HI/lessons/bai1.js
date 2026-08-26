@@ -1,4 +1,4 @@
-﻿/**
+/**
  * devices/ac1000hi/lessons/bai1.js
  * Bài 1: Cấu hình PPPoE trên ONT AC1000HI
  */
@@ -13,20 +13,18 @@ var lessonObj = {
   instructions: [
     '<b>Yêu cầu:</b>',
     'Thực hiện cấu hình kết nối WAN/Internet trên thiết bị và thiết lập kết nối PPPoE theo các thông số được cung cấp dưới đây:',
-    '- Username: <span class="val">Sgfdl-210208-218</span>',
-    '- Password: <span class="val">fpt12345</span>'
+    '- Username: <span class="val">hnfdl-123456-789</span>',
+    '- Password: <span class="val">d123456</span>'
   ],
   practiceUrl: '/sim_ac1000hi/cgi-bin/index.asp?page=home_wan.asp',
-    // Clear old localStorage when starting a new session
-    onSimLoad: function(iframeWindow) {
-      try {
-        var loc = (iframeWindow.location.href || '').toLowerCase();
-        if (loc.indexOf('home_wan') === -1) {
-          localStorage.removeItem('ftc_sim_wan');
-        }
-      } catch(e) {}
-    },
-
+  onSimLoad: function(iframeWindow) {
+    try {
+      var loc = (iframeWindow.location.href || '').toLowerCase();
+      if (loc.indexOf('home_wan') === -1) {
+        localStorage.removeItem('ftc_sim_wan');
+      }
+    } catch(e) {}
+  },
 
   clearFields: [
     'input[name="wan_PPPUsername"]',
@@ -35,52 +33,78 @@ var lessonObj = {
 
   grading: {
     description: 'Kiểm tra thông số Username và Password PPPoE',
-    customGrading: function(allDocs) {
-      var doc = null;
-      for (var i = 0; i < allDocs.length; i++) {
-        if (allDocs[i].URL.toLowerCase().indexOf('home_wan.asp') !== -1) {
-          doc = allDocs[i];
-          break;
-        }
+    rules: [
+      {
+        id: 'wan_user',
+        name: 'Username',
+        selector: 'input[name="wan_PPPUsername"]',
+        expected: 'hnfdl-123456-789',
+        type: 'text_exact',
+        trim: true,
+        required: true
+      },
+      {
+        id: 'wan_pass',
+        name: 'Password',
+        selector: 'input[name="wan_PPPPassword"]',
+        expected: 'd123456',
+        type: 'text_exact',
+        trim: true,
+        required: true
       }
-      
-      function getVal(selector) {
-        if (!doc) return '';
-        try {
-          var el = doc.querySelector(selector);
-          if (el) return el.value.trim();
-        } catch(e) {}
-        return '';
-      }
-      
-      var rules = [
-        { id: '1', name: 'Username', expected: 'Sgfdl-210208-218', actual: getVal('input[name="wan_PPPUsername"]') },
-        { id: '2', name: 'Password', expected: 'fpt12345', actual: getVal('input[name="wan_PPPPassword"]') }
-      ];
+    ]
+  },
 
-      var passedCount = 0;
-      var details = [];
-      rules.forEach(function(r) {
-        var actualVal = (r.actual || '').toString().trim();
-        var expectVal = (r.expected || '').toString().trim();
-        var isMatch = (actualVal === expectVal);
-        
-        if (isMatch) passedCount++;
-        details.push({
-          id: r.id,
-          name: r.name,
-          expected: r.expected,
-          actual: r.actual,
-          passed: isMatch
+  customClear: function() {
+    var iframe = document.getElementById('deviceIframe');
+    if (!iframe || !iframe.contentWindow || !iframe.contentWindow.document) return;
+    var doc = iframe.contentWindow.document;
+
+    // Liên tục quét xóa dữ liệu rác nếu có
+    if (!doc._ftcClearIntervalStarted) {
+      doc._ftcClearIntervalStarted = true;
+      doc._clearedFields = {};
+      setInterval(function() {
+        var selectors = ['input[name="wan_PPPUsername"]', 'input[name="wan_PPPPassword"]'];
+        selectors.forEach(function(sel) {
+          var els = doc.querySelectorAll(sel);
+          els.forEach(function(el) {
+            if (!el._ftcHasInputListener) {
+              el._ftcHasInputListener = true;
+              el.addEventListener('input', function() { el._ftcUserModified = true; });
+            }
+            if (doc.activeElement !== el && el.value !== "" && !el._ftcUserModified) {
+              el.value = "";
+              doc._clearedFields[el.name] = true;
+            }
+          });
         });
-      });
-      return {
-        passed: passedCount === rules.length,
-        score: Math.round((passedCount / rules.length) * 100),
-        passedCount: passedCount,
-        totalRules: rules.length,
-        details: details
-      };
+      }, 200);
+    }
+
+    // Chặn Submit để kiểm tra giống BE12000
+    if (!doc._ftcApplyInterceptorAttached) {
+      doc._ftcApplyInterceptorAttached = true;
+      doc.addEventListener('click', function (e) {
+        if (e.target && (e.target.name === 'SaveBtn' || e.target.value === 'Save' || e.target.id === 'save')) {
+          var errors = [];
+          
+          var getVal = function (selector) {
+              var el = doc.querySelector(selector);
+              return el ? el.value.trim() : "";
+          };
+
+          if (getVal('input[name="wan_PPPUsername"]') !== "hnfdl-123456-789") errors.push("Hàng Username cấu hình sai, phải là hnfdl-123456-789.");
+          if (getVal('input[name="wan_PPPPassword"]') !== "d123456") errors.push("Hàng Password cấu hình sai, phải là d123456.");
+
+          if (errors.length > 0) {
+              alert("BẠN ĐÃ CẤU HÌNH SAI:\n\n" + errors.join("\n"));
+              window._hasClickedSaveInGuide = false;
+              e.preventDefault();
+              e.stopPropagation();
+          }
+        }
+      }, true);
     }
   }
 };

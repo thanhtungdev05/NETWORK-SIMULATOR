@@ -20,6 +20,16 @@ var lessonObj = {
     '- End Internal Port: <span class="val">3389</span>',
   ],
   practiceUrl: '/sim_ac1000HI/cgi-bin/index.asp?page=adv_nat_top.asp',
+    // Clear old localStorage when starting a new session
+    onSimLoad: function(iframeWindow) {
+      try {
+        var loc = (iframeWindow.location.href || '').toLowerCase();
+        if (loc.indexOf('adv_nat_top') === -1) {
+          localStorage.removeItem('ftc_sim_portfwd');
+        }
+      } catch(e) {}
+    },
+
 
   clearFields: [
     'input[name="start_port1"]',
@@ -32,47 +42,50 @@ var lessonObj = {
   grading: {
     description: 'Kiểm tra cấu hình Port Forwarding (Virtual Server)',
     customGrading: function(allDocs) {
-      function fetchKho() {
-        try {
-          var req = new XMLHttpRequest();
-          req.open('GET', '/sim_ac1000HI/__sim/kho?_=' + new Date().getTime(), false);
-          req.send(null);
-          if (req.status === 200) {
-            return JSON.parse(req.responseText);
-          }
-        } catch(e) {}
-        return null;
-      }
-      
-      var state = fetchKho();
-      var vs = (state && state.adv_nat_top && state.adv_nat_top.virtual_servers) ? state.adv_nat_top.virtual_servers : [];
-      
-      // Tìm rule thỏa mãn yêu cầu (nếu user tạo nhiều rule thì chỉ cần 1 rule đúng là pass)
-      var foundRule = null;
-      for (var i = 0; i < vs.length; i++) {
-        var r = vs[i];
-        if (r && r.start_port === "3389" && r.end_port === "3389" && 
-            r.ip === "192.168.1.254" && r.local_sport === "3389" && r.local_eport === "3389") {
-          foundRule = r;
-          break;
+      // 1. Đọc từ localStorage để xem đã nhấn Save chưa
+      var data = null;
+      var isSaved = false;
+      try {
+        var raw = localStorage.getItem('ftc_sim_portfwd');
+        if (raw) {
+          data = JSON.parse(raw);
+          isSaved = true;
+        }
+      } catch (e) { }
+
+      // 2. Dự phòng lấy dữ liệu từ form hiện tại nếu có
+      if (!isSaved) {
+        for (var i = 0; i < allDocs.length; i++) {
+          try {
+            var url = allDocs[i].URL.toLowerCase();
+            if (url.indexOf('adv_nat_top.asp') !== -1) {
+              var form = allDocs[i].NAT_form || allDocs[i].forms[0];
+              if (form) {
+                data = {};
+                for (var j = 0; j < form.elements.length; j++) {
+                  var el = form.elements[j];
+                  if (!el.name) continue;
+                  if (el.type === 'radio' || el.type === 'checkbox') {
+                    if (el.checked) data[el.name] = el.value;
+                  } else {
+                    data[el.name] = el.value;
+                  }
+                }
+              }
+            }
+          } catch (e) { }
         }
       }
-      
-      // Nếu không có rule hoàn hảo, lấy rule đầu tiên do user tạo để show ra
-      if (!foundRule) {
-        for (var i = 0; i < vs.length; i++) {
-          if (vs[i]) {
-            foundRule = vs[i];
-            break;
-          }
-        }
+
+      function g(data, name) {
+        return data && data[name] ? String(data[name]).trim() : '';
       }
       
-      var actualStartExt = foundRule ? (foundRule.start_port !== "N/A" ? foundRule.start_port : "") : "";
-      var actualEndExt = foundRule ? (foundRule.end_port !== "N/A" ? foundRule.end_port : "") : "";
-      var actualIp = foundRule ? (foundRule.ip !== "N/A" ? foundRule.ip : "") : "";
-      var actualStartInt = foundRule ? (foundRule.local_sport !== "N/A" ? foundRule.local_sport : "") : "";
-      var actualEndInt = foundRule ? (foundRule.local_eport !== "N/A" ? foundRule.local_eport : "") : "";
+      var actualStartExt = g(data, 'start_port1');
+      var actualEndExt = g(data, 'end_port1');
+      var actualIp = g(data, 'Addr1');
+      var actualStartInt = g(data, 'local_sport');
+      var actualEndInt = g(data, 'local_eport');
 
       var rules = [
         { id: '1', name: 'Start External Port', expected: '3389', actual: actualStartExt },
@@ -89,7 +102,10 @@ var lessonObj = {
         var expectVal = (r.expected || '').toString().trim();
         var isMatch = (actualVal === expectVal);
         
-        if (isMatch) passedCount++;
+        // Bắt buộc phải nhấn Save mới qua
+        if (isMatch && isSaved) passedCount++;
+        else isMatch = false;
+
         details.push({
           id: r.id,
           name: r.name,
@@ -98,7 +114,13 @@ var lessonObj = {
           passed: isMatch
         });
       });
-      
+
+      if (!isSaved) {
+        details.push({
+          id: 'hint', name: '⚠ Chưa lưu cấu hình', expected: 'Bấm Save để lưu cấu hình', actual: 'Chưa lưu', passed: false, _isHint: true
+        });
+      }
+
       return {
         passed: passedCount === rules.length,
         score: Math.round((passedCount / rules.length) * 100),

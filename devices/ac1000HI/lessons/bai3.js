@@ -21,6 +21,25 @@ var lessonObj = {
     '2. Đặt tên và mật khẩu theo yêu cầu > bấm <b>Save & Apply</b>'
   ],
   practiceUrl: '/sim_ac1000hi/cgi-bin/index.asp?page=home_wireless.asp',
+    // Clear old wifi localStorage when starting a new session (on login page only)
+    onSimLoad: function(iframeWindow) {
+      try {
+        var loc = (iframeWindow.location.href || '').toLowerCase();
+        if (loc.indexOf('home_wireless') === -1) {
+          localStorage.removeItem('ftc_sim_wifi24');
+          localStorage.removeItem('ftc_sim_wifi5g');
+        }
+      } catch(e) {}
+    },
+
+    // CSS selectors for fields to clear at session start
+    clearFields: [
+      'input[name="ESSID"]',
+      'input[name="PreSharedKey1"]',
+      'input[name="PreSharedKey2"]',
+      'input[name="PreSharedKey3"]'
+    ],
+
 
   grading: {
     description: 'Kiểm tra cấu hình SSID Index 2 (IoT) trên 2.4G',

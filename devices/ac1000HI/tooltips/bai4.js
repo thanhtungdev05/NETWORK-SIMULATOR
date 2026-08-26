@@ -1,4 +1,4 @@
-﻿/**
+/**
  * devices/ac1000hi/tooltips/bai4.js
  */
 
@@ -6,46 +6,39 @@ if (!window.TOOLTIPS_AC1000HI) window.TOOLTIPS_AC1000HI = {};
 
 window.TOOLTIPS_AC1000HI['LAB_AC1000HI_04'] = [
   {
-    selector: 'a[onclick*="change_access"]',
-    text: 'Bước 1: Chọn tab Access',
+    selector: 'a[onclick*="change_basic"]',
+    text: 'Bước 1: Chọn tab Network',
     position: 'top'
   },
   {
-    selector: 'a[href*="access_ddns.asp"]',
-    text: 'Bước 2: Chọn DDNS',
+    selector: 'a[href*="home_lan.asp"]',
+    text: 'Bước 2: Chọn LAN',
     position: 'top'
   },
   {
-    page: 'access_ddns.asp',
-    selector: 'input[name="Enable_DyDNS"][value="Yes"]',
-    text: 'Bước 3: Chọn Yes để bật DDNS',
+    page: 'home_lan.asp',
+    selector: 'input[name="dnsTypeRadio"][value="1"]',
+    text: 'Bước 3: Chọn Manually (hoặc Use User Discovered DNS)',
     position: 'right'
   },
   {
-    page: 'access_ddns.asp',
-    selector: 'input[name="sysDNSHost"]',
-    text: 'Bước 4: Nhập Tên Host (ac1000HI.ddns.net)',
-    position: 'left',
-    expected: 'ac1000HI.ddns.net'
+    page: 'home_lan.asp',
+    selector: 'input[name="PrimaryDns"]',
+    text: 'Bước 4: Nhập Primary DNS (8.8.8.8)',
+    position: 'right',
+    expected: '8.8.8.8'
   },
   {
-    page: 'access_ddns.asp',
-    selector: 'input[name="sysDNSUser"]',
-    text: 'Bước 5: Nhập Username (truongconghau04111994@gmail.com)',
-    position: 'left',
-    expected: 'truongconghau04111994@gmail.com'
+    page: 'home_lan.asp',
+    selector: 'input[name="SecondDns"]',
+    text: 'Bước 5: Nhập Secondary DNS (8.8.4.4)',
+    position: 'right',
+    expected: '8.8.4.4'
   },
   {
-    page: 'access_ddns.asp',
-    selector: 'input[name="sysDNSPassword"]',
-    text: 'Bước 6: Nhập Password (fpt12345)',
-    position: 'left',
-    expected: 'fpt12345'
-  },
-  {
-    page: 'access_ddns.asp',
-    selector: 'input[name="SaveBtn"], input[value="Save"], input[name="save"], .button1',
-    text: 'Bước 7: Chọn Save để lưu cấu hình',
-    position: 'left'
+    page: 'home_lan.asp',
+    selector: 'input[name="SaveBtn"], input[value="Apply/Save"], input[name="save"], .button1, input[value="Save"]',
+    text: 'Bước 6: Chọn Save để lưu cấu hình',
+    position: 'top'
   }
 ];

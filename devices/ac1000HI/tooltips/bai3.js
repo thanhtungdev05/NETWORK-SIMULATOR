@@ -17,6 +17,7 @@ window.TOOLTIPS_AC1000HI['LAB_AC1000HI_03'] = [
   },
   {
     page: 'home_wireless.asp',
+    hideOnPage: 'home_wireless_5g.asp',
     selector: 'select[name="SSID_INDEX"]',
     text: 'Bước 3: Đảm bảo chọn SSID index là 2',
     position: 'right',
@@ -24,6 +25,7 @@ window.TOOLTIPS_AC1000HI['LAB_AC1000HI_03'] = [
   },
   {
     page: 'home_wireless.asp',
+    hideOnPage: 'home_wireless_5g.asp',
     selector: 'input[name="ESSID"], input[name="ssid"]',
     text: 'Bước 4: Nhập tên Wifi IoT (VD: FPT Telecom_IoT)',
     position: 'left',
@@ -31,6 +33,7 @@ window.TOOLTIPS_AC1000HI['LAB_AC1000HI_03'] = [
   },
   {
     page: 'home_wireless.asp',
+    hideOnPage: 'home_wireless_5g.asp',
     selector: 'input[name="PreSharedKey1"], input[name="PreSharedKey2"], input[name="PreSharedKey3"], input[name*="PreSharedKey"]',
     text: 'Bước 5: Nhập mật khẩu (VD: fpt12345)',
     position: 'left',
@@ -38,6 +41,7 @@ window.TOOLTIPS_AC1000HI['LAB_AC1000HI_03'] = [
   },
   {
     page: 'home_wireless.asp',
+    hideOnPage: 'home_wireless_5g.asp',
     selector: 'input[name="SaveBtn"], input[value="Save"], input[name="save"], #save, #btnSave, .button1',
     text: 'Bước 6: Chọn Save & Apply',
     position: 'left'

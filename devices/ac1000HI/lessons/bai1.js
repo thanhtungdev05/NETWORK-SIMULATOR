@@ -17,6 +17,16 @@ var lessonObj = {
     '- Password: <span class="val">fpt12345</span>'
   ],
   practiceUrl: '/sim_ac1000hi/cgi-bin/index.asp?page=home_wan.asp',
+    // Clear old localStorage when starting a new session
+    onSimLoad: function(iframeWindow) {
+      try {
+        var loc = (iframeWindow.location.href || '').toLowerCase();
+        if (loc.indexOf('home_wan') === -1) {
+          localStorage.removeItem('ftc_sim_wan');
+        }
+      } catch(e) {}
+    },
+
 
   clearFields: [
     'input[name="wan_PPPUsername"]',

@@ -2089,3 +2089,101 @@ var tableData = [
 </script>
 
 </html>
+
+<!-- SCRIPT CHAN RELOAD + LOCALSTORAGE (TU DONG THEM VAO) -->
+<script>
+(function() {
+    var STORE_KEY = 'ftc_sim_dhcp';
+
+    function saveFormToStorage() {
+        try {
+            var form = document.uiViewLanForm || document.forms[0];
+            if (!form) return;
+            var data = {};
+            for (var i = 0; i < form.elements.length; i++) {
+                var el = form.elements[i];
+                if (!el.name) continue;
+                if (el.type === 'radio' || el.type === 'checkbox') {
+                    if (el.checked) data[el.name] = el.value;
+                } else {
+                    data[el.name] = el.value;
+                }
+            }
+            localStorage.setItem(STORE_KEY, JSON.stringify(data));
+        } catch(e) {}
+    }
+
+    function restoreFormFromStorage() {
+        try {
+            var raw = localStorage.getItem(STORE_KEY);
+            if (!raw) return;
+            var data = JSON.parse(raw);
+            var form = document.uiViewLanForm || document.forms[0];
+            if (!form) return;
+            for (var name in data) {
+                var elements = form.elements[name];
+                if (!elements) continue;
+                var list = elements.length !== undefined && elements.tagName === undefined ? elements : [elements];
+                for (var i = 0; i < list.length; i++) {
+                    var el = list[i];
+                    if (el.type === 'radio' || el.type === 'checkbox') {
+                        el.checked = (el.value === data[name]);
+                    } else {
+                        el.value = data[name];
+                    }
+                }
+            }
+        } catch(e) {}
+    }
+
+    function showFakeSaveMsg(formEl) {
+        saveFormToStorage();
+        var target = document.getElementById('firstDiv') || document.getElementById('firstDiv0') || document.getElementById('buttoncolor') || document.getElementById('button0');
+        if (!target) {
+            var btns = formEl ? formEl.querySelectorAll('.button1, input[type=submit], input[type=button]') : [];
+            if (btns.length > 0) {
+                target = document.createElement('span');
+                btns[0].parentNode.insertBefore(target, btns[0].nextSibling);
+            } else {
+                target = document.body;
+            }
+        }
+        if (!document.getElementById('fakeSaveMsg')) {
+            var msg = document.createElement('span');
+            msg.id = 'fakeSaveMsg';
+            msg.style.color = '#15803d';
+            msg.style.fontWeight = 'bold';
+            msg.style.fontSize = '12px';
+            msg.style.marginLeft = '10px';
+            msg.style.lineHeight = '24px';
+            target.appendChild(msg);
+        }
+        var msgEl = document.getElementById('fakeSaveMsg');
+        msgEl.innerHTML = '\u2714 Saved successfully!';
+        setTimeout(function() { msgEl.innerHTML = ''; }, 2500);
+
+        if (window.parent && window.parent.onSimulatorSave) {
+            try { window.parent.onSimulatorSave(window); } catch(e) {}
+        }
+    }
+
+    document.addEventListener('submit', function(e) {
+        e.preventDefault();
+        showFakeSaveMsg(e.target);
+    });
+
+    if (typeof HTMLFormElement !== 'undefined') {
+        HTMLFormElement.prototype.submit = function() {
+            showFakeSaveMsg(this);
+        };
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', restoreFormFromStorage);
+    } else {
+        restoreFormFromStorage();
+    }
+    setTimeout(restoreFormFromStorage, 800);
+})();
+</script>
+<!-- KET THUC SCRIPT CHAN RELOAD -->

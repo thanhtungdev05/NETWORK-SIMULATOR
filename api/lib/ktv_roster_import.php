@@ -15,6 +15,15 @@ const KTV_ROSTER_REQUIRED_HEADERS = [
     'Ghi chú xếp lớp' => 'class_code',
 ];
 
+const KTV_ROSTER_TERMINATION_REQUIRED_HEADERS = [
+    'Empl ID' => 'employee_id',
+    'Name' => 'display_name',
+    'Email' => 'email',
+];
+
+const KTV_ROSTER_SPREADSHEET_NAMESPACE = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+const KTV_ROSTER_RELATIONSHIPS_NAMESPACE = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+
 const KTV_ROSTER_DASHBOARD_REGIONS = [
     'PNCDNB' => 'DNB',
     'PNCHCM' => 'HCM',
@@ -40,20 +49,46 @@ function ktv_roster_column_index(string $reference): int
     return $index - 1;
 }
 
+function ktv_roster_xml_document(string $contents, string $description): DOMDocument
+{
+    $previousInternalErrors = libxml_use_internal_errors(true);
+    libxml_clear_errors();
+    try {
+        $document = new DOMDocument();
+        if (!$document->loadXML($contents, LIBXML_NONET | LIBXML_COMPACT)) {
+            throw new RuntimeException("Unable to parse $description.");
+        }
+        return $document;
+    } finally {
+        libxml_clear_errors();
+        libxml_use_internal_errors($previousInternalErrors);
+    }
+}
+
 function ktv_roster_relationships(ZipArchive $zip, string $path): array
 {
     $contents = $zip->getFromName($path);
     if ($contents === false) {
         throw new RuntimeException("XLSX relationship file is missing: $path");
     }
-    $xml = simplexml_load_string($contents);
-    if (!$xml) {
-        throw new RuntimeException("Unable to parse XLSX relationship file: $path");
+    $document = ktv_roster_xml_document($contents, "XLSX relationship file: $path");
+    $xpath = new DOMXPath($document);
+    $relationships = $xpath->query(
+        '/*[local-name()="Relationships"]/*[local-name()="Relationship"]'
+    );
+    if ($relationships === false) {
+        throw new RuntimeException("Unable to read XLSX relationship file: $path");
     }
     $map = [];
-    foreach ($xml->Relationship as $relationship) {
-        $attributes = $relationship->attributes();
-        $map[(string)$attributes['Id']] = (string)$attributes['Target'];
+    foreach ($relationships as $relationship) {
+        if (!$relationship instanceof DOMElement) {
+            continue;
+        }
+        $relationshipId = trim($relationship->getAttribute('Id'));
+        $target = trim($relationship->getAttribute('Target'));
+        if ($relationshipId !== '' && $target !== '') {
+            $map[$relationshipId] = $target;
+        }
     }
     return $map;
 }
@@ -87,30 +122,9 @@ function ktv_roster_shared_strings(ZipArchive $zip): array
     return $strings;
 }
 
-function ktv_roster_first_sheet_path(ZipArchive $zip): string
+function ktv_roster_sheet_target_path(string $target): string
 {
-    $workbookXml = $zip->getFromName('xl/workbook.xml');
-    if ($workbookXml === false) {
-        throw new RuntimeException('The XLSX workbook descriptor is missing.');
-    }
-    $workbook = simplexml_load_string($workbookXml);
-    if (!$workbook) {
-        throw new RuntimeException('Unable to parse the XLSX workbook descriptor.');
-    }
-    $namespaces = $workbook->getNamespaces(true);
-    $relationshipsNamespace = $namespaces['r'] ?? 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
-    $sheets = $workbook->sheets->sheet ?? [];
-    if (count($sheets) < 1) {
-        throw new RuntimeException('The XLSX workbook does not contain a worksheet.');
-    }
-    $attributes = $sheets[0]->attributes($relationshipsNamespace);
-    $relationshipId = (string)$attributes['id'];
-    $relationships = ktv_roster_relationships($zip, 'xl/_rels/workbook.xml.rels');
-    $target = $relationships[$relationshipId] ?? null;
-    if (!$target) {
-        throw new RuntimeException('Unable to resolve the first XLSX worksheet.');
-    }
-    $target = str_replace('\\', '/', $target);
+    $target = str_replace('\\', '/', trim($target));
     if (str_starts_with($target, '/')) {
         return ltrim($target, '/');
     }
@@ -120,17 +134,76 @@ function ktv_roster_first_sheet_path(ZipArchive $zip): string
     return str_starts_with($target, 'xl/') ? $target : 'xl/' . $target;
 }
 
+function ktv_roster_workbook_sheets(ZipArchive $zip): array
+{
+    $workbookXml = $zip->getFromName('xl/workbook.xml');
+    if ($workbookXml === false) {
+        throw new RuntimeException('The XLSX workbook descriptor is missing.');
+    }
+    $document = ktv_roster_xml_document($workbookXml, 'the XLSX workbook descriptor');
+    $xpath = new DOMXPath($document);
+    $sheetNodes = $xpath->query(
+        '/*[local-name()="workbook"]/*[local-name()="sheets"]/*[local-name()="sheet"]'
+    );
+    if ($sheetNodes === false || $sheetNodes->length < 1) {
+        throw new RuntimeException('The XLSX workbook does not contain a worksheet.');
+    }
+    $relationships = ktv_roster_relationships($zip, 'xl/_rels/workbook.xml.rels');
+
+    $sheets = [];
+    foreach ($sheetNodes as $sheetNode) {
+        if (!$sheetNode instanceof DOMElement) {
+            continue;
+        }
+        $relationshipId = trim($sheetNode->getAttributeNS(KTV_ROSTER_RELATIONSHIPS_NAMESPACE, 'id'));
+        if ($relationshipId === '') {
+            foreach ($sheetNode->attributes as $attribute) {
+                if ($attribute->localName === 'id' && $attribute->namespaceURI !== null) {
+                    $relationshipId = trim($attribute->value);
+                    break;
+                }
+            }
+        }
+        $target = $relationships[$relationshipId] ?? null;
+        if (!is_string($target) || trim($target) === '') {
+            throw new RuntimeException('Unable to resolve XLSX worksheet: ' . $sheetNode->getAttribute('name'));
+        }
+        $sheets[] = [
+            'name' => trim($sheetNode->getAttribute('name')),
+            'path' => ktv_roster_sheet_target_path($target),
+            'relationship_id' => $relationshipId,
+        ];
+    }
+    if (!$sheets) {
+        throw new RuntimeException('The XLSX workbook does not contain a resolvable worksheet.');
+    }
+    return $sheets;
+}
+
+function ktv_roster_first_sheet_path(ZipArchive $zip): string
+{
+    $sheets = ktv_roster_workbook_sheets($zip);
+    return (string)$sheets[0]['path'];
+}
+
 function ktv_roster_uses_1904_dates(ZipArchive $zip): bool
 {
     $contents = $zip->getFromName('xl/workbook.xml');
     if ($contents === false) {
         throw new RuntimeException('The XLSX workbook descriptor is missing.');
     }
-    $workbook = simplexml_load_string($contents);
-    if (!$workbook) {
-        throw new RuntimeException('Unable to parse the XLSX workbook descriptor.');
+    $document = ktv_roster_xml_document($contents, 'the XLSX workbook descriptor');
+    $xpath = new DOMXPath($document);
+    $properties = $xpath->query(
+        '/*[local-name()="workbook"]/*[local-name()="workbookPr"][1]'
+    );
+    if ($properties === false || $properties->length === 0) {
+        return false;
     }
-    $value = strtolower(trim((string)($workbook->workbookPr['date1904'] ?? '0')));
+    $node = $properties->item(0);
+    $value = $node instanceof DOMElement
+        ? strtolower(trim($node->getAttribute('date1904')))
+        : '0';
     return in_array($value, ['1', 'true'], true);
 }
 
@@ -252,42 +325,67 @@ function ktv_roster_normalize_row(array $row, int $rowNumber, bool $uses1904Date
     ];
 }
 
-function parse_ktv_roster_xlsx(string $path): array
-{
-    if (!is_file($path)) {
-        throw new RuntimeException('KTV roster workbook not found: ' . $path);
+function ktv_roster_normalize_termination_row(
+    array $row,
+    int $rowNumber,
+    bool $uses1904Dates = false
+): array {
+    $employeeId = trim((string)($row['employee_id'] ?? ''));
+    $email = strtolower(trim((string)($row['email'] ?? '')));
+    $displayName = trim((string)($row['display_name'] ?? ''));
+
+    if (!preg_match('/^\d{8}$/', $employeeId)) {
+        throw new RuntimeException("Row $rowNumber has invalid Empl ID; expected exactly 8 digits.");
     }
-    if (!class_exists(ZipArchive::class)) {
-        throw new RuntimeException('PHP ZipArchive extension is required to read XLSX files.');
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        throw new RuntimeException("Row $rowNumber has invalid Email.");
     }
 
-    $zip = new ZipArchive();
-    if ($zip->open($path) !== true) {
-        throw new RuntimeException('Unable to open KTV roster workbook: ' . $path);
+    return [
+        'employee_id' => $employeeId,
+        'display_name' => $displayName !== '' ? $displayName : null,
+        'email' => $email !== '' ? $email : null,
+        'source_row' => $rowNumber,
+    ];
+}
+
+function ktv_roster_sheet_name_key(string $name): string
+{
+    $name = preg_replace('/\s+/u', ' ', trim($name)) ?? trim($name);
+    return function_exists('mb_strtolower')
+        ? mb_strtolower($name, 'UTF-8')
+        : strtolower($name);
+}
+
+function ktv_roster_parse_worksheet(
+    ZipArchive $zip,
+    array $sheet,
+    array $sharedStrings,
+    bool $uses1904Dates,
+    array $requiredHeaders,
+    callable $normalizer
+): array {
+    $sheetName = trim((string)($sheet['name'] ?? ''));
+    $sheetPath = (string)($sheet['path'] ?? '');
+    $sheetXml = $zip->getFromName($sheetPath);
+    if ($sheetXml === false) {
+        throw new RuntimeException('The XLSX worksheet is missing: ' . $sheetPath);
     }
+
+    $reader = new XMLReader();
+    if (!$reader->XML($sheetXml, null, LIBXML_NONET | LIBXML_COMPACT)) {
+        throw new RuntimeException('Unable to parse XLSX worksheet: ' . $sheetName);
+    }
+
+    $headerFieldsByIndex = [];
+    $headers = [];
+    $rows = [];
+    $errors = [];
+    $seenEmployeeIds = [];
+    $seenEmails = [];
+    $totalRows = 0;
 
     try {
-        $sharedStrings = ktv_roster_shared_strings($zip);
-        $uses1904Dates = ktv_roster_uses_1904_dates($zip);
-        $sheetPath = ktv_roster_first_sheet_path($zip);
-        $sheetXml = $zip->getFromName($sheetPath);
-        if ($sheetXml === false) {
-            throw new RuntimeException('The first XLSX worksheet is missing: ' . $sheetPath);
-        }
-
-        $reader = new XMLReader();
-        if (!$reader->XML($sheetXml, null, LIBXML_NONET | LIBXML_COMPACT)) {
-            throw new RuntimeException('Unable to parse the KTV roster worksheet.');
-        }
-
-        $headerFieldsByIndex = [];
-        $headers = [];
-        $rows = [];
-        $errors = [];
-        $seenEmployeeIds = [];
-        $seenEmails = [];
-        $totalRows = 0;
-
         while ($reader->read()) {
             if ($reader->nodeType !== XMLReader::ELEMENT || $reader->localName !== 'row') {
                 continue;
@@ -310,18 +408,19 @@ function parse_ktv_roster_xlsx(string $path): array
                 foreach ($values as $index => $value) {
                     $header = trim((string)$value);
                     $headers[$index] = $header;
-                    if (isset(KTV_ROSTER_REQUIRED_HEADERS[$header])) {
-                        $headerFieldsByIndex[$index] = KTV_ROSTER_REQUIRED_HEADERS[$header];
+                    if (isset($requiredHeaders[$header])) {
+                        $headerFieldsByIndex[$index] = $requiredHeaders[$header];
                     }
                 }
                 $missing = [];
-                foreach (KTV_ROSTER_REQUIRED_HEADERS as $header => $field) {
+                foreach ($requiredHeaders as $header => $field) {
                     if (!in_array($field, $headerFieldsByIndex, true)) {
                         $missing[] = $header;
                     }
                 }
                 if ($missing) {
                     $errors[] = [
+                        'sheet' => $sheetName,
                         'row' => 1,
                         'message' => 'Missing required headers: ' . implode(', ', $missing),
                     ];
@@ -330,17 +429,17 @@ function parse_ktv_roster_xlsx(string $path): array
                 continue;
             }
 
-            if (!$headerFieldsByIndex || !$values) {
+            if (!$headerFieldsByIndex) {
                 continue;
             }
-            $hasValue = false;
-            foreach ($values as $value) {
-                if (trim((string)$value) !== '') {
-                    $hasValue = true;
+            $hasMappedValue = false;
+            foreach (array_keys($headerFieldsByIndex) as $index) {
+                if (trim((string)($values[$index] ?? '')) !== '') {
+                    $hasMappedValue = true;
                     break;
                 }
             }
-            if (!$hasValue) {
+            if (!$hasMappedValue) {
                 continue;
             }
             $totalRows++;
@@ -351,30 +450,146 @@ function parse_ktv_roster_xlsx(string $path): array
             }
 
             try {
-                $normalized = ktv_roster_normalize_row($raw, $rowNumber, $uses1904Dates);
-                if (isset($seenEmployeeIds[$normalized['employee_id']])) {
-                    throw new RuntimeException("Row $rowNumber duplicates Empl ID {$normalized['employee_id']}.");
+                $normalized = $normalizer($raw, $rowNumber, $uses1904Dates);
+                $normalized['source_sheet'] = $sheetName;
+                $employeeId = (string)($normalized['employee_id'] ?? '');
+                $email = strtolower(trim((string)($normalized['email'] ?? '')));
+                if ($employeeId !== '' && isset($seenEmployeeIds[$employeeId])) {
+                    throw new RuntimeException("Row $rowNumber duplicates Empl ID $employeeId.");
                 }
-                if (isset($seenEmails[$normalized['email']])) {
-                    throw new RuntimeException("Row $rowNumber duplicates Email {$normalized['email']}.");
+                if ($email !== '' && isset($seenEmails[$email])) {
+                    throw new RuntimeException("Row $rowNumber duplicates Email $email.");
                 }
-                $seenEmployeeIds[$normalized['employee_id']] = true;
-                $seenEmails[$normalized['email']] = true;
+                if ($employeeId !== '') {
+                    $seenEmployeeIds[$employeeId] = true;
+                }
+                if ($email !== '') {
+                    $seenEmails[$email] = true;
+                }
                 $rows[] = $normalized;
             } catch (Throwable $exception) {
                 $errors[] = [
+                    'sheet' => $sheetName,
                     'row' => $rowNumber,
                     'message' => $exception->getMessage(),
                 ];
             }
         }
+    } finally {
         $reader->close();
+    }
+
+    return [
+        'name' => $sheetName,
+        'headers' => array_values($headers),
+        'rows' => $rows,
+        'errors' => $errors,
+        'totalRows' => $totalRows,
+    ];
+}
+
+function parse_ktv_roster_xlsx(string $path): array
+{
+    if (!is_file($path)) {
+        throw new RuntimeException('KTV roster workbook not found: ' . $path);
+    }
+    if (!class_exists(ZipArchive::class)) {
+        throw new RuntimeException('PHP ZipArchive extension is required to read XLSX files.');
+    }
+
+    $zip = new ZipArchive();
+    if ($zip->open($path) !== true) {
+        throw new RuntimeException('Unable to open KTV roster workbook: ' . $path);
+    }
+
+    try {
+        $sharedStrings = ktv_roster_shared_strings($zip);
+        $uses1904Dates = ktv_roster_uses_1904_dates($zip);
+        $sheets = ktv_roster_workbook_sheets($zip);
+        $activeSheet = null;
+        $terminationSheet = null;
+        foreach ($sheets as $sheet) {
+            $sheetName = ktv_roster_sheet_name_key((string)($sheet['name'] ?? ''));
+            if ($sheetName === 'tân binh' && $activeSheet === null) {
+                $activeSheet = $sheet;
+            }
+            if ($sheetName === 'nghỉ việc' && $terminationSheet === null) {
+                $terminationSheet = $sheet;
+            }
+        }
+        $activeSheet ??= $sheets[0];
+        $isDeltaWorkbook = ktv_roster_sheet_name_key((string)($activeSheet['name'] ?? '')) === 'tân binh'
+            || $terminationSheet !== null;
+
+        $active = ktv_roster_parse_worksheet(
+            $zip,
+            $activeSheet,
+            $sharedStrings,
+            $uses1904Dates,
+            KTV_ROSTER_REQUIRED_HEADERS,
+            'ktv_roster_normalize_row'
+        );
+        $termination = [
+            'name' => null,
+            'headers' => [],
+            'rows' => [],
+            'errors' => [],
+            'totalRows' => 0,
+        ];
+        if ($terminationSheet !== null && $terminationSheet !== $activeSheet) {
+            $termination = ktv_roster_parse_worksheet(
+                $zip,
+                $terminationSheet,
+                $sharedStrings,
+                $uses1904Dates,
+                KTV_ROSTER_TERMINATION_REQUIRED_HEADERS,
+                'ktv_roster_normalize_termination_row'
+            );
+        }
+
+        $errors = array_merge($active['errors'], $termination['errors']);
+        $activeEmployeeIds = [];
+        $activeEmails = [];
+        foreach ($active['rows'] as $row) {
+            $activeEmployeeIds[(string)$row['employee_id']] = true;
+            $activeEmails[strtolower((string)$row['email'])] = true;
+        }
+        foreach ($termination['rows'] as $row) {
+            $employeeId = (string)$row['employee_id'];
+            $email = strtolower(trim((string)($row['email'] ?? '')));
+            if (isset($activeEmployeeIds[$employeeId]) || ($email !== '' && isset($activeEmails[$email]))) {
+                $errors[] = [
+                    'sheet' => $termination['name'],
+                    'row' => $row['source_row'] ?? null,
+                    'message' => 'The same employee cannot appear in both active and termination sheets.',
+                ];
+            }
+        }
+
+        $totalRows = (int)$active['totalRows'] + (int)$termination['totalRows'];
 
         return [
-            'headers' => array_values($headers),
-            'rows' => $rows,
+            'headers' => $active['headers'],
+            'rows' => $active['rows'],
+            'termination_headers' => $termination['headers'],
+            'termination_rows' => $termination['rows'],
             'errors' => $errors,
             'totalRows' => $totalRows,
+            'total_rows' => $totalRows,
+            'activeRows' => count($active['rows']),
+            'active_rows' => count($active['rows']),
+            'terminationRows' => count($termination['rows']),
+            'termination_row_count' => count($termination['rows']),
+            'importMode' => $isDeltaWorkbook ? 'delta' : 'snapshot',
+            'import_mode' => $isDeltaWorkbook ? 'delta' : 'snapshot',
+            'sheetNames' => array_values(array_map(
+                static fn(array $sheet): string => (string)($sheet['name'] ?? ''),
+                $sheets
+            )),
+            'sheet_names' => array_values(array_map(
+                static fn(array $sheet): string => (string)($sheet['name'] ?? ''),
+                $sheets
+            )),
         ];
     } finally {
         $zip->close();
@@ -459,7 +674,10 @@ function ktv_roster_load_user_match_cache(PDO $pdo, array $rows, bool $forUpdate
                existing_user.employee_id,
                existing_user.display_name,
                existing_user.is_terminated,
-               existing_user.employee_source
+               existing_user.employee_source,
+               existing_user.role,
+               existing_user.dashboard_region,
+               existing_user.class_code
           FROM users AS existing_user
          WHERE EXISTS (
                SELECT 1
@@ -586,14 +804,30 @@ function ktv_roster_find_matching_user(PDO $pdo, array $row, bool $forUpdate): a
     return $stmt->fetchAll();
 }
 
-function sync_ktv_roster(PDO $pdo, array $rows, string $batch, bool $dryRun = false): array
+function sync_ktv_roster(
+    PDO $pdo,
+    array $rows,
+    string $batch,
+    bool $dryRun = false,
+    array $terminationRows = [],
+    bool $terminateMissing = true
+): array
 {
+    $totalRows = count($rows) + count($terminationRows);
     $result = [
         'batch_id' => $batch,
         'dryRun' => $dryRun,
         'dry_run' => $dryRun,
-        'totalRows' => count($rows),
-        'total_rows' => count($rows),
+        'totalRows' => $totalRows,
+        'total_rows' => $totalRows,
+        'activeRows' => count($rows),
+        'active_rows' => count($rows),
+        'terminationRows' => count($terminationRows),
+        'termination_rows' => count($terminationRows),
+        'importMode' => $terminateMissing ? 'snapshot' : 'delta',
+        'import_mode' => $terminateMissing ? 'snapshot' : 'delta',
+        'terminationMode' => $terminateMissing ? 'missing' : 'explicit',
+        'termination_mode' => $terminateMissing ? 'missing' : 'explicit',
         'inserted' => 0,
         'updated' => 0,
         'terminated' => 0,
@@ -614,7 +848,11 @@ function sync_ktv_roster(PDO $pdo, array $rows, string $batch, bool $dryRun = fa
         'by_dashboard_group' => [],
         'by_name' => [],
     ];
-    $userMatchCache = ktv_roster_load_user_match_cache($pdo, $rows, !$dryRun);
+    $userMatchCache = ktv_roster_load_user_match_cache(
+        $pdo,
+        array_merge($rows, $terminationRows),
+        !$dryRun
+    );
 
     $insertUser = null;
     $updateUser = null;
@@ -738,20 +976,11 @@ function sync_ktv_roster(PDO $pdo, array $rows, string $batch, bool $dryRun = fa
         }
     }
 
-    $sql = 'SELECT user_id, employee_id, email, display_name, dashboard_region, class_code
-              FROM users
-             WHERE employee_source = :employee_source
-               AND is_terminated = FALSE';
-    if (!$dryRun) {
-        $sql .= ' FOR UPDATE';
-    }
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute(['employee_source' => KTV_ROSTER_IMPORT_SOURCE]);
-    $managedRows = $stmt->fetchAll();
-
     $terminateUser = null;
     $terminationDate = (new DateTimeImmutable('now', new DateTimeZone(normalize_app_timezone(env_value('APP_TIMEZONE')))))->format('Y-m-d');
-    $terminationReason = 'Không có trong danh sách import ngày ' . $terminationDate;
+    $terminationReason = $terminateMissing
+        ? 'Không có trong danh sách import ngày ' . $terminationDate
+        : 'Có trong sheet Nghỉ việc của file import ngày ' . $terminationDate;
     if (!$dryRun) {
         $terminateUser = $pdo->prepare(
             'UPDATE users
@@ -765,12 +994,101 @@ function sync_ktv_roster(PDO $pdo, array $rows, string $batch, bool $dryRun = fa
         );
     }
 
-    foreach ($managedRows as $managed) {
-        $employeeId = (string)($managed['employee_id'] ?? '');
-        $email = strtolower((string)($managed['email'] ?? ''));
-        if (($employeeId !== '' && isset($activeEmployeeIds[$employeeId])) || ($email !== '' && isset($activeEmails[$email]))) {
-            continue;
+    $terminationCandidates = [];
+    if ($terminateMissing) {
+        $sql = 'SELECT user_id, employee_id, email, display_name, dashboard_region, class_code,
+                       role, is_terminated, employee_source
+                  FROM users
+                 WHERE employee_source = :employee_source
+                   AND is_terminated = FALSE';
+        if (!$dryRun) {
+            $sql .= ' FOR UPDATE';
         }
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute(['employee_source' => KTV_ROSTER_IMPORT_SOURCE]);
+        foreach ($stmt->fetchAll() as $managed) {
+            $employeeId = (string)($managed['employee_id'] ?? '');
+            $email = strtolower((string)($managed['email'] ?? ''));
+            if (($employeeId !== '' && isset($activeEmployeeIds[$employeeId]))
+                || ($email !== '' && isset($activeEmails[$email]))) {
+                continue;
+            }
+            $terminationCandidates[] = $managed;
+        }
+    } else {
+        foreach ($terminationRows as $row) {
+            $matches = ktv_roster_cached_user_matches($userMatchCache, $row);
+            $userIds = array_values(array_unique(array_map(
+                static fn(array $match): string => (string)($match['user_id'] ?? ''),
+                $matches
+            )));
+            $userIds = array_values(array_filter($userIds, static fn(string $userId): bool => $userId !== ''));
+            if (count($userIds) > 1) {
+                $result['errors'][] = [
+                    'sheet' => $row['source_sheet'] ?? 'Nghỉ việc',
+                    'row' => $row['source_row'] ?? null,
+                    'employee_id' => $row['employee_id'] ?? null,
+                    'email' => $row['email'] ?? null,
+                    'message' => 'Empl ID and Email are currently assigned to different users.',
+                ];
+                continue;
+            }
+            $existing = $matches[0] ?? null;
+            if (!$existing) {
+                $result['errors'][] = [
+                    'sheet' => $row['source_sheet'] ?? 'Nghỉ việc',
+                    'row' => $row['source_row'] ?? null,
+                    'employee_id' => $row['employee_id'] ?? null,
+                    'email' => $row['email'] ?? null,
+                    'message' => 'No matching KTV was found for the termination row.',
+                ];
+                continue;
+            }
+            if (strtoupper(trim((string)($existing['role'] ?? ''))) !== 'KTV') {
+                $result['errors'][] = [
+                    'sheet' => $row['source_sheet'] ?? 'Nghỉ việc',
+                    'row' => $row['source_row'] ?? null,
+                    'employee_id' => $row['employee_id'] ?? null,
+                    'email' => $row['email'] ?? null,
+                    'message' => 'The termination row matches a user who is not a KTV.',
+                ];
+                continue;
+            }
+            $providedEmployeeId = trim((string)($row['employee_id'] ?? ''));
+            $existingEmployeeId = trim((string)($existing['employee_id'] ?? ''));
+            if ($existingEmployeeId === '' || $providedEmployeeId !== $existingEmployeeId) {
+                $result['errors'][] = [
+                    'sheet' => $row['source_sheet'] ?? 'Nghỉ việc',
+                    'row' => $row['source_row'] ?? null,
+                    'employee_id' => $row['employee_id'] ?? null,
+                    'email' => $row['email'] ?? null,
+                    'message' => 'Empl ID does not match the KTV identified by Email.',
+                ];
+                continue;
+            }
+            $providedEmail = strtolower(trim((string)($row['email'] ?? '')));
+            $existingEmail = strtolower(trim((string)($existing['email'] ?? '')));
+            if ($providedEmail !== '' && $existingEmail !== '' && $providedEmail !== $existingEmail) {
+                $result['errors'][] = [
+                    'sheet' => $row['source_sheet'] ?? 'Nghỉ việc',
+                    'row' => $row['source_row'] ?? null,
+                    'employee_id' => $row['employee_id'] ?? null,
+                    'email' => $row['email'] ?? null,
+                    'message' => 'Email does not match the KTV identified by Empl ID.',
+                ];
+                continue;
+            }
+            if (ktv_roster_database_boolean($existing['is_terminated'] ?? false)) {
+                continue;
+            }
+            $existing['source_row'] = $row['source_row'] ?? null;
+            $existing['source_sheet'] = $row['source_sheet'] ?? 'Nghỉ việc';
+            $terminationCandidates[] = $existing;
+        }
+    }
+
+    foreach ($terminationCandidates as $managed) {
+        $employeeId = (string)($managed['employee_id'] ?? '');
         $result['terminated']++;
         $result['changes']['terminated'][] = [
             'employee_id' => $employeeId,
@@ -778,6 +1096,8 @@ function sync_ktv_roster(PDO $pdo, array $rows, string $batch, bool $dryRun = fa
             'email' => $managed['email'] ?? null,
             'region' => $managed['dashboard_region'] ?? null,
             'class_code' => $managed['class_code'] ?? null,
+            'source_row' => $managed['source_row'] ?? null,
+            'source_sheet' => $managed['source_sheet'] ?? null,
         ];
         if (!$dryRun && $terminateUser) {
             $terminateUser->execute([

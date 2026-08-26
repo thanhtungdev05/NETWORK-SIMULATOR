@@ -1007,6 +1007,20 @@ function renderLearnerDetail(rows) {
     renderDeviceDonutChart(allLearnerRows);
     renderHourlyBarChart(allLearnerRows);
 
+    // Đánh số thứ tự lượt thực hành theo trình tự thời gian cho từng bài lab
+    const attemptCounters = new Map();
+    const sortedChronological = [...allLearnerRows].sort((a, b) => {
+        const timeA = parseDate(a.date).getTime() + (a.time ? parseTimeMs(a.time) : 0);
+        const timeB = parseDate(b.date).getTime() + (b.time ? parseTimeMs(b.time) : 0);
+        return timeA - timeB;
+    });
+    sortedChronological.forEach(s => {
+        const key = `${s.device}\u001f${s.lab}\u001f${s.mode || 'Thực hành'}`;
+        const count = (attemptCounters.get(key) || 0) + 1;
+        attemptCounters.set(key, count);
+        s._attemptNumber = count;
+    });
+
     const pageData = getPageSlice(filteredHistory, state.learnerDetailPage, LEARNER_HISTORY_PAGE_SIZE);
     state.learnerDetailPage = pageData.currentPage;
     if (els.learnerHistoryBody) {
@@ -1020,7 +1034,10 @@ function renderLearnerDetail(rows) {
                     </td>
                     <td><span class="mode-pill ${item.mode === 'Hướng dẫn' ? 'mode-guide' : 'mode-practice'}">${escapeHTML(item.mode || 'Thực hành')}</span></td>
                     <td>${escapeHTML(item.device)}</td>
-                    <td>${escapeHTML(item.lab)}</td>
+                    <td>
+                        <div>${escapeHTML(item.lab)}</div>
+                        <div style="font-size: 11px; color: var(--muted); margin-top: 2px;">Lần ${item._attemptNumber || 1}</div>
+                    </td>
                     <td><span class="status-pill ${getStatusClass(item.status)}">${escapeHTML(item.status)}</span></td>
                     <td>${formatDuration(item.duration)}</td>
                 </tr>
@@ -3558,6 +3575,16 @@ function getClassMatrixData() {
             const attempts = labSessions.length;
             const attempted = attempts > 0;
 
+            // Xác định số thứ tự lần thực hành đạt chuẩn hoàn thành
+            const sortedLabSessions = [...labSessions].sort((a, b) => {
+                const timeA = parseDate(a.date).getTime() + (a.time ? parseTimeMs(a.time) : 0);
+                const timeB = parseDate(b.date).getTime() + (b.time ? parseTimeMs(b.time) : 0);
+                return timeA - timeB;
+            });
+            const practiceSessions = sortedLabSessions.filter(s => s.mode !== 'Hướng dẫn');
+            const passIndex = practiceSessions.findIndex(s => s.status === 'Hoàn thành' || s.status === 'completed' || s.is_passed === true);
+            const firstPassAttemptNo = passIndex !== -1 ? (passIndex + 1) : (Number(assign?.first_pass_attempt_no) || null);
+
             if (isAssigned) {
                 ktvAssigned += 1;
                 const stat = labStats.get(colKey);
@@ -3584,6 +3611,7 @@ function getClassMatrixData() {
                 assigned: isAssigned,
                 completed: isCompleted,
                 attempts,
+                firstPassAttemptNo,
                 lastSession: labSessions[labSessions.length - 1] || null
             };
         });
@@ -3733,14 +3761,17 @@ function renderClassMatrixReport() {
                 </th>
                 ${row.cells.map(cell => {
                     if (!cell.assigned) {
-                        return `<td class="report-metric-cell report-cell-zero" title="Bài lab chưa được giao"><strong>—</strong><span>Chưa giao</span></td>`;
+                        return `<td class="report-metric-cell report-cell-zero" title="${escapeHTML(`${row.name} • ${cell.device} • ${cell.lab}: Chưa phân công`)}"><strong>—</strong><span>Chưa giao</span></td>`;
                     }
                     if (cell.completed) {
-                        const tooltip = `${row.name} • ${cell.device} • ${cell.lab}: Đã hoàn thành (${cell.attempts} lượt thực hành)`;
+                        const passNote = cell.firstPassAttemptNo === 1 
+                            ? 'Đạt ngay lần thực hành 1' 
+                            : (cell.firstPassAttemptNo > 1 ? `Đạt ở lần thực hành thứ ${cell.firstPassAttemptNo}` : 'Đã đạt chuẩn');
+                        const tooltip = `${row.name} • ${cell.device} • ${cell.lab}: Đã hoàn thành (${passNote}) • Tổng ${cell.attempts} lượt thực hành`;
                         return `<td class="report-metric-cell report-cell-high" title="${escapeHTML(tooltip)}"><strong>1/1</strong><span>100% HT</span></td>`;
                     }
                     if (cell.attempts > 0) {
-                        const tooltip = `${row.name} • ${cell.device} • ${cell.lab}: Đang làm / Chưa đạt (${cell.attempts} lượt thực hành)`;
+                        const tooltip = `${row.name} • ${cell.device} • ${cell.lab}: Đang thực hiện • Đã làm ${cell.attempts} lượt thực hành`;
                         return `<td class="report-metric-cell report-cell-low" title="${escapeHTML(tooltip)}"><strong>0/1</strong><span>0% HT</span></td>`;
                     }
                     const tooltip = `${row.name} • ${cell.device} • ${cell.lab}: Chưa thực hiện`;
@@ -4826,6 +4857,16 @@ function openDeviceSubModal(deviceName, rows) {
             modeText = 'Chưa làm';
         }
 
+        // Tính thứ tự lượt thực hành đạt chuẩn hoàn thành
+        const sortedSessions = [...entry.sessions].sort((a, b) => {
+            const timeA = parseDate(a.date).getTime() + (a.time ? parseTimeMs(a.time) : 0);
+            const timeB = parseDate(b.date).getTime() + (b.time ? parseTimeMs(b.time) : 0);
+            return timeA - timeB;
+        });
+        const practiceSessions = sortedSessions.filter(s => s.mode === 'Thực hành');
+        const passIndex = practiceSessions.findIndex(s => s.status === 'Hoàn thành' || s.status === 'completed' || s.is_passed === true);
+        const firstPassAttemptNo = passIndex !== -1 ? (passIndex + 1) : null;
+
         if (!totalCount) {
             return {
                 ...entry,
@@ -4835,15 +4876,16 @@ function openDeviceSubModal(deviceName, rows) {
                 totalCount: 0,
                 guideCount: 0,
                 practiceCount: 0,
+                firstPassAttemptNo: null,
                 modeText: 'Chưa làm',
                 lastDateTimeStr: 'N/A',
                 lastDuration: '0 giây'
             };
         }
         const latest = [...entry.sessions].sort((a, b) => parseDate(b.date) - parseDate(a.date))[0];
-        const isDone = entry.sessions.some(s => s.status === 'Hoàn thành');
+        const isDone = entry.sessions.some(s => s.status === 'Hoàn thành' || s.status === 'completed');
         const statusCategory = isDone ? 'done' : 'pending';
-        const statusLabel = isDone ? 'Hoàn thành' : 'Đang làm';
+        const statusLabel = isDone ? 'Hoàn thành' : 'Đang thực hiện';
         const badgeClass = getStatusClass(statusLabel);
         const lastDateTimeStr = formatDateTime(latest.date, latest.time);
         const lastDuration = formatDuration(latest.duration);
@@ -4857,6 +4899,7 @@ function openDeviceSubModal(deviceName, rows) {
             totalCount,
             guideCount,
             practiceCount,
+            firstPassAttemptNo,
             modeText,
             lastDateTimeStr,
             lastDuration
@@ -4951,9 +4994,28 @@ function renderSubModalLabList(filter) {
                     </div>
                     <div class="sub-modal-item-grid2x2">
                         <div class="sub-modal-cell">Gần nhất: <strong>Chưa thực hiện</strong></div>
-                        <div class="sub-modal-cell">Số lần Hướng dẫn: <strong>0 lần</strong></div>
-                        <div class="sub-modal-cell">Tổng số lần đã làm: <strong>0 lần</strong></div>
-                        <div class="sub-modal-cell">Số lần Thực hành: <strong>0 lần</strong></div>
+                        <div class="sub-modal-cell">Kết quả: <strong>Chưa có phiên làm bài</strong></div>
+                        <div class="sub-modal-cell">Lượt Thực hành: <strong>0 lần</strong></div>
+                        <div class="sub-modal-cell">Lượt Hướng dẫn: <strong>0 lần</strong></div>
+                    </div>
+                </div>
+            `;
+        }
+        if (item.statusCategory === 'done') {
+            const passDetail = item.firstPassAttemptNo === 1 
+                ? 'Đạt ngay lần thực hành 1' 
+                : (item.firstPassAttemptNo > 1 ? `Đạt ở lần thực hành thứ ${item.firstPassAttemptNo}` : 'Đã hoàn thành');
+            return `
+                <div class="sub-modal-item">
+                    <div class="sub-modal-item-top">
+                        <div class="sub-modal-item-title">${escapeHTML(item.labName)}</div>
+                        <span class="status-pill ${item.badgeClass}">${escapeHTML(item.statusLabel)}</span>
+                    </div>
+                    <div class="sub-modal-item-grid2x2">
+                        <div class="sub-modal-cell">Gần nhất: <strong>${escapeHTML(item.lastDateTimeStr)}</strong> (${item.lastDuration})</div>
+                        <div class="sub-modal-cell">Kết quả: <strong>${passDetail}</strong></div>
+                        <div class="sub-modal-cell">Lượt Thực hành: <strong>${item.practiceCount} lần</strong></div>
+                        <div class="sub-modal-cell">Lượt Hướng dẫn: <strong>${item.guideCount} lần</strong></div>
                     </div>
                 </div>
             `;
@@ -4966,9 +5028,9 @@ function renderSubModalLabList(filter) {
                 </div>
                 <div class="sub-modal-item-grid2x2">
                     <div class="sub-modal-cell">Gần nhất: <strong>${escapeHTML(item.lastDateTimeStr)}</strong> (${item.lastDuration})</div>
-                    <div class="sub-modal-cell">Số lần Hướng dẫn: <strong>${item.guideCount} lần</strong></div>
-                    <div class="sub-modal-cell">Tổng số lần đã làm: <strong>${item.totalCount} lần</strong></div>
-                    <div class="sub-modal-cell">Số lần Thực hành: <strong>${item.practiceCount} lần</strong></div>
+                    <div class="sub-modal-cell">Kết quả: <strong>Đang luyện tập (${item.practiceCount} lượt)</strong></div>
+                    <div class="sub-modal-cell">Lượt Thực hành: <strong>${item.practiceCount} lần</strong></div>
+                    <div class="sub-modal-cell">Lượt Hướng dẫn: <strong>${item.guideCount} lần</strong></div>
                 </div>
             </div>
         `;
@@ -5669,7 +5731,14 @@ function renderRosterPreview(data) {
 
     const statsEl = document.getElementById('rosterPreviewStats');
     if (statsEl) {
+        const isDelta = (data.importMode || data.import_mode) === 'delta';
+        const activeRows = Number(data.activeRows || data.active_rows || 0);
+        const terminationRows = Number(data.terminationRows || data.termination_rows || 0);
+        const modeLabel = isDelta
+            ? `Theo sheet: ${activeRows} Tân binh, ${terminationRows} Nghỉ việc`
+            : 'Đồng bộ toàn bộ danh sách';
         statsEl.innerHTML = `
+            <span class="roster-preview-stat">${escapeHTML(modeLabel)}</span>
             <span class="roster-preview-stat stat-insert">Thêm mới: ${data.inserted || 0}</span>
             <span class="roster-preview-stat stat-update">Cập nhật: ${data.updated || 0}</span>
             <span class="roster-preview-stat stat-terminate">Nghỉ việc: ${data.terminated || 0}</span>
@@ -5684,7 +5753,12 @@ function renderRosterPreview(data) {
         errorsEl.classList.toggle('is-visible', errors.length > 0);
         if (errors.length) {
             errorsEl.hidden = false;
-            errorsEl.innerHTML = `<h4>Lỗi (${errors.length})</h4><ul>${errors.map(e => `<li>Dòng ${e.row || '?'}: ${escapeHTML(e.message || '')}</li>`).join('')}</ul>`;
+            errorsEl.innerHTML = `<h4>Lỗi (${errors.length})</h4><ul>${errors.map(e => {
+                const location = e.sheet
+                    ? `Sheet ${escapeHTML(e.sheet)}, dòng ${escapeHTML(e.row || '?')}`
+                    : `Dòng ${escapeHTML(e.row || '?')}`;
+                return `<li>${location}: ${escapeHTML(e.message || '')}</li>`;
+            }).join('')}</ul>`;
         } else {
             errorsEl.hidden = true;
         }
@@ -5720,8 +5794,12 @@ async function confirmRosterImport() {
     }
     const terminationCount = Number(data.terminated || 0);
     if (terminationCount > 0) {
+        const explicitTermination = (data.terminationMode || data.termination_mode) === 'explicit';
+        const warning = explicitTermination
+            ? `${terminationCount} KTV trong sheet “Nghỉ việc” sẽ được đánh dấu Đã nghỉ.`
+            : `${terminationCount} KTV không còn trong danh sách đầy đủ sẽ được đánh dấu Đã nghỉ.`;
         const confirmed = window.confirm(
-            `Cảnh báo: ${terminationCount} KTV không còn trong file sẽ bị đánh dấu Đã nghỉ. Bạn có chắc muốn tiếp tục?`
+            `Cảnh báo: ${warning} Bạn có chắc muốn tiếp tục?`
         );
         if (!confirmed) return;
     }

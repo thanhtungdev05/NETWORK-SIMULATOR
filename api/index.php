@@ -1520,14 +1520,29 @@ function handle_roster_import(array $actor): void
     $pdo = db();
     $parseErrors = $parsed['errors'] ?? [];
     $parsedRows = $parsed['rows'] ?? [];
+    $terminationRows = $parsed['termination_rows'] ?? [];
+    $importMode = ($parsed['import_mode'] ?? 'snapshot') === 'delta' ? 'delta' : 'snapshot';
+    $terminateMissing = $importMode === 'snapshot';
+    $validRowCount = count($parsedRows) + count($terminationRows);
     if ($dryRun) {
-        $preview = sync_ktv_roster($pdo, $parsedRows, $batch, true);
+        $preview = sync_ktv_roster(
+            $pdo,
+            $parsedRows,
+            $batch,
+            true,
+            $terminationRows,
+            $terminateMissing
+        );
         $preview['errors'] = array_merge($parseErrors, $preview['errors'] ?? []);
         $preview['error_count'] = count($preview['errors']);
         $preview['errorCount'] = count($preview['errors']);
-        $preview['canImport'] = $preview['error_count'] === 0 && count($parsedRows) > 0;
+        $preview['canImport'] = $preview['error_count'] === 0 && $validRowCount > 0;
         $preview['can_import'] = $preview['canImport'];
         $preview['headers'] = $parsed['headers'] ?? [];
+        $preview['terminationHeaders'] = $parsed['termination_headers'] ?? [];
+        $preview['termination_headers'] = $parsed['termination_headers'] ?? [];
+        $preview['sheetNames'] = $parsed['sheet_names'] ?? [];
+        $preview['sheet_names'] = $parsed['sheet_names'] ?? [];
         $preview['fileName'] = $file['name'];
         $preview['file_name'] = $file['name'];
         respond(['data' => $preview]);
@@ -1544,11 +1559,18 @@ function handle_roster_import(array $actor): void
         ], 400);
     }
 
-    if (!$parsedRows) {
+    if ($validRowCount === 0) {
         fail(400, 'empty-roster', 'Roster workbook does not contain any valid employee rows.');
     }
 
-    $preflight = sync_ktv_roster($pdo, $parsedRows, $batch, true);
+    $preflight = sync_ktv_roster(
+        $pdo,
+        $parsedRows,
+        $batch,
+        true,
+        $terminationRows,
+        $terminateMissing
+    );
     if (($preflight['error_count'] ?? 0) > 0) {
         respond([
             'error' => [
@@ -1560,10 +1582,13 @@ function handle_roster_import(array $actor): void
         ], 409);
     }
     if (($preflight['terminated'] ?? 0) > 0 && !roster_parse_bool_query('confirm_termination')) {
+        $message = $terminateMissing
+            ? 'This import will mark employees missing from the snapshot as terminated. Preview and explicitly confirm this change.'
+            : 'This import will mark employees listed in the Nghỉ việc sheet as terminated. Preview and explicitly confirm this change.';
         respond([
             'error' => [
                 'code' => 'termination-confirmation-required',
-                'message' => 'This import will mark employees as terminated. Preview and explicitly confirm this change.',
+                'message' => $message,
                 'requestId' => $GLOBALS['request_id'] ?? null,
                 'details' => $preflight['changes']['terminated'] ?? [],
             ],
@@ -1572,7 +1597,14 @@ function handle_roster_import(array $actor): void
 
     $pdo->beginTransaction();
     try {
-        $result = sync_ktv_roster($pdo, $parsedRows, $batch, false);
+        $result = sync_ktv_roster(
+            $pdo,
+            $parsedRows,
+            $batch,
+            false,
+            $terminationRows,
+            $terminateMissing
+        );
         if (($result['error_count'] ?? 0) > 0) {
             $pdo->rollBack();
             respond([

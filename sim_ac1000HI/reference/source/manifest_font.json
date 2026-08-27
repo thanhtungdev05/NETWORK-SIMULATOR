@@ -1,0 +1,31 @@
+{
+  "_tieu_de": "Bang ke 3 tep tai bo sung (font Be Vietnam + PIE.htc)",
+  "_ngay": "2026-08-22",
+  "_ghi_chu": "Lan crawl dau bi 401 vi thieu Referer tro toi trang ben trong. Anh Huynn phat hien font hien sai nen kiem lai.",
+  "danh_sach": [
+    {
+      "duong_dan": "/BeVietnam-Regular.ttf",
+      "ma_http": 401,
+      "byte": 140,
+      "byte_mong_doi": 86308,
+      "khop": false,
+      "sha256": "c4b9116af10fd5d1515dd321c26303df64ba7a843bd75b7931d2d1b14b0c9094"
+    },
+    {
+      "duong_dan": "/BeVietnam-Bold.ttf",
+      "ma_http": 401,
+      "byte": 140,
+      "byte_mong_doi": 88456,
+      "khop": false,
+      "sha256": "c4b9116af10fd5d1515dd321c26303df64ba7a843bd75b7931d2d1b14b0c9094"
+    },
+    {
+      "duong_dan": "/PIE.htc",
+      "ma_http": 401,
+      "byte": 140,
+      "byte_mong_doi": 41137,
+      "khop": false,
+      "sha256": "c4b9116af10fd5d1515dd321c26303df64ba7a843bd75b7931d2d1b14b0c9094"
+    }
+  ]
+}

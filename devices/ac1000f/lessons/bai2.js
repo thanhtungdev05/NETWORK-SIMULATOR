@@ -8,8 +8,8 @@
 
   window.DEVICE_AC1000F_LESSONS.push({
     id: 'LAB_AC1000F_02',
-    title: 'Bài 2 - Cấu hình mạng Wi-Fi',
-    subtitle: 'Thiết lập Wi-Fi 2.4G + 5G đúng chuẩn FPT Telecom',
+    title: 'Bài 2 - Cấu hình WiFi',
+    subtitle: 'Cấu hình wifi',
     instructions: [
       '<b>Yêu cầu:</b>',
       'Cấu hình đúng cho cả 2 băng tần <b>2.4G</b> và <b>5G</b> theo thông số:',
@@ -21,6 +21,25 @@
       '→ Dữ liệu được lưu tự động khi bấm Save, chuyển trang vẫn còn.'
     ],
     practiceUrl: '/sim_ac1000f/cgi-bin/index.asp?page=home_wireless.asp',
+    // Xóa localStorage wifi cũ khi bắt đầu phiên mới (trên trang login, không xóa khi đang ở trang wireless)
+    onSimLoad: function(iframeWindow) {
+      try {
+        var loc = (iframeWindow.location.href || '').toLowerCase();
+        if (loc.indexOf('home_wireless') === -1) {
+          localStorage.removeItem('ftc_sim_wifi24');
+          localStorage.removeItem('ftc_sim_wifi5g');
+        }
+      } catch(e) {}
+    },
+
+    // CSS selectors cho các ô cần xóa trắng khi bắt đầu phiên
+    clearFields: [
+      'input[name="ESSID"]',
+      'input[name="PreSharedKey1"]',
+      'input[name="PreSharedKey2"]',
+      'input[name="PreSharedKey3"]'
+    ],
+
 
     grading: {
       description: 'Kiểm tra thông số cấu hình Wi-Fi 2.4G và 5G',

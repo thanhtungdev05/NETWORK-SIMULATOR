@@ -8,7 +8,7 @@ window.DEVICE_AC1000F_LESSONS = window.DEVICE_AC1000F_LESSONS || [];
 window.DEVICE_AC1000F_LESSONS.push({
   id: 'LAB_AC1000F_01',
   title: 'Bài 1 - Cấu hình PPPoE',
-  subtitle: 'Thiết lập kết nối WAN/Internet với tài khoản PPPoE',
+  subtitle: 'Cấu hình PPPoE',
   instructions: [
     '<b>Yêu cầu:</b>',
     'Thực hiện cấu hình kết nối WAN/Internet trên thiết bị và thiết lập kết nối PPPoE theo các thông số được cung cấp dưới đây:',

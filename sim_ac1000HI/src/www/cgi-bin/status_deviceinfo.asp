@@ -1,0 +1,658 @@
+﻿
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="utf-8" dir="ltr" lang="utf-8">
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=11;IE=10;IE=9; IE=8; IE=7; IE=EDGE">
+<META NAME="GENERATOR" Content="Microsoft Developer Studio">
+<meta http-equiv=Content-Script-Type content=text/javascript>
+<meta http-equiv=Content-Style-Type content=text/css>
+<meta http-equiv=Content-Type content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="/style.css">
+<style  type="text/css">
+*{
+   color:  #404040;
+}
+</style>
+
+<script language="JavaScript">
+function doSave()
+{
+    document.DvInfo_Form.submit();
+}
+
+function onSubmmit()
+{
+	if(document.DvInfo_Form.workingmode.value != '2')
+	{
+		if( confirm("Are you sure to change working mode and reboot?"))
+		{
+			document.DvInfo_Form.SaveModeflag.value = 1;
+			document.DvInfo_Form.submit();
+		}
+	}
+	else
+		alert("The working mode is not changed !");
+}
+
+function onClickreconnetPPPoE()
+{
+	if( confirm("Are you sure you want to reconnect PPPoE?"))
+	{
+		document.DvInfo_Form.ReconnectPPPoEflag.value = 1;
+		document.DvInfo_Form.submit();
+	}
+}
+
+function Reload()
+{
+	document.location.href="/cgi-bin/status_deviceinfo.asp";
+}
+function renewrelease(ip){
+	document.DvInfo_Form.Dipflag.value = ip;
+	document.DvInfo_Form.Saveflag.value = 1;
+	document.DvInfo_Form.DipConnFlag.value = 0;
+	document.DvInfo_Form.submit();  
+}
+function reconnect(flag){
+	document.DvInfo_Form.DipConnFlag.value = flag;
+	document.DvInfo_Form.Saveflag.value = 1;
+	document.DvInfo_Form.submit();  
+}
+function dongle_reconnect(flag){
+	document.DvInfo_Form.DongleConnFlag.value = flag;
+	document.DvInfo_Form.Saveflag.value = 1;
+	document.DvInfo_Form.submit();  
+}
+
+
+	function transTemperature(temperature)
+	{
+		var temp = Number(temperature);
+		if (temp >= Math.pow(2, 15))
+		{
+			return -Math.round((Math.pow(2, 16)-temp)/256);
+		}else{
+			return Math.round(temp/256);
+		}
+	}
+
+
+
+
+
+
+</script>
+</HEAD>
+<BODY style="background:#4acbd6;">
+<FORM METHOD="POST" ACTION="/cgi-bin/status_deviceinfo.asp" name="DvInfo_Form">
+<div id="pagestyle">
+
+<div id="contenttype">
+<div id="block1" class="main_item">
+<table width="640" border="0" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" style="table-layout: fixed;margin:5px 0;">
+<INPUT TYPE="HIDDEN" NAME="Saveflag" VALUE="0">
+<INPUT TYPE="HIDDEN" NAME="Dipflag" VALUE="0">
+<tr style="height:25px;width:100%;background:#e6e6e6;">
+<td width="20px">&nbsp; </td>
+<td width="250px" align="left" class="title-main">Device Status</td>
+<td class="tabdata" valign="middle"> </td></tr>
+</table>
+
+<table width="640" border="0" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" style="table-layout: fixed">
+<tr height="30px">
+<td width="20px">&nbsp;</td>
+<td width="250px" align=left class="tabdata">  Working Mode</td>
+<td align=left class="tabdata">
+
+HGU  
+</td>
+</tr>
+<tr height="30px">
+<td width="20px">&nbsp;</td>
+<td width="250px" align=left class="tabdata">Serial Number</td>
+<td align=left class="tabdata">FPTH22800025</td>
+</tr>
+<tr height="30px">
+<td width="20px">&nbsp;</td>
+<td width="250px" align=left class="tabdata">  Model</td>
+<td align=left class="tabdata">Internet Hub AC1000HI</td>
+</tr>
+
+
+
+<tr height="30px">
+<td width="20px">&nbsp;</td>
+<td width="250px" align=left class="tabdata">Software Version</td>
+<td align=left class="tabdata">FT5.01.052e</td>
+</tr>
+
+
+<tr height="30px">
+<td width="20px">&nbsp;</td>
+<td width="250px" align=left class="tabdata">Hardware Version</td>
+<td align=left class="tabdata">
+V1.0
+</td>
+</tr>
+
+<tr height="30px">
+<td width="20px">&nbsp;</td>
+<td width="250px" align=left class="tabdata"><font color="#000000">Device Up Time</font></td>
+<td align=left class="tabdata">
+0 Days 
+11 Hours 
+25 Minutes
+</td>
+</tr>
+
+
+<tr height="30px">
+<td width="20px">&nbsp;</td>
+<td width="250px" align=left class="tabdata"><font color="#000000">RAM Size</font></td>
+<td align=left class="tabdata">238</td>
+</tr>
+<tr height="30px">
+<td width="20px">&nbsp;</td>
+<td width="250px" align=left class="tabdata"><font color="#000000">Mem Usage</font></td>
+<td align=left class="tabdata">22%</td>
+</tr>
+
+<tr height="30px">
+<td width="20px">&nbsp;</td>
+<td width="250px" align=left class="tabdata"><font color="#000000">CPU Usage</font></td>
+<td align=left class="tabdata">1.60%(all);
+0.85%(0);
+3.86%(1);
+1.22%(2);
+0.48%(3)
+</td>
+</tr>
+<tr height="30px">
+<td width="20px">&nbsp;</td>
+<td width="250px" align=left class="tabdata"><font color="#000000">NAT Session</font></td>
+<td align=left class="tabdata">43</td>
+</tr>
+
+
+
+<tr height="30px">
+<td width="20px">&nbsp;</td>
+<td width="250px" align=left class="tabdata">MAC Address</td>
+<td align=left class="tabdata" style="text-transform:uppercase">
+
+10:39:4e:bf:ea:40   
+
+</td>
+</tr>
+</table>
+</div>
+
+<div id="block1" class="main_item">
+
+
+
+<table width="640" border="0" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" style="table-layout: fixed;margin:5px 0;">
+<INPUT TYPE="HIDDEN" NAME="style" VALUE="0">
+<tr style="height:25px;width:100%;background:#e6e6e6;">
+<td width="250px" align="left" class="title-main" style="padding-left:20px;">GPON Status</td>
+</tr>
+</table>
+
+
+<table width="640" border="0" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" style="table-layout: fixed">
+
+
+<tr height="30px">
+<td width="20px">&nbsp;</td>
+<td width="250px" align=left class="tabdata"> GPON Link Status </td>
+<td align=left class="tabdata">down
+</td>
+</tr>
+
+<tr height="30px">
+<td width="20px">&nbsp;</td>
+<td width="250px" align=left class="tabdata">ONU State </td>
+<td align=left class="tabdata">O1</td>
+</tr>
+
+
+<tr style="display:none" height="30px">
+<td width="20px">&nbsp;</td>
+<td width="250px" align=left class="tabdata">GPON Firmware Ver</td>
+<td align=left class="tabdata">
+N/A
+</td>
+</tr>
+
+
+
+
+
+<tr height="30px">
+<td width="20px">&nbsp;</td>
+<td width="250px" align=left class="tabdata"> Rx Power</td>
+<td align=left class="tabdata">
+                        <script language="JavaScript">
+                         
+                                
+                                        document.write("N/A"); 
+                                
+                        
+                </script>
+</td>
+</tr>
+
+<tr height="30px">
+<td width="20px">&nbsp;</td>
+<td width="250px" align=left class="tabdata"> Tx Power</td>
+<td align=left class="tabdata">
+                        <script language="JavaScript">
+                        
+                                 
+                                        document.write("N/A");
+                                
+                        
+                </script>
+</td>
+</tr>
+
+<tr height="30px">
+<td width="20px">&nbsp;</td>
+<td width="250px" align=left class="tabdata"> Tx Bias Current</td>
+<td align=left class="tabdata">
+                        <script language="JavaScript">
+                        
+                                 
+                                        document.write("N/A"); 
+                                
+                        
+                </script>
+</td>
+</tr>
+
+<tr height="30px">
+<td width="20px">&nbsp;</td>
+<td width="250px" align=left class="tabdata">Supply Voltage</td>
+<td align=left class="tabdata">
+                        <script language="JavaScript">
+                        
+                                
+                                        document.write("N/A");
+                                 
+                        
+                </script>
+</td>
+</tr>
+
+<tr height="30px">
+<td width="20px">&nbsp;</td>
+<td width="250px" align=left class="tabdata">Temperature</td>
+<td align=left class="tabdata">
+                                <script language="JavaScript">
+                                
+                                        
+                                                document.write("N/A");
+                                         
+                        
+                        </script>
+</td>
+</tr>
+
+
+</table>
+</div>
+
+<div id="block1" class="main_item">
+
+<table width="640" border="0" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" style="table-layout: fixed;margin:5px 0;">
+<tr style="height:25px;width:100%;background:#e6e6e6;">
+<td width="250px" align=left  class="title-main" style="padding-left:20px;">LAN IPv4 Status</td>
+</tr>
+</table>
+
+<table width="640" border="0" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" style="table-layout: fixed">
+<tr height="30px">
+<td width="20px">&nbsp; </td>
+<td width="250px" align=left  class="tabdata">  IP Address</td>
+<td align=left class="tabdata">192.168.1.1 </td>
+</tr>
+<tr height="30px">
+<td width="20px">&nbsp; </td>
+<td width="250px" align=left  class="tabdata">Subnet Mask</td>
+<td align=left class="tabdata">255.255.255.0</td>
+</tr>
+
+
+<tr height="30px">
+<td width="20px">&nbsp; </td>
+<td width="250px" align=left class="tabdata">  DHCP</td>
+<td align=left class="tabdata">Enable</td>
+</tr>
+
+</table>
+
+
+        <table width="640" border="0" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" style="table-layout: fixed">
+                
+                        <tr height="30px">
+                                <td width="20px">&nbsp; </td>
+                                <td width="250px" align=left class="tabdata">  DNS Server</td>
+                                <td align=left class="tabdata">192.168.1.1</td>
+                        </tr>
+                
+        </table>
+
+
+<table width="640" border="0" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" style="table-layout: fixed;margin:5px 0;">
+
+
+
+<tr style="height:25px;width:100%;background:#e6e6e6;">
+<td align=left  class="title-main" style="padding-left:20px;">LAN IPv6 Status</td>
+</tr>
+</table>
+
+<table width="640" border="0" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" style="table-layout: fixed">
+<tr height="30px">
+<td width="20px">&nbsp; </td>
+<td width="250px" align=left  class="tabdata">Link local IP</td>
+<td class="tabdata" align=left>fe80::1/64 </td>
+</tr>
+
+<tr height="30px">
+<td width="20px">&nbsp; </td>
+<td width="250px" align=left class="tabdata">  Manual Global IP</td>
+<td align=left class="tabdata">
+N/A</td>
+</tr>
+
+<tr height="30px">
+<td width="20px">&nbsp; </td>
+<td width="250px" align=left class="tabdata">Dynamic Global IP</td>
+<td align=left class="tabdata">
+N/A</td>
+</tr>
+
+
+
+<tr height="30px">
+<td width="20px">&nbsp; </td>
+<td width="250px" align=left class="tabdata">  DHCP Server</td>
+<td align=left class="tabdata">Disable</td>
+</tr>
+
+
+
+
+
+</table>
+
+</div>
+
+
+<div id="block1" class="main_item">
+
+<table width="640" border="0" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" style="table-layout: fixed;margin:5px 0;">
+<tr style="height:25px;width:100%;background:#e6e6e6;">
+<td width="250px" align=left class="title-main" style="padding-left:20px;">
+WAN Status</td>
+</tr>
+</table>
+
+<table width="640" border="0" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" style="table-layout: fixed">
+<INPUT TYPE="HIDDEN" NAME="IPv6PrivacyAddrsSupportedFlag" value="N/A" >
+
+
+
+
+
+
+<tr height="30px">
+<td width="20px">&nbsp;</td>
+<td width="250px" align=left class="tabdata">
+WAN Type</td>
+<td align=left class="tabdata"><INPUT TYPE="HIDDEN" NAME="DipConnFlag" VALUE="0">
+        PPPoE
+        &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 
+                
+</td>
+</tr>
+
+
+
+
+<tr height="30px">
+<td width="20px">&nbsp;</td>
+<td width="250px" align=left class="tabdata">  User Name</td>
+<td align=left class="tabdata">  fpt</td>
+  </tr>
+
+<tr height="30px">
+<INPUT TYPE="HIDDEN" NAME="ReconnectPPPoEflag" VALUE="0">
+<INPUT TYPE="HIDDEN" NAME="wan_PPPUsername" value="fpt" >
+<INPUT TYPE="HIDDEN" NAME="wan_PPPPassword" value="fpt" >
+<INPUT TYPE="HIDDEN" NAME="wan_connType" value="0" >
+<td width="20px">&nbsp;</td>
+<td width="250px" align=left class="tabdata">  Reconnect PPPoE Server</td>
+<td align=left class="tabdata">
+     <input type="button" name="pppoe_Reconnect" class="button2" onclick="onClickreconnetPPPoE();" value="Reconnect">
+ </td>
+</tr>
+
+
+</table>
+
+<table width="640" border="0" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" style="table-layout: fixed;margin:5px 0;">
+
+  
+
+<tr style="height:25px;width:100%;background:#e6e6e6;">
+<td width="250px" align=left class="title-main" style="padding-left:20px;"> WAN IPv4 Status</td>
+</tr>
+
+</table>
+
+<table width="640" border="0" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" style="table-layout: fixed" >
+<tr height="30px">
+<td width="20px">&nbsp;</td>
+<td width="250px" align=left class="tabdata">  Status</td>
+<td align=left class="tabdata">
+Not Connected
+</td>
+</tr>
+
+<tr height="30px">
+<td width="20px">&nbsp;</td>
+<td width="250px" align=left class="tabdata">IP Address</td>
+<td align=left class="tabdata">
+        N/A</td>     
+</td>
+</tr>
+
+<tr height="30px">
+<td width="20px">&nbsp;</td>
+<td width="250px" align=left class="tabdata">Subnet Mask</td>
+<td align=left class="tabdata">N/A</td>
+</tr>
+
+<tr height="30px">
+<td width="20px">&nbsp;</td>
+        <td width="250px" align=left class="tabdata">
+
+        Default Gateway</td>
+        <td align=left class="tabdata">N/A
+
+</td>
+</tr>
+
+
+<tr height="30px">
+<td width="20px">&nbsp;</td>
+<td width="250px" align=left class="tabdata">  
+ 
+Primary DNS
+
+</td>
+<td align=left class="tabdata">
+<script language="JavaScript" type="text/JavaScript">
+var artIpver = ["IPv4/IPv6",
+                                        "IPv4/IPv6",
+                                        "IPv4/IPv6",
+                                        "IPv4/IPv6",
+                                        "IPv4/IPv6",
+                                        "IPv4/IPv6",
+                                        "IPv4/IPv6",
+                                        "IPv4/IPv6",
+                                        "IPv4/IPv6",
+                                        "IPv4/IPv6",
+                                        "IPv4/IPv6"];
+
+//      var pvc_index = parseInt(document.DvInfo_Form.DvInfo_PVC.value);
+        var pvc_index = 0;
+
+        var strtype = "0";
+        var strPriDNS = "168.95.1.1";
+        var strDevDNS = "N/A";
+
+        if (("IPv6" == artIpver[pvc_index]) || ("N/A" == artIpver[pvc_index]))
+                document.writeln("N/A");
+        else{
+                /*
+                if (strtype == "1") {
+                        document.writeln(strPriDNS);
+                }
+                else{
+                */
+                        document.writeln(strDevDNS);
+                //}
+        }
+</script>
+</td>
+</tr>
+
+
+
+
+ 
+</table>
+
+<table width="640" border="0" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" style="table-layout: fixed;margin:5px 0;">
+
+
+
+
+<tr style="height:25px;width:100%;background:#e6e6e6;">
+<td align=left class="title-main" style="width:250px;padding-left:20px;"> WAN IPv6 Status</td>
+</tr>
+
+</table>
+
+<table width="640" border="0" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" style="table-layout: fixed" >
+<tr height="30px">
+<td width="20px">&nbsp;</td>
+<td width="250px" align=left class="tabdata">Status </td>
+<td align=left class="tabdata">
+Not Connected
+</td>
+</tr>
+
+<tr height="30px">
+<td width="20px">&nbsp;</td>
+<td width="250px" align=left class="tabdata">IP Address</td>
+<td align=left class="tabdata">
+<script language="JavaScript" type="text/JavaScript">
+        var str_IP6 = "N/A";
+        if("N/A" != str_IP6){
+                var str_ip6value = str_IP6;
+                var vlen = str_IP6.indexOf('/');
+                if(vlen != -1){
+                        str_ip6value = str_IP6.substring(0, vlen);
+                }
+                document.writeln(str_ip6value);
+        }
+        else{
+                document.writeln(str_IP6);
+        }
+        </script>  
+</td>
+</tr>
+
+
+
+<tr height="30px">
+<td width="20px">&nbsp;</td>
+<td width="250px" align=left class="tabdata">Prefix Length</td>
+<td align=left class="tabdata">
+<script language="JavaScript" type="text/JavaScript">
+        if("N/A" != str_IP6){
+                var str_prelen = "64";
+                var plen = str_IP6.indexOf('/');
+                if(plen != -1){
+                        str_prelen = str_IP6.substring(1+plen, 3+plen);
+                }
+                document.writeln(str_prelen);
+        }
+        else{
+                document.writeln(str_IP6);
+        }
+</script>
+</td>
+</tr>
+
+		<tr height="30px">
+			<td width="20px">&nbsp;</td>
+			<td width="250px" align=left class="tabdata">Default Gateway</td>
+			<td align=left class="tabdata">
+				N/A
+			</td>
+        </tr>
+
+		<tr height="30px">
+			<td width="20px">&nbsp;</td>
+			<td width="250px" align=left class="tabdata">Primary DNS Server</td>
+			<td align=left class="tabdata">
+				N/A
+			</td>
+		</tr>
+
+		
+
+		<tr height="30px">
+		<td width="20px">&nbsp;</td>
+		<td width="250px" align=left class="tabdata">Prefix Delegation</td>
+		<td align=left class="tabdata">N/A        </td>
+		</tr>
+
+        
+
+
+        
+
+</table>
+</div>
+
+
+<div id="button0" class="main_item">
+<table width="640" border="0" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" style="margin:5px 0;">
+        <tr height="25px">
+               <td align=left class="title-main" style="padding-left:20px;white-space:nowrap;">Click "Refresh" to refresh device information</td>
+		</tr>
+</table>
+
+<table width="640" border="0" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" >
+<tr height="40px">
+<td width="250px" align=left class="tabdata" style="padding-left:20px;">
+<input type="button" class="button1" onclick="Reload()" value="Refresh">
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+
+
+	
+
+</form>    
+</BODY>
+</HTML>

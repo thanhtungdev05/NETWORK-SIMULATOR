@@ -1,56 +1,84 @@
 ﻿/**
  * devices/ax3000s/lessons/bai5.js
- * Bài 5: Cấu hình DNS trên AX3000S
+ * Bài 5: Cấu hình địa chỉ IP LAN trên AX3000S
  */
 
 window.DEVICE_AX3000S_LESSONS = window.DEVICE_AX3000S_LESSONS || [];
 
 const lessonObj5 = {
   id: 'LAB_AX3000S_05',
-  title: 'Bài 5 - Cấu hình DNS',
-  subtitle: 'Cấu hình máy chủ phân giải tên miền (DNS)',
+  title: 'Bài 5 - Cấu hình DHCP',
+  subtitle: 'Cấu hình DHCP',
   instructions: [
     '<b>Yêu cầu:</b>',
-    'Thực hiện cấu hình DNS trên thiết bị và cấu hình các máy chủ DNS theo yêu cầu sau:',
-    '- DNS Server 1: <span class="val">210.245.31.220</span> (DNS của FPT)',
-    '- DNS Server 2: <span class="val">8.8.8.8</span> (DNS của Google)',
-    '<br>',
-    '<i>Gợi ý IP DNS FPT: 210.245.31.220, 210.245.31.221 (Nam), 210.31.1.253, 21.31.1.254 (Bắc)</i>',
-    '<i>Gợi ý IP DNS Google: 8.8.8.8, 8.8.4.4 (GG)</i>',
-    '<i>Gợi ý IP DNS Cloudflare: 1.1.1.1 (CF)</i>'
+    'Thực hiện cấu hình IPv4 LAN theo các thông số dưới đây:',
+    '- IP Address (Gateway): <span class="val">192.168.1.1</span>',
+    '- Subnet Mask: <span class="val">255.255.255.0</span>',
+    '- DHCP Server: <span class="val">Enable</span>',
+    '- Start IP: <span class="val">192.168.1.2</span>',
+    '- End IP: <span class="val">192.168.1.254</span>',
+    '- Lease Time: <span class="val">2 minute</span>'
   ],
   practiceUrl: '/sim_ax3000s/app.html#lancfgv4',
   clearFields: [
-    '#dnsPrimary',
-    '#dnsSecondary'
+    '#ethIpAddress',
+    '#ethSubnetMask',
+    '#dhcpEthStart',
+    '#dhcpEthEnd'
   ],
   grading: {
-    description: 'Kiểm tra cấu hình máy chủ DNS',
+    description: 'Kiểm tra cấu hình IP LAN và DHCP trên AX3000S',
     rules: [
       {
-        id: 'dns_mode',
-        name: 'IPv4 DNS Mode',
-        selector: '#dnsmode2',
-        expected: ['1', 'on', 'true', 'ON'],
-        type: 'any_of',
-        trim: true,
-        required: true,
-        errorMessage: 'Bạn cần chọn chế độ DNS là Static'
-      },
-      {
-        id: 'dns_primary',
-        name: 'Primary DNS',
-        selector: '#dnsPrimary',
-        expected: '210.245.31.220',
+        id: 'lan_ip',
+        name: 'IP Address (Gateway)',
+        selector: '#ethIpAddress',
+        expected: '192.168.1.1',
         type: 'text_exact',
         trim: true,
         required: true
       },
       {
-        id: 'dns_secondary',
-        name: 'Secondary DNS',
-        selector: '#dnsSecondary',
-        expected: '8.8.8.8',
+        id: 'lan_subnet',
+        name: 'Subnet Mask',
+        selector: '#ethSubnetMask',
+        expected: '255.255.255.0',
+        type: 'text_exact',
+        trim: true,
+        required: true
+      },
+      {
+        id: 'lan_dhcp_enable',
+        name: 'DHCP Server',
+        selector: '#dhcpSrvType2',
+        expected: ['1', 'on', 'true', 'ON'],
+        type: 'any_of',
+        trim: true,
+        required: true
+      },
+      {
+        id: 'lan_dhcp_start',
+        name: 'Start IP',
+        selector: '#dhcpEthStart',
+        expected: '192.168.1.2',
+        type: 'text_exact',
+        trim: true,
+        required: true
+      },
+      {
+        id: 'lan_dhcp_end',
+        name: 'End IP',
+        selector: '#dhcpEthEnd',
+        expected: '192.168.1.254',
+        type: 'text_exact',
+        trim: true,
+        required: true
+      },
+      {
+        id: 'lan_dhcp_lease',
+        name: 'Lease Time',
+        selector: '#dhcpLeasedTime',
+        expected: '120',
         type: 'text_exact',
         trim: true,
         required: true

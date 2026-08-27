@@ -1,0 +1,42 @@
+{
+  "_tieu_de": "Đối chiếu khổ ĐIỆN THOẠI (390px) — trang login: thiết bị thật vs bản giả lập",
+  "_ngay_do": "2026-08-22",
+  "_cach_do": [
+    "Ở MỖI bên, chèn một <iframe> rộng đúng 390px (khổ iPhone) trỏ tới /cgi-bin/login.asp.",
+    "SPA/trang bên trong iframe tự đọc innerWidth của chính nó nên vẽ đúng như trên điện thoại thật.",
+    "Đo qua contentDocument: kích thước khung nhìn, chiều rộng cuộn, toạ độ + kích thước từng phần tử, chiều rộng chữ.",
+    "Kỹ thuật này đã dùng nhiều lần trong dự án; ưu điểm so với thu nhỏ cả cửa sổ là vẫn đọc được DOM/CSSOM đầy đủ."
+  ],
+
+  "ket_qua": {
+    "khung_nhin": {"that": [390, 800], "gia_lap": [390, 800], "khop": true},
+    "chieu_rong_cuon": {"that": 540, "gia_lap": 540, "khop": true},
+    "co_cuon_ngang": {"that": true, "gia_lap": true, "khop": true},
+    "khung_dang_nhap_div_visite": {"that": [0, 170, 540, 380], "gia_lap": [0, 170, 540, 380], "khop": true},
+    "o_username": {"that": [188, 293, 160, 30], "gia_lap": [188, 293, 160, 30], "khop": true},
+    "o_password": {"that": [188, 359, 160, 30], "gia_lap": [188, 359, 160, 30], "khop": true},
+    "nut_Login": {"that": [236, 440, 67, 33], "gia_lap": [236, 440, 67, 33], "khop": true},
+    "chieu_rong_chu_15px": {"that": 203.31, "gia_lap": 203.31, "khop": true},
+    "_dinh_dang_toa_do": "[left, top, width, height] tính bằng px"
+  },
+
+  "ket_luan": "TRÙNG KHÍT TUYỆT ĐỐI ở mọi phép đo — không lệch một pixel nào.",
+
+  "ghi_chu_quan_trong_ve_font_o_trang_login": {
+    "quan_sat": "Chiều rộng chữ ở trang login là 203.31 px = đúng bằng serif / Times New Roman, TRONG KHI trang bên trong (Device Info) là 220.47 px = Be Vietnam thật.",
+    "vi_sao": "CSS nội tuyến của login.asp viết `font: bold 15px Be Vietnam` — họ font 'Be Vietnam' KHÔNG khớp với bất kỳ @font-face nào (style.css chỉ khai báo 'BeVietnamRegular' và 'BeVietnamBold'). Nên trình duyệt luôn rơi về font mặc định.",
+    "nghia_la": "Đây là LỖI CỦA CHÍNH FIRMWARE, không phải lỗi bản giả lập. Trang login của thiết bị thật cũng hiện bằng Times New Roman. Hai bên giống nhau => ĐÚNG.",
+    "canh_bao": "ĐỪNG 'sửa' CSS login cho dùng đúng tên họ font. Làm vậy bản giả lập sẽ đẹp hơn thật."
+  },
+
+  "ghi_chu_ve_khong_responsive": {
+    "quan_sat": "Ở khung nhìn 390px, chiều rộng cuộn là 540px ở CẢ HAI bên => phải cuộn ngang mới xem hết.",
+    "nghia_la": "Thiết bị thật KHÔNG responsive (khung đăng nhập rộng cứng 540px, trang bên trong rộng cứng 956px). Trên điện thoại người dùng buộc phải thu nhỏ hoặc cuộn ngang.",
+    "canh_bao": "Bản giả lập PHẢI giữ nguyên đặc điểm bất tiện này. Nếu sau này có ai báo 'xem trên điện thoại xấu quá' thì câu trả lời là: thiết bị thật cũng đúng như vậy."
+  },
+
+  "con_thieu": {
+    "trang_index_o_kho_dien_thoai": "CHƯA đối chiếu được, vì phiên đăng nhập trên thiết bị thật hết hạn giữa chừng và Claude không được phép tự nhập mật khẩu. Cần anh Huynn đăng nhập lại rồi đo tiếp.",
+    "muc_do_rui_ro": "THẤP — hai bên dùng CHUNG file HTML (đã đối chiếu sha256 trùng khít) và CHUNG style.css, lại đã khớp tuyệt đối ở khổ máy tính, nên nhiều khả năng cũng khớp. Nhưng chưa đo thì chưa được kết luận."
+  }
+}

@@ -1,0 +1,135 @@
+/**
+ * devices/ac1000hi/lessons/bai5.js
+ * Bài 5: Cấu hình DHCP trên ONT AC1000HI
+ */
+
+window.DEVICE_AC1000HI_LESSONS = window.DEVICE_AC1000HI_LESSONS || [];
+
+var index = window.DEVICE_AC1000HI_LESSONS.findIndex(function(l) { return l.id === 'LAB_AC1000HI_05'; });
+var lessonObj = {
+  id: 'LAB_AC1000HI_05',
+  title: 'Bài 5 - Cấu hình DHCP',
+  subtitle: 'Cấu hình DHCP',
+  instructions: [
+    '<b>Yêu cầu:</b>',
+    'Thực hiện thay đổi cấu hình địa chỉ IP LAN trên thiết bị theo các thông số được cung cấp dưới đây.',
+    '- IP Address: <span class="val">192.168.1.1</span>',
+    '- IP Subnet Mask: <span class="val">255.255.255.0</span>',
+    '- Start IP: <span class="val">192.168.1.2</span>',
+    '- IP Pool Count: <span class="val">253</span>',
+    '- Lease Time: <span class="val">86400</span>',
+  ],
+  practiceUrl: '/sim_ac1000HI/cgi-bin/index.asp?page=home_lan.asp',
+    // Clear old localStorage when starting a new session
+    onSimLoad: function(iframeWindow) {
+      try {
+        var loc = (iframeWindow.location.href || '').toLowerCase();
+        if (loc.indexOf('home_lan') === -1) {
+          localStorage.removeItem('ftc_sim_dhcp');
+        }
+      } catch(e) {}
+    },
+
+
+  clearFields: [
+    'input[name="StartIp"]',
+    'input[name="PoolSize"]',
+    'input[name="dhcp_LeaseTime"]',
+  ],
+
+  grading: {
+    description: 'Kiểm tra cấu hình IP LAN & DHCP',
+    customGrading: function(allDocs) {
+      // 1. Đọc từ localStorage để xem đã nhấn Save chưa
+      var data = null;
+      var isSaved = false;
+      try {
+        var raw = localStorage.getItem('ftc_sim_dhcp');
+        if (raw) {
+          data = JSON.parse(raw);
+          isSaved = true;
+        }
+      } catch (e) { }
+
+      // 2. Dự phòng lấy dữ liệu từ form hiện tại nếu có
+      if (!isSaved) {
+        for (var i = 0; i < allDocs.length; i++) {
+          try {
+            var url = allDocs[i].URL.toLowerCase();
+            if (url.indexOf('home_lan.asp') !== -1) {
+              var form = allDocs[i].uiViewLanForm || allDocs[i].forms[0];
+              if (form) {
+                data = {};
+                for (var j = 0; j < form.elements.length; j++) {
+                  var el = form.elements[j];
+                  if (!el.name) continue;
+                  if (el.type === 'radio' || el.type === 'checkbox') {
+                    if (el.checked) data[el.name] = el.value;
+                  } else {
+                    data[el.name] = el.value;
+                  }
+                }
+              }
+            }
+          } catch (e) { }
+        }
+      }
+
+      function g(data, name) {
+        return data && data[name] ? String(data[name]).trim() : '';
+      }
+      
+      var isDhcpEnable = g(data, 'dhcpTypeRadio') === '1';
+
+      var rules = [
+        { id: '1', name: 'IP Address', expected: '192.168.1.1', actual: g(data, 'uiViewIPAddr') },
+        { id: '2', name: 'IP Subnet Mask', expected: '255.255.255.0', actual: g(data, 'uiViewNetMask') },
+        { id: '3', name: 'DHCP State', expected: 'Enable', actual: isDhcpEnable ? 'Enable' : 'Disable' },
+        { id: '4', name: 'Start IP', expected: '192.168.1.2', actual: g(data, 'StartIp') },
+        { id: '5', name: 'IP Pool Count', expected: '253', actual: g(data, 'PoolSize') },
+        { id: '6', name: 'Lease Time', expected: '86400', actual: g(data, 'dhcp_LeaseTime') }
+      ];
+
+      var passedCount = 0;
+      var details = [];
+      rules.forEach(function(r) {
+        var actualVal = (r.actual || '').toString().trim();
+        var expectVal = (r.expected || '').toString().trim();
+        var isMatch = (actualVal === expectVal);
+        
+        // Bắt buộc phải nhấn Save mới qua
+        if (isMatch && isSaved) passedCount++;
+        else isMatch = false;
+
+        details.push({
+          id: r.id,
+          name: r.name,
+          expected: r.expected,
+          actual: r.actual || '(Trống)',
+          passed: isMatch
+        });
+      });
+
+      if (!isSaved) {
+        details.push({
+          id: 'hint', name: '⚠ Chưa lưu cấu hình', expected: 'Bấm Apply/Save để lưu cấu hình', actual: 'Chưa lưu', passed: false, _isHint: true
+        });
+      }
+
+      return {
+        passed: passedCount === rules.length,
+        score: Math.round((passedCount / rules.length) * 100),
+        passedCount: passedCount,
+        totalRules: rules.length,
+        details: details
+      };
+    }
+  }
+};
+
+if (index !== -1) {
+  window.DEVICE_AC1000HI_LESSONS[index] = lessonObj;
+} else {
+  window.DEVICE_AC1000HI_LESSONS.push(lessonObj);
+}
+

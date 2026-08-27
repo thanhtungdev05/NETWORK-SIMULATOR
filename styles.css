@@ -1,11 +1,11 @@
-/* ============================================================
-   styles.css — Network Simulator Portal
+﻿/* ============================================================
+   styles.css â€” Network Simulator Portal
    Dark admin dashboard theme
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-/* ── Reset & Base ─────────────────────────────────────────── */
+/* â”€â”€ Reset & Base â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
@@ -47,14 +47,14 @@ html, body {
   overflow: hidden;
 }
 
-/* ── Layout Shell ─────────────────────────────────────────── */
+/* â”€â”€ Layout Shell â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 #app {
   display: flex;
   height: 100%;
   overflow: hidden;
 }
 
-/* ── SIDEBAR ──────────────────────────────────────────────── */
+/* â”€â”€ SIDEBAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 #sidebar {
   width: var(--sidebar-width);
   min-width: var(--sidebar-width);
@@ -244,7 +244,7 @@ html, body {
   transition: var(--transition);
   border-left: 3px solid transparent;
   white-space: nowrap;
-  color: #c5cfe0;           /* trắng xám rõ ràng, không xánh */
+  color: #c5cfe0;           /* tráº¯ng xÃ¡m rÃµ rÃ ng, khÃ´ng xÃ¡nh */
   font-size: 13px;
   font-weight: 400;
   user-select: none;
@@ -258,7 +258,7 @@ html, body {
 }
 
 .nav-item.active {
-  background: #1a56db;      /* xanh dương đặm solid như ảnh 1 */
+  background: #1a56db;      /* xanh dÆ°Æ¡ng Ä‘áº·m solid nhÆ° áº£nh 1 */
   border-left-color: #1a56db;
   color: #fff;
   font-weight: 500;
@@ -271,16 +271,16 @@ html, body {
   font-weight: 600;
   min-width: 26px;
 }
-.nav-item.active .nav-num { color: #fff; }  /* số trắng khi active */
+.nav-item.active .nav-num { color: #fff; }  /* sá»‘ tráº¯ng khi active */
 
 .nav-item .nav-label {
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: inherit;           /* thừa hưởng màu từ .nav-item */
+  color: inherit;           /* thá»«a hÆ°á»Ÿng mÃ u tá»« .nav-item */
 }
 
-/* ── MAIN CONTENT ─────────────────────────────────────────── */
+/* â”€â”€ MAIN CONTENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 #main {
   flex: 1;
   display: flex;
@@ -289,7 +289,7 @@ html, body {
   overflow: hidden;
 }
 
-/* ── TOPBAR ───────────────────────────────────────────────── */
+/* â”€â”€ TOPBAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 #topbar {
   height: var(--topbar-h);
   background: #fff;
@@ -369,6 +369,9 @@ html, body {
 }
 
 /* Thao tác Dropdown */
+.action-dropdown {
+  position: relative;
+}
 .action-btn {
   display: flex;
   align-items: center;
@@ -387,6 +390,40 @@ html, body {
 }
 .action-btn:hover { background: #c62828; }
 
+.action-dropdown-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid #e2e6f0;
+  overflow: hidden;
+  min-width: 180px;
+  z-index: 999;
+  animation: fadeDown 0.15s ease;
+}
+.action-dropdown-menu.open { display: block; }
+
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.action-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  cursor: pointer;
+  color: #334;
+  font-size: 13px;
+  transition: background 0.15s;
+}
+.action-menu-item:hover { background: #f5f7ff; }
+.action-menu-item .item-icon { font-size: 16px; }
+
 /* ── CONTENT AREA ─────────────────────────────────────────── */
 #content {
   flex: 1;
@@ -399,7 +436,7 @@ html, body {
 #content::-webkit-scrollbar-track { background: transparent; }
 #content::-webkit-scrollbar-thumb { background: #c8cfe0; border-radius: 3px; }
 
-/* ── HERO SCREEN ──────────────────────────────────────────── */
+/* â”€â”€ HERO SCREEN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 #hero-screen {
   height: 100%;
   display: flex;
@@ -424,6 +461,7 @@ html, body {
 .hero-image-wrap img {
   width: 100%;
   height: 100%;
+  min-width: 1100px;
   object-fit: cover;
 }
 
@@ -441,7 +479,7 @@ html, body {
   max-width: 400px;
 }
 
-/* ── LESSON CARD SCREEN ───────────────────────────────────── */
+/* â”€â”€ LESSON CARD SCREEN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 #lesson-screen {
   display: none;
   padding: 32px 40px;
@@ -554,7 +592,7 @@ html, body {
   box-shadow: 0 4px 12px rgba(0,184,212,0.4);
 }
 
-/* ── MOBILE WARNING ───────────────────────────────────────── */
+/* â”€â”€ MOBILE WARNING â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 #mobile-warning {
   display: none;
   position: fixed;
@@ -592,14 +630,14 @@ html, body {
   max-width: 280px;
 }
 
-/* Bỏ chặn màn hình dọc theo yêu cầu */
+/* Bá» cháº·n mÃ n hÃ¬nh dá»c theo yÃªu cáº§u */
 /*
 @media (max-width: 768px) and (orientation: portrait) {
   #mobile-warning { display: flex; }
 }
 */
 
-/* ── LOADING OVERLAY ──────────────────────────────────────── */
+/* â”€â”€ LOADING OVERLAY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 #loading-overlay {
   display: none;
   position: fixed;
@@ -632,7 +670,7 @@ html, body {
   font-weight: 500;
 }
 
-/* ── NO LESSONS STATE ─────────────────────────────────────── */
+/* â”€â”€ NO LESSONS STATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .empty-state {
   text-align: center;
   padding: 40px 20px;
@@ -641,7 +679,7 @@ html, body {
 .empty-state .empty-icon { font-size: 36px; margin-bottom: 12px; }
 .empty-state p { font-size: 13px; line-height: 1.6; }
 
-/* ── PRACTICE IFRAME SCREEN ──────────────────────────────── */
+/* â”€â”€ PRACTICE IFRAME SCREEN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 #practice-screen {
   display: none;
   flex-direction: column;
@@ -782,7 +820,7 @@ html, body {
   text-overflow: ellipsis;
 }
 
-/* ── GRADING MODAL STYLES ───────────────────────────────── */
+/* â”€â”€ GRADING MODAL STYLES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .grading-modal-overlay {
   position: fixed;
   inset: 0;
@@ -1166,7 +1204,7 @@ html, body {
 .iframe-wrap {
   flex: 1;
   position: relative;
-  overflow: hidden;
+  overflow: auto;
   background: #f0f2f8;
 }
 
@@ -1204,18 +1242,19 @@ html, body {
   inset: 0;
   width: 100%;
   height: 100%;
+  min-width: 1100px;
   border: none;
   background: #fff;
   transition: opacity 0.3s ease;
 }
 
-/* ── Smooth screen transition keyframes ──────────────────── */
+/* â”€â”€ Smooth screen transition keyframes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @keyframes screenFadeIn {
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── RESPONSIVE ───────────────────────────────────────────── */
+/* â”€â”€ RESPONSIVE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 @media (max-width: 900px) {
   :root { --sidebar-width: 220px; }
@@ -1233,7 +1272,7 @@ html, body {
   #lesson-screen { padding: 16px; }
 }
 
-/* ── Practice Timer (Đồng hồ realtime trên toolbar) ───────── */
+/* â”€â”€ Practice Timer (Äá»“ng há»“ realtime trÃªn toolbar) â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .practice-timer {
   display: inline-flex;
   align-items: center;
@@ -1271,7 +1310,7 @@ html, body {
 }
 
 
-/* ── User Profile / IAM Auth ────────────────────────────────── */
+/* â”€â”€ User Profile / IAM Auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .user-profile-section {
   padding: 16px;
   border-top: 1px solid rgba(255,255,255,0.05);
@@ -1356,7 +1395,7 @@ html, body {
   border-color: rgba(255, 59, 48, 0.3);
 }
 
-/* Ẩn khi sidebar thu gọn */
+/* áº¨n khi sidebar thu gá»n */
 #sidebar.collapsed .user-profile-section {
   display: none;
 }

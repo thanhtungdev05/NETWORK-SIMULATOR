@@ -6,46 +6,54 @@ window.TOOLTIPS_AX3000HV2['LAB_AX3000HV2_03'] = [
         position: 'top'
     },
     {
-        selector: 'a[href*="wifi_guest.asp"], a:contains("Guest Wi-Fi")',
-        text: 'Bước 2: Chọn Guest Wi-Fi',
+        selector: 'a[href*="wifi5.asp"], a:contains("IOT SSID")',
+        text: 'Bước 2: Chọn IOT SSID',
+        hideOnUrlIncludes: 'wifi5.asp',
         position: 'top'
     },
     {
-        selector: 'input[name="enable_SSID"][value="1"]',
+        selector: 'input[name="Enable_Wifi5_2G"][value="1"]',
+        urlIncludes: 'wifi5.asp',
         text: 'Bước 3: Chọn Enable',
         position: 'top'
     },
     {
-        selector: 'input[name="ESSID"]',
-        text: 'Bước 4: Nhập tên Wifi: FPT Telecom_Guest',
+        selector: 'input[name="wifi5SSid_2G"], #wifi5SSid_2G',
+        urlIncludes: 'wifi5.asp',
+        text: 'Bước 4: Nhập tên Wifi: FPT Telecom_IoT',
         position: 'right',
         forcePosition: true
     },
     {
-        selector: 'input[name="PreSharedKey"]',
+        selector: 'input[name="wifi5Pwd_2G"], #wifi5Pwd_2G',
+        urlIncludes: 'wifi5.asp',
         text: 'Bước 5: Nhập mật khẩu Wifi: fpt12345',
         position: 'right',
         forcePosition: true
     },
     {
-        selector: 'input[name="enable_SSID_5g"][value="1"]',
+        selector: 'input[name="Enable_Wifi5_5G"][value="1"]',
+        urlIncludes: 'wifi5.asp',
         text: 'Bước 6: Chọn Enable',
         position: 'top'
     },
     {
-        selector: 'input[name="ESSID_5g"]',
-        text: 'Bước 7: Nhập tên Wifi 5G: FPT Telecom_Guest',
+        selector: 'input[name="wifi5SSid_5G"], #wifi5SSid_5G',
+        urlIncludes: 'wifi5.asp',
+        text: 'Bước 7: Nhập tên Wifi 5G: FPT Telecom_IoT',
         position: 'right',
         forcePosition: true
     },
     {
-        selector: 'input[name="PreSharedKey_5g"]',
+        selector: 'input[name="wifi5Pwd_5G"], #wifi5Pwd_5G',
+        urlIncludes: 'wifi5.asp',
         text: 'Bước 8: Nhập mật khẩu Wifi 5G: fpt12345',
         position: 'right',
         forcePosition: true
     },
     {
         selector: 'input[value="Save"], input[name="SaveBtn"]',
+        urlIncludes: 'wifi5.asp',
         text: 'Bước 9: Chọn Save',
         position: 'top'
     }

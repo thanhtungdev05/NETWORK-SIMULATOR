@@ -1,0 +1,464 @@
+{
+ "_tieu_de": "Bang ke crawl thiet bi that ONT AC1000HI",
+ "_thiet_bi": "http://192.168.1.1",
+ "_ghi_chu": "Chay bang devices/ac1000hi/src/crawl_that.py tren may anh Huynn (cung LAN voi thiet bi). Chi gui GET, khong ghi gi len thiet bi.",
+ "tong_ket": {
+  "so_muc": 64,
+  "tra_200": 59,
+  "tra_404": 2,
+  "tong_byte": 1149972
+ },
+ "danh_sach": [
+  {
+   "duong_dan": "/cgi-bin/login.asp",
+   "ma_http": 200,
+   "byte": 16286,
+   "sha256": "c4202d1a65880dd99068abe5f87b5cc32a9c519f4aa46864452d265437db4baf",
+   "luu_tai": "reference/html/login.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/index.asp",
+   "ma_http": 200,
+   "byte": 7093,
+   "sha256": "652fcc590a8b19c44d29100f04eb632722aebd07728e4a433e94fc273151a37c",
+   "luu_tai": "reference/html/index.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/status.asp",
+   "ma_http": 200,
+   "byte": 9315,
+   "sha256": "78de38b18af3b8e5bb5a463c4d3ffdfd7e77066de8f13f3e9aac2c4f3378639f",
+   "luu_tai": "reference/html/status.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/blank.asp",
+   "ma_http": 200,
+   "byte": 798,
+   "sha256": "1aafe0ce744759d27e6073beb7c78aaf346f9b25e6345aea7d933cb14e322373",
+   "luu_tai": "reference/html/blank.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/refresh.asp",
+   "ma_http": 200,
+   "byte": 399,
+   "sha256": "39c57ce44d50ef70ec4d18d5a1feb43485b59d2fb18bf1fef72ecfbd3f52d29a",
+   "luu_tai": "reference/html/refresh.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/navigation-status.asp",
+   "ma_http": 200,
+   "byte": 3763,
+   "sha256": "c4e658ae1712f5493a62d49852cb2ea6e70ec019a88704bfe9918aaa6c236dc3",
+   "luu_tai": "reference/html/navigation-status.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/navigation-basic.asp",
+   "ma_http": 200,
+   "byte": 3723,
+   "sha256": "1e1fffbd6511dd89ab8c115dd14a3f9012e589e016fe3c6d72764e37dec90978",
+   "luu_tai": "reference/html/navigation-basic.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/navigation-access.asp",
+   "ma_http": 200,
+   "byte": 3763,
+   "sha256": "5c4ae6c4e2047e1c08c0750bff09afa9ec65e2db618e975281e0f992601f871b",
+   "luu_tai": "reference/html/navigation-access.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/navigation-advanced.asp",
+   "ma_http": 200,
+   "byte": 3476,
+   "sha256": "a0d69c42fd00ce2d61f056b932b99239811a41a35566a7257c038f6b456bced1",
+   "luu_tai": "reference/html/navigation-advanced.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/navigation-maintenance.asp",
+   "ma_http": 200,
+   "byte": 3683,
+   "sha256": "f5e81c4861c8251fc00181d6cc2c2a8ddad741dead8bfacf72baac19dc2c1219",
+   "luu_tai": "reference/html/navigation-maintenance.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/navigation-help.asp",
+   "ma_http": 200,
+   "byte": 3296,
+   "sha256": "d09adf5bba2293ebc9c8a89445283e7eb62d493582ec0ff9dbf75779f84e4c33",
+   "luu_tai": "reference/html/navigation-help.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/status_deviceinfo.asp",
+   "ma_http": 200,
+   "byte": 18150,
+   "sha256": "de47f074272e54449eb48fa828463e4cd2846ffd5055b59e69e451205405be44",
+   "luu_tai": "reference/html/status_deviceinfo.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/status_log.cgi",
+   "ma_http": 200,
+   "byte": 17209,
+   "sha256": "ba7c681c4120527e90ffc5849d3a9641abed0f088e985c1278ab75a989d32337",
+   "luu_tai": "reference/html/status_log.cgi.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/status_statistics.asp",
+   "ma_http": 200,
+   "byte": 4666,
+   "sha256": "aacf7eb5e0d1b7a402f7fd7164c6693607c6394372dffac73a6965dba0aac358",
+   "luu_tai": "reference/html/status_statistics.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/EthernetStatus.asp",
+   "ma_http": 200,
+   "byte": 3817,
+   "sha256": "a81f3780da350ee44d74058ee6931e4de877015d109fb541a77a44af216c0401",
+   "luu_tai": "reference/html/EthernetStatus.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/devicetable.asp",
+   "ma_http": 200,
+   "byte": 6897,
+   "sha256": "5cf191a581963ae4453e967d3dd01a53a3ce1c730f999d56bb1d891278319409",
+   "luu_tai": "reference/html/devicetable.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/wirelessSignal.asp",
+   "ma_http": 200,
+   "byte": 17358,
+   "sha256": "9aceda4b31e4644cc41fb19159990f9e6b6f55bd3078f5e2ff5f9e303c649c0d",
+   "luu_tai": "reference/html/wirelessSignal.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/home_wizard.asp",
+   "ma_http": 200,
+   "byte": 4464,
+   "sha256": "d53550b8d37bfbc329f056a39b8d414ba83ce8b63143270a0eaf6e74586b8102",
+   "luu_tai": "reference/html/home_wizard.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/home_wan.asp",
+   "ma_http": 200,
+   "byte": 123409,
+   "sha256": "130bee1a575f3086740bc761a8c1009e04591eadc9278b4dbe4623cc571871d7",
+   "luu_tai": "reference/html/home_wan.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/home_lan.asp",
+   "ma_http": 200,
+   "byte": 65179,
+   "sha256": "0bb15187486ea61c9297b6e89d1b87c48466d36686d8811972d0219ea9030b91",
+   "luu_tai": "reference/html/home_lan.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/home_wireless.asp",
+   "ma_http": 200,
+   "byte": 87880,
+   "sha256": "f807c73c2af7044c4cce66439496d30370fa4f6259cffa0d4f58de5b87aee7ad",
+   "luu_tai": "reference/html/home_wireless.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/home_wireless_5g.asp",
+   "ma_http": 200,
+   "byte": 116023,
+   "sha256": "1765f3ed19e7452265f711183f86143f1db60aa645acd0f908c419ff5d70781d",
+   "luu_tai": "reference/html/home_wireless_5g.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/adv_nat_top.asp",
+   "ma_http": 200,
+   "byte": 50306,
+   "sha256": "ce9462c8cefc56783f68c1ec417dbf789722b4b278c42da6bca73999c355ec7a",
+   "luu_tai": "reference/html/adv_nat_top.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/adv_qos.asp",
+   "ma_http": 200,
+   "byte": 84637,
+   "sha256": "6804085797c7f037e80d5a30aa00c731533202759e7e8653aec59791a1172d81",
+   "luu_tai": "reference/html/adv_qos.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/access_upnp.asp",
+   "ma_http": 200,
+   "byte": 12045,
+   "sha256": "6f7daa222a1134ccaf411ec6cf7c412ce9dc8ff7aa4772f3c110d689126e35ab",
+   "luu_tai": "reference/html/access_upnp.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/access_ddns.asp",
+   "ma_http": 200,
+   "byte": 15321,
+   "sha256": "149bab65e2237271c52539808cb031dd9f5fe6a268e5082ee4b466a026a1cd89",
+   "luu_tai": "reference/html/access_ddns.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/access_cwmp.asp",
+   "ma_http": 404,
+   "byte": 165,
+   "sha256": "6e1591640d2a0aac17de3c892334d18186b0ec1266da14bd0e555192b3705495",
+   "luu_tai": "reference/html/access_cwmp.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/access_auth.asp",
+   "ma_http": 200,
+   "byte": 12322,
+   "sha256": "d8f3854c30cbe5b457866ea5ffd2e024c8c304f8780a363b0ad76c67f84aab8a",
+   "luu_tai": "reference/html/access_auth.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/access_parentalControl.asp",
+   "ma_http": 200,
+   "byte": 42219,
+   "sha256": "876cd1e9abddf5d4f4bcbdda07a015998862167e39ee58ba78a52d2a4eb07aac",
+   "luu_tai": "reference/html/access_parentalControl.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/adv_firewall.asp",
+   "ma_http": 200,
+   "byte": 13939,
+   "sha256": "5f31f59aad497ce4d435bb2132e2f1c50fd8d12cc7d9e27c22bfa937800ff95e",
+   "luu_tai": "reference/html/adv_firewall.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/adv_routing_table.asp",
+   "ma_http": 200,
+   "byte": 25640,
+   "sha256": "ab48e8107f5bbadff9e49347f9d709df5db782ff50aa8c1e7c286c6af597ed4a",
+   "luu_tai": "reference/html/adv_routing_table.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/adv_portbinding.asp",
+   "ma_http": 404,
+   "byte": 169,
+   "sha256": "050b7991670359f37d62704ab00939d9128eab22e57a7699b32d22af2305f2da",
+   "luu_tai": "reference/html/adv_portbinding.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/adv_nat_alg_switch.asp",
+   "ma_http": 200,
+   "byte": 6747,
+   "sha256": "e3e4c3055ec44f9a18d4e09fd785daffe471bcad6f452397e3d68ef20cbade51",
+   "luu_tai": "reference/html/adv_nat_alg_switch.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/tools_admin.asp",
+   "ma_http": 200,
+   "byte": 14142,
+   "sha256": "64108e16bb8eff17db0d725f16d457e06d1e68129cad9679632b60b2f07d2d76",
+   "luu_tai": "reference/html/tools_admin.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/tools_time.asp",
+   "ma_http": 200,
+   "byte": 42172,
+   "sha256": "85cfdd54c8d7f27117b6dd406b7fc8006e97202ed9a1585bb00faa3c8842862a",
+   "luu_tai": "reference/html/tools_time.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/tools_update.asp",
+   "ma_http": 200,
+   "byte": 34060,
+   "sha256": "7e6b480e3b2e0d38e00abfd6edda5790454305c03580dcdf3e68ddb683e91485",
+   "luu_tai": "reference/html/tools_update.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/tools_system.asp",
+   "ma_http": 200,
+   "byte": 9769,
+   "sha256": "cfed1f85ec472f50cc8430972097f4fac8eacfdce2dc7586aee20c8ff46aa409",
+   "luu_tai": "reference/html/tools_system.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/tools_test.asp",
+   "ma_http": 200,
+   "byte": 49399,
+   "sha256": "82dac321c2217f3515dea048d74b40c830785830d74e3cd166d908c6ce04db89",
+   "luu_tai": "reference/html/tools_test.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/tools_wifitimer.asp",
+   "ma_http": 200,
+   "byte": 14570,
+   "sha256": "32423b40dc8dcb458d4239d7f94aa89e2de5c07bc6e4b846264356ba2b2848d1",
+   "luu_tai": "reference/html/tools_wifitimer.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/tools_reboottimer.asp",
+   "ma_http": 200,
+   "byte": 13483,
+   "sha256": "5a4b989f47c5abb7580166107583c7cd1713ba4e1178950cbaf881e5a21098bb",
+   "luu_tai": "reference/html/tools_reboottimer.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/help_status.asp",
+   "ma_http": 200,
+   "byte": 7954,
+   "sha256": "768d3be2febef34edf55c2e2c2a2b8670f101b04f3a023af01f93f2024287394",
+   "luu_tai": "reference/html/help_status.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/help_interface.asp",
+   "ma_http": 200,
+   "byte": 31755,
+   "sha256": "7797dc057171e379752b0ece45d8aa1a97df2b1949b1afaceba3446770d63a0f",
+   "luu_tai": "reference/html/help_interface.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/help_access.asp",
+   "ma_http": 200,
+   "byte": 11844,
+   "sha256": "c0145f31a56a329ba5d2df2cbcbc0810665c263d0cabcbdd1d38be90ebc30db9",
+   "luu_tai": "reference/html/help_access.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/help_advanced.asp",
+   "ma_http": 200,
+   "byte": 8012,
+   "sha256": "9cfa9bfb9ffffb8b31494ce2f6184e501a224e25ed44ebdcaaaaf731f0e78b6a",
+   "luu_tai": "reference/html/help_advanced.asp.html"
+  },
+  {
+   "duong_dan": "/cgi-bin/help_maintenance.asp",
+   "ma_http": 200,
+   "byte": 13620,
+   "sha256": "fe3bd229c70556676d464c348cd26503da4420f8d836d897dd37fd1149425b1b",
+   "luu_tai": "reference/html/help_maintenance.asp.html"
+  },
+  {
+   "duong_dan": "/style.css",
+   "ma_http": 200,
+   "byte": 12538,
+   "sha256": "8368bdf39d26ec64f1d773dd150b9747214b1a0a3d365e53223207ecf6400c76",
+   "luu_tai": "css/style.css"
+  },
+  {
+   "duong_dan": "/jsl.js",
+   "ma_http": 200,
+   "byte": 5690,
+   "sha256": "15c5260e014b6ccfb9a7430fbc8a6db4853ad236b673194fd1ba1b15d5f853fa",
+   "luu_tai": "js/jsl.js"
+  },
+  {
+   "duong_dan": "/general.js",
+   "ma_http": 200,
+   "byte": 5702,
+   "sha256": "2f45e9f519e1ebbe8fa5c35c14458ba5ddda88be0797b5b90f9a5f7a16724f71",
+   "luu_tai": "js/general.js"
+  },
+  {
+   "duong_dan": "/ip.js",
+   "ma_http": 200,
+   "byte": 11393,
+   "sha256": "90bcd4876e379eaa3c15b3e663e9045c49fefc954db80aae056eea63dc1fefbf",
+   "luu_tai": "js/ip.js"
+  },
+  {
+   "duong_dan": "/val.js",
+   "ma_http": 200,
+   "byte": 9538,
+   "sha256": "5fc8a0c296bea2bfb24df8858302410a39dfc15fbf2d5bb57388de8ac75c48f3",
+   "luu_tai": "js/val.js"
+  },
+  {
+   "duong_dan": "/wanfunc.js",
+   "ma_http": 200,
+   "byte": 4447,
+   "sha256": "8f9a893692b3f089140afeb033868829eed7a52f40d3411838992fecf65a6e2b",
+   "luu_tai": "js/wanfunc.js"
+  },
+  {
+   "duong_dan": "/mac.js",
+   "ma_http": 200,
+   "byte": 2713,
+   "sha256": "cc16fb2129db62f864cda252fdbb8f0262b04e2f8683b96ae6517420e2c8490b",
+   "luu_tai": "js/mac.js"
+  },
+  {
+   "duong_dan": "/ip_new.js",
+   "ma_http": 200,
+   "byte": 18961,
+   "sha256": "2ad2a84ee0c8a1c71ae0a9e45db9eb4339959f8f5bb3ae2c648b3f90eee667ef",
+   "luu_tai": "js/ip_new.js"
+  },
+  {
+   "duong_dan": "/spin.js",
+   "ma_http": 200,
+   "byte": 4502,
+   "sha256": "f00fb92030171e9af96d228201f0fa0bb8fbd88c44446356bf0f306cd9c89af1",
+   "luu_tai": "js/spin.js"
+  },
+  {
+   "duong_dan": "/pvc.js",
+   "ma_http": 200,
+   "byte": 6052,
+   "sha256": "f009d2d83e1fee7dee62caa0cc6c19bf58e1ac3ea1fae06667517dde0c4a6485",
+   "luu_tai": "js/pvc.js"
+  },
+  {
+   "duong_dan": "/exclamation.gif",
+   "ma_http": 200,
+   "byte": 1052,
+   "sha256": "c2171c188f65be1b61a9d2c4e36b6321abd55ac50a064b4bede1f6ce747c171d",
+   "luu_tai": "img/exclamation.gif"
+  },
+  {
+   "duong_dan": "/login.png",
+   "ma_http": 200,
+   "byte": 13220,
+   "sha256": "11b9d555667d5f691d91d54e223da73eed12c6f373dc3e6bc419c0c02561ccb9",
+   "luu_tai": "img/login.png"
+  },
+  {
+   "duong_dan": "/logo.png",
+   "ma_http": 200,
+   "byte": 10160,
+   "sha256": "37a84149a89b49f8d5474c9299b6ddeb92c2c0599265eb6cce4a4076253a6e43",
+   "luu_tai": "img/logo.png"
+  },
+  {
+   "duong_dan": "/bg.gif",
+   "ma_http": 200,
+   "byte": 65,
+   "sha256": "bb0e4facc5c87d556563f7604dbf75991a602b681f5a120112563e44830f0b16",
+   "luu_tai": "img/bg.gif"
+  },
+  {
+   "duong_dan": "/usr.png",
+   "ma_http": 200,
+   "byte": 4406,
+   "sha256": "34e50ece55a6909a8e57c02106ecbf0b620651922a29927649521bc4b99f214c",
+   "luu_tai": "img/usr.png"
+  },
+  {
+   "duong_dan": "/pwd.png",
+   "ma_http": 200,
+   "byte": 4176,
+   "sha256": "7e39c3e18e4e659f233aa28925036f5fc0f13e88a42b2b44d3421059b2db0a6f",
+   "luu_tai": "img/pwd.png"
+  },
+  {
+   "duong_dan": "/PIE.htc",
+   "ma_http": 200,
+   "byte": 41137,
+   "sha256": "14071bf29f62067d921963e649561c1c2dfb1f846d83d9998c8c07bf4ac522cc",
+   "luu_tai": "img/PIE.htc",
+   "ghi_chu": "KHOI PHUC 2026-08-22: crawl_that.py (Python) bi thiet bi tu choi voi file nay (401, 140 byte trung voi than loi chuan). Gia tri that lay tu Chrome (xem ISSUES.md bai hoc FONT). crawl_that.py da vá de khong ghi de nham lan sau."
+  },
+  {
+   "duong_dan": "/BeVietnam-Regular.ttf",
+   "ma_http": 200,
+   "byte": 86308,
+   "sha256": "13b836b299ee55f60a65cb6c1eeaf3663e3bdc6e454d0eeb8bc1456f6eedc358",
+   "luu_tai": "img/BeVietnam-Regular.ttf",
+   "ghi_chu": "KHOI PHUC 2026-08-22: crawl_that.py (Python) bi thiet bi tu choi voi file nay (401, 140 byte trung voi than loi chuan). Gia tri that lay tu Chrome (xem ISSUES.md bai hoc FONT). crawl_that.py da vá de khong ghi de nham lan sau."
+  },
+  {
+   "duong_dan": "/BeVietnam-Bold.ttf",
+   "ma_http": 200,
+   "byte": 88456,
+   "sha256": "ff955ef8276c6f0329767e5088db51f5d1694f815bdebde98dafa8658a6610b0",
+   "luu_tai": "img/BeVietnam-Bold.ttf",
+   "ghi_chu": "KHOI PHUC 2026-08-22: crawl_that.py (Python) bi thiet bi tu choi voi file nay (401, 140 byte trung voi than loi chuan). Gia tri that lay tu Chrome (xem ISSUES.md bai hoc FONT). crawl_that.py da vá de khong ghi de nham lan sau."
+  }
+ ]
+}

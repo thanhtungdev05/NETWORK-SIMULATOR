@@ -54,6 +54,15 @@
     var main = document.querySelector(".el-main") || document.querySelector("main");
     if (!main) return setTimeout(function () { show(name); }, 120);
     if (getComputedStyle(main).position === "static") main.style.position = "relative";
+    
+    // Hide original Vue content to prevent bleed-through (scrolling issues)
+    Array.prototype.forEach.call(main.children, function(child) {
+      if (child !== overlay) {
+        child.dataset.oldDisplay = child.style.display || '';
+        child.style.display = 'none';
+      }
+    });
+
     if (iframe.getAttribute("data-name") !== name) {
       iframe.src = "/sim-pages/" + name + ".html";
       iframe.setAttribute("data-name", name);
@@ -62,7 +71,19 @@
     overlay.style.display = "block";
   }
 
-  function hide() { if (overlay) overlay.style.display = "none"; }
+  function hide() { 
+    if (overlay) overlay.style.display = "none"; 
+    // Restore original Vue content
+    var main = document.querySelector(".el-main") || document.querySelector("main");
+    if (main) {
+      Array.prototype.forEach.call(main.children, function(child) {
+        if (child !== overlay && child.dataset.oldDisplay !== undefined) {
+          child.style.display = child.dataset.oldDisplay;
+          delete child.dataset.oldDisplay;
+        }
+      });
+    }
+  }
 
   function apply(path) {
     if (PAGES[path]) show(PAGES[path]); else hide();

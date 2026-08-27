@@ -1,0 +1,422 @@
+{
+ "_thiet_bi": "ONT AC1000HI (FPT Telecom) — tiêu đề trang trong: \"GPON Home Gateway\"",
+ "_dia_chi": "http://192.168.1.1 (HTTP, KHÔNG phải HTTPS)",
+ "_ngay_do": "2026-08-22",
+ "_cach_do": "Điều khiển Chrome vào thẳng thiết bị thật đang đăng nhập, đọc frame header (status.asp) để lấy 6 tab, đọc 6 file navigation-*.asp để lấy menu con, rồi fetch thử từng đường dẫn để xác nhận mã HTTP + kích thước thật.",
+ "kien_truc": {
+  "loai": "frameset ASP cổ điển (KHÔNG phải SPA)",
+  "trang_goc": "/cgi-bin/index.asp",
+  "cay_frame": {
+   "frameset_ngoai": {
+    "rows": "159,*",
+    "framespacing": "0",
+    "frameborder": "0"
+   },
+   "frame_header": {
+    "name": "header",
+    "src": "/cgi-bin/status.asp",
+    "ghi_chu": "thanh trên: logo + 6 tab + nút Logout"
+   },
+   "frameset_giua": {
+    "cols": "*,956,*,0",
+    "framespacing": "0",
+    "frameborder": "0"
+   },
+   "frame_blank_trai": {
+    "name": "blank",
+    "src": "/cgi-bin/blank.asp"
+   },
+   "frameset_trong": {
+    "cols": "266.5,*",
+    "framespacing": "0",
+    "frameborder": "0"
+   },
+   "frame_nav": {
+    "name": "nav",
+    "src": "/cgi-bin/navigation-status.asp",
+    "ghi_chu": "menu dọc bên trái, ĐỔI FILE theo tab đang chọn"
+   },
+   "frame_main": {
+    "name": "main",
+    "src": "/cgi-bin/status_deviceinfo.asp",
+    "ghi_chu": "vùng nội dung chính"
+   },
+   "frame_blank_phai": {
+    "name": "blank",
+    "src": "/cgi-bin/blank.asp"
+   },
+   "frame_refresh": {
+    "name": "refreshfrm",
+    "src": "/cgi-bin/refresh.asp",
+    "ghi_chu": "frame ẩn (cột rộng 0) dùng để làm tươi dữ liệu"
+   }
+  },
+  "ghi_chu_quan_trong": "Bề rộng vùng nội dung CỐ ĐỊNH 956px (cols=\"*,956,*,0\"), hai bên là frame blank co giãn. Menu trái cố định 266.5px. Đây là bố cục cứng, KHÔNG responsive — trên điện thoại thiết bị thật hiển thị y hệt máy tính, chỉ bị thu nhỏ/cuộn ngang."
+ },
+ "dang_nhap": {
+  "trang": "/cgi-bin/login.asp",
+  "form": {
+   "name": "configform",
+   "method": "get",
+   "action": "/cgi-bin/login.asp"
+  },
+  "truong": [
+   {
+    "tag": "input",
+    "type": "text",
+    "name": "username",
+    "id": "username"
+   },
+   {
+    "tag": "input",
+    "type": "password",
+    "name": "password",
+    "id": "password"
+   },
+   {
+    "tag": "input",
+    "type": "button",
+    "name": "btnsubmit",
+    "value": "Login",
+    "onclick": "submitform()"
+   }
+  ],
+  "ham_js": [
+   "delCookie",
+   "doLoad",
+   "submitform",
+   "gotoLOID"
+  ],
+  "logic_submitform": "Chỉ kiểm tra username khác rỗng (nếu rỗng thì alert 'Account can not be blank' và return false), KHÔNG mã hoá mật khẩu — xác nhận bằng cách liệt kê toàn bộ định danh trong thân hàm: không có btoa/md5/sha/encode/encrypt/escape/base64/hex. Mật khẩu gửi đi dạng chuỗi thường qua query string của form GET.",
+  "tai_nguyen": [
+   "/style.css",
+   "/login.png"
+  ],
+  "logout": {
+   "the_a": "Logout",
+   "href": "/cgi-bin/logout.cgi",
+   "onclick": "doLogout()"
+  }
+ },
+ "sau_dang_nhap_6_tab": [
+  {
+   "ten": "Status",
+   "ham": "change_stat(this)",
+   "nav": "/cgi-bin/navigation-status.asp"
+  },
+  {
+   "ten": "Network",
+   "ham": "change_basic(this)",
+   "nav": "/cgi-bin/navigation-basic.asp"
+  },
+  {
+   "ten": "Access",
+   "ham": "change_access(this)",
+   "nav": "/cgi-bin/navigation-access.asp"
+  },
+  {
+   "ten": "Advanced",
+   "ham": "change_adv(this)",
+   "nav": "/cgi-bin/navigation-advanced.asp"
+  },
+  {
+   "ten": "Maintenance",
+   "ham": "change_maint(this)",
+   "nav": "/cgi-bin/navigation-maintenance.asp"
+  },
+  {
+   "ten": "Help",
+   "ham": "change_help(this)",
+   "nav": "/cgi-bin/navigation-help.asp"
+  }
+ ],
+ "cay_menu": {
+  "Status": [
+   {
+    "ten": "Device Info",
+    "duong_dan": "/cgi-bin/status_deviceinfo.asp",
+    "ma_http": 200,
+    "byte": 18149
+   },
+   {
+    "ten": "System Log",
+    "duong_dan": "/cgi-bin/status_log.cgi",
+    "ma_http": 200,
+    "byte": 18015
+   },
+   {
+    "ten": "Statistics",
+    "duong_dan": "/cgi-bin/status_statistics.asp",
+    "ma_http": 200,
+    "byte": 4662
+   },
+   {
+    "ten": "Ethernet Status",
+    "duong_dan": "/cgi-bin/EthernetStatus.asp",
+    "ma_http": 200,
+    "byte": 3816
+   },
+   {
+    "ten": "Device Table",
+    "duong_dan": "/cgi-bin/devicetable.asp",
+    "ma_http": 200,
+    "byte": 6898
+   },
+   {
+    "ten": "Wireless Signal",
+    "duong_dan": "/cgi-bin/wirelessSignal.asp",
+    "ma_http": 200,
+    "byte": 17358
+   }
+  ],
+  "Network": [
+   {
+    "ten": "Quick Start",
+    "duong_dan": "/cgi-bin/home_wizard.asp",
+    "ma_http": 200,
+    "byte": 4464
+   },
+   {
+    "ten": "Internet",
+    "duong_dan": "/cgi-bin/home_wan.asp",
+    "ma_http": 200,
+    "byte": 123409
+   },
+   {
+    "ten": "LAN",
+    "duong_dan": "/cgi-bin/home_lan.asp",
+    "ma_http": 200,
+    "byte": 65180
+   },
+   {
+    "ten": "Wireless 2.4G",
+    "duong_dan": "/cgi-bin/home_wireless.asp",
+    "ma_http": 200,
+    "byte": 87880
+   },
+   {
+    "ten": "Wireless 5G",
+    "duong_dan": "/cgi-bin/home_wireless_5g.asp",
+    "ma_http": 200,
+    "byte": 116023
+   },
+   {
+    "ten": "NAT",
+    "duong_dan": "/cgi-bin/adv_nat_top.asp",
+    "ma_http": 200,
+    "byte": 50306,
+    "ghi_chu": "dùng chung với tab Advanced. Phát hiện qua HAR (adv_table_actions.har, 2026-08-22): tab con \"Virtual Server\" của TRANG NÀY tải qua URL RIÊNG /cgi-bin/adv_nat_top_VirtualServer.asp (nội dung gần như y hệt, chỉ khác option DMZ/Virtual Server nào đang selected + khối JS nào bị comment) — không phải trang menu riêng, form Add Virtual Server POST thẳng về URL đó. Phát hiện thêm qua HAR đợt 2 (adv_table_actions_2.har, 2026-08-22): tab con \"Port Triggering\" cũng tải qua URL RIÊNG song song /cgi-bin/adv_nat_top_PortTriggering.asp, cùng kiểu, form Add/Delete Port Trigger POST thẳng về URL đó."
+   },
+   {
+    "ten": "QoS",
+    "duong_dan": "/cgi-bin/adv_qos.asp",
+    "ma_http": 200,
+    "byte": 84637,
+    "ghi_chu": "dùng chung với tab Advanced"
+   }
+  ],
+  "Access": [
+   {
+    "ten": "UPnP",
+    "duong_dan": "/cgi-bin/access_upnp.asp",
+    "ma_http": 200,
+    "byte": 12045
+   },
+   {
+    "ten": "DDNS",
+    "duong_dan": "/cgi-bin/access_ddns.asp",
+    "ma_http": 200,
+    "byte": 15321
+   },
+   {
+    "ten": "CWMP",
+    "duong_dan": "/cgi-bin/access_cwmp.asp",
+    "ma_http": 404,
+    "byte": 165,
+    "ghi_chu": "CÓ trong menu nhưng thiết bị trả 404 — bản giả lập PHẢI trả 404 y hệt, không được tự dựng trang"
+   },
+   {
+    "ten": "Auth",
+    "duong_dan": "/cgi-bin/access_auth.asp",
+    "ma_http": 200,
+    "byte": 12322
+   },
+   {
+    "ten": "Parent Control",
+    "duong_dan": "/cgi-bin/access_parentalControl.asp",
+    "ma_http": 200,
+    "byte": 42133
+   }
+  ],
+  "Advanced": [
+   {
+    "ten": "Firewall",
+    "duong_dan": "/cgi-bin/adv_firewall.asp",
+    "ma_http": 200,
+    "byte": 13789
+   },
+   {
+    "ten": "Routing",
+    "duong_dan": "/cgi-bin/adv_routing_table.asp",
+    "ma_http": 200,
+    "byte": 25640
+   },
+   {
+    "ten": "NAT",
+    "duong_dan": "/cgi-bin/adv_nat_top.asp",
+    "ma_http": 200,
+    "byte": 50306,
+    "ghi_chu": "tab con \"Virtual Server\" tai qua URL rieng /cgi-bin/adv_nat_top_VirtualServer.asp; tab con \"Port Triggering\" tai qua URL rieng /cgi-bin/adv_nat_top_PortTriggering.asp — xem ghi_chu o muc NAT trong Network"
+   },
+   {
+    "ten": "QoS",
+    "duong_dan": "/cgi-bin/adv_qos.asp",
+    "ma_http": 200,
+    "byte": 84637
+   },
+   {
+    "ten": "PortBinding",
+    "duong_dan": "/cgi-bin/adv_portbinding.asp",
+    "ma_http": 404,
+    "byte": 169,
+    "ghi_chu": "CÓ trong menu nhưng thiết bị trả 404 — giữ nguyên 404"
+   },
+   {
+    "ten": "ALG Switch",
+    "duong_dan": "/cgi-bin/adv_nat_alg_switch.asp",
+    "ma_http": 200,
+    "byte": 6747
+   }
+  ],
+  "Maintenance": [
+   {
+    "ten": "Administration",
+    "duong_dan": "/cgi-bin/tools_admin.asp",
+    "ma_http": 200,
+    "byte": 14142
+   },
+   {
+    "ten": "Time Zone",
+    "duong_dan": "/cgi-bin/tools_time.asp",
+    "ma_http": 200,
+    "byte": 42172
+   },
+   {
+    "ten": "Firmware",
+    "duong_dan": "/cgi-bin/tools_update.asp",
+    "ma_http": 200,
+    "byte": 34060
+   },
+   {
+    "ten": "SysRestart",
+    "duong_dan": "/cgi-bin/tools_system.asp",
+    "ma_http": 200,
+    "byte": 9769
+   },
+   {
+    "ten": "Diagnostics",
+    "duong_dan": "/cgi-bin/tools_test.asp",
+    "ma_http": 200,
+    "byte": 49399
+   },
+   {
+    "ten": "WiFi Timer",
+    "duong_dan": "/cgi-bin/tools_wifitimer.asp",
+    "ma_http": 200,
+    "byte": 14570
+   },
+   {
+    "ten": "Reboot Timer",
+    "duong_dan": "/cgi-bin/tools_reboottimer.asp",
+    "ma_http": 200,
+    "byte": 13483
+   }
+  ],
+  "Help": [
+   {
+    "ten": "Status",
+    "duong_dan": "/cgi-bin/help_status.asp",
+    "ma_http": 200,
+    "byte": 7954
+   },
+   {
+    "ten": "Network",
+    "duong_dan": "/cgi-bin/help_interface.asp",
+    "ma_http": 200,
+    "byte": 31755
+   },
+   {
+    "ten": "Access",
+    "duong_dan": "/cgi-bin/help_access.asp",
+    "ma_http": 200,
+    "byte": 11844
+   },
+   {
+    "ten": "Advanced",
+    "duong_dan": "/cgi-bin/help_advanced.asp",
+    "ma_http": 200,
+    "byte": 8012
+   },
+   {
+    "ten": "Maintenance",
+    "duong_dan": "/cgi-bin/help_maintenance.asp",
+    "ma_http": 200,
+    "byte": 13620
+   }
+  ]
+ },
+ "trang_khung": [
+  {
+   "duong_dan": "/cgi-bin/index.asp",
+   "ma_http": 200,
+   "byte": 7092,
+   "vai_tro": "frameset gốc"
+  },
+  {
+   "duong_dan": "/cgi-bin/login.asp",
+   "ma_http": 200,
+   "byte": 16286,
+   "vai_tro": "trang đăng nhập"
+  },
+  {
+   "duong_dan": "/cgi-bin/status.asp",
+   "ma_http": 200,
+   "byte": 9315,
+   "vai_tro": "frame header (6 tab + Logout)"
+  },
+  {
+   "duong_dan": "/cgi-bin/blank.asp",
+   "ma_http": 200,
+   "byte": 798,
+   "vai_tro": "frame đệm 2 bên"
+  },
+  {
+   "duong_dan": "/cgi-bin/refresh.asp",
+   "ma_http": 200,
+   "byte": 399,
+   "vai_tro": "frame ẩn làm tươi"
+  }
+ ],
+ "tai_nguyen_tinh": [
+  "/style.css",
+  "/jsl.js",
+  "/general.js",
+  "/ip.js",
+  "/val.js",
+  "/wanfunc.js",
+  "/mac.js",
+  "/ip_new.js",
+  "/spin.js",
+  "/pvc.js",
+  "/exclamation.gif",
+  "/login.png",
+  "/logo.png"
+ ],
+ "tong_ket": {
+  "tong_duong_dan_da_thu": 45,
+  "tra_200": 43,
+  "tra_404": 2,
+  "tong_byte_html": 1035168,
+  "so_muc_menu": 36
+ }
+}

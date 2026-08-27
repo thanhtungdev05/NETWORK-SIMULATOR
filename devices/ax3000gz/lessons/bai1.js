@@ -1,41 +1,47 @@
-﻿/**
+/**
  * devices/ax3000gz/lessons/bai1.js
- * Bài 1: Cấu hình ONT trên AX3000GZ
+ * Bài 1: Cấu hình PPPoE trên AX3000GZ
  */
 
 window.DEVICE_AX3000GZ_LESSONS = window.DEVICE_AX3000GZ_LESSONS || [];
 
+// Remove any existing LAB_AX3000GZ_01
+var index = window.DEVICE_AX3000GZ_LESSONS.findIndex(function(l) { return l.id === 'LAB_AX3000GZ_01'; });
+if (index !== -1) {
+    window.DEVICE_AX3000GZ_LESSONS.splice(index, 1);
+}
+
 window.DEVICE_AX3000GZ_LESSONS.push({
   id: 'LAB_AX3000GZ_01',
-  title: 'Bài 1 - Cấu hình ONT',
-  subtitle: 'Thiết lập kết nối WAN/ONT trên AX3000GZ',
+  title: 'Bài 1 - Cấu hình PPPoE',
+  subtitle: 'Cấu hình PPPoE',
   instructions: [
     '<b>Yêu cầu:</b>',
-    'Thực hiện cấu hình kết nối WAN/ONT trên thiết bị và thiết lập kết nối PPPoE theo các thông số được cung cấp dưới đây:',
-    '- Username: <span class="val">fpt</span>',
-    '- Password: <span class="val">fpt12345</span>',
+    'Thực hiện cấu hình kết nối WAN/Internet trên thiết bị và thiết lập kết nối PPPoE theo các thông số được cung cấp dưới đây:',
+    '- Username: <span class="val">Sgfdl-123456-789</span>',
+    '- Password: <span class="val">fpt12345</span>'
   ],
-  practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/internet/wan/interface',
+  practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/internet/wan', // LuCI based path usually, or we can just start at home
   clearFields: [
     '[id="widget.cbid.network.wan.username"]',
     '[id="widget.cbid.network.wan.password"]'
   ],
   grading: {
-    description: 'Kiểm tra WAN/ONT Interface trên AX3000GZ',
+    description: 'Kiểm tra thông số Username và Password PPPoE',
     rules: [
       {
-        id: 'wan_username',
-        name: 'PPPoE Username',
-        selector: '[id="widget.cbid.network.wan.username"]',
-        expected: 'fpt',
+        id: 'pppoe_user',
+        name: 'Username',
+        selector: '[id="widget.cbid.network.wan.username"], [name="cbid.network.wan.username"]',
+        expected: 'Sgfdl-123456-789',
         type: 'text_exact',
         trim: true,
         required: true
       },
       {
-        id: 'wan_password',
-        name: 'PPPoE Password',
-        selector: '[id="widget.cbid.network.wan.password"]',
+        id: 'pppoe_pwd',
+        name: 'Password',
+        selector: '[id="widget.cbid.network.wan.password"], [name="cbid.network.wan.password"]',
         expected: 'fpt12345',
         type: 'text_exact',
         trim: true,
@@ -43,5 +49,36 @@ window.DEVICE_AX3000GZ_LESSONS.push({
       }
     ]
   },
-  guidePopups: []
+  guidePopups: [
+    {
+      selector: '#topmenu a[href*="internet"]',
+      text: 'Chọn Internet',
+      position: 'bottom',
+      page: 'home'
+    },
+    {
+      selector: '#WANUrl, #sidebarmenu a[href*="/internet/wan"]',
+      text: 'Chọn WAN',
+      position: 'right',
+      hideOnPage: 'wan'
+    },
+    {
+      selector: '[id="widget.cbid.network.wan.username"], [name="cbid.network.wan.username"]',
+      text: 'Bước 1: Nhập Username: Sgfdl-123456-789',
+      position: 'right',
+      page: 'wan'
+    },
+    {
+      selector: '[id="widget.cbid.network.wan.password"], [name="cbid.network.wan.password"]',
+      text: 'Bước 2: Nhập Password: fpt12345',
+      position: 'right',
+      page: 'wan'
+    },
+    {
+      selector: '.cbi-button-save',
+      text: 'Bước 3: Chọn Apply',
+      position: 'bottom',
+      page: 'wan'
+    }
+  ]
 });

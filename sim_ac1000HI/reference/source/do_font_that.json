@@ -1,0 +1,73 @@
+{
+  "_tieu_de": "Font chữ THẬT của ONT AC1000HI — và bài học về một kết luận SAI đã suýt lọt",
+  "_ngay_do": "2026-08-22",
+  "_thiet_bi": "http://192.168.1.1 — Internet Hub AC1000HI, fw FT5.01.052e",
+
+  "_canh_bao": "PHIÊN BẢN ĐẦU CỦA FILE NÀY KẾT LUẬN SAI. Nội dung dưới đây là bản đã sửa. Giữ lại phần mô tả sai lầm để không ai lặp lại.",
+
+  "ket_luan_dung": {
+    "thiet_bi_CO_font": true,
+    "cac_tep": [
+      {"duong_dan": "/BeVietnam-Regular.ttf", "byte": 86308, "sha256": "13b836b299ee55f60a65cb6c1eeaf3663e3bdc6e454d0eeb8bc1456f6eedc358"},
+      {"duong_dan": "/BeVietnam-Bold.ttf", "byte": 88456},
+      {"duong_dan": "/PIE.htc", "byte": 41137}
+    ],
+    "trang_thai_tren_thiet_bi_that": "document.fonts trong frame main báo BeVietnamRegular = loaded, BeVietnamBold = loaded",
+    "font_thuc_su_ve_ra": "Be Vietnam (KHÔNG phải font hệ thống)"
+  },
+
+  "phep_do_quyet_dinh": {
+    "_cach": "Dùng canvas measureText() đo chiều rộng chuỗi 'Working Mode Serial Number Model' cỡ 13px, với font-family đúng như CSS khai báo: 'BeVietnamRegular',Be Vietnam",
+    "thiet_bi_that": 220.47,
+    "gia_lap_LUC_SAI": 195.36,
+    "gia_lap_SAU_KHI_SUA": 220.47,
+    "doi_chieu": {
+      "serif / Times New Roman": 195.36,
+      "Arial / sans-serif": 209.29,
+      "Be Vietnam (thật)": 220.47
+    },
+    "y_nghia": "195.36 chính là serif — tức bản giả lập đang rơi về Times New Roman vì thiếu font. Sau khi lấy đủ font về, cả hai bên đều 220.47."
+  },
+
+  "sai_lam_da_mac_phai": {
+    "ket_luan_sai": "Thiết bị không có font Be Vietnam — firmware khai báo @font-face nhưng không đóng gói file vào. Bản giả lập phải trả 401 y hệt, KHÔNG được tự thêm font vào kẻo đẹp hơn thật.",
+    "vi_sao_nghe_co_ly": "Lập luận này viện đúng nguyên tắc của dự án ('giống thật là trên hết', 'không được làm đẹp hơn thật'), nên rất dễ được chấp nhận mà không kiểm lại.",
+    "sai_o_dau": [
+      "Đo font ở TRANG LOGIN — nơi CHƯA đăng nhập nên MỌI tài nguyên đều bị 401. Rồi lấy kết quả đó suy ra cho toàn thiết bị.",
+      "Dùng mã HTTP (401) để kết luận về KẾT QUẢ HIỂN THỊ, thay vì đo chính kết quả hiển thị.",
+      "Script Python crawl cũng bị 401 nên tưởng đã có 'hai nguồn độc lập cùng xác nhận' — thực ra cả hai cùng sai theo một kiểu."
+    ],
+    "hau_qua_neu_khong_phat_hien": "Toàn bộ 45 trang hiển thị bằng Times New Roman thay vì Be Vietnam. Chữ rộng khác ~11%, kéo theo lệch bố cục bảng.",
+    "diem_nguy_hiem_nhat": "Bộ kiểm tự động vẫn báo '43/43 ĐẠT', vì chính nó đã bị dạy rằng 401 là đúng. Công cụ kiểm quay lại xác nhận cho giả định sai của người viết ra nó — đúng họ lỗi đã ghi trong memory 'cong-cu-kiem-tra-bao-dong-gia'.",
+    "ai_phat_hien": "Anh Huynn, bằng một câu hỏi thường: 'nếu font không đúng thì có giống thiết bị thật được không?'"
+  },
+
+  "vi_sao_401_o_cho_nay_ma_200_o_cho_kia": {
+    "quan_sat": [
+      "fetch từ trang /cgi-bin/login.asp (chưa đăng nhập)     -> 401",
+      "fetch từ script Python (ĐÃ đăng nhập, có SESSIONID)    -> 401",
+      "fetch từ script Python + Referer trỏ trang bên trong   -> 401",
+      "fetch từ Chrome, bên trong frame main (đã đăng nhập)   -> 200, đủ byte",
+      "fetch từ Chrome với cache:'no-store' và cache:'reload' -> 200, đủ byte (loại trừ bộ nhớ đệm)"
+    ],
+    "cookie_hai_ben_gui": "Giống nhau: SESSIONID, uid, psw (đã đối chiếu tên cookie).",
+    "ket_luan": "CHƯA XÁC ĐỊNH được thiết bị phân biệt bằng tiêu chí gì. Không cần thiết phải biết: đã lấy đủ file bằng cách cho Chrome đọc rồi POST sang server giả lập qua /__sim/nhan_file.",
+    "ghi_chu": "Nếu sau này cần crawl lại font trên thiết bị khác cùng họ, nhớ rằng script Python có thể bị từ chối trong khi trình duyệt thì không."
+  },
+
+  "bai_hoc_rut_ra": [
+    "Muốn kết luận về GIAO DIỆN thì phải đo GIAO DIỆN (font thực vẽ ra, chiều rộng chữ, pixel) — không được suy từ mã HTTP.",
+    "Đo ở đúng NGỮ CẢNH: tài nguyên sau khi đăng nhập phải đo khi đã đăng nhập.",
+    "Khi một kết luận vừa hay ho vừa viện đúng nguyên tắc dự án ('không được làm đẹp hơn thật'), càng phải nghi ngờ nó hơn.",
+    "Bộ kiểm tự động chỉ đáng tin ở mức giả định mà nó được dạy. Phải có ít nhất một phép kiểm đo KẾT QUẢ CUỐI (ở đây: so chiều rộng chữ hai bên)."
+  ],
+
+  "cach_kiem_lai_bat_ky_luc_nao": [
+    "Mở thiết bị thật và bản giả lập trên CÙNG trình duyệt, cùng vào trang trong (Status > Device Info).",
+    "Ở mỗi bên chạy trong Console:",
+    "  var d=frames['main'].document, c=d.createElement('canvas').getContext('2d');",
+    "  c.font=\"13px 'BeVietnamRegular',Be Vietnam\";",
+    "  c.measureText('Working Mode Serial Number Model').width",
+    "Cả hai phải ra 220.47. Nếu ra 195.36 tức là font lại thiếu (đang rơi về Times New Roman)."
+  ]
+}

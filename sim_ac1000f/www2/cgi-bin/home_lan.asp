@@ -1843,7 +1843,7 @@ function doIsolateIGMPChange(){
 					<table width="640" border="0" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" style="table-layout: fixed">
 						<tr height="30px">
 							<td align=left class="tabdata" style="width:250px;padding-left:20px;">IP Address</td>
-							<td align=left class="tabdata"> <INPUT TYPE="TEXT" NAME="uiViewIPAddr" SIZE="15" MAXLENGTH="15" onblur=blockIP(); VALUE="" >	
+							<td align=left class="tabdata"> <INPUT TYPE="TEXT" NAME="uiViewIPAddr" SIZE="15" MAXLENGTH="15" onblur=blockIP(); VALUE="192.168.1.1" >	
 							    <INPUT TYPE="HIDDEN" NAME="dhcpFlag" VALUE="1">
 							    <INPUT TYPE="HIDDEN" NAME="lanFlag" VALUE="0">
 							    <INPUT TYPE="HIDDEN" NAME="DNSproxy" VALUE='Yes'> 
@@ -1852,7 +1852,7 @@ function doIsolateIGMPChange(){
 
 						<tr height="30px">
 							<td align=left class="tabdata" style="width:250px;padding-left:20px;">IP Subnet Mask</td>
-							<td align=left class="tabdata"><INPUT TYPE="TEXT" NAME="uiViewNetMask" SIZE="15" MAXLENGTH="15" VALUE="" ></td>
+							<td align=left class="tabdata"><INPUT TYPE="TEXT" NAME="uiViewNetMask" SIZE="15" MAXLENGTH="15" VALUE="255.255.255.0" ></td>
 						</tr>
 
 							
@@ -2127,14 +2127,14 @@ function doIsolateIGMPChange(){
 							    	<tr height="30px" id="hiddendns_div0">
 							    		<td width="250px" align=left class="tabdata" style="padding-left:20px;"> Primary DNS</td>
 							     		<td align=left class="tabdata" width="30px">
-							        		<INPUT TYPE="TEXT" NAME="PrimaryDns" SIZE="15" MAXLENGTH="15" VALUE="N/A" >	        
+							        		<INPUT TYPE="TEXT" NAME="PrimaryDns" SIZE="15" MAXLENGTH="15" VALUE="" >	        
 							     		</td>
 							     	</tr>
 
 							    	<tr height="30px" id="hiddendns_div1">
 							    		<td width="250px" align=left class="tabdata" style="padding-left:20px;"> Secondary DNS </td>
 							     		<td align=left class="tabdata" width="300px">
-							        		<INPUT TYPE="TEXT" NAME="SecondDns" SIZE="15" MAXLENGTH="15" VALUE="N/A" >	        
+							        		<INPUT TYPE="TEXT" NAME="SecondDns" SIZE="15" MAXLENGTH="15" VALUE="" >	        
 							     		</td>
 							     	</tr>
 							</table>
@@ -2546,3 +2546,5 @@ function doIsolateIGMPChange(){
 })();
 </script>
 <!-- K?T THÚC SCRIPT CH?N RELOAD -->
+
+

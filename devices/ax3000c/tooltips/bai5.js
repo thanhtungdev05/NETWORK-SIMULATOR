@@ -5,26 +5,26 @@
 if (!window.TOOLTIPS_AX3000C) window.TOOLTIPS_AX3000C = {};
 
 window.TOOLTIPS_AX3000C['LAB_AX3000CV2_05'] = [
-    // 1. Chọn Network ở Menu bên trái (chỉ hiện khi chưa ở trang Port Forwarding)
+    // 1. Chọn Network ở Menu bên trái
     {
-        selector: '.el-submenu__title:contains("Network")',
+        selector: 'li.el-submenu:not(.is-opened):contains("Network") .el-submenu__title',
         text: 'Chọn Network',
         position: 'right',
-        hideOnPage: 'portfwd'
+        hideOnPage: 'lan'
     },
-    // 2. Chọn Access ở Submenu bên trái (chỉ hiện khi chưa ở trang Port Forwarding)
+    // 2. Chọn LAN ở Menu bên trái cấp 1
     {
-        selector: '.el-submenu__title:contains("Access")',
-        text: 'Chọn Access',
+        selector: 'li.el-submenu.is-opened:contains("Network") li.el-submenu:not(.is-opened):contains("LAN") .el-submenu__title',
+        text: 'Chọn LAN',
         position: 'right',
-        hideOnPage: 'portfwd'
+        hideOnPage: 'lan'
     },
-    // 3. Chọn Port Forwarding ở Submenu bên trái (chỉ hiện khi chưa ở trang Port Forwarding)
+    // 3. Chọn LAN ở Submenu bên trái cấp 2
     {
-        selector: '.el-menu-item:contains("Port Forwarding"), .el-menu-item[index*="/network/portfwd"]',
-        text: 'Chọn Port Forwarding',
+        selector: 'li.el-submenu.is-opened:contains("Network") li.el-submenu.is-opened:contains("LAN") li.el-menu-item:contains("LAN"), li.el-submenu.is-opened:contains("Network") li.el-menu-item:contains("LAN")',
+        text: 'Chọn LAN',
         position: 'right',
-        hideOnPage: 'portfwd'
+        hideOnPage: 'lan'
     },
     // Bước 1: chọn Enable (chỉ hiện khi ở trang Port Forwarding)
     {

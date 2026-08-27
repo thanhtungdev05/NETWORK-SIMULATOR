@@ -5,7 +5,6 @@ let deviceCatalog = [];
 let technicianCatalog = [];
 let trainingAssignments = [];
 let dashboardReport = null;
-let dashboardDataQuality = null;
 let technicianByIdentity = new Map();
 let technicianCatalogAuthoritative = false;
 let instructorSearchTimer = null;
@@ -315,62 +314,8 @@ function formatCompactList(values, limit = 2) {
 }
 
 function sessionTimestampMs(item) {
-    const precise = Date.parse(item?.startedAt || item?.started_at || '');
-    if (Number.isFinite(precise)) return precise;
     const base = item?.date ? parseDate(item.date).getTime() : 0;
     return (Number.isFinite(base) ? base : 0) + (item?.time ? parseTimeMs(item.time) : 0);
-}
-
-function isPracticeSession(item) {
-    return String(item?.mode || '').trim().toLocaleLowerCase('vi') === 'thực hành';
-}
-
-function isCompletedSession(item) {
-    return item?.status === 'Hoàn thành' || item?.status === 'completed';
-}
-
-function comparePracticeSessions(left, right) {
-    const leftAttempt = Number(left?.practiceAttemptNo);
-    const rightAttempt = Number(right?.practiceAttemptNo);
-    if (leftAttempt > 0 && rightAttempt > 0 && leftAttempt !== rightAttempt) {
-        return leftAttempt - rightAttempt;
-    }
-    const timeDifference = sessionTimestampMs(left) - sessionTimestampMs(right);
-    if (timeDifference !== 0) return timeDifference;
-    return String(left?.sessionId || '').localeCompare(String(right?.sessionId || ''), 'vi');
-}
-
-function getPracticeMilestones(rows = []) {
-    const practiceSessions = rows.filter(isPracticeSession).sort(comparePracticeSessions);
-    const attemptNoAt = index => {
-        if (index < 0) return null;
-        const apiAttemptNo = Number(practiceSessions[index]?.practiceAttemptNo);
-        return apiAttemptNo > 0 ? apiAttemptNo : index + 1;
-    };
-    const completedIndex = practiceSessions.findIndex(isCompletedSession);
-    const recordedPassIndex = practiceSessions.findIndex(item => item.isPassed === true);
-    const firstAttempt = practiceSessions[0] || null;
-    const firstAttemptNo = attemptNoAt(0);
-    const ungradedCount = practiceSessions.filter(item => item.isPassed === null || item.isPassed === undefined).length;
-    const failedCount = practiceSessions.filter(item => item.isPassed === false).length;
-    const hasUngradedBeforePass = recordedPassIndex > 0
-        && practiceSessions.slice(0, recordedPassIndex).some(item => item.isPassed === null || item.isPassed === undefined);
-
-    return {
-        practiceSessions,
-        attemptCount: practiceSessions.length,
-        completionAttemptNo: attemptNoAt(completedIndex),
-        recordedPassAttemptNo: attemptNoAt(recordedPassIndex),
-        firstPassAttemptNo: recordedPassIndex >= 0 && !hasUngradedBeforePass
-            ? attemptNoAt(recordedPassIndex)
-            : null,
-        firstAttemptPassed: firstAttemptNo === 1 && firstAttempt?.isPassed === true,
-        firstAttemptGraded: firstAttemptNo === 1 && (firstAttempt?.isPassed === true || firstAttempt?.isPassed === false),
-        hasUngradedBeforePass,
-        ungradedCount,
-        failedCount,
-        gradedCount: practiceSessions.length - ungradedCount
-    };
 }
 
 function getLatestSession(rows) {
@@ -544,21 +489,6 @@ function renderKpis() {
         const practice = computeMetrics(practiceRows);
         const gradedRows = practiceRows.filter(item => item.isPassed === true || item.isPassed === false);
         const passedRows = gradedRows.filter(item => item.isPassed === true);
-        const completedPairs = new Set(practiceRows
-            .filter(isCompletedSession)
-            .map(item => `${String(item.learner || '').toLowerCase()}\u001f${item.device}\u001f${item.lab}`));
-        const sessionsByPair = new Map();
-        practiceRows.forEach(item => {
-            const key = `${String(item.learner || '').toLowerCase()}\u001f${item.device}\u001f${item.lab}`;
-            if (!sessionsByPair.has(key)) sessionsByPair.set(key, []);
-            sessionsByPair.get(key).push(item);
-        });
-        const firstAttemptOutcomes = [...sessionsByPair.values()]
-            .map(pairRows => getPracticeMilestones(pairRows))
-            .filter(milestone => milestone.firstAttemptGraded);
-        const firstTryRate = firstAttemptOutcomes.length
-            ? Math.round((firstAttemptOutcomes.filter(milestone => milestone.firstAttemptPassed).length / firstAttemptOutcomes.length) * 1000) / 10
-            : null;
         const durationRows = practiceRows.filter(item => Number(item.duration) > 0);
         const durationCoverage = practiceRows.length
             ? Math.round((durationRows.length / practiceRows.length) * 1000) / 10
@@ -572,10 +502,10 @@ function renderKpis() {
             totalSessions: practice.totalSessions,
             guideSessions: rows.filter(item => item.mode === 'Hướng dẫn').length,
             learners: all.learners,
-            completed: completedPairs.size,
+            completed: practice.completed,
             rate: practice.rate,
             passRate: gradedRows.length ? Math.round((passedRows.length / gradedRows.length) * 1000) / 10 : null,
-            firstTryRate,
+            firstTryRate: practice.firstTryRate,
             avgDuration: durationReliable
                 ? Math.round(durationRows.reduce((sum, item) => sum + Number(item.duration), 0) / durationRows.length)
                 : null,
@@ -602,11 +532,11 @@ function renderKpis() {
         { key: 'totalSessions', valueId: 'kpiSessions', comparisonId: 'kpiSessionsComparison', contextId: 'kpiSessionsContext', type: 'count', unit: 'phiên' },
         { key: 'guideSessions', valueId: 'kpiGuideSessions', comparisonId: 'kpiGuideSessionsComparison', contextId: 'kpiGuideSessionsContext', type: 'count', unit: 'lượt' },
         { key: 'learners', valueId: 'kpiLearners', comparisonId: 'kpiLearnersComparison', contextId: 'kpiLearnersContext', type: 'count', unit: 'KTV' },
-        { key: 'completed', valueId: 'kpiCompleted', comparisonId: 'kpiCompletedComparison', contextId: 'kpiCompletedContext', type: 'count', unit: 'cặp KTV–lab' },
+        { key: 'completed', valueId: 'kpiCompleted', comparisonId: 'kpiCompletedComparison', contextId: 'kpiCompletedContext', type: 'count', unit: 'bài' },
         { key: 'rate', valueId: 'kpiCompletionRate', comparisonId: 'kpiCompletionRateComparison', contextId: 'kpiCompletionRateContext', type: 'rate', unit: '%' },
         { key: 'passRate', valueId: 'kpiPassRate', comparisonId: 'kpiPassRateComparison', contextId: 'kpiPassRateContext', type: 'rate', unit: '%' },
         { key: 'firstTryRate', valueId: 'kpiFirstTryRate', comparisonId: 'kpiFirstTryRateComparison', contextId: 'kpiFirstTryRateContext', type: 'rate', unit: '%' },
-        { key: 'avgDuration', valueId: 'kpiAvgDuration', comparisonId: 'kpiAvgDurationComparison', contextId: 'kpiAvgDurationContext', type: 'duration', unit: 'giây' }
+        { key: 'avgDuration', valueId: 'kpiAvgDuration', comparisonId: 'kpiAvgDurationComparison', contextId: 'kpiAvgDurationContext', type: 'duration', unit: 'giây', lowerIsBetter: true }
     ];
 
     const formatMetric = (value, definition) => {
@@ -638,9 +568,7 @@ function renderKpis() {
             if (difference === null) {
                 changeText = 'Chưa đủ mẫu số';
             } else if (difference !== 0) {
-                comparisonClass = definition.type === 'duration'
-                    ? 'neutral'
-                    : (difference > 0 ? 'positive' : 'negative');
+                comparisonClass = difference > 0 ? 'positive' : 'negative';
                 arrow = difference > 0 ? '↑' : '↓';
 
                 if (definition.type === 'rate') {
@@ -696,17 +624,8 @@ function renderDashboardDataNotice(currentMetrics) {
     if (unassignedAssignments > 0) {
         messages.push(`${formatNumber.format(unassignedAssignments)} lượt KTV–lab chưa có khu vực nên đang được gom vào “Chưa xác định”.`);
     }
-    const unresolvedTechnicians = technicianCatalog.filter(item => !item.isTerminated
-        && (!item.locationAssigned || item.dashboardRegion === 'Chưa phân vùng' || item.dashboardRegion.endsWith(' - Chưa xác định')));
-    if (unresolvedTechnicians.length > 0) {
-        messages.push(`${formatNumber.format(unresolvedTechnicians.length)} KTV chưa đủ thông tin chi nhánh; số liệu được tách vào “Chưa xác định”, không phân bổ suy đoán sang TIN/PNC.`);
-    }
-    const ungradedAttempts = Math.max(0, Number(currentMetrics.totalSessions || 0) - Number(currentMetrics.graded || 0));
-    if (ungradedAttempts > 0) {
-        messages.push(`${formatNumber.format(ungradedAttempts)}/${formatNumber.format(currentMetrics.totalSessions || 0)} lượt thực hành trong kỳ chưa có kết quả chấm; chưa thể kết luận “đạt ở lần thứ mấy” cho các lượt này.`);
-    }
-    if (!dashboardReport?.matrix) {
-        messages.push('Ma trận đang dùng danh sách KTV đang hoạt động × danh mục lab hiện hành làm phạm vi tham chiếu; đây chưa phải dữ liệu phân công đào tạo theo kỳ.');
+    if (currentMetrics.completed > 0 && currentMetrics.graded === 0) {
+        messages.push('Có dữ liệu hoàn thành nhưng chưa có kết quả chấm; tỷ lệ đạt và đạt lần đầu chưa thể tính tin cậy.');
     }
 
     notice.hidden = messages.length === 0;
@@ -985,13 +904,13 @@ function renderOverviewMonthlyTrend(rows) {
         const height = period.totalSessions ? Math.max(12, Math.round((period.totalSessions / maxSessions) * 100)) : 0;
         const isSelected = period.key === selectedKey;
         return `
-            <div class="ktv-month-column ${isSelected ? 'selected' : ''} ${period.isFuture ? 'future' : ''}" title="${period.label}: ${period.totalSessions} lượt thực hành, ${period.completed} cặp KTV–lab có lượt hoàn tất trong tháng">
+            <div class="ktv-month-column ${isSelected ? 'selected' : ''} ${period.isFuture ? 'future' : ''}" title="${period.label}: ${period.totalSessions} lượt thực hành, ${period.completed} bài hoàn thành lũy kế">
                 <strong>${period.totalSessions}</strong>
                 <div class="ktv-month-bar-track">
                     <div class="ktv-month-bar" style="height: ${height}%;"></div>
                 </div>
                 <span class="ktv-month-label">${period.shortLabel}</span>
-                <span class="ktv-month-rate">${period.rate === null ? '—' : `${period.rate}% lượt HT`}</span>
+                <span class="ktv-month-rate">${period.rate === null ? '—' : `${period.rate}% HT`}</span>
             </div>
         `;
     }).join('');
@@ -1090,14 +1009,16 @@ function renderLearnerDetail(rows) {
 
     // Đánh số thứ tự lượt thực hành theo trình tự thời gian cho từng bài lab
     const attemptCounters = new Map();
-    const sortedChronological = [...allLearnerRows].sort(comparePracticeSessions);
+    const sortedChronological = [...allLearnerRows].sort((a, b) => {
+        const timeA = parseDate(a.date).getTime() + (a.time ? parseTimeMs(a.time) : 0);
+        const timeB = parseDate(b.date).getTime() + (b.time ? parseTimeMs(b.time) : 0);
+        return timeA - timeB;
+    });
     sortedChronological.forEach(s => {
         const key = `${s.device}\u001f${s.lab}\u001f${s.mode || 'Thực hành'}`;
         const count = (attemptCounters.get(key) || 0) + 1;
         attemptCounters.set(key, count);
-        s._attemptNumber = isPracticeSession(s) && Number(s.practiceAttemptNo) > 0
-            ? Number(s.practiceAttemptNo)
-            : count;
+        s._attemptNumber = count;
     });
 
     const pageData = getPageSlice(filteredHistory, state.learnerDetailPage, LEARNER_HISTORY_PAGE_SIZE);
@@ -1115,7 +1036,7 @@ function renderLearnerDetail(rows) {
                     <td>${escapeHTML(item.device)}</td>
                     <td>
                         <div>${escapeHTML(item.lab)}</div>
-                        <div style="font-size: 11px; color: var(--muted); margin-top: 2px;">Lượt ${escapeHTML(item.mode || 'Thực hành')} ${item._attemptNumber || 1}</div>
+                        <div style="font-size: 11px; color: var(--muted); margin-top: 2px;">Lần ${item._attemptNumber || 1}</div>
                     </td>
                     <td><span class="status-pill ${getStatusClass(item.status)}">${escapeHTML(item.status)}</span></td>
                     <td>${formatDuration(item.duration)}</td>
@@ -1456,51 +1377,13 @@ let REGION_CATALOG = BASE_REGION_CATALOG.map(region => ({
 }));
 let REGION_FILTER_OPTIONS = REGION_CATALOG.flatMap(region => region.children || [region.code]);
 
-function canonicalDashboardRegion(region) {
-    const value = String(region || '').trim().replace(/\s*-\s*/g, ' - ').replace(/\s+/g, ' ');
-    if (!value) return 'Chưa phân vùng';
-    for (const catalogRegion of BASE_REGION_CATALOG) {
-        if (catalogRegion.code.toLocaleLowerCase('vi') === value.toLocaleLowerCase('vi')) {
-            return catalogRegion.children ? `${catalogRegion.code} - Chưa xác định` : catalogRegion.code;
-        }
-        const child = (catalogRegion.children || []).find(item => item.toLocaleLowerCase('vi') === value.toLocaleLowerCase('vi'));
-        if (child) return child;
-    }
-    return value;
-}
-
-function resolveDashboardRegionLeaf(dashboardRegion, regionName = '', branchName = '') {
-    const group = String(dashboardRegion || '').trim();
-    const candidates = [regionName, dashboardRegion, branchName]
-        .map(value => String(value || '').trim())
-        .filter(Boolean);
-    const hierarchicalGroup = BASE_REGION_CATALOG.find(region => region.children
-        && candidates.some(candidate => {
-            const normalized = canonicalDashboardRegion(candidate).toLocaleLowerCase('vi');
-            return normalized === region.code.toLocaleLowerCase('vi')
-                || normalized.startsWith(`${region.code.toLocaleLowerCase('vi')} - `);
-        }));
-
-    if (!hierarchicalGroup) return canonicalDashboardRegion(group || regionName || branchName);
-
-    for (const candidate of candidates) {
-        const normalized = canonicalDashboardRegion(candidate);
-        const exactChild = hierarchicalGroup.children.find(child => child.toLocaleLowerCase('vi') === normalized.toLocaleLowerCase('vi'));
-        if (exactChild) return exactChild;
-        const suffix = normalized.split(' - ').pop()?.toLocaleUpperCase('vi');
-        const suffixChild = hierarchicalGroup.children.find(child => child.toLocaleUpperCase('vi').endsWith(` - ${suffix}`));
-        if (suffixChild && suffix !== hierarchicalGroup.code.toLocaleUpperCase('vi')) return suffixChild;
-    }
-    return `${hierarchicalGroup.code} - Chưa xác định`;
-}
-
 function getLearnerRegion(learner) {
     const key = String(learner || '').trim().toLowerCase();
     return technicianByIdentity.get(key)?.dashboardRegion || 'Chưa phân vùng';
 }
 
 function normalizeRegionName(region, learner) {
-    const value = canonicalDashboardRegion(region);
+    const value = String(region || '').trim();
     if (!value) return getLearnerRegion(learner);
     const directMatch = REGION_FILTER_OPTIONS.find(option => option.toLowerCase() === value.toLowerCase());
     return directMatch || value;
@@ -1567,7 +1450,7 @@ function renderAuthoritativeDetailedReport(reportMatrix) {
     };
     els.detailReportHead.innerHTML = `
         <tr class="report-device-header-row">
-            <th class="report-region-head" rowspan="2" scope="col"><strong>Khu vực / Chi nhánh</strong></th>
+            <th class="report-region-head" rowspan="2" scope="col"><strong>Khu vực/CNx</strong></th>
             ${groups.map((group, index) => `<th class="report-device-group report-device-tone-${index % 5}" colspan="${(group.labs || []).length}" scope="colgroup">${escapeHTML(group.device?.name || group.device_name || '')}<span>${(group.labs || []).length} bài lab</span></th>`).join('')}
             <th class="report-summary-head" rowspan="2" scope="col">Tổng</th>
         </tr>
@@ -1660,9 +1543,9 @@ function getDetailReportCellClass(cell) {
 
 function renderDetailReportMetricCell(cell, extraClass = '') {
     if (!cell.eligible) return `<td class="report-metric-cell report-cell-zero ${extraClass}" title="Không có KTV trong phạm vi này"><strong>—</strong><span>N/A</span></td>`;
-    if (!cell.attempts) return `<td class="report-metric-cell report-cell-zero ${extraClass}" title="Có ${cell.eligible} KTV trong phạm vi nhưng chưa ghi nhận lượt thực hành trong kỳ"><strong>0/${formatNumber.format(cell.eligible)}</strong><span>0% HT</span></td>`;
+    if (!cell.attempts) return `<td class="report-metric-cell report-cell-zero ${extraClass}" title="Chưa có KTV thực hiện trong khoảng lọc"><strong>—</strong><span>Chưa có dữ liệu</span></td>`;
     const coverageUnit = cell.isAggregate ? 'lượt KTV-lab' : 'KTV';
-    const title = `${cell.completed}/${cell.eligible} ${coverageUnit} có lượt hoàn tất • ${cell.attempted} ${coverageUnit} đã thực hành • ${cell.attempts} lượt • Trung bình ${formatDuration(cell.avgDuration)}`;
+    const title = `${cell.completed}/${cell.eligible} ${coverageUnit} hoàn thành • ${cell.attempted} ${coverageUnit} đã làm • ${cell.attempts} phiên • Trung bình ${formatDuration(cell.avgDuration)}`;
     return `
         <td class="report-metric-cell ${getDetailReportCellClass(cell)} ${extraClass}" title="${escapeHTML(title)}">
             <strong>${formatNumber.format(cell.completed)}/${formatNumber.format(cell.eligible)}</strong>
@@ -1700,19 +1583,15 @@ function renderDetailedReport(rows) {
             isParent: true,
             isExpanded: state.detailReportExpandedRegions.has(region.code)
         });
-        region.children.forEach(child => rowDefinitions.push({
-            name: child,
-            parent: region.code,
-            regionKeys: [child],
-            isChild: true,
-            isVisible: state.detailReportExpandedRegions.has(region.code)
-        }));
+        if (state.detailReportExpandedRegions.has(region.code)) {
+            region.children.forEach(child => rowDefinitions.push({ name: child, regionKeys: [child], isChild: true }));
+        }
     });
 
     els.detailReportHead.innerHTML = `
         <tr class="report-device-header-row">
             <th class="report-region-head" rowspan="2" scope="col">
-                <strong>Khu vực / Chi nhánh</strong>
+                <strong>Khu vực/CNx</strong>
             </th>
             ${groups.map((group, index) => `
                 <th class="report-device-group report-device-tone-${index % 5}" colspan="${group.labs.length}" scope="colgroup">
@@ -1735,16 +1614,13 @@ function renderDetailedReport(rows) {
     els.detailReportBody.innerHTML = rowDefinitions.map(row => {
         const rowTotal = getDetailReportTotal(cellIndex, row.regionKeys, columns);
         const rowClass = row.isParent ? 'report-region-parent' : (row.isChild ? 'report-region-child' : '');
-        const childVisibility = row.isChild && !row.isVisible ? ' hidden' : '';
-        const childOwner = row.isChild ? ` data-report-region-child="${escapeHTML(row.parent)}"` : '';
         const regionLabel = row.isParent
-            ? `<button type="button" class="report-region-toggle" data-report-region-toggle="${escapeHTML(row.name)}" aria-expanded="${row.isExpanded}" aria-label="${row.isExpanded ? 'Thu gọn' : 'Mở'} chi tiết chi nhánh ${escapeHTML(row.name)}">
-                    <span aria-hidden="true">${row.isExpanded ? '▾' : '▸'}</span>
-                    <strong>${escapeHTML(row.name)}</strong>
+            ? `<button type="button" class="report-region-toggle" data-report-region-toggle="${escapeHTML(row.name)}" aria-expanded="${row.isExpanded}">
+                    <span>${row.isExpanded ? '▾' : '▸'}</span>${escapeHTML(row.name)}
                </button>`
             : `<div class="report-region-label">${row.isChild ? '<span class="report-region-bullet">•</span>' : '<span class="report-region-spacer"></span>'}${escapeHTML(row.name)}</div>`;
         return `
-            <tr class="${rowClass}"${childOwner}${childVisibility}>
+            <tr class="${rowClass}">
                 <th class="report-region-cell" scope="row">${regionLabel}</th>
                 ${columns.map(column => renderDetailReportMetricCell(getDetailReportCell(cellIndex, row.regionKeys, column), column.isFirst ? 'group-start' : '')).join('')}
                 ${renderDetailReportMetricCell(rowTotal, 'report-row-total')}
@@ -1784,16 +1660,9 @@ function renderDetailedReport(rows) {
     els.detailReportBody.querySelectorAll('[data-report-region-toggle]').forEach(button => {
         button.addEventListener('click', () => {
             const region = button.dataset.reportRegionToggle;
-            const willExpand = !state.detailReportExpandedRegions.has(region);
-            if (willExpand) state.detailReportExpandedRegions.add(region);
-            else state.detailReportExpandedRegions.delete(region);
-            button.setAttribute('aria-expanded', String(willExpand));
-            button.setAttribute('aria-label', `${willExpand ? 'Thu gọn' : 'Mở'} chi tiết chi nhánh ${region}`);
-            const indicator = button.querySelector('[aria-hidden="true"]');
-            if (indicator) indicator.textContent = willExpand ? '▾' : '▸';
-            els.detailReportBody.querySelectorAll('[data-report-region-child]').forEach(childRow => {
-                if (childRow.dataset.reportRegionChild === region) childRow.hidden = !willExpand;
-            });
+            if (state.detailReportExpandedRegions.has(region)) state.detailReportExpandedRegions.delete(region);
+            else state.detailReportExpandedRegions.add(region);
+            renderDetailedReport(rows);
         });
     });
 
@@ -1881,12 +1750,7 @@ function normalizeTechnicianCatalog(apiTechnicians = []) {
         regionCode: item.region_code || item.regionCode || '',
         regionName: item.region_name || item.regionName || item.dashboard_region || item.dashboardRegion || 'Chưa phân vùng',
         branchName: item.branch_name || item.branchName || '',
-        dashboardRegion: resolveDashboardRegionLeaf(
-            item.dashboard_group || item.dashboardGroup || item.dashboard_region || item.dashboardRegion,
-            item.region_name || item.regionName,
-            item.branch_name || item.branchName
-        ),
-        dashboardGroup: canonicalDashboardRegion(item.dashboard_group || item.dashboardGroup || item.dashboard_region || item.dashboardRegion),
+        dashboardRegion: item.dashboard_region || item.dashboardRegion || item.region_name || item.regionName || 'Chưa phân vùng',
         locationAssigned: Boolean(item.location_assigned ?? item.locationAssigned ?? item.region_id ?? item.regionId),
         isTerminated: Boolean(item.is_terminated ?? item.isTerminated)
     }));
@@ -1901,8 +1765,6 @@ function normalizeTrainingAssignments(apiAssignments = []) {
         lab: item.lab_name || item.labName || item.lab || 'N/A',
         status: item.status || 'assigned',
         completed: ['completed', 'passed'].includes(item.status) || Boolean(item.completed),
-        passed: item.status === 'passed' || Boolean(item.passed),
-        firstPassAttemptNo: Number(item.first_pass_attempt_no || item.firstPassAttemptNo) || null,
         completedAt: item.completed_at || item.completedAt || null
     }));
 }
@@ -1915,7 +1777,6 @@ function rebuildTechnicianIndex() {
     }));
     REGION_FILTER_OPTIONS = REGION_CATALOG.flatMap(region => region.children || [region.code]);
     technicianCatalog.forEach(item => {
-        item.dashboardRegion = canonicalDashboardRegion(item.dashboardRegion);
         [item.email, item.employeeId, item.userId].filter(Boolean).forEach(identity => {
             technicianByIdentity.set(String(identity).trim().toLowerCase(), item);
         });
@@ -1923,26 +1784,10 @@ function rebuildTechnicianIndex() {
     const dynamicRegions = [...new Set(technicianCatalog.map(item => item.dashboardRegion).filter(Boolean))]
         .sort((a, b) => a.localeCompare(b, 'vi'));
     dynamicRegions.forEach(region => {
-        if (REGION_FILTER_OPTIONS.some(item => item.toLocaleLowerCase('vi') === region.toLocaleLowerCase('vi'))) return;
-        const parent = REGION_CATALOG.find(item => item.children
-            && region.toLocaleLowerCase('vi').startsWith(`${item.code.toLocaleLowerCase('vi')} - `));
-        if (parent) {
-            parent.children.push(region);
-            return;
-        }
-        if (REGION_CATALOG.some(item => item.code.toLocaleLowerCase('vi') === region.toLocaleLowerCase('vi'))) return;
+        if (REGION_FILTER_OPTIONS.includes(region)) return;
         REGION_CATALOG.push({ code: region });
+        REGION_FILTER_OPTIONS.push(region);
     });
-    REGION_CATALOG.forEach(region => {
-        if (!region.children) return;
-        region.children.sort((left, right) => {
-            const leftUnknown = left.endsWith(' - Chưa xác định');
-            const rightUnknown = right.endsWith(' - Chưa xác định');
-            if (leftUnknown !== rightUnknown) return leftUnknown ? 1 : -1;
-            return left.localeCompare(right, 'vi', { numeric: true, sensitivity: 'base' });
-        });
-    });
-    REGION_FILTER_OPTIONS = REGION_CATALOG.flatMap(region => region.children || [region.code]);
 }
 
 function rebuildLearnerNameMap() {
@@ -1971,22 +1816,12 @@ function mapApiSessions(apiSessions = []) {
             || technicianByIdentity.get(String(item.email || '').trim().toLowerCase());
         return {
             sessionId: item.session_id,
-            startedAt: item.started_at || null,
             technicianId: item.technician_id || item.technician?.technician_id,
             technicianName: technician?.displayName || item.technician?.full_name || item.full_name || '',
             date: dateOnly(item.started_at),
             time: timeOnly(item.started_at),
             learner,
-            region: normalizeRegionName(
-                technician?.dashboardRegion
-                    || item.dashboard_region
-                    || item.technician?.dashboard_region
-                    || technician?.regionName
-                    || item.region_name
-                    || item.region
-                    || item.technician?.region,
-                learner
-            ),
+            region: normalizeRegionName(technician?.regionName || item.region_name || item.region || item.technician?.region, learner),
             classCode: technician?.classCode || item.class_code || '',
             jobTitle: technician?.jobTitle || item.job_title || '',
             unitCode: technician?.unitCode || item.unit_code || '',
@@ -2008,7 +1843,6 @@ function mapApiSessions(apiSessions = []) {
                 ? null
                 : item.completed_first_try === true || item.completed_first_try === 1
                     || ['1', 't', 'true', 'yes'].includes(String(item.completed_first_try).trim().toLowerCase()),
-            practiceAttemptNo: Number(item.practice_attempt_no) > 0 ? Number(item.practice_attempt_no) : null,
             lastAction: normalizeActionText(item)
         };
     });
@@ -2187,7 +2021,6 @@ async function fetchDashboardData(versionHint = '') {
         technicians,
         techniciansAuthoritative,
         assignments: normalizeTrainingAssignments(data.assignments || []),
-        dataQuality: data.data_quality || null,
         assignmentsRequested,
         report,
         version,
@@ -2204,7 +2037,6 @@ function applyDashboardData(data) {
         state.assignmentsLoaded = true;
     }
     if (data.report !== undefined) dashboardReport = data.report;
-    dashboardDataQuality = data.dataQuality || null;
     technicianCatalogAuthoritative = Boolean(data.techniciansAuthoritative);
     state.dashboardDataLoaded = true;
     rebuildTechnicianIndex();
@@ -3254,17 +3086,7 @@ function getInstructorClassProgress(selectedClass, selectedGroups) {
             const deviceResults = selectedGroups.map(group => {
                 const labResults = group.labs.map(lab => {
                     const assignment = assignmentByLearnerLab.get(`${learner}\u001f${group.device}\u001f${lab}`);
-                    return {
-                        lab,
-                        assigned: Boolean(assignment),
-                        completed: Boolean(assignment?.completed),
-                        passed: Boolean(assignment?.passed),
-                        attempts: 0,
-                        completionAttemptNo: null,
-                        recordedPassAttemptNo: assignment?.firstPassAttemptNo || null,
-                        ungradedCount: 0,
-                        failedCount: 0
-                    };
+                    return { lab, assigned: Boolean(assignment), completed: Boolean(assignment?.completed) };
                 });
                 const assignedResults = labResults.filter(item => item.assigned);
                 const completed = assignedResults.filter(item => item.completed).length;
@@ -3276,6 +3098,7 @@ function getInstructorClassProgress(selectedClass, selectedGroups) {
             return { learner, deviceResults, completed, total, rate: total ? Math.round((completed / total) * 100) : null };
         });
     }
+    const completedStatus = statusToVietnamese('completed');
     const rowsByLearner = new Map();
     sessions.forEach(item => {
         if (item.mode === 'Hướng dẫn') return;
@@ -3286,21 +3109,12 @@ function getInstructorClassProgress(selectedClass, selectedGroups) {
     return (selectedClass?.members || []).map(learner => {
         const learnerSessions = rowsByLearner.get(learner) || [];
         const deviceResults = selectedGroups.map(group => {
-            const labResults = group.labs.map(lab => {
-                const labSessions = learnerSessions.filter(item => item.device === group.device && item.lab === lab);
-                const milestones = getPracticeMilestones(labSessions);
-                return {
-                    lab,
-                    assigned: true,
-                    completed: milestones.completionAttemptNo !== null,
-                    passed: milestones.recordedPassAttemptNo !== null,
-                    attempts: milestones.attemptCount,
-                    completionAttemptNo: milestones.completionAttemptNo,
-                    recordedPassAttemptNo: milestones.recordedPassAttemptNo,
-                    ungradedCount: milestones.ungradedCount,
-                    failedCount: milestones.failedCount
-                };
-            });
+            const completedLabs = new Set(
+                learnerSessions
+                    .filter(item => item.device === group.device && item.status === completedStatus)
+                    .map(item => item.lab)
+            );
+            const labResults = group.labs.map(lab => ({ lab, completed: completedLabs.has(lab) }));
             const completed = labResults.filter(item => item.completed).length;
             const total = group.labs.length;
             return { device: group.device, labResults, completed, total, rate: total ? Math.round((completed / total) * 100) : 0 };
@@ -3317,29 +3131,9 @@ function getInstructorClassProgress(selectedClass, selectedGroups) {
     });
 }
 
-function getInstructorLabCellClass(lab) {
-    if (lab?.assigned === false) return 'instructor-progress-unassigned';
-    if (lab?.passed) return 'instructor-progress-complete';
-    if (lab?.completed) return 'instructor-progress-ungraded';
-    if (lab?.attempts > 0) return 'instructor-progress-pending';
-    return 'instructor-progress-notstarted';
-}
-
-function getInstructorLabCellContent(lab) {
-    if (lab?.assigned === false) return '—';
-    if (lab?.passed) return `Đạt L${lab.recordedPassAttemptNo || '?'}`;
-    if (lab?.completed) return `HT L${lab.completionAttemptNo || '?'}`;
-    if (lab?.attempts > 0) return `${lab.attempts} lượt`;
-    return '·';
-}
-
-function getInstructorLabCellTitle(device, lab) {
-    const prefix = `${device} • ${lab.lab}: `;
-    if (lab.assigned === false) return `${prefix}Ngoài phạm vi`;
-    if (lab.passed) return `${prefix}Ghi nhận đạt ở lượt thực hành ${lab.recordedPassAttemptNo || '?'}; tổng ${lab.attempts} lượt`;
-    if (lab.completed) return `${prefix}Hoàn tất phiên lần đầu ở lượt ${lab.completionAttemptNo || '?'}; chưa có kết quả chấm`;
-    if (lab.attempts > 0) return `${prefix}${lab.failedCount ? 'Chưa đạt' : 'Đang thực hiện'}; ${lab.attempts} lượt`;
-    return `${prefix}Chưa thực hiện`;
+function getInstructorLabCellClass(completed, assigned = true) {
+    if (!assigned) return 'instructor-progress-unassigned';
+    return completed ? 'instructor-progress-complete' : 'instructor-progress-pending';
 }
 
 function getInstructorRateClass(rate) {
@@ -3485,7 +3279,7 @@ function renderInstructorClassProgress() {
         <span class="instructor-summary-chip"><strong>${progressRows.length}${filtersActive ? `/${allProgressRows.length}` : ''}</strong> KTV hiển thị</span>
         <span class="instructor-summary-chip"><strong>${selectedGroups.length}</strong> thiết bị</span>
         <span class="instructor-summary-chip"><strong>${columns.length}</strong> bài lab</span>
-        <span class="instructor-summary-chip"><strong>${completed}/${total}</strong> bài có lượt hoàn tất</span>
+        <span class="instructor-summary-chip"><strong>${completed}/${total}</strong> bài hoàn thành</span>
         <span class="instructor-summary-chip"><strong>${rate === null ? '—' : `${rate}%`}</strong> tiến độ lớp</span>
     `;
 
@@ -3499,7 +3293,7 @@ function renderInstructorClassProgress() {
                     <span>${group.labs.length} bài lab</span>
                 </th>
             `).join('')}
-            <th class="instructor-progress-total" rowspan="2" scope="col">Hoàn tất</th>
+            <th class="instructor-progress-total" rowspan="2" scope="col">Hoàn thành</th>
             <th class="instructor-progress-rate" rowspan="2" scope="col">Tỷ lệ</th>
         </tr>
         <tr class="instructor-progress-lab-row">
@@ -3513,8 +3307,8 @@ function renderInstructorClassProgress() {
             <td class="instructor-progress-index">${index + 1}</td>
             <th class="instructor-progress-email" scope="row" title="${escapeHTML(row.learner)}">${renderInstructorLearner(row.learner)}</th>
             ${row.deviceResults.flatMap(item => item.labResults.map(lab => `
-                <td class="instructor-progress-lab instructor-lab-cell ${getInstructorLabCellClass(lab)}" title="${escapeHTML(getInstructorLabCellTitle(item.device, lab))}">
-                    ${escapeHTML(getInstructorLabCellContent(lab))}
+                <td class="instructor-progress-lab instructor-lab-cell ${getInstructorLabCellClass(lab.completed, lab.assigned !== false)}" title="${escapeHTML(`${item.device} • ${lab.lab}: ${lab.assigned === false ? 'Chưa giao' : (lab.completed ? 'Hoàn thành' : 'Chưa hoàn thành')}`)}">
+                    ${lab.assigned === false ? '—' : (lab.completed ? '✓' : '○')}
                 </td>
             `)).join('')}
             <td class="instructor-progress-total">${row.completed}/${row.total}</td>
@@ -3542,7 +3336,7 @@ function renderInstructorClassProgress() {
                 ${columnTotals.map((item, index) => {
                     const columnRate = item.assigned ? Math.round((item.completed / item.assigned) * 100) : null;
                     return `
-                        <td class="instructor-progress-lab instructor-progress-column-total ${columns[index].isFirst ? 'group-start' : ''}" title="${escapeHTML(`${columns[index].device} • ${columns[index].lab}: ${item.completed}/${item.assigned} KTV có lượt hoàn tất`)}">
+                        <td class="instructor-progress-lab instructor-progress-column-total ${columns[index].isFirst ? 'group-start' : ''}" title="${escapeHTML(`${columns[index].device} • ${columns[index].lab}: ${item.completed}/${item.assigned} KTV hoàn thành`)}">
                             <strong>${item.assigned ? `${item.completed}/${item.assigned}` : '—'}</strong>
                             ${columnRate === null ? '' : `<small>${columnRate}%</small>`}
                         </td>
@@ -3777,11 +3571,19 @@ function getClassMatrixData() {
             const assign = assignmentMap.get(assignKey);
             const labSessions = sessionsByCell.get(`${learnerKey}\u001f${col.device}\u001f${col.lab}`) || [];
             const isAssigned = trainingAssignments.length === 0 ? true : Boolean(assign);
-            const milestones = getPracticeMilestones(labSessions);
-            const isCompleted = isAssigned && (Boolean(assign?.completed) || milestones.completionAttemptNo !== null);
-            const isPassed = isAssigned && (Boolean(assign?.passed) || milestones.recordedPassAttemptNo !== null);
-            const attempts = milestones.attemptCount;
+            const isCompleted = isAssigned && (Boolean(assign?.completed) || labSessions.some(s => s.status === 'Hoàn thành' || s.status === 'completed'));
+            const attempts = labSessions.length;
             const attempted = attempts > 0;
+
+            // Xác định số thứ tự lần thực hành đạt chuẩn hoàn thành
+            const sortedLabSessions = [...labSessions].sort((a, b) => {
+                const timeA = parseDate(a.date).getTime() + (a.time ? parseTimeMs(a.time) : 0);
+                const timeB = parseDate(b.date).getTime() + (b.time ? parseTimeMs(b.time) : 0);
+                return timeA - timeB;
+            });
+            const practiceSessions = sortedLabSessions.filter(s => s.mode !== 'Hướng dẫn');
+            const passIndex = practiceSessions.findIndex(s => s.status === 'Hoàn thành' || s.status === 'completed' || s.is_passed === true);
+            const firstPassAttemptNo = passIndex !== -1 ? (passIndex + 1) : (Number(assign?.first_pass_attempt_no) || null);
 
             if (isAssigned) {
                 ktvAssigned += 1;
@@ -3808,16 +3610,9 @@ function getClassMatrixData() {
                 lab: col.lab,
                 assigned: isAssigned,
                 completed: isCompleted,
-                passed: isPassed,
                 attempts,
-                completionAttemptNo: milestones.completionAttemptNo,
-                recordedPassAttemptNo: milestones.recordedPassAttemptNo || assign?.firstPassAttemptNo || null,
-                firstPassAttemptNo: milestones.firstPassAttemptNo || assign?.firstPassAttemptNo || null,
-                hasUngradedBeforePass: milestones.hasUngradedBeforePass,
-                ungradedCount: milestones.ungradedCount,
-                failedCount: milestones.failedCount,
-                gradedCount: milestones.gradedCount,
-                lastSession: [...labSessions].sort(comparePracticeSessions).at(-1) || null
+                firstPassAttemptNo,
+                lastSession: labSessions[labSessions.length - 1] || null
             };
         });
 
@@ -3934,7 +3729,7 @@ function renderClassMatrixReport() {
                     <span>${(group.labs || []).length} bài lab</span>
                 </th>
             `).join('')}
-            <th class="ktv-total-head" scope="col" rowspan="2">Hoàn tất</th>
+            <th class="ktv-total-head" scope="col" rowspan="2">Hoàn thành</th>
             <th class="ktv-rate-head" scope="col" rowspan="2">Tỷ lệ</th>
         </tr>
         <tr class="report-lab-header-row">
@@ -3966,25 +3761,18 @@ function renderClassMatrixReport() {
                 </th>
                 ${row.cells.map(cell => {
                     if (!cell.assigned) {
-                        return `<td class="report-metric-cell report-cell-zero" title="${escapeHTML(`${row.name} • ${cell.device} • ${cell.lab}: Ngoài phạm vi đang áp dụng`)}"><strong>—</strong><span>Ngoài phạm vi</span></td>`;
-                    }
-                    if (cell.passed) {
-                        const passNo = cell.recordedPassAttemptNo;
-                        const evidenceNote = cell.hasUngradedBeforePass
-                            ? 'Có lượt trước chưa chấm nên đây là lần đạt được ghi nhận, chưa chắc là lần đạt đầu tiên'
-                            : 'Kết quả chấm đã xác nhận';
-                        const tooltip = `${row.name} • ${cell.device} • ${cell.lab}: Ghi nhận đạt ở lượt thực hành ${passNo || '?'} • ${evidenceNote} • Tổng ${cell.attempts} lượt`;
-                        return `<td class="report-metric-cell report-cell-high" title="${escapeHTML(tooltip)}"><strong>Đạt L${passNo || '?'}</strong><span>${cell.hasUngradedBeforePass ? 'Cần rà soát' : 'Đã chấm'}</span></td>`;
+                        return `<td class="report-metric-cell report-cell-zero" title="${escapeHTML(`${row.name} • ${cell.device} • ${cell.lab}: Chưa phân công`)}"><strong>—</strong><span>Chưa giao</span></td>`;
                     }
                     if (cell.completed) {
-                        const completionNo = cell.completionAttemptNo;
-                        const tooltip = `${row.name} • ${cell.device} • ${cell.lab}: Hoàn tất phiên lần đầu ở lượt thực hành ${completionNo || '?'} • ${cell.ungradedCount} lượt chưa chấm • Chưa thể kết luận đạt`;
-                        return `<td class="report-metric-cell report-cell-medium" title="${escapeHTML(tooltip)}"><strong>HT L${completionNo || '?'}</strong><span>Chưa chấm · ${cell.attempts} lượt</span></td>`;
+                        const passNote = cell.firstPassAttemptNo === 1 
+                            ? 'Đạt ngay lần thực hành 1' 
+                            : (cell.firstPassAttemptNo > 1 ? `Đạt ở lần thực hành thứ ${cell.firstPassAttemptNo}` : 'Đã đạt chuẩn');
+                        const tooltip = `${row.name} • ${cell.device} • ${cell.lab}: Đã hoàn thành (${passNote}) • Tổng ${cell.attempts} lượt thực hành`;
+                        return `<td class="report-metric-cell report-cell-high" title="${escapeHTML(tooltip)}"><strong>1/1</strong><span>100% HT</span></td>`;
                     }
                     if (cell.attempts > 0) {
-                        const resultLabel = cell.failedCount > 0 && cell.ungradedCount === 0 ? 'Chưa đạt' : 'Đang thực hiện';
-                        const tooltip = `${row.name} • ${cell.device} • ${cell.lab}: ${resultLabel} • ${cell.attempts} lượt thực hành (${cell.gradedCount} đã chấm, ${cell.ungradedCount} chưa chấm)`;
-                        return `<td class="report-metric-cell report-cell-low" title="${escapeHTML(tooltip)}"><strong>${cell.attempts} lượt</strong><span>${resultLabel}</span></td>`;
+                        const tooltip = `${row.name} • ${cell.device} • ${cell.lab}: Đang thực hiện • Đã làm ${cell.attempts} lượt thực hành`;
+                        return `<td class="report-metric-cell report-cell-low" title="${escapeHTML(tooltip)}"><strong>0/1</strong><span>0% HT</span></td>`;
                     }
                     const tooltip = `${row.name} • ${cell.device} • ${cell.lab}: Chưa thực hiện`;
                     return `<td class="report-metric-cell report-cell-zero" title="${escapeHTML(tooltip)}"><strong>0/1</strong><span>Chưa làm</span></td>`;
@@ -4008,7 +3796,7 @@ function renderClassMatrixReport() {
                 const stat = data.labStats.get(colKey) || { assigned: 0, completed: 0, attempts: 0 };
                 const rate = stat.assigned > 0 ? Math.round((stat.completed / stat.assigned) * 100) : null;
                 const cellClass = rate === null ? 'report-cell-zero' : (rate >= 80 ? 'report-cell-high' : (rate >= 50 ? 'report-cell-medium' : 'report-cell-low'));
-                const tooltip = `${stat.completed}/${stat.assigned} KTV có lượt hoàn tất • ${stat.attempts} lượt thực hành`;
+                const tooltip = `${stat.completed}/${stat.assigned} KTV hoàn thành • ${stat.attempts} lượt thực hành`;
                 if (!stat.assigned) {
                     return `<td class="report-metric-cell report-cell-zero ${col.isFirst ? 'group-start' : ''}" title="Chưa giao trong lớp này"><strong>—</strong><span>Chưa giao</span></td>`;
                 }
@@ -4551,19 +4339,18 @@ function buildActivityReportDescriptor() {
         available: orderedRows.length > 0,
         metadata: [
             ['Quy ước thời lượng', 'Giây và định dạng đọc nhanh'],
-            ['Thứ tự dữ liệu', 'Mới nhất đến cũ nhất'],
-            ['Quy ước kết quả', 'Hoàn tất phiên khác với Đạt; Đạt/Không đạt chỉ có khi đã chấm']
+            ['Thứ tự dữ liệu', 'Mới nhất đến cũ nhất']
         ],
         headers: [
             'STT', 'Ngày', 'Giờ', 'Mã phiên', 'Mã NV', 'Họ và tên', 'Email', 'Vị trí',
-            'Khu vực / Chi nhánh', 'Chi nhánh', 'Đơn vị', 'Lớp', 'Thiết bị', 'Bài lab', 'Kỹ năng',
-            'Chế độ', 'Lượt thực hành', 'Trạng thái phiên', 'Kết quả chấm', 'Đạt ngay lượt 1', 'Thời lượng (giây)',
+            'Khu vực/CNx', 'Chi nhánh', 'Đơn vị', 'Lớp', 'Thiết bị', 'Bài lab', 'Kỹ năng',
+            'Chế độ', 'Trạng thái', 'Kết quả', 'Hoàn thành lần đầu', 'Thời lượng (giây)',
             'Thời lượng', 'Hành động cuối'
         ],
         columnTypes: [
             'integer', 'date', 'time', 'text', 'text', 'text', 'text', 'text',
             'text', 'text', 'text', 'text', 'text', 'text', 'text', 'text',
-            'integer', 'text', 'text', 'text', 'integer', 'text', 'text'
+            'text', 'text', 'text', 'integer', 'text', 'text'
         ],
         rows: orderedRows.map((row, index) => {
             const technician = technicianByIdentity.get(String(row.learner || '').trim().toLowerCase())
@@ -4586,7 +4373,6 @@ function buildActivityReportDescriptor() {
                 row.lab || '',
                 row.skill || '',
                 row.mode || '',
-                isPracticeSession(row) ? (row.practiceAttemptNo || '') : '',
                 row.status || '',
                 row.isPassed === true ? 'Đạt' : (row.isPassed === false ? 'Không đạt' : ''),
                 row.firstTry === true ? 'Có' : (row.firstTry === false ? 'Không' : ''),
@@ -4631,12 +4417,12 @@ function buildAuthoritativeRegionReportDescriptor(matrix) {
         type: 'region',
         title: 'FTC - BÁO CÁO TIẾN ĐỘ THỰC HÀNH THEO CHI NHÁNH',
         period: dashboardReport?.meta?.period?.label || getRangeLabel(),
-        scope: 'Ma trận Khu vực / Chi nhánh theo thiết bị và bài lab',
+        scope: 'Ma trận Khu vực/CNx theo thiết bị và bài lab',
         filename: buildReportFilename('FTC_Tien_do_theo_chi_nhanh'),
         countLabel: `${formatNumber.format(rows.length)} khu vực · ${formatNumber.format(columns.length)} bài lab`,
         available: rows.length > 0 && columns.length > 0,
-        metadata: [['Quy ước ô dữ liệu', 'Có lượt hoàn tất/phạm vi (tỷ lệ) · lượt thực hành']],
-        headers: ['STT', 'Khu vực / Chi nhánh', ...columns.map(column => `${column.device} - ${column.lab}`), 'Tổng khu vực'],
+        metadata: [['Quy ước ô dữ liệu', 'Hoàn thành/phạm vi (tỷ lệ) · lượt thực hành']],
+        headers: ['STT', 'Khu vực/CNx', ...columns.map(column => `${column.device} - ${column.lab}`), 'Tổng khu vực'],
         columnTypes: ['integer', 'text', ...columns.map(() => 'text'), 'text'],
         rows
     };
@@ -4672,16 +4458,15 @@ function buildRegionReportDescriptor() {
         type: 'region',
         title: 'FTC - BÁO CÁO TIẾN ĐỘ THỰC HÀNH THEO CHI NHÁNH',
         period: getRangeLabel(),
-        scope: 'Ma trận Khu vực / Chi nhánh theo thiết bị và bài lab',
+        scope: 'Ma trận Khu vực/CNx theo thiết bị và bài lab',
         filename: buildReportFilename('FTC_Tien_do_theo_chi_nhanh'),
         countLabel: `${formatNumber.format(rows.length)} khu vực · ${formatNumber.format(columns.length)} bài lab`,
         available: rows.length > 0 && columns.length > 0,
         metadata: [
-            ['Quy ước ô dữ liệu', 'Có lượt hoàn tất/phạm vi tham chiếu (tỷ lệ) · lượt thực hành'],
-            ['Nguồn phạm vi', 'KTV đang hoạt động × danh mục bài lab hiện hành; chưa phải phân công theo kỳ'],
-            ['Cách quy vùng', 'Theo khu vực hiện tại trong hồ sơ KTV']
+            ['Quy ước ô dữ liệu', 'Hoàn thành/phạm vi (tỷ lệ) · lượt thực hành'],
+            ['Nguồn phạm vi', 'Danh mục KTV đang hoạt động và danh mục bài lab']
         ],
-        headers: ['STT', 'Khu vực / Chi nhánh', ...columns.map(column => `${column.device} - ${column.lab}`), 'Tổng khu vực'],
+        headers: ['STT', 'Khu vực/CNx', ...columns.map(column => `${column.device} - ${column.lab}`), 'Tổng khu vực'],
         columnTypes: ['integer', 'text', ...columns.map(() => 'text'), 'text'],
         rows
     };
@@ -4704,15 +4489,14 @@ function buildClassMatrixReportDescriptor() {
         metadata: [
             ['Lớp học', classLabel],
             ['Thiết bị', deviceLabel],
-            ['Tỷ lệ hoàn tất ghi nhận', `${data.totalCompletedAll}/${data.totalAssignedAll} (${data.overallRate}%)`],
+            ['Tiến độ tổng', `${data.totalCompletedAll}/${data.totalAssignedAll} (${data.overallRate}%)`],
             ['Tổng lượt thực hành', data.totalSessions],
-            ['Quy ước trạng thái', 'Đạt Lx · HT Lx chưa chấm · Chưa đạt/đang thực hiện · Chưa làm · Ngoài phạm vi'],
-            ['Nguồn phạm vi', dashboardReport?.matrix ? 'Phân công theo kỳ' : 'Danh mục KTV đang hoạt động × danh mục lab hiện hành']
+            ['Quy ước trạng thái', 'Hoàn thành · Đang thực hiện · Chưa thực hiện · Ngoài phạm vi']
         ],
         headers: [
-            'STT', 'Mã NV', 'Họ và tên', 'Email', 'Khu vực / Chi nhánh', 'Lớp học',
+            'STT', 'Mã NV', 'Họ và tên', 'Email', 'Khu vực/CNx', 'Lớp học',
             ...data.columns.map(column => `${column.device} - ${column.lab}`),
-            'Bài có lượt hoàn tất', 'Bài trong phạm vi', 'Tỷ lệ hoàn tất (%)', 'Lượt thực hành'
+            'Bài hoàn thành', 'Bài trong phạm vi', 'Tỷ lệ hoàn thành (%)', 'Lượt thực hành'
         ],
         columnTypes: [
             'integer', 'text', 'text', 'text', 'text', 'text',
@@ -4728,12 +4512,8 @@ function buildClassMatrixReportDescriptor() {
             row.className || row.classCode || classLabel,
             ...row.cells.map(cell => {
                 if (!cell.assigned) return 'Ngoài phạm vi';
-                if (cell.passed) {
-                    const evidence = cell.hasUngradedBeforePass ? ' · Có lượt trước chưa chấm' : '';
-                    return `Đạt ghi nhận L${cell.recordedPassAttemptNo || '?'} · ${cell.attempts} lượt${evidence}`;
-                }
-                if (cell.completed) return `HT L${cell.completionAttemptNo || '?'} · Chưa chấm · ${cell.attempts} lượt`;
-                if (cell.attempts > 0) return `${cell.failedCount ? 'Chưa đạt' : 'Đang thực hiện'} · ${cell.attempts} lượt`;
+                if (cell.completed) return cell.attempts ? `Hoàn thành · ${cell.attempts} lượt` : 'Hoàn thành';
+                if (cell.attempts > 0) return `Đang thực hiện · ${cell.attempts} lượt`;
                 return 'Chưa thực hiện';
             }),
             row.completed,
@@ -5077,7 +4857,15 @@ function openDeviceSubModal(deviceName, rows) {
             modeText = 'Chưa làm';
         }
 
-        const milestones = getPracticeMilestones(entry.sessions);
+        // Tính thứ tự lượt thực hành đạt chuẩn hoàn thành
+        const sortedSessions = [...entry.sessions].sort((a, b) => {
+            const timeA = parseDate(a.date).getTime() + (a.time ? parseTimeMs(a.time) : 0);
+            const timeB = parseDate(b.date).getTime() + (b.time ? parseTimeMs(b.time) : 0);
+            return timeA - timeB;
+        });
+        const practiceSessions = sortedSessions.filter(s => s.mode === 'Thực hành');
+        const passIndex = practiceSessions.findIndex(s => s.status === 'Hoàn thành' || s.status === 'completed' || s.is_passed === true);
+        const firstPassAttemptNo = passIndex !== -1 ? (passIndex + 1) : null;
 
         if (!totalCount) {
             return {
@@ -5088,25 +4876,17 @@ function openDeviceSubModal(deviceName, rows) {
                 totalCount: 0,
                 guideCount: 0,
                 practiceCount: 0,
-                completionAttemptNo: null,
-                recordedPassAttemptNo: null,
                 firstPassAttemptNo: null,
-                hasUngradedBeforePass: false,
-                ungradedCount: 0,
-                failedCount: 0,
                 modeText: 'Chưa làm',
                 lastDateTimeStr: 'N/A',
                 lastDuration: '0 giây'
             };
         }
-        const latest = [...entry.sessions].sort((a, b) => sessionTimestampMs(b) - sessionTimestampMs(a))[0];
-        const isDone = milestones.completionAttemptNo !== null;
-        const isPassed = milestones.recordedPassAttemptNo !== null;
+        const latest = [...entry.sessions].sort((a, b) => parseDate(b.date) - parseDate(a.date))[0];
+        const isDone = entry.sessions.some(s => s.status === 'Hoàn thành' || s.status === 'completed');
         const statusCategory = isDone ? 'done' : 'pending';
-        const statusLabel = isPassed
-            ? 'Đạt'
-            : (isDone ? 'Hoàn tất · chưa chấm' : (practiceCount ? 'Đang thực hiện' : 'Chỉ xem hướng dẫn'));
-        const badgeClass = isPassed ? 'status-done' : (isDone ? 'status-running' : (milestones.failedCount ? 'status-risk' : 'status-running'));
+        const statusLabel = isDone ? 'Hoàn thành' : 'Đang thực hiện';
+        const badgeClass = getStatusClass(statusLabel);
         const lastDateTimeStr = formatDateTime(latest.date, latest.time);
         const lastDuration = formatDuration(latest.duration);
 
@@ -5119,12 +4899,7 @@ function openDeviceSubModal(deviceName, rows) {
             totalCount,
             guideCount,
             practiceCount,
-            completionAttemptNo: milestones.completionAttemptNo,
-            recordedPassAttemptNo: milestones.recordedPassAttemptNo,
-            firstPassAttemptNo: milestones.firstPassAttemptNo,
-            hasUngradedBeforePass: milestones.hasUngradedBeforePass,
-            ungradedCount: milestones.ungradedCount,
-            failedCount: milestones.failedCount,
+            firstPassAttemptNo,
             modeText,
             lastDateTimeStr,
             lastDuration
@@ -5227,9 +5002,9 @@ function renderSubModalLabList(filter) {
             `;
         }
         if (item.statusCategory === 'done') {
-            const passDetail = item.recordedPassAttemptNo
-                ? `Ghi nhận đạt ở lượt thực hành ${item.recordedPassAttemptNo}${item.hasUngradedBeforePass ? ' (có lượt trước chưa chấm)' : ''}`
-                : `Hoàn tất phiên lần đầu ở lượt thực hành ${item.completionAttemptNo || '?'}; chưa có kết quả chấm`;
+            const passDetail = item.firstPassAttemptNo === 1 
+                ? 'Đạt ngay lần thực hành 1' 
+                : (item.firstPassAttemptNo > 1 ? `Đạt ở lần thực hành thứ ${item.firstPassAttemptNo}` : 'Đã hoàn thành');
             return `
                 <div class="sub-modal-item">
                     <div class="sub-modal-item-top">
@@ -5396,22 +5171,13 @@ function filterSessionsByDate(startStr, endStr) {
 
 function computeMetrics(rows) {
     const totalSessions = rows.length;
-    const completedSessions = rows.filter(isCompletedSession);
-    const completed = new Set(completedSessions.map(item => `${String(item.learner || '').toLowerCase()}\u001f${item.device}\u001f${item.lab}`)).size;
+    const completed = rows.filter(item => item.status === 'Hoàn thành').length;
     const learners = new Set(rows.map(item => item.learner)).size;
-    const rate = totalSessions ? Math.round((completedSessions.length / totalSessions) * 1000) / 10 : 0;
+    const rate = totalSessions ? Math.round((completed / totalSessions) * 1000) / 10 : 0;
 
-    const rowsByPair = new Map();
-    rows.filter(isPracticeSession).forEach(item => {
-        const key = `${String(item.learner || '').toLowerCase()}\u001f${item.device}\u001f${item.lab}`;
-        if (!rowsByPair.has(key)) rowsByPair.set(key, []);
-        rowsByPair.get(key).push(item);
-    });
-    const evaluatedFirstAttempts = [...rowsByPair.values()]
-        .map(pairRows => getPracticeMilestones(pairRows))
-        .filter(milestone => milestone.firstAttemptGraded);
-    const firstTryCount = evaluatedFirstAttempts.filter(milestone => milestone.firstAttemptPassed).length;
-    const firstTryRate = evaluatedFirstAttempts.length ? Math.round((firstTryCount / evaluatedFirstAttempts.length) * 1000) / 10 : null;
+    const evaluatedCompletions = rows.filter(item => item.status === 'Hoàn thành' && item.firstTry !== null);
+    const firstTryCount = evaluatedCompletions.filter(item => item.firstTry).length;
+    const firstTryRate = evaluatedCompletions.length ? Math.round((firstTryCount / evaluatedCompletions.length) * 100) : null;
 
     const durationRows = rows.filter(item => Number(item.duration) > 0);
     const totalDuration = durationRows.reduce((sum, item) => sum + Number(item.duration), 0);
@@ -5423,7 +5189,7 @@ function computeMetrics(rows) {
         completed,
         rate,
         firstTryRate,
-        evaluatedFirstTry: evaluatedFirstAttempts.length,
+        evaluatedFirstTry: evaluatedCompletions.length,
         avgDuration
     };
 }
@@ -5440,9 +5206,9 @@ const DASHBOARD_VIEWS = {
         subtitle: 'Theo dõi bài nộp và trạng thái thực hành của KTV'
     },
     analytics: {
-        eyebrow: 'Báo cáo đào tạo',
+        eyebrow: 'Báo cáo vận hành',
         title: 'Báo cáo chi nhánh',
-        subtitle: 'Ma trận thiết bị và bài lab theo từng Khu vực / Chi nhánh'
+        subtitle: 'Ma trận thiết bị và bài lab theo từng Khu vực/CNx'
     },
     class_matrix: {
         eyebrow: 'Báo cáo đào tạo',

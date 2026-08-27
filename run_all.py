@@ -69,6 +69,8 @@ import sim_ax3000hv2.server2 as ax3000hv2
 import sim_ax3000s.server as ax3000s
 import sim_be12000.src.server as be12000
 import sim_be15000.server as be15000
+import sim_ac1000HI.src.server as ac1000HI
+import sim_vigor2927.src.server as vigor2927
 
 # Mapping từ device id sang module
 SIM_MODULES = {
@@ -78,7 +80,9 @@ SIM_MODULES = {
     'sim_ax3000hv2': ax3000hv2,
     'sim_ax3000s': ax3000s,
     'sim_be12000': be12000,
-    'sim_be15000': be15000
+    'sim_be15000': be15000,
+    'sim_ac1000HI': ac1000HI,
+    'sim_vigor2927': vigor2927
 }
 
 # Các class Handler của từng thiết bị
@@ -89,7 +93,9 @@ SIM_HANDLERS = {
     'sim_ax3000hv2': ax3000hv2.H,
     'sim_ax3000s': ax3000s.H,
     'sim_be12000': be12000.Handler,
-    'sim_be15000': be15000.H
+    'sim_be15000': be15000.H,
+    'sim_ac1000HI': ac1000HI.H,
+    'sim_vigor2927': vigor2927.H
 }
 
 # File/thư mục Portal luôn do Portal phục vụ (chống bị 'cướp' bởi Referer/Cookie)
@@ -261,7 +267,13 @@ class MasterDispatcher(SimpleHTTPRequestHandler):
     def detect_simulator(self):
         # 0. Các file/thư mục Portal luôn do Portal phục vụ (chống bị 'cướp' bởi Referer/Cookie)
         path = self.path.split('?')[0]
-        if is_portal_path(path):
+        
+        # Ngoại lệ cho BE12000: thiết bị này dùng /?_type=... cho mọi AJAX request.
+        # Nếu path là / nhưng có tham số _type=, ta bỏ qua check Portal để nó được
+        # route xuống simulator dựa vào Referer/Cookie.
+        if path == '/' and ('?_type=' in self.path or '&_type=' in self.path):
+            pass
+        elif is_portal_path(path):
             return None
 
         # 1. Kiểm tra prefix trong URL path

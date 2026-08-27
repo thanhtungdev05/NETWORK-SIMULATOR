@@ -5,10 +5,10 @@
 
 window.DEVICE_AX3000HV2_LESSONS = window.DEVICE_AX3000HV2_LESSONS || [];
 
-window.DEVICE_AX3000HV2_LESSONS.push({
+var lessonObj = {
   id: 'LAB_AX3000HV2_02',
-  title: 'Bài 2 - Cấu hình Wi-Fi Host',
-  subtitle: 'Thiết lập mạng Wi-Fi chính (Host)',
+  title: 'Bài 2 - Cấu hình WiFi',
+  subtitle: 'Cấu hình wifi',
   instructions: [
     '<b>Yêu cầu:</b>',
     'Thực hiện cấu hình mạng Wi-Fi chính (Host) theo các thông số dưới đây:',
@@ -47,4 +47,11 @@ window.DEVICE_AX3000HV2_LESSONS.push({
     ]
   },
   guidePopups: []
-});
+};
+
+var idx = window.DEVICE_AX3000HV2_LESSONS.findIndex(function(l) { return l.id === lessonObj.id; });
+if (idx !== -1) {
+  window.DEVICE_AX3000HV2_LESSONS[idx] = lessonObj;
+} else {
+  window.DEVICE_AX3000HV2_LESSONS.push(lessonObj);
+}

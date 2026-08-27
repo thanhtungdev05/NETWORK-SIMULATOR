@@ -330,7 +330,8 @@
                       const cls = (el.className && typeof el.className === 'string') ? el.className.toLowerCase() : '';
                       const id = (el.id || '').toLowerCase();
                       
-                      if ((el.tagName === 'INPUT' || el.tagName === 'BUTTON' || el.tagName === 'A' || el.tagName === 'SPAN') && 
+                      const isTextInput = el.tagName === 'INPUT' && (el.type === 'text' || el.type === 'password' || el.type === 'email' || el.type === 'number');
+                      if (!isTextInput && (el.tagName === 'INPUT' || el.tagName === 'BUTTON' || el.tagName === 'A' || el.tagName === 'SPAN') && 
                           (el.type === 'submit' || txt.includes('login') || txt.includes('log in') || txt.includes('đăng nhập') || id.includes('login') || cls.includes('login') || cls.includes('btn-primary') || cls.includes('submit'))) {
                         
                         if (!checkLoginFields(e, el)) return false;

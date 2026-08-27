@@ -1,0 +1,98 @@
+{
+ "_nguon": "reference/source/text_that.json + map_trang_api.json + seed_api.json (do truc tiep tren thiet bi that 2026-08-10)",
+ "_dinh_vi": "khoa la duong dan chi so con tinh tu #root (vd \"1/0/2/0\") -- on dinh vi ban gia lap la ban chup nguyen cau truc",
+ "_quy_tac": "chi noi khi duy nhat 1 duong dan JSON trung gia tri hien thi; nhieu ung vien cung resource va cung gia tri -> coi la tuong duong (chon cai dau, ghi ro); khac resource -> de vao _mo_ho, khong noi",
+ "_tuong_duong": {
+  "advanced__wan": {
+   "0/0/1/1/1/0/0/0/0/0/0/0/0": {
+    "resource": "interfaces/configurations",
+    "duong_dan": "[1].usage",
+    "_ghi_chu": "2 duong dan cung gia tri, tuong duong nhau: [1].usage, [2].usage"
+   }
+  },
+  "home__overview": {
+   "0/0/1/1/1/0/0/2/0/1/0/0/0/0/0/0": {
+    "resource": "ssids",
+    "duong_dan": "[0].name",
+    "_ghi_chu": "2 duong dan cung gia tri, tuong duong nhau: [0].name, [1].name"
+   }
+  }
+ },
+ "_mo_ho": {
+  "home__overview": {
+   "0/0/1/1/1/0/0/1/0/0/1/0/0": {
+    "text": "Internet",
+    "ung_vien": [
+     "interfaces:[1].usage",
+     "interfaces:[2].usage",
+     "interfaces/configurations:[1].usage",
+     "interfaces/configurations:[2].usage"
+    ]
+   },
+   "0/0/1/1/1/0/0/1/0/1/0/0/0/0/0/1/0": {
+    "text": "LAN",
+    "ung_vien": [
+     "interfaces:[0].usage",
+     "interfaces/configurations:[0].usage"
+    ]
+   },
+   "0/0/1/1/1/0/0/1/0/1/0/0/1/0/0/0/0": {
+    "text": "Internet",
+    "ung_vien": [
+     "interfaces:[1].usage",
+     "interfaces:[2].usage",
+     "interfaces/configurations:[1].usage",
+     "interfaces/configurations:[2].usage"
+    ]
+   },
+   "0/0/1/1/1/0/0/2/0/1/0/0/0/0/1/0/0/0": {
+    "text": "2.4G",
+    "ung_vien": [
+     "radios:[0].band",
+     "ssids:[0].radio",
+     "ssids:[2].radio",
+     "ssids:[4].radio",
+     "ssids:[6].radio"
+    ]
+   }
+  }
+ },
+ "binding": {
+  "home__lanstatus": {
+   "0/0/1/1/1/0/0/1/0/1/0/0/0/0": {
+    "resource": "ext/lanstatus",
+    "duong_dan": "[0].ifName"
+   },
+   "0/0/1/1/1/0/0/1/0/1/1/0/0/0": {
+    "resource": "ext/lanstatus",
+    "duong_dan": "[1].ifName"
+   },
+   "0/0/1/1/1/0/0/1/0/1/2/0/0/0": {
+    "resource": "ext/lanstatus",
+    "duong_dan": "[2].ifName"
+   }
+  },
+  "home__overview": {
+   "0/0/1/1/1/0/0/0/0/0/1/1/0": {
+    "resource": "system/info",
+    "duong_dan": "hostname"
+   },
+   "0/0/1/1/1/0/0/0/0/1/0/0/0/0/1/0": {
+    "resource": "system/info",
+    "duong_dan": "hostname"
+   },
+   "0/0/1/1/1/0/0/0/0/1/0/0/0/1/1/0": {
+    "resource": "system/info",
+    "duong_dan": "modelName"
+   },
+   "0/0/1/1/1/0/0/0/0/1/0/0/0/2/1/0": {
+    "resource": "system/info",
+    "duong_dan": "serialNumber"
+   },
+   "0/0/1/1/1/0/0/0/0/1/0/0/0/3/1/0": {
+    "resource": "system/info",
+    "duong_dan": "firmwareVersion"
+   }
+  }
+ }
+}

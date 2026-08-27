@@ -1,0 +1,362 @@
+{
+ "_route": "security/firewall",
+ "_duong_dan_trinh_duyet": "#/security/firewall",
+ "_nguon": {
+  "chunk": "index-eel5T8aZ.js",
+  "kich_thuoc_byte": 17263,
+  "chunk_phu_thuoc": [
+   "assets/index-eel5T8aZ.js",
+   "assets/PageHeading-B0ZcsD9H.js",
+   "assets/useSnackbar-DeOFrJDC.js",
+   "assets/isNumber-CjKC2f0Q.js",
+   "assets/Tooltip-DjW0OUsG.js",
+   "assets/Popper-BinJnTg_.js"
+  ],
+  "bundle_loi": "index-CW0UhNxy.js",
+  "_da_quet": [
+   "PageHeading-B0ZcsD9H.js",
+   "Tooltip-DjW0OUsG.js",
+   "index-eel5T8aZ.js",
+   "isNumber-CjKC2f0Q.js",
+   "useSnackbar-DeOFrJDC.js"
+  ]
+ },
+ "_cach_trich": "src/trich_dac_ta_trang.py (doc ma goc, khong doan)",
+ "goi_api": [
+  {
+   "ham_goc": "getFirewallConfigurations",
+   "doi_tuong_goc": "use",
+   "tim_thay_o": [
+    "index-eel5T8aZ.js"
+   ],
+   "resource": "api/v1/data/firewall",
+   "method": "GET",
+   "kenh": "REST"
+  },
+  {
+   "ham_goc": "updateFirewallConfigurations",
+   "doi_tuong_goc": "use",
+   "tim_thay_o": [
+    "index-eel5T8aZ.js"
+   ],
+   "resource": "api/v1/data/firewall",
+   "method": "PATCH",
+   "kenh": "REST"
+  }
+ ],
+ "goi_khac": {
+  "rpc": [],
+  "duong_dan_tuyet_doi": []
+ },
+ "truong_form": [
+  {
+   "name": "spiEnabled",
+   "label": "SPI Firewall",
+   "disabled": true
+  },
+  {
+   "name": "icmpPing.wanEnabled",
+   "label": "Respond to Pings from WAN"
+  },
+  {
+   "name": "dosDefense.enabled",
+   "label": "DoS Defense"
+  },
+  {
+   "name": "dosDefense.tcpFlood.enabled",
+   "label": "SYN Flood Defense"
+  },
+  {
+   "name": "dosDefense.tcpFlood.rate",
+   "placeholder": "Threshold (packets/sec)"
+  },
+  {
+   "name": "dosDefense.tcpFlood.burst",
+   "placeholder": "Burst (packets)"
+  },
+  {
+   "name": "dosDefense.udpFlood.enabled",
+   "label": "UDP Flood Defense"
+  },
+  {
+   "name": "dosDefense.udpFlood.rate",
+   "placeholder": "Threshold (packets/sec)"
+  },
+  {
+   "name": "dosDefense.udpFlood.burst",
+   "placeholder": "Burst (packets)"
+  },
+  {
+   "name": "dosDefense.icmpFlood.enabled",
+   "label": "ICMP Flood Defense"
+  },
+  {
+   "name": "dosDefense.icmpFlood.rate",
+   "placeholder": "Threshold (packets/sec)"
+  },
+  {
+   "name": "dosDefense.icmpFlood.burst",
+   "placeholder": "Burst (packets)"
+  },
+  {
+   "name": "dosDefense.portScan.enabled",
+   "label": "Port Scan Detection"
+  },
+  {
+   "name": "dosDefense.portScan.rate",
+   "placeholder": "Threshold (packets/sec)"
+  },
+  {
+   "name": "dosDefense.portScan.burst",
+   "placeholder": "Burst (packets)"
+  },
+  {
+   "name": "dosDefense.tcpFlagScan.enabled",
+   "label": "Block TCP Flag Scan"
+  },
+  {
+   "name": "dosDefense.land.enabled",
+   "label": "Block Land"
+  },
+  {
+   "name": "dosDefense.smurf.enabled",
+   "label": "Block Smurf DDoS"
+  },
+  {
+   "name": "dosDefense.pingOfDeath.enabled",
+   "label": "Block Ping of Death"
+  },
+  {
+   "name": "dosDefense.traceRoute.enabled",
+   "label": "Block Trace Route"
+  },
+  {
+   "name": "dosDefense.icmpFragment.enabled",
+   "label": "Block ICMP Fragment"
+  },
+  {
+   "name": "dosDefense.synFragment.enabled",
+   "label": "Block SYN Fragment"
+  },
+  {
+   "name": "dosDefense.fraggleAttack.enabled",
+   "label": "Block Fraggle Attack"
+  },
+  {
+   "name": "dosDefense.unknownProtocol.enabled",
+   "label": "Block Unknown Protocol"
+  }
+ ],
+ "gia_tri_mac_dinh": [],
+ "schema_kiem_tra": [
+  {
+   "ma": "{enabled:n.boolean()}"
+  },
+  {
+   "ma": "{enabled:n.literal(!0),rate:ze,burst:Ie}"
+  },
+  {
+   "ma": "{enabled:n.literal(!1),rate:A,burst:A}"
+  },
+  {
+   "ma": "{spiEnabled:n.boolean(),icmpPing:n.object({wanEnabled:n.boolean()}),dosDefense:n.discriminatedUnion(\"enabled\",[n.object({enabled:n.literal(!1)}),n.object({enabled:n.literal(!0),tcpFlood:N,udpFlood:N,icmpFlood:N,portScan:kt,tcpFlagScan:g,land:g,smurf:g,pingOfDeath:g,traceRoute:g,icmpFragment:g,synFragment:g,fraggleAttack:g,unknownProtocol:g})])}"
+  },
+  {
+   "ma": "{wanEnabled:n.boolean()}"
+  },
+  {
+   "ma": "{enabled:n.literal(!1)}"
+  },
+  {
+   "ma": "{enabled:n.literal(!0),tcpFlood:N,udpFlood:N,icmpFlood:N,portScan:kt,tcpFlagScan:g,land:g,smurf:g,pingOfDeath:g,traceRoute:g,icmpFragment:g,synFragment:g,fraggleAttack:g,unknownProtocol:g}"
+  }
+ ],
+ "chuoi_hien_thi": [
+  ")),{enqueueSnackbar:l}=ct(),h=tt(r=>r.token),[Le,W]=m.useState(!1),{data:a,mutate:Ne}=st({key:",
+  "))},[C,o,d]),m.useEffect(()=>{W(Y)},[Y]);const Ke=We(async r=>{try{await Ee.updateFirewallConfigurations({payload:r,token:h}),Ne()}catch(F){throw l({title:",
+  "))},[P,o,d]),m.useEffect(()=>{C||(o(",
+  "))},[v,o,d]),m.useEffect(()=>{P||(o(",
+  "))},[y,o,d]),m.useEffect(()=>{v||(o(",
+  "),$e=i(",
+  "),C=i(",
+  "),Ge=i(",
+  "),He=i(",
+  "),Je=i(",
+  "),Me=i(",
+  "),P=i(",
+  "),R=i(",
+  "),Ve=i(",
+  "),Y=y&&v&&P&&C&&Me&&Ye&&_e&&qe&&Ve&&He&&Ge&&$e&&Je,z=m.useCallback(r=>{o(",
+  "),Ye=i(",
+  "),_e=i(",
+  "),d(",
+  "),qe=i(",
+  "),v=i(",
+  "),y=i(",
+  ",!1,{shouldDirty:!0})},[O,o]),m.useEffect(()=>{R&&d()},[d,R,z]),m.useEffect(()=>{y||(o(",
+  ",[gt,Dt]),xt=n.object({enabled:n.literal(!0),rate:ze,burst:Ie}),St=n.object({enabled:n.literal(!1),rate:A,burst:A}),kt=n.discriminatedUnion(",
+  ",[n.object({enabled:n.literal(!1)}),n.object({enabled:n.literal(!0),tcpFlood:N,udpFlood:N,icmpFlood:N,portScan:kt,tcpFlagScan:g,land:g,smurf:g,pingOfDeath:g,traceRoute:g,icmpFragment:g,synFragment:g,fraggleAttack:g,unknownProtocol:g})])});function jt(){const s=Ze(),t=et(s.breakpoints.up(",
+  ",[xt,St]),Ft=n.object({spiEnabled:n.boolean(),icmpPing:n.object({wanEnabled:n.boolean()}),dosDefense:n.discriminatedUnion(",
+  ",burst:",
+  ",burst:(($=(G=a.dosDefense)==null?void 0:G.tcpFlood)==null?void 0:$.burst)||",
+  ",burst:((ee=(Z=a.dosDefense)==null?void 0:Z.udpFlood)==null?void 0:ee.burst)||",
+  ",burst:((pe=(fe=a.dosDefense)==null?void 0:fe.portScan)==null?void 0:pe.burst)||",
+  ",burst:((re=(ae=a.dosDefense)==null?void 0:ae.icmpFlood)==null?void 0:re.burst)||",
+  ",r,{shouldDirty:!0}),o(",
+  ",r,{shouldDirty:!0})},[o]);m.useEffect(()=>{O||o(",
+  ",resolver:it(Ft),defaultValues:U,values:U}),{handleSubmit:We,reset:Ue,watch:i,setValue:o,clearErrors:d,formState:{errors:D}}=M,O=i(",
+  ",w=",
+  ",{shouldDirty:!0}),d(",
+  ",{shouldDirty:!0}),o(",
+  "-14px !important",
+  "-1px !important",
+  "-37px !important",
+  "-5px !important",
+  "-7px !important",
+  "-8px !important",
+  "10px !important",
+  "13px !important",
+  "2px !important",
+  "67px !important",
+  "A Fraggle attack is similar to a DDoS (Distributed Denial of Service) attack that floods a network with spoofed UDP (User Datagram Protocol) packets, targeting services like DNS (Domain Name System). Blocking Fraggle attacks prevents network saturation and service disruption.",
+  "A TCP flag scan is a method to check which TCP ports on a system are open by sending packets with different TCP flags to observe how the system responds, revealing its port statuses.",
+  "Block Fraggle Attack",
+  "Block ICMP Fragment",
+  "Block Land",
+  "Block Ping of Death",
+  "Block SYN Fragment",
+  "Block Smurf DDoS",
+  "Block TCP Flag Scan",
+  "Block Trace Route",
+  "Block Unknown Protocol",
+  "Blocking ICMP (Internet Control Message Protocol) fragments can prevent potential evasion techniques and malformed packet attacks targeting ICMP.",
+  "Blocking SYN (Synchronize) fragments helps mitigate SYN flood attacks, where an attacker sends a flood of TCP/SYN packets with incomplete handshake requests to overwhelm the target system.",
+  "Blocking Smurf DDoS stops a type of cyber attack where bad actors flood someone's internet with messages that overload and crash their system.",
+  "Blocking land in a firewall prevents a type of attack where malicious packets with the same source and destination IP address cause system instability.",
+  "Blocking ping of death prevents a malicious attack where an oversized or malformed ping packet is sent to a computer, causing it to crash or become unstable.",
+  "Blocking trace route prevents external users from using the traceroute command to map the network path to your device or network. This helps in enhancing security by hiding network topology information from potential attackers.",
+  "Blocking unknown protocols is a proactive security measure to prevent exploitation of vulnerabilities associated with unsupported or unrecognized network protocols, reducing the attack surface.",
+  "Burst (packets)",
+  "DoS Defense",
+  "DoS Defense Setup",
+  "Enable All",
+  "Enabling DoS defense can protect your network or device against Denial-of-Service (DoS) attacks by monitoring and mitigating suspicious or malicious traffic that could overwhelm the network or system.",
+  "Firewall Settings",
+  "ICMP Flood Defense",
+  "ICMP flood defense protects against attacks that flood a network or server with excessive ICMP packets, which can overwhelm network resources and cause disruptions. It involves filtering and rate-limiting ICMP traffic to mitigate the impact of such attacks.",
+  "Port Scan Detection",
+  "Port scan detection refers to the capability of a security system to identify and alert about attempts to scan a computer or network to find open ports. It helps in identifying potential malicious activities aimed at probing for vulnerabilities or unauthorized access attempts.",
+  "Respond to Pings from WAN",
+  "SPI Firewall",
+  "SPI Firewall inspects incoming and outgoing data, allowing only trusted connections to protect your devices from potential threats.",
+  "SYN Flood Defense",
+  "SYN flood defense acts like a vigilant guard for your network. It detects and blocks fake connection requests (SYN packets) that can overwhelm your devices, ensuring smooth internet performance and protecting against potential disruptions caused by malicious traffic.",
+  "Save",
+  "This switch affects the availability of DoS defense.",
+  "Threshold (packets/sec)",
+  "UDP Flood Defense",
+  "UDP flood defense protects against attacks that flood a network or server with excessive UDP packets, aiming to disrupt services like DNS, VoIP, or gaming. It involves filtering and monitoring UDP traffic to prevent service slowdowns or outages.",
+  "When enabled, the firewall will respond to these ping requests from devices on the WAN (the internet or external networks). This allows external users to check if your network or device is reachable.",
+  "alternative-layout alternative-layout--submit",
+  "dosDefense.enabled",
+  "dosDefense.fraggleAttack.enabled",
+  "dosDefense.icmpFlood.burst",
+  "dosDefense.icmpFlood.enabled",
+  "dosDefense.icmpFlood.rate",
+  "dosDefense.icmpFragment.enabled",
+  "dosDefense.land.enabled",
+  "dosDefense.pingOfDeath.enabled",
+  "dosDefense.portScan.burst",
+  "dosDefense.portScan.enabled",
+  "dosDefense.portScan.rate",
+  "dosDefense.smurf.enabled",
+  "dosDefense.synFragment.enabled",
+  "dosDefense.tcpFlagScan.enabled",
+  "dosDefense.tcpFlood.burst",
+  "dosDefense.tcpFlood.enabled",
+  "dosDefense.tcpFlood.rate",
+  "dosDefense.traceRoute.enabled",
+  "dosDefense.udpFlood.burst",
+  "dosDefense.udpFlood.enabled",
+  "dosDefense.udpFlood.rate",
+  "dosDefense.unknownProtocol.enabled",
+  "icmpPing.wanEnabled",
+  "spiEnabled",
+  "}),e.jsxs(nt,{providerProps:M,children:[e.jsxs(k,{spacing:t?4:2,children:[e.jsxs(Ae,{spacing:t?2:4,children:[e.jsx(T,{variant:t?",
+  "},icmpFlood:{enabled:!1,rate:",
+  "},icmpFlood:{enabled:((se=(te=a.dosDefense)==null?void 0:te.icmpFlood)==null?void 0:se.enabled)||!1,rate:((ne=(oe=a.dosDefense)==null?void 0:oe.icmpFlood)==null?void 0:ne.rate)||",
+  "},portScan:{enabled:!1,rate:",
+  "},portScan:{enabled:((ie=(le=a.dosDefense)==null?void 0:le.portScan)==null?void 0:ie.enabled)||!1,rate:((ce=(de=a.dosDefense)==null?void 0:de.portScan)==null?void 0:ce.rate)||",
+  "},tcpFlagScan:{enabled:!1},land:{enabled:!1},smurf:{enabled:!1},pingOfDeath:{enabled:!1},traceRoute:{enabled:!1},icmpFragment:{enabled:!1},synFragment:{enabled:!1},fraggleAttack:{enabled:!1},unknownProtocol:{enabled:!1}}},j=",
+  "},udpFlood:{enabled:!1,rate:",
+  "},udpFlood:{enabled:((K=(J=a.dosDefense)==null?void 0:J.udpFlood)==null?void 0:K.enabled)||!1,rate:((X=(Q=a.dosDefense)==null?void 0:Q.udpFlood)==null?void 0:X.rate)||",
+  "},{alertProps:{severity:",
+  "}}),F}}),Qe=m.useCallback(r=>{const{checked:F}=r.target;W(F),z(F)},[z]);return e.jsxs(ut,{spacing:2,children:[!t&&e.jsx(dt,{children:"
+ ],
+ "_can_doc_tay": [],
+ "_doc_tay_2026_08_18_enable_all": {
+  "_vi_sao": "Cau hoi treo tu 2026-08-14 trong ISSUES.md: o tick \"Enable All\" lan truyen xuong nhung truong NAO -- chi .enabled, hay ca rate/burst mac dinh? Doc tay chunk index-eel5T8aZ.js tra loi dut khoat, khong con phai doan.",
+  "ham_lan_truyen_z": {
+   "_trich_nguyen_van": "z=m.useCallback(r=>{o(\"dosDefense.tcpFlood.enabled\",r,{shouldDirty:!0}),o(\"dosDefense.udpFlood.enabled\",r,{shouldDirty:!0}),o(\"dosDefense.icmpFlood.enabled\",r,{shouldDirty:!0}),o(\"dosDefense.portScan.enabled\",r,{shouldDirty:!0}),o(\"dosDefense.tcpFlagScan.enabled\",r,{shouldDirty:!0}),o(\"dosDefense.land.enabled\",r,{shouldDirty:!0}),o(\"dosDefense.smurf.enabled\",r,{shouldDirty:!0}),o(\"dosDefense.pingOfDeath.enabled\",r,{shouldDirty:!0}),o(\"dosDefense.traceRoute.enabled\",r,{shouldDirty:!0}),o(\"dosDefense.icmpFragment.enabled\",r,{shouldDirty:!0}),o(\"dosDefense.synFragment.enabled\",r,{shouldDirty:!0}),o(\"dosDefense.fraggleAttack.enabled\",r,{shouldDirty:!0}),o(\"dosDefense.unknownProtocol.enabled\",r,{shouldDirty:!0})},[o]);",
+   "ket_luan": "DUNG 13 truong, CHI truong \".enabled\". KHONG dung toi rate/burst.",
+   "danh_sach_13": [
+    "dosDefense.tcpFlood.enabled",
+    "dosDefense.udpFlood.enabled",
+    "dosDefense.icmpFlood.enabled",
+    "dosDefense.portScan.enabled",
+    "dosDefense.tcpFlagScan.enabled",
+    "dosDefense.land.enabled",
+    "dosDefense.smurf.enabled",
+    "dosDefense.pingOfDeath.enabled",
+    "dosDefense.traceRoute.enabled",
+    "dosDefense.icmpFragment.enabled",
+    "dosDefense.synFragment.enabled",
+    "dosDefense.fraggleAttack.enabled",
+    "dosDefense.unknownProtocol.enabled"
+   ]
+  },
+  "trinh_xu_ly_o_tick": {
+   "_trich_nguyen_van": "Qe=m.useCallback(r=>{const{checked:F}=r.target;W(F),z(F)},[z]);",
+   "ket_luan": "W dat trang thai chinh o tick; z lan truyen xuong 13 o con."
+  },
+  "chieu_nguoc_lai": {
+   "_trich_nguyen_van": "Y=y&&v&&P&&C&&Me&&Ye&&_e&&qe&&Ve&&He&&Ge&&$e&&Je; m.useEffect(()=>{W(Y)},[Y]);",
+   "ket_luan": "o tick = phep AND cua ca 13 o con. Bo tick 1 o con thi \"Enable All\" tu bo tick; tick du 13 thi no tu tick lai."
+  },
+  "spi_khoa_dos": {
+   "_trich_nguyen_van": "m.useEffect(()=>{O||o(\"dosDefense.enabled\",!1,{shouldDirty:!0})},[O,o]) | cong tac DoS Defense mang disabled:!O  (O=watch(\"spiEnabled\"))",
+   "ket_luan": "SPI tat -> DoS Defense tu tat VA bi khoa. Bat SPI lai thi DoS Defense KHONG tu bat lai."
+  },
+  "an_hien_khoi_con": {
+   "_trich_nguyen_van": "R&&e.jsxs(bt,{gap:2,children:[...]})  (R=watch(\"dosDefense.enabled\"))",
+   "ket_luan": "Khoi \"Enable All\" + 13 cong tac + 8 o so CHI hien khi dosDefense.enabled=true."
+  },
+  "xoa_rong_rate_burst": {
+   "_trich_nguyen_van": "m.useEffect(()=>{y||(o(\"dosDefense.tcpFlood.rate\",\"\",{shouldDirty:!0}),o(\"dosDefense.tcpFlood.burst\",\"\",{shouldDirty:!0}),d(\"dosDefense.tcpFlood.rate\"),d(\"dosDefense.tcpFlood.burst\"))},[y,o,d]) -- va 3 useEffect y het cho udpFlood / icmpFlood / portScan.",
+   "ket_luan": "Tat 1 trong 4 cong tac co o so -> rate/burst cua CHINH no bi xoa ve chuoi RONG (khong phai 0). Cac o rate/burst cung mang disabled:!<cong tac cung nhom>."
+  },
+  "gia_tri_0_hien_rong": {
+   "_trich_nguyen_van": "rate:((H=(V=a.dosDefense)==null?void 0:V.tcpFlood)==null?void 0:H.rate)||\"\"",
+   "ket_luan": "Toan tu || nen API tra 0 se hien thanh O RONG, khong phai chuoi \"0\". Da xac nhan tren thiet bi that."
+  },
+  "_xac_nhan_tren_thiet_bi_that_2026_08_18": {
+   "cach_do": "Mo 192.168.1.1 bang Chrome, chan san moi request ghi (fetch+XHR), chi DOC, KHONG bam Save.",
+   "cong_tac_bat": [
+    "tcpFlood",
+    "icmpFlood",
+    "tcpFlagScan",
+    "unknownProtocol"
+   ],
+   "enable_all": false,
+   "khop_quy_tac_AND": true,
+   "o_so": {
+    "tcpFlood": "25/50 (mo)",
+    "icmpFlood": "100/100 (mo)",
+    "udpFlood": "RONG + BI KHOA",
+    "portScan": "RONG + BI KHOA"
+   },
+   "api_tra": "udpFlood.rate=0 va portScan.rate=0 nhung o hien RONG -> dung quy tac ||\"\" o tren.",
+   "_chua_do_duoc": "Chua kip bam thu chinh o \"Enable All\" tren may that: phien JWT het han giua chung (loi van hanh da biet, xem ISSUES.md muc \"Canh bao van hanh\"). KHONG chan tien do vi muc ham_lan_truyen_z va trinh_xu_ly_o_tick la ma nguon trich NGUYEN VAN, khong phai suy dien."
+  }
+ }
+}

@@ -1,0 +1,7 @@
+[
+ {
+  "url": "api/v1/data/time",
+  "body": null,
+  "resp": "{\"status\":\"Unsynchronized\",\"enabled\":true,\"localTimeZone\":\"UTC-7\",\"servers\":[\"pool.ntp.org\",\"0.openwrt.pool.ntp.org\"],\"time\":1783514415542}"
+ }
+]

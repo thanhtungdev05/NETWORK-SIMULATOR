@@ -1,0 +1,219 @@
+{
+  "_nguon": "bang dinh tuyen f0e trong index-CW0UhNxy.js",
+  "_ngay": "2026-08-12",
+  "_tong_route": 21,
+  "routes": {
+    "advanced/ddns": "index-C832Cjvp.js",
+    "advanced/dmz": "index-CxJ1Hdez.js",
+    "advanced/lan": "index-ZQ6T7f31.js",
+    "advanced/routing": "index-CZBnlfHf.js",
+    "advanced/tcpdump": "index-B1ax-rXf.js",
+    "advanced/upnp": "index-agtlspBu.js",
+    "advanced/wan": "index-D_2ztGgf.js",
+    "help": "index-CqEnHIyC.js",
+    "home/overview": "index-CfNs84oj.js",
+    "home/topology": "index-kg8DHhRn.js",
+    "home/wizard": "index-BC-_5TxF.js",
+    "network/diagnostics": "index-DOrO-0P0.js",
+    "network/portforward": "index-Bz95h4Eb.js",
+    "network/speedtest": "index-DN0khghO.js",
+    "security/firewall": "index-eel5T8aZ.js",
+    "status/devices": "index-CDBqBPYE.js",
+    "system/general": "index-C7yhm04W.js",
+    "system/upgrade": "index-BWZCtr0J.js",
+    "system/user": "index-DOmrHpTT.js",
+    "wifi/advanced": "index-CdFMqTaa.js",
+    "wifi/general": "index-Bzvp9ziO.js"
+  },
+  "tong_ket": {
+    "advanced/ddns": {
+      "chunk": "index-C832Cjvp.js",
+      "byte": 5340,
+      "so_api": 3,
+      "so_rpc": 0,
+      "so_truong": 5,
+      "so_chuoi": 60,
+      "can_doc_tay": 0
+    },
+    "advanced/dmz": {
+      "chunk": "index-CxJ1Hdez.js",
+      "byte": 3728,
+      "so_api": 2,
+      "so_rpc": 0,
+      "so_truong": 1,
+      "so_chuoi": 33,
+      "can_doc_tay": 0
+    },
+    "advanced/lan": {
+      "chunk": "index-ZQ6T7f31.js",
+      "byte": 36497,
+      "so_api": 8,
+      "so_rpc": 0,
+      "so_truong": 9,
+      "so_chuoi": 318,
+      "can_doc_tay": 1
+    },
+    "advanced/routing": {
+      "chunk": "index-CZBnlfHf.js",
+      "byte": 12099,
+      "so_api": 5,
+      "so_rpc": 0,
+      "so_truong": 1,
+      "so_chuoi": 82,
+      "can_doc_tay": 0
+    },
+    "advanced/tcpdump": {
+      "chunk": "index-B1ax-rXf.js",
+      "byte": 10297,
+      "so_api": 3,
+      "so_rpc": 0,
+      "so_truong": 0,
+      "so_chuoi": 65,
+      "can_doc_tay": 0
+    },
+    "advanced/upnp": {
+      "chunk": "index-agtlspBu.js",
+      "byte": 2101,
+      "so_api": 2,
+      "so_rpc": 0,
+      "so_truong": 1,
+      "so_chuoi": 8,
+      "can_doc_tay": 0
+    },
+    "advanced/wan": {
+      "chunk": "index-D_2ztGgf.js",
+      "byte": 34003,
+      "so_api": 4,
+      "so_rpc": 0,
+      "so_truong": 12,
+      "so_chuoi": 243,
+      "can_doc_tay": 1
+    },
+    "help": {
+      "chunk": "index-CqEnHIyC.js",
+      "byte": 1179,
+      "so_api": 0,
+      "so_rpc": 0,
+      "so_truong": 0,
+      "so_chuoi": 11,
+      "can_doc_tay": 1
+    },
+    "home/overview": {
+      "chunk": "index-CfNs84oj.js",
+      "byte": 53071,
+      "so_api": 12,
+      "so_rpc": 0,
+      "so_truong": 27,
+      "so_chuoi": 345,
+      "can_doc_tay": 1
+    },
+    "home/topology": {
+      "chunk": "index-kg8DHhRn.js",
+      "byte": 35298,
+      "so_api": 2,
+      "so_rpc": 0,
+      "so_truong": 0,
+      "so_chuoi": 141,
+      "can_doc_tay": 1
+    },
+    "home/wizard": {
+      "chunk": "index-BC-_5TxF.js",
+      "byte": 277768,
+      "so_api": 16,
+      "so_rpc": 0,
+      "so_truong": 16,
+      "so_chuoi": 1121,
+      "can_doc_tay": 1
+    },
+    "network/diagnostics": {
+      "chunk": "index-DOrO-0P0.js",
+      "byte": 7541,
+      "so_api": 1,
+      "so_rpc": 0,
+      "so_truong": 2,
+      "so_chuoi": 53,
+      "can_doc_tay": 0
+    },
+    "network/portforward": {
+      "chunk": "index-Bz95h4Eb.js",
+      "byte": 13854,
+      "so_api": 4,
+      "so_rpc": 0,
+      "so_truong": 3,
+      "so_chuoi": 78,
+      "can_doc_tay": 0
+    },
+    "network/speedtest": {
+      "chunk": "index-DN0khghO.js",
+      "byte": 352260,
+      "so_api": 3,
+      "so_rpc": 0,
+      "so_truong": 0,
+      "so_chuoi": 1104,
+      "can_doc_tay": 1
+    },
+    "security/firewall": {
+      "chunk": "index-eel5T8aZ.js",
+      "byte": 17263,
+      "so_api": 2,
+      "so_rpc": 0,
+      "so_truong": 24,
+      "so_chuoi": 120,
+      "can_doc_tay": 0
+    },
+    "status/devices": {
+      "chunk": "index-CDBqBPYE.js",
+      "byte": 1495,
+      "so_api": 0,
+      "so_rpc": 0,
+      "so_truong": 0,
+      "so_chuoi": 10,
+      "can_doc_tay": 1
+    },
+    "system/general": {
+      "chunk": "index-C7yhm04W.js",
+      "byte": 16223,
+      "so_api": 4,
+      "so_rpc": 0,
+      "so_truong": 2,
+      "so_chuoi": 73,
+      "can_doc_tay": 0
+    },
+    "system/upgrade": {
+      "chunk": "index-BWZCtr0J.js",
+      "byte": 46107,
+      "so_api": 0,
+      "so_rpc": 7,
+      "so_truong": 0,
+      "so_chuoi": 382,
+      "can_doc_tay": 1
+    },
+    "system/user": {
+      "chunk": "index-DOmrHpTT.js",
+      "byte": 4013,
+      "so_api": 2,
+      "so_rpc": 0,
+      "so_truong": 0,
+      "so_chuoi": 33,
+      "can_doc_tay": 0
+    },
+    "wifi/advanced": {
+      "chunk": "index-CdFMqTaa.js",
+      "byte": 12514,
+      "so_api": 4,
+      "so_rpc": 0,
+      "so_truong": 1,
+      "so_chuoi": 78,
+      "can_doc_tay": 0
+    },
+    "wifi/general": {
+      "chunk": "index-Bzvp9ziO.js",
+      "byte": 13506,
+      "so_api": 4,
+      "so_rpc": 0,
+      "so_truong": 0,
+      "so_chuoi": 109,
+      "can_doc_tay": 0
+    }
+  }
+}

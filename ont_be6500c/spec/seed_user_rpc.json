@@ -1,0 +1,22 @@
+{
+  "_ghi_chu": [
+    "Kho MO PHONG rieng cho kenh RPC /oui-rpc -- KHAC voi seed_api.json",
+    "(chi chua cac resource REST that /api/v1/data/*). Chi co 1 muc:",
+    "'user/users' (ten noi bo cua ban gia lap, KHONG phai duong dan that",
+    "tren thiet bi -- thiet bi that goi qua RPC method=call,",
+    "params=[sid,'user','get_users'|'change',args], xem",
+    "reference/har/system_user_doi_mk.har).",
+    "",
+    "Cau truc ban ghi (id/acl/username) LAY THAT tu HAR do ngay 2026-08-18",
+    "(RPC user/get_users tra {result:{users:[{acl:'admin',username:'admin',",
+    "id:'cfg042e84'}]}}). Truong 'password' la CHUOI GIA TAM",
+    "('changeme123'), KHONG PHAI mat khau that cua thiet bi -- co tinh",
+    "khong luu mat khau that vao repo (van de bao mat), chi can co san 1",
+    "gia tri hop le de trang co du lieu khoi tao."
+  ],
+  "du_lieu": {
+    "user/users": [
+      { "id": "cfg042e84", "acl": "admin", "username": "admin", "password": "changeme123" }
+    ]
+  }
+}

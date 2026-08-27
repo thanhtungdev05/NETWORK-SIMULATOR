@@ -1,0 +1,1 @@
+import{s as n,T as a,P as o,b as p,y as d,j as t}from"./index-CW0UhNxy.js";const c=n(a)(({theme:s})=>{const{spacing:e}=s;return{width:"100%",padding:e(2,3,2,0),marginBottom:e(2)}}),m=s=>{const e=p(),i=d(e.breakpoints.down("md")),{title:r}=s;return t.jsx(t.Fragment,{children:i&&t.jsx(c,{variant:"h5",children:r})})};m.propTypes={title:o.string.isRequired};export{m as P};

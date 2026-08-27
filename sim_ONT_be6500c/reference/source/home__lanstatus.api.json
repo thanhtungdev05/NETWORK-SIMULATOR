@@ -1,0 +1,7 @@
+[
+ {
+  "url": "api/v1/data/ext/lanstatus",
+  "body": null,
+  "resp": "[{\"status\":1,\"loopStatus\":0,\"ifName\":\"LAN1(eth1.5)\",\"rx\":226465,\"phyRate\":1000,\"crc\":0,\"tx\":3365605},{\"status\":0,\"loopStatus\":0,\"ifName\":\"LAN2(eth1.6)\",\"rx\":0,\"phyRate\":0,\"crc\":0,\"tx\":0},{\"status\":0,\"loopStatus\":0,\"ifName\":\"LAN3(eth1.7)\",\"rx\":0,\"phyRate\":0,\"crc\":0,\"tx\":0}]"
+ }
+]

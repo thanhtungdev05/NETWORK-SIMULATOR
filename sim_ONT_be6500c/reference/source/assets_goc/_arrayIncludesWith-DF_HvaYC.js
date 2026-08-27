@@ -1,0 +1,1 @@
+import{_ as a}from"./_baseIndexOf-BIsKLoQn.js";var u=a;function s(e,n){var r=e==null?0:e.length;return!!r&&u(e,n,0)>-1}var f=s;function i(e,n,r){for(var l=-1,t=e==null?0:e.length;++l<t;)if(r(n,e[l]))return!0;return!1}var h=i;export{f as _,h as a};

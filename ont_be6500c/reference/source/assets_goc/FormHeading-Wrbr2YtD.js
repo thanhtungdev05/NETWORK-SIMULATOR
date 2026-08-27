@@ -1,0 +1,1 @@
+import{s as t,T as e,a4 as n,aS as p,j as m}from"./index-CW0UhNxy.js";const a="AeiFormHeading",i=t(e,{name:a,slot:"root"})(({theme:s})=>{const{spacing:o}=s;return{marginBottom:o(3),"&:not(:first-of-type)":{marginTop:o(4)}}}),c=n.forwardRef((s,o)=>{const r=p({props:s,name:a});return m.jsx(i,{ref:o,variant:"h6",...r})});c.displayName=a;export{c as F};

@@ -1,0 +1,398 @@
+{
+ "api/v1/data/internetConnection": [
+  {
+   "method": "GET",
+   "ham": "getInternetStatus"
+  }
+ ],
+ "api/v1/data/interfaces": [
+  {
+   "method": "GET",
+   "ham": "getInterfaceStatus"
+  }
+ ],
+ "api/v1/data/interfaces/configurations": [
+  {
+   "method": "GET",
+   "ham": "getInterfaceConfigurations"
+  },
+  {
+   "method": "PATCH",
+   "ham": "setInterfaceConfigurations"
+  }
+ ],
+ "api/v1/data/devices": [
+  {
+   "method": "GET",
+   "ham": "getInstances"
+  }
+ ],
+ "api/v1/data/speedTest/servers": [
+  {
+   "method": "GET",
+   "ham": "getSpeedTestServers"
+  }
+ ],
+ "api/v1/data/speedTest": [
+  {
+   "method": "POST",
+   "ham": "doSpeedTest"
+  }
+ ],
+ "api/v1/data/ethernetPorts": [
+  {
+   "method": "GET",
+   "ham": "getEthernetPorts"
+  },
+  {
+   "method": "PATCH",
+   "ham": "setEthernetPorts"
+  }
+ ],
+ "api/v1/data/eapProfiles": [
+  {
+   "method": "DELETE",
+   "ham": "deleteEapProfiles"
+  },
+  {
+   "method": "GET",
+   "ham": "getEapProfiles"
+  },
+  {
+   "method": "PATCH",
+   "ham": "setEapProfiles"
+  },
+  {
+   "method": "POST",
+   "ham": "postEapProfiles"
+  }
+ ],
+ "api/v1/data/upnp": [
+  {
+   "method": "GET",
+   "ham": "getUpnp"
+  },
+  {
+   "method": "PATCH",
+   "ham": "setUpnp"
+  }
+ ],
+ "api/v1/data/dmz/configurations": [
+  {
+   "method": "GET",
+   "ham": "getDmzConfiguration"
+  },
+  {
+   "method": "PATCH",
+   "ham": "setDmzConfiguration"
+  }
+ ],
+ "api/v1/data/tcpdump": [
+  {
+   "method": "POST",
+   "ham": "sendTcpDumpAction"
+  }
+ ],
+ "api/v1/data/firewall": [
+  {
+   "method": "GET",
+   "ham": "getFirewallConfigurations"
+  },
+  {
+   "method": "PATCH",
+   "ham": "updateFirewallConfigurations"
+  }
+ ],
+ "api/v1/data/portForwarding/policies": [
+  {
+   "method": "DELETE",
+   "ham": "deletePortForwardingEntries"
+  },
+  {
+   "method": "GET",
+   "ham": "getPortForwardingEntries"
+  },
+  {
+   "method": "PATCH",
+   "ham": "updatePortForwardingEntries"
+  },
+  {
+   "method": "POST",
+   "ham": "createPortForwardingEntries"
+  }
+ ],
+ "api/v1/data/alg": [
+  {
+   "method": "GET",
+   "ham": "getAlgConfigurations"
+  },
+  {
+   "method": "PATCH",
+   "ham": "updateAlgConfigurations"
+  }
+ ],
+ "api/v1/data/diagnostic": [
+  {
+   "method": "POST",
+   "ham": "postDiagnostic"
+  }
+ ],
+ "api/v1/data/ddns": [
+  {
+   "method": "GET",
+   "ham": "getDynamicDNSStatus"
+  }
+ ],
+ "api/v1/data/ddns/configurations": [
+  {
+   "method": "GET",
+   "ham": "getDynamicDNSConfigurations"
+  },
+  {
+   "method": "PATCH",
+   "ham": "setDynamicDNSConfigurations"
+  }
+ ],
+ "api/v1/data/dhcp/servers": [
+  {
+   "method": "GET",
+   "ham": "getDhcpServers"
+  },
+  {
+   "method": "PATCH",
+   "ham": "setDhcpServers"
+  }
+ ],
+ "api/v1/data/dhcp/reservedHosts": [
+  {
+   "method": "DELETE",
+   "ham": "deleteDhcpReservedHosts"
+  },
+  {
+   "method": "GET",
+   "ham": "getDhcpReservedHosts"
+  },
+  {
+   "method": "PATCH",
+   "ham": "setDhcpReservedHosts"
+  },
+  {
+   "method": "POST",
+   "ham": "postDhcpReservedHosts"
+  }
+ ],
+ "api/v1/data/publicLan": [
+  {
+   "method": "GET",
+   "ham": "getPublicLanConfiguration"
+  },
+  {
+   "method": "PATCH",
+   "ham": "setPublicLanConfiguration"
+  }
+ ],
+ "api/v1/data/publicLan/staticNat/policies": [
+  {
+   "method": "DELETE",
+   "ham": "deleteStaticNatPolicies"
+  },
+  {
+   "method": "GET",
+   "ham": "getStaticNatPolicies"
+  },
+  {
+   "method": "PATCH",
+   "ham": "setStaticNatPolicies"
+  },
+  {
+   "method": "POST",
+   "ham": "postStaticNatPolicies"
+  }
+ ],
+ "api/v1/data/publicLan/routing/reservedHosts": [
+  {
+   "method": "DELETE",
+   "ham": "deletePublicLanReservedHosts"
+  },
+  {
+   "method": "GET",
+   "ham": "getPublicLanReservedHosts"
+  },
+  {
+   "method": "PATCH",
+   "ham": "setPublicLanReservedHosts"
+  },
+  {
+   "method": "POST",
+   "ham": "postPublicLanReservedHosts"
+  }
+ ],
+ "api/v1/data/staticRouting/policies": [
+  {
+   "method": "DELETE",
+   "ham": "deleteStaticRoutingPolicies"
+  },
+  {
+   "method": "GET",
+   "ham": "getStaticRoutingPolicies"
+  },
+  {
+   "method": "PATCH",
+   "ham": "setStaticRoutingPolicies"
+  },
+  {
+   "method": "POST",
+   "ham": "postStaticRoutingPolicies"
+  }
+ ],
+ "api/v1/data/pon/status": [
+  {
+   "method": "GET",
+   "ham": "getPonStatus"
+  }
+ ],
+ "api/v1/data/system/info": [
+  {
+   "method": "GET",
+   "ham": "getSystemInfo"
+  }
+ ],
+ "api/v1/data/system": [
+  {
+   "method": "PATCH",
+   "ham": "setSystemInfo"
+  }
+ ],
+ "api/v1/data/system/status": [
+  {
+   "method": "GET",
+   "ham": "getSystemStatus"
+  }
+ ],
+ "api/v1/data/system/logServer": [
+  {
+   "method": "GET",
+   "ham": "getSystemLogConfig"
+  },
+  {
+   "method": "PATCH",
+   "ham": "setSystemLogConfig"
+  }
+ ],
+ "api/v1/data/system/logs": [
+  {
+   "method": "GET",
+   "ham": "getSystemLogs"
+  }
+ ],
+ "api/v1/data/time": [
+  {
+   "method": "GET",
+   "ham": "getTime"
+  },
+  {
+   "method": "PATCH",
+   "ham": "setTime"
+  }
+ ],
+ "api/v1/data/access/http/connections": [
+  {
+   "method": "DELETE",
+   "ham": "deleteAccessHttpConnections"
+  },
+  {
+   "method": "GET",
+   "ham": "getAccessHttpConnections"
+  },
+  {
+   "method": "POST",
+   "ham": "postAccessHttpConnections"
+  }
+ ],
+ "api/v1/data/access/ssh/connections": [
+  {
+   "method": "DELETE",
+   "ham": "deleteAccessSshConnections"
+  },
+  {
+   "method": "GET",
+   "ham": "getAccessSshConnections"
+  },
+  {
+   "method": "POST",
+   "ham": "postAccessSshConnections"
+  }
+ ],
+ "api/v1/data/wizard": [
+  {
+   "method": "GET",
+   "ham": "getWizardSettings"
+  },
+  {
+   "method": "PATCH",
+   "ham": "setWizardSettings"
+  }
+ ],
+ "api/v1/data/system/services/cache": [
+  {
+   "method": "GET",
+   "ham": "getServicesCache"
+  }
+ ],
+ "api/v1/data/system/services/actions": [
+  {
+   "method": "POST",
+   "ham": "postServicesActions"
+  }
+ ],
+ "api/v1/data/ext/timer/wifi": [
+  {
+   "method": "GET",
+   "ham": "getWifiTimer"
+  },
+  {
+   "method": "PATCH",
+   "ham": "setWifiTimer"
+  }
+ ],
+ "api/v1/data/ext/timer/reboot": [
+  {
+   "method": "GET",
+   "ham": "getRebootTimer"
+  },
+  {
+   "method": "PATCH",
+   "ham": "setRebootTimer"
+  }
+ ],
+ "api/v1/data/ssids": [
+  {
+   "method": "GET",
+   "ham": "getSsidConfiguration"
+  },
+  {
+   "method": "PATCH",
+   "ham": "setSsidConfiguration"
+  }
+ ],
+ "api/v1/data/radios": [
+  {
+   "method": "GET",
+   "ham": "getRadios"
+  },
+  {
+   "method": "PATCH",
+   "ham": "setRadios"
+  }
+ ],
+ "api/v1/data/easyMesh": [
+  {
+   "method": "GET",
+   "ham": "getEasyMeshConfiguration"
+  },
+  {
+   "method": "PATCH",
+   "ham": "setEasyMeshConfiguration"
+  }
+ ]
+}

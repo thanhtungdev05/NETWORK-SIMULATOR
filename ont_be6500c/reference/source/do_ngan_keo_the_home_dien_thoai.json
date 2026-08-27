@@ -1,0 +1,102 @@
+{
+  "_tieu_de": "Ngan keo cua cac THE o Home > Overview, ban DIEN THOAI -- trang thai MO va DONG",
+  "_ngay_do": "2026-08-14",
+  "_thiet_bi": "ONT-BE6500C, 192.168.1.1, firmware 1PZ108WZ110",
+  "_vi_sao_den_hom_nay_moi_do_duoc": [
+    "GD1 chi chup duoc trang thai DONG (reference/source/mobile_ngan_keo.html):",
+    "  visibility: hidden; transform: translateX(502px)",
+    "File mobile_ngan_keo_MO.html KHONG phai ngan keo nay -- do la ngan keo",
+    "MENU HAMBURGER (MuiDrawer-modal, role=presentation, chua Home/Wi-Fi/...),",
+    "mot component hoan toan khac.",
+    "GD6 lan dau da thu ep khung nhin hep bang cong cu resize cua trinh duyet",
+    "dieu khien tu xa -> bao thanh cong nhung window.innerWidth KHONG doi",
+    "(luon ~1536px), nen khong vao duoc bo cuc dien thoai. Da ghi ISSUES la",
+    "'bi chan boi moi truong'."
+  ],
+  "_cach_do_thanh_cong": [
+    "Khong ep khung nhin cua CA TAB nua, ma tao mot <iframe> RONG 420px CUNG",
+    "ORIGIN ngay trong trang thiet bi that:",
+    "    f.src = '/#/home/overview'; f.style.width = '420px';",
+    "SPA quyet dinh bo cuc bang useMediaQuery(breakpoints.down('md')), doc",
+    "window.innerWidth cua CHINH iframe -> iframe 420px (innerWidth do duoc",
+    "417px sau khi tru thanh cuon) ra dung ban dien thoai.",
+    "Cung origin nen doc duoc contentDocument, bam nut va do getComputedStyle",
+    "binh thuong. Sau khi do xong go iframe di, KHONG doi gi tren thiet bi."
+  ],
+
+  "so_ngan_keo": 3,
+  "cac_the_co_ngan_keo": ["Gateway", "Internet", "Devices"],
+  "_ghi_chu_the_khac": [
+    "The 'Wi-Fi' va 'Speed Test' dung icon ChevronRightIcon va DIEU HUONG",
+    "sang trang khac, KHONG mo ngan keo -- khac hai loai, dung nham la sai."
+  ],
+
+  "lop": {
+    "ngan_keo_goc": "MuiDrawer-root MuiDrawer-docked css-ioquii",
+    "giay": "MuiPaper-root MuiPaper-elevation MuiPaper-elevation0 MuiDrawer-paper MuiDrawer-paperAnchorRight MuiDrawer-paperAnchorDockedRight css-1ciwpa8",
+    "nut_mo": "MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeSmall css-smt8kr",
+    "nut_mo_icon": "svg[data-testid=ExpandMoreIcon] nam trong the",
+    "nut_dong": "MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeMedium css-2u1cpt",
+    "nut_dong_icon": "svg[data-testid=ArrowBackIcon] nam o dau ngan keo"
+  },
+
+  "_chu_thich_W": "W = be rong giay = be rong khung nhin. Khi do that: 417px. Ban chup GD1 (khung nhin 502px): 502px. Bo gia lap phai lay tu chinh style dang co, khong hardcode.",
+
+  "style_noi_tuyen_theo_tung_trang_thai": {
+    "dong_nghi": "transform: translateX(Wpx); visibility: hidden;",
+    "mo": "transform: none; transition: transform 300ms cubic-bezier(0, 0, 0.2, 1);",
+    "dang_dong": "transform: translateX(Wpx); transition: transform 300ms cubic-bezier(0.4, 0, 0.6, 1);",
+    "da_dong": "transform: translateX(Wpx); visibility: hidden;"
+  },
+
+  "_do_nguyen_van": {
+    "truoc_khi_bam": [
+      "transform: translateX(417px); visibility: hidden;",
+      "visibility: hidden; transform: translateX(417px);",
+      "visibility: hidden; transform: translateX(417px);"
+    ],
+    "sau_khi_bam_mui_ten_the_1": [
+      "transform: none; transition: transform 300ms cubic-bezier(0, 0, 0.2, 1);",
+      "visibility: hidden; transform: translateX(417px);",
+      "visibility: hidden; transform: translateX(417px);"
+    ],
+    "ngay_sau_khi_bam_nut_quay_lai": [
+      "transform: translateX(417px); transition: transform 300ms cubic-bezier(0.4, 0, 0.6, 1);",
+      "visibility: hidden; transform: translateX(417px);",
+      "visibility: hidden; transform: translateX(417px);"
+    ],
+    "sau_khi_dong_xong": [
+      "transform: translateX(417px); visibility: hidden;",
+      "visibility: hidden; transform: translateX(417px);",
+      "visibility: hidden; transform: translateX(417px);"
+    ]
+  },
+
+  "getComputedStyle_giay_luc_MO": {
+    "visibility": "visible",
+    "width": "416.8px",
+    "height": "832.8px",
+    "position": "fixed",
+    "top": "64px",
+    "right": "0px",
+    "left": "0px",
+    "zIndex": "1200",
+    "boxShadow": "none",
+    "backgroundColor": "rgb(255, 255, 255)",
+    "overflowY": "auto",
+    "padding": "0px",
+    "borderRadius": "0px",
+    "transition": "transform 0.3s cubic-bezier(0, 0, 0.2, 1)"
+  },
+
+  "_ket_luan_cho_bo_gia_lap": [
+    "1. Chi mot ngan keo mo tai mot thoi diem (do duoc: bam the 1 thi the 2,3",
+    "   van giu nguyen trang thai dong).",
+    "2. Mo  = xoa visibility:hidden, dat transform:none + transition mo.",
+    "3. Dong = dat lai transform:translateX(Wpx) + transition dong, HET 300ms",
+    "   moi them lai visibility:hidden (neu them ngay thi mat hieu ung truot).",
+    "4. Ngan keo phu len noi dung, bat dau tu top:64px (duoi thanh tieu de).",
+    "5. Noi dung ben trong ngan keo GD1 DA CHUP DU (nam san trong",
+    "   src/www/m_home__overview.html) -- chi thieu phan dong/mo nay."
+  ]
+}

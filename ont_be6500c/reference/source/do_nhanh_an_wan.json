@@ -1,0 +1,133 @@
+{
+  "_muc_dich": "Markup THAT cua cac nhanh giao dien trang Advanced > WAN ma ban chup tinh KHONG co (vi luc chup thiet bi khong o trang thai do). Chup ngay 2026-08-13 tren thiet bi that 192.168.1.1.",
+
+  "_cach_chup_AN_TOAN": {
+    "buoc_1": "Cai bo chan ghi truoc: ghi de window.fetch va XMLHttpRequest.open, moi method khac GET bi chan tai cho va tra 200 rong.",
+    "buoc_2": "Chi doi cac o chon (Connection Type, cong tac VLAN) -- react-hook-form chi doi state trong trinh duyet, KHONG goi API.",
+    "buoc_3": "TUYET DOI khong bam Save.",
+    "buoc_4": "Tai lai trang -> moi thay doi phia client bien mat, bo chan ghi cung mat theo.",
+    "ket_qua_kiem_chung": {
+      "request_ghi_bi_chan": ["POST /oui-rpc", "POST /oui-rpc", "POST /oui-rpc"],
+      "giai_thich": "Ca 3 deu la RPC 'alive' giu phien, KHONG phai ghi cau hinh. Khong co PATCH/POST/DELETE nao toi api/v1/data.",
+      "sau_khi_tai_lai": {
+        "ipv4Settings.protocol": "static",
+        "ipv6Settings.protocol": "slaac",
+        "vlan.enabled": false,
+        "ipv4Settings.ipAddress": "192.168.1.1",
+        "ipv4Settings.gateway": "192.168.1.254"
+      },
+      "ket_luan": "Thiet bi ve DUNG nguyen trang truoc khi do."
+    }
+  },
+
+  "popup_cua_MUI_Select": {
+    "_y_nghia": "Tu truoc toi nay du an CHUA co markup popup cua MUI Select, nen phai dung hop chon tu che (sim-chon-*) o trang LAN, Port Forwarding, Reserved IP. Nay da co markup that -> thay het.",
+    "_chup_tu": "o 'Connection Type' cua IPv4 tren trang WAN",
+    "goc": {
+      "the": "div",
+      "role": "presentation",
+      "id": "menu-<ten truong>",
+      "class": "MuiPopover-root MuiMenu-root MuiModal-root css-1sucic7"
+    },
+    "con": [
+      {"the": "div", "class": "MuiBackdrop-root MuiBackdrop-invisible MuiModal-backdrop css-esi9ax", "aria-hidden": "true", "style": "opacity: 1; transition: opacity 225ms cubic-bezier(0.4, 0, 0.2, 1);"},
+      {"the": "div", "tabindex": "0", "data-testid": "sentinelStart"},
+      {
+        "the": "div",
+        "class": "MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation8 MuiPopover-paper MuiMenu-paper MuiMenu-paper css-ivedc8",
+        "tabindex": "-1",
+        "style_mau": "opacity: 1; transform: none; min-width: 850px; transition: opacity 265ms cubic-bezier(0.4, 0, 0.2, 1), transform 176ms cubic-bezier(0.4, 0, 0.2, 1); top: 348px; left: 361px; transform-origin: 425px 0px;",
+        "_ghi_chu_style": "min-width lay theo be ngang o chon; top/left tinh theo vi tri o -- phai tinh lai luc chay, khong dung nguyen so nay",
+        "con": {
+          "the": "ul",
+          "class": "MuiList-root MuiList-padding MuiMenu-list css-r8u8y9",
+          "role": "listbox",
+          "tabindex": "-1",
+          "style": "padding: 0px;",
+          "muc": {
+            "the": "li",
+            "class_binh_thuong": "MuiButtonBase-root MuiMenuItem-root MuiMenuItem-gutters MuiMenuItem-root MuiMenuItem-gutters css-x3whsd",
+            "class_dang_chon": "MuiButtonBase-root MuiMenuItem-root MuiMenuItem-gutters Mui-selected Mui-focusVisible MuiMenuItem-root MuiMenuItem-gutters Mui-selected css-x3whsd",
+            "tabindex_binh_thuong": "-1",
+            "tabindex_dang_chon": "0",
+            "role": "option",
+            "color": "secondary",
+            "aria-selected": "false | true",
+            "data-value": "<gia tri>",
+            "noi_dung": "<chu hien thi> + <span class=\"MuiTouchRipple-root css-w0pj6f\"></span>"
+          }
+        }
+      },
+      {"the": "div", "tabindex": "0", "data-testid": "sentinelEnd"}
+    ],
+    "tuy_chon_do_duoc": {
+      "ipv4Settings.protocol": [
+        {"data-value": "dhcp", "chu": "DHCP"},
+        {"data-value": "pppoe", "chu": "PPPoE"},
+        {"data-value": "static", "chu": "Static"}
+      ],
+      "ipv6Settings.protocol": [
+        {"data-value": "dhcpv6", "chu": "DHCPv6 (Stateful)"},
+        {"data-value": "slaac", "chu": "DHCPv6 (Stateless)"},
+        {"data-value": "static", "chu": "Static"}
+      ]
+    }
+  },
+
+  "o_van_ban_khong_co_goi_y": {
+    "_mau_chuan_da_chup": "ipv4Settings.pppoe.username (nhanh PPPoE)",
+    "cau_truc": "div.MuiFormControl-root.MuiTextField-root.css-5p9558 > label.(...).css-4mi22k[data-shrink=false][for=ID][id=ID-label] + div.MuiInputBase-root.MuiOutlinedInput-root.MuiInputBase-colorPrimary.MuiInputBase-formControl.css-j9o3g1 > input[aria-invalid=false][id=ID][name=NAME][type=text].MuiInputBase-input.MuiOutlinedInput-input.css-1x5jdmq + fieldset[aria-hidden=true].MuiOutlinedInput-notchedOutline.css-igs3ac > legend.css-yjsfm1 > span(LABEL)",
+    "_luu_y_data_shrink": "data-shrink=false va legend css-yjsfm1 khi o RONG; khi o CO gia tri thi data-shrink=true, them lop MuiInputLabel-shrink + MuiFormLabel-filled, va legend doi sang css-14lo706",
+    "cac_o_dung_mau_nay": [
+      {"name": "ipv4Settings.pppoe.username", "label": "PPP Username", "_da_chup_nguyen_van": true},
+      {"name": "ipv4Settings.pppoe.password", "label": "PPP Password", "_da_chup": "cung cau truc, do dai JSON bang y het o username (994 ky tu)"},
+      {"name": "ipv6Settings.ipAddress", "label": "IPv6 WAN Address", "_da_chup": "cung cau truc (997 ky tu)"},
+      {"name": "ipv6Settings.gateway", "label": "IPv6 Gateway Address", "_da_chup": "cung cau truc (1003 ky tu)"}
+    ]
+  },
+
+  "o_van_ban_co_goi_y": {
+    "_mau_chuan_da_chup_nguyen_van": "ipv6Settings.prefix",
+    "khac_o_khong_goi_y": "input them aria-describedby=ID-helper-text; sau fieldset co them the <p>",
+    "the_goi_y": "p.MuiFormHelperText-root.MuiFormHelperText-sizeMedium.MuiFormHelperText-contained.css-1mqlc81[id=ID-helper-text] > span.normal.css-3wogm7 (chua chu goi y)",
+    "cac_o": [
+      {"name": "ipv6Settings.prefix", "label": "Custom Delegated IPv6-Prefix", "goi_y": "e.g., 2001:0db8:85a3::/64"}
+    ],
+    "_doi_chieu_nguoc": "Markup nay XAC NHAN o 'Custom Delegated IPv6-Prefix' ma ta tu dung o trang LAN (lan_binding.js, nhan ban tu o ULA IPv6-Prefix) la DUNG: cung css-5p9558 / css-j9o3g1 / css-1x5jdmq."
+  },
+
+  "o_VLAN_ID": {
+    "_da_chup_nguyen_van": true,
+    "khac_biet": "FormControl co them lop 'manualInputs' (thut le) va dung css-136zr73 thay vi css-5p9558; label o trang thai shrink (data-shrink=true, co MuiInputLabel-shrink + MuiFormLabel-filled, legend css-14lo706) vi o luon co gia tri",
+    "cau_truc": "div.MuiFormControl-root.MuiTextField-root.manualInputs.css-136zr73 > label.(...).css-1sqw6hd[data-shrink=true] + div.(...).css-j9o3g1 > input[aria-invalid=false][aria-describedby=ID-helper-text][id=ID][name=vlan.id][type=number][max=4094][min=1][maxlength=4].css-1x5jdmq + fieldset.css-igs3ac > legend.css-14lo706 > span(VLAN ID); roi <p>.MuiFormHelperText-root(...).MuiFormHelperText-filled.css-1mqlc81 > span.normal.css-3wogm7('Range: 1 to 4094.')",
+    "label": "VLAN ID",
+    "goi_y": "Range: 1 to 4094."
+  },
+
+  "nhom_radio_Automatic_Manual": {
+    "_ket_luan_quan_trong": "Nhom radio cua DNS (IPv4), DNS (IPv6) va VLAN autoDetection dung Y HET mot cau truc -- da do va so sanh truc tiep: class nhom giong nhau tuyet doi.",
+    "form_control_class": "MuiFormControl-root css-i44wyl",
+    "group_class": "MuiFormGroup-root MuiRadioGroup-root css-1h7anqn",
+    "cac_o": [{"value": "auto", "nhan": "Automatic"}, {"value": "manual", "nhan": "Manual"}],
+    "_he_qua": "Ban chup advanced__wan.html DA CO san nhom nay (cua DNS IPv6) -> nhan ban duoc cho DNS IPv4 va cho VLAN ma khong phai bia gi.",
+    "nhom_ipVersion_khac": {
+      "group_class": "MuiFormGroup-root MuiFormGroup-row MuiRadioGroup-root MuiRadioGroup-row css-p58oka",
+      "cac_o": [{"value": "10", "nhan": "IPv4 & IPv6"}, {"value": "4", "nhan": "IPv4"}, {"value": "6", "nhan": "IPv6"}],
+      "_ghi_chu": "bay NGANG (row), da co san trong ban chup"
+    }
+  },
+
+  "xac_nhan_cay_an_hien_bang_THUC_NGHIEM": [
+    "ipv4 protocol = pppoe -> hien PPP Username + PPP Password, AN 3 o Static (ipAddress/mask/gateway). Da do: con_o_static=false.",
+    "ipv4 protocol != static -> nhom radio DNS cua IPv4 HIEN RA (luc protocol=static thi bi an). Da do.",
+    "ipv6 protocol = static -> hien IPv6 WAN Address + IPv6 Gateway Address + Custom Delegated IPv6-Prefix. Da do du 3 o.",
+    "bat cong tac VLAN (luc ipv4 protocol=static) -> o VLAN ID hien ra NGAY, nhom radio autoDetection KHONG hien (dung nhu ma goc: radio chi hien khi protocol==='dhcp')",
+    "doi tiep ipv4 protocol sang dhcp -> nhom radio VLAN autoDetection hien ra (dem duoc 3 nhom radio: ipVersion, DNS, VLAN)",
+    "tuy chon 'Static' cua IPv6 KHONG bi vo hieu hoa luc ipv4 protocol=static (dung ma goc: chi vo hieu khi ipv4 protocol==='pppoe')"
+  ],
+
+  "_con_thieu": [
+    "Chua do duoc trang thai tuy chon 'Static' cua IPv6 BI VO HIEU HOA (can dat ipv4=pppoe VA ipv6 dang mo menu cung luc) -- ma goc noi ro dieu kien, nhung chua co anh chup lop Mui-disabled cua the <li>.",
+    "Chua do tab 'Backup' vi thiet bi khong co ban ghi interfaces/configurations nao mang usage='Backup'."
+  ]
+}

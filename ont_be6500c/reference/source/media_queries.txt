@@ -1,0 +1,13 @@
+(hover: none)
+(max-width: 599.95px)
+(max-width: 899.95px)
+(min-width: 0px)
+(min-width: 0px) and (max-width: 599.95px)
+(min-width: 0px) and (orientation: landscape)
+(min-width: 1200px)
+(min-width: 1536px)
+(min-width: 600px)
+(min-width: 900px)
+(pointer: fine)
+(prefers-reduced-motion: reduce)
+print

@@ -1,0 +1,36 @@
+{
+ "_muc_dich": "Cac anh xa o-nhap <-> API ma script tu dong (src/tao_binding.py) KHONG tim ra duoc, nhung co bang chung ro rang. Moi muc bat buoc ghi ly do o '_bang_chung'. File nay duoc gop vao spec/binding.json khi sinh src/www/binding_data.js.",
+ "_vi_sao_script_bo_sot": "Script chi xet cac resource RIENG cua trang (loai 4 resource chung: devices, ssids, system/info, wizard) va chi nhan o co gia tri trung khop. Nen (a) o lay du lieu tu resource CHUNG bi bo qua, (b) o chua duoc chup gia tri that thi khong the so.",
+
+ "advanced__dmz": {
+  "enabled": {
+   "resource": "dmz/configurations",
+   "duong_dan": "[0].enabled",
+   "_bang_chung": "Ma goc (reference/source/assets_goc/index-C36zq4Sp.js) lam: u.find(z => z.ipVersion === 4) -- trang DMZ CHI dung ban ghi IPv4. Trong spec/seed_api.json, dmz/configurations[0] chinh la ban ghi do (id 'dmz_v4', ipVersion 4); [1] la 'dmz_v6' va KHONG duoc trang nay dung. Truoc day script danh dau MO HO vi hai ban ghi cung co enabled=false nen so gia tri khong phan biet duoc -- ma goc moi cho cau tra loi.",
+   "_luu_y_ghi": "Ma goc ghi bang setDmzConfiguration({payload:[{...form, id: banGhi.id}]}) -- tuc PATCH MOT MANG chua dung 1 phan tu kem 'id'. O 'ipAddress' chi hien khi cong tac bat (giong 2 trang Timer), ban chup hien tai dang tat nen chua co markup cho o do."
+  }
+ },
+
+ "system__general": {
+  "hostname": {
+   "resource": "system/info",
+   "resource_ghi": "system",
+   "duong_dan": "hostname",
+   "_bang_chung": "Gia tri that cua o tren thiet bi (reference/source/o_nhap_that.json) la 'AP-BE6500C-525E', trung khop tuyet doi voi system/info.hostname. Script bo sot vi 'system/info' nam trong nhom 4 resource CHUNG (moi trang deu goi) nen bi loai khoi danh sach resource rieng cua trang.",
+   "_luu_y_ghi": "Chi doc. Muon GHI phai PATCH /api/v1/data/system (ham setSystemInfo trong ma goc), KHONG phai /api/v1/data/system/info -- xem spec/api_methods.json."
+  }
+ },
+
+ "system__general__t1": {
+  "ntp.servers.0.value": {
+   "resource": "time",
+   "duong_dan": "servers[0]",
+   "_bang_chung": "Ten o dung theo quy luat da xac nhan cua app: name = duong dan trong JSON cua resource ('ntp.servers.N.value' -> time.servers[N]). Trang nay goi dung resource 'time' (reference/source/map_trang_api.json). Chua chup duoc gia tri that cua o vi ban chup tab Time Synchronization dang de trong."
+  },
+  "ntp.servers.1.value": {
+   "resource": "time",
+   "duong_dan": "servers[1]",
+   "_bang_chung": "Nhu tren, phan tu thu hai."
+  }
+ }
+}

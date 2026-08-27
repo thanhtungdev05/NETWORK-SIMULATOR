@@ -1,0 +1,53 @@
+{
+  "_tieu_de": "Do bo sung dropdown 'Security Mode' che do TACH -- 2 diem doc lap ngoai 2.4GHz/SmartHome da do truoc do, de kiem gia thuyet 'danh sach khong phu thuoc band/loai SSID'",
+  "_ngay_do": "2026-08-18",
+  "_thiet_bi": "ONT-BE6500C, 192.168.1.1, firmware 1PZ108WZ110",
+  "_ke_thua": "Bo sung cho reference/source/do_security_mode_wifi.json (KHONG sua file do -- reference/ chi doc, luat 2.3). File do ghi 2 gap con thieu o muc _gap_chua_do_duoc: (1) dai 5GHz khi tach rieng, (2) Guest Network khi BAT va TACH.",
+  "_vi_sao": [
+    "ISSUES.md/STATUS.md liet ke day la viec treo cuoi cung cua du an.",
+    "Dieu khien Chrome MCP vao thang thiet bi that de do, KHONG can anh",
+    "Huynn thao tac. Chi doc DOM/CSSOM qua javascript_tool, KHONG bam",
+    "Save o bat ky buoc nao -- moi thay doi cuc bo (vd bat 'Use separate",
+    "network' o tab Primary) deu duoc huy bang nut Cancel truoc khi roi",
+    "trang, khong ghi gi that len thiet bi."
+  ],
+
+  "diem_do_1__primary_5ghz_tach": {
+    "cach_do": "Tab PRIMARY NETWORK dang o che do GOP (mac dinh that). Bat cong tac 'Use separate network' (thay doi CUC BO, chua Save) -> form tach thanh 2 hop rieng '2.4GHz' va '5GHz', ca hai deu Enable=true (ke thua tu gia tri GOP dang bat). Mo dropdown Security Mode cua hop 5GHz.",
+    "danh_sach_mo": [
+      { "data-value": "WPA2-Personal", "aria-selected": "false", "text": "WPA2-Personal" },
+      { "data-value": "WPA3-Personal-Transition", "aria-selected": "true", "text": "WPA2/WPA3 Personal" }
+    ],
+    "class_li": "MuiButtonBase-root MuiMenuItem-root MuiMenuItem-gutters [Mui-selected] MuiMenuItem-root MuiMenuItem-gutters [Mui-selected] css-x3whsd",
+    "ket_luan": "GIONG HET danh sach da do o SmartHome 2.4GHz (che_do_TACH trong file goc) -- ca data-value, ca lop CSS, ca chu hien thi.",
+    "sau_do": "Da bam CANCEL de huy thay doi cuc bo, khong Save. Kiem lai bang navigate lai trang tu dau: tab Primary tro ve dung trang thai GOP ban dau."
+  },
+
+  "diem_do_2__guest_2_4ghz_tach": {
+    "phat_hien_bat_ngo": "Tab GUEST NETWORK tren thiet bi that HIEN DANG o che do TACH RIENG THAT SU (khong phai em tu bat) -- 'Use separate network' = ON, dai 2.4GHz Enable=true ten 'GuestC151 2.4G', dai 5GHz Enable=false. Xac nhan bang navigate lai trang tu dau (khong phai trang thai form con sot lai tu thao tac o tab Primary).",
+    "cach_do": "Mo dropdown Security Mode cua hop 2.4GHz (dang Enable).",
+    "danh_sach_mo": [
+      { "data-value": "WPA2-Personal", "aria-selected": "false", "text": "WPA2-Personal" },
+      { "data-value": "WPA3-Personal-Transition", "aria-selected": "true", "text": "WPA2/WPA3 Personal" }
+    ],
+    "class_li": "MuiButtonBase-root MuiMenuItem-root MuiMenuItem-gutters [Mui-selected] MuiMenuItem-root MuiMenuItem-gutters [Mui-selected] css-x3whsd",
+    "ket_luan": "GIONG HET danh sach da do o SmartHome 2.4GHz VA o Primary 5GHz (diem do 1) -- cung data-value, cung lop CSS, cung chu hien thi.",
+    "guest_5ghz": "Dang Enable=false tren thiet bi that -> o Select bi khoa (Mui-disabled/con tro khong mo duoc popup) -- DUNG hanh vi da biet cua moi Select khi band tat, khong phai thieu bang chung rieng.",
+    "khong_dong_gi": "Khong sua gi o tab Guest (no von da o trang thai nay tren thiet bi that, khong phai do em thao tac). Chi mo dropdown de doc, khong chon gia tri khac, khong Save."
+  },
+
+  "smarthome_5ghz": {
+    "trang_thai": "Dang Enable=false tren thiet bi that (nhu da ghi trong file goc do_security_mode_wifi.json) -> Select bi khoa, khong mo duoc. Khong doi gi o day."
+  },
+
+  "bang_6ghz": {
+    "ket_luan": "Kiem toan bo 3 tab (Primary/Guest/SmartHome): MOI tab CHI co 2 hop bang tan '2.4GHz' va '5GHz'. KHONG co hop/tab '6GHz' nao trong giao dien That cua thiet bi nay, du schema xac thuc trong ma nguon co liet ke enum radio:['2.4G','5G','6G'] (co the la du phong cho model khac cung dong san pham, khong dung tren ONT-BE6500C). Khong co gi de do cho 6GHz vi tinh nang khong ton tai tren UI thiet bi nay."
+  },
+
+  "_ket_luan_cho_bo_gia_lap": [
+    "1. Danh sach Select o che do TACH la CO DINH, khong phu thuoc band (2.4GHz/5GHz) hay loai SSID (Primary/Guest/SmartHome) -- xac nhan boi 3 diem do doc lap tro ve CUNG 1 ket qua (SmartHome-2.4G tu file goc, Primary-5G va Guest-2.4G tu file nay).",
+    "2. Da bo dieu kien 'chi 2.4GHz' trong wifi_general_binding.js (ham noiSecurityMode) -- doi ten bien CHON_SECURITY_TACH_24G thanh CHON_SECURITY_TACH, ap dung cho MOI band/loai khi da tach.",
+    "3. Truong hop Select bi khoa (band dang tat) VAN giu nguyen hanh vi cu -- day KHONG phai gioi han thieu bang chung, ma la hanh vi THAT da quan sat duoc (MUI disable Select khi form field tuong ung bi tat).",
+    "4. KHONG co 6GHz tren UI thiet bi nay -- khong co gi de noi them, khac voi gia dinh ban dau trong ISSUES.md rang '6GHz' la mot gap con thieu bang chung."
+  ]
+}

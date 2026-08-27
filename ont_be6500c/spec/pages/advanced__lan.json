@@ -1,0 +1,635 @@
+{
+  "_route": "advanced/lan",
+  "_duong_dan_trinh_duyet": "#/advanced/lan",
+  "_nguon": {
+    "chunk": "index-ZQ6T7f31.js",
+    "kich_thuoc_byte": 36497,
+    "chunk_phu_thuoc": [
+      "assets/index-ZQ6T7f31.js",
+      "assets/FormHeading-Wrbr2YtD.js",
+      "assets/FormSelect-CJAio79q.js",
+      "assets/schema-BT0LOWg1.js",
+      "assets/TabList-CMoR7mS_.js",
+      "assets/KeyboardArrowRight-C7P-Q0WC.js",
+      "assets/TabPanel-D6RFuHOG.js",
+      "assets/PageHeading-B0ZcsD9H.js",
+      "assets/AlertDialog-DcZGNdPg.js",
+      "assets/cloneDeep-DVNSNFN2.js",
+      "assets/_baseClone-BoSTy1YA.js",
+      "assets/useDevices-DwHuFieu.js",
+      "assets/_baseSlice-z0Zd1-Ev.js",
+      "assets/_baseFlatten-g6JNov8F.js",
+      "assets/useSnackbar-DeOFrJDC.js",
+      "assets/isNumber-CjKC2f0Q.js",
+      "assets/time-DkCa3OgQ.js",
+      "assets/FormAutocomplete-L6F1ijaU.js",
+      "assets/Popper-BinJnTg_.js",
+      "assets/Chip-Ck-8K0QZ.js",
+      "assets/FormRadios-CChkrIKK.js",
+      "assets/RadioGroup-Bf2DXGOk.js",
+      "assets/Tooltip-DjW0OUsG.js",
+      "assets/Add-tn7x3fTr.js",
+      "assets/RuleList-Ce4Vxx8G.js",
+      "assets/Delete-CIanOWax.js",
+      "assets/Refresh-Ce4n-Ghb.js",
+      "assets/TableRow-CJLJKR0z.js",
+      "assets/TableContainer-D0iNLS95.js",
+      "assets/ListItem-Dw6uMNOj.js",
+      "assets/Clear-D33Tn-Yk.js",
+      "assets/sortBy-BbK4aBfn.js"
+    ],
+    "bundle_loi": "index-CW0UhNxy.js",
+    "_da_quet": [
+      "Add-tn7x3fTr.js",
+      "AlertDialog-DcZGNdPg.js",
+      "Chip-Ck-8K0QZ.js",
+      "Clear-D33Tn-Yk.js",
+      "Delete-CIanOWax.js",
+      "FormAutocomplete-L6F1ijaU.js",
+      "FormHeading-Wrbr2YtD.js",
+      "FormRadios-CChkrIKK.js",
+      "FormSelect-CJAio79q.js",
+      "KeyboardArrowRight-C7P-Q0WC.js",
+      "ListItem-Dw6uMNOj.js",
+      "PageHeading-B0ZcsD9H.js",
+      "RadioGroup-Bf2DXGOk.js",
+      "Refresh-Ce4n-Ghb.js",
+      "RuleList-Ce4Vxx8G.js",
+      "TabPanel-D6RFuHOG.js",
+      "TableContainer-D0iNLS95.js",
+      "TableRow-CJLJKR0z.js",
+      "Tooltip-DjW0OUsG.js",
+      "cloneDeep-DVNSNFN2.js",
+      "index-ZQ6T7f31.js",
+      "isNumber-CjKC2f0Q.js",
+      "schema-BT0LOWg1.js",
+      "sortBy-BbK4aBfn.js",
+      "time-DkCa3OgQ.js",
+      "useDevices-DwHuFieu.js",
+      "useSnackbar-DeOFrJDC.js"
+    ]
+  },
+  "_cach_trich": "src/trich_dac_ta_trang.py (doc ma goc, khong doan)",
+  "goi_api": [
+    {
+      "ham_goc": "deleteDhcpReservedHosts",
+      "doi_tuong_goc": "use",
+      "tim_thay_o": [
+        "index-ZQ6T7f31.js"
+      ],
+      "resource": "api/v1/data/dhcp/reservedHosts",
+      "method": "DELETE",
+      "kenh": "REST"
+    },
+    {
+      "ham_goc": "getDhcpReservedHosts",
+      "doi_tuong_goc": "use",
+      "tim_thay_o": [
+        "index-ZQ6T7f31.js"
+      ],
+      "resource": "api/v1/data/dhcp/reservedHosts",
+      "method": "GET",
+      "kenh": "REST"
+    },
+    {
+      "ham_goc": "getDhcpServers",
+      "doi_tuong_goc": "use",
+      "tim_thay_o": [
+        "index-ZQ6T7f31.js"
+      ],
+      "resource": "api/v1/data/dhcp/servers",
+      "method": "GET",
+      "kenh": "REST"
+    },
+    {
+      "ham_goc": "getInterfaceConfigurations",
+      "doi_tuong_goc": "use",
+      "tim_thay_o": [
+        "index-ZQ6T7f31.js"
+      ],
+      "resource": "api/v1/data/interfaces/configurations",
+      "method": "GET",
+      "kenh": "REST"
+    },
+    {
+      "ham_goc": "postDhcpReservedHosts",
+      "doi_tuong_goc": "use",
+      "tim_thay_o": [
+        "index-ZQ6T7f31.js"
+      ],
+      "resource": "api/v1/data/dhcp/reservedHosts",
+      "method": "POST",
+      "kenh": "REST"
+    },
+    {
+      "ham_goc": "setDhcpReservedHosts",
+      "doi_tuong_goc": "use",
+      "tim_thay_o": [
+        "index-ZQ6T7f31.js"
+      ],
+      "resource": "api/v1/data/dhcp/reservedHosts",
+      "method": "PATCH",
+      "kenh": "REST"
+    },
+    {
+      "ham_goc": "setDhcpServers",
+      "doi_tuong_goc": "use",
+      "tim_thay_o": [
+        "index-ZQ6T7f31.js"
+      ],
+      "resource": "api/v1/data/dhcp/servers",
+      "method": "PATCH",
+      "kenh": "REST"
+    },
+    {
+      "ham_goc": "setInterfaceConfigurations",
+      "doi_tuong_goc": "use",
+      "tim_thay_o": [
+        "index-ZQ6T7f31.js"
+      ],
+      "resource": "api/v1/data/interfaces/configurations",
+      "method": "PATCH",
+      "kenh": "REST"
+    }
+  ],
+  "goi_khac": {
+    "rpc": [],
+    "duong_dan_tuyet_doi": []
+  },
+  "truong_form": [
+    {
+      "name": "ipv4Settings.ipAddress",
+      "label": "IP Address"
+    },
+    {
+      "name": "ipv4Settings.mask",
+      "label": "Subnet Mask"
+    },
+    {
+      "name": "ipv4Settings.dhcp.enabled",
+      "label": "Enable DHCP Server"
+    },
+    {
+      "name": "ipv6Settings.enabled",
+      "label": "Enable LAN IPv6"
+    },
+    {
+      "name": "ipv6Settings.mode",
+      "label": "Mode"
+    },
+    {
+      "name": "ipv6Settings.pdMode.mode"
+    },
+    {
+      "name": "ipv6Settings.ula.prefix",
+      "label": "ULA IPv6-Prefix"
+    },
+    {
+      "name": "ipv6Settings.dhcp.enabled",
+      "label": "Enable DHCP Server"
+    },
+    {
+      "name": "data"
+    }
+  ],
+  "gia_tri_mac_dinh": [
+    {
+      "bien": "$e",
+      "ma": "{dhcpId:\"\",interfaceId:\"\",ipv4Settings:{enabled:!0,ipAddress:\"\",mask:\"\",dhcp:{enabled:!0,startAddress:\"\",endAddress:\"\",leaseTime:{days:\"\",hours:\"\"},dns:{autoDnsEnabled:\"auto\",dnsServers:{primary:\"\",secondary:\"\"}}}},ipv6Settings:{enabled:!1,mode:\"Stateful\",pdMode:{mode:\"auto\",prefix:\"\"},ula:{enabled:!1,prefix:\"\"},dhcp:{enabled:!0,startSuffix:\"\",endSuffix:\"\",dns:{autoDnsEnabled:\"auto\",dnsServers:{primary:\"\",secondary:\"\"}}}}}"
+    },
+    {
+      "bien": "Dt",
+      "ma": "{id:\"\",ipv4Settings:{autoReserved:{enabled:!1}}}"
+    },
+    {
+      "bien": "(noi tuyen)",
+      "ma": "{data:C}"
+    }
+  ],
+  "schema_kiem_tra": [
+    {
+      "ma": "{ipAddress:t.string().ip({version:\"v4\",message:\"LAN IP must be an IPv4 address\"}),mask:t.string().ip({version:\"v4\"}),dhcp:t.object({startAddress:t.string().ip({version:\"v4\",message:\"Start address must be an IPv4 address\"}),endAddress:t.string().ip({version:\"v4\",message:\"End address must be an IPv4 address\"})})}"
+    },
+    {
+      "ma": "{startAddress:t.string().ip({version:\"v4\",message:\"Start address must be an IPv4 address\"}),endAddress:t.string().ip({version:\"v4\",message:\"End address must be an IPv4 address\"})}"
+    },
+    {
+      "ma": "{autoDnsEnabled:t.literal(k.Automatic)}"
+    },
+    {
+      "ma": "{autoDnsEnabled:t.literal(k.Manual),dnsServers:t.object({primary:t.string().min(1,{message:\"IPv4 primary DNS cannot be empty.\"}).ip({version:\"v4\",message:\"Please enter a valid IPv4 address (e.g., 192.168.1.1).\"}),secondary:t.string().ip({version:\"v4\",message:\"Please enter a valid IPv4 address (e.g., 192.168.1.1).\"}).or(t.literal(\"\"))}).superRefine((s,a)=>{const{primary:n,secondary:d}=s;d&&d===n&&a.addIssue({code:t.ZodIssueCode.custom,message:\"The Secondary DNS cannot be the same as the Primary DNS.\",path:[\"secondary\"]})})}"
+    },
+    {
+      "ma": "{primary:t.string().min(1,{message:\"IPv4 primary DNS cannot be empty.\"}).ip({version:\"v4\",message:\"Please enter a valid IPv4 address (e.g., 192.168.1.1).\"}),secondary:t.string().ip({version:\"v4\",message:\"Please enter a valid IPv4 address (e.g., 192.168.1.1).\"}).or(t.literal(\"\"))}"
+    },
+    {
+      "ma": "{enabled:t.boolean(),ipAddress:t.string().min(1,{message:\"IP Address cannot be empty.\"}).ip({version:\"v4\",message:\"Please enter a valid IPv4 address (e.g., 192.168.1.1).\"}).refine(i=>Ce(i),{message:\"The last segment of an IPv4 address cannot be 0 or 255.\"}).refine(i=>{const u=L(i),f=L(o),g=L(l);return!(u<=g&&u>=f)},{message:`${a} IP address must not overlap with the ${n} IP range (${o} to ${l}).`}),mask:t.string().ip({version:\"v4\",message:\"Please enter a valid Subnet Mask (e.g., 255.255.255.0).\"}).refine(i=>Pe(i.split(\".\").map(Number)),{message:\"Please enter a valid Subnet Mask (e.g., 255.255.255.0).\"}),dhcp:t.discriminatedUnion(\"enabled\",[t.object({enabled:t.literal(!1)}),t.object({enabled:t.literal(!0),startAddress:t.string().min(1,{message:\"Start IP Address cannot be empty.\"}).ip({version:\"v4\",message:\"Please enter a valid IPv4 Address (e.g., 192.168.1.1).\"}),endAddress:t.string().min(1,{message:\"End IP Address cannot be empty.\"}).ip({version:\"v4\",message:\"Please enter a valid IPv4 Address (e.g., 192.168.1.1).\"}),leaseTime:t.object({days:t.string().refine(i=>K(i)>=0&&K(i)<=30&&Ae(i),{message:\"Please enter an integer between 0 and 30.\"}),hours:t.string().refine(i=>K(i)>=0&&K(i)<=23&&Ae(i),{message:\"Please enter an integer between 0 and 23.\"})}),dns:Os})])}"
+    },
+    {
+      "ma": "{enabled:t.literal(!1)}"
+    },
+    {
+      "ma": "{enabled:t.literal(!0),startAddress:t.string().min(1,{message:\"Start IP Address cannot be empty.\"}).ip({version:\"v4\",message:\"Please enter a valid IPv4 Address (e.g., 192.168.1.1).\"}),endAddress:t.string().min(1,{message:\"End IP Address cannot be empty.\"}).ip({version:\"v4\",message:\"Please enter a valid IPv4 Address (e.g., 192.168.1.1).\"}),leaseTime:t.object({days:t.string().refine(i=>K(i)>=0&&K(i)<=30&&Ae(i),{message:\"Please enter an integer between 0 and 30.\"}),hours:t.string().refine(i=>K(i)>=0&&K(i)<=23&&Ae(i),{message:\"Please enter an integer between 0 and 23.\"})}),dns:Os}"
+    },
+    {
+      "ma": "{days:t.string().refine(i=>K(i)>=0&&K(i)<=30&&Ae(i),{message:\"Please enter an integer between 0 and 30.\"}),hours:t.string().refine(i=>K(i)>=0&&K(i)<=23&&Ae(i),{message:\"Please enter an integer between 0 and 23.\"})}"
+    },
+    {
+      "ma": "{autoDnsEnabled:t.literal(k.Manual),dnsServers:t.object({primary:t.string().min(1,{message:\"Primary DNS cannot be empty.\"}).ip({version:\"v6\",message:\"Invalid Primary DNS.\"}),secondary:t.string().ip({version:\"v6\",message:\"Invalid Secondary DNS.\"}).or(t.literal(\"\"))}).superRefine((s,a)=>{const{primary:n,secondary:d}=s;d&&d===n&&a.addIssue({code:t.ZodIssueCode.custom,message:\"The Secondary DNS cannot be the same as the Primary DNS.\",path:[\"secondary\"]})})}"
+    },
+    {
+      "ma": "{primary:t.string().min(1,{message:\"Primary DNS cannot be empty.\"}).ip({version:\"v6\",message:\"Invalid Primary DNS.\"}),secondary:t.string().ip({version:\"v6\",message:\"Invalid Secondary DNS.\"}).or(t.literal(\"\"))}"
+    },
+    {
+      "ma": "{enabled:t.boolean(),mode:t.string(),pdMode:t.discriminatedUnion(\"mode\",[t.object({mode:t.literal(k.Automatic)}),t.object({mode:t.literal(k.Manual),prefix:t.string().min(1,{message:\"Custom Delegated IPv6-Prefix cannot be empty.\"}).refine(s=>Fe(s),{message:\"Please enter a valid IPv6-Prefix (e.g., 2001:0db8:85a3::/64).\"})})]),ula:t.discriminatedUnion(\"enabled\",[t.object({enabled:t.literal(!1)}),t.object({enabled:t.literal(!0),prefix:t.string().min(1,{message:\"ULA IPv6-Prefix cannot be empty.\"}).refine(s=>Fe(s),{message:\"Please enter a valid IPv6-Prefix (e.g., 2001:0db8:85a3::/64).\"})})]),dhcp:t.discriminatedUnion(\"enabled\",[t.object({enabled:t.literal(!1)}),t.object({enabled:t.literal(!0),startSuffix:t.string().min(1,{message:\"Start IP Suffix cannot be empty.\"}).refine(s=>_e(s),{message:\"Please enter a valid IPv6 suffix between 2 to FFFF.\"}),endSuffix:t.string().min(1,{message:\"End IP Suffix cannot be empty.\"}).refine(s=>_e(s),{message:\"Please enter a valid IPv6 suffix between 2 to FFFF.\"}),dns:Zs})]).superRefine((s,a)=>{if(s.enabled){const n=parseInt(s.startSuffix,16),d=parseInt(s.endSuffix,16);n>=d&&(Re.changedKey===\"ipv6Settings.dhcp.startSuffix\"?a.addIssue({code:t.ZodIssueCode.custom,message:\"The value of the start IP suffix cannot exceed the end IP suffix.\",path:[\"startSuffix\"]}):a.addIssue({code:t.ZodIssueCode.custom,message:\"The value of the end IP suffix cannot be lower than the start IP suffix.\",path:[\"endSuffix\"]}))}})}"
+    },
+    {
+      "ma": "{mode:t.literal(k.Automatic)}"
+    },
+    {
+      "ma": "{mode:t.literal(k.Manual),prefix:t.string().min(1,{message:\"Custom Delegated IPv6-Prefix cannot be empty.\"}).refine(s=>Fe(s),{message:\"Please enter a valid IPv6-Prefix (e.g., 2001:0db8:85a3::/64).\"})}"
+    },
+    {
+      "ma": "{enabled:t.literal(!0),prefix:t.string().min(1,{message:\"ULA IPv6-Prefix cannot be empty.\"}).refine(s=>Fe(s),{message:\"Please enter a valid IPv6-Prefix (e.g., 2001:0db8:85a3::/64).\"})}"
+    },
+    {
+      "ma": "{enabled:t.literal(!0),startSuffix:t.string().min(1,{message:\"Start IP Suffix cannot be empty.\"}).refine(s=>_e(s),{message:\"Please enter a valid IPv6 suffix between 2 to FFFF.\"}),endSuffix:t.string().min(1,{message:\"End IP Suffix cannot be empty.\"}).refine(s=>_e(s),{message:\"Please enter a valid IPv6 suffix between 2 to FFFF.\"}),dns:Zs}"
+    },
+    {
+      "ma": "{dhcpId:t.string(),interfaceId:t.string(),ipv4Settings:Vs(s),ipv6Settings:t.union([Ws,Ks])}"
+    },
+    {
+      "ma": "{data:t.array(t.object({id:t.string().optional(),serverId:t.string(),macAddress:ys({message:\"Device must be a MAC address\"}),ipAddress:t.string().ip({version:\"v4\",message:\"Reserved IP must be an IPv4 address\"})})).superRefine((f,g)=>{const w=new Set(i),$=new Set(u);f.forEach((N,M)=>{const{ipAddress:P,macAddress:h}=N,F=Be(h);$.has(F)?g.addIssue({code:t.ZodIssueCode.custom,message:\"Duplicated MAC address\",path:[`${M}.macAddress`]}):$.add(F),w.has(P)?g.addIssue({code:t.ZodIssueCode.custom,message:\"This IP address is already taken, please try another one.\",path:[`${M}.ipAddress`]}):w.add(P),!Ge(a,n,P)&&!Ge(m,o,P)&&g.addIssue({code:t.ZodIssueCode.custom,message:\"Your input is out of the valid range.\",path:[`${M}.ipAddress`]})})})}"
+    },
+    {
+      "ma": "{id:t.string().optional(),serverId:t.string(),macAddress:ys({message:\"Device must be a MAC address\"}),ipAddress:t.string().ip({version:\"v4\",message:\"Reserved IP must be an IPv4 address\"})}"
+    },
+    {
+      "ma": "{id:t.string(),ipv4Settings:t.object({autoReserved:t.object({enabled:t.boolean()})})}"
+    },
+    {
+      "ma": "{autoReserved:t.object({enabled:t.boolean()})}"
+    },
+    {
+      "ma": "{enabled:t.boolean()}"
+    }
+  ],
+  "chuoi_hien_thi": [
+    " and ",
+    "& .MuiTooltip-tooltip",
+    "&&!R.dhcp.enabled&&h(",
+    "&&!R.enabled&&h(",
+    "&&!R.ula.enabled&&h(",
+    "&&!y.dhcp.enabled&&h(",
+    "&&!y.mask&&h(",
+    "&&R.dhcp.dns.autoDnsEnabled===k.Automatic&&h(",
+    "&&R.pdMode.mode===k.Automatic&&h(",
+    "&&S(v,",
+    "&&h(",
+    "&&y.dhcp.dns.autoDnsEnabled===k.Automatic&&h(",
+    "&::-webkit-outer-spin-button, &::-webkit-inner-spin-button",
+    ")&&h(",
+    ")),i=De(r=>r.token),u=Qe(!1),f=c.useMemo(()=>new Map(u.map(r=>[r.macAddress,r.hostname])),[u]),[g,w]=qe(),[$,N]=c.useState(!1),[M,P]=c.useState(ae.Add),[h,F]=c.useState(),[D,v]=c.useState(0),[T,q]=c.useState(10),[Y,C]=c.useState(!1),U=c.useMemo(()=>({...a}),[a]),x=ke({mode:",
+    ")),n=c.useMemo(()=>je.map(u=>({value:u,label:u})),[]),d=Oe(),{watch:m,formState:{errors:o}}=d,{dhcp:l}=m(",
+    ")),v=m===",
+    ")),{enqueueSnackbar:l}=Xe(),i=De(C=>C.token),{mutate:u}=ne({key:",
+    ")){const b=L(E),G=L(I),[se,Q]=Ie(H,B),te=L(se),J=L(Q);(b<te||b>J)&&D(",
+    "))}).superRefine((s,a)=>{const{primary:n,secondary:d}=s;d&&d===n&&a.addIssue({code:t.ZodIssueCode.custom,message:",
+    "),(G<te||G>J)&&D(",
+    "),V=pe(B(",
+    "),d=Gs(a.endsWith(",
+    "),disabled:!l.enabled}),e.jsx(z,{name:",
+    "),disabled:!l.enabled})]})]}),e.jsxs(A,{spacing:2,children:[e.jsx(j,{variant:",
+    "),helperText:S(o,",
+    "),helperText:i?",
+    "),i=S(o,",
+    "),x===",
+    ").concat(s).concat(d),u=pe(l,f=>Be(f.macAddress));return t.object({data:t.array(t.object({id:t.string().optional(),serverId:t.string(),macAddress:ys({message:",
+    ").map(Number))&&!S(v,",
+    ").map(Number))&&Ee($)&&Ee(N)){const h=L($),F=L(N),D=L(f),[v,T]=Ie(f,g),q=L(v),Y=L(T);(h<q||h>Y)&&u.addIssue({code:t.ZodIssueCode.custom,message:`The IP address range must be between ${v} to ${T}.`,path:[",
+    ").map(Number)),{message:",
+    ").map(yt),[T]);c.useEffect(()=>{s&&o&&v&&H(",
+    "):",
+    ");const Qs=Z(Ke)(()=>({",
+    ");function Fs(){const s=re(),a=ie(s.breakpoints.down(",
+    ");function Ue({setIsFormDirty:s,lanConfig:a,dhcpConfig:n,otherLanConfig:d}){const m=re(),o=ie(m.breakpoints.down(",
+    ");return new Set(ht(p,V)).has(r.value)},[U,B]),be=y(async r=>{try{await n(r.data)}catch(p){throw p}});return c.useEffect(()=>{(G||!s)&&E()},[G,E,s]),e.jsxs(vt,{open:s,onClose:de,fullScreen:D,...h,children:[e.jsxs(Me,{providerProps:x,children:[e.jsxs(A,{spacing:2,children:[D&&e.jsx(A,{direction:",
+    ")===ue;return e.jsx(as,{children:e.jsxs(A,{spacing:a?2:4,children:[e.jsx(j,{variant:",
+    ")===ue||S(o,",
+    ")?`${a}0`:a),m=As(n);return d&&m},Os=t.discriminatedUnion(",
+    ")[3]))},Gs=s=>{var n;return(n=t.string().ip({version:",
+    ")]:{borderRadius:4,padding:s(3),backgroundColor:a.fill.light}}));var ae=(s=>(s.Edit=",
+    ")]:{order:-1,marginTop:0,marginLeft:",
+    ")]:{padding:0}},",
+    ")]:{padding:a(1,0)}}}),bt=Z(j)(({theme:{palette:s,spacing:a}})=>({color:s.text.secondary,padding:a(2),fontWeight:500,backgroundColor:s.fill.lighter,borderRadius:4})),St=Z(Xs)(({theme:{breakpoints:s}})=>({marginTop:10,[s.down(",
+    ")]:{padding:s(4,2,15,2)}},",
+    ")]:{width:",
+    "){const{ipAddress:H,mask:B,dhcp:_}=y,{startAddress:E,endAddress:I}=_;if(Ce(H)&&Pe(B.split(",
+    ")}),_s?e.jsx(es,{name:",
+    ")}),e.jsx(le,{name:",
+    ")});return()=>C()},[F,v,D,h,M]),c.useEffect(()=>{s(P.isDirty)},[P.isDirty,s]),e.jsxs(Me,{providerProps:w,children:[e.jsxs(A,{spacing:4,marginBottom:o?14:8.5,children:[e.jsx(Fs,{}),e.jsx(Us,{})]}),e.jsx(We,{actions:[{action:",
+    ")})}):e.jsx(Je,{name:",
+    ")}}x===",
+    ",$&&e.jsxs(e.Fragment,{children:[e.jsx(",
+    ",...H(",
+    ",..._(`data.${p}.id`)}),e.jsx(",
+    ",..._(`data.${p}.serverId`)}),e.jsx(es,{name:`data.${p}.macAddress`,label:",
+    ",E.dns.dnsServers.secondary||",
+    ",He?Q:",
+    ",He?se.replace(/\\.1$/,",
+    ",I.ipv6Settings.prefix=B.mode===k.Manual?B.prefix:",
+    ",I.ipv6Settings.slaacEnabled=H===ee.Stateless,I.ipv6Settings.ulaPrefix=_.enabled?_.prefix:",
+    ",T=Qe(),[q,Y]=qe(),C=v&&o?[o]:[At(g)],U=v?It(P,o):P,x=ke({mode:",
+    ",[o])},[H,o,v,s]);const ge=c.useCallback(()=>{Q({macAddress:",
+    ",[t.object({autoDnsEnabled:t.literal(k.Automatic)}),t.object({autoDnsEnabled:t.literal(k.Manual),dnsServers:t.object({primary:t.string().min(1,{message:",
+    ",[t.object({enabled:t.literal(!1)}),t.object({enabled:t.literal(!0),prefix:t.string().min(1,{message:",
+    ",[t.object({enabled:t.literal(!1)}),t.object({enabled:t.literal(!0),startAddress:t.string().min(1,{message:",
+    ",[t.object({enabled:t.literal(!1)}),t.object({enabled:t.literal(!0),startSuffix:t.string().min(1,{message:",
+    ",[t.object({mode:t.literal(k.Automatic)}),t.object({mode:t.literal(k.Manual),prefix:t.string().min(1,{message:",
+    ",alignItems:",
+    ",borderRadius:2},children:e.jsx(Rs,{})})}),e.jsx(ft,{children:a}),e.jsxs(A,{spacing:2,children:[e.jsxs(bt,{variant:",
+    ",children:",
+    ",children:[",
+    ",children:[e.jsx(",
+    ",children:[e.jsx(j,{variant:",
+    ",children:[v&&e.jsx(",
+    ",children:e.jsx(Ke,{color:",
+    ",children:e.jsx(Tt,{startIcon:e.jsx(ts,{}),onClick:te,size:l?",
+    ",children:e.jsx(Ze,{sx:{fontSize:20,color:",
+    ",children:i}),",
+    ",children:v?",
+    ",children:w}),",
+    ",className:",
+    ",color:",
+    ",defaultIcon:e.jsx(ns,{}),hoverIcon:e.jsx(Ts,{}),onClick:()=>he(p)})]},r.id||p))}),!v&&e.jsx(A,{direction:{sm:",
+    ",defaultValues:Dt,values:U,resolver:we(Ct)}),{handleSubmit:y,watch:R,register:H}=x,{mutate:B}=ne({key:",
+    ",defaultValues:{data:C},resolver:we(Pt(i,u,f,w,$,N,U))}),{handleSubmit:y,control:R,setValue:H,getValues:B,register:_,reset:E,formState:{isDirty:I,errors:b,isSubmitSuccessful:G}}=x,{fields:se,append:Q,remove:te}=fs({control:R,name:",
+    ",dhcp:{enabled:!0,startAddress:",
+    ",dialogContent:",
+    ",disabled:Y,label:e.jsxs(A,{spacing:1,direction:",
+    ",dns:{autoDnsEnabled:",
+    ",dnsServers:{primary:",
+    ",e.jsx(j,{variant:",
+    ",endAddress:",
+    ",endSuffix:",
+    ",error:!!S(b,`data.${p}.ipAddress`),helperText:S(b,`data.${p}.ipAddress.message`)}),!v&&e.jsx(St,{size:",
+    ",error:!!S(o,",
+    ",fullWidth:!0}),i&&e.jsx(j,{variant:",
+    ",gatewayIp:i,dhcpStartIp:u,dhcpEndIp:f,serverId:g,guestLanGatewayIp:w,guestLanDhcpStartIp:$,guestLanDhcpEndIp:N,autoFillAddress:M=!1,reservedHosts:P=[],...h}){const F=re(),D=ie(F.breakpoints.down(",
+    ",hours:",
+    ",interfaceId:",
+    ",ipAddress:",
+    ",ipv4Settings:{autoReserved:{enabled:!1}}},kt=Z(({className:s,...a})=>e.jsx(ss,{...a,classes:{popper:s}}))(({theme:s})=>{const{spacing:a,palette:n,customShadows:d,typography:m}=s;return{",
+    ",ipv4Settings:{enabled:!0,ipAddress:",
+    ",justifyContent:",
+    ",l,",
+    ",label:",
+    ",leaseTime:{days:",
+    ",listHeightOnMobile:500,PanelComponent:e.jsx(A,{direction:",
+    ",mask:",
+    ",maxWidth:948,padding:s(8),[a.down(",
+    ",md:",
+    ",message:",
+    ",onChangeTab:N}=Is(w,O.General),M=c.useCallback((P,h)=>{l.current=[P,h],n?o(!0):N(P,h)},[n,N]);return e.jsxs(Lt,{children:[e.jsxs(A,{spacing:2,children:[a&&e.jsx(js,{children:",
+    ",onClick:Y,className:",
+    ",onClick:de,sx:{backgroundColor:",
+    ",onClick:ge,startIcon:e.jsx(ts,{fontSize:",
+    ",onClick:q,className:",
+    ",options:me,getOptionDisabled:fe,fullWidth:!0,sx:{",
+    ",options:n,Input:u=>e.jsx(Ve,{...u,error:!!S(o,",
+    ",options:n,label:",
+    ",padding:a(.5,1),marginLeft:0,marginRight:0,left:-134,maxWidth:400}}}),wt=Z(j)(({theme:{spacing:s,palette:a}})=>({backgroundColor:a.fill.blank,padding:s(2),borderRadius:4,",
+    ",paginatedTypeOnMobile:",
+    ",path:[",
+    ",path:[`${M}.ipAddress`]}):w.add(P),!Ge(a,n,P)&&!Ge(m,o,P)&&g.addIssue({code:t.ZodIssueCode.custom,message:",
+    ",path:[`${M}.ipAddress`]})})})})};function jt({open:s,title:a=void 0,handleConfirm:n,handleClose:d,mode:m,data:o=void 0,targetName:l=",
+    ",path:[`${M}.macAddress`]}):$.add(F),w.has(P)?g.addIssue({code:t.ZodIssueCode.custom,message:",
+    ",pdMode:{mode:",
+    ",placement:",
+    ",prefix:",
+    ",s))(ae||{});const At=s=>({serverId:s,macAddress:",
+    ",s.Add=",
+    ",secondary:",
+    ",secondary:R.dnsServers[1]||",
+    ",secondary:y.dnsServers[1]||",
+    ",serverId:g})},[Q,g]),he=c.useCallback(r=>{te(r)},[te]),de=c.useCallback(async()=>{I&&J&&!await Y({okText:",
+    ",sx:{",
+    ",sx:{backgroundColor:s.palette.amber[1]},children:[e.jsx(j,{variant:",
+    ",sx:{color:",
+    ",sx:{display:",
+    ",sx:{flex:1},error:i||!!S(o,",
+    ",textOfContinuation:",
+    ",title:",
+    ",token:i},W.getDhcpReservedHosts,{revalidateOnFocus:!1}),b=c.useMemo(()=>[{title:l?",
+    ",token:i},W.getDhcpServers),{data:_=[],isLoading:E,mutate:I}=ne({key:",
+    ",token:i},W.getInterfaceConfigurations),{mutate:f}=ne({key:",
+    ",variant:",
+    ",y.dns.dnsServers.secondary||",
+    ",{children:",
+    ",{className:",
+    ",{d:",
+    ",{type:",
+    ",{value:!0});var ns=Le.default=void 0,Ys=qs(os()),Js=e;ns=Le.default=(0,Ys.default)((0,Js.jsx)(",
+    ",{}),",
+    ":S(o,",
+    ":{...m.tooltipLabel,backgroundColor:n.fill.extraLight,color:n.text.primary,boxShadow:d.lighter,position:",
+    ":{backgroundColor:",
+    ":{backgroundColor:n.fill.blank}})),ft=Z(vs)(({theme:s})=>{const{spacing:a,breakpoints:n}=s;return{padding:0,[n.down(",
+    ":{fontweight:600},",
+    ":{margin:0,paddingLeft:s(3)}})),Mt=Z($s)(({theme:s})=>{const{palette:a,spacing:n}=s;return{color:a.text.secondary,borderRadius:4,marginLeft:n(.5)}}),Tt=Z(Ye)(({theme:s})=>{const{palette:a,spacing:n,breakpoints:d}=s;return{background:a.geekBlue[1],padding:n(.75,2),[d.down(",
+    ":{padding:s(4,0,0,0),[a.down(",
+    ":{width:",
+    "?a.addIssue({code:t.ZodIssueCode.custom,message:",
+    "?u.addIssue({code:t.ZodIssueCode.custom,message:",
+    "A Unique Local Address (ULA) in IPv6 is assigned to devices within a private network for internal communication only. These addresses are not routable on the global internet, keeping traffic local.",
+    "ADD",
+    "Add New",
+    "Add New Reserved IP",
+    "Added By",
+    "Are you sure to delete the selected item(s)?",
+    "Auto",
+    "Automatic",
+    "Changes saving failed, please try again.",
+    "Custom Delegated IPv6-Prefix",
+    "DHCP Server",
+    "Day(s)",
+    "Delete",
+    "Device",
+    "Disable",
+    "Edit",
+    "Enable DHCP Server",
+    "Enable LAN IPv6",
+    "Enable ULA",
+    "Enabled",
+    "End IP Suffix",
+    "End address must be an IPv4 address",
+    "End address must be greater than start address.",
+    "End address must be within the LAN subnet",
+    "General",
+    "Guest",
+    "Guest LAN",
+    "Hour(s)",
+    "IP Address cannot be empty.",
+    "IPv6",
+    "IPv6 Basics",
+    "LAN",
+    "LAN IP must be an IPv4 address",
+    "Manual",
+    "Mode",
+    "PD Mode",
+    "Please enter a valid IPv4 address (e.g., 192.168.1.1).",
+    "Please enter a valid Subnet Mask (e.g., 255.255.255.0).",
+    "Range: Any integer between 0 and 23.",
+    "Range: Any integer greater than or equal to 0.",
+    "Reserved IP",
+    "Reserved IP allows you to assign a specific IP address to a device within your network, ensuring it always receives the same address.",
+    "Start IP Address",
+    "Start IP Suffix",
+    "Start address must be an IPv4 address",
+    "Start address must be within the LAN subnet",
+    "Stateful",
+    "Stateless",
+    "The IP address cannot be part of the DHCP IP address range.",
+    "The last segment of an IPv4 address cannot be 0 or 255.",
+    "This action cannot be undone.",
+    "ULA",
+    "ULA IPv6-Prefix",
+    "]),b.ipv4Settings.enabled=y.enabled,R&&(E.enabled&&H===ee.Stateful&&(b.ipv6Settings.startSuffix=E.startSuffix,b.ipv6Settings.endSuffix=E.endSuffix,b.ipv6Settings.autoDnsEnabled=E.dns.autoDnsEnabled===k.Automatic,b.ipv6Settings.dnsServers=b.ipv6Settings.autoDnsEnabled?[]:[E.dns.dnsServers.primary||",
+    "]),b.ipv6Settings.enabled=E.enabled),!Ds(a,I)){const G=await W.setInterfaceConfigurations({token:i,payload:[I]});G!=null&&G.rebootInfo&&T(G.rebootInfo,0),u()}await W.setDhcpServers({token:i,payload:[b]}),f()}catch(U){throw l({title:",
+    "]})),Bs||D>=h&&D<=F&&(u.addIssue({code:t.ZodIssueCode.custom,message:ue,path:[",
+    "]}))}!Ae(M)||K(M)<=0?K(M)===0&&K(P)>0||u.addIssue({code:t.ZodIssueCode.custom,message:",
+    "]}))}})}),Ks=t.object({enabled:t.literal(!1)}),zs=s=>t.object({dhcpId:t.string(),interfaceId:t.string(),ipv4Settings:Vs(s),ipv6Settings:t.union([Ws,Ks])}),He=JSON.parse(",
+    "]}),(F<q||F>Y)&&u.addIssue({code:t.ZodIssueCode.custom,message:`The IP address range must be between ${v} to ${T}.`,path:[",
+    "]}),h>=F&&(Re.changedKey===",
+    "]}),u.addIssue({code:t.ZodIssueCode.custom,message:ue,path:[",
+    "]}):K(M)===30&&K(P)>0&&u.addIssue({code:t.ZodIssueCode.custom,message:",
+    "]}):a.addIssue({code:t.ZodIssueCode.custom,message:",
+    "]}):u.addIssue({code:t.ZodIssueCode.custom,message:",
+    "]})]}),e.jsx(A,{spacing:2,children:se.map((r,p)=>e.jsxs(xt,{direction:{xs:",
+    "]})})})]),Vs=s=>{const a=s.usage===",
+    "]})})})]),Ws=t.object({enabled:t.boolean(),mode:t.string(),pdMode:t.discriminatedUnion(",
+    "]})}})},Zs=t.discriminatedUnion(",
+    "alternative-layout alternative-layout--submit",
+    "alternative-layout dialogForm",
+    "and DHCP pool between ",
+    "dhcp.endAddress",
+    "dhcp.startAddress",
+    "e.g., 2001:0db8:85a3::/64",
+    "getDhcpServers",
+    "getInterfaceConfig",
+    "ipv4Settings.autoReserved.enabled",
+    "ipv4Settings.dhcp.leaseTime.days",
+    "ipv4Settings.dhcp.leaseTime.days.message",
+    "ipv4Settings.dhcp.leaseTime.hours",
+    "ipv4Settings.dhcp.leaseTime.hours.message",
+    "ipv4Settings.dhcp.startAddress",
+    "ipv6Settings",
+    "ipv6Settings.dhcp.enabled",
+    "ipv6Settings.dhcp.endSuffix",
+    "ipv6Settings.dhcp.endSuffix.message",
+    "ipv6Settings.dhcp.startSuffix",
+    "ipv6Settings.dhcp.startSuffix.message",
+    "ipv6Settings.enabled",
+    "ipv6Settings.mode",
+    "ipv6Settings.pdMode.mode",
+    "ipv6Settings.pdMode.prefix",
+    "ipv6Settings.pdMode.prefix.message",
+    "ipv6Settings.ula.enabled",
+    "ipv6Settings.ula.prefix",
+    "ipv6Settings.ula.prefix.message",
+    "||x===",
+    "} (${d})`}},Ge=(s,a,n)=>{const d=L(s),m=L(a),o=L(n);return o>=d&&o<=m},It=(s,a)=>a?s.filter(n=>n.ipAddress!==a.ipAddress):s,Pt=(s,a,n,d,m,o,l)=>{const i=pe(l,",
+    "}),",
+    "}),!l&&e.jsx(kt,{title:",
+    "}),J=se.length>0,me=c.useMemo(()=>Ns(T,",
+    "}),children:",
+    "}),dhcp:t.discriminatedUnion(",
+    "}),dns:Zs})]).superRefine((s,a)=>{if(s.enabled){const n=parseInt(s.startSuffix,16),d=parseInt(s.endSuffix,16);n>=d&&(Re.changedKey===",
+    "}),e.jsx(",
+    "}),e.jsx(j,{variant:",
+    "}),e.jsx(z,{name:",
+    "}),e.jsxs(",
+    "}),e.jsxs(A,{spacing:2,children:[e.jsx(j,{variant:",
+    "}),e.jsxs(A,{spacing:2,flexDirection:a?",
+    "}),e.jsxs(is,{icon:!1,severity:",
+    "}),endAddress:t.string().min(1,{message:",
+    "}),endSuffix:t.string().min(1,{message:",
+    "}),hours:t.string().refine(i=>K(i)>=0&&K(i)<=23&&Ae(i),{message:",
+    "}),ipAddress:t.string().ip({version:",
+    "}),leaseTime:t.object({days:t.string().refine(i=>K(i)>=0&&K(i)<=30&&Ae(i),{message:",
+    "}),secondary:t.string().ip({version:",
+    "}),yt=s=>{const{id:a,hostname:n,macAddress:d}=s;return{key:a,value:d,label:`${n||",
+    "}).ip({version:",
+    "}).or(t.literal(",
+    "}).refine(s=>Fe(s),{message:",
+    "}).refine(s=>_e(s),{message:",
+    "}).safeParse(s))!=null&&n.success&&![",
+    "}).safeParse(s))==null?void 0:n.success},_e=s=>{if(/^[0-9a-f]{1,4}$/.test(s)){const n=parseInt(s,16);if(n>=2&&n<=65535)return!0}return!1},Fe=s=>{const[a,n]=s.split(",
+    "})]}),e.jsx(le,{name:",
+    "})]}),e.jsxs(A,{spacing:2,children:[e.jsx(j,{variant:",
+    "})]})]})]})}),e.jsxs(Me,{providerProps:x,children:[e.jsx(",
+    "})]})}var Le={},qs=ls;Object.defineProperty(Le,",
+    "})})).superRefine((f,g)=>{const w=new Set(i),$=new Set(u);f.forEach((N,M)=>{const{ipAddress:P,macAddress:h}=N,F=Be(h);$.has(F)?g.addIssue({code:t.ZodIssueCode.custom,message:",
+    "})}),dns:Os})])}).superRefine((i,u)=>{const{ipAddress:f,mask:g,dhcp:w}=i;if(w.enabled){const{startAddress:$,endAddress:N,leaseTime:{days:M,hours:P}}=w;if(Ce(f)&&Pe(g.split(",
+    "})})]),dhcp:t.discriminatedUnion(",
+    "})})]),ula:t.discriminatedUnion(",
+    "})})]})]}),e.jsx(xs,{children:e.jsx(We,{actions:[{action:",
+    "},Ae=s=>{var n;return(n=t.number().int().safeParse(K(s)))==null?void 0:n.success},Ce=s=>{var n;return!!((n=t.string().ip({version:",
+    "},children:",
+    "},children:e.jsx(Ye,{variant:",
+    "},dhcp:{enabled:!0,startSuffix:",
+    "},dns:{autoDnsEnabled:",
+    "},spacing:2,alignItems:",
+    "},ula:{enabled:!1,prefix:",
+    "},{action:",
+    "},{alertProps:{severity:",
+    "}],className:",
+    "}})),xt=Z(A)(({theme:{spacing:s,palette:a,breakpoints:n}})=>({[n.down(",
+    "}}),U}}),Y=c.useCallback(()=>{N(g)},[g,N]);return c.useEffect(()=>{const{unsubscribe:C}=M((U,{name:x})=>{const{ipv4Settings:y,ipv6Settings:R}=U;if(Re.changedKey=x,x===",
+    "}})})]}),fullWidth:!0})]}),e.jsx(Ms,{loading:E,tableName:",
+    "}},Input:V=>e.jsx(Ve,{...V,error:!!S(b,`data.${p}.macAddress`),helperText:S(b,`data.${p}.macAddress.message`)}),disableClearable:!0,forcePopupIcon:!0,onChange:(V,X)=>{ve(X,p)}}),e.jsx(z,{name:`data.${p}.ipAddress`,label:",
+    "}},fullWidth:!0,variant:",
+    "}}});function Rt({lanConfig:s,dhcpConfig:a,guestLanConfig:n,guestLanDhcpConfig:d}){const{enqueueSnackbar:m}=Xe(),o=re(),l=ie(o.breakpoints.down(",
+    "}}}},ipv6Settings:{enabled:!1,mode:",
+    "}}}}return C},[a,n]),w=ke({mode:",
+    "}}}}},_s=JSON.parse("
+  ],
+  "_can_doc_tay": [
+    "chunk 36497 byte -- qua lon de trich tu dong het, phai doc tay phan logic hien/an va bang bieu"
+  ],
+  "_doc_tay_gd4_2026-08-13": {
+    "cau_truc_trang": "Component Nt() dung 3 tab qua Se/selectedKey (CHUYEN TAB TREN CUNG MOT TRANG, khong phai route rieng nhu Static Routing). Tab 'Guest LAN' CHI co trong danh sach neu guestLanConfig.enabled=true (interfaces/configurations id='guest'.enabled). Ban gia lap dung kien truc file-tinh-moi-tab (nav.js dieu huong het toan trang) nen chi dung dung 2 file da chup: __t0 (=General, tab dau) va __t1 (=Reserved IP). KHONG co __t2 cho Guest LAN vi guest.enabled=false luc chup (tabpanel-Guest LAN rong '<div ... hidden></div>' -- xac nhan bang cat chuoi HTML that). => Trang gia lap CHUA co tab Guest LAN, dung nhu bang chung chup duoc; xem ISSUES.md.",
+    "form_General_Ue_Fs_Us": {
+      "nguon": "function Ue(...) goi Fs() (IPv4) + Us() (IPv6), gan tu offset ~3666 va ~15639 trong index-ZQ6T7f31.js",
+      "gia_tri_mac_dinh_$e": "xem gia_tri_mac_dinh[0] o tren",
+      "mat_na_mang_je": ["255.255.255.0", "255.255.0.0"],
+      "enum_k_pdMode": {"Automatic": "auto", "Manual": "manual"},
+      "enum_ee_mode": {"Stateful": "Stateful", "Stateless": "Stateless"},
+      "IPv4_show_hide": "DHCP Server: Start/End IP Address + Lease Time (days/hours) chi BAT (khong disabled) khi ipv4Settings.dhcp.enabled=true. KHONG co truong DNS tren giao dien (xem duoi).",
+      "IPv6_show_hide": [
+        "ipv6Settings.enabled=false -> CHI hien 'Enable LAN IPv6', an het Mode/PD Mode/ULA/DHCP",
+        "ipv6Settings.enabled=true -> hien Mode select (Stateful/Stateless) + toan bo khoi PD Mode + ULA",
+        "PD Mode: FormRadios Automatic/Manual; mode=Manual moi hien o 'Custom Delegated IPv6-Prefix'",
+        "ULA: 'Enable ULA' switch luon hien khi ipv6 enabled; o 'ULA IPv6-Prefix' LUON hien nhung disabled=!ula.enabled (khong an/hien, chi khoa nhap)",
+        "DHCP Server (IPv6): CHI hien khi mode===Stateful (Stateless thi an ca khoi, khong chi disable). Start/End IP Suffix disabled=!dhcp.enabled"
+      ],
+      "truong_DNS_AN_KHONG_HIEN_TREN_UI": "defaultValues co du ipv4Settings.dhcp.dns.{autoDnsEnabled:'auto',dnsServers:{primary,secondary}} va ipv6Settings.dhcp.dns tuong tu, Zod schema Os/Zs kiem tra chung, NHUNG khong co JSX nao render truong DNS trong Fs()/Us() (da doi chieu voi HTML that __t0: chi co 1 cho chua chu 'DNS' la nhan menu 'Dynamic DNS', khong phai form). => Nguoi dung KHONG BAO GIO sua duoc autoDnsEnabled/dnsServers tren trang nay; gia tri submit LUON tinh tu default 'auto' -> autoDnsEnabled:true, dnsServers:[]. Ban gia lap PHAI luon gui hai truong nay co dinh nhu vay trong PATCH dhcp/servers (giong ipVersion cua Static Routing: truong CLIENT tu tinh, khong phai o nhap)."
+    },
+    "submit_Ue": {
+      "resource_1": "interfaces/configurations",
+      "payload_1": "PATCH [{...ban_ghi_goc(a), ipv4Settings:{ipAddress,mask}, ipv6Settings:{enabled, ...neu enabled=true them protocol:'dhcpv6', prefix:(pdMode.mode==='manual'?pdMode.prefix:''), slaacEnabled:(mode==='Stateless'), ulaPrefix:(ula.enabled?ula.prefix:'')}}]",
+      "resource_2": "dhcp/servers",
+      "payload_2_luon_gui": "PATCH [{...ban_ghi_goc(n), ipv4Settings:{enabled:dhcp.enabled, autoDnsEnabled:true, dnsServers:[], + neu dhcp.enabled=true them startAddress,endAddress,leaseTime(giay=hours*3600+days*86400)}, ipv6Settings:{enabled:ipv6.dhcp.enabled, + neu ipv6.enabled&&ipv6.dhcp.enabled&&mode==='Stateful' them startSuffix,endSuffix,autoDnsEnabled:true,dnsServers:[]}}]",
+      "ghi_chu": "Ma goc co toi uu 'chi PATCH interfaces/configurations neu deep-equal thay doi' (ham Ds) nhung PATCH dhcp/servers thi LUON goi. Ban gia lap don gian hoa: luon PATCH ca hai (giong cach system__general da lam), khong anh huong ket qua cuoi vi config_store.ghi() la merge idempotent."
+    },
+    "bang_ReservedIP_Rt": {
+      "nguon": "function Rt({lanConfig,dhcpConfig,guestLanConfig,guestLanDhcpConfig}) - offset gan cuoi file, dung RuleList + dialog jt()",
+      "resource": "dhcp/reservedHosts",
+      "cot_bang": ["Device", "IP Address", "Added By"],
+      "them_muc": "chuoi_hien_thi co 'Added By' -- cot nay hien 'Auto'/thu cong dua tren isAutoReserved cua ban ghi (xem state.json: ban ghi mau co isAutoReserved:true)",
+      "dialog_them_sua": "jt(...) - markup THAT da chup o reference/source/dialog_reserved_add.html. Ho tro NHIEU dong trong 1 lan mo (mang 'data'), moi dong: input hidden data.N.serverId, Autocomplete 'Device / MAC' (data.N.macAddress, tu danh sach thiet bi qua devices), input text 'Reserved IP' (data.N.ipAddress), nut xoa dong (DeleteOutlinedIcon), nut '+ ADD' de them dong moi (Q({macAddress:'',ipAddress:'',serverId:g}))",
+      "validate": "Trung MAC / trung IP / IP ngoai vung DHCP+gateway cua CA LAN va Guest LAN deu bi tu choi (superRefine doc ca 4 khoang: gatewayIp/dhcpStartIp/dhcpEndIp cua LAN va guestLan*)",
+      "id_sinh_boi_thiet_bi": "vi du that trong state.json: 'cfg08fe63' (dang HEX 6 ky tu, KHAC voi portForwarding 'cfg'+6 CHU SO THAP PHAN da do o GD4 phan 2). Da them vao config_store.DINH_DANG_ID."
+    }
+  }
+}

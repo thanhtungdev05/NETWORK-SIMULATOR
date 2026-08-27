@@ -7,7 +7,7 @@ window.DEVICE_BE12000_LESSONS = window.DEVICE_BE12000_LESSONS || [];
 
 // Thay thế nếu đã tồn tại, hoặc thêm mới
 var lessonId = 'LAB_BE12000_01';
-var lessonIndex = window.DEVICE_BE12000_LESSONS.findIndex(function(l) { return l.id === lessonId; });
+var lessonIndex = window.DEVICE_BE12000_LESSONS.findIndex(function (l) { return l.id === lessonId; });
 
 var lessonObj = {
   id: lessonId,
@@ -21,7 +21,7 @@ var lessonObj = {
     '- Password: <span class="val">fpt12345</span>',
     'Bấm <b>Apply</b> để lưu cấu hình',
   ],
-  practiceUrl: '/sim_be12000/login',
+  practiceUrl: '/sim_be12000/app.html#wancfg',
   grading: {
     description: 'Kiểm tra cấu hình PPPoE trên BE12000',
     rules: [
@@ -135,52 +135,10 @@ var lessonObj = {
   clearFields: [
     '#UserName, input[id^="UserName"]',
     '#Password, input[id^="Password"]'
-  ],
-  guidePopups: [
-    {
-      selector: '#internet:not(.SelectMenuItem)',
-      text: 'Bước 1: Chọn menu Internet',
-      position: 'bottom'
-    },
-    {
-      selector: '#internetConfig:not(.selectClass2Menu)',
-      text: 'Bước 2: Chọn WAN ở cột trái',
-      position: 'right'
-    },
-    {
-      selector: '#ethWanConfig:not(.AEleMenu3Selected)',
-      text: 'Bước 3: Chọn WAN ở menu ngang',
-      position: 'bottom'
-    },
-    {
-      selector: '.instName:contains("internet_tr069"), .collapsibleInst:contains("internet_tr069")',
-      text: 'Bước 4: Chọn internet_tr069',
-      position: 'bottom'
-    },
-    {
-      selector: '#TransType, select[id^="TransType"]',
-      text: 'Bước 5: Chọn PPPoE (PPP Transfer Type)',
-      position: 'right'
-    },
-    {
-      selector: '#UserName, input[id^="UserName"]',
-      text: 'Bước 6: Nhập Username: hnfdl-123456-789',
-      position: 'right'
-    },
-    {
-      selector: '#Password, input[id^="Password"]',
-      text: 'Bước 7: Nhập Password: d123456',
-      position: 'right'
-    },
-    {
-      selector: '#Btn_apply_internet, .Btn_apply, #Btn_Apply, input[value="Apply"], .button1',
-      text: 'Bước 8: Bấm Apply để lưu',
-      position: 'top'
-    }
   ]
 };
 
-lessonObj.customClear = function() {
+lessonObj.customClear = function () {
   var iframe = document.getElementById('deviceIframe');
   if (!iframe || !iframe.contentWindow || !iframe.contentWindow.document) return;
   var doc = iframe.contentWindow.document;
@@ -189,14 +147,14 @@ lessonObj.customClear = function() {
   if (!doc._ftcClearIntervalStarted) {
     doc._ftcClearIntervalStarted = true;
     doc._clearedFields = {};
-    setInterval(function() {
+    setInterval(function () {
       var selectors = ['[id^="UserName"]', '[id^="Password"]'];
-      selectors.forEach(function(sel) {
+      selectors.forEach(function (sel) {
         var els = doc.querySelectorAll(sel);
-        els.forEach(function(el) {
+        els.forEach(function (el) {
           if (!el._ftcHasInputListener) {
             el._ftcHasInputListener = true;
-            el.addEventListener('input', function() { el._ftcUserModified = true; });
+            el.addEventListener('input', function () { el._ftcUserModified = true; });
           }
           if (doc.activeElement !== el && el.value !== "" && !el._ftcUserModified) {
             el.value = "";
@@ -215,13 +173,13 @@ lessonObj.customClear = function() {
         var errors = [];
 
         var getVal = function (idPrefix) {
-            var el = doc.querySelector("[id^='" + idPrefix + "']");
-            return el ? el.value : "";
+          var el = doc.querySelector("[id^='" + idPrefix + "']");
+          return el ? el.value : "";
         };
 
         var getRadioChecked = function (namePrefix) {
-            var el = doc.querySelector("input[name^='" + namePrefix + "']:checked");
-            return el ? el.value : "";
+          var el = doc.querySelector("input[name^='" + namePrefix + "']:checked");
+          return el ? el.value : "";
         };
 
         if (getVal("WANCName") !== "") errors.push("Hàng \"Connection Name:\" giá trị đúng là Rỗng, khuyến nghị giá trị đúng Rỗng.");
@@ -239,10 +197,10 @@ lessonObj.customClear = function() {
         if (getRadioChecked("VlanEnable") !== "0") errors.push("Hàng \"IP VLAN:\" giá trị đúng là Off vào ô Checkbox, khuyến nghị off vào ô Checkbox.");
 
         if (errors.length > 0) {
-            alert("BẠN ĐÃ CẤU HÌNH SAI:\n\n" + errors.join("\n"));
-            window._hasClickedSaveInGuide = false; // Phục hồi trạng thái chưa save để hiện lại tooltip
-            e.preventDefault();
-            e.stopPropagation();
+          alert("BẠN ĐÃ CẤU HÌNH SAI:\n\n" + errors.join("\n"));
+          window._hasClickedSaveInGuide = false; // Phục hồi trạng thái chưa save để hiện lại tooltip
+          e.preventDefault();
+          e.stopPropagation();
         }
         // Nếu ĐÚNG: Không chặn sự kiện. 
         // -> Giả lập sẽ tự gọi dataPost lưu dữ liệu.

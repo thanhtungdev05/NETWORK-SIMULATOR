@@ -1,0 +1,11 @@
+{
+ "home__overview": [],
+ "home__topology": [],
+ "home__lanstatus": [],
+ "wifi__general": [],
+ "wifi__advanced": [],
+ "network__portforward": [],
+ "network__diagnostics": [],
+ "security__firewall": [],
+ "security__parentalcontrol": []
+}

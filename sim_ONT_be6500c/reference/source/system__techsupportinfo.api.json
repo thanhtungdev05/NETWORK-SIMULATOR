@@ -1,0 +1,7 @@
+[
+ {
+  "url": "api/v1/data/ext/logpull",
+  "body": null,
+  "resp": "{\"status\":0,\"logFile\":\"\"}"
+ }
+]

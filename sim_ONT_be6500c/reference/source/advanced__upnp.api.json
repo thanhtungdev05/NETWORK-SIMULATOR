@@ -1,0 +1,7 @@
+[
+ {
+  "url": "api/v1/data/upnp",
+  "body": null,
+  "resp": "{\"enabled\":true}"
+ }
+]

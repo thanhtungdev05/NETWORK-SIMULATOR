@@ -1,0 +1,117 @@
+{
+ "Hostname": [
+  "S(n.hostname)"
+ ],
+ "Model": [
+  "S(n.modelName)"
+ ],
+ "Serial Number": [
+  "S(n.serialNumber)"
+ ],
+ "Firmware Version": [
+  "S(n.firmwareVersion)"
+ ],
+ "Uptime": [
+  "Ht(0,s.uptime*1e3)"
+ ],
+ "Memory Usage": [
+  "r.jsx(be,{value:s.memoryUsage??0,color:\"purple\"})"
+ ],
+ "CPU Usage": [
+  "r.jsx(be,{value:((c=s.cpuUsage)==null?void 0:c.total)??0,color:\"teal\"})"
+ ],
+ "Status": [
+  "r.jsx(b,{variant:\"subtitle3\",color:o.status===\"Up\"?s.success.main:s.warning.main,children:S(o.status)})",
+  "r.jsxs(r.Fragment,{children:[r.jsx(b,{variant:\"subtitle3\",color:a.status===\"Up\"?n.success.main:n.warning.main,children:S(a.status)}),r.jsxs(b,{variant"
+ ],
+ "Bandwidth (MHz)": [
+  "S(o.bandwidth).replace(\"MHz\",\"\")"
+ ],
+ "Channel": [
+  "S(o.channelInUse)"
+ ],
+ "Device Associated": [
+  "S(c[o.band])"
+ ],
+ "TX Bytes": [
+  "Q(a.stats.bytesSent)",
+  "Q(o.stats.bytesSent)"
+ ],
+ "RX Bytes": [
+  "Q(a.stats.bytesReceived)",
+  "Q(o.stats.bytesReceived)"
+ ],
+ "Link Rate": [
+  "\"xxxxxxxx\"",
+  "ke(a.status===\"Down\"?void 0:a.bitRate)",
+  "ke(u.linkRate)"
+ ],
+ "IP Address": [
+  "S(d.ipv4Address)",
+  "S(u.ipv4Address)"
+ ],
+ "Submask": [
+  "S(d.ipv4Mask)"
+ ],
+ "MAC Address": [
+  "S((f=d.macAddress)==null?void 0:f.toUpperCase())",
+  "S((m=u.macAddress)==null?void 0:m.toUpperCase())"
+ ],
+ "Connection Status": [
+  "r.jsx(_,{label:u.isConnected?\"UP\":\"DOWN\",size:\"small\",className:$({isDisconnected:!u.isConnected})})"
+ ],
+ "Physical Type": [
+  "r.jsx(b,{variant:\"subtitle3\",color:\"primary.main\",children:S(u.phyType)})"
+ ],
+ "Connection Type": [
+  "r.jsx(b,{variant:\"subtitle3\",color:\"secondary.dark\",children:S(d(u.connectionType))})"
+ ],
+ "DNS": [
+  "r.jsx(ye,{list:u.dnsServers})"
+ ],
+ "Gateway Address": [
+  "S(u.ipv4Gateway)"
+ ],
+ "IPv6 Connection Type": [
+  "r.jsx(b,{variant:\"subtitle3\",color:\"primary.main\",children:S(d(u.ipv6ConnectionType))+u.ipv6ConnectionState})"
+ ],
+ "IPv6 Address": [
+  "r.jsx(ye,{list:u.ipv6Addresses})"
+ ],
+ "Port": [
+  "S(u.port)"
+ ],
+ "DL Bytes": [
+  "Q(u.dlBytes)"
+ ],
+ "UL Bytes": [
+  "Q(u.ulBytes)"
+ ],
+ "Link Status": [
+  "r.jsxs(b,{variant:\"body2\",sx:{display:\"flex\",alignItems:\"center\",color:u.ponStatus.status===\"O7\"?i.error.main:i.text.primary},children:[r.jsx(_,{label"
+ ],
+ "Transceiver Temperature": [
+  "S(u.ponStatus.temperature,W,\"°C\")"
+ ],
+ "Transmitted Optical Power": [
+  "S(u.ponStatus.transmittedPower,W,\" dBm\")"
+ ],
+ "Received Optical Power": [
+  "u.ponStatus.receivedOpticalPower"
+ ],
+ "Bias Current": [
+  "S(u.ponStatus.biasCurrent,W,\" mA\")"
+ ],
+ "Supply Power Voltage": [
+  "S(u.ponStatus.supplyPowerVoltage,W,\" V\")"
+ ],
+ "Tx Packets": [
+  "S((P=u.ponStatus.stats)==null?void 0:P.packetsSent)"
+ ],
+ "Rx Packets": [
+  "S((C=u.ponStatus.stats)==null?void 0:C.packetsReceived)"
+ ],
+ "RSSI": [
+  "r.jsx(b,{variant:\"body2\",color:\"success.main\",children:\"xxxxxxxx\"})"
+ ]
+}

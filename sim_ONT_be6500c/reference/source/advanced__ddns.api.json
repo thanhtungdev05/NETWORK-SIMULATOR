@@ -1,0 +1,12 @@
+[
+ {
+  "url": "api/v1/data/ddns/configurations",
+  "body": null,
+  "resp": "[{\"interfaceId\":\"wan\",\"serviceProvider\":\"noip\",\"ipVersion\":4,\"id\":\"myddns_ipv4\",\"username\":\"your_username\",\"hostname\":\"yourhost.example.com\",\"password\":\"your_password\",\"enabled\":false}]"
+ },
+ {
+  "url": "api/v1/data/ddns",
+  "body": null,
+  "resp": "[{\"interfaceId\":\"wan\",\"lastChangeTime\":0,\"ipVersion\":4,\"id\":\"myddns_ipv4\",\"ipAddress\":\"\",\"status\":\"Failed\"}]"
+ }
+]

@@ -1,0 +1,116 @@
+{
+  "_route": "system/user",
+  "_duong_dan_trinh_duyet": "#/system/user",
+  "_nguon": {
+    "chunk": "index-DOmrHpTT.js",
+    "kich_thuoc_byte": 4013,
+    "chunk_phu_thuoc": [
+      "assets/index-DOmrHpTT.js",
+      "assets/FormHeading-Wrbr2YtD.js",
+      "assets/useSnackbar-DeOFrJDC.js",
+      "assets/isNumber-CjKC2f0Q.js",
+      "assets/PageHeading-B0ZcsD9H.js",
+      "assets/schema-BT0LOWg1.js",
+      "assets/_baseFindIndex-Ct0WiHaB.js"
+    ],
+    "bundle_loi": "index-CW0UhNxy.js",
+    "_da_quet": [
+      "FormHeading-Wrbr2YtD.js",
+      "PageHeading-B0ZcsD9H.js",
+      "index-DOmrHpTT.js",
+      "isNumber-CjKC2f0Q.js",
+      "schema-BT0LOWg1.js",
+      "useSnackbar-DeOFrJDC.js"
+    ]
+  },
+  "_cach_trich": "src/trich_dac_ta_trang.py (doc ma goc, khong doan)",
+  "goi_api": [
+    {
+      "ham_goc": "getPassword",
+      "doi_tuong_goc": "n0e",
+      "tim_thay_o": [
+        "index-DOmrHpTT.js"
+      ],
+      "kenh": "RPC /oui-rpc",
+      "rpc": [
+        {
+          "module": "user",
+          "action": "get_users"
+        }
+      ]
+    },
+    {
+      "ham_goc": "setPassword",
+      "doi_tuong_goc": "n0e",
+      "tim_thay_o": [
+        "index-DOmrHpTT.js"
+      ],
+      "kenh": "RPC /oui-rpc",
+      "rpc": [
+        {
+          "module": "oui.ui",
+          "action": "crypt"
+        },
+        {
+          "module": "user",
+          "action": "change"
+        }
+      ]
+    }
+  ],
+  "goi_khac": {
+    "rpc": [],
+    "duong_dan_tuyet_doi": []
+  },
+  "truong_form": [],
+  "gia_tri_mac_dinh": [
+    {
+      "bien": "xs",
+      "ma": "{password:\"\",confirmPassword:\"\"}"
+    }
+  ],
+  "schema_kiem_tra": [
+    {
+      "ma": "{password:p.string().trim().min(1,{message:\"Password is required\"}),confirmPassword:p.string()}"
+    },
+    {
+      "ma": "{password:j(\"New\"),confirmPassword:j(\"New\")}"
+    }
+  ],
+  "chuoi_hien_thi": [
+    "& .MuiInputBase-root",
+    ")),t=w(o=>o.sessionId),n=w(o=>o.signOut),i=w(o=>o.username),{data:d=[]}=R({token:t,key:",
+    "),confirmPassword:j(",
+    ");await v.setPassword({token:t,payload:{id:m.id,acl:m.acl,password:o.password}}),N()}catch(m){throw e({title:",
+    ")}).refine(s=>s.password===s.confirmPassword,{message:",
+    ",children:",
+    ",children:i})]}),!a&&r.jsx(U,{sx:{my:3}}),r.jsxs(O,{providerProps:c,children:[r.jsxs(f,{spacing:2,children:[r.jsx(C,{name:",
+    ",color:",
+    ",confirmPassword:",
+    ",error:!!l.confirmPassword,helperText:(y=l.confirmPassword)==null?void 0:y.message,InputProps:{autoComplete:",
+    ",error:!!l.password,helperText:(b=l.password)==null?void 0:b.message,InputProps:{autoComplete:",
+    ",label:",
+    ",onClick:S,className:",
+    ",onClick:T,className:",
+    ",path:[",
+    ",placeholder:",
+    ",resolver:D(gs),defaultValues:xs}),{formState:{errors:l},handleSubmit:k,reset:g}=c,N=P.useCallback(async()=>{n()},[n]),T=k(async o=>{try{const m=fs(d,{username:i});if(!m)throw new Error(",
+    ",type:",
+    ",variant:",
+    "Password is required",
+    "Passwords do not match",
+    "]});function bs(){var b,y;const s=$(),{enqueueSnackbar:e}=q(),a=L(s.breakpoints.down(",
+    "confirmPassword",
+    "}),r.jsx(h,{variant:",
+    "}),r.jsxs(f,{spacing:2,children:[r.jsxs(f,{spacing:1,children:[r.jsx(h,{variant:",
+    "},gs=p.object({password:j(",
+    "},v.getPassword,{revalidateOnFocus:!1}),c=B({mode:",
+    "},{action:",
+    "},{alertProps:{severity:",
+    "}],className:",
+    "}}),m}}),S=P.useCallback(()=>{g()},[g]);return r.jsxs(hs,{children:[a&&r.jsx(z,{children:",
+    "}}),r.jsx(C,{name:",
+    "}})]}),r.jsx(W,{actions:[{action:"
+  ],
+  "_can_doc_tay": []
+}

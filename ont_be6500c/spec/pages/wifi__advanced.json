@@ -1,0 +1,183 @@
+{
+  "_route": "wifi/advanced",
+  "_duong_dan_trinh_duyet": "#/wifi/advanced",
+  "_nguon": {
+    "chunk": "index-CdFMqTaa.js",
+    "kich_thuoc_byte": 12514,
+    "chunk_phu_thuoc": [
+      "assets/index-CdFMqTaa.js",
+      "assets/TabList-CMoR7mS_.js",
+      "assets/KeyboardArrowRight-C7P-Q0WC.js",
+      "assets/TabPanel-D6RFuHOG.js",
+      "assets/PageHeading-B0ZcsD9H.js",
+      "assets/AlertDialog-DcZGNdPg.js",
+      "assets/_arrayIncludesWith-DL0ePAun.js",
+      "assets/_baseFindIndex-Ct0WiHaB.js",
+      "assets/FormSelect-CJAio79q.js",
+      "assets/useSnackbar-DeOFrJDC.js",
+      "assets/isNumber-CjKC2f0Q.js",
+      "assets/Loading-BUU8xORD.js",
+      "assets/Refresh-Ce4n-Ghb.js",
+      "assets/AccordionSummary-Q8GsfrJR.js"
+    ],
+    "bundle_loi": "index-CW0UhNxy.js",
+    "_da_quet": [
+      "AccordionSummary-Q8GsfrJR.js",
+      "AlertDialog-DcZGNdPg.js",
+      "FormSelect-CJAio79q.js",
+      "KeyboardArrowRight-C7P-Q0WC.js",
+      "Loading-BUU8xORD.js",
+      "PageHeading-B0ZcsD9H.js",
+      "Refresh-Ce4n-Ghb.js",
+      "TabPanel-D6RFuHOG.js",
+      "index-CdFMqTaa.js",
+      "isNumber-CjKC2f0Q.js",
+      "useSnackbar-DeOFrJDC.js"
+    ]
+  },
+  "_cach_trich": "src/trich_dac_ta_trang.py (doc ma goc, khong doan)",
+  "goi_api": [
+    {
+      "ham_goc": "getEasyMeshConfiguration",
+      "doi_tuong_goc": "Ble",
+      "tim_thay_o": [
+        "index-CdFMqTaa.js"
+      ],
+      "resource": "api/v1/data/easyMesh",
+      "method": "GET",
+      "kenh": "REST"
+    },
+    {
+      "ham_goc": "getRadios",
+      "doi_tuong_goc": "Ble",
+      "tim_thay_o": [
+        "index-CdFMqTaa.js"
+      ],
+      "resource": "api/v1/data/radios",
+      "method": "GET",
+      "kenh": "REST"
+    },
+    {
+      "ham_goc": "setEasyMeshConfiguration",
+      "doi_tuong_goc": "Ble",
+      "tim_thay_o": [
+        "index-CdFMqTaa.js"
+      ],
+      "resource": "api/v1/data/easyMesh",
+      "method": "PATCH",
+      "kenh": "REST"
+    },
+    {
+      "ham_goc": "setRadios",
+      "doi_tuong_goc": "Ble",
+      "tim_thay_o": [
+        "index-CdFMqTaa.js"
+      ],
+      "resource": "api/v1/data/radios",
+      "method": "PATCH",
+      "kenh": "REST"
+    }
+  ],
+  "goi_khac": {
+    "rpc": [],
+    "duong_dan_tuyet_doi": []
+  },
+  "truong_form": [
+    {
+      "name": "mloEnabled",
+      "label": "Enable MLO"
+    }
+  ],
+  "gia_tri_mac_dinh": [
+    {
+      "bien": "$",
+      "ma": "{radios:[]}"
+    },
+    {
+      "bien": "(noi tuyen)",
+      "ma": "{mloEnabled:!1}"
+    }
+  ],
+  "schema_kiem_tra": [],
+  "chuoi_hien_thi": [
+    "),b=c.useCallback((f,r)=>{o.current=[f,r],s?d(!0):a(f,r)},[s,a]);return e.jsxs(e.Fragment,{children:[e.jsx(Ve,{children:e.jsxs(S,{direction:",
+    "),disabled:n===D[",
+    "),w.map(i=>i.value).includes(b)||h(`radios.${l}.channel`,0)},[n,t,b,w,r,l,h]),c.useEffect(()=>{const i=b===0;h(`radios.${l}.autoChannelEnabled`,i)},[b,l,h]);const I=c.useCallback(()=>{g(i=>!i)},[g]);return e.jsx(",
+    ")?i=[",
+    ")]:i=d,i.map(x=>({value:x,label:x.replace(/MHz/g,",
+    ")]:{display:",
+    ")},[n]),O=c.useMemo(()=>{let i=[];return d.includes(",
+    ",...d.filter(x=>x!==",
+    ",MenuProps:{sx:{",
+    ",children:",
+    ",children:e.jsx(Ge,{setIsFormDirty:n})}),e.jsx(_,{selectedKey:m,value:",
+    ",children:e.jsx(Ue,{})})]})}),e.jsx(K,{dialogTitle:",
+    ",color:",
+    ",defaultValues:$,values:f}),{handleSubmit:l,reset:p,watch:g,formState:u}=r,h=g(",
+    ",defaultValues:{mloEnabled:!1},values:d}),{handleSubmit:m,watch:a,reset:b}=o,f=a(",
+    ",dialogContent:",
+    ",fullWidth:!0}),e.jsxs(S,{direction:",
+    ",isOpen:n,handleClose:()=>t(!1),handleContinuance:w}),e.jsx(fe,{open:d})]})}const Pe=L(({className:s})=>e.jsx(B,{elevation:0,className:s,children:e.jsx(j,{variant:",
+    ",label:",
+    ",onChangeTab:a}=ue(G,",
+    ",onClick:I,className:",
+    ",onClick:O,className:",
+    ",options:w,helperText:(a||r)&&f?`Currently on channel ${f}.`:",
+    ",spacing:0,sx:{marginLeft:1},children:[n&&d.length>0&&e.jsxs(e.Fragment,{children:[e.jsx(j,{variant:",
+    ",spacing:2,children:[e.jsx(de,{name:",
+    ",spacing:2,children:[e.jsx(j,{variant:",
+    ",spacing:2,children:h==null?void 0:h.map((i,x)=>e.jsx($e,{radio:i,index:x},`radio_${i.id}`))}),e.jsx(te,{actions:[{action:",
+    ",spacing:4,children:[e.jsx(We,{}),e.jsxs(Y,{providerProps:r,children:[e.jsx(S,{direction:",
+    ",spacing:4,children:[e.jsx(me,{children:",
+    ",sx:{",
+    ",sx:{wordWrap:",
+    ",textOfContinuation:",
+    ",token:m},F.getRadios,{revalidateOnFocus:!1}),f=c.useMemo(()=>k(a)?$:{radios:a.map(x=>({...x,...x.autoChannelEnabled&&{channel:0}}))},[a]),r=q({mode:",
+    ",token:s},F.getEasyMeshConfiguration,{revalidateOnFocus:!1}),d=c.useMemo(()=>{var g;return{mloEnabled:(g=n==null?void 0:n.ssidTypesConfigurations)==null?void 0:g.some(u=>u.uiConfigurable&&u.mloEnabled)}},[n]),o=q({mode:",
+    ",variant:",
+    ",{children:e.jsxs(ge,{expanded:p,onChange:I,children:[e.jsx(xe,{expandIcon:e.jsx(oe,{}),",
+    "160MHz",
+    "2.4G",
+    "20MHz",
+    "320MHz",
+    "40MHz",
+    "5G",
+    "6G",
+    "80MHz",
+    ":{maxHeight:7*ze+16}}}})]})})]})})}function Ge({setIsFormDirty:s}){const[n,t]=c.useState(!1),[d,o]=c.useState(!1),m=U(i=>i.token),{data:a,mutate:b}=V({key:",
+    ":{whiteSpace:",
+    "Allow DFS channels",
+    "Bandwidth controls channel width for speed or interference.",
+    "Bandwidth(MHz)",
+    "Changes saving failed, please try again.",
+    "Changes to radio or SSID settings may temporarily disrupt your Wi-Fi connection.",
+    "Channel selects the Wi-Fi frequency to avoid interference.",
+    "Disable",
+    "GHz",
+    "Other",
+    "REMINDER",
+    "Radios",
+    "When DFS is enabled, the actual bandwidth and channel may differ from the configured settings.",
+    "You can customize advanced Wi-Fi settings and use these settings to fine-tune your Wi-Fi network for better performance:",
+    "]&&!r&&z.includes(x)}))},[n,d,r]),w=c.useMemo(()=>{const i=Ne[n],x=Re(m,i[t]).sort((v,E)=>v-E),A={value:0,label:",
+    "]&&a.enabled),m=[];return s.ssidTypesConfigurations.filter(a=>!a.separatedSsid&&a.uiConfigurable&&a.mloEnabled).forEach(a=>{const b=o.find(f=>f.type===a.type);k(b)||m.push(b)}),m},[s,t]);return e.jsxs(S,{direction:",
+    "mloEnabled",
+    "}),d.map(o=>e.jsx(j,{variant:",
+    "}),e.jsx(Pe,{}),e.jsxs(S,{direction:",
+    "}),e.jsx(he,{tabs:G,selectedKey:m,onChange:b}),e.jsx(_,{selectedKey:m,value:",
+    "}),e.jsx(j,{variant:",
+    "})]})]}),e.jsx(K,{dialogTitle:",
+    "})]})]})]})]})}function Ue(){const s=U(p=>p.token),{data:n,mutate:t}=V({key:",
+    "})}))(({theme:s})=>{const{spacing:n,breakpoints:t}=s;return{padding:n(2),[t.down(",
+    "},children:",
+    "},children:o.name},`ssid_${o.id}`))]}),n&&d.length===0&&e.jsxs(e.Fragment,{children:[e.jsx(j,{variant:",
+    "},{action:",
+    "},{alertProps:{severity:",
+    "};if(n===D[",
+    "}],className:",
+    "}})}finally{o(!1)}}),I=c.useCallback(()=>{p(f)},[p,f]);return c.useEffect(()=>{s(u.isDirty)},[u.isDirty,s]),e.jsxs(e.Fragment,{children:[e.jsxs(S,{direction:",
+    "}}}),e.jsx(R,{name:`radios.${l}.channel`,label:",
+    "}}});function Be({easyMeshConfiguration:s,formMloEnabled:n}){const t=ce(o=>o.ssids),d=c.useMemo(()=>{if(k(t)||k(s))return[];const o=t.filter(a=>a.radio===D["
+  ],
+  "_can_doc_tay": []
+}

@@ -1,0 +1,1 @@
+import{s as d,a1 as p,aC as i,j as m}from"./index-DVvqSuzn.js";const e="AeiTabPanel",P=d("div",{name:e,slot:"root"})({}),T=p.forwardRef((t,o)=>{const n=i({props:t,name:e}),{children:r,selectedKey:l,value:s,...c}=n,a=l===s;return m.jsx(P,{role:"tabpanel",hidden:!a,id:`tabpanel-${s}`,ref:o,...c,children:a&&r})});T.displayName=e;export{T};

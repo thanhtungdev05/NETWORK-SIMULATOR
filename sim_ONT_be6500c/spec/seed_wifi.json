@@ -1,0 +1,14 @@
+{
+  "_nguon": "reference/har/wifi_general_apply.har - GET /api/v1/data/ssids va GET /api/v1/data/easyMesh dau tien (truoc luc bam Apply), 2026-08-10",
+  "ssids": [
+    {"status":"Up","securityMode":"WPA3-Personal-Transition","passphrase":"7cf526b6d5","radio":"2.4G","name":"FPT Telecom-525F","securityModesSupported":["WPA2-Personal","WPA3-Personal-Transition"],"enabled":true,"id":"04:d6:88:8d:52:61","broadcastEnabled":true,"type":"Primary"},
+    {"status":"Up","securityMode":"WPA3-Personal-Transition","passphrase":"7cf526b6d5","radio":"5G","name":"FPT Telecom-525F","securityModesSupported":["WPA2-Personal","WPA3-Personal-Transition"],"enabled":true,"id":"04:d6:88:8d:52:69","broadcastEnabled":true,"type":"Primary"},
+    {"status":"Down","securityMode":"WPA3-Personal-Transition","passphrase":"7cf526b6d5","radio":"2.4G","name":"Guest525F","securityModesSupported":["WPA2-Personal","WPA3-Personal-Transition"],"enabled":false,"id":"04:d6:88:8d:52:62","broadcastEnabled":true,"type":"Guest"},
+    {"status":"Down","securityMode":"WPA3-Personal-Transition","passphrase":"7cf526b6d5","radio":"5G","name":"Guest525F","securityModesSupported":["WPA2-Personal","WPA3-Personal-Transition"],"enabled":false,"id":"04:d6:88:8d:52:6a","broadcastEnabled":true,"type":"Guest"},
+    {"status":"Up","securityMode":"WPA3-Personal-Transition","passphrase":"7cf526b6d5","radio":"2.4G","name":"FPT Telecom-525F-IoT 2.4G","securityModesSupported":["WPA2-Personal","WPA3-Personal-Transition"],"enabled":true,"id":"04:d6:88:8d:52:63","broadcastEnabled":true,"type":"SmartHome"},
+    {"status":"Down","securityMode":"WPA3-Personal-Transition","passphrase":"7cf526b6d5","radio":"5G","name":"FPT Telecom-525F-IoT 5G","securityModesSupported":["WPA2-Personal","WPA3-Personal-Transition"],"enabled":false,"id":"04:d6:88:8d:52:6b","broadcastEnabled":true,"type":"SmartHome"},
+    {"status":"Up","securityMode":"WPA3-Personal","passphrase":"d10254036c","radio":"2.4G","name":"FPT Telecom-525F-BH_MLO","securityModesSupported":["WPA3-Personal"],"enabled":true,"id":"04:d6:88:8d:52:64","broadcastEnabled":false,"type":"Backhaul"},
+    {"status":"Up","securityMode":"WPA3-Personal","passphrase":"d10254036c","radio":"5G","name":"FPT Telecom-525F-BH_MLO","securityModesSupported":["WPA3-Personal"],"enabled":true,"id":"04:d6:88:8d:52:6c","broadcastEnabled":false,"type":"Backhaul"}
+  ],
+  "easyMesh": {"role":"Agent","ssidTypesConfigurations":[{"isolated":false,"uiConfigurable":true,"separatedSsid":false,"isBackhaul":false,"mloEnabled":false,"type":"Primary"},{"isolated":true,"uiConfigurable":true,"separatedSsid":false,"isBackhaul":false,"mloEnabled":false,"type":"Guest"},{"isolated":false,"uiConfigurable":true,"separatedSsid":true,"isBackhaul":false,"mloEnabled":false,"type":"SmartHome"},{"isolated":false,"uiConfigurable":false,"separatedSsid":false,"isBackhaul":true,"mloEnabled":true,"type":"Backhaul"}],"enabled":true}
+}

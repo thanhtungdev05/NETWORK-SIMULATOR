@@ -1,0 +1,12 @@
+[
+ {
+  "url": "api/v1/data/speedTest/servers",
+  "body": null,
+  "resp": "[]"
+ },
+ {
+  "url": "api/v1/data/speedTest/records/",
+  "body": null,
+  "resp": "[]"
+ }
+]

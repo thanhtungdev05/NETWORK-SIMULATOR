@@ -1,0 +1,1907 @@
+{
+ "_nguon": "reference/source/api_v1_data_full.json -- GET truc tiep 39 endpoint /api/v1/data/* tren ONT-BE6500C that 192.168.1.1 ngay 2026-08-11",
+ "_ghi_chu": {
+  "system/logs": "ban that co 15314 dong, chi giu 200 dong dau (dong moi nhat truoc) de file khong qua lon"
+ },
+ "_khong_lay_duoc": {
+  "speedTest/servers": "thiet bi that tra 503 -- day la hanh vi THAT (giong AP)",
+  "tcpdump/interfaces": "thiet bi that tra 404 cho GET -- co the chi ho tro phuong thuc khac, can doi chieu o GD3",
+  "system/services/actions": "GET tra status=0, than rong (ket noi bi dong) -- nghi la resource CHI-GHI, can xac nhan o GD3",
+  "diagnostic": "GET tra status=0, than rong (ket noi bi dong) -- nghi la resource CHI-GHI, can xac nhan o GD3",
+  "speedTest": "GET tra status=0, than rong (ket noi bi dong) -- nghi la resource CHI-GHI, can xac nhan o GD3",
+  "system": "GET tra status=0, than rong (ket noi bi dong) -- nghi la resource CHI-GHI, can xac nhan o GD3"
+ },
+ "du_lieu": {
+  "access/http/connections": [],
+  "access/ssh/connections": [],
+  "alg": {
+   "h323Enabled": true,
+   "ipsecEnabled": true,
+   "sipEnabled": true,
+   "pptpEnabled": true,
+   "rtspEnabled": true,
+   "ftpEnabled": true,
+   "tftpEnabled": true,
+   "l2tpEnabled": true
+  },
+  "ddns": [
+   {
+    "id": "myddns_ipv4",
+    "status": "Failed",
+    "lastChangeTime": 0,
+    "ipAddress": "",
+    "interfaceId": "wan",
+    "ipVersion": 4
+   }
+  ],
+  "ddns/configurations": [
+   {
+    "serviceProvider": "noip",
+    "id": "myddns_ipv4",
+    "password": "your_password",
+    "username": "your_username",
+    "enabled": false,
+    "hostname": "yourhost.example.com",
+    "interfaceId": "wan",
+    "ipVersion": 4
+   }
+  ],
+  "devices": [
+   {
+    "id": "94:f7:17:a9:c1:50",
+    "status": "Up",
+    "capabilities": [
+     {
+      "type": "Ethernet"
+     },
+     {
+      "radio": "2.4G",
+      "type": "Wireless"
+     },
+     {
+      "radio": "5G",
+      "type": "Wireless"
+     }
+    ],
+    "lastChangeTime": 1786329880000,
+    "macAddress": "94:f7:17:a9:c1:50",
+    "connections": [],
+    "ipAddresses": [
+     {
+      "lifetime": 0,
+      "lifetimeState": "Infinite",
+      "version": 4,
+      "address": "192.168.1.1"
+     }
+    ],
+    "type": "Router",
+    "hostname": "ONT-BE6500C-C150",
+    "upstreamId": "00:00:00:00:00:00"
+   },
+   {
+    "id": "d8:43:ae:2e:65:45",
+    "status": "Up",
+    "capabilities": [],
+    "lastChangeTime": 1786329880000,
+    "macAddress": "d8:43:ae:2e:65:45",
+    "connections": [
+     {
+      "type": "Ethernet",
+      "uptime": 1695,
+      "ethernet": {
+       "port": 2,
+       "bitRate": 2500000000
+      }
+     }
+    ],
+    "ipAddresses": [
+     {
+      "lifetime": 1786371565000,
+      "lifetimeState": "Valid",
+      "version": 4,
+      "address": "192.168.1.109"
+     },
+     {
+      "lifetimeState": "Unknown",
+      "lifetime": 0,
+      "type": "LLA",
+      "address": "fe80::19f6:b206:5131:4599",
+      "version": 6
+     }
+    ],
+    "type": "Device",
+    "hostname": "Admin-PC",
+    "upstreamId": "94:f7:17:a9:c1:50"
+   }
+  ],
+  "dhcp/reservedHosts": [
+   {
+    "id": "cfg08fe63",
+    "serverId": "lan",
+    "isAutoReserved": true,
+    "ipAddress": "192.168.1.109",
+    "macAddress": "d8:43:ae:2e:65:45"
+   }
+  ],
+  "dhcp/servers": [
+   {
+    "ipv4Settings": {
+     "autoReserved": {
+      "enabled": true,
+      "limit": 50
+     },
+     "startAddress": "192.168.1.2",
+     "endAddress": "192.168.1.249",
+     "enabled": true,
+     "dnsServers": [
+      "192.168.1.1"
+     ],
+     "leaseTime": 43200,
+     "autoDnsEnabled": true
+    },
+    "id": "lan",
+    "interfaceId": "lan",
+    "ipv6Settings": {
+     "startSuffix": "2",
+     "dnsServers": [
+      "fe80::96f7:17ff:fea9:c150"
+     ],
+     "enabled": true,
+     "endSuffix": "ffff",
+     "autoDnsEnabled": true
+    }
+   },
+   {
+    "ipv4Settings": {
+     "autoReserved": {
+      "enabled": true,
+      "limit": 50
+     },
+     "startAddress": "192.168.5.100",
+     "endAddress": "192.168.5.249",
+     "enabled": true,
+     "dnsServers": [
+      "192.168.5.1"
+     ],
+     "leaseTime": 14400,
+     "autoDnsEnabled": true
+    },
+    "id": "guest",
+    "interfaceId": "guest",
+    "ipv6Settings": {
+     "startSuffix": "2",
+     "dnsServers": [],
+     "enabled": true,
+     "endSuffix": "3e8",
+     "autoDnsEnabled": true
+    }
+   }
+  ],
+  "diagnostic": null,
+  "dmz/configurations": [
+   {
+    "enabled": false,
+    "id": "dmz_v4",
+    "ipVersion": 4
+   },
+   {
+    "enabled": false,
+    "id": "dmz_v6",
+    "ipVersion": 6
+   }
+  ],
+  "eapProfiles": [
+   {
+    "id": "pre_profile1",
+    "password": "password",
+    "mode": "PEAP",
+    "username": "FTR",
+    "name": "predefine_peap"
+   }
+  ],
+  "easyMesh": {
+   "role": "Controller",
+   "enabled": true,
+   "ssidTypesConfigurations": [
+    {
+     "uiConfigurable": true,
+     "isBackhaul": false,
+     "mloEnabled": false,
+     "type": "Primary",
+     "separatedSsid": false,
+     "isolated": false
+    },
+    {
+     "uiConfigurable": true,
+     "isBackhaul": false,
+     "mloEnabled": false,
+     "type": "Guest",
+     "separatedSsid": false,
+     "isolated": true
+    },
+    {
+     "uiConfigurable": true,
+     "isBackhaul": false,
+     "mloEnabled": false,
+     "type": "SmartHome",
+     "separatedSsid": true,
+     "isolated": false
+    },
+    {
+     "uiConfigurable": false,
+     "isBackhaul": true,
+     "mloEnabled": true,
+     "type": "Backhaul",
+     "separatedSsid": false,
+     "isolated": false
+    }
+   ]
+  },
+  "ethernetPorts": [
+   {
+    "duplexMode": "Auto",
+    "id": "lan1",
+    "stats": {
+     "bytesReceived": 1403962,
+     "bytesSent": 22268663
+    },
+    "lastChangeTime": 1786328185000,
+    "eap": {
+     "status": "",
+     "id": ""
+    },
+    "isUpstream": false,
+    "macAddress": "94:f7:17:a9:c1:50",
+    "name": "lan1",
+    "bitRate": 1000000000,
+    "port": 1,
+    "enabled": true,
+    "status": "Up",
+    "maxBitRate": 1000000000
+   },
+   {
+    "duplexMode": "Auto",
+    "id": "lan2",
+    "stats": {
+     "bytesReceived": 0,
+     "bytesSent": 0
+    },
+    "lastChangeTime": 1786328185000,
+    "eap": {
+     "status": "",
+     "id": ""
+    },
+    "isUpstream": false,
+    "macAddress": "94:f7:17:a9:c1:50",
+    "name": "lan2",
+    "bitRate": 0,
+    "port": 2,
+    "enabled": true,
+    "status": "Down",
+    "maxBitRate": 1000000000
+   },
+   {
+    "duplexMode": "Auto",
+    "id": "lan3",
+    "stats": {
+     "bytesReceived": 0,
+     "bytesSent": 0
+    },
+    "lastChangeTime": 1786328185000,
+    "eap": {
+     "status": "",
+     "id": ""
+    },
+    "isUpstream": false,
+    "macAddress": "94:f7:17:a9:c1:50",
+    "name": "lan3",
+    "bitRate": 0,
+    "port": 3,
+    "enabled": true,
+    "status": "Down",
+    "maxBitRate": 1000000000
+   },
+   {
+    "duplexMode": "Auto",
+    "id": "lan4",
+    "stats": {
+     "bytesReceived": 0,
+     "bytesSent": 0
+    },
+    "lastChangeTime": 1786328185000,
+    "eap": {
+     "status": "",
+     "id": ""
+    },
+    "isUpstream": false,
+    "macAddress": "94:f7:17:a9:c1:50",
+    "name": "lan4",
+    "bitRate": 0,
+    "port": 4,
+    "enabled": true,
+    "status": "Down",
+    "maxBitRate": 1000000000
+   }
+  ],
+  "firewall": {
+   "spiEnabled": true,
+   "icmpPing": {
+    "wanEnabled": true,
+    "lanEnabled": true
+   },
+   "clientIsolationEnabled": false,
+   "dosDefense": {
+    "icmpFragment": {
+     "enabled": false
+    },
+    "enabled": true,
+    "tcpFlagScan": {
+     "enabled": true
+    },
+    "icmpFlood": {
+     "burst": 100,
+     "enabled": true,
+     "rate": 100
+    },
+    "unknownProtocol": {
+     "enabled": true
+    },
+    "traceRoute": {
+     "enabled": false
+    },
+    "fraggleAttack": {
+     "enabled": false
+    },
+    "tcpFlood": {
+     "burst": 50,
+     "enabled": true,
+     "rate": 25
+    },
+    "pingOfDeath": {
+     "enabled": false
+    },
+    "smurf": {
+     "enabled": false
+    },
+    "portScan": {
+     "burst": 0,
+     "enabled": false,
+     "rate": 0
+    },
+    "synFragment": {
+     "enabled": false
+    },
+    "land": {
+     "enabled": false
+    },
+    "udpFlood": {
+     "burst": 0,
+     "enabled": false,
+     "rate": 0
+    }
+   }
+  },
+  "interfaces": [
+   {
+    "id": "lan",
+    "status": "Up",
+    "ipv6Addresses": [
+     {
+      "gateway": "",
+      "lifetimeState": "Infinite",
+      "prefix": 64,
+      "lifetime": 0,
+      "protocol": "static",
+      "address": "fe80::96f7:17ff:fea9:c150",
+      "type": "LLA"
+     }
+    ],
+    "device": [
+     "eth1"
+    ],
+    "lastChangeTime": 1786328184000,
+    "name": "lan",
+    "dnsServers": [],
+    "usage": "LAN",
+    "ipv4Addresses": [
+     {
+      "gateway": "",
+      "protocol": "static",
+      "address": "192.168.1.1",
+      "mask": "255.255.255.0"
+     }
+    ],
+    "macAddress": "94:f7:17:a9:c1:50"
+   },
+   {
+    "id": "wan",
+    "status": "Up",
+    "ipv6Addresses": [],
+    "device": [
+     "pon"
+    ],
+    "lastChangeTime": 1786328185000,
+    "name": "wan",
+    "dnsServers": [
+     "8.8.8.8"
+    ],
+    "usage": "Internet",
+    "ipv4Addresses": [
+     {
+      "gateway": "192.168.1.254",
+      "protocol": "static",
+      "address": "192.168.1.1",
+      "mask": "255.255.255.0"
+     }
+    ],
+    "macAddress": "94:f7:17:a9:c1:51"
+   },
+   {
+    "id": "wan6",
+    "status": "Down",
+    "ipv6Addresses": [
+     {
+      "gateway": "",
+      "lifetimeState": "Infinite",
+      "prefix": 64,
+      "lifetime": 0,
+      "protocol": "static",
+      "address": "fe80::96f7:17ff:fea9:c151",
+      "type": "LLA"
+     }
+    ],
+    "device": [
+     "pon"
+    ],
+    "lastChangeTime": 1786327654000,
+    "name": "wan6",
+    "dnsServers": [],
+    "usage": "Internet",
+    "ipv4Addresses": [],
+    "macAddress": "94:f7:17:a9:c1:51"
+   },
+   {
+    "id": "guest",
+    "status": "Down",
+    "ipv6Addresses": [],
+    "device": [],
+    "lastChangeTime": 0,
+    "name": "guest",
+    "dnsServers": [],
+    "usage": "Guest",
+    "ipv4Addresses": [],
+    "macAddress": "94:f7:17:a9:c1:53"
+   }
+  ],
+  "interfaces/configurations": [
+   {
+    "ipv4Settings": {
+     "gateway": "",
+     "protocol": "static",
+     "mask": "255.255.255.0",
+     "ipAddress": "192.168.1.1"
+    },
+    "id": "lan",
+    "devices": [
+     "eth1"
+    ],
+    "name": "lan",
+    "mtu": 1500,
+    "dnsServers": [],
+    "enabled": true,
+    "ipv6Settings": {
+     "gateway": "",
+     "ipAddress": "",
+     "prefix": "",
+     "enabled": true,
+     "protocol": "dhcpv6",
+     "ulaPrefix": "",
+     "slaacEnabled": false
+    },
+    "autoDnsEnabled": true,
+    "usage": "LAN"
+   },
+   {
+    "ipv4Settings": {
+     "gateway": "192.168.1.254",
+     "ipAddress": "192.168.1.1",
+     "mask": "255.255.255.0",
+     "pppoe": {
+      "username": "",
+      "password": ""
+     },
+     "protocol": "static"
+    },
+    "id": "wan",
+    "devices": [
+     "pon"
+    ],
+    "name": "wan",
+    "mtu": 1500,
+    "dnsServers": [
+     "8.8.8.8"
+    ],
+    "usage": "Internet",
+    "vlan": {
+     "autoDetectionEnabled": false,
+     "id": 0,
+     "enabled": false
+    },
+    "autoDnsEnabled": false,
+    "enabled": true
+   },
+   {
+    "id": "wan6",
+    "devices": [
+     "@wan"
+    ],
+    "name": "wan6",
+    "mtu": 1500,
+    "dnsServers": [
+     "2001:4860:4860::8888",
+     "2001:4860:4860::8844"
+    ],
+    "enabled": true,
+    "ipv6Settings": {
+     "gateway": "",
+     "ipAddress": "",
+     "prefix": "",
+     "enabled": true,
+     "protocol": "dhcpv6",
+     "ulaPrefix": "",
+     "slaacEnabled": true
+    },
+    "autoDnsEnabled": false,
+    "usage": "Internet"
+   },
+   {
+    "ipv4Settings": {
+     "gateway": "",
+     "protocol": "static",
+     "mask": "255.255.255.0",
+     "ipAddress": "192.168.5.1"
+    },
+    "id": "guest",
+    "devices": [
+     ""
+    ],
+    "name": "guest",
+    "mtu": 1500,
+    "dnsServers": [],
+    "enabled": false,
+    "ipv6Settings": {
+     "gateway": "",
+     "ipAddress": "",
+     "prefix": "",
+     "enabled": true,
+     "protocol": "dhcpv6",
+     "ulaPrefix": "",
+     "slaacEnabled": false
+    },
+    "autoDnsEnabled": true,
+    "usage": "Guest"
+   }
+  ],
+  "internetConnection": {
+   "status": "Down"
+  },
+  "pon/status": {
+   "transmittedPower": 6.2450045135165e-16,
+   "stats": {
+    "packetsReceived": 0,
+    "packetsSent": 11
+   },
+   "status": "O1",
+   "temperature": 0,
+   "biasCurrent": 0,
+   "supplyPowerVoltage": 0,
+   "receivedPower": -30,
+   "maxBitRate": 10000000000
+  },
+  "portForwarding/policies": [],
+  "publicLan": {
+   "enabled": false,
+   "routing": {
+    "dhcpServer": {
+     "enabled": false,
+     "dnsServers": []
+    }
+   }
+  },
+  "publicLan/routing/reservedHosts": [],
+  "publicLan/staticNat/policies": [],
+  "radios": [
+   {
+    "stats": {
+     "bytesSent": 0,
+     "bytesReceived": 0
+    },
+    "rtsThreshold": 2347,
+    "bandwidthInUse": "20MHz",
+    "bandwidthSupported": [
+     "20MHz",
+     "40MHz",
+     "Auto"
+    ],
+    "operatingStandards": [
+     "beg"
+    ],
+    "bandwidth": "20MHz",
+    "id": "wifi0",
+    "status": "Up",
+    "band": "2.4G",
+    "possibleChannels": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ],
+    "channel": -1,
+    "dtimInterval": 1,
+    "beaconInterval": 100,
+    "operatingStandardsSupported": [
+     "ax",
+     "b",
+     "g",
+     "n",
+     "be"
+    ],
+    "enabled": true,
+    "autoChannelEnabled": true,
+    "channelInUse": 6,
+    "macAddress": "94:f7:17:a9:c1:58"
+   },
+   {
+    "dfsEnabled": false,
+    "stats": {
+     "bytesSent": 0,
+     "bytesReceived": 0
+    },
+    "rtsThreshold": 2347,
+    "bandwidthInUse": "80MHz",
+    "bandwidthSupported": [
+     "20MHz",
+     "40MHz",
+     "80MHz",
+     "160MHz",
+     "Auto"
+    ],
+    "operatingStandards": [
+     "bea"
+    ],
+    "bandwidth": "80MHz",
+    "id": "wifi1",
+    "status": "Up",
+    "band": "5G",
+    "possibleChannels": [
+     36,
+     40,
+     44,
+     48,
+     52,
+     56,
+     60,
+     64,
+     100,
+     104,
+     108,
+     112,
+     116,
+     120,
+     124,
+     128,
+     132,
+     136,
+     140,
+     144,
+     149,
+     153,
+     157,
+     161,
+     165
+    ],
+    "channel": -1,
+    "dtimInterval": 1,
+    "beaconInterval": 100,
+    "operatingStandardsSupported": [
+     "ac",
+     "ax",
+     "a",
+     "n",
+     "be"
+    ],
+    "enabled": true,
+    "autoChannelEnabled": true,
+    "channelInUse": 153,
+    "macAddress": "94:f7:17:a9:c1:60"
+   }
+  ],
+  "speedTest": null,
+  "speedTest/records": [],
+  "speedTest/servers": "<HTTP 503> []",
+  "ssids": [
+   {
+    "securityModesSupported": [
+     "WPA2-Personal",
+     "WPA3-Personal-Transition"
+    ],
+    "passphrase": "12345678",
+    "status": "Up",
+    "name": "FPT Telecom-C151",
+    "radio": "2.4G",
+    "securityMode": "WPA3-Personal-Transition",
+    "enabled": true,
+    "type": "Primary",
+    "broadcastEnabled": true,
+    "id": "94:f7:17:a9:c1:59"
+   },
+   {
+    "securityModesSupported": [
+     "WPA2-Personal",
+     "WPA3-Personal-Transition"
+    ],
+    "passphrase": "12345678",
+    "status": "Up",
+    "name": "FPT Telecom-C151",
+    "radio": "5G",
+    "securityMode": "WPA3-Personal-Transition",
+    "enabled": true,
+    "type": "Primary",
+    "broadcastEnabled": true,
+    "id": "94:f7:17:a9:c1:61"
+   },
+   {
+    "securityModesSupported": [
+     "WPA2-Personal",
+     "WPA3-Personal-Transition"
+    ],
+    "passphrase": "119424b42f",
+    "status": "Down",
+    "name": "GuestC151",
+    "radio": "2.4G",
+    "securityMode": "WPA3-Personal-Transition",
+    "enabled": false,
+    "type": "Guest",
+    "broadcastEnabled": true,
+    "id": "94:f7:17:a9:c1:5a"
+   },
+   {
+    "securityModesSupported": [
+     "WPA2-Personal",
+     "WPA3-Personal-Transition"
+    ],
+    "passphrase": "119424b42f",
+    "status": "Down",
+    "name": "GuestC151",
+    "radio": "5G",
+    "securityMode": "WPA3-Personal-Transition",
+    "enabled": false,
+    "type": "Guest",
+    "broadcastEnabled": true,
+    "id": "94:f7:17:a9:c1:62"
+   },
+   {
+    "securityModesSupported": [
+     "WPA2-Personal",
+     "WPA3-Personal-Transition"
+    ],
+    "passphrase": "12345678",
+    "status": "Up",
+    "name": "FPT Telecom-C151 IoT 2.4G",
+    "radio": "2.4G",
+    "securityMode": "WPA3-Personal-Transition",
+    "enabled": true,
+    "type": "SmartHome",
+    "broadcastEnabled": true,
+    "id": "94:f7:17:a9:c1:5b"
+   },
+   {
+    "securityModesSupported": [
+     "WPA2-Personal",
+     "WPA3-Personal-Transition"
+    ],
+    "passphrase": "119424b42f",
+    "status": "Down",
+    "name": "FPT Telecom-C151 IoT 5G",
+    "radio": "5G",
+    "securityMode": "WPA3-Personal-Transition",
+    "enabled": false,
+    "type": "SmartHome",
+    "broadcastEnabled": true,
+    "id": "94:f7:17:a9:c1:63"
+   },
+   {
+    "securityModesSupported": [
+     "WPA3-Personal"
+    ],
+    "passphrase": "814826836e",
+    "status": "Up",
+    "name": "FPT Telecom-C151-BH_MLO",
+    "radio": "2.4G",
+    "securityMode": "WPA3-Personal",
+    "enabled": true,
+    "type": "Backhaul",
+    "broadcastEnabled": false,
+    "id": "94:f7:17:a9:c1:5c"
+   },
+   {
+    "securityModesSupported": [
+     "WPA3-Personal"
+    ],
+    "passphrase": "814826836e",
+    "status": "Up",
+    "name": "FPT Telecom-C151-BH_MLO",
+    "radio": "5G",
+    "securityMode": "WPA3-Personal",
+    "enabled": true,
+    "type": "Backhaul",
+    "broadcastEnabled": false,
+    "id": "94:f7:17:a9:c1:64"
+   }
+  ],
+  "staticRouting/policies": [],
+  "system": null,
+  "system/info": {
+   "firmwareVersion": "1PZ108WZ110",
+   "kernelVersion": "ipq53xx/ipq53xx_32",
+   "architecture": "arm_cortex-a7_neon-vfpv4",
+   "operatingMode": "router",
+   "domainName": "my-router.top",
+   "modelName": "ONT-BE6500C",
+   "isConfigured": true,
+   "hostname": "ONT-BE6500C-C150",
+   "serialNumber": "94F717A9C151",
+   "manufacturer": "Actiontec"
+  },
+  "system/logServer": {
+   "level": 7,
+   "remoteServer": {
+    "enabled": false,
+    "ipAddress": "",
+    "protocol": "",
+    "port": 514
+   }
+  },
+  "system/logs": [
+   {
+    "log": "kernel: [ 0.023784] cpuidle: using governor menu",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 0.023944] NET: Registered protocol family 42",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 0.024275] hw-breakpoint: found 5 (+1 reserved) breakpoint and 4 watchpoint registers.",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 0.024284] hw-breakpoint: maximum watchpoint size is 8 bytes.",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 0.025968] printk: console [pstore-1] enabled",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 0.026066] pstore: Registered ramoops as persistent store backend",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 0.026077] ramoops: using 0x10000@0x56200000, ecc: 0",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 0.030455] gpiochip_find_base: found new base at 459",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 0.030478] gpio gpiochip0: (1000000.pinctrl): created GPIO range 0->52 ==> 1000000.pinctrl PIN 0->52",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 0.030616] gpio gpiochip0: (1000000.pinctrl): added GPIO chardev (254:0)",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 0.030684] gpiochip_setup_dev: registered GPIOs 459 to 511 on device: gpiochip0 (1000000.pinctrl)",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 0.040248] gcc-ipq5332 1800000.gcc: Registered GCC clocks",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 0.044435] qcom,nsscc-ipq5332 39b00000.nsscc: Registered NSS CC clocks",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 0.060678] msm_sps_probe: sps:sps is ready",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.038267] cryptd: max_cpu_qlen set to 1000",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.052867] pps_core: LinuxPPS API ver. 1 registered",
+    "level": 5,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.052885] pps_core: Software ver. 5.3.6 - Copyright 2005-2007 Rodolfo Giometti <giometti@linux.it>",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.052909] PTP clock support registered",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.053700] Advanced Linux Sound Architecture Driver Initialized.",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.053757] workqueue: max_active 576 requested for napi_workq is out of range, clamping between 1 and 512",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.054695] clocksource: Switched to clocksource arch_sys_counter",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.055496] thermal_sys: Registered thermal governor 'step_wise'",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.055500] thermal_sys: Registered thermal governor 'user_space'",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.056557] NET: Registered protocol family 2",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.056772] IP idents hash table entries: 16384 (order: 5, 131072 bytes, linear)",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.057726] tcp_listen_portaddr_hash hash table entries: 512 (order: 0, 6144 bytes, linear)",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.057770] TCP established hash table entries: 8192 (order: 3, 32768 bytes, linear)",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.057858] TCP bind hash table entries: 8192 (order: 4, 65536 bytes, linear)",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.058002] TCP: Hash tables configured (established 8192 bind 8192)",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.058091] UDP hash table entries: 512 (order: 2, 16384 bytes, linear)",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.058133] UDP-Lite hash table entries: 512 (order: 2, 16384 bytes, linear)",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.058324] NET: Registered protocol family 1",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.058355] PCI: CLS 0 bytes, default 64",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.059366] hw perfevents: enabled with armv7_cortex_a7 PMU driver, 7 counters available",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.065765] Initialise system trusted keyrings",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.065935] workingset: timestamp_bits=14 max_order=18 bucket_order=4",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.071475] squashfs: version 4.0 (2009/01/31) Phillip Lougher",
+    "level": 4,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.071486] jffs2: version 2.2 (NAND) (SUMMARY) (LZMA) (RTIME) (CMODE_PRIORITY) (c) 2001-2006 Red Hat, Inc.",
+    "level": 4,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.098594] Key type asymmetric registered",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.098606] Asymmetric key parser 'x509' registered",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.104857] bam-dma-engine 7884000.dma: qcom,controlled-remotely unspecified",
+    "level": 5,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.105661] bam-dma-engine 7984000.dma: qcom,controlled-remotely unspecified",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.106981] CPU: IPQ5312, SoC Version: 1.1",
+    "level": 4,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.106991] OEM_ID: 0, PROD_ID: 0",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.109957] TZ Log : Will warn on Access Violation, as paniconaccessviolation is not set",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.111409] License Manager driver registered",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.111658] Context is not provided, skipping key init",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.111913] msm_serial 78af000.serial: msm_serial: detected port #0",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.111959] msm_serial 78af000.serial: uartclk = 1843199",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.112016] 78af000.serial: ttyMSM0 at MMIO 0x78af000 (irq = 57, base_baud = 115199) is a MSM",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.112043] msm_serial: console setup on port #0",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.756076] printk: console [ttyMSM0] enabled",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.761035] msm_serial 78b0000.serial: msm_serial: detected port #1",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.765029] msm_serial 78b0000.serial: uartclk = 24000000",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.771106] 78b0000.serial: ttyMSM1 at MMIO 0x78b0000 (irq = 58, base_baud = 1500000) is a MSM",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.776885] msm_serial: driver initialized",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.785470] random: crng init done",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.792873] brd: module loaded",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.796541] loop: module loaded",
+    "level": 4,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.798149] nand: device found, Manufacturer ID: 0xef, Chip ID: 0xba",
+    "level": 4,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.798672] nand: Winbond W25N04KWZEIR SPI NAND 4G 1.8V",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.805292] nand: 512 MiB, SLC, erase size: 128 KiB, page size: 2048, OOB size: 128",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.810373] qcom-nandc 79b0000.nand: Serial training partition not found",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.817878] qcom-nandc 79b0000.nand: failed to enable serial training",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.824965] 32 fixed-partitions partitions found on MTD device qcom_nand.0",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.831137] Creating 32 MTD partitions on \"qcom_nand.0\":",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.837923] 0x000000000000-0x000000180000 : \"0:SBL1\"",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.845359] 0x000000180000-0x000000300000 : \"0:SBL1_1\"",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.850196] 0x000000300000-0x000000400000 : \"0:MIBIB\"",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.854760] 0x000000400000-0x000000480000 : \"0:BOOTCONFIG\"",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.859434] 0x000000480000-0x000000500000 : \"0:BOOTCONFIG1\"",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.864842] 0x000000500000-0x000000880000 : \"0:QSEE\"",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.872809] 0x000000880000-0x000000c00000 : \"0:QSEE_1\"",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.878066] 0x000000c00000-0x000000c80000 : \"0:DEVCFG_1\"",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.880436] 0x000000c80000-0x000000d00000 : \"0:DEVCFG\"",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.885924] 0x000000d00000-0x000000d80000 : \"0:TME\"",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.890902] 0x000000d80000-0x000000e00000 : \"0:TME_1\"",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.895641] 0x000000e00000-0x000000e80000 : \"0:CDT_1\"",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.900837] 0x000000e80000-0x000000f00000 : \"0:CDT\"",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.905893] 0x000000f00000-0x000000f80000 : \"0:APPSBLENV\"",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.910554] 0x000000f80000-0x000001100000 : \"0:APPSBL_1\"",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.916998] 0x000001100000-0x000001280000 : \"0:APPSBL\"",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.922334] 0x000001280000-0x000001380000 : \"0:ETHPHYFW\"",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.926889] 0x000001380000-0x000001400000 : \"0:TRAINING\"",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.931906] 0x000001400000-0x000001600000 : \"0:ART\"",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.938531] 0x000001600000-0x000001640000 : \"0:LICENSE\"",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.941585] 0x000001640000-0x0000016c0000 : \"APPSBLENV_1\"",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.947107] 0x0000016c0000-0x0000018c0000 : \"ART_1\"",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.953838] 0x0000018c0000-0x0000019c0000 : \"cert\"",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.957710] 0x0000019c0000-0x000001ac0000 : \"cert_1\"",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.962558] 0x000001ac0000-0x000001bc0000 : \"ETHPHYFW_1\"",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.967712] 0x000001bc0000-0x000001c40000 : \"TRAINING_1\"",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.972527] 0x000001c40000-0x000001c80000 : \"LICENSE_1\"",
+    "level": 2,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 3.977642] 0x000001c80000-0x000006c80000 : \"rootfs_1\"",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 4.050063] 0x000006c80000-0x00000bc80000 : \"rootfs\"",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 4.118443] mtd: device 28 (rootfs) set to be root filesystem",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 4.118685] mtdsplit: no squashfs found in \"rootfs\"",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 4.123168] 0x00000bc80000-0x00000cc80000 : \"aei_cfg\"",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 4.142042] 0x00000cc80000-0x00000dc80000 : \"aei_cfg_1\"",
+    "level": 4,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 4.156264] 0x00000dc80000-0x00000ff00000 : \"aei_app\"",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 4.186792] yt9215s soc:yt@29: cannot find mdio bus from bus handle (yet)",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 4.187517] mdio_bus fixed-0: GPIO lookup for consumer reset",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 4.187525] mdio_bus fixed-0: using lookup tables for GPIO lookup",
+    "level": 4,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 4.187534] mdio_bus fixed-0: No GPIO consumer reset found",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 4.244710] qca-mdio 90000.mdio: CMN clock reset done",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 4.244828] qca-mdio 90000.mdio: CIG clk_div =ff",
+    "level": 4,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 4.468854] of_get_named_gpiod_flags: parsed 'phy-reset-gpio' property of node '/soc/mdio@90000[0]' - status (0)",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 4.468863] qca-mdio 90000.mdio: Reset PHY by GPIO 483",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 4.799621] qca-mdio 90000.mdio: programe EPHY reg 0xc90f018 with 0xffffffec",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 4.800875] qca-mdio 90000.mdio: programe UNIPHY reg 0xc90f014 with 0xffffbdcd",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 4.983165] mdio_bus 90000.mdio: GPIO lookup for consumer reset",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 4.983172] mdio_bus 90000.mdio: using device tree for GPIO lookup",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 4.983191] of_get_named_gpiod_flags: can't parse 'reset-gpios' property of node '/soc/mdio@90000[0]'",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 4.983207] of_get_named_gpiod_flags: can't parse 'reset-gpio' property of node '/soc/mdio@90000[0]'",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 4.983218] mdio_bus 90000.mdio: using lookup tables for GPIO lookup",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 4.983225] mdio_bus 90000.mdio: No GPIO consumer reset found",
+    "level": 4,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 4.983850] mdio_bus 90000.mdio:1d: GPIO lookup for consumer reset",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 4.983857] mdio_bus 90000.mdio:1d: using device tree for GPIO lookup",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 4.983875] of_get_named_gpiod_flags: can't parse 'reset-gpios' property of node '/soc/mdio@90000/ethernet-phy@0[0]'",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 4.983891] of_get_named_gpiod_flags: can't parse 'reset-gpio' property of node '/soc/mdio@90000/ethernet-phy@0[0]'",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 4.983900] mdio_bus 90000.mdio:1d: using lookup tables for GPIO lookup",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 4.983908] mdio_bus 90000.mdio:1d: No GPIO consumer reset found",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 4.984349] mdio_bus 90000.mdio: MDIO device at address 12 is missing.",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 4.984373] qca-mdio 90000.mdio: qca-mdio driver was registered",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 4.989967] i2c /dev entries driver",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 4.996363] qcom-tsens 4a9000.thermal-sensor: tsens device is not enabled",
+    "level": 4,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 4.999909] device-mapper: ioctl: 4.41.0-ioctl (2019-09-16) initialised: dm-devel@redhat.com",
+    "level": 4,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.006577] of_get_named_gpiod_flags: parsed 'gpios' property of node '/soc/leds/led@29[0]' - status (0)",
+    "level": 4,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.006594] no flags found for gpios",
+    "level": 4,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.006695] of_get_named_gpiod_flags: parsed 'gpios' property of node '/soc/leds/led@39[0]' - status (0)",
+    "level": 4,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.006706] no flags found for gpios",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.007297] qti_scm_restart_reason qti,scm_restart_reason: reset_reason : System reset or reboot [0x10]",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.016638] sdhci: Secure Digital Host Controller Interface driver",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.023614] sdhci: Copyright(c) Pierre Ossman",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.029872] sdhci-pltfm: SDHCI platform and OF driver helper",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.037264]",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.037264] Version Rollback Feature Disabled",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.043887] remoteproc remoteproc0: d100000.remoteproc is available",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.046747] remoteproc remoteproc1: 4ab000.remoteproc_pd1 is available",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.052262] coresight-tmc 4047000.etf: invalid cti data",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.060480] coresight coresight-etm0: CPU0: ETM v4.0 initialized",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.063545] coresight-etm4x 509c000.etm: CPU0: (null) initialized",
+    "level": 4,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.070219] coresight coresight-etm1: CPU1: ETM v4.0 initialized",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.075802] coresight-etm4x 509d000.etm: CPU1: (null) initialized",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.082230] coresight coresight-etm2: CPU2: ETM v4.0 initialized",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.087876] coresight-etm4x 509e000.etm: CPU2: (null) initialized",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.094297] coresight coresight-etm3: CPU3: ETM v4.0 initialized",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.099939] coresight-etm4x 509f000.etm: CPU3: (null) initialized",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.106242] coresight-stm 4002000.stm: coresight-stm : stm_register_device failed, probing deferred",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.112091] OF: graph: no port node found in /soc/cti@5098000",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.121068] OF: graph: no port node found in /soc/cti@5099000",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.126943] OF: graph: no port node found in /soc/cti@509a000",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.132649] OF: graph: no port node found in /soc/cti@509b000",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.138634] OF: graph: no port node found in /soc/csr@4001000",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.144026] coresight-csr 4001000.csr: CSR initialized: coresight-csr",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.151568] NET: Registered protocol family 10",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.156918] Segment Routing with IPv6",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.160485] NET: Registered protocol family 17",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.164201] Bridge firewalling registered",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.168515] 8021q: 802.1Q VLAN Support v1.8",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.172818] Registering SWP/SWPB emulation handler",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.176718] Loading compiled-in X.509 certificates",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.181544] Key type ._fscrypt registered",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.186213] Key type .fscrypt registered",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.190874] pstore: Using crash dump compression: deflate",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.212993] qcom-pcie 18000000.pcie: GPIO lookup for consumer perst",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.213004] qcom-pcie 18000000.pcie: using device tree for GPIO lookup",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.213029] of_get_named_gpiod_flags: can't parse 'perst-gpios' property of node '/soc/pcie@18000000[0]'",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.213056] of_get_named_gpiod_flags: parsed 'perst-gpio' property of node '/soc/pcie@18000000[0]' - status (0)",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.213292] qcom-pcie 18000000.pcie: IRQ mdm2ap_e911 not found",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.213334] qcom-pcie 18000000.pcie: host bridge /soc/pcie@18000000 ranges:",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.218091] qcom-pcie 18000000.pcie: IO 0x18200000..0x182fffff -> 0x18200000",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.224898] qcom-pcie 18000000.pcie: MEM 0x18300000..0x1fffffff -> 0x18300000",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.466246] qcom-pcie 18000000.pcie: Link up",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.466434] qcom-pcie 18000000.pcie: PCI host bridge to bus 0001:00",
+    "level": 5,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.469579] pci_bus 0001:00: root bus resource [bus 00-ff]",
+    "level": 5,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.475590] pci_bus 0001:00: root bus resource [io 0x0000-0xfffff] (bus address [0x18200000-0x182fffff])",
+    "level": 4,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.481125] pci_bus 0001:00: root bus resource [mem 0x18300000-0x1fffffff]",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.490794] pci 0001:00:00.0: [17cb:1005] type 01 class 0x060400",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.497561] pci 0001:00:00.0: reg 0x10: [mem 0x00000000-0x00000fff]",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.503694] pci 0001:00:00.0: reg 0x14: [mem 0x00000000-0x0000ffff]",
+    "level": 5,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.509749] pci 0001:00:00.0: PME# supported from D0 D3hot D3cold",
+    "level": 5,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.519687] PCI: bus0: Fast back to back transfers disabled",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.522350] pci 0001:01:00.0: [17cb:1109] type 00 class 0x028000",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.527727] pci 0001:01:00.0: reg 0x10: [mem 0x00000000-0x001fffff 64bit]",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.534001] pci 0001:01:00.0: Max Payload Size set to 256 (was 128, max 256)",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.540881] pci 0001:01:00.0: PME# supported from D0 D3hot D3cold",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.547705] pci 0001:01:00.0: 7.876 Gb/s available PCIe bandwidth, limited by 8 GT/s x1 link at 0001:00:00.0 (capable of 15.752 Gb/s with 8 GT/s x2 link)",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.557326] PCI: bus1: Fast back to back transfers disabled",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.567361] pci 0001:00:00.0: BAR 8: assigned [mem 0x18400000-0x185fffff]",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.572703] pci 0001:00:00.0: BAR 9: assigned [mem 0x18600000-0x187fffff 64bit pref]",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.579663] pci 0001:00:00.0: BAR 1: assigned [mem 0x18300000-0x1830ffff]",
+    "level": 6,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.587475] pci 0001:00:00.0: BAR 0: assigned [mem 0x18310000-0x18310fff]",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.594143] pci 0001:00:00.0: BAR 7: assigned [io 0x1000-0x1fff]",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.600929] pci 0001:01:00.0: BAR 0: assigned [mem 0x18400000-0x185fffff 64bit]",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.607046] pci 0001:00:00.0: PCI bridge to [bus 01-ff]",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.614104] pci 0001:00:00.0: bridge window [io 0x1000-0x1fff]",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.619329] pci 0001:00:00.0: bridge window [mem 0x18400000-0x185fffff]",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.625580] pci 0001:00:00.0: bridge window [mem 0x18600000-0x187fffff 64bit pref]",
+    "level": 7,
+    "time": 1786327740000
+   },
+   {
+    "log": "kernel: [ 5.632410] [qcom_pcie_probe ] PCIe: RC enabled during bootup",
+    "level": 7,
+    "time": 1786327740000
+   }
+  ],
+  "system/services/actions": null,
+  "system/services/cache": [],
+  "system/status": {
+   "uptime": 2246,
+   "memoryUsage": 45,
+   "cpuUsage": {
+    "cores": [
+     32,
+     0,
+     12,
+     3
+    ],
+    "total": 13
+   }
+  },
+  "tcpdump/interfaces": "<HTTP 404> ",
+  "time": {
+   "status": "Unsynchronized",
+   "enabled": true,
+   "time": 1786329899555,
+   "servers": [
+    "pool.ntp.org",
+    "0.openwrt.pool.ntp.org"
+   ],
+   "localTimeZone": "UTC-7"
+  },
+  "upnp": {
+   "enabled": true
+  },
+  "wizard": {
+   "step": 5
+  }
+ }
+}

@@ -1,0 +1,222 @@
+{
+  "_route": "advanced/routing",
+  "_duong_dan_trinh_duyet": "#/advanced/routing",
+  "_nguon": {
+    "chunk": "index-CZBnlfHf.js",
+    "kich_thuoc_byte": 12099,
+    "chunk_phu_thuoc": [
+      "assets/index-CZBnlfHf.js",
+      "assets/schema-BT0LOWg1.js",
+      "assets/reverse-Bt8l-Q-w.js",
+      "assets/Add-tn7x3fTr.js",
+      "assets/TabList-CMoR7mS_.js",
+      "assets/KeyboardArrowRight-C7P-Q0WC.js",
+      "assets/PageHeading-B0ZcsD9H.js",
+      "assets/useSnackbar-DeOFrJDC.js",
+      "assets/isNumber-CjKC2f0Q.js",
+      "assets/RuleList-Ce4Vxx8G.js",
+      "assets/Delete-CIanOWax.js",
+      "assets/Refresh-Ce4n-Ghb.js",
+      "assets/TableRow-CJLJKR0z.js",
+      "assets/TableContainer-D0iNLS95.js",
+      "assets/ListItem-Dw6uMNOj.js",
+      "assets/cloneDeep-DVNSNFN2.js",
+      "assets/_baseClone-BoSTy1YA.js",
+      "assets/Clear-D33Tn-Yk.js",
+      "assets/FormRadios-CChkrIKK.js",
+      "assets/RadioGroup-Bf2DXGOk.js",
+      "assets/FormSelect-CJAio79q.js",
+      "assets/FormAutocomplete-L6F1ijaU.js",
+      "assets/Popper-BinJnTg_.js",
+      "assets/Chip-Ck-8K0QZ.js"
+    ],
+    "bundle_loi": "index-CW0UhNxy.js",
+    "_da_quet": [
+      "Add-tn7x3fTr.js",
+      "Chip-Ck-8K0QZ.js",
+      "Clear-D33Tn-Yk.js",
+      "Delete-CIanOWax.js",
+      "FormAutocomplete-L6F1ijaU.js",
+      "FormRadios-CChkrIKK.js",
+      "FormSelect-CJAio79q.js",
+      "KeyboardArrowRight-C7P-Q0WC.js",
+      "ListItem-Dw6uMNOj.js",
+      "PageHeading-B0ZcsD9H.js",
+      "RadioGroup-Bf2DXGOk.js",
+      "Refresh-Ce4n-Ghb.js",
+      "RuleList-Ce4Vxx8G.js",
+      "TableContainer-D0iNLS95.js",
+      "TableRow-CJLJKR0z.js",
+      "cloneDeep-DVNSNFN2.js",
+      "index-CZBnlfHf.js",
+      "isNumber-CjKC2f0Q.js",
+      "reverse-Bt8l-Q-w.js",
+      "schema-BT0LOWg1.js",
+      "useSnackbar-DeOFrJDC.js"
+    ]
+  },
+  "_cach_trich": "src/trich_dac_ta_trang.py (doc ma goc, khong doan)",
+  "goi_api": [
+    {
+      "ham_goc": "deleteStaticRoutingPolicies",
+      "doi_tuong_goc": "use",
+      "tim_thay_o": [
+        "index-CZBnlfHf.js"
+      ],
+      "resource": "api/v1/data/staticRouting/policies",
+      "method": "DELETE",
+      "kenh": "REST"
+    },
+    {
+      "ham_goc": "getInterfaceConfigurations",
+      "doi_tuong_goc": "use",
+      "tim_thay_o": [
+        "index-CZBnlfHf.js"
+      ],
+      "resource": "api/v1/data/interfaces/configurations",
+      "method": "GET",
+      "kenh": "REST"
+    },
+    {
+      "ham_goc": "getStaticRoutingPolicies",
+      "doi_tuong_goc": "use",
+      "tim_thay_o": [
+        "index-CZBnlfHf.js"
+      ],
+      "resource": "api/v1/data/staticRouting/policies",
+      "method": "GET",
+      "kenh": "REST"
+    },
+    {
+      "ham_goc": "postStaticRoutingPolicies",
+      "doi_tuong_goc": "use",
+      "tim_thay_o": [
+        "index-CZBnlfHf.js"
+      ],
+      "resource": "api/v1/data/staticRouting/policies",
+      "method": "POST",
+      "kenh": "REST"
+    },
+    {
+      "ham_goc": "setStaticRoutingPolicies",
+      "doi_tuong_goc": "use",
+      "tim_thay_o": [
+        "index-CZBnlfHf.js"
+      ],
+      "resource": "api/v1/data/staticRouting/policies",
+      "method": "PATCH",
+      "kenh": "REST"
+    }
+  ],
+  "goi_khac": {
+    "rpc": [],
+    "duong_dan_tuyet_doi": []
+  },
+  "truong_form": [
+    {
+      "name": "data"
+    }
+  ],
+  "gia_tri_mac_dinh": [
+    {
+      "bien": "(noi tuyen)",
+      "ma": "{data:L}"
+    }
+  ],
+  "schema_kiem_tra": [
+    {
+      "ma": "{id:u.string().optional(),interfaceId:u.string(),target:u.string().min(1,{message:\"Destination IP cannot be empty.\"}).ip({version:\"v4\",message:\"Invalid IP address.\"}),mask:u.string().min(1,{message:\"Mask cannot be empty.\"}).refine(a=>Ie(a.split(\".\").map(Number)),{message:\"Invalid mask.Please ensure the input is a valid format (e.g., 255.255.255.0) and within the correct range for your network.\"}),gateway:u.string().min(1,{message:\"Gateway IP cannot be empty.\"}).ip({version:\"v4\",message:\"Invalid IP address.\"})}"
+    },
+    {
+      "ma": "{id:u.string().optional(),interfaceId:u.string(),target:u.string().cidr({version:\"v6\",message:\"Invalid input. Example: 2001:0db8:85a3::8a2e:0370:7334/64\"}).min(1,{message:\"Destination IP/Prefix Length cannot be empty.\"}).superRefine((a,s)=>{const[,l]=a.split(\"/\");Pe(l)||s.addIssue({code:u.ZodIssueCode.custom,message:\"Invalid input. Prefix length must be an integer between 1 and 128.\"})}),gateway:u.string().min(1,{message:\"Gateway IP cannot be empty.\"}).ip({version:\"v6\",message:\"Invalid IP address.\"})}"
+    },
+    {
+      "ma": "{data:u.array(v?_e:ze).superRefine((I,C)=>{I.filter(x=>{var w;return(w=u.string().cidr().safeParse(x.target))==null?void 0:w.success}).forEach((x,w)=>{const{target:d}=x;if(d){const h=v?_(d):H(d.split(\"/\")[0]);y.includes(h)&&h!==n?C.addIssue({code:u.ZodIssueCode.custom,message:\"This destination IP already exists.\",path:[`${w}.target`]}):I.forEach((D,g)=>{if(D.target&&w!==g){const T=v?_(D.target):H(D.target.split(\"/\")[0]);h===T&&C.addIssue({code:u.ZodIssueCode.custom,message:\"This destination IP already exists.\",path:[`${w}.target`]})}})}})})}"
+    }
+  ],
+  "chuoi_hien_thi": [
+    ")))),[n,z]),k=r.useMemo(()=>[{title:",
+    ").map(Number)),{message:",
+    ");Pe(l)||s.addIssue({code:u.ZodIssueCode.custom,message:",
+    ");return{rowKey:t.id,rowName:c,dataArray:[{columnKey:k[0].title,sortValue:n===j.ipv4?_(c):ke(c),hideOnMobile:!0,content:s?e.jsxs(f,{children:[e.jsx(N,{variant:",
+    ")[0])),n=(v?_(l==null?void 0:l.target):H(l==null?void 0:l.target.split(",
+    ")[0]))||",
+    ")[0]);h===T&&C.addIssue({code:u.ZodIssueCode.custom,message:",
+    ")[0]);y.includes(h)&&h!==n?C.addIssue({code:u.ZodIssueCode.custom,message:",
+    ")]:{padding:0}}})),Ve=(a,s,l)=>{const v=s===j.ipv4,y=a.map(I=>v?_(I.target):H(I.target.split(",
+    ")]:{paddingTop:a(3)}},",
+    ",[n])},[R,n,h,a]);const W=async()=>{q&&O.length>0&&!await M({okText:",
+    ",borderRadius:2,padding:1.5},children:e.jsx(Ee,{sx:{fontSize:24}})})}),e.jsx(N,{variant:d?",
+    ",children:",
+    ",children:[",
+    ",children:e.jsx(Ze,{startIcon:e.jsx(Ce,{}),onClick:()=>{K(void 0)},size:s?",
+    ",children:e.jsx(ve,{color:",
+    ",children:t.gateway})]}):c},{columnKey:k[1].title,content:t.mask||S},{columnKey:k[2].title,content:t.gateway},{columnKey:k[3].title,sortValue:t.interfaceId,content:(($=E==null?void 0:E.find(U=>U.id===t.interfaceId))==null?void 0:$.usage)??",
+    ",children:t.mask||S}),e.jsx(N,{variant:",
+    ",color:",
+    ",defaultValues:{data:L},values:{data:L},resolver:pe(Ve(I,v,n))}),{handleSubmit:E,control:V,setValue:R,register:k,reset:b,formState:{isDirty:q,errors:p,isSubmitSuccessful:K}}=P,{fields:O}=he({control:V,name:",
+    ",e.jsx(",
+    ",gateway:",
+    ",justifyContent:",
+    ",listHeightOnMobile:500,PanelComponent:e.jsxs(f,{spacing:1.5,children:[e.jsx(f,{direction:",
+    ",mask:",
+    ",maxWidth:948,padding:a(2),[s.down(",
+    ",message:",
+    ",onClick:W,sx:{backgroundColor:",
+    ",paginatedTypeOnMobile:",
+    ",path:[`${w}.target`]}):I.forEach((D,g)=>{if(D.target&&w!==g){const T=v?_(D.target):H(D.target.split(",
+    ",path:[`${w}.target`]})}})}})})})},qe=[",
+    ",title:",
+    ",{children:",
+    ".MuiTableContainer-root .MuiTableHead-root tr",
+    ":{padding:a(4,0,0,0),[s.down(",
+    ":{width:",
+    ";return u.object({data:u.array(v?_e:ze).superRefine((I,C)=>{I.filter(x=>{var w;return(w=u.string().cidr().safeParse(x.target))==null?void 0:w.success}).forEach((x,w)=>{const{target:d}=x;if(d){const h=v?_(d):H(d.split(",
+    "ADD",
+    "Add New",
+    "Destination IP cannot be empty.",
+    "Edit",
+    "ErrorOutline",
+    "Gateway IP",
+    "IPv4",
+    "IPv6",
+    "Interface",
+    "Internet",
+    "Invalid IP address.",
+    "Invalid mask.",
+    "M11 15h2v2h-2zm0-8h2v6h-2zm.99-5C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2M12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8",
+    "Mask cannot be empty.",
+    "No routing rule is configured.",
+    "Please ensure the input is a valid format (e.g., 255.255.255.0) and within the correct range for your network.",
+    "Prefix Length",
+    "SAVE",
+    "The order in this table does not represent the actual routing path of the rules.",
+    "]}):e.jsx(ae,{variant:",
+    "__esModule",
+    "alternative-layout alternative-layout--submit",
+    "alternative-layout dialogForm",
+    "e.g. 2001:0db8:85a3::8a2e:0370:7334/64",
+    "getInterfaceConfig",
+    "getStaticRoutingPolicies",
+    "th:nth-of-type(3), th:nth-of-type(4)",
+    "})),e.jsx($e,{loading:L,tableName:",
+    "}))try{const $={ids:[t.rowKey]};await F.deleteStaticRoutingPolicies({token:m,payload:$}),P(),V(),c(t.rowKey)}catch{p()}},[x,m,P,V,p]),W=r.useCallback(async(t,c)=>{if(await x({okText:",
+    "}),",
+    "}),e.jsxs(f,{spacing:s?2:4,children:[e.jsx(Te,{tabs:y,selectedKey:n,onChange:I}),e.jsxs(f,{spacing:s?0:4,children:[!s&&(n===j.ipv4?e.jsxs(ae,{variant:",
+    "}),gateway:u.string().min(1,{message:",
+    "}).ip({version:",
+    "}).min(1,{message:",
+    "}).superRefine((a,s)=>{const[,l]=a.split(",
+    "});r.useEffect(()=>{a&&n&&h&&R(",
+    "})||(b(),l())},Y=E(async o=>{await s(o.data)});return r.useEffect(()=>{K&&b()},[K,b]),e.jsxs(Le,{open:a,onClose:W,fullScreen:d,...x,children:[e.jsxs(fe,{providerProps:P,children:[e.jsxs(f,{spacing:2,children:[d&&e.jsx(f,{direction:",
+    "})}),Le=G(ge)(({theme:{spacing:a,breakpoints:s}})=>({",
+    "})}),gateway:u.string().min(1,{message:",
+    "})}),ze=u.object({id:u.string().optional(),interfaceId:u.string(),target:u.string().cidr({version:",
+    "},{alertProps:{severity:",
+    "},{title:n===j.ipv4?",
+    "}]}}),[k,E,s,R,n]),q=r.useMemo(()=>s?b.slice(0,g*M+M):b,[s,b,g,M]),p=r.useCallback(()=>{v({title:",
+    "}})},[v]),K=r.useCallback(t=>{if(d(!0),t){const c=R.find(S=>S.id===t.rowKey);D(c)}else D(void 0)},[R]),O=r.useCallback(async(t,c)=>{if(await x({okText:",
+    "}},[m,g]),L=h?[n]:[Ae(z)],P=me({mode:"
+  ],
+  "_can_doc_tay": []
+}

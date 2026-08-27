@@ -1,0 +1,78 @@
+{
+  "_muc_dich": "Bang chung DO TRUC TIEP tren thiet bi that 192.168.1.1 (Chrome, chi doc DOM, khong bam gi) ngay 2026-08-13, de sua 1 loi va xac nhan 1 nghi van cua trang Advanced > LAN.",
+  "_vi_sao_phai_do": "Ban chup tinh (SingleFile) KHONG co thanh Save/Cancel cua trang nay. Doc thieu bang chung nay de dan den ket luan sai la 'nut Save chi hien khi form ban' (copy nham mau cua wifi_general_binding.js).",
+
+  "thanh_save_cancel": {
+    "ket_luan": "LUON HIEN, khong phu thuoc form da doi hay chua",
+    "bang_chung_ma_goc": "index-ZQ6T7f31.js ham Ue(): e.jsx(We,{actions:[{action:'submit',children:'Save',onClick:q},{action:'cancel',variant:'text',onClick:Y}],className:'alternative-layout'}) -- nam NGOAI moi bieu thuc dieu kien, khong co && nao truoc no",
+    "bang_chung_do_DOM_that": {
+      "so_nut_tim_thay": 2,
+      "save": {
+        "chu": "Save",
+        "lop": "MuiButtonBase-root MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButton-colorPrimary MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButton-colorPrimary formActionButton submit alternative-layout alternative-layout--submit css-g28vy7",
+        "computed_display": "flex",
+        "con": [
+          "span.MuiBox-root.css-rrm59m = 'Save'",
+          "span.MuiCircularProgress-root.MuiCircularProgress-indeterminate.MuiCircularProgress-colorPrimary.css-1i7o5xq (vong xoay, an khi khong ban)",
+          "span.MuiTouchRipple-root.css-w0pj6f"
+        ]
+      },
+      "cancel": {
+        "chu": "Cancel",
+        "lop": "MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorPrimary MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorPrimary formActionButton cancel alternative-layout css-1acoyi9",
+        "computed_display": "flex"
+      },
+      "khoi_boc": "div.MuiStack-root.alternative-layout.css-den97n",
+      "vi_tri_computed": {"position": "fixed", "bottom": "0px"},
+      "to_tien_tu_trong_ra": [
+        "form.css-1w5zf2q",
+        "div#tabpanel-General.css-0",
+        "div.MuiStack-root.css-6r2fzw",
+        "div.MuiStack-root.css-yd8sa2",
+        "div.css-1kve6po",
+        "div.css-1geokqn",
+        "div.css-15cza0q"
+      ],
+      "anh_em_cung_cha": ["div.MuiStack-root.css-1rp9elp (khoi noi dung)", "div.MuiStack-root.alternative-layout.css-den97n (chinh no)"],
+      "ket_luan_vi_tri": "La con CUOI CUNG cua <form class='css-1w5zf2q'> trong #tabpanel-General"
+    },
+    "he_qua_cho_ban_gia_lap": [
+      "hienThanhSave() phai goi NGAY sau khi nap xong, khong doi su kien",
+      "chen vao dung form.css-1w5zf2q trong #tabpanel-General",
+      "KHONG dat style noi tuyen -- lop css-den97n da co position:fixed;bottom:0. Ban truoc dat position:sticky lam thanh dinh goc trai va de len sidebar",
+      "Cancel = nap lai gia tri tu kho (ma goc: Y=()=>N(g) tuc reset(values)), KHONG phai an thanh di"
+    ]
+  },
+
+  "loi_cham_giua_radio": {
+    "trieu_chung": "DOM bao radio 'Manual' dang chon (input.checked=true, wrapper co lop Mui-checked) nhung hinh ve cham giua van nam o 'Automatic'",
+    "nguyen_nhan": "MUI xep chong 2 <svg> trong moi radio: RadioButtonUncheckedIcon (vong tron) va RadioButtonCheckedIcon (cham giua). Cham giua an/hien bang 'transform: scale(0|1)' do LOP EMOTION quy dinh, KHONG phai do lop Mui-checked.",
+    "do_duoc_trong_emotion_css": {
+      ".css-1u5ei5s": "transform: scale(1)  -> cham HIEN",
+      ".css-1c4tzn": "transform: scale(0)  -> cham AN"
+    },
+    "vi_sao_ban_chup_bi_dong_cung": "Luc chup, React da gan san lop tuong ung TRANG THAI LUC DO cho tung radio. File tinh giu nguyen hai lop nay mai mai, nen doi lop Mui-checked khong lam cham di chuyen.",
+    "pham_vi_anh_huong_da_ra_soat": {
+      "advanced__lan.html": "1 radio hien / 1 an",
+      "advanced__lan__t0.html": "1 hien / 1 an",
+      "advanced__tcpdump.html": "1 hien / 1 an",
+      "advanced__wan.html": "2 hien / 3 an",
+      "dialog_data.js (dialog_routing_add)": "1 hien / 2 an"
+    },
+    "cach_sua": "Ghi de theo DUNG ngu nghia MUI trong interact.js injectCss(): '.PrivateSwitchBase-root svg[data-testid=\"RadioButtonCheckedIcon\"]{transform:scale(0)}' va '.PrivateSwitchBase-root.Mui-checked svg[...]{transform:scale(1)}'. Do sau chon lop (0,2,1) cao hon lop Emotion (0,1,0) nen khong can !important. KHONG sua file CSS bang chung goc."
+  },
+
+  "loi_hinh_ve_checkbox": {
+    "trieu_chung": "Bam vao checkbox thi trang thai logic doi nhung hinh o vuong khong bao gio hien dau tick",
+    "nguyen_nhan": "Khac radio (2 svg xep chong), MUI Checkbox chi render DUNG MOT <svg> -- icon cua trang thai hien tai. Ban chup tinh vi vay chi co icon cua trang thai luc chup.",
+    "bang_chung": "security__firewall.html co CA HAI dang trong cung mot trang (10 o CheckBoxOutlineBlankIcon + 4 o CheckBoxIcon), cung lop svg 'css-vubbuv', chi khac data-testid va thuoc tinh 'd' cua <path>",
+    "path_d_do_duoc": {
+      "CheckBoxOutlineBlankIcon": "M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z",
+      "CheckBoxIcon": "M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.11 0 2-.9 2-2V5c0-1.1-.89-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
+    },
+    "pham_vi_anh_huong": ["advanced__lan__t1.html", "security__firewall.html", "wifi__advanced(.__t0).html", "wifi__general(.__t0/t1/t2).html", "bang_binding.js (o chon tung dong bang)"],
+    "cach_sua": "interact.js them ham veLaiCheckbox(): doi data-testid + thuoc tinh 'd' theo input.checked, goi trong syncAll(). Bo qua o 3 trang thai (data-indeterminate) vi dung icon khac."
+  },
+
+  "_luu_y": "Cong tac (MuiSwitch) KHONG bi hai loi tren -- no doi mau bang lop Mui-checked ma CSS that co quy dinh san, da kiem bang mat thay bat/tat dung."
+}

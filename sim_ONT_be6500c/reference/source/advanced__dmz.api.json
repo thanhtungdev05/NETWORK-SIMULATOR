@@ -1,0 +1,7 @@
+[
+ {
+  "url": "api/v1/data/dmz/configurations",
+  "body": null,
+  "resp": "[{\"enabled\":false,\"ipVersion\":4,\"id\":\"dmz_v4\"},{\"enabled\":false,\"ipVersion\":6,\"id\":\"dmz_v6\"}]"
+ }
+]

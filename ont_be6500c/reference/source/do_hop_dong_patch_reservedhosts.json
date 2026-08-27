@@ -1,0 +1,28 @@
+{
+  "_tieu_de": "Do hinh dang than PATCH THAT cua dhcp/reservedHosts -- gap ghi trong STATUS.md/ISSUES.md 'hinh dang body PATCH chi co bang chung cho ssids, cac resource khac ap theo mau chung chua do rieng'.",
+  "_ngay_do": "2026-08-20",
+  "_thiet_bi": "ONT-BE6500C, 192.168.1.1, firmware 1PZ108WZ110",
+  "_cach_do": [
+    "Cai lop chan ghi truc tiep tren trang that: ghi de window.fetch, voi moi request PATCH toi URL chua 'reservedHosts' thi GHI LAI (url, method, body) vao window.__simGhiLog roi CHAN KHONG GUI THAT (tra ve Response gia 200 rong de UI khong bao loi), cac request khac (GET...) van di qua binh thuong.",
+    "Vao Advanced > LAN > Reserved IP, bam Edit dong Admin-PC co san (id cfg08fe63), sua Reserved IP tu 192.168.1.109 thanh 192.168.1.110, bam Save.",
+    "Doc window.__simGhiLog de lay dung than PATCH ma trinh duyet DA DINH gui (nhung bi chan truoc khi ra khoi may).",
+    "KHONG co request nao thuc su den thiet bi -- xac nhan lai bang chup man hinh: danh sach Reserved IP van hien 192.168.1.109 (khong doi), khong can hoan tac gi them."
+  ],
+  "ket_qua_do": {
+    "url": "api/v1/data/dhcp/reservedHosts",
+    "method": "PATCH",
+    "body": [
+      {
+        "id": "cfg08fe63",
+        "serverId": "lan",
+        "macAddress": "d8:43:ae:2e:65:45",
+        "ipAddress": "192.168.1.110"
+      }
+    ]
+  },
+  "ket_luan": [
+    "Client gui NGUYEN VEN toan bo doi tuong (id + serverId + macAddress + ipAddress), KHONG chi truong da doi (ipAddress) -- giong cach da do cho 'ssids' truoc day, khac voi suy dien 'partial patch chi gui truong thay doi'.",
+    "Doi chieu voi config_store.py: ham ghi() -> _gop_mang_theo_khoa() -> _gop_sau() da xu ly DUNG ca hai truong hop (client gui full object hay chi 1 vai truong) vi co che merge-theo-id la idempotent -- neu client gui full object thi moi truong duoc merge lai dung gia tri hien tai cua no, khong lam mat du lieu. KHONG CAN SUA CODE, chi can xac nhan bang chung va dong gap trong ISSUES.md.",
+    "Dinh dang id 'cfg08fe63' (cfg + 6 ky tu HEX) khop dung voi DINH_DANG_ID['dhcp/reservedHosts'] da suy tu ban ghi mau seed_api.json truoc day -- xac nhan dung, khong can sua."
+  ]
+}

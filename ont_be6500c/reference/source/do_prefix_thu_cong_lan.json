@@ -1,0 +1,46 @@
+{
+  "_tieu_de": "Do truong 'Custom Delegated IPv6-Prefix' (Advanced > LAN > General, PD Mode = Manual) truc tiep tren thiet bi that",
+  "_ngay_do": "2026-08-18",
+  "_thiet_bi": "ONT-BE6500C, 192.168.1.1, firmware 1PZ108WZ110",
+  "_vi_sao": [
+    "GD4 phan 3 (2026-08-13) khong co bang chung cho truong nay vi luc chup",
+    "PD Mode dang o Automatic -- lan_binding.js (dungOPrefixThuCong) da phai",
+    "SUY DIEN bang cach clone cau truc cua o 'ULA IPv6-Prefix' cung trang,",
+    "ghi ro trong ISSUES.md la chua doi chieu anh chup that.",
+    "Phien nay do THAT bang cach: chan moi request GHI (fetch method != GET",
+    "tra ve 200 rong tai cho, khong chuyen tiep) roi bam radio 'Manual' de",
+    "React tu ve ra truong nay, chi doc DOM/CSSOM, KHONG bao gio bam Save.",
+    "Da bam lai 'Auto' va tai lai trang -- thiet bi ve nguyen trang, khong",
+    "co PATCH nao thuc su duoc gui (xac nhan qua console.warn cua bo chan)."
+  ],
+
+  "input_that": {
+    "name": "ipv6Settings.pdMode.prefix",
+    "id": ":rn: (React useId, doi moi lan render -- KHONG dung lam bang chung co dinh)",
+    "placeholder": "",
+    "gia_tri_luc_rong": "",
+    "label_va_legend": "Custom Delegated IPv6-Prefix"
+  },
+
+  "so_sanh_voi_o_ULA_IPv6-Prefix_cung_trang": {
+    "_ghi_chu": "lan_binding.js clone nguyen o ULA (name=ipv6Settings.ula.prefix) roi doi ten/nhan -- kiem xem 2 o co giong het khong.",
+    "class_MuiFormControl_cua_o_manual": "MuiFormControl-root MuiTextField-root css-9jxy54",
+    "class_MuiFormControl_cua_o_ULA": "MuiFormControl-root MuiTextField-root css-5p9558",
+    "khac_biet_CSS_duy_nhat": ".css-9jxy54 co 'margin: 0 0 0 40px'; .css-5p9558 co 'margin: 0' -- CHI khac margin-left 40px, moi thu khac (display:inline-flex, padding, border...) GIONG HET NHAU.",
+    "ket_luan": "Code hien tai da dat 'khoiMoi.style.marginLeft = \"40px\"' bang inline-style TRUOC KHI co bang chung nay (suy tu doc JSX) -- DO THAT XAC NHAN DUNG 40px, khong can sua gia tri. Chi khac ten lop css- (khong anh huong hien thi vi inline-style de len tren)."
+  },
+
+  "vi_tri_trong_cay_DOM": {
+    "stack_cha": "div.MuiStack-root.css-1821gv5 (display:flex; flex-direction:column; gap:8px)",
+    "thu_tu_con": [
+      "1. div.MuiFormControl-root.css-i44wyl (radio group PD Mode)",
+      "2. div.MuiFormControl-root.MuiTextField-root.css-9jxy54 (o Custom Delegated IPv6-Prefix, CHI khi Manual)"
+    ],
+    "ket_luan": "Khop dung code hien tai: chaRadio.appendChild(khoiMoi) noi vao SAU radio group, dung 1 Stack -- khong can sua cau truc chen."
+  },
+
+  "_ket_luan_cho_bo_gia_lap": [
+    "Cau truc/vi tri/margin cua truong nay trong lan_binding.js (dungOPrefixThuCong) DA DUNG, xac nhan boi do that lan dau tien.",
+    "Sua nho: doi ten lop css- tren FormControl clone tu 'css-5p9558' (cua ULA) sang 'css-9jxy54' (cua chinh o nay) de dung ten lop that -- khong doi hien thi (margin da gan qua inline-style tu truoc)."
+  ]
+}

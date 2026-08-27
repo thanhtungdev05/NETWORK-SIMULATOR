@@ -1,0 +1,35 @@
+{
+ "dhcp/reservedHosts": [],
+ "alg": {
+  "h323Enabled": true,
+  "l2tpEnabled": true,
+  "ftpEnabled": true,
+  "rtspEnabled": true,
+  "tftpEnabled": true,
+  "sipEnabled": true,
+  "ipsecEnabled": true,
+  "pptpEnabled": true
+ },
+ "eapProfiles": [
+  {
+   "username": "FTR",
+   "id": "pre_profile1",
+   "mode": "PEAP",
+   "password": "password",
+   "name": "predefine_peap"
+  }
+ ],
+ "publicLan": {
+  "enabled": false,
+  "routing": {
+   "dhcpServer": {
+    "enabled": false,
+    "dnsServers": []
+   }
+  }
+ },
+ "_loi_pon/status": 501,
+ "system/services/cache": [],
+ "access/http/connections": [],
+ "access/ssh/connections": []
+}

@@ -1,0 +1,452 @@
+{
+ "security__firewall": [
+  {
+   "name": "spiEnabled",
+   "type": "checkbox",
+   "value": "true",
+   "checked": true,
+   "disabled": true
+  },
+  {
+   "name": "icmpPing.wanEnabled",
+   "type": "checkbox",
+   "value": "true",
+   "checked": true,
+   "disabled": false
+  },
+  {
+   "name": "dosDefense.enabled",
+   "type": "checkbox",
+   "value": "true",
+   "checked": true,
+   "disabled": false
+  },
+  {
+   "name": "dosDefense.tcpFlood.enabled",
+   "type": "checkbox",
+   "value": "true",
+   "checked": true,
+   "disabled": false
+  },
+  {
+   "name": "dosDefense.tcpFlood.rate",
+   "type": "text",
+   "value": "25",
+   "disabled": false
+  },
+  {
+   "name": "dosDefense.tcpFlood.burst",
+   "type": "text",
+   "value": "50",
+   "disabled": false
+  },
+  {
+   "name": "dosDefense.udpFlood.enabled",
+   "type": "checkbox",
+   "value": "false",
+   "checked": false,
+   "disabled": false
+  },
+  {
+   "name": "dosDefense.udpFlood.rate",
+   "type": "text",
+   "value": "",
+   "disabled": true
+  },
+  {
+   "name": "dosDefense.udpFlood.burst",
+   "type": "text",
+   "value": "",
+   "disabled": true
+  },
+  {
+   "name": "dosDefense.icmpFlood.enabled",
+   "type": "checkbox",
+   "value": "true",
+   "checked": true,
+   "disabled": false
+  },
+  {
+   "name": "dosDefense.icmpFlood.rate",
+   "type": "text",
+   "value": "100",
+   "disabled": false
+  },
+  {
+   "name": "dosDefense.icmpFlood.burst",
+   "type": "text",
+   "value": "100",
+   "disabled": false
+  },
+  {
+   "name": "dosDefense.portScan.enabled",
+   "type": "checkbox",
+   "value": "false",
+   "checked": false,
+   "disabled": false
+  },
+  {
+   "name": "dosDefense.portScan.rate",
+   "type": "text",
+   "value": "",
+   "disabled": true
+  },
+  {
+   "name": "dosDefense.portScan.burst",
+   "type": "text",
+   "value": "",
+   "disabled": true
+  },
+  {
+   "name": "dosDefense.tcpFlagScan.enabled",
+   "type": "checkbox",
+   "value": "true",
+   "checked": true,
+   "disabled": false
+  },
+  {
+   "name": "dosDefense.land.enabled",
+   "type": "checkbox",
+   "value": "false",
+   "checked": false,
+   "disabled": false
+  },
+  {
+   "name": "dosDefense.smurf.enabled",
+   "type": "checkbox",
+   "value": "false",
+   "checked": false,
+   "disabled": false
+  },
+  {
+   "name": "dosDefense.pingOfDeath.enabled",
+   "type": "checkbox",
+   "value": "false",
+   "checked": false,
+   "disabled": false
+  },
+  {
+   "name": "dosDefense.traceRoute.enabled",
+   "type": "checkbox",
+   "value": "false",
+   "checked": false,
+   "disabled": false
+  },
+  {
+   "name": "dosDefense.icmpFragment.enabled",
+   "type": "checkbox",
+   "value": "false",
+   "checked": false,
+   "disabled": false
+  },
+  {
+   "name": "dosDefense.synFragment.enabled",
+   "type": "checkbox",
+   "value": "false",
+   "checked": false,
+   "disabled": false
+  },
+  {
+   "name": "dosDefense.fraggleAttack.enabled",
+   "type": "checkbox",
+   "value": "false",
+   "checked": false,
+   "disabled": false
+  },
+  {
+   "name": "dosDefense.unknownProtocol.enabled",
+   "type": "checkbox",
+   "value": "true",
+   "checked": true,
+   "disabled": false
+  }
+ ],
+ "advanced__lan": [
+  {
+   "name": "ipv4Settings.ipAddress",
+   "type": "text",
+   "value": "192.168.1.1",
+   "disabled": false
+  },
+  {
+   "name": "ipv4Settings.dhcp.enabled",
+   "type": "checkbox",
+   "value": "true",
+   "checked": true,
+   "disabled": false
+  },
+  {
+   "name": "ipv4Settings.dhcp.startAddress",
+   "type": "text",
+   "value": "192.168.1.2",
+   "disabled": false
+  },
+  {
+   "name": "ipv4Settings.dhcp.endAddress",
+   "type": "text",
+   "value": "192.168.1.254",
+   "disabled": false
+  },
+  {
+   "name": "ipv4Settings.dhcp.leaseTime.days",
+   "type": "number",
+   "value": "0",
+   "disabled": false
+  },
+  {
+   "name": "ipv4Settings.dhcp.leaseTime.hours",
+   "type": "number",
+   "value": "12",
+   "disabled": false
+  },
+  {
+   "name": "ipv6Settings.enabled",
+   "type": "checkbox",
+   "value": "true",
+   "checked": true,
+   "disabled": false
+  },
+  {
+   "name": "ipv6Settings.mode",
+   "type": "text",
+   "value": "Stateful",
+   "disabled": false
+  },
+  {
+   "name": "ipv6Settings.dhcp.startSuffix",
+   "type": "text",
+   "value": "2",
+   "disabled": false
+  },
+  {
+   "name": "ipv6Settings.dhcp.endSuffix",
+   "type": "text",
+   "value": "ffff",
+   "disabled": false
+  },
+  {
+   "name": "ipv6Settings.ula.enabled",
+   "type": "checkbox",
+   "value": "false",
+   "checked": false,
+   "disabled": false
+  },
+  {
+   "name": "ipv6Settings.ula.prefix",
+   "type": "text",
+   "value": "",
+   "disabled": true
+  }
+ ],
+ "advanced__wan": [
+  {
+   "name": "radio",
+   "type": "radio",
+   "value": "10",
+   "checked": false,
+   "disabled": false
+  },
+  {
+   "name": "radio",
+   "type": "radio",
+   "value": "4",
+   "checked": false,
+   "disabled": false
+  },
+  {
+   "name": "radio",
+   "type": "radio",
+   "value": "6",
+   "checked": false,
+   "disabled": false
+  },
+  {
+   "name": "ipv4Settings.protocol",
+   "type": "text",
+   "value": "pppoe",
+   "disabled": false
+  },
+  {
+   "name": "ipv4Settings.pppoe.username",
+   "type": "text",
+   "value": "fpt",
+   "disabled": false
+  },
+  {
+   "name": "ipv4Settings.pppoe.password",
+   "type": "text",
+   "value": "fpt",
+   "disabled": false
+  },
+  {
+   "name": "radio",
+   "type": "radio",
+   "value": "auto",
+   "checked": false,
+   "disabled": false
+  },
+  {
+   "name": "radio",
+   "type": "radio",
+   "value": "manual",
+   "checked": false,
+   "disabled": false
+  },
+  {
+   "name": "ipv6Settings.protocol",
+   "type": "text",
+   "value": "slaac",
+   "disabled": false
+  },
+  {
+   "name": "radio",
+   "type": "radio",
+   "value": "auto",
+   "checked": false,
+   "disabled": false
+  },
+  {
+   "name": "radio",
+   "type": "radio",
+   "value": "manual",
+   "checked": true,
+   "disabled": false
+  },
+  {
+   "name": "ipv6Settings.dns.dnsServers.primary",
+   "type": "text",
+   "value": "2001:4860:4860::8888",
+   "disabled": false
+  },
+  {
+   "name": "ipv6Settings.dns.dnsServers.secondary",
+   "type": "text",
+   "value": "2001:4860:4860::8844",
+   "disabled": false
+  },
+  {
+   "name": "vlan.enabled",
+   "type": "checkbox",
+   "value": "false",
+   "checked": false,
+   "disabled": false
+  }
+ ],
+ "advanced__ddns": [
+  {
+   "name": "customDDnsEnabled",
+   "type": "checkbox",
+   "value": "false",
+   "checked": false,
+   "disabled": false
+  },
+  {
+   "name": "dynamicServer",
+   "type": "text",
+   "value": "noip",
+   "disabled": true
+  },
+  {
+   "name": "username",
+   "type": "text",
+   "value": "your_username",
+   "disabled": true
+  },
+  {
+   "name": "password",
+   "type": "password",
+   "value": "your_password",
+   "disabled": true
+  },
+  {
+   "name": "hostname",
+   "type": "text",
+   "value": "yourhost.example.com",
+   "disabled": true
+  }
+ ],
+ "wifi__advanced": [
+  {
+   "name": "radios.0.bandwidth",
+   "type": "text",
+   "value": "20MHz",
+   "disabled": false
+  },
+  {
+   "name": "radios.0.channel",
+   "type": "text",
+   "value": "0",
+   "disabled": false
+  },
+  {
+   "name": "radios.1.dfsEnabled",
+   "type": "checkbox",
+   "value": "true",
+   "checked": true,
+   "disabled": false
+  },
+  {
+   "name": "radios.1.bandwidth",
+   "type": "text",
+   "value": "160MHz",
+   "disabled": false
+  },
+  {
+   "name": "radios.1.channel",
+   "type": "text",
+   "value": "0",
+   "disabled": false
+  }
+ ],
+ "system__general": [
+  {
+   "name": "hostname",
+   "type": "text",
+   "value": "AP-BE6500C-525E",
+   "disabled": false
+  },
+  {
+   "name": "localTimeZone",
+   "type": "text",
+   "value": "UTC-7",
+   "disabled": false
+  }
+ ],
+ "system__wifitimer": [
+  {
+   "name": "enabled",
+   "type": "checkbox",
+   "value": "false",
+   "checked": false,
+   "disabled": false
+  }
+ ],
+ "system__reboottimer": [
+  {
+   "name": "enabled",
+   "type": "checkbox",
+   "value": "false",
+   "checked": false,
+   "disabled": false
+  }
+ ],
+ "advanced__upnp": [
+  {
+   "name": "enabled",
+   "type": "checkbox",
+   "value": "true",
+   "checked": true,
+   "disabled": false
+  }
+ ],
+ "advanced__dmz": [
+  {
+   "name": "enabled",
+   "type": "checkbox",
+   "value": "false",
+   "checked": false,
+   "disabled": false
+  }
+ ],
+ "network__portforward": []
+}

@@ -1,0 +1,222 @@
+{
+  "_route": "network/portforward",
+  "_duong_dan_trinh_duyet": "#/network/portforward",
+  "_nguon": {
+    "chunk": "index-Bz95h4Eb.js",
+    "kich_thuoc_byte": 13854,
+    "chunk_phu_thuoc": [
+      "assets/index-Bz95h4Eb.js",
+      "assets/Add-tn7x3fTr.js",
+      "assets/FormSelect-CJAio79q.js",
+      "assets/FormAutocomplete-L6F1ijaU.js",
+      "assets/Popper-BinJnTg_.js",
+      "assets/Chip-Ck-8K0QZ.js",
+      "assets/RuleList-Ce4Vxx8G.js",
+      "assets/Delete-CIanOWax.js",
+      "assets/Refresh-Ce4n-Ghb.js",
+      "assets/TableRow-CJLJKR0z.js",
+      "assets/TableContainer-D0iNLS95.js",
+      "assets/ListItem-Dw6uMNOj.js",
+      "assets/KeyboardArrowRight-C7P-Q0WC.js",
+      "assets/useSnackbar-DeOFrJDC.js",
+      "assets/isNumber-CjKC2f0Q.js",
+      "assets/schema-BT0LOWg1.js",
+      "assets/useDevices-DwHuFieu.js",
+      "assets/_baseClone-BoSTy1YA.js",
+      "assets/_baseSlice-z0Zd1-Ev.js",
+      "assets/_baseFlatten-g6JNov8F.js",
+      "assets/FormHeading-Wrbr2YtD.js"
+    ],
+    "bundle_loi": "index-CW0UhNxy.js",
+    "_da_quet": [
+      "Add-tn7x3fTr.js",
+      "Chip-Ck-8K0QZ.js",
+      "Delete-CIanOWax.js",
+      "FormAutocomplete-L6F1ijaU.js",
+      "FormHeading-Wrbr2YtD.js",
+      "FormSelect-CJAio79q.js",
+      "KeyboardArrowRight-C7P-Q0WC.js",
+      "ListItem-Dw6uMNOj.js",
+      "Refresh-Ce4n-Ghb.js",
+      "RuleList-Ce4Vxx8G.js",
+      "TableContainer-D0iNLS95.js",
+      "TableRow-CJLJKR0z.js",
+      "index-Bz95h4Eb.js",
+      "isNumber-CjKC2f0Q.js",
+      "schema-BT0LOWg1.js",
+      "useDevices-DwHuFieu.js",
+      "useSnackbar-DeOFrJDC.js"
+    ]
+  },
+  "_cach_trich": "src/trich_dac_ta_trang.py (doc ma goc, khong doan)",
+  "goi_api": [
+    {
+      "ham_goc": "createPortForwardingEntries",
+      "doi_tuong_goc": "use",
+      "tim_thay_o": [
+        "index-Bz95h4Eb.js"
+      ],
+      "resource": "api/v1/data/portForwarding/policies",
+      "method": "POST",
+      "kenh": "REST"
+    },
+    {
+      "ham_goc": "deletePortForwardingEntries",
+      "doi_tuong_goc": "use",
+      "tim_thay_o": [
+        "index-Bz95h4Eb.js"
+      ],
+      "resource": "api/v1/data/portForwarding/policies",
+      "method": "DELETE",
+      "kenh": "REST"
+    },
+    {
+      "ham_goc": "getPortForwardingEntries",
+      "doi_tuong_goc": "use",
+      "tim_thay_o": [
+        "index-Bz95h4Eb.js"
+      ],
+      "resource": "api/v1/data/portForwarding/policies",
+      "method": "GET",
+      "kenh": "REST"
+    },
+    {
+      "ham_goc": "updatePortForwardingEntries",
+      "doi_tuong_goc": "use",
+      "tim_thay_o": [
+        "index-Bz95h4Eb.js"
+      ],
+      "resource": "api/v1/data/portForwarding/policies",
+      "method": "PATCH",
+      "kenh": "REST"
+    }
+  ],
+  "goi_khac": {
+    "rpc": [],
+    "duong_dan_tuyet_doi": []
+  },
+  "truong_form": [
+    {
+      "name": "enabled",
+      "label": "Enable"
+    },
+    {
+      "name": "name",
+      "label": "Name"
+    },
+    {
+      "name": "protocol",
+      "label": "Protocol"
+    }
+  ],
+  "gia_tri_mac_dinh": [
+    {
+      "bien": "$",
+      "ma": "{enabled:!0,name:\"\",protocol:\"\",source:{portRange:\"\"},destination:{portRange:\"\",ipAddress:\"\"}}"
+    }
+  ],
+  "schema_kiem_tra": [
+    {
+      "ma": "{enabled:l.boolean(),name:l.string().min(1,{message:\"Name cannot be empty.\"}).max(63,{message:\"Name must be 1–63 English letters with no special characters.\"}).regex(/^[A-Za-z]+$/,{message:\"Name must be 1–63 English letters with no special characters.\"}),protocol:l.string().min(1,{message:\"Protocol cannot be empty.\"}),source:l.object({portRange:L({range:!0,errorMap:()=>({message:\"External port must be an integer or a range between 1 and 65535\"})})}),destination:l.object({portRange:L({range:!0,errorMap:()=>({message:\"Internal port must be an integer or a range between 1 and 65535\"})}),ipAddress:l.string().ip({version:\"v4\",message:\"Device IP must be an IPv4 address\"})})}"
+    },
+    {
+      "ma": "{portRange:L({range:!0,errorMap:()=>({message:\"External port must be an integer or a range between 1 and 65535\"})})}"
+    },
+    {
+      "ma": "{portRange:L({range:!0,errorMap:()=>({message:\"Internal port must be an integer or a range between 1 and 65535\"})}),ipAddress:l.string().ip({version:\"v4\",message:\"Device IP must be an IPv4 address\"})}"
+    },
+    {
+      "ma": "{entries:l.array(l.object({id:l.string(),enabled:l.boolean(),name:l.string().min(1,{message:\"Name is required\"}),protocol:l.string().min(1,{message:\"Protocol is required\"}),src:l.object({port:L({range:!0,errorMap:()=>({message:\"External port must be an integer or a range between 1 and 65535\"})})}),dest:l.object({port:L({range:!0,errorMap:()=>({message:\"Internal port must be an integer or a range between 1 and 65535\"})}),ipAddress:l.string().ip({version:\"v4\",message:\"Device must be an IPv4 address\"})})})).superRefine((i,t)=>{const a=new Set;i.forEach((d,P)=>{const{name:h}=d;a.has(h)?t.addIssue({code:l.ZodIssueCode.custom,message:\"Duplicated name\",path:[`${P}.name`]}):a.add(h)})})}"
+    },
+    {
+      "ma": "{id:l.string(),enabled:l.boolean(),name:l.string().min(1,{message:\"Name is required\"}),protocol:l.string().min(1,{message:\"Protocol is required\"}),src:l.object({port:L({range:!0,errorMap:()=>({message:\"External port must be an integer or a range between 1 and 65535\"})})}),dest:l.object({port:L({range:!0,errorMap:()=>({message:\"Internal port must be an integer or a range between 1 and 65535\"})}),ipAddress:l.string().ip({version:\"v4\",message:\"Device must be an IPv4 address\"})})}"
+    },
+    {
+      "ma": "{port:L({range:!0,errorMap:()=>({message:\"External port must be an integer or a range between 1 and 65535\"})})}"
+    },
+    {
+      "ma": "{port:L({range:!0,errorMap:()=>({message:\"Internal port must be an integer or a range between 1 and 65535\"})}),ipAddress:l.string().ip({version:\"v4\",message:\"Device must be an IPv4 address\"})}"
+    }
+  ],
+  "chuoi_hien_thi": [
+    "&.MuiDialog-paperFullScreen",
+    "&.stateDisabled",
+    ",ipAddress:",
+    ",message:",
+    ",path:[",
+    ",protocol:",
+    ",source:{portRange:",
+    ",token:x},W.getPortForwardingEntries,{revalidateOnFocus:!1}),xe=l.object({enabled:l.boolean(),name:l.string().min(1,{message:",
+    ".MuiChip-label",
+    ".MuiDialog-paper",
+    ".MuiDialogActions-root",
+    ".MuiDialogTitle-root",
+    ".MuiDialogTitle-root+.MuiDialogContent-root",
+    ".MuiFormControl-root",
+    ".MuiFormControl-root, .MuiFormControlLabel-root",
+    ".MuiFormControlLabel-root",
+    ".MuiIconButton-root",
+    ".MuiTypography-root",
+    ".deleteButton",
+    "Add",
+    "Add New",
+    "All",
+    "Are you sure to delete the selected item(s)?",
+    "Changes saving failed, please try again.",
+    "CloseOutlined",
+    "Delete",
+    "Device / IP",
+    "Device must be an IPv4 address",
+    "Device/IP",
+    "Disabled",
+    "Duplicated name",
+    "Edit",
+    "Enable",
+    "Enabled",
+    "External Port",
+    "External Port (e.g., 100 or 100-255)",
+    "External port must be an integer or a range between 1 and 65535",
+    "Internal Port",
+    "Internal Port (e.g., 100 or 100-255)",
+    "Internal port must be an integer or a range between 1 and 65535",
+    "M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z",
+    "Name",
+    "Name is required",
+    "No port forwarding rule is configured.",
+    "Port Forwarding",
+    "Port forwarding directs incoming internet traffic to a specific device or service within a local network, allowing external devices to access internal services. It is commonly used for hosting servers, running remote desktop applications, and accessing home security cameras from outside the network.",
+    "Protocol",
+    "Protocol is required",
+    "Rule List",
+    "Save",
+    "State",
+    "TCP",
+    "TCP + UDP",
+    "This action cannot be undone.",
+    "UDP",
+    "WebKit",
+    "]})}),V=o.useCallback(e=>{const s=D.find(r=>r.ip4Address===e);return(s==null?void 0:s.hostname)||",
+    "__esModule",
+    "alternative-layout alternative-layout--submit",
+    "alternative-layout dialogForm",
+    "destination.ipAddress",
+    "destination.ipAddress.message",
+    "destination.portRange",
+    "destination.portRange.message",
+    "onTouched",
+    "source.portRange",
+    "source.portRange.message",
+    "} (${d})`}};function wt(){var oe,se;const i=Ke(),t=_e(i.breakpoints.up(",
+    "}),protocol:l.string().min(1,{message:",
+    "}),source:l.object({portRange:L({range:!0,errorMap:()=>({message:",
+    "}).max(63,{message:",
+    "}).regex(/^[A-Za-z]+$/,{message:",
+    "})}),ipAddress:l.string().ip({version:",
+    "})})}),destination:l.object({portRange:L({range:!0,errorMap:()=>({message:",
+    "})})}).superRefine((e,s)=>{const{name:r}=e,K=c.find(I=>I.id!==(p==null?void 0:p.id)&&I.name===r);Ue(K)||s.addIssue({code:l.ZodIssueCode.custom,message:",
+    "},[D]),fe=o.useMemo(()=>{if(c&&c.length>0){const e=[];return(t?c:c.slice(0,d*h+h)).forEach(r=>{var I;const K={rowKey:r.id,rowName:r.name,dataArray:[{columnKey:C[0].title,sortValue:r.enabled?",
+    "},destination:{portRange:",
+    "}},Pt=i=>{const{id:t,hostname:a,ip4Address:d}=i;return{key:t,value:d,label:`${a||"
+  ],
+  "_can_doc_tay": []
+}

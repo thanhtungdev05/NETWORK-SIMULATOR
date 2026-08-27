@@ -1,0 +1,142 @@
+{
+  "_route": "advanced/tcpdump",
+  "_duong_dan_trinh_duyet": "#/advanced/tcpdump",
+  "_nguon": {
+    "chunk": "index-B1ax-rXf.js",
+    "kich_thuoc_byte": 10297,
+    "chunk_phu_thuoc": [
+      "assets/index-B1ax-rXf.js",
+      "assets/PageHeading-B0ZcsD9H.js",
+      "assets/useSnackbar-DeOFrJDC.js",
+      "assets/isNumber-CjKC2f0Q.js",
+      "assets/FormRadios-CChkrIKK.js",
+      "assets/RadioGroup-Bf2DXGOk.js"
+    ],
+    "bundle_loi": "index-CW0UhNxy.js",
+    "_da_quet": [
+      "FormRadios-CChkrIKK.js",
+      "PageHeading-B0ZcsD9H.js",
+      "RadioGroup-Bf2DXGOk.js",
+      "index-B1ax-rXf.js",
+      "isNumber-CjKC2f0Q.js",
+      "useSnackbar-DeOFrJDC.js"
+    ]
+  },
+  "_cach_trich": "src/trich_dac_ta_trang.py (doc ma goc, khong doan)",
+  "goi_api": [
+    {
+      "ham_goc": "getInterfaceConfigurations",
+      "doi_tuong_goc": "use",
+      "tim_thay_o": [
+        "index-B1ax-rXf.js"
+      ],
+      "resource": "api/v1/data/interfaces/configurations",
+      "method": "GET",
+      "kenh": "REST"
+    },
+    {
+      "ham_goc": "getTcpDumpResult",
+      "doi_tuong_goc": "use",
+      "tim_thay_o": [
+        "index-B1ax-rXf.js"
+      ],
+      "resource": "api/v1/data/tcpdump/interfaces/{id}",
+      "method": "GET",
+      "kenh": "REST"
+    },
+    {
+      "ham_goc": "sendTcpDumpAction",
+      "doi_tuong_goc": "use",
+      "tim_thay_o": [
+        "index-B1ax-rXf.js"
+      ],
+      "resource": "api/v1/data/tcpdump/interfaces/{id}/action",
+      "method": "POST",
+      "kenh": "REST"
+    }
+  ],
+  "goi_khac": {
+    "rpc": [],
+    "duong_dan_tuyet_doi": []
+  },
+  "truong_form": [],
+  "gia_tri_mac_dinh": [
+    {
+      "bien": "q",
+      "ma": "{interfaceId:\"wan\",maxPacketsNumber:\"\"}"
+    }
+  ],
+  "schema_kiem_tra": [
+    {
+      "ma": "{interfaceId:R.string(),maxPacketsNumber:R.preprocess(r=>Number(r),R.number().min(1,{message:T}).max(2e3,{message:T}))}"
+    }
+  ],
+  "chuoi_hien_thi": [
+    "& .MuiAlert-message",
+    "&&e===2&&_()},[_,e,h]),n.jsxs($e,{spacing:a?4:2,children:[a?n.jsx(Ne,{children:n.jsx(O,{variant:",
+    "&:disabled",
+    "&:hover",
+    ")),{enqueueSnackbar:d}=ve(),p=me(o=>o.token),[f,J]=c.useState(q),[e,i]=c.useState(0),C=2e3,K=2e3,{data:j}=z({key:",
+    ")):(i(2),m())}},[f,m,p]),N=c.useCallback(async()=>{const{fileEntry:o,status:s}=await v.getTcpDumpResult({interfaceId:f.interfaceId,token:p});if(o)if(s===",
+    "),(e===4||e===7||e===-1)&&i(0)},[e,y,I]),re=c.useMemo(()=>e===1||e===2||e===3?",
+    "),i(0)},[y]),te=c.useCallback(()=>{S(f)},[f,S]),ae=c.useCallback(o=>{const s=o.target.value.replace(/[^0-9]/g,",
+    ");I(",
+    ");x.href=o,x.download=",
+    "){d({title:",
+    ",Ge=R.object({interfaceId:R.string(),maxPacketsNumber:R.preprocess(r=>Number(r),R.number().min(1,{message:T}).max(2e3,{message:T}))});function Je(){var L;const r=de(),{palette:t}=r,a=ue(r.breakpoints.up(",
+    ",[e,t]);return c.useEffect(()=>{(h==null?void 0:h.status)===",
+    ",[e]),oe=c.useMemo(()=>e===1||e===2||e===3?n.jsx(H,{className:",
+    ",children:",
+    ",color:",
+    ",defaultValues:q,resolver:he(Ge)}),{resetField:y,setValue:I,trigger:$,handleSubmit:X,formState:{errors:u}}=A,m=c.useCallback(o=>{d({title:o||",
+    ",fileEntry:",
+    ",s),$()},[I,$]),ne=c.useCallback((o,s)=>{I(",
+    ",s),y(",
+    ",sx:{color:t.info.main}}):e===7?n.jsx(W,{sx:{color:t.info.main}}):",
+    ",token:p},v.getInterfaceConfigurations);let{data:h}=z({key:e===2?",
+    ",x.click(),i(7)}},K)}catch(x){throw i(-1),m(),x}}else s===",
+    ".rotateIcon",
+    ":e===4?",
+    ":e===5?",
+    ":e===6?",
+    ":e===7?",
+    ":null,interfaceId:f.interfaceId,token:p},e===2?v.getTcpDumpResult:null,{refreshInterval:C});const Q=c.useMemo(()=>{const o=[];return F(j)||j.filter(s=>Ae.includes(s.usage)&&!F(s.ipv4Settings)).forEach(s=>{o.push({label:s.usage,value:s.name})}),o},[j]),A=pe({mode:",
+    "?(i(5),setTimeout(()=>{N()},C)):(i(-1),m());else i(-1),m()},[m,p,f,e,d]),ee=c.useCallback(()=>{y(",
+    "Backup",
+    "CancelRounded",
+    "CheckRounded",
+    "Clear",
+    "Clear Input",
+    "Download",
+    "Download Result (.pcap)",
+    "Interface",
+    "Internet",
+    "LAN",
+    "M9 16.17 5.53 12.7a.9959.9959 0 0 0-1.41 0c-.39.39-.39 1.02 0 1.41l4.18 4.18c.39.39 1.02.39 1.41 0L20.29 7.71c.39-.39.39-1.02 0-1.41a.9959.9959 0 0 0-1.41 0z",
+    "Max Packet Number (1-2000)",
+    "RefreshRounded",
+    "Restart this TCPDump",
+    "RotateRightRounded",
+    "SaveAltRounded",
+    "Start TCPDump",
+    "Stop",
+    "Stopping",
+    "[0-9]*",
+    "__esModule",
+    "calc(100% - 32px)",
+    "calc(100% - 80px)",
+    "interfaceId",
+    "maxPacketsNumber",
+    "}),n.jsx(fe,{providerProps:A,children:n.jsxs(g,{spacing:2,children:[n.jsxs(g,{direction:a?",
+    "}):e===5||e===6?n.jsx(Y,{className:",
+    "})}):n.jsx(xe,{children:",
+    "},T=",
+    "},{alertProps:{severity:",
+    "};await v.sendTcpDumpAction({interfaceId:f.interfaceId,payload:o,token:p}),setTimeout(()=>{i(4)},C)}catch(o){(o==null?void 0:o.status)===400?(i(-1),m(",
+    "};await v.sendTcpDumpAction({interfaceId:o.interfaceId,payload:s,token:p}),setTimeout(()=>{i(2)},C)}catch(s){throw i(0),m(),s}},[p,m]),Z=X(o=>{S(o)}),_=c.useCallback(async()=>{try{i(3);const o={...f,action:",
+    "};try{i(1);const s={...o,action:",
+    "}});try{i(6),setTimeout(()=>{if(e===4||e===6){const x=document.createElement(",
+    "}})},[d]),S=c.useCallback(async o=>{J(o),h={status:"
+  ],
+  "_can_doc_tay": []
+}

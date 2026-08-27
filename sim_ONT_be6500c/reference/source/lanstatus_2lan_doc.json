@@ -1,0 +1,60 @@
+{
+ "doc1": [
+  {
+   "loopStatus": 0,
+   "phyRate": 0,
+   "ifName": "LAN1(eth1.5)",
+   "status": 0,
+   "tx": 0,
+   "rx": 0,
+   "crc": 0
+  },
+  {
+   "loopStatus": 0,
+   "phyRate": 1000,
+   "ifName": "LAN2(eth1.6)",
+   "status": 1,
+   "tx": 2410520,
+   "rx": 121696,
+   "crc": 0
+  },
+  {
+   "loopStatus": 0,
+   "phyRate": 0,
+   "ifName": "LAN3(eth1.7)",
+   "status": 0,
+   "tx": 0,
+   "rx": 0,
+   "crc": 0
+  }
+ ],
+ "doc2_sau_2giay": [
+  {
+   "loopStatus": 0,
+   "phyRate": 0,
+   "ifName": "LAN1(eth1.5)",
+   "status": 0,
+   "tx": 0,
+   "rx": 0,
+   "crc": 0
+  },
+  {
+   "loopStatus": 0,
+   "phyRate": 1000,
+   "ifName": "LAN2(eth1.6)",
+   "status": 1,
+   "tx": 2411636,
+   "rx": 123093,
+   "crc": 0
+  },
+  {
+   "loopStatus": 0,
+   "phyRate": 0,
+   "ifName": "LAN3(eth1.7)",
+   "status": 0,
+   "tx": 0,
+   "rx": 0,
+   "crc": 0
+  }
+ ]
+}

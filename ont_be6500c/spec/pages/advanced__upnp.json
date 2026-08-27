@@ -1,0 +1,78 @@
+{
+  "_route": "advanced/upnp",
+  "_duong_dan_trinh_duyet": "#/advanced/upnp",
+  "_nguon": {
+    "chunk": "index-agtlspBu.js",
+    "kich_thuoc_byte": 2101,
+    "chunk_phu_thuoc": [
+      "assets/index-agtlspBu.js",
+      "assets/FormHeading-Wrbr2YtD.js",
+      "assets/useSnackbar-DeOFrJDC.js",
+      "assets/isNumber-CjKC2f0Q.js",
+      "assets/PageHeading-B0ZcsD9H.js"
+    ],
+    "bundle_loi": "index-CW0UhNxy.js",
+    "_da_quet": [
+      "FormHeading-Wrbr2YtD.js",
+      "PageHeading-B0ZcsD9H.js",
+      "index-agtlspBu.js",
+      "isNumber-CjKC2f0Q.js",
+      "useSnackbar-DeOFrJDC.js"
+    ]
+  },
+  "_cach_trich": "src/trich_dac_ta_trang.py (doc ma goc, khong doan)",
+  "goi_api": [
+    {
+      "ham_goc": "getUpnp",
+      "doi_tuong_goc": "use",
+      "tim_thay_o": [
+        "index-agtlspBu.js"
+      ],
+      "resource": "api/v1/data/upnp",
+      "method": "GET",
+      "kenh": "REST"
+    },
+    {
+      "ham_goc": "setUpnp",
+      "doi_tuong_goc": "use",
+      "tim_thay_o": [
+        "index-agtlspBu.js"
+      ],
+      "resource": "api/v1/data/upnp",
+      "method": "PATCH",
+      "kenh": "REST"
+    }
+  ],
+  "goi_khac": {
+    "rpc": [],
+    "duong_dan_tuyet_doi": []
+  },
+  "truong_form": [
+    {
+      "name": "enabled",
+      "label": "Enable UPnP"
+    }
+  ],
+  "gia_tri_mac_dinh": [
+    {
+      "bien": "T",
+      "ma": "{enabled:!1}"
+    }
+  ],
+  "schema_kiem_tra": [
+    {
+      "ma": "{enabled:r.boolean()}"
+    }
+  ],
+  "chuoi_hien_thi": [
+    "An error has occurred. Please try again.",
+    "Disable",
+    "Enable UPnP",
+    "Enabled",
+    "UPnP",
+    "UPnP(Universal Plug and Play) allows devices on a network to discover each other and establish functional network services for data sharing, communications, and entertainment. It simplifies the process of adding new devices to a network by enabling automatic configuration without user intervention.",
+    "getUpnp",
+    "onTouched"
+  ],
+  "_can_doc_tay": []
+}

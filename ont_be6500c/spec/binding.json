@@ -1,0 +1,406 @@
+{
+ "_mo_ta": "Bang NOI o nhap tren trang <-> kho cau hinh. Moi dong deu phai truy duoc ve ma goc hoac bang chung do that -- KHONG suy doan.",
+ "_ngay": "2026-08-13",
+ "_giai_doan": "GD4",
+ "_cach_doc": {
+  "_hai_cach_viet": "Trang chi dung MOT resource thi viet gon: dat 'resource' ngay o cap trang. Trang dung NHIEU resource thi khai 'nguon' (map ten_nguon -> cau hinh) va moi truong ghi ro thuoc 'nguon' nao. src/tao_binding_data.py se chuan hoa ca hai ve cung mot dang truoc khi sinh JS.",
+  "nhan_nut_luu": "Chu tren nut luu. KHONG phai trang nao cung la 'Save' -- trang DDNS dung 'Apply'. Lay tu ma goc.",
+  "them_khi_ghi": "Cac khoa LUON gui kem du form khong co o nhap. Vd trang System Settings luon gui enabled:true cho resource 'time'.",
+  "resource": "resource DOC du lieu ve (khong co tien to api/v1/data/)",
+  "resource_ghi": "resource GHI len, neu KHAC cho doc. Vang mat = ghi cung cho doc.",
+  "dang": "object | mang_theo_id | mang_loc",
+  "loc": "chi dung voi dang mang_loc -- dieu kien chon dung mot phan tu",
+  "truong": "ten truong (theo ma goc) -> duong dan trong du lieu. Gia tri co the la CHUOI (duong dan) hoac OBJECT khi can them tuy chon.",
+  "truong._tuy_chon": {
+   "duong_dan": "duong dan trong du lieu",
+   "theo_nhan": "Tim o nhap theo NHAN thay vi theo name=. Bat buoc voi MUI Autocomplete: no KHONG dat thuoc tinh name len the <input> (react-hook-form dieu khien qua Controller). Nhan lay tu ma goc.",
+   "hien_thi": "nhan_thiet_bi = hien '<hostname> (<ip>)' nhu ma goc, con gia tri THAT (dia chi IP) giu o thuoc tinh data-sim-gia-tri",
+   "tuy_chon": "GD5 phan 2 (2026-08-14): mang [{value,label}] TINH (khong doi theo API) cho truong la MUI Select thuong -- api_binding.js se tu noi __noiOChon() bang danh sach nay. Chi dung khi co bang chung dich danh (vd file JS hang so rieng nhu timezone-*.js); KHONG suy ra tu ten truong."
+  },
+  "_nguon": "trich o dau ra"
+ },
+ "_hop_dong_ghi": "Xem reference/source/hop_dong_ghi_that.json. Tom tat: PATCH va DELETE tra 200 than RONG; POST tra {ids:[...]}. Ma khach KHONG duoc doc than cua PATCH.",
+ "trang": {
+  "advanced__ddns": {
+   "resource": "ddns/configurations",
+   "dang": "mang_moi_phan_tu",
+   "_dang_vi": "Ma goc luu: i.map(U => ({id: U.id, enabled: form.customDDnsEnabled, serviceProvider: form.dynamicServer, username, password, hostname})) -- ap CUNG bo gia tri form cho MOI phan tu, giu nguyen id cua tung phan tu. Doc thi lay tu phan tu DAU TIEN (i[0]).",
+   "nhan_nut_luu": "Apply",
+   "_nhan_nut_vi": "Ma goc ghi children:\"Apply\", KHONG phai \"Save\" nhu cac trang khac. Giu dung.",
+   "truong": {
+    "customDDnsEnabled": "enabled",
+    "dynamicServer": "serviceProvider",
+    "username": "username",
+    "password": "password",
+    "hostname": "hostname"
+   },
+   "_chu_y_ten_lech": "Ten truong tren FORM khac ten khoa trong DU LIEU: customDDnsEnabled<-enabled, dynamicServer<-serviceProvider. Doc thang tu ma goc, khong suy tu ten.",
+   "phu_thuoc": {
+    "dynamicServer": {
+     "tat_khi_tat": "customDDnsEnabled"
+    },
+    "username": {
+     "tat_khi_tat": "customDDnsEnabled"
+    },
+    "password": {
+     "tat_khi_tat": "customDDnsEnabled"
+    },
+    "hostname": {
+     "tat_khi_tat": "customDDnsEnabled"
+    }
+   },
+   "thong_bao": {
+    "loi": "An error has occurred. Please try again."
+   },
+   "_nguon": "reference/source/assets_goc/index-C832Cjvp.js"
+  },
+  "system__general": {
+   "nguon": {
+    "sysinfo": {
+     "resource": "system/info",
+     "resource_ghi": "system",
+     "dang": "object",
+     "_vi": "Ma goc: getSystemInfo doc 'system/info', setSystemInfo ghi 'system'. Da kiem chung tren thiet bi that 2026-08-13."
+    },
+    "time": {
+     "resource": "time",
+     "dang": "object",
+     "them_khi_ghi": {
+      "enabled": true
+     },
+     "_vi": "Ma goc: setTime({enabled:!0, localTimeZone, servers}) -- LUON gui enabled:true du form khong co o nao cho no."
+    }
+   },
+   "truong": {
+    "hostname": {
+     "nguon": "sysinfo",
+     "duong_dan": "hostname"
+    },
+    "localTimeZone": {
+     "nguon": "time",
+     "duong_dan": "localTimeZone",
+     "tuy_chon": [
+      {
+       "value": "AOE12",
+       "label": "UTC-12:00 – Baker Island, Howland Island (uninhabited)"
+      },
+      {
+       "value": "UTC11",
+       "label": "UTC-11:00 – American Samoa, Niue"
+      },
+      {
+       "value": "UTC10",
+       "label": "UTC-10:00 – Hawaii, Aleutian Islands, Tahiti"
+      },
+      {
+       "value": "UTC9",
+       "label": "UTC-09:00 – Alaska"
+      },
+      {
+       "value": "PST8PDT,M3.2.0,M11.1.0",
+       "label": "UTC-08:00 – Pacific Time (US & Canada), Baja California"
+      },
+      {
+       "value": "MST7MDT,M3.2.0,M11.1.0",
+       "label": "UTC-07:00 – Mountain Time (US & Canada), Arizona"
+      },
+      {
+       "value": "CST6CDT,M4.1.0,M10.5.0",
+       "label": "UTC-06:00 – Central Time (US & Canada), Mexico City, Central America"
+      },
+      {
+       "value": "EST5EDT,M3.2.0,M11.1.0",
+       "label": "UTC-05:00 – Eastern Time (US & Canada), Bogota, Lima"
+      },
+      {
+       "value": "AST4ADT,M3.2.0,M11.1.0",
+       "label": "UTC-04:00 – Atlantic Time (Canada), Caracas, La Paz"
+      },
+      {
+       "value": "UTC3",
+       "label": "UTC-03:00 – Buenos Aires, Greenland, Montevideo"
+      },
+      {
+       "value": "UTC2",
+       "label": "UTC-02:00 – South Georgia/South Sandwich Islands"
+      },
+      {
+       "value": "UTC1",
+       "label": "UTC-01:00 – Azores, Cape Verde Islands"
+      },
+      {
+       "value": "GMT0BST,M3.5.0/1,M10.5.0",
+       "label": "UTC±00:00 – Greenwich Mean Time (GMT), London, Dublin, Lisbon"
+      },
+      {
+       "value": "CET-1CEST,M3.5.0,M10.5.0/3",
+       "label": "UTC+01:00 – Central European Time (CET), West Africa Time (WAT), Berlin, Paris, Rome"
+      },
+      {
+       "value": "EET-2EEST,M3.5.0/3,M10.5.0/4",
+       "label": "UTC+02:00 – Eastern European Time (EET), Cairo, Athens, South Africa"
+      },
+      {
+       "value": "UTC-3",
+       "label": "UTC+03:00 – Moscow, Nairobi, Baghdad, Saudi Arabia"
+      },
+      {
+       "value": "UTC-4",
+       "label": "UTC+04:00 – Dubai, Samara, Baku"
+      },
+      {
+       "value": "UTC-5",
+       "label": "UTC+05:00 – Pakistan Standard Time, Yekaterinburg, Islamabad"
+      },
+      {
+       "value": "UTC-6",
+       "label": "UTC+06:00 – Bangladesh, Bhutan, Omsk"
+      },
+      {
+       "value": "UTC-7",
+       "label": "UTC+07:00 – Indochina Time, Bangkok, Hanoi, Jakarta"
+      },
+      {
+       "value": "UTC-8",
+       "label": "UTC+08:00 – China Standard Time, Singapore, Perth, Beijing"
+      },
+      {
+       "value": "UTC-9",
+       "label": "UTC+09:00 – Japan Standard Time, Korea Standard Time, Yakutsk"
+      },
+      {
+       "value": "UTC-10",
+       "label": "UTC+10:00 – Australian Eastern Standard Time, Vladivostok"
+      },
+      {
+       "value": "UTC-11",
+       "label": "UTC+11:00 – Solomon Islands, Magadan, New Caledonia"
+      },
+      {
+       "value": "UTC-12",
+       "label": "UTC+12:00 – Fiji, Kamchatka, New Zealand Standard Time (NZST)"
+      },
+      {
+       "value": "UTC-13",
+       "label": "UTC+13:00 – Tonga, Samoa, Tokelau"
+      }
+     ],
+     "_nguon_tuy_chon": "reference/source/assets_goc/timezone-DtTaowKW.js, mang xuat ten 'l' (gan bien T). 26 lua chon, dung nguyen van value/label, KHONG doan."
+    }
+   },
+   "thong_bao": {
+    "loi": "Changes saving failed, please try again."
+   },
+   "_chua_noi_o_trang_nay": {
+    "ntp.servers": "Danh sach may chu NTP. Tren form la mang object {value}, trong du lieu la mang CHUOI -- can phep bien doi hai chieu va giao dien them/bot dong. De sau."
+   },
+   "_nguon": "reference/source/assets_goc/index-C7yhm04W.js"
+  },
+  "advanced__upnp": {
+   "resource": "upnp",
+   "dang": "object",
+   "tu_luu": true,
+   "_tu_luu_vi": "Ma goc: watch((v,{name}) => { if(name==='enabled') submit() }) -- doi la luu ngay, KHONG co nut Save.",
+   "truong": {
+    "enabled": "enabled"
+   },
+   "thong_bao": {
+    "thanh_cong_bat": "Enabled UPnP successfully.",
+    "thanh_cong_tat": "Disable UPnP successfully.",
+    "loi": "An error has occurred. Please try again."
+   },
+   "_nguon": "reference/source/assets_goc/index-agtlspBu.js -- getUpnp/setUpnp, FormSwitch name='enabled' label='Enable UPnP'. Chuoi 'Disable' (thieu 'd') la loi cua hang, GIU NGUYEN."
+  },
+  "advanced__dmz": {
+   "resource": "dmz/configurations",
+   "dang": "mang_loc",
+   "loc": {
+    "ipVersion": 4
+   },
+   "_loc_vi": "Ma goc: p.find(I => I.ipVersion === 4) roi reset({enabled, ipAddress}) tu phan tu do.",
+   "gui_kem_id": true,
+   "_gui_kem_id_vi": "Ma goc: setDmzConfiguration({payload: [{...form, id: banGhi.id}]}) -- gui MOT MANG mot phan tu, co id.",
+   "truong": {
+    "enabled": "enabled",
+    "ipAddress": {
+     "duong_dan": "ipAddress",
+     "theo_nhan": "Device / IP",
+     "hien_thi": "nhan_thiet_bi",
+     "_vi_sao_theo_nhan": "O nay la MUI Autocomplete -- da kiem tren DOM that cua ban chup: the <input> KHONG co thuoc tinh name. Phai tim theo nhan.",
+     "_vi_sao_hien_thi": "Ma goc: X = i => ({key:id, value:ip4Address, label: `${hostname||'Unknown'} (${ip4Address})`}). Nguoi dung THAY nhan, con gia tri gui di la dia chi IP."
+    }
+   },
+   "phu_thuoc": {
+    "ipAddress": {
+     "tat_khi_tat": "enabled"
+    }
+   },
+   "thong_bao": {
+    "loi": "An error has occurred. Please try again."
+   },
+   "_nguon": "reference/source/assets_goc/index-CxJ1Hdez.js",
+   "_danh_sach_chon": {
+    "tu_resource": "devices",
+    "loc": "bo type='Router', chi giu status='Up'",
+    "_nguon": "hook useDevices trong useDevices-DwHuFieu.js"
+   }
+  },
+  "security__firewall": {
+   "resource": "firewall",
+   "dang": "object",
+   "truong": {
+    "spiEnabled": "spiEnabled",
+    "icmpPing.wanEnabled": "icmpPing.wanEnabled",
+    "dosDefense.enabled": "dosDefense.enabled",
+    "dosDefense.tcpFlood.enabled": "dosDefense.tcpFlood.enabled",
+    "dosDefense.tcpFlood.rate": {
+     "duong_dan": "dosDefense.tcpFlood.rate",
+     "rong_khi_falsy": true,
+     "_nguon": "ma goc index-eel5T8aZ.js defaultValues: ((a.dosDefense)?.tcpFlood)?.rate||\"\" -- toan tu || nen gia tri 0 hien thanh O RONG, khong phai chuoi \"0\". Xac nhan tren thiet bi that 2026-08-18: API tra rate=0 nhung o tren man hinh RONG."
+    },
+    "dosDefense.tcpFlood.burst": {
+     "duong_dan": "dosDefense.tcpFlood.burst",
+     "rong_khi_falsy": true,
+     "_nguon": "ma goc index-eel5T8aZ.js defaultValues: ((a.dosDefense)?.tcpFlood)?.burst||\"\" -- toan tu || nen gia tri 0 hien thanh O RONG, khong phai chuoi \"0\". Xac nhan tren thiet bi that 2026-08-18: API tra burst=0 nhung o tren man hinh RONG."
+    },
+    "dosDefense.udpFlood.enabled": "dosDefense.udpFlood.enabled",
+    "dosDefense.udpFlood.rate": {
+     "duong_dan": "dosDefense.udpFlood.rate",
+     "rong_khi_falsy": true,
+     "_nguon": "ma goc index-eel5T8aZ.js defaultValues: ((a.dosDefense)?.udpFlood)?.rate||\"\" -- toan tu || nen gia tri 0 hien thanh O RONG, khong phai chuoi \"0\". Xac nhan tren thiet bi that 2026-08-18: API tra rate=0 nhung o tren man hinh RONG."
+    },
+    "dosDefense.udpFlood.burst": {
+     "duong_dan": "dosDefense.udpFlood.burst",
+     "rong_khi_falsy": true,
+     "_nguon": "ma goc index-eel5T8aZ.js defaultValues: ((a.dosDefense)?.udpFlood)?.burst||\"\" -- toan tu || nen gia tri 0 hien thanh O RONG, khong phai chuoi \"0\". Xac nhan tren thiet bi that 2026-08-18: API tra burst=0 nhung o tren man hinh RONG."
+    },
+    "dosDefense.icmpFlood.enabled": "dosDefense.icmpFlood.enabled",
+    "dosDefense.icmpFlood.rate": {
+     "duong_dan": "dosDefense.icmpFlood.rate",
+     "rong_khi_falsy": true,
+     "_nguon": "ma goc index-eel5T8aZ.js defaultValues: ((a.dosDefense)?.icmpFlood)?.rate||\"\" -- toan tu || nen gia tri 0 hien thanh O RONG, khong phai chuoi \"0\". Xac nhan tren thiet bi that 2026-08-18: API tra rate=0 nhung o tren man hinh RONG."
+    },
+    "dosDefense.icmpFlood.burst": {
+     "duong_dan": "dosDefense.icmpFlood.burst",
+     "rong_khi_falsy": true,
+     "_nguon": "ma goc index-eel5T8aZ.js defaultValues: ((a.dosDefense)?.icmpFlood)?.burst||\"\" -- toan tu || nen gia tri 0 hien thanh O RONG, khong phai chuoi \"0\". Xac nhan tren thiet bi that 2026-08-18: API tra burst=0 nhung o tren man hinh RONG."
+    },
+    "dosDefense.portScan.enabled": "dosDefense.portScan.enabled",
+    "dosDefense.portScan.rate": {
+     "duong_dan": "dosDefense.portScan.rate",
+     "rong_khi_falsy": true,
+     "_nguon": "ma goc index-eel5T8aZ.js defaultValues: ((a.dosDefense)?.portScan)?.rate||\"\" -- toan tu || nen gia tri 0 hien thanh O RONG, khong phai chuoi \"0\". Xac nhan tren thiet bi that 2026-08-18: API tra rate=0 nhung o tren man hinh RONG."
+    },
+    "dosDefense.portScan.burst": {
+     "duong_dan": "dosDefense.portScan.burst",
+     "rong_khi_falsy": true,
+     "_nguon": "ma goc index-eel5T8aZ.js defaultValues: ((a.dosDefense)?.portScan)?.burst||\"\" -- toan tu || nen gia tri 0 hien thanh O RONG, khong phai chuoi \"0\". Xac nhan tren thiet bi that 2026-08-18: API tra burst=0 nhung o tren man hinh RONG."
+    },
+    "dosDefense.tcpFlagScan.enabled": "dosDefense.tcpFlagScan.enabled",
+    "dosDefense.land.enabled": "dosDefense.land.enabled",
+    "dosDefense.smurf.enabled": "dosDefense.smurf.enabled",
+    "dosDefense.pingOfDeath.enabled": "dosDefense.pingOfDeath.enabled",
+    "dosDefense.traceRoute.enabled": "dosDefense.traceRoute.enabled",
+    "dosDefense.icmpFragment.enabled": "dosDefense.icmpFragment.enabled",
+    "dosDefense.synFragment.enabled": "dosDefense.synFragment.enabled",
+    "dosDefense.fraggleAttack.enabled": "dosDefense.fraggleAttack.enabled",
+    "dosDefense.unknownProtocol.enabled": "dosDefense.unknownProtocol.enabled"
+   },
+   "_nguon": "reference/source/assets_goc/index-eel5T8aZ.js -- thuoc tinh name= cua tung FormSwitch/FormCheckbox trung khop 1-1 voi duong dan trong resource 'firewall'. Da doi chieu voi ban chup that security__firewall.html: du 16/16 nhan. | 2026-08-18: bo sung 8 truong rate/burst (4 nhom x rate+burst). Chung CO trong DOM that (doi chieu security__firewall.html: du 24 thuoc tinh name=) va CO trong defaultValues cua ma goc (index-eel5T8aZ.js), nhung bang noi cu chi khai 16 cong tac nen 8 o so KHONG duoc nap/ghi. 'phu_thuoc' lay tu ma goc: moi o rate/burst mang disabled:!<watch cong tac cung nhom> -- da xac nhan tren thiet bi that 2026-08-18 (udpFlood/portScan tat -> 4 o do disabled=true va rong; tcpFlood/icmpFlood bat -> co gia tri 25/50 va 100/100).",
+   "phu_thuoc": {
+    "dosDefense.tcpFlood.rate": {
+     "tat_khi_tat": "dosDefense.tcpFlood.enabled"
+    },
+    "dosDefense.tcpFlood.burst": {
+     "tat_khi_tat": "dosDefense.tcpFlood.enabled"
+    },
+    "dosDefense.udpFlood.rate": {
+     "tat_khi_tat": "dosDefense.udpFlood.enabled"
+    },
+    "dosDefense.udpFlood.burst": {
+     "tat_khi_tat": "dosDefense.udpFlood.enabled"
+    },
+    "dosDefense.icmpFlood.rate": {
+     "tat_khi_tat": "dosDefense.icmpFlood.enabled"
+    },
+    "dosDefense.icmpFlood.burst": {
+     "tat_khi_tat": "dosDefense.icmpFlood.enabled"
+    },
+    "dosDefense.portScan.rate": {
+     "tat_khi_tat": "dosDefense.portScan.enabled"
+    },
+    "dosDefense.portScan.burst": {
+     "tat_khi_tat": "dosDefense.portScan.enabled"
+    }
+   }
+  }
+ },
+ "_chua_noi": {
+  "_giai_thich": "Nhung trang CO THE noi nhung chua lam trong dot nay. Da co du dac ta o spec/pages/*.json va DAC_TA_DOC_TAY.md; chi con viec lap lai khuon. Day la phan giao cho Sonnet.",
+  "de": [],
+  "kho": [
+   {
+    "trang": "wifi__general",
+    "vi_sao": "Hai lan PATCH tuan tu (ssids roi easyMesh), co suy dien WPA23T, co quy tac doi ten khi bat/tat 'Use separate network'. Xem DAC_TA_DOC_TAY.md muc 6."
+   },
+   {
+    "trang": "wifi__advanced",
+    "vi_sao": "Bang kenh cung theo (bang tan, bandwidth); tab Other tu luu."
+   },
+   {
+    "trang": "advanced__lan",
+    "vi_sao": "Cay an/hien IPv6 chua doc het."
+   },
+   {
+    "trang": "advanced__wan",
+    "vi_sao": "Cay an/hien theo Connection Type chua doc het."
+   },
+   {
+    "trang": "network__portforward",
+    "vi_sao": "Bang + hop thoai them/sua/xoa, can dung POST/PATCH/DELETE."
+   },
+   {
+    "trang": "advanced__routing",
+    "vi_sao": "Nhu tren, them phan biet IPv4/IPv6."
+   }
+  ],
+  "khong_noi": [
+   {
+    "trang": "home__overview",
+    "vi_sao": "Chi DOC, khong co o nhap. Se noi o buoc hien thi rieng, khong thuoc bang nay."
+   },
+   {
+    "trang": "home__topology",
+    "vi_sao": "Do thi d3, khong phai form."
+   },
+   {
+    "trang": "status__devices",
+    "vi_sao": "La trang 404 tren thiet bi that."
+   },
+   {
+    "trang": "home__wizard",
+    "vi_sao": "Khong dung -- vao la mat phien."
+   },
+   {
+    "trang": "system__user",
+    "vi_sao": "Doi mat khau di qua RPC, khong phai /api/v1/data/."
+   },
+   {
+    "trang": "system__upgrade",
+    "vi_sao": "Khong dung REST -- /oui-upload + RPC."
+   },
+   {
+    "trang": "network__diagnostics",
+    "vi_sao": "Chi POST hanh dong, khong luu cau hinh."
+   },
+   {
+    "trang": "network__speedtest",
+    "vi_sao": "Chi POST hanh dong."
+   },
+   {
+    "trang": "help",
+    "vi_sao": "Trang tinh."
+   }
+  ]
+ }
+}

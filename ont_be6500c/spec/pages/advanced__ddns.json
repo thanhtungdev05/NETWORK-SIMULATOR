@@ -1,0 +1,166 @@
+{
+  "_route": "advanced/ddns",
+  "_duong_dan_trinh_duyet": "#/advanced/ddns",
+  "_nguon": {
+    "chunk": "index-C832Cjvp.js",
+    "kich_thuoc_byte": 5340,
+    "chunk_phu_thuoc": [
+      "assets/index-C832Cjvp.js",
+      "assets/FormHeading-Wrbr2YtD.js",
+      "assets/FormSelect-CJAio79q.js",
+      "assets/useSnackbar-DeOFrJDC.js",
+      "assets/isNumber-CjKC2f0Q.js",
+      "assets/schema-BT0LOWg1.js",
+      "assets/time-DkCa3OgQ.js",
+      "assets/Chip-Ck-8K0QZ.js"
+    ],
+    "bundle_loi": "index-CW0UhNxy.js",
+    "_da_quet": [
+      "Chip-Ck-8K0QZ.js",
+      "FormHeading-Wrbr2YtD.js",
+      "FormSelect-CJAio79q.js",
+      "index-C832Cjvp.js",
+      "isNumber-CjKC2f0Q.js",
+      "schema-BT0LOWg1.js",
+      "time-DkCa3OgQ.js",
+      "useSnackbar-DeOFrJDC.js"
+    ]
+  },
+  "_cach_trich": "src/trich_dac_ta_trang.py (doc ma goc, khong doan)",
+  "goi_api": [
+    {
+      "ham_goc": "getDynamicDNSConfigurations",
+      "doi_tuong_goc": "use",
+      "tim_thay_o": [
+        "index-C832Cjvp.js"
+      ],
+      "resource": "api/v1/data/ddns/configurations",
+      "method": "GET",
+      "kenh": "REST"
+    },
+    {
+      "ham_goc": "getDynamicDNSStatus",
+      "doi_tuong_goc": "use",
+      "tim_thay_o": [
+        "index-C832Cjvp.js"
+      ],
+      "resource": "api/v1/data/ddns",
+      "method": "GET",
+      "kenh": "REST"
+    },
+    {
+      "ham_goc": "setDynamicDNSConfigurations",
+      "doi_tuong_goc": "use",
+      "tim_thay_o": [
+        "index-C832Cjvp.js"
+      ],
+      "resource": "api/v1/data/ddns/configurations",
+      "method": "PATCH",
+      "kenh": "REST"
+    }
+  ],
+  "goi_khac": {
+    "rpc": [],
+    "duong_dan_tuyet_doi": []
+  },
+  "truong_form": [
+    {
+      "name": "customDDnsEnabled",
+      "label": "Enable"
+    },
+    {
+      "name": "dynamicServer",
+      "label": "Dynamic Server"
+    },
+    {
+      "name": "username",
+      "label": "Username"
+    },
+    {
+      "name": "password",
+      "label": "Password",
+      "type": "password"
+    },
+    {
+      "name": "hostname",
+      "label": "Domain Name"
+    }
+  ],
+  "gia_tri_mac_dinh": [
+    {
+      "bien": "N",
+      "ma": "{id:\"\",customDDnsEnabled:!1,dynamicServer:\"\",username:\"\",password:\"\",hostname:\"\"}"
+    }
+  ],
+  "schema_kiem_tra": [
+    {
+      "ma": "{customDDnsEnabled:o.literal(!1)}"
+    },
+    {
+      "ma": "{customDDnsEnabled:o.literal(!0),dynamicServer:o.string().min(1,{message:\"Dynamic server cannot be empty.\"}),username:o.string().min(1,{message:\"Username cannot be empty.\"}),password:o.string().min(1,{message:\"Password cannot be empty.\"}),hostname:$({message:\"Invalid input. Please enter a valid domain name (e.g. myhost.ddns.org).\"})}"
+    }
+  ],
+  "chuoi_hien_thi": [
+    ")),n=W(a=>a.token),{data:l,mutate:T}=k({key:",
+    "),paddingTop:s(4),paddingBottom:s(6.75),position:",
+    ")]:{width:",
+    ",[n.down(",
+    ",[ne,te]),oe=h(p)(({theme:t})=>{const{spacing:s,breakpoints:n}=t;return{width:",
+    ",a.ipVersion]}),e.jsx(d,{variant:",
+    ",alignItems:",
+    ",children:",
+    ",children:e.jsx(d,{variant:",
+    ",color:",
+    ",color:s.success.contrastText,padding:0,borderRadius:0,backgroundColor:s.gray[6],",
+    ",customDDnsEnabled:!1,dynamicServer:",
+    ",defaultValues:N,values:g,resolver:H(re)}),{handleSubmit:P,watch:I,reset:m,trigger:S,clearErrors:f,formState:{errors:r,isSubmitSuccessful:R}}=v,c=I(",
+    ",disabled:!c,error:!!r.hostname,helperText:(E=r.hostname)==null?void 0:E.message})]}),e.jsx(J,{actions:[{action:",
+    ",disabled:!c,error:!!r.password,helperText:(C=r.password)==null?void 0:C.message}),e.jsx(x,{name:",
+    ",disabled:!c,error:!!r.username,helperText:(j=r.username)==null?void 0:j.message}),e.jsx(x,{name:",
+    ",hostname:",
+    ",label:",
+    ",marginY:2,children:",
+    ",maxWidth:980,minWidth:600,margin:s(0,",
+    ",minWidth:0,paddingTop:0,paddingBottom:s(12.25)}}}),ie=h(D)(({theme:t})=>{const{palette:s,spacing:n}=t;return{background:s.fill.blank,borderRadius:4,padding:n(2)}}),de=h(V)(({theme:t})=>{const{spacing:s}=t;return{display:",
+    ",onClick:B,className:",
+    ",onClick:O,className:",
+    ",options:se,disabled:!c,error:!!r.dynamicServer,helperText:(w=r.dynamicServer)==null?void 0:w.message}),e.jsx(x,{name:",
+    ",padding:s(2)}}),ce=h(ae)(({theme:t})=>{const{palette:s,spacing:n}=t;return{height:",
+    ",password:",
+    ",sx:{marginBottom:.5},children:ee(Number(a.lastChangeTime))})]}),e.jsx(ce,{className:Q({isEnabled:a.status===",
+    ",sx:{marginTop:.5,marginBottom:.125},children:[",
+    ",sx:{overflow:",
+    ",textOverflow:",
+    ",token:n},b.getDynamicDNSConfigurations,{revalidateOnFocus:!1}),g=u.useMemo(()=>{if(L(i)||i.length===0)return N;const a=i[0];return{id:a.id,customDDnsEnabled:a.enabled,dynamicServer:a.serviceProvider,username:a.username,password:a.password,hostname:a.hostname}},[i]),v=z({mode:",
+    ",token:n},b.getDynamicDNSStatus,{revalidateOnFocus:!1}),{data:i,mutate:F}=k({key:",
+    ",type:",
+    ",username:",
+    ",variant:",
+    ",whiteSpace:",
+    ":{backgroundColor:s.success.main}}});function le(){var w,j,C,E;const t=Y(),s=M(t.breakpoints.up(",
+    ":{paddingLeft:n(.75),paddingRight:n(.75),lineHeight:",
+    "ChangeIP",
+    "DynDNS",
+    "No-IP",
+    "}),e.jsx(X,{name:",
+    "}),e.jsxs(_,{providerProps:v,children:[s&&e.jsx(G,{children:",
+    "}),e.jsxs(p,{spacing:2,children:[e.jsx(q,{name:",
+    "}),hostname:$({message:",
+    "}),l&&(l==null?void 0:l.length)>0?e.jsx(p,{gap:2,children:l.map(a=>e.jsxs(de,{children:[e.jsxs(p,{flex:1,sx:{paddingY:1,paddingRight:.5,width:",
+    "}),label:a.status})]},a.id))}):e.jsx(D,{paddingY:2,textAlign:",
+    "}),password:o.string().min(1,{message:",
+    "}),username:o.string().min(1,{message:",
+    "})]}),e.jsx(D,{paddingY:2,marginY:2,children:e.jsx(K,{})}),e.jsx(d,{variant:",
+    "})}),re=o.discriminatedUnion(",
+    "})}):e.jsx(d,{variant:",
+    "},",
+    "},children:[e.jsxs(d,{variant:",
+    "},children:a.ipAddress}),e.jsx(d,{variant:",
+    "},ne=o.object({customDDnsEnabled:o.literal(!1)}),te=o.object({customDDnsEnabled:o.literal(!0),dynamicServer:o.string().min(1,{message:",
+    "},{action:",
+    "},{alertProps:{severity:",
+    "}],className:",
+    "}}),y}}),O=u.useCallback(()=>{m(g)},[g,m]);return u.useEffect(()=>{c?S():f()},[c,S,f]),e.jsxs(oe,{spacing:s?4:2,children:[s?e.jsx(ie,{children:e.jsx(d,{variant:"
+  ],
+  "_can_doc_tay": []
+}

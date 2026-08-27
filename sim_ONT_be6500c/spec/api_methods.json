@@ -1,0 +1,177 @@
+{
+ "api/v1/data/ext/lanstatus": [
+  "GET"
+ ],
+ "api/v1/data/ext/logpull": [
+  "GET",
+  "POST"
+ ],
+ "api/v1/data/ext/devicelist": [
+  "GET"
+ ],
+ "api/v1/data/ext/parentalControl/policies": [
+  "DELETE",
+  "GET",
+  "PATCH",
+  "POST"
+ ],
+ "api/v1/data/internetConnection": [
+  "GET"
+ ],
+ "api/v1/data/interfaces": [
+  "GET"
+ ],
+ "api/v1/data/interfaces/configurations": [
+  "GET",
+  "PATCH"
+ ],
+ "api/v1/data/devices": [
+  "GET"
+ ],
+ "api/v1/data/speedTest/servers": [
+  "GET"
+ ],
+ "api/v1/data/speedTest": [
+  "POST"
+ ],
+ "api/v1/data/ethernetPorts": [
+  "GET",
+  "PATCH"
+ ],
+ "api/v1/data/eapProfiles": [
+  "DELETE",
+  "GET",
+  "PATCH",
+  "POST"
+ ],
+ "api/v1/data/upnp": [
+  "GET",
+  "PATCH"
+ ],
+ "api/v1/data/dmz/configurations": [
+  "GET",
+  "PATCH"
+ ],
+ "api/v1/data/tcpdump": [
+  "POST"
+ ],
+ "api/v1/data/firewall": [
+  "GET",
+  "PATCH"
+ ],
+ "api/v1/data/portForwarding/policies": [
+  "DELETE",
+  "GET",
+  "PATCH",
+  "POST"
+ ],
+ "api/v1/data/alg": [
+  "GET",
+  "PATCH"
+ ],
+ "api/v1/data/diagnostic": [
+  "POST"
+ ],
+ "api/v1/data/ddns": [
+  "GET"
+ ],
+ "api/v1/data/ddns/configurations": [
+  "GET",
+  "PATCH"
+ ],
+ "api/v1/data/dhcp/servers": [
+  "GET",
+  "PATCH"
+ ],
+ "api/v1/data/dhcp/reservedHosts": [
+  "DELETE",
+  "GET",
+  "PATCH",
+  "POST"
+ ],
+ "api/v1/data/publicLan": [
+  "GET",
+  "PATCH"
+ ],
+ "api/v1/data/publicLan/staticNat/policies": [
+  "DELETE",
+  "GET",
+  "PATCH",
+  "POST"
+ ],
+ "api/v1/data/publicLan/routing/reservedHosts": [
+  "DELETE",
+  "GET",
+  "PATCH",
+  "POST"
+ ],
+ "api/v1/data/staticRouting/policies": [
+  "DELETE",
+  "GET",
+  "PATCH",
+  "POST"
+ ],
+ "api/v1/data/pon/status": [
+  "GET"
+ ],
+ "api/v1/data/system/info": [
+  "GET"
+ ],
+ "api/v1/data/system": [
+  "PATCH"
+ ],
+ "api/v1/data/system/status": [
+  "GET"
+ ],
+ "api/v1/data/system/logServer": [
+  "GET",
+  "PATCH"
+ ],
+ "api/v1/data/system/logs": [
+  "GET"
+ ],
+ "api/v1/data/time": [
+  "GET",
+  "PATCH"
+ ],
+ "api/v1/data/access/http/connections": [
+  "DELETE",
+  "GET",
+  "POST"
+ ],
+ "api/v1/data/access/ssh/connections": [
+  "DELETE",
+  "GET",
+  "POST"
+ ],
+ "api/v1/data/wizard": [
+  "GET",
+  "PATCH"
+ ],
+ "api/v1/data/system/services/cache": [
+  "GET"
+ ],
+ "api/v1/data/system/services/actions": [
+  "POST"
+ ],
+ "api/v1/data/ext/timer/wifi": [
+  "GET",
+  "PATCH"
+ ],
+ "api/v1/data/ext/timer/reboot": [
+  "GET",
+  "PATCH"
+ ],
+ "api/v1/data/ssids": [
+  "GET",
+  "PATCH"
+ ],
+ "api/v1/data/radios": [
+  "GET",
+  "PATCH"
+ ],
+ "api/v1/data/easyMesh": [
+  "GET",
+  "PATCH"
+ ]
+}

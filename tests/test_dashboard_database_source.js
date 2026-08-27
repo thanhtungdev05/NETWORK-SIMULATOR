@@ -8,6 +8,7 @@ const root = path.resolve(__dirname, '..');
 const api = fs.readFileSync(path.join(root, 'api/index.php'), 'utf8');
 const report = fs.readFileSync(path.join(root, 'api/lib/dashboard_report.php'), 'utf8');
 const dashboard = fs.readFileSync(path.join(root, 'dashboard-authen/js/app.js'), 'utf8');
+const dashboardStyles = fs.readFileSync(path.join(root, 'dashboard-authen/css/dashboard-professional.css'), 'utf8');
 const migration = fs.readFileSync(
   path.join(root, 'api/migrations/030_enforce_approved_dashboard_catalog.sql'),
   'utf8'
@@ -39,6 +40,7 @@ assert.match(dashboard, /function resetLearnerDetailFilters\(\)/);
 assert.match(dashboard, /state\.selectedLearner !== nextLearner\) resetLearnerDetailFilters\(\)/);
 assert.match(dashboard, /Đang hiển thị \$\{pageData\.totalRows\}\/\$\{totalHistoryRows\} phiên theo bộ lọc/);
 assert.match(dashboard, /phiên hoạt động trong toàn bộ lịch sử/);
+assert.match(dashboardStyles, /body\.detail-open \.sidebar[\s\S]*position: fixed;[\s\S]*height: 100dvh;/);
 assert.doesNotMatch(dashboard, /ftc-instructor-classes-v1/);
 assert.doesNotMatch(dashboard, /region\.branch_name \? `\$\{region\.branch_name\} · \$\{regionName\}`/);
 assert.doesNotMatch(dashboard, /deviceCatalog\.length \|\| 5/);

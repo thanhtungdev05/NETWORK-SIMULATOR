@@ -110,6 +110,26 @@ body {
     box-shadow: 10px 0 32px rgba(15, 29, 53, .08);
 }
 
+@media (min-width: 961px) {
+    body.detail-open .sidebar,
+    body.detail-open .page.sidebar-collapsed .sidebar {
+        position: fixed;
+        inset: 0 auto 0 0;
+        height: 100vh;
+        height: 100dvh;
+        min-height: 100vh;
+        min-height: 100dvh;
+    }
+
+    body.detail-open .sidebar {
+        width: 260px;
+    }
+
+    body.detail-open .page.sidebar-collapsed .sidebar {
+        width: 80px;
+    }
+}
+
 .sidebar-brand {
     display: flex;
     align-items: center;

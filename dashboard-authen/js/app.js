@@ -49,7 +49,7 @@ const state = {
     realtimeSelectedKtvs: new Set(),
     realtimeSelectedModes: new Set(['Thực hành', 'Hướng dẫn']),
     realtimeSelectedDevices: new Set(),
-    realtimeSelectedStatuses: new Set(['Hoàn thành', 'Đang làm', 'Không đạt', 'Đã dừng']),
+    realtimeSelectedStatuses: new Set(['Đạt', 'Hoàn thành', 'Hoàn thành - Chưa chấm', 'Đang làm', 'Không đạt', 'Đã dừng']),
     realtimeSearchKtv: '',
     realtimeSearchDevice: '',
     realtimeSearchLab: '',
@@ -94,7 +94,7 @@ const state = {
     detailSelectedModes: new Set(['Thực hành', 'Hướng dẫn']),
     detailSelectedDevices: new Set(),
     detailDevicesTouched: false,
-    detailSelectedStatuses: new Set(['Hoàn thành', 'Đang làm', 'Không đạt', 'Đã dừng', 'Chưa thực hiện']),
+    detailSelectedStatuses: new Set(['Đạt', 'Hoàn thành', 'Hoàn thành - Chưa chấm', 'Đang làm', 'Không đạt', 'Đã dừng', 'Chưa thực hiện']),
     detailSearchDevice: '',
     detailSelectedLabs: new Set(),
     detailLabsTouched: false,
@@ -302,7 +302,8 @@ function trapDialogFocus(event, container) {
 }
 
 function getStatusClass(status) {
-    if (status === 'Hoàn thành') return 'status-done';
+    if (status === 'Đạt' || status === 'Hoàn thành') return 'status-done';
+    if (status === 'Hoàn thành - Chưa chấm') return 'status-ungraded';
     if (status === 'Đang làm') return 'status-running';
     if (status === 'Không đạt' || status === 'Đã dừng') return 'status-risk';
     return 'status-notstarted';
@@ -458,6 +459,8 @@ function mapReportMetrics(metric) {
     return {
         assigned: Number(metric?.assigned_count) || 0,
         graded: Number(metric?.graded_count) || 0,
+        activityCompleted: Number(metric?.activity_completed_count) || 0,
+        ungradedCompleted: Number(metric?.ungraded_completed_count) || 0,
         totalSessions: practiceAttempts,
         guideSessions: Number(metric?.guide_attempts) || 0,
         learners: Number(metric?.participating_technicians) || 0,
@@ -490,6 +493,8 @@ function renderKpis() {
         const practice = computeMetrics(practiceRows);
         const gradedRows = practiceRows.filter(item => item.isPassed === true || item.isPassed === false);
         const passedRows = gradedRows.filter(item => item.isPassed === true);
+        const activityCompletedRows = practiceRows.filter(item => item.status === 'Đạt' || item.status === 'Hoàn thành - Chưa chấm');
+        const ungradedCompletedRows = practiceRows.filter(item => item.status === 'Hoàn thành - Chưa chấm');
         const durationRows = practiceRows.filter(item => Number(item.duration) > 0);
         const durationCoverage = practiceRows.length
             ? Math.round((durationRows.length / practiceRows.length) * 1000) / 10
@@ -500,6 +505,8 @@ function renderKpis() {
         return {
             assigned: 0,
             graded: gradedRows.length,
+            activityCompleted: activityCompletedRows.length,
+            ungradedCompleted: ungradedCompletedRows.length,
             totalSessions: practice.totalSessions,
             guideSessions: rows.filter(item => item.mode === 'Hướng dẫn').length,
             learners: all.learners,
@@ -625,8 +632,8 @@ function renderDashboardDataNotice(currentMetrics) {
     if (unassignedAssignments > 0) {
         messages.push(`${formatNumber.format(unassignedAssignments)} lượt KTV–lab chưa có khu vực nên đang được gom vào “Chưa xác định”.`);
     }
-    if (currentMetrics.completed > 0 && currentMetrics.graded === 0) {
-        messages.push('Có dữ liệu hoàn thành nhưng chưa có kết quả chấm; tỷ lệ đạt và đạt lần đầu chưa thể tính tin cậy.');
+    if (currentMetrics.ungradedCompleted > 0) {
+        messages.push(`${formatNumber.format(currentMetrics.ungradedCompleted)} lượt thực hành đã hoàn thành thao tác nhưng chưa có kết quả chấm; các lượt này chưa được tính là đạt chuẩn.`);
     }
 
     notice.hidden = messages.length === 0;
@@ -1614,7 +1621,7 @@ function resetLearnerDetailFilters() {
     state.detailDevicesTouched = false;
     state.detailSelectedLabs = new Set();
     state.detailLabsTouched = false;
-    state.detailSelectedStatuses = new Set(['Hoàn thành', 'Đang làm', 'Không đạt', 'Đã dừng', 'Chưa thực hiện']);
+    state.detailSelectedStatuses = new Set(['Đạt', 'Hoàn thành', 'Hoàn thành - Chưa chấm', 'Đang làm', 'Không đạt', 'Đã dừng', 'Chưa thực hiện']);
     state.detailSearchDevice = '';
     state.detailSearchLab = '';
     state.learnerDetailPage = 1;
@@ -1856,6 +1863,15 @@ function statusToVietnamese(status) {
     return map[status] || status || 'Chưa thực hiện';
 }
 
+function getSessionDisplayStatus(rawStatus, mode, isPassed) {
+    if (mode === 'Thực hành' || mode === 'practice') {
+        if (isPassed === true) return 'Đạt';
+        if (isPassed === false) return 'Không đạt';
+        if (rawStatus === 'completed' || rawStatus === 'Hoàn thành') return 'Hoàn thành - Chưa chấm';
+    }
+    return statusToVietnamese(rawStatus);
+}
+
 function dateOnly(value) {
     if (!value) return '';
     const date = new Date(value);
@@ -1913,8 +1929,11 @@ function normalizeTrainingAssignments(apiAssignments = []) {
         device: item.device_name || item.deviceName || item.device || 'N/A',
         lab: item.lab_name || item.labName || item.lab || 'N/A',
         status: item.status || 'assigned',
-        completed: ['completed', 'passed'].includes(item.status) || Boolean(item.completed),
-        completedAt: item.completed_at || item.completedAt || null
+        completed: item.status === 'passed' || Boolean(item.passed),
+        completedAt: item.completed_at || item.completedAt || null,
+        firstPassAttemptNo: item.first_pass_attempt_no == null
+            ? null
+            : Number(item.first_pass_attempt_no)
     }));
 }
 
@@ -1963,6 +1982,10 @@ function mapApiSessions(apiSessions = []) {
         const learner = item.technician?.email || item.email || item.technician?.full_name || item.full_name || item.technician_id || 'Unknown';
         const technician = technicianByIdentity.get(String(item.technician_id || '').trim().toLowerCase())
             || technicianByIdentity.get(String(item.email || '').trim().toLowerCase());
+        const isPassed = item.is_passed === null || item.is_passed === undefined
+            ? null
+            : item.is_passed === true || item.is_passed === 1
+                || ['1', 't', 'true', 'yes'].includes(String(item.is_passed).trim().toLowerCase());
         return {
             sessionId: item.session_id,
             technicianId: item.technician_id || item.technician?.technician_id,
@@ -1982,14 +2005,11 @@ function mapApiSessions(apiSessions = []) {
             lab: item.lab?.lab_name || item.lab_name || item.lab_id || 'N/A',
             skill: item.skill?.skill_name || item.skill?.skill_id || item.lab?.lab_name || item.lab_name || 'N/A',
             mode: item.mode || 'Thực hành',
-            status: statusToVietnamese(item.status),
+            status: getSessionDisplayStatus(item.status, item.mode || 'Thực hành', isPassed),
             duration: item.duration_sec === null || item.duration_sec === undefined
                 ? null
                 : Number(item.duration_sec),
-            isPassed: item.is_passed === null || item.is_passed === undefined
-                ? null
-                : item.is_passed === true || item.is_passed === 1
-                    || ['1', 't', 'true', 'yes'].includes(String(item.is_passed).trim().toLowerCase()),
+            isPassed,
             firstTry: item.completed_first_try === null || item.completed_first_try === undefined
                 ? null
                 : item.completed_first_try === true || item.completed_first_try === 1
@@ -2233,9 +2253,7 @@ function getCanonicalDeviceList() {
 }
 
 function isSuccessfulSession(item) {
-    if (item?.isPassed === true) return true;
-    if (item?.isPassed === false) return false;
-    return item?.status === 'Hoàn thành' || item?.status === 'completed';
+    return (item?.mode === 'Thực hành' || item?.mode === 'practice') && item?.isPassed === true;
 }
 
 function getCanonicalLabList() {
@@ -2791,7 +2809,7 @@ function initPopovers() {
     });
     document.getElementById('realtimeStatusClear')?.addEventListener('click', (e) => {
         e.stopPropagation();
-        state.realtimeSelectedStatuses = new Set(['Hoàn thành', 'Đang làm', 'Không đạt', 'Đã dừng']);
+        state.realtimeSelectedStatuses = new Set(['Đạt', 'Hoàn thành', 'Hoàn thành - Chưa chấm', 'Đang làm', 'Không đạt', 'Đã dừng']);
         document.querySelectorAll('#realtimeStatusOptions input[type="checkbox"]').forEach(chk => chk.checked = true);
         renderAll();
     });
@@ -2965,7 +2983,7 @@ function initPopovers() {
     });
     document.getElementById('detailStatusClear')?.addEventListener('click', (e) => {
         e.stopPropagation();
-        state.detailSelectedStatuses = new Set(['Hoàn thành', 'Đang làm', 'Không đạt', 'Đã dừng', 'Chưa thực hiện']);
+        state.detailSelectedStatuses = new Set(['Đạt', 'Hoàn thành', 'Hoàn thành - Chưa chấm', 'Đang làm', 'Không đạt', 'Đã dừng', 'Chưa thực hiện']);
         document.querySelectorAll('#detailStatusOptions input[type="checkbox"]').forEach(chk => chk.checked = true);
         renderAll();
     });
@@ -3250,7 +3268,6 @@ function getInstructorClassProgress(selectedClass, selectedGroups) {
             return { learner, deviceResults, completed, total, rate: total ? Math.round((completed / total) * 100) : null };
         });
     }
-    const completedStatus = statusToVietnamese('completed');
     const rowsByLearner = new Map();
     sessions.forEach(item => {
         if (item.mode === 'Hướng dẫn') return;
@@ -3263,7 +3280,7 @@ function getInstructorClassProgress(selectedClass, selectedGroups) {
         const deviceResults = selectedGroups.map(group => {
             const completedLabs = new Set(
                 learnerSessions
-                    .filter(item => item.device === group.device && item.status === completedStatus)
+                    .filter(item => item.device === group.device && isSuccessfulSession(item))
                     .map(item => item.lab)
             );
             const labResults = group.labs.map(lab => ({ lab, completed: completedLabs.has(lab) }));
@@ -3722,9 +3739,10 @@ function getClassMatrixData() {
             const assignKey = `${learnerClassCode}\u001f${l.email.toLowerCase()}\u001f${col.device}\u001f${col.lab}`;
             const assign = assignmentMap.get(assignKey);
             const labSessions = sessionsByCell.get(`${learnerKey}\u001f${col.device}\u001f${col.lab}`) || [];
+            const practiceSessions = labSessions.filter(session => session.mode === 'Thực hành');
             const isAssigned = trainingAssignments.length === 0 ? true : Boolean(assign);
             const isCompleted = isAssigned && (Boolean(assign?.completed) || labSessions.some(isSuccessfulSession));
-            const attempts = labSessions.length;
+            const attempts = practiceSessions.length;
             const attempted = attempts > 0;
 
             // Xác định số thứ tự lần thực hành đạt chuẩn hoàn thành
@@ -3733,12 +3751,12 @@ function getClassMatrixData() {
                 const timeB = parseDate(b.date).getTime() + (b.time ? parseTimeMs(b.time) : 0);
                 return timeA - timeB;
             });
-            const practiceSessions = sortedLabSessions.filter(s => s.mode !== 'Hướng dẫn');
-            const passIndex = practiceSessions.findIndex(isSuccessfulSession);
-            const firstPassSession = passIndex !== -1 ? practiceSessions[passIndex] : null;
+            const sortedPracticeSessions = sortedLabSessions.filter(s => s.mode === 'Thực hành');
+            const passIndex = sortedPracticeSessions.findIndex(isSuccessfulSession);
+            const firstPassSession = passIndex !== -1 ? sortedPracticeSessions[passIndex] : null;
             const firstPassAttemptNo = firstPassSession
                 ? (Number(firstPassSession.practiceAttemptNo) || passIndex + 1)
-                : (Number(assign?.first_pass_attempt_no) || null);
+                : (Number(assign?.firstPassAttemptNo) || null);
 
             if (isAssigned) {
                 ktvAssigned += 1;
@@ -5043,8 +5061,9 @@ function openDeviceSubModal(deviceName, rows) {
         }
         const latest = [...entry.sessions].sort((a, b) => parseDate(b.date) - parseDate(a.date))[0];
         const isDone = entry.sessions.some(isSuccessfulSession);
+        const hasUngradedCompletion = entry.sessions.some(session => session.status === 'Hoàn thành - Chưa chấm');
         const statusCategory = isDone ? 'done' : 'pending';
-        const statusLabel = isDone ? 'Hoàn thành' : 'Đang thực hiện';
+        const statusLabel = isDone ? 'Đạt' : (hasUngradedCompletion ? 'Hoàn thành - Chưa chấm' : 'Đang thực hiện');
         const badgeClass = getStatusClass(statusLabel);
         const lastDateTimeStr = formatDateTime(latest.date, latest.time);
         const lastDuration = formatDuration(latest.duration);
@@ -5059,6 +5078,7 @@ function openDeviceSubModal(deviceName, rows) {
             guideCount,
             practiceCount,
             firstPassAttemptNo,
+            hasUngradedCompletion,
             modeText,
             lastDateTimeStr,
             lastDuration
@@ -5187,7 +5207,7 @@ function renderSubModalLabList(filter) {
                 </div>
                 <div class="sub-modal-item-grid2x2">
                     <div class="sub-modal-cell">Gần nhất: <strong>${escapeHTML(item.lastDateTimeStr)}</strong> (${item.lastDuration})</div>
-                    <div class="sub-modal-cell">Kết quả: <strong>Đang luyện tập (${item.practiceCount} lượt)</strong></div>
+                    <div class="sub-modal-cell">Kết quả: <strong>${item.hasUngradedCompletion ? 'Hoàn thành thao tác, chưa có kết quả chấm' : `Đang luyện tập (${item.practiceCount} lượt)`}</strong></div>
                     <div class="sub-modal-cell">Lượt Thực hành: <strong>${item.practiceCount} lần</strong></div>
                     <div class="sub-modal-cell">Lượt Hướng dẫn: <strong>${item.guideCount} lần</strong></div>
                 </div>

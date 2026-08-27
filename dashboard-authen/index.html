@@ -7,8 +7,8 @@
     <meta name="theme-color" content="#f3f6fb">
     <meta name="color-scheme" content="light">
     <title>Dashboard giám sát thực hành KTV | FTC</title>
-    <link rel="stylesheet" href="css/styles.css?v=20260825-7">
-    <link rel="stylesheet" href="css/dashboard-professional.css?v=20260827-2">
+    <link rel="stylesheet" href="css/styles.css?v=20260827-3">
+    <link rel="stylesheet" href="css/dashboard-professional.css?v=20260827-3">
 </head>
 
 <body>
@@ -225,20 +225,20 @@
                                 <div class="kpi-comparison" id="kpiLearnersComparison"></div>
                                 <div class="kpi-note" id="kpiLearnersContext">Đang tính dữ liệu so sánh</div>
                             </div>
-                            <div class="kpi-card" title="Tổng số cặp KTV - Bài lab đã hoàn thành tích lũy tính đến thời điểm báo cáo">
-                                <div class="kpi-label">Lab thực hành hoàn thành lũy kế</div>
+                            <div class="kpi-card" title="Tổng số cặp KTV - Bài lab đã được chấm đạt tính đến cuối kỳ báo cáo">
+                                <div class="kpi-label">Lab đạt chuẩn lũy kế</div>
                                 <div class="kpi-value violet" id="kpiCompleted">0</div>
                                 <div class="kpi-comparison" id="kpiCompletedComparison"></div>
                                 <div class="kpi-note" id="kpiCompletedContext">Đang tính dữ liệu so sánh</div>
                             </div>
-                            <div class="kpi-card" title="Tỷ lệ phần trăm bài lab đã hoàn thành trên tổng số bài lab được phân công trong chương trình">
+                            <div class="kpi-card" title="Tỷ lệ cặp KTV - Bài lab đã được chấm đạt trên toàn bộ phạm vi chương trình chuẩn">
                                 <div class="kpi-label">Tiến độ hoàn thành thực hành</div>
                                 <div class="kpi-value cyan" id="kpiCompletionRate">0%</div>
                                 <div class="kpi-comparison" id="kpiCompletionRateComparison"></div>
                                 <div class="kpi-note" id="kpiCompletionRateContext">Đang tính dữ liệu so sánh</div>
                             </div>
                             <div class="kpi-card" title="Tỷ lệ phiên thực hành đạt yêu cầu trên tổng số phiên thực hành đã có kết quả chấm điểm">
-                                <div class="kpi-label">Tỷ lệ đạt (trên bài đã chấm)</div>
+                                <div class="kpi-label">Tỷ lệ lượt thực hành đạt</div>
                                 <div class="kpi-value cyan" id="kpiPassRate">—</div>
                                 <div class="kpi-comparison" id="kpiPassRateComparison"></div>
                                 <div class="kpi-note" id="kpiPassRateContext">Chưa có kết quả chấm</div>
@@ -471,7 +471,11 @@
                                                     <div class="popover-dropdown" id="realtimeStatusDropdown">
                                                         <div class="popover-options" id="realtimeStatusOptions">
                                                             <label class="popover-option"><input type="checkbox"
-                                                                    value="Hoàn thành" checked> Hoàn thành</label>
+                                                                    value="Đạt" checked> Đạt chuẩn</label>
+                                                            <label class="popover-option"><input type="checkbox"
+                                                                    value="Hoàn thành - Chưa chấm" checked> Hoàn thành - Chưa chấm</label>
+                                                            <label class="popover-option"><input type="checkbox"
+                                                                    value="Hoàn thành" checked> Hoàn thành hướng dẫn</label>
                                                             <label class="popover-option"><input type="checkbox"
                                                                     value="Đang làm" checked> Đang làm</label>
                                                             <label class="popover-option"><input type="checkbox"
@@ -1135,8 +1139,12 @@
                                     <button class="popover-trigger-btn" type="button">Trạng thái</button>
                                     <div class="popover-dropdown" id="detailStatusDropdown">
                                         <div class="popover-options" id="detailStatusOptions">
+                                            <label class="popover-option"><input type="checkbox" value="Đạt"
+                                                    checked> Đạt chuẩn</label>
+                                            <label class="popover-option"><input type="checkbox"
+                                                    value="Hoàn thành - Chưa chấm" checked> Hoàn thành - Chưa chấm</label>
                                             <label class="popover-option"><input type="checkbox" value="Hoàn thành"
-                                                    checked> Hoàn thành</label>
+                                                    checked> Hoàn thành hướng dẫn</label>
                                             <label class="popover-option"><input type="checkbox" value="Đang làm"
                                                     checked> Đang làm</label>
                                             <label class="popover-option"><input type="checkbox" value="Không đạt"
@@ -1293,7 +1301,7 @@
 
     <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
 
-    <script src="js/app.js?v=20260827-2"></script>
+    <script src="js/app.js?v=20260827-3"></script>
 </body>
 
 </html>

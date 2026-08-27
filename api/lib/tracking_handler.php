@@ -39,7 +39,8 @@ function tracking_timer_response(array $timer): array
         'technician_id' => (string)($timer['technician_id'] ?? ''),
         'name' => (string)($timer['name'] ?? ''),
         'email' => (string)($timer['email'] ?? ''),
-        'finished_at' => safe_datetime($timer['finished_at']),
+        'started_at' => safe_datetime($timer['started_at'] ?? null),
+        'finished_at' => safe_datetime($timer['finished_at'] ?? null),
         'duration_sec' => (int)($timer['duration_sec'] ?? 0),
         'mode' => (string)($timer['mode'] ?? 'Thực hành'),
         'device' => (string)($timer['device'] ?? ''),
@@ -49,6 +50,7 @@ function tracking_timer_response(array $timer): array
         'lab_name' => (string)($timer['lab_name'] ?? ($timer['lab_id'] ?? '')),
         'status' => (string)($timer['status'] ?? 'completed'),
         'completed_first_try' => $timer['completed_first_try'] ?? null,
+        'practice_attempt_no' => isset($timer['practice_attempt_no']) ? (int)$timer['practice_attempt_no'] : null,
         'is_passed' => isset($timer['is_passed']) ? (bool)$timer['is_passed'] : null,
         'score' => isset($timer['score']) ? (float)$timer['score'] : null,
         'grading_details' => $timer['grading_details'] ?? null,
@@ -72,6 +74,177 @@ function sync_tracking_attempt(PDO $pdo, int $timerId, array $timer, ?string $us
     return true;
 }
 
+function reserve_tracking_timer_start(array $trackingActor, array $input): array
+{
+    $submissionId = optional_text($input, 'submission_id', 64)
+        ?? optional_text($input, 'submissionId', 64);
+    if (!$submissionId || !preg_match('/^[A-Za-z0-9._:-]{8,64}$/D', $submissionId)) {
+        fail(400, 'bad-request', 'submission_id is required and must contain 8-64 safe characters.');
+    }
+
+    $labId = optional_text($input, 'lab_id', 50)
+        ?? optional_text($input, 'labId', 50)
+        ?? optional_text($input, 'lab', 50);
+    if (!$labId) {
+        fail(400, 'bad-request', 'lab_id is required.');
+    }
+
+    $mode = optional_text($input, 'mode', 30) ?? 'Thực hành';
+    if (!in_array($mode, ['Thực hành', 'Hướng dẫn'], true)) {
+        fail(400, 'bad-request', "mode must be 'Thực hành' or 'Hướng dẫn'.");
+    }
+    $sessionType = $mode === 'Hướng dẫn' ? 'guide' : 'practice';
+    $startedAt = normalized_timestamp($input['started_at'] ?? $input['startedAt'] ?? null, 'started_at')
+        ?? (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
+    if (new DateTimeImmutable($startedAt) > (new DateTimeImmutable())->modify('+5 minutes')) {
+        fail(400, 'bad-request', 'started_at cannot be in the future.');
+    }
+
+    $pdo = db();
+    $catalogLookup = $pdo->prepare(
+        'SELECT lab.lab_name, lab.device_id, device.device_name
+           FROM lab_catalog lab
+           JOIN device_catalog device ON device.device_id = lab.device_id
+          WHERE lab.lab_id = :lab_id
+            AND lab.is_active = TRUE
+            AND device.is_active = TRUE'
+    );
+    $catalogLookup->execute(['lab_id' => $labId]);
+    $catalog = $catalogLookup->fetch();
+    if (!$catalog) {
+        fail(422, 'tracking/unknown-lab', 'lab_id is not in the active catalog.');
+    }
+
+    $userId = (string)($trackingActor['user_id'] ?? '');
+    if ($userId === '') {
+        fail(401, 'auth/unauthenticated', 'Sign in before starting a lab session.');
+    }
+    $employeeId = (string)($trackingActor['employee_id'] ?? '');
+    $email = (string)($trackingActor['email'] ?? '');
+    $name = (string)($trackingActor['display_name'] ?? '');
+
+    try {
+        $pdo->beginTransaction();
+        $submissionLock = $pdo->prepare('SELECT pg_advisory_xact_lock(hashtextextended(:lock_key, 0))');
+        $submissionLock->execute(['lock_key' => 'submission|' . $submissionId]);
+        $existingStatement = $pdo->prepare(
+            'SELECT id, user_id, technician_id, name, email, started_at, finished_at,
+                    duration_sec, mode, device, device_id, lab_id, lab_name, status,
+                    completed_first_try, practice_attempt_no, is_passed, score,
+                    grading_details, session_type, submission_id
+               FROM timer_sessions
+              WHERE submission_id = :submission_id
+              FOR UPDATE'
+        );
+        $existingStatement->execute(['submission_id' => $submissionId]);
+        $existing = $existingStatement->fetch();
+        if ($existing) {
+            if ((string)$existing['user_id'] !== $userId
+                || (string)$existing['lab_id'] !== $labId
+                || (string)$existing['mode'] !== $mode) {
+                $pdo->rollBack();
+                fail(409, 'tracking/submission-conflict', 'submission_id was already used for a different session.');
+            }
+            $pdo->commit();
+            $existing['session_id'] = (string)$existing['id'];
+            $existing['saved'] = true;
+            $existing['duplicate'] = true;
+            $existing['normalized_saved'] = true;
+            return tracking_timer_response($existing);
+        }
+
+        $practiceAttemptNo = null;
+        if ($mode === 'Thực hành') {
+            $lockKey = strtolower($userId . '|' . $labId);
+            $lock = $pdo->prepare('SELECT pg_advisory_xact_lock(hashtextextended(:lock_key, 0))');
+            $lock->execute(['lock_key' => $lockKey]);
+            $nextAttempt = $pdo->prepare(
+                <<<'SQL'
+                SELECT COALESCE(MAX(practice_attempt_no), 0) + 1
+                  FROM timer_sessions
+                 WHERE lab_id = :lab_id
+                   AND mode IN ('Thực hành', 'practice')
+                   AND (
+                       user_id = CAST(:user_id AS uuid)
+                       OR (NULLIF(:email, '') IS NOT NULL AND LOWER(email) = LOWER(:email))
+                       OR (NULLIF(:technician_id, '') IS NOT NULL AND technician_id = :technician_id)
+                   )
+                SQL
+            );
+            $nextAttempt->execute([
+                'lab_id' => $labId,
+                'user_id' => $userId,
+                'email' => $email,
+                'technician_id' => $employeeId,
+            ]);
+            $practiceAttemptNo = (int)$nextAttempt->fetchColumn();
+        }
+
+        $insert = $pdo->prepare(
+            <<<'SQL'
+            INSERT INTO timer_sessions (
+                user_id, technician_id, name, email, started_at, finished_at,
+                duration_sec, mode, device, device_id, lab_id, lab_name,
+                status, completed_first_try, practice_attempt_no, last_action,
+                is_passed, score, grading_details, session_type, submission_id
+            ) VALUES (
+                CAST(:user_id AS uuid), :technician_id, :name, :email,
+                CAST(:started_at AS timestamptz), NULL,
+                0, :mode, :device, :device_id, :lab_id, :lab_name,
+                'in_progress', NULL, :practice_attempt_no, 'Bắt đầu phiên',
+                NULL, NULL, NULL, :session_type, :submission_id
+            )
+            RETURNING id
+            SQL
+        );
+        $insert->execute([
+            'user_id' => $userId,
+            'technician_id' => $employeeId,
+            'name' => $name,
+            'email' => $email,
+            'started_at' => $startedAt,
+            'mode' => $mode,
+            'device' => (string)$catalog['device_name'],
+            'device_id' => (string)$catalog['device_id'],
+            'lab_id' => $labId,
+            'lab_name' => (string)$catalog['lab_name'],
+            'practice_attempt_no' => $practiceAttemptNo,
+            'session_type' => $sessionType,
+            'submission_id' => $submissionId,
+        ]);
+        $timerId = (int)$insert->fetchColumn();
+        $pdo->commit();
+
+        return tracking_timer_response([
+            'session_id' => (string)$timerId,
+            'submission_id' => $submissionId,
+            'technician_id' => $employeeId,
+            'name' => $name,
+            'email' => $email,
+            'started_at' => $startedAt,
+            'finished_at' => null,
+            'duration_sec' => 0,
+            'mode' => $mode,
+            'device' => (string)$catalog['device_name'],
+            'device_id' => (string)$catalog['device_id'],
+            'lab_id' => $labId,
+            'lab_name' => (string)$catalog['lab_name'],
+            'status' => 'in_progress',
+            'practice_attempt_no' => $practiceAttemptNo,
+            'session_type' => $sessionType,
+            'saved' => true,
+            'duplicate' => false,
+            'normalized_saved' => true,
+        ]);
+    } catch (Throwable $exception) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        report_exception($exception, 'tracking-timer-start');
+        fail(500, 'tracking/start-failed', 'Unable to start the timer session.');
+    }
+}
+
 function handle_tracking(array $segments, string $method): void
 {
     // Allow a lightweight unauthenticated health check before enforcing API key
@@ -86,6 +259,14 @@ function handle_tracking(array $segments, string $method): void
     }
 
     $trackingActor = verify_tracking_access();
+
+    // POST /tracking/timer/start reserves an immutable practice attempt number.
+    if ($sub === 'timer' && ($segments[2] ?? '') === 'start' && $method === 'POST') {
+        if (!is_array($trackingActor)) {
+            fail(401, 'auth/unauthenticated', 'Sign in before starting a lab session.');
+        }
+        respond(['item' => reserve_tracking_timer_start($trackingActor, json_body())]);
+    }
 
     // POST /tracking/timer or /tracking/timers or /tracking
     if (($sub === 'timer' || $sub === 'timers' || $sub === '') && $method === 'POST') {
@@ -364,97 +545,193 @@ function handle_tracking(array $segments, string $method): void
 
         try {
             $pdo->beginTransaction();
-            $insert = $pdo->prepare(
-                <<<'SQL'
-                INSERT INTO timer_sessions (
-                    user_id, technician_id, name, email, started_at, finished_at,
-                    duration_sec, mode, device, device_id, lab_id, lab_name,
-                    status, completed_first_try, last_action, is_passed, score,
-                    grading_details, client_ip, user_agent, session_type,
-                    submission_id
-                ) VALUES (
-                    :user_id, :technician_id, :name, :email, :started_at, :finished_at,
-                    :duration_sec, :mode, :device, :device_id, :lab_id, :lab_name,
-                    :status, :completed_first_try, :last_action, :is_passed, :score,
-                    :grading_details, :client_ip, :user_agent, :session_type,
-                    :submission_id
-                )
-                ON CONFLICT (submission_id) WHERE submission_id IS NOT NULL DO NOTHING
-                RETURNING id
-                SQL
+            $submissionLock = $pdo->prepare('SELECT pg_advisory_xact_lock(hashtextextended(:lock_key, 0))');
+            $submissionLock->execute(['lock_key' => 'submission|' . $submissionId]);
+
+            $existingStatement = $pdo->prepare(
+                'SELECT id, user_id, lab_id, mode, status, is_passed, session_type,
+                        practice_attempt_no, completed_first_try,
+                        started_at IS NOT DISTINCT FROM CAST(:started_at AS timestamptz) AS same_started_at,
+                        finished_at IS NOT DISTINCT FROM CAST(:finished_at AS timestamptz) AS same_finished_at,
+                        duration_sec IS NOT DISTINCT FROM CAST(:duration_sec AS integer) AS same_duration,
+                        score IS NOT DISTINCT FROM CAST(:score AS numeric) AS same_score,
+                        grading_details IS NOT DISTINCT FROM CAST(:grading_details AS jsonb) AS same_grading_details
+                   FROM timer_sessions
+                  WHERE submission_id = :submission_id
+                  FOR UPDATE'
             );
-            $insert->execute([
-                'user_id' => $resolvedUserId,
-                'technician_id' => $timer['technician_id'],
-                'name' => $timer['name'],
-                'email' => $timer['email'],
+            $existingStatement->execute([
+                'submission_id' => $submissionId,
                 'started_at' => $startedAt,
                 'finished_at' => $finishedAt,
                 'duration_sec' => $timer['duration_sec'],
-                'mode' => $mode,
-                'device' => $timer['device'],
-                'device_id' => $deviceId,
-                'lab_id' => $timer['lab_id'],
-                'lab_name' => $timer['lab_name'],
-                'status' => $timer['status'],
-                'completed_first_try' => $timer['completed_first_try'],
-                'last_action' => $timer['last_action'],
-                'is_passed' => $timer['is_passed'] !== null ? ($timer['is_passed'] ? 1 : 0) : null,
                 'score' => $timer['score'],
                 'grading_details' => $gradingDetailsJson,
-                'client_ip' => $clientIp,
-                'user_agent' => $userAgent,
-                'session_type' => $sessionType,
-                'submission_id' => $submissionId,
             ]);
-            $savedRow = $insert->fetch();
-            if (!$savedRow) {
-                $existingStatement = $pdo->prepare(
-                    'SELECT id, user_id, lab_id, mode, status, is_passed, session_type,
-                            started_at IS NOT DISTINCT FROM CAST(:started_at AS timestamptz) AS same_started_at,
-                            finished_at IS NOT DISTINCT FROM CAST(:finished_at AS timestamptz) AS same_finished_at,
-                            duration_sec IS NOT DISTINCT FROM CAST(:duration_sec AS integer) AS same_duration,
-                            completed_first_try IS NOT DISTINCT FROM CAST(:completed_first_try AS boolean) AS same_first_try,
-                            score IS NOT DISTINCT FROM CAST(:score AS numeric) AS same_score,
-                            grading_details IS NOT DISTINCT FROM CAST(:grading_details AS jsonb) AS same_grading_details
-                       FROM timer_sessions
-                      WHERE submission_id = :submission_id
-                      FOR SHARE'
+            $existingTimer = $existingStatement->fetch();
+
+            if ($existingTimer) {
+                $sameIdentity = (string)$existingTimer['user_id'] === (string)$resolvedUserId
+                    && (string)$existingTimer['lab_id'] === $timer['lab_id']
+                    && (string)$existingTimer['mode'] === $timer['mode']
+                    && (string)$existingTimer['session_type'] === $timer['session_type']
+                    && database_boolean($existingTimer['same_started_at'] ?? false);
+                if (!$sameIdentity) {
+                    $pdo->rollBack();
+                    fail(409, 'tracking/submission-conflict', 'submission_id was already used for a different session.');
+                }
+
+                $timer['practice_attempt_no'] = $existingTimer['practice_attempt_no'] !== null
+                    ? (int)$existingTimer['practice_attempt_no']
+                    : null;
+                $timer['completed_first_try'] = $timer['is_passed'] === true
+                    ? $timer['practice_attempt_no'] === 1
+                    : null;
+                if ((string)$existingTimer['status'] === 'in_progress') {
+                    $update = $pdo->prepare(
+                        <<<'SQL'
+                        UPDATE timer_sessions
+                           SET technician_id = :technician_id,
+                               name = :name,
+                               email = :email,
+                               finished_at = CAST(:finished_at AS timestamptz),
+                               duration_sec = :duration_sec,
+                               device = :device,
+                               device_id = :device_id,
+                               lab_name = :lab_name,
+                               status = :status,
+                               completed_first_try = :completed_first_try,
+                               last_action = :last_action,
+                               is_passed = :is_passed,
+                               score = :score,
+                               grading_details = CAST(:grading_details AS jsonb),
+                               client_ip = :client_ip,
+                               user_agent = :user_agent
+                         WHERE id = :id
+                        SQL
+                    );
+                    $update->execute([
+                        'technician_id' => $timer['technician_id'],
+                        'name' => $timer['name'],
+                        'email' => $timer['email'],
+                        'finished_at' => $finishedAt,
+                        'duration_sec' => $timer['duration_sec'],
+                        'device' => $timer['device'],
+                        'device_id' => $deviceId,
+                        'lab_name' => $timer['lab_name'],
+                        'status' => $timer['status'],
+                        'completed_first_try' => $timer['completed_first_try'] === null
+                            ? null
+                            : ($timer['completed_first_try'] ? 1 : 0),
+                        'last_action' => $timer['last_action'],
+                        'is_passed' => $timer['is_passed'] !== null ? ($timer['is_passed'] ? 1 : 0) : null,
+                        'score' => $timer['score'],
+                        'grading_details' => $gradingDetailsJson,
+                        'client_ip' => $clientIp,
+                        'user_agent' => $userAgent,
+                        'id' => (int)$existingTimer['id'],
+                    ]);
+                    $timer['session_id'] = (string)$existingTimer['id'];
+                    $savedRow = ['id' => $existingTimer['id']];
+                } else {
+                    $existingPassed = $existingTimer['is_passed'] !== null
+                        ? database_boolean($existingTimer['is_passed'])
+                        : null;
+                    $existingFirstTry = $existingTimer['completed_first_try'] !== null
+                        ? database_boolean($existingTimer['completed_first_try'])
+                        : null;
+                    $sameSubmission = (string)$existingTimer['status'] === $timer['status']
+                        && $existingPassed === $timer['is_passed']
+                        && $existingFirstTry === $timer['completed_first_try']
+                        && database_boolean($existingTimer['same_finished_at'] ?? false)
+                        && database_boolean($existingTimer['same_duration'] ?? false)
+                        && database_boolean($existingTimer['same_score'] ?? false)
+                        && database_boolean($existingTimer['same_grading_details'] ?? false);
+                    if (!$sameSubmission) {
+                        $pdo->rollBack();
+                        fail(409, 'tracking/submission-conflict', 'submission_id was already used for a different result.');
+                    }
+                    $timer['session_id'] = (string)$existingTimer['id'];
+                    $savedRow = null;
+                }
+            } else {
+                $practiceAttemptNo = null;
+                if ($mode === 'Thực hành') {
+                    $identityKey = strtolower((string)($resolvedUserId ?: $timer['email'] ?: $timer['technician_id']) . '|' . $timer['lab_id']);
+                    $attemptLock = $pdo->prepare('SELECT pg_advisory_xact_lock(hashtextextended(:lock_key, 0))');
+                    $attemptLock->execute(['lock_key' => 'attempt|' . $identityKey]);
+                    $nextAttempt = $pdo->prepare(
+                        <<<'SQL'
+                        SELECT COALESCE(MAX(practice_attempt_no), 0) + 1
+                          FROM timer_sessions
+                         WHERE lab_id = :lab_id
+                           AND mode IN ('Thực hành', 'practice')
+                           AND (
+                               (:user_id IS NOT NULL AND user_id = CAST(:user_id AS uuid))
+                               OR (NULLIF(:email, '') IS NOT NULL AND LOWER(email) = LOWER(:email))
+                               OR (NULLIF(:technician_id, '') IS NOT NULL AND technician_id = :technician_id)
+                           )
+                        SQL
+                    );
+                    $nextAttempt->execute([
+                        'lab_id' => $timer['lab_id'],
+                        'user_id' => $resolvedUserId ?: null,
+                        'email' => $timer['email'],
+                        'technician_id' => $timer['technician_id'],
+                    ]);
+                    $practiceAttemptNo = (int)$nextAttempt->fetchColumn();
+                }
+                $timer['practice_attempt_no'] = $practiceAttemptNo;
+                $timer['completed_first_try'] = $timer['is_passed'] === true
+                    ? $practiceAttemptNo === 1
+                    : null;
+
+                $insert = $pdo->prepare(
+                    <<<'SQL'
+                    INSERT INTO timer_sessions (
+                        user_id, technician_id, name, email, started_at, finished_at,
+                        duration_sec, mode, device, device_id, lab_id, lab_name,
+                        status, completed_first_try, practice_attempt_no, last_action,
+                        is_passed, score, grading_details, client_ip, user_agent,
+                        session_type, submission_id
+                    ) VALUES (
+                        :user_id, :technician_id, :name, :email, :started_at, :finished_at,
+                        :duration_sec, :mode, :device, :device_id, :lab_id, :lab_name,
+                        :status, :completed_first_try, :practice_attempt_no, :last_action,
+                        :is_passed, :score, :grading_details, :client_ip, :user_agent,
+                        :session_type, :submission_id
+                    )
+                    RETURNING id
+                    SQL
                 );
-                $existingStatement->execute([
-                    'submission_id' => $submissionId,
+                $insert->execute([
+                    'user_id' => $resolvedUserId,
+                    'technician_id' => $timer['technician_id'],
+                    'name' => $timer['name'],
+                    'email' => $timer['email'],
                     'started_at' => $startedAt,
                     'finished_at' => $finishedAt,
                     'duration_sec' => $timer['duration_sec'],
+                    'mode' => $mode,
+                    'device' => $timer['device'],
+                    'device_id' => $deviceId,
+                    'lab_id' => $timer['lab_id'],
+                    'lab_name' => $timer['lab_name'],
+                    'status' => $timer['status'],
                     'completed_first_try' => $timer['completed_first_try'] === null
                         ? null
                         : ($timer['completed_first_try'] ? 1 : 0),
+                    'practice_attempt_no' => $practiceAttemptNo,
+                    'last_action' => $timer['last_action'],
+                    'is_passed' => $timer['is_passed'] !== null ? ($timer['is_passed'] ? 1 : 0) : null,
                     'score' => $timer['score'],
                     'grading_details' => $gradingDetailsJson,
+                    'client_ip' => $clientIp,
+                    'user_agent' => $userAgent,
+                    'session_type' => $sessionType,
+                    'submission_id' => $submissionId,
                 ]);
-                $existingTimer = $existingStatement->fetch();
-                $existingPassed = is_array($existingTimer) && $existingTimer['is_passed'] !== null
-                    ? database_boolean($existingTimer['is_passed'])
-                    : null;
-                $sameSubmission = is_array($existingTimer)
-                    && (string)$existingTimer['user_id'] === (string)$resolvedUserId
-                    && (string)$existingTimer['lab_id'] === $timer['lab_id']
-                    && (string)$existingTimer['mode'] === $timer['mode']
-                    && (string)$existingTimer['status'] === $timer['status']
-                    && $existingPassed === $timer['is_passed']
-                    && (string)$existingTimer['session_type'] === $timer['session_type']
-                    && database_boolean($existingTimer['same_started_at'] ?? false)
-                    && database_boolean($existingTimer['same_finished_at'] ?? false)
-                    && database_boolean($existingTimer['same_duration'] ?? false)
-                    && database_boolean($existingTimer['same_first_try'] ?? false)
-                    && database_boolean($existingTimer['same_score'] ?? false)
-                    && database_boolean($existingTimer['same_grading_details'] ?? false);
-                if (!$sameSubmission) {
-                    $pdo->rollBack();
-                    fail(409, 'tracking/submission-conflict', 'submission_id was already used for a different result.');
-                }
-                $timer['session_id'] = (string)$existingTimer['id'];
-            } else {
+                $savedRow = $insert->fetch();
                 $timer['session_id'] = (string)$savedRow['id'];
             }
             $timer['saved'] = true;

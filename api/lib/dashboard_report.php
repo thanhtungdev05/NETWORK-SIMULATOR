@@ -69,6 +69,7 @@ resolved_sessions AS (
            timer.status,
            timer.is_passed,
            timer.completed_first_try,
+           timer.practice_attempt_no,
            timer.duration_sec
       FROM timer_sessions timer
       JOIN active_labs lab ON lab.lab_id = timer.lab_id
@@ -81,14 +82,7 @@ resolved_sessions AS (
      WHERE NOT COALESCE(timer.is_mock, FALSE)
 ),
 numbered_sessions AS (
-    SELECT session.*,
-           CASE WHEN session.mode IN ('Thực hành', 'practice') THEN
-               COUNT(*) FILTER (WHERE session.mode IN ('Thực hành', 'practice')) OVER (
-                   PARTITION BY session.person_id, session.lab_id
-                   ORDER BY session.occurred_at, session.id
-                   ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-               )
-           END AS practice_attempt_no
+    SELECT session.*
       FROM resolved_sessions session
 )
 SQL;
@@ -107,50 +101,67 @@ function dashboard_report_metric(PDO $pdo, ?string $from, ?string $to): array
         $params['to_date'] = $to;
     }
     $predicate = $where ? 'WHERE ' . implode(' AND ', $where) : '';
+    $progressWhere = '';
+    if ($to !== null) {
+        $progressWhere = "WHERE occurred_at < CAST(:progress_to_date AS date) + INTERVAL '1 day'";
+        $params['progress_to_date'] = $to;
+    }
 
     $sql = dashboard_report_common_cte() . ",\n" . <<<SQL
-scoped AS (
+activity_scoped AS (
     SELECT * FROM numbered_sessions $predicate
+),
+progress_scoped AS (
+    SELECT * FROM numbered_sessions $progressWhere
 ),
 pair_outcomes AS (
     SELECT person_id,
            lab_id,
            MIN(practice_attempt_no) FILTER (
-               WHERE mode IN ('Thực hành', 'practice')
-                 AND (is_passed IS TRUE OR (is_passed IS NULL AND status IN ('completed', 'Hoàn thành')))
+                WHERE mode IN ('Thực hành', 'practice')
+                  AND is_passed IS TRUE
            ) AS first_pass_attempt_no
-      FROM scoped
+      FROM progress_scoped
      GROUP BY person_id, lab_id
 )
 SELECT (SELECT COUNT(*) FROM eligible) * (SELECT COUNT(*) FROM active_labs) AS assigned_count,
-       COUNT(*) FILTER (WHERE scoped.mode IN ('Thực hành', 'practice')) AS practice_attempts,
-       COUNT(*) FILTER (WHERE scoped.mode IN ('Hướng dẫn', 'guide')) AS guide_attempts,
-       COUNT(DISTINCT scoped.person_id) AS participating_technicians,
+       COUNT(*) FILTER (WHERE activity_scoped.mode IN ('Thực hành', 'practice')) AS practice_attempts,
+       COUNT(*) FILTER (WHERE activity_scoped.mode IN ('Hướng dẫn', 'guide')) AS guide_attempts,
+       COUNT(DISTINCT activity_scoped.person_id) AS participating_technicians,
+       COUNT(*) FILTER (
+           WHERE activity_scoped.mode IN ('Thực hành', 'practice')
+             AND activity_scoped.status IN ('completed', 'Hoàn thành')
+       ) AS activity_completed_count,
+       COUNT(*) FILTER (
+           WHERE activity_scoped.mode IN ('Thực hành', 'practice')
+             AND activity_scoped.status IN ('completed', 'Hoàn thành')
+             AND activity_scoped.is_passed IS NULL
+       ) AS ungraded_completed_count,
        (SELECT COUNT(*) FROM pair_outcomes WHERE first_pass_attempt_no IS NOT NULL) AS completed_count,
        COUNT(*) FILTER (
-           WHERE scoped.mode IN ('Thực hành', 'practice') AND scoped.is_passed IS NOT NULL
+            WHERE activity_scoped.mode IN ('Thực hành', 'practice') AND activity_scoped.is_passed IS NOT NULL
        ) AS graded_count,
        ROUND(100.0 * (SELECT COUNT(*) FROM pair_outcomes WHERE first_pass_attempt_no IS NOT NULL)
            / NULLIF((SELECT COUNT(*) FROM eligible) * (SELECT COUNT(*) FROM active_labs), 0), 2) AS completion_rate,
        ROUND(100.0 * COUNT(*) FILTER (
-           WHERE scoped.mode IN ('Thực hành', 'practice') AND scoped.is_passed IS TRUE
+            WHERE activity_scoped.mode IN ('Thực hành', 'practice') AND activity_scoped.is_passed IS TRUE
        ) / NULLIF(COUNT(*) FILTER (
-           WHERE scoped.mode IN ('Thực hành', 'practice') AND scoped.is_passed IS NOT NULL
+            WHERE activity_scoped.mode IN ('Thực hành', 'practice') AND activity_scoped.is_passed IS NOT NULL
        ), 0), 2) AS pass_rate,
        ROUND(100.0 * (SELECT COUNT(*) FROM pair_outcomes WHERE first_pass_attempt_no = 1)
            / NULLIF((SELECT COUNT(*) FROM pair_outcomes WHERE first_pass_attempt_no IS NOT NULL), 0), 2) AS first_try_rate,
-       ROUND(AVG(scoped.duration_sec) FILTER (
-           WHERE scoped.mode IN ('Thực hành', 'practice') AND scoped.duration_sec > 0
+       ROUND(AVG(activity_scoped.duration_sec) FILTER (
+            WHERE activity_scoped.mode IN ('Thực hành', 'practice') AND activity_scoped.duration_sec > 0
        )) AS avg_duration_sec,
        COUNT(*) FILTER (
-           WHERE scoped.mode IN ('Thực hành', 'practice') AND scoped.duration_sec > 0
+            WHERE activity_scoped.mode IN ('Thực hành', 'practice') AND activity_scoped.duration_sec > 0
        ) AS duration_known_count,
        ROUND(100.0 * COUNT(*) FILTER (
-           WHERE scoped.mode IN ('Thực hành', 'practice') AND scoped.duration_sec > 0
+            WHERE activity_scoped.mode IN ('Thực hành', 'practice') AND activity_scoped.duration_sec > 0
        ) / NULLIF(COUNT(*) FILTER (
-           WHERE scoped.mode IN ('Thực hành', 'practice')
-       ), 0), 2) AS duration_coverage_rate
-  FROM scoped
+            WHERE activity_scoped.mode IN ('Thực hành', 'practice')
+        ), 0), 2) AS duration_coverage_rate
+  FROM activity_scoped
 SQL;
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
@@ -182,23 +193,26 @@ attempt_metrics AS (
       FROM scoped
      GROUP BY month
 ),
-pair_outcomes AS (
-    SELECT month,
-           person_id,
+first_passes AS (
+    SELECT person_id,
            lab_id,
            MIN(practice_attempt_no) FILTER (
-               WHERE mode IN ('Thực hành', 'practice')
-                 AND (is_passed IS TRUE OR (is_passed IS NULL AND status IN ('completed', 'Hoàn thành')))
-           ) AS first_pass_attempt_no
-      FROM scoped
-     GROUP BY month, person_id, lab_id
+               WHERE mode IN ('Thực hành', 'practice') AND is_passed IS TRUE
+           ) AS first_pass_attempt_no,
+           MIN(occurred_at) FILTER (
+               WHERE mode IN ('Thực hành', 'practice') AND is_passed IS TRUE
+           ) AS first_passed_at
+      FROM numbered_sessions
+     GROUP BY person_id, lab_id
 ),
 pair_metrics AS (
-    SELECT month,
-           COUNT(*) FILTER (WHERE first_pass_attempt_no IS NOT NULL) AS completed_count,
-           COUNT(*) FILTER (WHERE first_pass_attempt_no = 1) AS first_try_count
-      FROM pair_outcomes
-     GROUP BY month
+    SELECT months.month,
+           COUNT(first_passes.first_pass_attempt_no) AS completed_count,
+           COUNT(*) FILTER (WHERE first_passes.first_pass_attempt_no = 1) AS first_try_count
+      FROM months
+      LEFT JOIN first_passes
+        ON first_passes.first_passed_at < months.month + INTERVAL '1 month'
+     GROUP BY months.month
 )
 SELECT TO_CHAR(months.month, 'YYYY-MM') AS month,
        COALESCE(attempt.practice_attempts, 0) AS practice_attempts,
@@ -248,10 +262,10 @@ matrix AS (
            COUNT(DISTINCT eligible.person_id) FILTER (
                WHERE scoped.mode IN ('Thực hành', 'practice')
            ) AS attempted_count,
-           COUNT(DISTINCT eligible.person_id) FILTER (
-               WHERE scoped.mode IN ('Thực hành', 'practice')
-                 AND (scoped.is_passed IS TRUE OR (scoped.is_passed IS NULL AND scoped.status IN ('completed', 'Hoàn thành')))
-           ) AS completed_count,
+            COUNT(DISTINCT eligible.person_id) FILTER (
+                WHERE scoped.mode IN ('Thực hành', 'practice')
+                  AND scoped.is_passed IS TRUE
+            ) AS completed_count,
            COUNT(scoped.id) FILTER (WHERE scoped.mode IN ('Thực hành', 'practice')) AS attempt_count
       FROM eligible
      CROSS JOIN active_labs lab

@@ -654,6 +654,12 @@ tr:last-child td {
     background: rgba(220, 38, 38, 0.1);
 }
 
+.status-ungraded {
+    color: #92400e;
+    border-color: #f6d58d !important;
+    background: #fff8e7;
+}
+
 .mode-pill {
     display: inline-flex;
     align-items: center;

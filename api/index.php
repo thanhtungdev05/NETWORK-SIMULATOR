@@ -2095,7 +2095,10 @@ function handle_dashboard(array $segments, string $method): void
                            TO_CHAR(
                                GREATEST(
                                    COALESCE((SELECT MAX(updated_at) FROM users), 'epoch'::timestamptz),
-                                   COALESCE((SELECT MAX(created_at) FROM timer_sessions), 'epoch'::timestamptz),
+                                    COALESCE((
+                                        SELECT MAX(GREATEST(created_at, COALESCE(finished_at, started_at, created_at)))
+                                          FROM timer_sessions
+                                    ), 'epoch'::timestamptz),
                                    COALESCE((SELECT MAX(updated_at) FROM regions), 'epoch'::timestamptz),
                                    COALESCE((SELECT MAX(updated_at) FROM device_catalog), 'epoch'::timestamptz),
                                    COALESCE((SELECT MAX(updated_at) FROM lab_catalog), 'epoch'::timestamptz)
@@ -2179,17 +2182,7 @@ function handle_dashboard(array $segments, string $method): void
                     timer.status,
                     timer.completed_first_try,
                     timer.last_action,
-                    CASE WHEN timer.mode IN (\'Thực hành\', \'practice\') THEN
-                        COUNT(*) FILTER (WHERE timer.mode IN (\'Thực hành\', \'practice\')) OVER (
-                            PARTITION BY COALESCE(
-                                timer.user_id::text,
-                                NULLIF(LOWER(timer.email), \'\'),
-                                NULLIF(timer.technician_id, \'\')
-                            ), active_lab.lab_id
-                            ORDER BY COALESCE(timer.started_at, timer.finished_at, timer.created_at), timer.id
-                            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-                        )
-                    END AS practice_attempt_no
+                    timer.practice_attempt_no
                  FROM timer_sessions timer
                  JOIN lab_catalog active_lab
                    ON active_lab.lab_id = timer.lab_id
@@ -2358,8 +2351,9 @@ function handle_dashboard(array $segments, string $method): void
                     COALESCE(u.class_code, 'Lớp chung') AS class_name,
                     device.device_name,
                     lab.lab_name,
-                    CASE WHEN bool_or(s.status IN ('completed', 'Hoàn thành')) THEN 'completed' ELSE 'assigned' END AS status,
-                    min(s.finished_at) FILTER (WHERE s.status IN ('completed', 'Hoàn thành')) AS completed_at
+                    CASE WHEN bool_or(s.is_passed IS TRUE) THEN 'passed' ELSE 'assigned' END AS status,
+                    min(s.finished_at) FILTER (WHERE s.is_passed IS TRUE) AS completed_at,
+                    min(s.practice_attempt_no) FILTER (WHERE s.is_passed IS TRUE) AS first_pass_attempt_no
                   FROM users u
                   CROSS JOIN lab_catalog lab
                   JOIN device_catalog device ON device.device_id = lab.device_id
@@ -2396,6 +2390,9 @@ function handle_dashboard(array $segments, string $method): void
                     'lab_name' => (string)$row['lab_name'],
                     'status' => (string)$row['status'],
                     'completed_at' => safe_datetime($row['completed_at']),
+                    'first_pass_attempt_no' => $row['first_pass_attempt_no'] !== null
+                        ? (int)$row['first_pass_attempt_no']
+                        : null,
                 ];
             }
         } catch (Throwable $e) {

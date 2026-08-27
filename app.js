@@ -820,6 +820,12 @@
       startedAt: new Date().toISOString(),
       submissionId: crypto.randomUUID ? crypto.randomUUID() : ('sub-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10))
     };
+    const sessionToReserve = _trackingSession;
+    _trackingSession.startSettled = sessionToReserve.mode !== 'Thực hành';
+    _trackingSession.startPromise = sessionToReserve.mode === 'Thực hành'
+      ? reserveTrackingTimerStart(sessionToReserve)
+        .finally(function () { sessionToReserve.startSettled = true; })
+      : Promise.resolve(true);
     _lastTrackingPayload = null;
 
     // ── Khởi động đồng hồ realtime trên toolbar ──
@@ -886,6 +892,11 @@
 
   function backToLesson() {
     // Reset đồng hồ và session tracking
+    const sessionToClose = _trackingSession;
+    const elapsedSec = stopPracticeTimer();
+    if (sessionToClose && sessionToClose.mode === 'Thực hành' && !sessionToClose.finalized) {
+      finalizeAbandonedTrackingSession(sessionToClose, elapsedSec);
+    }
     resetPracticeTimer();
     _trackingSession = null;
     _lastTrackingPayload = null;
@@ -1357,6 +1368,83 @@
   }
 
   // ── Tracking API ─────────────────────────────────────────────────
+  function reserveTrackingTimerStart(session) {
+    if (!session || !_currentUser) return Promise.resolve(false);
+    const labId = session.lesson && session.lesson.id
+      ? session.lesson.id
+      : (session.lesson && session.lesson.title ? session.lesson.title : '');
+    return fetch('/api/index.php/tracking/timer/start', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        submission_id: session.submissionId,
+        lab_id: labId,
+        mode: session.mode,
+        started_at: session.startedAt
+      })
+    })
+      .then(function (res) {
+        if (!res.ok) {
+          return res.json().catch(function () { return {}; }).then(function (err) {
+            const message = err && err.error && err.error.message
+              ? err.error.message
+              : `Không khởi tạo được phiên (HTTP ${res.status}).`;
+            throw new Error(message);
+          });
+        }
+        return res.json();
+      })
+      .then(function (data) {
+        const item = data && data.item ? data.item : {};
+        session.attemptNo = item.practice_attempt_no == null ? null : Number(item.practice_attempt_no);
+        session.serverSessionId = item.session_id || '';
+        return true;
+      })
+      .catch(function (err) {
+        console.warn('[Tracking] Chưa thể giữ số thứ tự phiên; máy chủ sẽ cấp số khi lưu kết quả:', err);
+        return false;
+      });
+  }
+
+  function finalizeAbandonedTrackingSession(session, durationSec) {
+    if (!session || !_currentUser) return Promise.resolve(false);
+    const labId = session.lesson && session.lesson.id
+      ? session.lesson.id
+      : (session.lesson && session.lesson.title ? session.lesson.title : '');
+    const user = _currentUser;
+    const finish = function () {
+      return fetch('/api/index.php/tracking/timer', {
+        method: 'POST',
+        credentials: 'include',
+        keepalive: true,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          submission_id: session.submissionId,
+          technician_id: user.technician_id,
+          name: user.name,
+          email: user.email || undefined,
+          lab_id: labId,
+          mode: session.mode,
+          started_at: session.startedAt,
+          finished_at: new Date().toISOString(),
+          duration_sec: durationSec || 0,
+          status: 'abandoned'
+        })
+      })
+        .then(function (response) {
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          session.finalized = true;
+          return true;
+        })
+        .catch(function (error) {
+          console.warn('[Tracking] Không thể ghi nhận phiên đã dừng:', error);
+          return false;
+        });
+    };
+    return Promise.resolve(session.startPromise).then(finish);
+  }
+
   /**
    * Gửi thông tin phiên thực hành lên server qua POST /api/index.php/tracking/timer.
    * Được gọi DUY NHẤT 1 LẦN khi KTV bấm nút trên modal kết quả.
@@ -1391,6 +1479,12 @@
 
   function sendTrackingTimer(evalResult, durationSec, retryPayload = null) {
     if (!_trackingSession) return; // Chưa có phiên nào được bắt đầu
+    const session = _trackingSession;
+    if (session.startPromise && !session.startSettled) {
+      return session.startPromise.then(function () {
+        return sendTrackingTimer(evalResult, durationSec, retryPayload);
+      });
+    }
     if (trackingSaveInFlight) return;
     if (!_currentUser) {
       setTrackingSaveStatus('error', 'Phiên đăng nhập không còn hợp lệ. Hãy đăng nhập lại trước khi nộp bài.');
@@ -1399,8 +1493,6 @@
     trackingSaveInFlight = true;
     setTrackingActionsDisabled(true);
     setTrackingSaveStatus('saving', 'Đang lưu kết quả và cập nhật tiến độ...');
-
-    const session = _trackingSession;
 
     const finishedAt = new Date();
 
@@ -1457,10 +1549,16 @@
         return res.json().then(function (data) {
           console.info('[Tracking] Đã ghi phiên thực hành & chấm điểm:', data);
           const item = data && data.item ? data.item : {};
+          session.finalized = true;
+          const attemptNote = item.practice_attempt_no
+            ? ` Lần thực hành ${item.practice_attempt_no}.`
+            : '';
           if (item.normalized_saved === false) {
             setTrackingSaveStatus('warning', 'Đã lưu lịch sử làm bài, nhưng bài này chưa được giao trong lớp nên chưa cộng vào tiến độ.');
           } else {
-            setTrackingSaveStatus('success', item.duplicate ? 'Kết quả này đã được lưu trước đó.' : 'Đã lưu kết quả và cập nhật tiến độ thành công.');
+            setTrackingSaveStatus('success', item.duplicate
+              ? `Kết quả này đã được lưu trước đó.${attemptNote}`
+              : `Đã lưu kết quả và cập nhật tiến độ thành công.${attemptNote}`);
           }
         });
       })

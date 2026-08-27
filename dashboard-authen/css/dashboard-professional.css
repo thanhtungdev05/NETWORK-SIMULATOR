@@ -115,10 +115,12 @@ body {
     body.detail-open .page.sidebar-collapsed .sidebar {
         position: fixed;
         inset: 0 auto 0 0;
-        height: 100vh;
-        height: 100dvh;
-        min-height: 100vh;
-        min-height: 100dvh;
+        /* Let the fixed top/bottom anchors define the height. Explicit 100dvh
+           can resolve to a shorter visual viewport while the detail drawer
+           owns scrolling, leaving an uncovered strip below the sidebar. */
+        height: auto;
+        min-height: 0;
+        max-height: none;
     }
 
     body.detail-open .sidebar {

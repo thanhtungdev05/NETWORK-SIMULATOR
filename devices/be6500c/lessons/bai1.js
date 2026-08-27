@@ -24,17 +24,12 @@ window.DEVICE_BE6500C_LESSONS.push({
     {
       selector: '#username',
       text: 'Nhập admin',
-      position: 'bottom'
+      position: 'right'
     },
     {
       selector: '#password',
       text: 'Nhập admin',
-      position: 'bottom'
+      position: 'right'
     },
-    {
-      selector: '.btn-login',
-      text: 'Bấm Đăng nhập',
-      position: 'bottom'
-    }
   ]
 });

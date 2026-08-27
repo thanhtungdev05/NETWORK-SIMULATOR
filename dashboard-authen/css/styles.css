@@ -7635,6 +7635,16 @@ th:nth-last-child(2) .header-filter-popover .popover-dropdown {
     background: #fff0f2;
 }
 
+.instructor-lab-cell.instructor-progress-ungraded {
+    color: #8a5a00;
+    background: #fff6d8;
+}
+
+.instructor-lab-cell.instructor-progress-notstarted {
+    color: #7b8798;
+    background: #f7f9fc;
+}
+
 .instructor-lab-cell.instructor-progress-unassigned {
     color: #98a2b3;
     background: #f7f8fa;

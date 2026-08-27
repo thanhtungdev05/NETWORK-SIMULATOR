@@ -7,8 +7,8 @@
     <meta name="theme-color" content="#f3f6fb">
     <meta name="color-scheme" content="light">
     <title>Dashboard giám sát thực hành KTV | FTC</title>
-    <link rel="stylesheet" href="css/styles.css?v=20260825-7">
-    <link rel="stylesheet" href="css/dashboard-professional.css?v=20260825-1">
+    <link rel="stylesheet" href="css/styles.css?v=20260827-2">
+    <link rel="stylesheet" href="css/dashboard-professional.css?v=20260827-2">
 </head>
 
 <body>
@@ -135,8 +135,8 @@
                     <section class="section dashboard-page-view" id="overview" data-page-view="overview">
                         <div class="section-title">
                             <div>
-                                <h2>Tổng quan hoạt động thực hành</h2>
-                                <span>Chỉ số tổng hợp theo dõi tình hình luyện tập và tiến độ bài lab của KTV toàn hệ thống.</span>
+                                <h2>Tổng quan đào tạo thực hành</h2>
+                                <span>Theo dõi mức độ tham gia, lượt hoàn tất và chất lượng kết quả thực hành của KTV trong kỳ.</span>
                             </div>
                             <div class="date-range-picker overview-month-picker" id="dateRangePicker">
                                 <div class="overview-month-field">
@@ -207,50 +207,50 @@
                         </div>
 
                         <div class="kpi-grid">
-                            <div class="kpi-card" title="Tổng số phiên KTV tự thực hành bài lab độc lập trong kỳ báo cáo đã chọn">
-                                <div class="kpi-label">Lượt thực hành trong kỳ</div>
+                            <div class="kpi-card" title="Số phiên ở chế độ Thực hành phát sinh trong kỳ; một KTV có thể thực hành cùng một lab nhiều lượt">
+                                <div class="kpi-label">Lượt thực hành</div>
                                 <div class="kpi-value blue" id="kpiSessions">0</div>
                                 <div class="kpi-comparison" id="kpiSessionsComparison"></div>
                                 <div class="kpi-note" id="kpiSessionsContext">Đang tính dữ liệu so sánh</div>
                             </div>
-                            <div class="kpi-card" title="Tổng số phiên KTV mở chế độ hướng dẫn từng bước để làm quen thao tác cấu hình">
-                                <div class="kpi-label">Lượt xem hướng dẫn trong kỳ</div>
+                            <div class="kpi-card" title="Số phiên ở chế độ Hướng dẫn; các phiên này không được tính vào tỷ lệ đạt">
+                                <div class="kpi-label">Lượt sử dụng hướng dẫn</div>
                                 <div class="kpi-value violet" id="kpiGuideSessions">0</div>
                                 <div class="kpi-comparison" id="kpiGuideSessionsComparison"></div>
                                 <div class="kpi-note" id="kpiGuideSessionsContext">Đang tính dữ liệu so sánh</div>
                             </div>
-                            <div class="kpi-card" title="Số lượng KTV có phát sinh ít nhất 1 phiên học tập hoặc thực hành trong kỳ">
-                                <div class="kpi-label">KTV tham gia trong kỳ</div>
+                            <div class="kpi-card" title="Số KTV duy nhất có ít nhất một phiên trong kỳ; không đồng nghĩa với số KTV được phân công">
+                                <div class="kpi-label">KTV có hoạt động</div>
                                 <div class="kpi-value green" id="kpiLearners">0</div>
                                 <div class="kpi-comparison" id="kpiLearnersComparison"></div>
                                 <div class="kpi-note" id="kpiLearnersContext">Đang tính dữ liệu so sánh</div>
                             </div>
-                            <div class="kpi-card" title="Tổng số cặp KTV - Bài lab đã hoàn thành tích lũy tính đến thời điểm báo cáo">
-                                <div class="kpi-label">Lab thực hành hoàn thành lũy kế</div>
+                            <div class="kpi-card" title="Số cặp KTV–bài lab có ít nhất một lượt ghi nhận hoàn tất; mỗi cặp chỉ được tính một lần trong kỳ">
+                                <div class="kpi-label">Cặp KTV–lab đã hoàn tất</div>
                                 <div class="kpi-value violet" id="kpiCompleted">0</div>
                                 <div class="kpi-comparison" id="kpiCompletedComparison"></div>
                                 <div class="kpi-note" id="kpiCompletedContext">Đang tính dữ liệu so sánh</div>
                             </div>
-                            <div class="kpi-card" title="Tỷ lệ phần trăm bài lab đã hoàn thành trên tổng số bài lab được phân công trong chương trình">
-                                <div class="kpi-label">Tiến độ hoàn thành thực hành</div>
+                            <div class="kpi-card" title="Số lượt Thực hành có trạng thái kết thúc phiên trên tổng lượt Thực hành; không đồng nghĩa tỷ lệ đạt chuẩn">
+                                <div class="kpi-label">Tỷ lệ lượt hoàn tất</div>
                                 <div class="kpi-value cyan" id="kpiCompletionRate">0%</div>
                                 <div class="kpi-comparison" id="kpiCompletionRateComparison"></div>
                                 <div class="kpi-note" id="kpiCompletionRateContext">Đang tính dữ liệu so sánh</div>
                             </div>
-                            <div class="kpi-card" title="Tỷ lệ phiên thực hành đạt yêu cầu trên tổng số phiên thực hành đã có kết quả chấm điểm">
-                                <div class="kpi-label">Tỷ lệ đạt (trên bài đã chấm)</div>
+                            <div class="kpi-card" title="Số lượt Thực hành đạt trên số lượt đã có kết quả chấm; không phản ánh tiến độ chương trình">
+                                <div class="kpi-label">Tỷ lệ đạt trên lượt đã chấm</div>
                                 <div class="kpi-value cyan" id="kpiPassRate">—</div>
                                 <div class="kpi-comparison" id="kpiPassRateComparison"></div>
                                 <div class="kpi-note" id="kpiPassRateContext">Chưa có kết quả chấm</div>
                             </div>
-                            <div class="kpi-card" title="Tỷ lệ bài lab KTV hoàn thành ngay từ lần thực hành độc lập đầu tiên">
-                                <div class="kpi-label">Đạt lần đầu (First-pass Rate)</div>
+                            <div class="kpi-card" title="Số cặp KTV–lab có lượt Thực hành đầu tiên đạt trên số cặp có kết quả chấm ở lượt đầu">
+                                <div class="kpi-label">Tỷ lệ đạt ngay lượt 1</div>
                                 <div class="kpi-value green" id="kpiFirstTryRate">0%</div>
                                 <div class="kpi-comparison" id="kpiFirstTryRateComparison"></div>
                                 <div class="kpi-note" id="kpiFirstTryRateContext">Đang tính dữ liệu so sánh</div>
                             </div>
-                            <div class="kpi-card" title="Thời lượng trung bình của một phiên thực hành hoàn thành (tính trên các phiên có dữ liệu thời gian)">
-                                <div class="kpi-label">Thời gian làm trung bình</div>
+                            <div class="kpi-card" title="Thời lượng trung bình của các lượt Thực hành có dữ liệu thời gian; nhanh hơn không mặc định là tốt hơn">
+                                <div class="kpi-label">Thời lượng thực hành trung bình</div>
                                 <div class="kpi-value blue" id="kpiAvgDuration">0m</div>
                                 <div class="kpi-comparison" id="kpiAvgDurationComparison"></div>
                                 <div class="kpi-note" id="kpiAvgDurationContext">Đang tính dữ liệu so sánh</div>
@@ -264,7 +264,7 @@
                             <div class="detail-section-header ktv-monthly-header">
                                 <div>
                                     <h4>Xu hướng hoạt động theo tháng</h4>
-                                    <span>Lượt thực hành trong từng tháng và tiến độ hoàn thành lũy kế đến cuối tháng</span>
+                                    <span>Lượt thực hành và tỷ lệ lượt kết thúc phiên của từng tháng; không phải tỷ lệ đạt chuẩn.</span>
                                 </div>
                                 <div class="ktv-monthly-summary" id="overviewMonthlySummary"></div>
                             </div>
@@ -310,12 +310,13 @@
                                     <div class="instructor-progress-title-row">
                                         <h2>Ma trận tiến độ lab theo lớp</h2>
                                     </div>
-                                    <p>Đối chiếu từng bài lab của từng thiết bị với từng KTV; màu ô thể hiện trạng thái thực hiện.</p>
+                                    <p>Đối chiếu lũy kế từng KTV–lab; “HT Lx” là lượt hoàn tất đầu tiên, còn “Đạt Lx” chỉ xuất hiện khi đã có kết quả chấm.</p>
                                     <div class="detail-report-legend instructor-progress-legend"
                                         aria-label="Chú thích màu trạng thái bài lab">
-                                        <span><i class="legend-high"></i> Hoàn thành</span>
-                                        <span><i class="legend-low"></i> Đang thực hiện</span>
-                                        <span><i class="legend-unassigned"></i> Chưa phân công</span>
+                                        <span><i class="legend-high"></i> Đạt (đã chấm)</span>
+                                        <span><i class="legend-medium"></i> Hoàn tất · chưa chấm</span>
+                                        <span><i class="legend-low"></i> Chưa đạt / đang thực hiện</span>
+                                        <span><i class="legend-unassigned"></i> Ngoài phạm vi</span>
                                     </div>
                                 </div>
                                 <div class="instructor-progress-tools">
@@ -352,10 +353,10 @@
                                     </span>
                                 </label>
                                 <label class="instructor-filter-field" for="instructorCompletionFilter">
-                                    <span>Trạng thái hoàn thành</span>
+                                    <span>Trạng thái hoàn tất</span>
                                     <select id="instructorCompletionFilter">
                                         <option value="all">Tất cả trạng thái</option>
-                                        <option value="completed">Hoàn thành 100%</option>
+                                        <option value="completed">Hoàn tất 100%</option>
                                         <option value="in_progress">Đang thực hiện (1–99%)</option>
                                         <option value="not_started">Chưa làm (0%)</option>
                                         <option value="unassigned">Chưa phân công</option>
@@ -495,7 +496,7 @@
                         </div>
                     </section>
 
-                    <!-- Báo cáo ma trận thiết bị và bài lab theo Khu vực/CNx -->
+                    <!-- Báo cáo ma trận thiết bị và bài lab theo Khu vực / Chi nhánh -->
                     <section class="section detail-report-page dashboard-page-view" id="analytics"
                         data-page-view="analytics">
                         <div class="detail-report-shell">
@@ -506,7 +507,7 @@
                                         stroke-width="2">
                                         <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4" />
                                     </svg>
-                                    <span>Báo cáo theo Khu vực/CNx</span>
+                                    <span>Báo cáo theo Khu vực / Chi nhánh</span>
                                 </button>
                                 <button type="button" class="matrix-toggle-btn" data-matrix-tab-target="class_matrix"
                                     aria-pressed="false">
@@ -523,7 +524,7 @@
                                 <div>
                                     <span class="detail-report-eyebrow">Báo cáo quản lý đào tạo</span>
                                     <h2>Tiến độ thực hành theo Khu vực / Chi nhánh</h2>
-                                    <p>Bảng tổng hợp tỷ lệ KTV hoàn thành từng bài lab trên tổng số KTV được giao của mỗi đơn vị.</p>
+                                    <p>Đối chiếu KTV có lượt hoàn tất từng lab theo khu vực hiện tại trong hồ sơ. Khi chưa có dữ liệu phân công, mẫu số dùng phạm vi danh mục hiện hành.</p>
                                 </div>
                                 <div class="detail-report-period">
                                     <span>Kỳ báo cáo</span>
@@ -538,15 +539,15 @@
                                     <strong id="detailReportSessions">0</strong>
                                 </div>
                                 <div class="detail-report-stat report-stat-purple">
-                                    <span>Đơn vị / Vùng</span>
+                                    <span>Đơn vị hiển thị</span>
                                     <strong id="detailReportRegions">0</strong>
                                 </div>
                                 <div class="detail-report-stat report-stat-cyan">
-                                    <span>Tổng số bài lab</span>
+                                    <span>Bài lab trong phạm vi</span>
                                     <strong id="detailReportLabs">0</strong>
                                 </div>
                                 <div class="detail-report-stat report-stat-green">
-                                    <span>Độ phủ hoàn thành</span>
+                                    <span>Tỷ lệ cặp đã hoàn tất</span>
                                     <strong id="detailReportCompletion">0%</strong>
                                 </div>
                             </div>
@@ -555,12 +556,13 @@
                                 <div class="detail-report-table-header">
                                     <div>
                                         <h3>Ma trận hoàn thành theo Khu vực / Chi nhánh</h3>
-                                        <span>Mỗi ô hiển thị KTV hoàn thành / KTV được giao. “—” là chưa phân công bài lab này.</span>
+                                        <span>Mỗi ô = KTV có lượt hoàn tất / KTV trong phạm vi tham chiếu. Dòng tổng được tính từ tử số và mẫu số, không lấy trung bình phần trăm.</span>
                                     </div>
                                     <div class="detail-report-legend" aria-label="Chú thích màu tỷ lệ hoàn thành">
-                                        <span><i class="legend-high"></i> Từ 80% trở lên</span>
+                                        <span><i class="legend-high"></i> Hoàn tất từ 80%</span>
                                         <span><i class="legend-medium"></i> 50–79%</span>
                                         <span><i class="legend-low"></i> Dưới 50%</span>
+                                        <span><i class="legend-unassigned"></i> —: không có KTV trong phạm vi</span>
                                     </div>
                                 </div>
                                 <div class="detail-report-scroll" id="detailReportScroll" tabindex="0"
@@ -572,8 +574,7 @@
                                         <tfoot id="detailReportFoot"></tfoot>
                                     </table>
                                 </div>
-                                <div class="detail-report-hint">Giữ Shift và lăn chuột hoặc kéo thanh cuộn để xem thêm
-                                    thiết bị và bài lab.</div>
+                                <div class="detail-report-hint"><strong>Mở chi tiết chi nhánh</strong> chỉ chèn/ẩn các dòng con; số liệu dòng tổng và tổng hệ thống không thay đổi. Giữ Shift và lăn chuột hoặc kéo thanh cuộn để xem thêm thiết bị và bài lab.</div>
                             </div>
                         </div>
                     </section>
@@ -589,7 +590,7 @@
                                         stroke-width="2">
                                         <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4" />
                                     </svg>
-                                    <span>Báo cáo theo Khu vực/CNx</span>
+                                    <span>Báo cáo theo Khu vực / Chi nhánh</span>
                                 </button>
                                 <button type="button" class="matrix-toggle-btn active"
                                     data-matrix-tab-target="class_matrix" aria-pressed="true">
@@ -605,8 +606,8 @@
                             <div class="detail-report-header">
                                 <div>
                                     <span class="detail-report-eyebrow">Báo cáo đào tạo</span>
-                                    <h2>Chi tiết tiến độ thực hành KTV theo Lớp</h2>
-                                    <p>Bảng theo dõi chi tiết kết quả từng bài lab của từng Kỹ thuật viên trong lớp học.</p>
+                                    <h2>Tiến độ thực hành KTV theo lớp</h2>
+                                    <p>Dữ liệu lũy kế toàn thời gian. Số lượt được xếp theo lịch sử thực hành của từng KTV–lab; kết quả đạt chỉ hiển thị khi có dữ liệu chấm.</p>
                                 </div>
                                 <div class="class-matrix-toolbar">
                                     <label class="instructor-select-field">
@@ -637,11 +638,11 @@
                                     <strong id="classMatrixTotalKtvs">0</strong>
                                 </div>
                                 <div class="detail-report-stat report-stat-cyan">
-                                    <span>Tổng số bài lab</span>
+                                    <span>Bài lab trong phạm vi</span>
                                     <strong id="classMatrixTotalLabs">0</strong>
                                 </div>
                                 <div class="detail-report-stat report-stat-green">
-                                    <span>Độ phủ hoàn thành</span>
+                                    <span>Tỷ lệ hoàn tất ghi nhận</span>
                                     <strong id="classMatrixCompletionRate">0%</strong>
                                 </div>
                             </div>
@@ -650,14 +651,14 @@
                                 <div class="detail-report-table-header">
                                     <div>
                                         <h3 id="classMatrixTableTitle">Ma trận thực hành theo Kỹ thuật viên</h3>
-                                        <span>Mỗi ô thể hiện kết quả bài lab của KTV; màu ô phản ánh trạng thái (Xanh: Hoàn thành, Vàng/Đỏ: Đang thực hiện, Xám: Chưa làm, “—” là Chưa phân công).</span>
+                                        <span>“Đạt L3” = có kết quả chấm đạt ở lượt thực hành thứ 3; “HT L1 · Chưa chấm” = kết thúc phiên ở lượt 1 nhưng chưa thể kết luận đạt.</span>
                                     </div>
                                     <div class="detail-report-legend" aria-label="Chú thích màu trạng thái">
-                                        <span><i class="legend-high"></i> Hoàn thành (Từ 80%)</span>
-                                        <span><i class="legend-medium"></i> Đang thực hiện (50–79%)</span>
-                                        <span><i class="legend-low"></i> Đang thực hiện (Dưới 50%)</span>
+                                        <span><i class="legend-high"></i> Đạt (đã chấm)</span>
+                                        <span><i class="legend-medium"></i> Hoàn tất · chưa chấm</span>
+                                        <span><i class="legend-low"></i> Chưa đạt / đang thực hiện</span>
                                         <span><i class="legend-notstarted"></i> Chưa làm</span>
-                                        <span><i class="legend-unassigned"></i> Chưa phân công</span>
+                                        <span><i class="legend-unassigned"></i> Ngoài phạm vi</span>
                                     </div>
                                 </div>
                                 <div class="detail-report-scroll class-matrix-scroll" id="classMatrixScroll"
@@ -735,7 +736,7 @@
                                         <th style="width: 12%;">
                                             <div class="popover-filter-wrapper" id="learnerRegionPopoverWrapper">
                                                 <button class="popover-trigger-btn" type="button"
-                                                    aria-label="Lọc theo khu vực">Khu vực/CNx</button>
+                                                    aria-label="Lọc theo khu vực">Khu vực / Chi nhánh</button>
                                                 <div class="popover-dropdown" id="learnerRegionDropdown">
                                                     <div class="popover-options" id="learnerRegionOptions"></div>
                                                     <div class="popover-footer">
@@ -1187,7 +1188,7 @@
                         <strong class="mini-kpi-val blue" id="subModalTotalLabs">0</strong>
                     </div>
                     <div class="mini-kpi green-bg" id="kpiCompletedBox">
-                        <span class="mini-kpi-label">Đã hoàn thành</span>
+                        <span class="mini-kpi-label">Đã hoàn tất</span>
                         <strong class="mini-kpi-val green" id="subModalCompletedCount">0</strong>
                     </div>
                     <div class="mini-kpi amber-bg" id="kpiUncompletedBox">
@@ -1203,7 +1204,7 @@
                 <div class="sub-modal-filter-bar" role="group" aria-label="Lọc bài lab theo trạng thái">
                     <button type="button" class="sub-filter-btn active" data-sub-filter="all" aria-pressed="true">Tất cả bài lab (<span
                             id="cntAll">0</span>)</button>
-                    <button type="button" class="sub-filter-btn" data-sub-filter="done" aria-pressed="false">Đã hoàn thành (<span
+                    <button type="button" class="sub-filter-btn" data-sub-filter="done" aria-pressed="false">Đã hoàn tất (<span
                             id="cntDone">0</span>)</button>
                     <button type="button" class="sub-filter-btn" data-sub-filter="pending" aria-pressed="false">Đang thực hiện (<span
                             id="cntPending">0</span>)</button>
@@ -1245,7 +1246,7 @@
                         <span class="report-export-option-icon report-export-option-cyan" aria-hidden="true">
                             <svg viewBox="0 0 24 24"><path d="M4 20h16M6 20V8l6-4 6 4v12M9 11h2m2 0h2m-6 4h2m2 0h2" /></svg>
                         </span>
-                        <span><strong>Tiến độ theo chi nhánh</strong><small>Ma trận Khu vực/CNx theo thiết bị và bài lab.</small></span>
+                        <span><strong>Tiến độ theo chi nhánh</strong><small>Ma trận Khu vực / Chi nhánh theo thiết bị và bài lab.</small></span>
                     </label>
                     <label class="report-export-option" data-report-option="class_matrix">
                         <input type="radio" name="reportExportType" value="class_matrix">
@@ -1293,7 +1294,7 @@
 
     <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
 
-    <script src="js/app.js?v=20260825-9"></script>
+    <script src="js/app.js?v=20260827-2"></script>
 </body>
 
 </html>

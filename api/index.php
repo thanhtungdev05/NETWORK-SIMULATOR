@@ -2133,7 +2133,28 @@ function handle_dashboard(array $segments, string $method): void
         }
         unset($userLookupRows);
 
-        $timerSql = 'SELECT
+        $timerSql = 'WITH numbered_timer AS (
+                    SELECT source_timer.*,
+                           CASE WHEN source_timer.mode = \'Thực hành\' THEN
+                               COUNT(*) FILTER (WHERE source_timer.mode = \'Thực hành\') OVER (
+                                   PARTITION BY
+                                       COALESCE(
+                                           source_timer.user_id::text,
+                                           NULLIF(LOWER(BTRIM(source_timer.email)), \'\'),
+                                           NULLIF(BTRIM(source_timer.technician_id), \'\'),
+                                           \'session:\' || source_timer.id::text
+                                       ),
+                                       COALESCE(source_timer.device_id::text, NULLIF(BTRIM(source_timer.device), \'\'), \'unknown-device\'),
+                                       COALESCE(NULLIF(BTRIM(source_timer.lab_id), \'\'), NULLIF(BTRIM(source_timer.lab_name), \'\'), \'unknown-lab\')
+                                   ORDER BY
+                                       COALESCE(source_timer.started_at, source_timer.finished_at, source_timer.created_at),
+                                       source_timer.id
+                                   ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+                               )
+                           ELSE NULL END AS practice_attempt_no
+                      FROM timer_sessions source_timer
+                 )
+                 SELECT
                     timer.id AS session_id,
                     timer.user_id,
                     timer.technician_id,
@@ -2148,8 +2169,9 @@ function handle_dashboard(array $segments, string $method): void
                     timer.is_passed,
                     timer.status,
                     timer.completed_first_try,
+                    timer.practice_attempt_no,
                     timer.last_action
-                 FROM timer_sessions timer
+                 FROM numbered_timer timer
                  WHERE (
                      timer.user_id IS NOT NULL
                      OR (timer.email IS NOT NULL AND timer.email != \'\')
@@ -2280,9 +2302,10 @@ function handle_dashboard(array $segments, string $method): void
             'mode' => (string)($row['mode'] ?? 'Thực hành'),
             'device_name' => $device,
             'lab_name' => isset($labMap[$labKey]) ? $labMap[$labKey]['lab_name'] : (string)($row['lab_name'] ?? ''),
-            'is_passed' => isset($row['is_passed']) ? (bool)$row['is_passed'] : null,
+            'is_passed' => database_nullable_boolean($row['is_passed'] ?? null),
             'status' => (string)($row['status'] ?? ((isset($row['is_passed']) && $row['is_passed'] === false) ? 'failed' : 'completed')),
             'completed_first_try' => database_nullable_boolean($row['completed_first_try'] ?? null),
+            'practice_attempt_no' => $row['practice_attempt_no'] !== null ? (int)$row['practice_attempt_no'] : null,
             'last_action' => (string)($row['last_action'] ?? ''),
         ];
 
@@ -2383,12 +2406,42 @@ function handle_dashboard(array $segments, string $method): void
         'updated_at' => $row['updated_at'] ?? null,
     ], $technicianRows);
 
+    $practiceAttempts = 0;
+    $gradedPracticeAttempts = 0;
+    $verifiedPasses = 0;
+    $completedUngraded = 0;
+    $practicePairs = [];
+    foreach ($sessions as $session) {
+        if (($session['mode'] ?? '') !== 'Thực hành') continue;
+        $practiceAttempts++;
+        $passed = $session['is_passed'] ?? null;
+        if ($passed !== null) $gradedPracticeAttempts++;
+        if ($passed === true) $verifiedPasses++;
+        if (($session['status'] ?? '') === 'completed' && $passed === null) $completedUngraded++;
+        $identity = strtolower(trim((string)($session['email'] ?: $session['technician_id'])));
+        $pairKey = $identity . "\x1f" . ($session['device_name'] ?? '') . "\x1f" . ($session['lab_name'] ?? '');
+        $practicePairs[$pairKey] = ($practicePairs[$pairKey] ?? 0) + 1;
+    }
+    $repeatedPracticePairs = count(array_filter($practicePairs, static fn(int $count): bool => $count > 1));
+
     respond(['data' => [
         'sessions' => $sessions,
         'devices' => array_values($deviceMap),
         'labs' => array_values($labMap),
         'technicians' => $dashboardTechnicians,
         'assignments' => $assignments,
+        'data_quality' => [
+            'practice_attempts' => $practiceAttempts,
+            'graded_practice_attempts' => $gradedPracticeAttempts,
+            'ungraded_practice_attempts' => $practiceAttempts - $gradedPracticeAttempts,
+            'verified_passes' => $verifiedPasses,
+            'completed_ungraded_attempts' => $completedUngraded,
+            'practice_pairs' => count($practicePairs),
+            'repeated_practice_pairs' => $repeatedPracticePairs,
+            'attempt_number_basis' => 'lifetime_timer_history',
+            'assignment_basis' => 'active_roster_x_active_lab_catalog',
+            'region_basis' => 'current_roster_location',
+        ],
     ]]);
 }
 

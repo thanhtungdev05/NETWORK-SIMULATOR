@@ -571,6 +571,16 @@ body {
     font-size: 11px;
 }
 
+.class-matrix-table .report-metric-cell span {
+    white-space: normal;
+    line-height: 1.15;
+}
+
+.instructor-progress-table .instructor-lab-cell {
+    font-size: 9.5px;
+    line-height: 1.15;
+}
+
 .panel,
 .detail-section-card,
 .detail-report-shell,

@@ -1564,7 +1564,7 @@ function renderAuthoritativeDetailedReport(reportMatrix) {
     els.detailReportBody.innerHTML = visibleRows.map(row => {
         const region = row.region || {};
         const regionName = region.name || region.region_name || region.code || region.region_code || '';
-        const locationLabel = region.branch_name ? `${region.branch_name} · ${regionName}` : regionName;
+        const locationLabel = regionName;
         const rowClass = row.isParent ? 'report-region-parent' : (row.isChild ? 'report-region-child' : '');
         const regionLabel = row.isParent
             ? `<button type="button" class="report-region-toggle" data-report-region-toggle="${escapeHTML(regionName)}" aria-expanded="${row.isExpanded}"><span>${row.isExpanded ? '▾' : '▸'}</span>${escapeHTML(regionName)}</button>`
@@ -4530,7 +4530,7 @@ function buildAuthoritativeRegionReportDescriptor(matrix) {
     const rows = (matrix.rows || []).map((row, index) => {
         const region = row.region || {};
         const regionName = region.name || region.region_name || region.code || region.region_code || '';
-        const location = region.branch_name ? `${region.branch_name} · ${regionName}` : regionName;
+        const location = regionName;
         return [
             index + 1,
             location,

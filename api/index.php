@@ -2141,7 +2141,28 @@ function handle_dashboard(array $segments, string $method): void
         }
         unset($userLookupRows);
 
-        $timerSql = 'SELECT
+        $timerSql = 'WITH eligible_dashboard_ktv AS (
+                    SELECT DISTINCT
+                           COALESCE(user_id::text, NULLIF(LOWER(email), \'\'), NULLIF(employee_id, \'\')) AS person_id,
+                           user_id,
+                           email,
+                           employee_id
+                      FROM v_ktv_directory
+                     WHERE is_terminated = FALSE
+                       AND (employee_id IS NOT NULL OR employee_source LIKE \'firestore:%\')
+                       AND (job_title = \'CB Kỹ thuật TKBT\' OR employee_source LIKE \'firestore:%\')
+                 ),
+                 eligible_dashboard_identities AS (
+                    SELECT person_id, \'user:\' || user_id::text AS identity_key
+                      FROM eligible_dashboard_ktv WHERE user_id IS NOT NULL
+                    UNION
+                    SELECT person_id, \'email:\' || LOWER(email)
+                      FROM eligible_dashboard_ktv WHERE NULLIF(email, \'\') IS NOT NULL
+                    UNION
+                    SELECT person_id, \'employee:\' || employee_id
+                      FROM eligible_dashboard_ktv WHERE NULLIF(employee_id, \'\') IS NOT NULL
+                 )
+                 SELECT
                     timer.id AS session_id,
                     timer.user_id,
                     timer.technician_id,
@@ -2176,11 +2197,18 @@ function handle_dashboard(array $segments, string $method): void
                  JOIN device_catalog active_device
                    ON active_device.device_id = active_lab.device_id
                   AND active_device.is_active = TRUE
+                 JOIN eligible_dashboard_identities dashboard_identity
+                   ON dashboard_identity.identity_key = CASE
+                       WHEN timer.user_id IS NOT NULL THEN \'user:\' || timer.user_id::text
+                       WHEN NULLIF(timer.email, \'\') IS NOT NULL THEN \'email:\' || LOWER(timer.email)
+                       ELSE \'employee:\' || COALESCE(timer.technician_id, \'\')
+                   END
                  WHERE (
                      timer.user_id IS NOT NULL
                      OR (timer.email IS NOT NULL AND timer.email != \'\')
                      OR (timer.technician_id IS NOT NULL AND timer.technician_id != \'\')
                  )
+                   AND NOT COALESCE(timer.is_mock, FALSE)
                    AND NOT (
                      timer.user_id IS NULL
                      AND (

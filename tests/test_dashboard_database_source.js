@@ -19,6 +19,8 @@ const regionMigration = fs.readFileSync(
 
 assert.match(api, /JOIN lab_catalog active_lab[\s\S]*active_lab\.is_active = TRUE/);
 assert.match(api, /JOIN device_catalog active_device[\s\S]*active_device\.is_active = TRUE/);
+assert.match(api, /JOIN eligible_dashboard_identities dashboard_identity/);
+assert.match(api, /AND NOT COALESCE\(timer\.is_mock, FALSE\)/);
 assert.doesNotMatch(api, /if \(\$device !== '' && !isset\(\$deviceMap\[\$device\]\)\)/);
 assert.match(api, /dashboard_report_payload\(db\(\), \$_GET\)/);
 assert.doesNotMatch(api, /if \(\$action === 'report'\) \{\s*respond\(\['data' => null\]\)/);
@@ -34,6 +36,7 @@ assert.match(dashboard, /group\.toLocaleLowerCase\('vi'\) !== label\.toLocaleLow
 assert.match(dashboard, /function getCanonicalLabList\(\)/);
 assert.match(dashboard, /practiceAttemptNo/);
 assert.doesNotMatch(dashboard, /ftc-instructor-classes-v1/);
+assert.doesNotMatch(dashboard, /region\.branch_name \? `\$\{region\.branch_name\} · \$\{regionName\}`/);
 assert.doesNotMatch(dashboard, /deviceCatalog\.length \|\| 5/);
 assert.doesNotMatch(dashboard, /\|\| 17/);
 

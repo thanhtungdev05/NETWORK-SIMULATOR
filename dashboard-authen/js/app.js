@@ -93,6 +93,7 @@ const state = {
     detailSortKey: 'time',
     detailSelectedModes: new Set(['Thực hành', 'Hướng dẫn']),
     detailSelectedDevices: new Set(),
+    detailDevicesTouched: false,
     detailSelectedStatuses: new Set(['Hoàn thành', 'Đang làm', 'Không đạt', 'Đã dừng', 'Chưa thực hiện']),
     detailSearchDevice: '',
     detailSelectedLabs: new Set(),
@@ -744,7 +745,7 @@ function renderSessions(rows) {
         els.sessionsBody.querySelectorAll('[data-open-learner]').forEach(button => {
             const openLearner = () => {
                 const nextLearner = button.getAttribute('data-learner');
-                if (state.selectedLearner !== nextLearner) state.learnerDetailPage = 1;
+                if (state.selectedLearner !== nextLearner) resetLearnerDetailFilters();
                 learnerDetailReturnIdentity = nextLearner;
                 state.selectedLearner = nextLearner;
                 renderAll();
@@ -794,19 +795,30 @@ function renderLearnerTableMeta(pageData) {
     });
 }
 
-function renderLearnerHistoryMeta(pageData) {
+function renderLearnerHistoryMeta(pageData, totalHistoryRows = pageData.totalRows) {
     if (!els.learnerHistoryMeta) return;
-    if (!pageData.totalRows) {
+    if (!totalHistoryRows) {
         els.learnerHistoryMeta.innerHTML = '';
         return;
     }
-    els.learnerHistoryMeta.innerHTML = `
-        <span>Hiển thị ${pageData.start + 1}-${pageData.end} / ${pageData.totalRows} phiên</span>
+
+    const isFiltered = pageData.totalRows !== totalHistoryRows;
+    const rangeText = pageData.totalRows
+        ? `Dòng ${pageData.start + 1}-${pageData.end}`
+        : '';
+    const summaryText = isFiltered
+        ? `Đang hiển thị ${pageData.totalRows}/${totalHistoryRows} phiên theo bộ lọc${rangeText ? ` • ${rangeText}` : ''}`
+        : `Hiển thị ${pageData.start + 1}-${pageData.end} / ${pageData.totalRows} phiên`;
+    const pagination = pageData.totalRows ? `
         <span class="table-page-controls">
             <button type="button" class="table-page-btn" data-learner-page="prev" ${pageData.currentPage <= 1 ? 'disabled' : ''}>Trước</button>
             <span>Trang ${pageData.currentPage}/${pageData.totalPages}</span>
             <button type="button" class="table-page-btn" data-learner-page="next" ${pageData.currentPage >= pageData.totalPages ? 'disabled' : ''}>Sau</button>
         </span>
+    ` : '';
+    els.learnerHistoryMeta.innerHTML = `
+        <span>${summaryText}</span>
+        ${pagination}
     `;
     els.learnerHistoryMeta.querySelectorAll('[data-learner-page]').forEach(button => {
         button.addEventListener('click', (event) => {
@@ -993,7 +1005,7 @@ function renderLearnerDetail(rows) {
     const practiceSessionsCount = allLearnerRows.filter(item => item.mode === 'Thực hành').length;
 
     if (els.learnerDetailTitle) els.learnerDetailTitle.textContent = getLearnerName(state.selectedLearner);
-    if (els.learnerDetailSubtitle) els.learnerDetailSubtitle.textContent = `${allLearnerRows[0]?.region || getLearnerRegion(state.selectedLearner)} • ${state.selectedLearner} • ${allLearnerRows.length} phiên thực hành trong toàn bộ lịch sử.`;
+    if (els.learnerDetailSubtitle) els.learnerDetailSubtitle.textContent = `${allLearnerRows[0]?.region || getLearnerRegion(state.selectedLearner)} • ${state.selectedLearner} • ${allLearnerRows.length} phiên hoạt động trong toàn bộ lịch sử.`;
     if (els.detailTotalSessions) els.detailTotalSessions.textContent = allLearnerRows.length;
     if (els.detailTotalSessionsSub) {
         els.detailTotalSessionsSub.innerHTML = `
@@ -1044,7 +1056,7 @@ function renderLearnerDetail(rows) {
             `).join('');
         }
     }
-    renderLearnerHistoryMeta(pageData);
+    renderLearnerHistoryMeta(pageData, allLearnerRows.length);
     els.learnerDetailCard?.classList.add('visible');
     els.learnerDetailCard?.setAttribute('aria-hidden', 'false');
     document.body.classList.add('detail-open');
@@ -1593,6 +1605,25 @@ function renderAuthoritativeDetailedReport(reportMatrix) {
             else state.detailReportExpandedRegions.add(region);
             renderAuthoritativeDetailedReport(reportMatrix);
         });
+    });
+}
+
+function resetLearnerDetailFilters() {
+    state.detailSelectedModes = new Set(['Thực hành', 'Hướng dẫn']);
+    state.detailSelectedDevices = new Set();
+    state.detailDevicesTouched = false;
+    state.detailSelectedLabs = new Set();
+    state.detailLabsTouched = false;
+    state.detailSelectedStatuses = new Set(['Hoàn thành', 'Đang làm', 'Không đạt', 'Đã dừng', 'Chưa thực hiện']);
+    state.detailSearchDevice = '';
+    state.detailSearchLab = '';
+    state.learnerDetailPage = 1;
+
+    document.querySelectorAll('#detailModeOptions input[type="checkbox"], #detailStatusOptions input[type="checkbox"]')
+        .forEach(checkbox => { checkbox.checked = true; });
+    ['detailDeviceSearch', 'detailLabSearch'].forEach(id => {
+        const input = document.getElementById(id);
+        if (input) input.value = '';
     });
 }
 

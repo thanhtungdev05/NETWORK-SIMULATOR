@@ -98,38 +98,51 @@ SET device_id = EXCLUDED.device_id,
     is_active = TRUE,
     updated_at = NOW();
 
--- Bao toan cac khoa ngoai lich su, nhung khong con coi bai an/thua la bat buoc.
-UPDATE curriculum_labs curriculum_lab
-   SET is_required = FALSE,
-       updated_at = NOW()
-  FROM lab_catalog lab
- WHERE lab.lab_id = curriculum_lab.lab_id
-   AND lab.is_active = FALSE;
+-- Cac bang chuong trinh da duoc migration 025 loai bo o schema production gon.
+-- Chi dong bo mo hinh curriculum tren nhung deployment van con cac bang tuy chon.
+DO $migration$
+BEGIN
+    IF to_regclass('public.curriculum_labs') IS NOT NULL THEN
+        EXECUTE $sql$
+            UPDATE curriculum_labs curriculum_lab
+               SET is_required = FALSE,
+                   updated_at = NOW()
+              FROM lab_catalog lab
+             WHERE lab.lab_id = curriculum_lab.lab_id
+               AND lab.is_active = FALSE
+        $sql$;
+    END IF;
 
--- Dong bo 36 bai dang cong bo vao chuong trinh mac dinh.
-INSERT INTO curriculum_labs (
-    curriculum_id,
-    lab_id,
-    required_mode,
-    is_required,
-    sort_order,
-    passing_score
-)
-SELECT curriculum.curriculum_id,
-       lab.lab_id,
-       'practice',
-       TRUE,
-       (device.sort_order * 100) + lab.sort_order,
-       80.00
-  FROM curricula curriculum
- CROSS JOIN lab_catalog lab
-  JOIN device_catalog device ON device.device_id = lab.device_id
- WHERE curriculum.curriculum_code = 'LEGACY-PORTAL-LABS'
-   AND curriculum.version = '1'
-   AND lab.is_active = TRUE
-   AND device.is_active = TRUE
-ON CONFLICT (curriculum_id, lab_id, required_mode) DO UPDATE
-SET is_required = TRUE,
-    sort_order = EXCLUDED.sort_order,
-    passing_score = EXCLUDED.passing_score,
-    updated_at = NOW();
+    IF to_regclass('public.curricula') IS NOT NULL
+       AND to_regclass('public.curriculum_labs') IS NOT NULL THEN
+        EXECUTE $sql$
+            INSERT INTO curriculum_labs (
+                curriculum_id,
+                lab_id,
+                required_mode,
+                is_required,
+                sort_order,
+                passing_score
+            )
+            SELECT curriculum.curriculum_id,
+                   lab.lab_id,
+                   'practice',
+                   TRUE,
+                   (device.sort_order * 100) + lab.sort_order,
+                   80.00
+              FROM curricula curriculum
+             CROSS JOIN lab_catalog lab
+              JOIN device_catalog device ON device.device_id = lab.device_id
+             WHERE curriculum.curriculum_code = 'LEGACY-PORTAL-LABS'
+               AND curriculum.version = '1'
+               AND lab.is_active = TRUE
+               AND device.is_active = TRUE
+            ON CONFLICT (curriculum_id, lab_id, required_mode) DO UPDATE
+            SET is_required = TRUE,
+                sort_order = EXCLUDED.sort_order,
+                passing_score = EXCLUDED.passing_score,
+                updated_at = NOW()
+        $sql$;
+    END IF;
+END
+$migration$;

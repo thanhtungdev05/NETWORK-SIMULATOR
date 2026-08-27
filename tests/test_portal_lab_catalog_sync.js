@@ -18,8 +18,8 @@ const expected = {
 const hidden = ['be12000', 'be15000', 'vigor2927'];
 const expectedTitles = [
   'Bài 1 - Cấu hình PPPoE',
-  'Bài 2 - Cấu hình WiFi',
-  'Bài 3 - Cấu hình WiFi IoT',
+  'Bài 2 - Cấu hình Wi-Fi',
+  'Bài 3 - Cấu hình Wi-Fi IoT',
   'Bài 4 - Cấu hình DNS',
   'Bài 5 - Cấu hình DHCP',
   'Bài 6 - Cấu hình Port Forwarding'
@@ -53,7 +53,7 @@ assert.deepEqual(
 );
 
 const migration = fs.readFileSync(
-  path.join(root, 'api/migrations/027_standardize_six_lab_catalog.sql'),
+  path.join(root, 'api/migrations/030_enforce_approved_dashboard_catalog.sql'),
   'utf8'
 );
 for (const device of context.DEVICES) {

@@ -64,6 +64,9 @@ try {
     foreach ($appliedRows as $row) {
         $applied[$row['version']] = $row;
     }
+    $latestAppliedVersion = $appliedRows
+        ? (string)$appliedRows[array_key_last($appliedRows)]['version']
+        : null;
 
     $pendingCount = 0;
     foreach ($migrationFiles as $file) {
@@ -83,6 +86,14 @@ try {
                 fwrite(STDOUT, "[resynced] $version (line-ending checksum)\n");
             }
             fwrite(STDOUT, "[applied] $version\n");
+            continue;
+        }
+
+        // Forward-only migrations: a database may have been baselined at a newer
+        // version after the migration ledger was introduced. Never replay an
+        // older, unrecorded file on top of that newer schema.
+        if ($latestAppliedVersion !== null && strcmp($version, $latestAppliedVersion) < 0) {
+            fwrite(STDOUT, "[superseded] $version (database baseline: $latestAppliedVersion)\n");
             continue;
         }
 

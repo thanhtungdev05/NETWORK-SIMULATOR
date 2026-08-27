@@ -9,8 +9,8 @@ window.DEVICE_AX3000C_LESSONS = window.DEVICE_AX3000C_LESSONS || [];
 var idx = window.DEVICE_AX3000C_LESSONS.findIndex(function (l) { return l.id === 'LAB_AX3000CV2_03'; });
 var lessonObj = {
   id: 'LAB_AX3000CV2_03',
-  title: 'Bài 3 - Cấu hình WiFi IoT',
-  subtitle: 'Cấu hình wifi IoT',
+  title: 'Bài 3 - Cấu hình Wi-Fi IoT',
+  subtitle: 'Cấu hình Wi-Fi IoT',
   instructions: [
     '<b>Yêu cầu:</b>',
     'Thực hiện cấu hình một mạng Wi-Fi riêng biệt dành riêng cho các thiết bị IoT (Smart Home, Camera, v.v.). Cấu hình các thông số mạng Wi-Fi IoT theo đúng yêu cầu dưới đây:',

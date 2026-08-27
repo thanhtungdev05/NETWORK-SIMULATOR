@@ -10,6 +10,7 @@ require_once __DIR__ . '/lib/iam_identity.php';
 require_once __DIR__ . '/lib/tracking_handler.php';
 require_once __DIR__ . '/lib/ktv_roster_import.php';
 require_once __DIR__ . '/lib/report_xlsx.php';
+require_once __DIR__ . '/lib/dashboard_report.php';
 load_app_environment($root);
 
 $GLOBALS['request_id'] = bin2hex(random_bytes(8));
@@ -2075,7 +2076,14 @@ function handle_dashboard(array $segments, string $method): void
     $action = $segments[1] ?? '';
 
     if ($action === 'report') {
-        respond(['data' => null]);
+        try {
+            respond(['data' => dashboard_report_payload(db(), $_GET)]);
+        } catch (InvalidArgumentException $exception) {
+            fail(400, 'invalid-report-period', $exception->getMessage());
+        } catch (Throwable $exception) {
+            report_exception($exception, 'dashboard-report');
+            fail(500, 'dashboard-report-failed', 'Unable to load dashboard report.');
+        }
     }
 
     if ($action === 'version') {
@@ -2142,14 +2150,32 @@ function handle_dashboard(array $segments, string $method): void
                     COALESCE(timer.started_at, timer.finished_at) AS started_at,
                     timer.duration_sec,
                     timer.mode,
-                    timer.device AS device_name,
-                    timer.lab_id,
-                    timer.lab_name,
+                    active_device.device_id,
+                    active_device.device_name,
+                    active_lab.lab_id,
+                    active_lab.lab_name,
                     timer.is_passed,
                     timer.status,
                     timer.completed_first_try,
-                    timer.last_action
+                    timer.last_action,
+                    CASE WHEN timer.mode IN (\'Thực hành\', \'practice\') THEN
+                        COUNT(*) FILTER (WHERE timer.mode IN (\'Thực hành\', \'practice\')) OVER (
+                            PARTITION BY COALESCE(
+                                timer.user_id::text,
+                                NULLIF(LOWER(timer.email), \'\'),
+                                NULLIF(timer.technician_id, \'\')
+                            ), active_lab.lab_id
+                            ORDER BY COALESCE(timer.started_at, timer.finished_at, timer.created_at), timer.id
+                            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+                        )
+                    END AS practice_attempt_no
                  FROM timer_sessions timer
+                 JOIN lab_catalog active_lab
+                   ON active_lab.lab_id = timer.lab_id
+                  AND active_lab.is_active = TRUE
+                 JOIN device_catalog active_device
+                   ON active_device.device_id = active_lab.device_id
+                  AND active_device.is_active = TRUE
                  WHERE (
                      timer.user_id IS NOT NULL
                      OR (timer.email IS NOT NULL AND timer.email != \'\')
@@ -2278,32 +2304,16 @@ function handle_dashboard(array $segments, string $method): void
             'started_at' => safe_datetime($row['started_at']),
             'duration_sec' => $row['duration_sec'] !== null ? (int)$row['duration_sec'] : null,
             'mode' => (string)($row['mode'] ?? 'Thực hành'),
+            'device_id' => (string)($row['device_id'] ?? ''),
             'device_name' => $device,
             'lab_name' => isset($labMap[$labKey]) ? $labMap[$labKey]['lab_name'] : (string)($row['lab_name'] ?? ''),
             'is_passed' => isset($row['is_passed']) ? (bool)$row['is_passed'] : null,
             'status' => (string)($row['status'] ?? ((isset($row['is_passed']) && $row['is_passed'] === false) ? 'failed' : 'completed')),
             'completed_first_try' => database_nullable_boolean($row['completed_first_try'] ?? null),
+            'practice_attempt_no' => $row['practice_attempt_no'] !== null ? (int)$row['practice_attempt_no'] : null,
             'last_action' => (string)($row['last_action'] ?? ''),
         ];
 
-        if ($device !== '' && !isset($deviceMap[$device])) {
-            $catalogDevice = [
-                'device_id' => 'DEV_' . count($deviceMap),
-                'model' => $device,
-                'device_name' => $device,
-            ];
-            $deviceMap[$device] = $catalogDevice;
-            $deviceById[$catalogDevice['device_id']] = $catalogDevice;
-        }
-
-        $labName = (string)($row['lab_name'] ?? $labKey);
-        if ($labKey !== '' && !isset($labMap[$labKey])) {
-            $labMap[$labKey] = [
-                'lab_id' => $labKey,
-                'lab_name' => $labName,
-                'device_id' => $deviceMap[$device]['device_id'] ?? 'DEV_' . count($deviceMap),
-            ];
-        }
     }
 
     $assignments = [];

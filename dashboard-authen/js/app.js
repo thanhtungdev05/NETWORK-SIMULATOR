@@ -670,7 +670,7 @@ function buildLearnerSummaries(rows) {
 
     return [...map.values()].map(item => {
         const latest = getLatestSession(item.rows);
-        const completed = item.rows.filter(row => row.status === 'Hoàn thành').length;
+        const completed = item.rows.filter(isSuccessfulSession).length;
         const modesArray = [...item.modes];
         const primaryMode = modesArray.length === 1 ? modesArray[0] : (latest?.mode || 'Thực hành');
         return {
@@ -987,8 +987,8 @@ function renderLearnerDetail(rows) {
     const uniqueDevices = new Set(allLearnerRows.map(item => item.device));
     const latest = getLatestSession(allLearnerRows);
 
-    const totalCatalogDevices = deviceCatalog.length || 5;
-    const totalCatalogLabs = deviceCatalog.reduce((sum, d) => sum + (d.labs ? d.labs.length : 0), 0) || 17;
+    const totalCatalogDevices = deviceCatalog.length;
+    const totalCatalogLabs = deviceCatalog.reduce((sum, d) => sum + (d.labs ? d.labs.length : 0), 0);
     const guideSessionsCount = allLearnerRows.filter(item => item.mode === 'Hướng dẫn').length;
     const practiceSessionsCount = allLearnerRows.filter(item => item.mode === 'Thực hành').length;
 
@@ -1010,15 +1010,15 @@ function renderLearnerDetail(rows) {
     // Đánh số thứ tự lượt thực hành theo trình tự thời gian cho từng bài lab
     const attemptCounters = new Map();
     const sortedChronological = [...allLearnerRows].sort((a, b) => {
-        const timeA = parseDate(a.date).getTime() + (a.time ? parseTimeMs(a.time) : 0);
-        const timeB = parseDate(b.date).getTime() + (b.time ? parseTimeMs(b.time) : 0);
-        return timeA - timeB;
+        return (a.startedAtMs || 0) - (b.startedAtMs || 0)
+            || String(a.sessionId || '').localeCompare(String(b.sessionId || ''));
     });
     sortedChronological.forEach(s => {
-        const key = `${s.device}\u001f${s.lab}\u001f${s.mode || 'Thực hành'}`;
+        if (s.mode !== 'Thực hành') return;
+        const key = `${s.device}\u001f${s.lab}`;
         const count = (attemptCounters.get(key) || 0) + 1;
         attemptCounters.set(key, count);
-        s._attemptNumber = count;
+        s._attemptNumber = Number(s.practiceAttemptNo) || count;
     });
 
     const pageData = getPageSlice(filteredHistory, state.learnerDetailPage, LEARNER_HISTORY_PAGE_SIZE);
@@ -1036,7 +1036,7 @@ function renderLearnerDetail(rows) {
                     <td>${escapeHTML(item.device)}</td>
                     <td>
                         <div>${escapeHTML(item.lab)}</div>
-                        <div style="font-size: 11px; color: var(--muted); margin-top: 2px;">Lần ${item._attemptNumber || 1}</div>
+                        <div style="font-size: 11px; color: var(--muted); margin-top: 2px;">${item.mode === 'Thực hành' ? `Lần thực hành ${item._attemptNumber || item.practiceAttemptNo || 1}` : 'Lượt hướng dẫn'}</div>
                     </td>
                     <td><span class="status-pill ${getStatusClass(item.status)}">${escapeHTML(item.status)}</span></td>
                     <td>${formatDuration(item.duration)}</td>
@@ -1067,7 +1067,8 @@ function renderHourlyCalendar() {
         monthSelect.innerHTML = Array.from({ length: 12 }, (_, index) => `<option value="${index}">Tháng ${index + 1}</option>`).join('');
     }
     if (yearSelect && !yearSelect.children.length) {
-        yearSelect.innerHTML = [2025, 2026, 2027].map(year => `<option value="${year}">${year}</option>`).join('');
+        const y = new Date().getFullYear();
+        yearSelect.innerHTML = [y - 1, y, y + 1].map(year => `<option value="${year}">${year}</option>`).join('');
     }
 
     const month = state.hourlyCalendarMonth.getMonth();
@@ -1347,7 +1348,7 @@ function aggregateBy(rows, key) {
         }
         const row = map.get(item[key]);
         row.sessions += 1;
-        row.completed += item.status === 'Hoàn thành' ? 1 : 0;
+        row.completed += isSuccessfulSession(item) ? 1 : 0;
         if (Number(item.duration) > 0) {
             row.duration += Number(item.duration);
             row.durationCount += 1;
@@ -1360,22 +1361,50 @@ function aggregateBy(rows, key) {
     }));
 }
 
-const BASE_REGION_CATALOG = [
-    { code: 'DNB' },
-    { code: 'HCM' },
-    { code: 'TDDT', children: ['TDDT - TIN', 'TDDT - PNC'] },
-    { code: 'TNB' },
-    { code: 'TNMT', children: ['TNMT - TIN', 'TNMT - PNC'] },
-    { code: 'DBB' },
-    { code: 'HNI' },
-    { code: 'TBB' }
-];
+let BASE_REGION_CATALOG = [];
 
-let REGION_CATALOG = BASE_REGION_CATALOG.map(region => ({
-    ...region,
-    children: region.children ? [...region.children] : undefined
-}));
-let REGION_FILTER_OPTIONS = REGION_CATALOG.flatMap(region => region.children || [region.code]);
+let REGION_CATALOG = [];
+let REGION_FILTER_OPTIONS = [];
+
+async function fetchAndBuildRegionCatalog() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/roster/regions`);
+        if (!response.ok) return;
+        const payload = await response.json();
+        const items = payload.data?.items || [];
+        const groupMap = new Map();
+        items.forEach(item => {
+            const group = String(item.dashboard_group || '').trim();
+            const regionCode = String(item.region_code || item.regionCode || '').trim();
+            const regionName = String(item.region_name || item.regionName || '').trim();
+            const label = regionName || regionCode;
+            if (!group && !label) return;
+            if (group && group.toLocaleLowerCase('vi') !== label.toLocaleLowerCase('vi')) {
+                if (!groupMap.has(group)) groupMap.set(group, new Set());
+                if (label) groupMap.get(group).add(label);
+            } else if (label) {
+                if (!groupMap.has(label)) groupMap.set(label, new Set());
+            }
+        });
+        const catalog = [];
+        groupMap.forEach((children, code) => {
+            if (children.size > 0) {
+                catalog.push({ code, children: [...children].sort((a, b) => a.localeCompare(b, 'vi')) });
+            } else {
+                catalog.push({ code });
+            }
+        });
+        catalog.sort((a, b) => a.code.localeCompare(b.code, 'vi'));
+        BASE_REGION_CATALOG = catalog;
+        REGION_CATALOG = BASE_REGION_CATALOG.map(region => ({
+            ...region,
+            children: region.children ? [...region.children] : undefined
+        }));
+        REGION_FILTER_OPTIONS = REGION_CATALOG.flatMap(region => region.children || [region.code]);
+    } catch (error) {
+        console.warn('Không tải được vùng từ database.', error);
+    }
+}
 
 function getLearnerRegion(learner) {
     const key = String(learner || '').trim().toLowerCase();
@@ -1422,6 +1451,82 @@ function detailReportCellKey(region, device, lab) {
     return `${region}\u001f${device}\u001f${lab}`;
 }
 
+function aggregateAuthoritativeMetrics(metrics = []) {
+    const result = { assigned_count: 0, attempted_count: 0, completed_count: 0, attempt_count: 0 };
+    metrics.forEach(metric => {
+        Object.keys(result).forEach(key => { result[key] += Number(metric?.[key]) || 0; });
+    });
+    result.completion_rate = result.assigned_count
+        ? Math.round((result.completed_count / result.assigned_count) * 1000) / 10
+        : null;
+    return result;
+}
+
+function aggregateAuthoritativeRows(rows = [], columns = []) {
+    return {
+        cells: Object.fromEntries(columns.map(column => [
+            column.labId,
+            aggregateAuthoritativeMetrics(rows.map(row => row.cells?.[column.labId]))
+        ])),
+        total: aggregateAuthoritativeMetrics(rows.map(row => row.total))
+    };
+}
+
+function buildAuthoritativeRegionRows(reportRows = [], columns = []) {
+    const remaining = new Set(reportRows);
+    const normalized = value => String(value || '').trim().toLocaleLowerCase('vi');
+    const matchesRegion = (row, values) => {
+        const region = row.region || {};
+        const candidates = [region.name, region.region_name, region.code, region.region_code].map(normalized);
+        return values.some(value => candidates.includes(normalized(value)));
+    };
+    const result = [];
+
+    REGION_CATALOG.forEach(region => {
+        const children = region.children || [];
+        if (children.length) {
+            const matched = reportRows.filter(row => {
+                const group = normalized(row.region?.dashboard_group);
+                return group === normalized(region.code) || matchesRegion(row, children);
+            });
+            if (!matched.length) return;
+            matched.forEach(row => remaining.delete(row));
+            const aggregate = aggregateAuthoritativeRows(matched, columns);
+            result.push({
+                region: { code: region.code, name: region.code },
+                ...aggregate,
+                isParent: true,
+                isExpanded: state.detailReportExpandedRegions.has(region.code)
+            });
+            if (state.detailReportExpandedRegions.has(region.code)) {
+                children.forEach(child => {
+                    const childRows = matched.filter(row => matchesRegion(row, [child]));
+                    if (!childRows.length) return;
+                    result.push({
+                        region: { ...(childRows[0].region || {}), name: child },
+                        ...aggregateAuthoritativeRows(childRows, columns),
+                        isChild: true
+                    });
+                });
+            }
+            return;
+        }
+
+        const matched = reportRows.filter(row => matchesRegion(row, [region.code]));
+        if (!matched.length) return;
+        matched.forEach(row => remaining.delete(row));
+        result.push({
+            region: matched[0].region || { code: region.code, name: region.code },
+            ...aggregateAuthoritativeRows(matched, columns)
+        });
+    });
+
+    [...remaining]
+        .sort((a, b) => String(a.region?.name || '').localeCompare(String(b.region?.name || ''), 'vi'))
+        .forEach(row => result.push(row));
+    return result;
+}
+
 function renderAuthoritativeDetailedReport(reportMatrix) {
     if (!els.detailReportHead || !els.detailReportBody || !els.detailReportFoot) return;
     const groups = reportMatrix.device_groups || [];
@@ -1455,11 +1560,16 @@ function renderAuthoritativeDetailedReport(reportMatrix) {
             <th class="report-summary-head" rowspan="2" scope="col">Tổng</th>
         </tr>
         <tr class="report-lab-header-row">${columns.map(column => `<th class="report-lab-head report-device-tone-${column.groupIndex % 5} ${column.isFirst ? 'group-start' : ''} ${column.isLast ? 'group-end' : ''}" scope="col" title="${escapeHTML(`${column.device} • ${column.lab}`)}">${escapeHTML(column.lab)}</th>`).join('')}</tr>`;
-    els.detailReportBody.innerHTML = (reportMatrix.rows || []).map(row => {
+    const visibleRows = buildAuthoritativeRegionRows(reportMatrix.rows || [], columns);
+    els.detailReportBody.innerHTML = visibleRows.map(row => {
         const region = row.region || {};
         const regionName = region.name || region.region_name || region.code || region.region_code || '';
         const locationLabel = region.branch_name ? `${region.branch_name} · ${regionName}` : regionName;
-        return `<tr><th class="report-region-cell" scope="row"><div class="report-region-label"><span class="report-region-spacer"></span>${escapeHTML(locationLabel)}</div></th>${columns.map(column => metricCell(row.cells?.[column.labId], column.isFirst ? 'group-start' : '')).join('')}${metricCell(row.total, 'report-row-total')}</tr>`;
+        const rowClass = row.isParent ? 'report-region-parent' : (row.isChild ? 'report-region-child' : '');
+        const regionLabel = row.isParent
+            ? `<button type="button" class="report-region-toggle" data-report-region-toggle="${escapeHTML(regionName)}" aria-expanded="${row.isExpanded}"><span>${row.isExpanded ? '▾' : '▸'}</span>${escapeHTML(regionName)}</button>`
+            : `<div class="report-region-label">${row.isChild ? '<span class="report-region-bullet">•</span>' : '<span class="report-region-spacer"></span>'}${escapeHTML(locationLabel)}</div>`;
+        return `<tr class="${rowClass}"><th class="report-region-cell" scope="row">${regionLabel}</th>${columns.map(column => metricCell(row.cells?.[column.labId], column.isFirst ? 'group-start' : '')).join('')}${metricCell(row.total, 'report-row-total')}</tr>`;
     }).join('') || `<tr><td colspan="${columns.length + 2}" class="empty">Không có assignment phù hợp với kỳ báo cáo.</td></tr>`;
     const grand = reportMatrix.grand_total || {};
     els.detailReportFoot.innerHTML = `<tr><th class="report-region-cell report-grand-label" scope="row">Tổng hệ thống</th>${columns.map(column => metricCell(grand.cells?.[column.labId], column.isFirst ? 'group-start' : '')).join('')}${metricCell(grand.total || grand, 'report-row-total report-grand-total')}</tr>`;
@@ -1476,6 +1586,14 @@ function renderAuthoritativeDetailedReport(reportMatrix) {
         const element = document.getElementById(id);
         if (element) element.textContent = value;
     });
+    els.detailReportBody.querySelectorAll('[data-report-region-toggle]').forEach(button => {
+        button.addEventListener('click', () => {
+            const region = button.dataset.reportRegionToggle;
+            if (state.detailReportExpandedRegions.has(region)) state.detailReportExpandedRegions.delete(region);
+            else state.detailReportExpandedRegions.add(region);
+            renderAuthoritativeDetailedReport(reportMatrix);
+        });
+    });
 }
 
 function buildDetailReportIndex(rows) {
@@ -1487,7 +1605,7 @@ function buildDetailReportIndex(rows) {
         const cell = index.get(key);
         cell.attempts += 1;
         cell.learners.add(item.learner);
-        if (item.status === 'Hoàn thành') cell.completedLearners.add(item.learner);
+        if (isSuccessfulSession(item)) cell.completedLearners.add(item.learner);
         cell.duration += Number(item.duration) || 0;
     });
     return index;
@@ -1641,7 +1759,7 @@ function renderDetailedReport(rows) {
     const activeRegions = new Set(rows.map(item => item.region || getLearnerRegion(item.learner)));
     const activeLabs = new Set(rows.map(item => `${item.device}\u001f${item.lab}`));
     const completedPairs = new Set(rows
-        .filter(item => item.status === 'Hoàn thành')
+        .filter(isSuccessfulSession)
         .map(item => `${item.learner}\u001f${item.device}\u001f${item.lab}`)).size;
     const eligiblePairs = technicianCatalog.filter(item => !item.isTerminated && item.email).length * columns.length;
     const completionRate = eligiblePairs ? Math.round((completedPairs / eligiblePairs) * 100) : 0;
@@ -1820,6 +1938,7 @@ function mapApiSessions(apiSessions = []) {
             technicianName: technician?.displayName || item.technician?.full_name || item.full_name || '',
             date: dateOnly(item.started_at),
             time: timeOnly(item.started_at),
+            startedAtMs: item.started_at ? new Date(item.started_at).getTime() : 0,
             learner,
             region: normalizeRegionName(technician?.regionName || item.region_name || item.region || item.technician?.region, learner),
             classCode: technician?.classCode || item.class_code || '',
@@ -1827,6 +1946,7 @@ function mapApiSessions(apiSessions = []) {
             unitCode: technician?.unitCode || item.unit_code || '',
             unitName: technician?.unitName || item.unit_name || '',
             branchName: technician?.branchName || item.branch_name || '',
+            deviceId: item.device_id || item.device?.device_id || null,
             device: item.device?.device_name || item.device_name || item.device_id || 'N/A',
             lab: item.lab?.lab_name || item.lab_name || item.lab_id || 'N/A',
             skill: item.skill?.skill_name || item.skill?.skill_id || item.lab?.lab_name || item.lab_name || 'N/A',
@@ -1843,6 +1963,9 @@ function mapApiSessions(apiSessions = []) {
                 ? null
                 : item.completed_first_try === true || item.completed_first_try === 1
                     || ['1', 't', 'true', 'yes'].includes(String(item.completed_first_try).trim().toLowerCase()),
+            practiceAttemptNo: item.practice_attempt_no === null || item.practice_attempt_no === undefined
+                ? null
+                : Number(item.practice_attempt_no),
             lastAction: normalizeActionText(item)
         };
     });
@@ -1999,6 +2122,7 @@ async function fetchDashboardData(versionHint = '') {
     const versionRequest = versionHint
         ? Promise.resolve(versionHint)
         : fetchDashboardVersion();
+    const regionCatalogPromise = fetchAndBuildRegionCatalog();
     const optionalRequests = Promise.allSettled([reportRequest, versionRequest]);
     const response = await fetch(`${API_BASE_URL}/dashboard/all?${allParams}`);
     if (!response.ok) throw new Error(`API dữ liệu chi tiết trả về HTTP ${response.status}`);
@@ -2008,6 +2132,7 @@ async function fetchDashboardData(versionHint = '') {
     const version = versionResult.status === 'fulfilled' ? String(versionResult.value || '') : String(versionHint || lastDashboardVersion || '');
     if (reportResult.status === 'rejected') console.warn('Không đồng bộ được báo cáo tổng hợp; giữ dữ liệu gần nhất.', reportResult.reason);
     if (versionResult.status === 'rejected') console.warn('Không đọc được phiên bản dữ liệu dashboard.', versionResult.reason);
+    await regionCatalogPromise;
     const techniciansAuthoritative = Array.isArray(data.technicians);
     const technicians = normalizeTechnicianCatalog(techniciansAuthoritative ? data.technicians : []);
     technicianCatalog = technicians;
@@ -2039,8 +2164,56 @@ function applyDashboardData(data) {
     if (data.report !== undefined) dashboardReport = data.report;
     technicianCatalogAuthoritative = Boolean(data.techniciansAuthoritative);
     state.dashboardDataLoaded = true;
+    normalizeSessionDeviceNames();
     rebuildTechnicianIndex();
     rebuildLearnerNameMap();
+}
+
+function normalizeSessionDeviceNames() {
+    if (!deviceCatalog.length || !sessions.length) return;
+    const deviceIdToName = new Map();
+    deviceCatalog.forEach(d => {
+        if (d.device_id) deviceIdToName.set(String(d.device_id).toLowerCase(), d.device || d.device_name);
+    });
+    const fallbackMap = new Map();
+    const canonicalNames = deviceCatalog.map(d => d.device || d.device_name).filter(Boolean);
+    canonicalNames.forEach(name => { fallbackMap.set(name.toLowerCase(), name); });
+    const junkPatterns = ['hệ thống lab', 'router mikrotik', 'internet hub', 'ont'];
+    sessions.forEach(s => {
+        if (s.deviceId) {
+            const canonical = deviceIdToName.get(String(s.deviceId).toLowerCase());
+            if (canonical) { s.device = canonical; return; }
+        }
+        const lower = (s.device || '').toLowerCase().trim();
+        if (!lower || lower === 'n/a' || junkPatterns.some(p => lower.includes(p))) {
+            const matched = canonicalNames.find(c => lower.includes(c.toLowerCase()));
+            if (matched) { s.device = matched; return; }
+        }
+        const directMatch = fallbackMap.get(lower);
+        if (directMatch) s.device = directMatch;
+    });
+}
+
+function getCanonicalDeviceList() {
+    if (deviceCatalog.length) {
+        return deviceCatalog.map(d => d.device || d.device_name).filter(Boolean).sort();
+    }
+    return [...new Set(sessions.map(item => item.device))].sort();
+}
+
+function isSuccessfulSession(item) {
+    if (item?.isPassed === true) return true;
+    if (item?.isPassed === false) return false;
+    return item?.status === 'Hoàn thành' || item?.status === 'completed';
+}
+
+function getCanonicalLabList() {
+    if (deviceCatalog.length) {
+        return [...new Set(deviceCatalog.flatMap(device => device.labs || []).filter(Boolean))]
+            .sort((a, b) => a.localeCompare(b, 'vi'));
+    }
+    return [...new Set(sessions.map(item => item.lab).filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b, 'vi'));
 }
 
 function mergeUntouchedFilterSets(allKtvs, allDevices, allLabs, allRegions) {
@@ -2068,8 +2241,8 @@ function mergeDefaultClassLearners() {
 
 function refreshFilterOptionLists() {
     const allKtvs = [...new Set(sessions.map(item => item.learner))].sort();
-    const allDevices = [...new Set(sessions.map(item => item.device))].sort();
-    const allLabs = [...new Set(sessions.map(item => item.lab))].sort((a, b) => a.localeCompare(b, 'vi'));
+    const allDevices = getCanonicalDeviceList();
+    const allLabs = getCanonicalLabList();
     const allRegions = [...new Set(sessions.map(item => item.region))].sort((a, b) => a.localeCompare(b, 'vi'));
     const universes = state.popoverUniverses;
     if (universes) {
@@ -2117,8 +2290,8 @@ async function refreshDashboardData({ force = false, announce = false } = {}) {
         lastDashboardVersion = data.version || version;
         applyDashboardData(data);
         const allKtvs = [...new Set(sessions.map(item => item.learner))].sort();
-        const allDevices = [...new Set(sessions.map(item => item.device))].sort();
-        const allLabs = [...new Set(sessions.map(item => item.lab))].sort((a, b) => a.localeCompare(b, 'vi'));
+        const allDevices = getCanonicalDeviceList();
+        const allLabs = getCanonicalLabList();
         const allRegions = [...new Set(sessions.map(item => item.region))].sort((a, b) => a.localeCompare(b, 'vi'));
         mergeUntouchedFilterSets(allKtvs, allDevices, allLabs, allRegions);
         refreshFilterOptionLists();
@@ -2168,8 +2341,8 @@ async function loadDashboardFromApi() {
             setDashboardSyncState('ready');
             mergeUntouchedFilterSets(
                 [...new Set(sessions.map(item => item.learner))].sort(),
-                [...new Set(sessions.map(item => item.device))].sort(),
-                [...new Set(sessions.map(item => item.lab))].sort((a, b) => a.localeCompare(b, 'vi')),
+                getCanonicalDeviceList(),
+                getCanonicalLabList(),
                 [...new Set(sessions.map(item => item.region))].sort((a, b) => a.localeCompare(b, 'vi'))
             );
             initFilters();
@@ -2474,8 +2647,8 @@ function initPopovers() {
     }
     state.popoversInitialized = true;
     const allKtvs = [...new Set(sessions.map(item => item.learner))].sort();
-    const allDevices = [...new Set(sessions.map(item => item.device))].sort();
-    const allLabs = [...new Set(sessions.map(item => item.lab))].sort((a, b) => a.localeCompare(b, 'vi'));
+    const allDevices = getCanonicalDeviceList();
+    const allLabs = getCanonicalLabList();
     const allRegions = [...new Set(sessions.map(item => item.region))].sort((a, b) => a.localeCompare(b, 'vi'));
     state.popoverUniverses = { allKtvs, allDevices, allLabs, allRegions };
     let learnerSearchTimer = null;
@@ -2884,7 +3057,6 @@ function parseTimeMs(timeStr) {
     return (parts[0] * 3600 + parts[1] * 60) * 1000;
 }
 
-const INSTRUCTOR_CLASSES_STORAGE_KEY = 'ftc-instructor-classes-v1';
 
 function getInstructorLearners() {
     const rosterLearners = technicianCatalog
@@ -3010,65 +3182,14 @@ function getInstructorDeviceGroups(selectedClass = null) {
 }
 
 function saveInstructorClasses() {
-    try {
-        localStorage.setItem(INSTRUCTOR_CLASSES_STORAGE_KEY, JSON.stringify(state.instructorClasses));
-    } catch (error) {
-        console.warn('Không thể lưu danh sách lớp trên trình duyệt.', error);
-    }
+    // Class membership is authoritative in the employee database. Never persist
+    // a competing roster in browser storage.
 }
 
 function initializeInstructorClasses() {
     const databaseClasses = getDatabaseInstructorClasses();
-    if (technicianCatalogAuthoritative) {
-        state.instructorClasses = databaseClasses;
-        state.instructorClassesLoaded = true;
-        if (!state.instructorClasses.some(item => item.id === state.instructorActiveClassId)) {
-            state.instructorActiveClassId = state.instructorClasses[0]?.id || '';
-        }
-        return;
-    }
-    if (!state.instructorClassesLoaded) {
-        try {
-            const stored = JSON.parse(localStorage.getItem(INSTRUCTOR_CLASSES_STORAGE_KEY) || '[]');
-            if (Array.isArray(stored)) {
-                state.instructorClasses = stored
-                    .filter(item => item && item.id && item.name && Array.isArray(item.members))
-                    .map(item => ({
-                        id: String(item.id),
-                        name: String(item.name),
-                        members: [...new Set(item.members.map(String).filter(Boolean))]
-                    }));
-            }
-        } catch (error) {
-            state.instructorClasses = [];
-        }
-        state.instructorClassesLoaded = true;
-    }
-
-    const learners = getInstructorLearners();
-    if (!state.instructorClasses.length && !learners.length) {
-        state.instructorActiveClassId = '';
-        return;
-    }
-
-    if (!state.instructorClasses.length && learners.length) {
-        const reportDate = state.startDate ? parseDate(state.startDate) : new Date();
-        state.instructorClasses = [{
-            id: 'class-default',
-            name: `Lớp KTV ${String(reportDate.getMonth() + 1).padStart(2, '0')}/${reportDate.getFullYear()}`,
-            members: learners
-        }];
-        saveInstructorClasses();
-    } else {
-        const defaultClass = state.instructorClasses.find(item => item.id === 'class-default');
-        if (defaultClass && learners.length) {
-            const merged = [...new Set([...(defaultClass.members || []), ...learners])].sort((a, b) => a.localeCompare(b, 'vi'));
-            if (merged.length !== (defaultClass.members || []).length) {
-                defaultClass.members = merged;
-                saveInstructorClasses();
-            }
-        }
-    }
+    state.instructorClasses = technicianCatalogAuthoritative ? databaseClasses : [];
+    state.instructorClassesLoaded = true;
 
     if (!state.instructorClasses.some(item => item.id === state.instructorActiveClassId)) {
         state.instructorActiveClassId = state.instructorClasses[0]?.id || '';
@@ -3571,7 +3692,7 @@ function getClassMatrixData() {
             const assign = assignmentMap.get(assignKey);
             const labSessions = sessionsByCell.get(`${learnerKey}\u001f${col.device}\u001f${col.lab}`) || [];
             const isAssigned = trainingAssignments.length === 0 ? true : Boolean(assign);
-            const isCompleted = isAssigned && (Boolean(assign?.completed) || labSessions.some(s => s.status === 'Hoàn thành' || s.status === 'completed'));
+            const isCompleted = isAssigned && (Boolean(assign?.completed) || labSessions.some(isSuccessfulSession));
             const attempts = labSessions.length;
             const attempted = attempts > 0;
 
@@ -3582,8 +3703,11 @@ function getClassMatrixData() {
                 return timeA - timeB;
             });
             const practiceSessions = sortedLabSessions.filter(s => s.mode !== 'Hướng dẫn');
-            const passIndex = practiceSessions.findIndex(s => s.status === 'Hoàn thành' || s.status === 'completed' || s.is_passed === true);
-            const firstPassAttemptNo = passIndex !== -1 ? (passIndex + 1) : (Number(assign?.first_pass_attempt_no) || null);
+            const passIndex = practiceSessions.findIndex(isSuccessfulSession);
+            const firstPassSession = passIndex !== -1 ? practiceSessions[passIndex] : null;
+            const firstPassAttemptNo = firstPassSession
+                ? (Number(firstPassSession.practiceAttemptNo) || passIndex + 1)
+                : (Number(assign?.first_pass_attempt_no) || null);
 
             if (isAssigned) {
                 ktvAssigned += 1;
@@ -3881,8 +4005,8 @@ function renderAll() {
 
 function updatePopoverTriggerLabels() {
     const allKtvs = [...new Set(sessions.map(item => item.learner))].sort();
-    const allDevices = [...new Set(sessions.map(item => item.device))].sort();
-    const allLabs = [...new Set(sessions.map(item => item.lab))].sort((a, b) => a.localeCompare(b, 'vi'));
+    const allDevices = getCanonicalDeviceList();
+    const allLabs = getCanonicalLabList();
     const allRegions = [...new Set(sessions.map(item => item.region))].sort((a, b) => a.localeCompare(b, 'vi'));
     const learnerReset = document.getElementById('learnerFilterReset');
     const selectedLearners = state.learnerSelectedKtvs.size;
@@ -3943,7 +4067,8 @@ function populateCalendarSelects() {
         monthSelect.innerHTML = Array.from({ length: 12 }, (_, index) => `<option value="${index}">Tháng ${index + 1}</option>`).join('');
     }
     if (yearSelect) {
-        yearSelect.innerHTML = [2025, 2026, 2027].map(year => `<option value="${year}">${year}</option>`).join('');
+        const y = new Date().getFullYear();
+        yearSelect.innerHTML = [y - 1, y, y + 1].map(year => `<option value="${year}">${year}</option>`).join('');
     }
 }
 
@@ -4864,8 +4989,11 @@ function openDeviceSubModal(deviceName, rows) {
             return timeA - timeB;
         });
         const practiceSessions = sortedSessions.filter(s => s.mode === 'Thực hành');
-        const passIndex = practiceSessions.findIndex(s => s.status === 'Hoàn thành' || s.status === 'completed' || s.is_passed === true);
-        const firstPassAttemptNo = passIndex !== -1 ? (passIndex + 1) : null;
+        const passIndex = practiceSessions.findIndex(isSuccessfulSession);
+        const firstPassSession = passIndex !== -1 ? practiceSessions[passIndex] : null;
+        const firstPassAttemptNo = firstPassSession
+            ? (Number(firstPassSession.practiceAttemptNo) || passIndex + 1)
+            : null;
 
         if (!totalCount) {
             return {
@@ -4883,7 +5011,7 @@ function openDeviceSubModal(deviceName, rows) {
             };
         }
         const latest = [...entry.sessions].sort((a, b) => parseDate(b.date) - parseDate(a.date))[0];
-        const isDone = entry.sessions.some(s => s.status === 'Hoàn thành' || s.status === 'completed');
+        const isDone = entry.sessions.some(isSuccessfulSession);
         const statusCategory = isDone ? 'done' : 'pending';
         const statusLabel = isDone ? 'Hoàn thành' : 'Đang thực hiện';
         const badgeClass = getStatusClass(statusLabel);
@@ -5171,11 +5299,11 @@ function filterSessionsByDate(startStr, endStr) {
 
 function computeMetrics(rows) {
     const totalSessions = rows.length;
-    const completed = rows.filter(item => item.status === 'Hoàn thành').length;
+    const completed = rows.filter(isSuccessfulSession).length;
     const learners = new Set(rows.map(item => item.learner)).size;
     const rate = totalSessions ? Math.round((completed / totalSessions) * 1000) / 10 : 0;
 
-    const evaluatedCompletions = rows.filter(item => item.status === 'Hoàn thành' && item.firstTry !== null);
+    const evaluatedCompletions = rows.filter(item => isSuccessfulSession(item) && item.firstTry !== null);
     const firstTryCount = evaluatedCompletions.filter(item => item.firstTry).length;
     const firstTryRate = evaluatedCompletions.length ? Math.round((firstTryCount / evaluatedCompletions.length) * 100) : null;
 

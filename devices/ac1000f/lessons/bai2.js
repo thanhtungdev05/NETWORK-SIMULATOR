@@ -8,8 +8,8 @@
 
   window.DEVICE_AC1000F_LESSONS.push({
     id: 'LAB_AC1000F_02',
-    title: 'Bài 2 - Cấu hình WiFi',
-    subtitle: 'Cấu hình wifi',
+    title: 'Bài 2 - Cấu hình Wi-Fi',
+    subtitle: 'Cấu hình Wi-Fi',
     instructions: [
       '<b>Yêu cầu:</b>',
       'Cấu hình đúng cho cả 2 băng tần <b>2.4G</b> và <b>5G</b> theo thông số:',

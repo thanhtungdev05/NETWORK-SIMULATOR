@@ -8,8 +8,8 @@ window.DEVICE_AC1000HI_LESSONS = window.DEVICE_AC1000HI_LESSONS || [];
 var index = window.DEVICE_AC1000HI_LESSONS.findIndex(function(l) { return l.id === 'LAB_AC1000HI_03'; });
 var lessonObj = {
   id: 'LAB_AC1000HI_03',
-  title: 'Bài 3 - Cấu hình WiFi IoT',
-  subtitle: 'Cấu hình wifi IoT',
+  title: 'Bài 3 - Cấu hình Wi-Fi IoT',
+  subtitle: 'Cấu hình Wi-Fi IoT',
   instructions: [
     '<b>Yêu cầu:</b>',
     'Thực hiện cấu hình mạng Wi-Fi IoT (băng tần 2.4G) theo các thông số dưới đây:',

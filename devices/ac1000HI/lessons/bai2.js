@@ -8,7 +8,7 @@ window.DEVICE_AC1000HI_LESSONS = window.DEVICE_AC1000HI_LESSONS || [];
 var index = window.DEVICE_AC1000HI_LESSONS.findIndex(function(l) { return l.id === 'LAB_AC1000HI_02'; });
 var lessonObj = {
   id: 'LAB_AC1000HI_02',
-  title: 'Bài 2 - Cấu hình WiFi',
+  title: 'Bài 2 - Cấu hình Wi-Fi',
   subtitle: 'Cấu hình Wi-Fi',
   instructions: [
     '<b>Yêu cầu:</b>',

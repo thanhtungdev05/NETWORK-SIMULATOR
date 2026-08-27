@@ -53,7 +53,7 @@ python run_all.py
 Dự án không chỉ mô phỏng thiết bị mà còn tích hợp bộ công cụ Đào tạo và Chấm điểm tự động:
 
 ### A. Danh sách các dòng thiết bị giả lập (Simulators)
-Dự án đã giả lập thành công Web Admin Interface của 9 dòng thiết bị mạng thực tế phổ biến của FPT Telecom:
+Dự án đã giả lập thành công Web Admin Interface của 10 dòng thiết bị mạng thực tế phổ biến của FPT Telecom:
 1. **AC1000F** (`/sim_ac1000f`)
 2. **AC1000HI** (`/sim_ac1000HI`)
 3. **AX3000C** (`/sim_ax3000c`)
@@ -61,8 +61,9 @@ Dự án đã giả lập thành công Web Admin Interface của 9 dòng thiết
 5. **AX3000Hv2** (`/sim_ax3000hv2`)
 6. **AX3000S** (`/sim_ax3000s`)
 7. **BE12000** (`/sim_be12000`)
-8. **BE6500C** (`/sim_ONT_be6500c`)
-9. **Vigor2927** (`/sim_vigor2927`)
+8. **BE15000** (`/sim_be15000`)
+9. **BE6500C** (`/sim_ONT_be6500c`)
+10. **Vigor2927** (`/sim_vigor2927`)
 
 ### B. Hai Chế Độ Hoạt Động (Dual Modes)
 1. **💡 Chế độ Hướng dẫn (Guide Mode)**
@@ -157,7 +158,7 @@ Các lệnh CLI hữu ích để quản lý cơ sở dữ liệu:
 
 ### A. Chuẩn Hóa Tên Danh Mục Thiết Bị
 - Tên thiết bị trên Dropdown Menu đã được cấu trúc lại với các tiền tố rõ ràng để KTV dễ phân biệt chủng loại:
-  - **Dòng ONT:** `ONT AC1000F`, `ONT AC1000HI`, `ONT AX3000CV2`, `ONT AX3000GZ`, `ONT AX3000HV2`, `ONT BE12000`, `ONT BE6500C`
+  - **Dòng ONT:** `ONT AC1000F`, `ONT AC1000HI`, `ONT AX3000CV2`, `ONT AX3000GZ`, `ONT AX3000HV2`, `ONT BE12000`, `ONT BE15000`, `ONT BE6500C`
   - **Dòng Khác:** `Internet Hub AX3000S`, `Router MikroTik`, `DrayTek Vigor2927`
 - Thứ tự (Order) hiển thị trên giao diện đã được sắp xếp đồng bộ thành một khối logic chuẩn (ONT -> Hub -> Router) quản lý tập trung trong file `data.js`.
 

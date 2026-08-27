@@ -32,16 +32,17 @@ DASHBOARD_DIR = os.path.join(BASE_DIR, 'dashboard-authen')
 os.chdir(BASE_DIR)
 
 # Import các Handler của từng thiết bị
-import sim_ac1000f.server2 as ac1000f
-import sim_ax3000c.server as ax3000c
-import sim_ax3000gz.server as ax3000gz
-import sim_ax3000hv2.server2 as ax3000hv2
-import sim_ax3000s.server as ax3000s
-import sim_be12000.src.server as be12000
-import sim_ac1000HI.src.server as ac1000HI
-import sim_vigor2927.src.server as vigor2927
-import sim_ONT_be6500c.src.server as be6500c
-import ont_be6500c.src.server as ONT_be6500c
+import simulators.sim_ac1000f.server2 as ac1000f
+import simulators.sim_ax3000c.server as ax3000c
+import simulators.sim_ax3000gz.server as ax3000gz
+import simulators.sim_ax3000hv2.server2 as ax3000hv2
+import simulators.sim_ax3000s.server as ax3000s
+import simulators.sim_be12000.src.server as be12000
+import simulators.sim_be15000.server as be15000
+import simulators.sim_ac1000HI.src.server as ac1000HI
+import simulators.sim_vigor2927.src.server as vigor2927
+import simulators.sim_ONT_be6500c.src.server as be6500c
+import simulators.ont_be6500c.src.server as ONT_be6500c
 
 # Mapping từ device id sang module
 SIM_MODULES = {
@@ -51,6 +52,7 @@ SIM_MODULES = {
     'sim_ax3000hv2': ax3000hv2,
     'sim_ax3000s': ax3000s,
     'sim_be12000': be12000,
+    'sim_be15000': be15000,
     'sim_ac1000HI': ac1000HI,
     'sim_vigor2927': vigor2927,
     'sim_be6500c': be6500c,
@@ -65,6 +67,7 @@ SIM_HANDLERS = {
     'sim_ax3000hv2': ax3000hv2.H,
     'sim_ax3000s': ax3000s.H,
     'sim_be12000': be12000.Handler,
+    'sim_be15000': be15000.H,
     'sim_ac1000HI': ac1000HI.H,
     'sim_vigor2927': vigor2927.H,
     'sim_be6500c': be6500c.H,
@@ -238,7 +241,7 @@ class MasterDispatcher(SimpleHTTPRequestHandler):
                 elif hasattr(sim_module, 'WWW'):
                     self.directory = getattr(sim_module, 'WWW')
                 else:
-                    self.directory = os.path.join(BASE_DIR, sim_id, "www")
+                    self.directory = os.path.join(BASE_DIR, "simulators", sim_id, "www")
                 
                 # -------------------------------------------------------------
                 # MONKEY PATCH ĐỂ FIX LỖI MẤT PREFIX KHI REDIRECT VÀ GIỮ COOKIE

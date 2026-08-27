@@ -1,102 +1,77 @@
-﻿/**
- * devices/ac1000f/lessons/bai6.js
- * Bài 6: Cấu hình Remote Web
+/**
+ * Bài 6: Cấu hình Port Forwarding trên ONT AC1000F
  */
 
 window.DEVICE_AC1000F_LESSONS = window.DEVICE_AC1000F_LESSONS || [];
 
 window.DEVICE_AC1000F_LESSONS.push({
   id: 'LAB_AC1000F_06',
-  title: 'Bài 6 - Cấu hình Remote Web',
-  subtitle: 'Cấu hình quản lý thiết bị từ xa qua Web',
+  title: 'Bài 6 - Cấu hình Port Forwarding',
+  subtitle: 'Mở cổng dịch vụ từ Internet vào thiết bị trong mạng LAN',
   instructions: [
-    '<b>Yêu cầu:</b> Cấu hình quản lý thiết bị từ xa (Remote Web) với tài khoản:',
-    '- Remote Username: <span class="val">admin99</span>',
-    '- Remote Password: <span class="val">ftc12345</span>',
+    '<b>Yêu cầu:</b>',
+    'Tạo quy tắc Port Forwarding theo các thông số sau:',
+    '- Start External Port: <span class="val">3389</span>',
+    '- End External Port: <span class="val">3389</span>',
+    '- IP Address: <span class="val">192.168.1.254</span>',
+    '- Start Internal Port: <span class="val">3389</span>',
+    '- End Internal Port: <span class="val">3389</span>'
   ],
-  practiceUrl: '/sim_ac1000f/cgi-bin/index.asp?page=adv_firewall.asp',
-
-  // Ràng buộc điều kiện chấm đúng Ä‘Ãºng
-    grading: {
-    description: 'Kiểm tra cấu hình Remote Web',
-    customGrading: function(allDocs) {
+  practiceUrl: '/sim_ac1000f/cgi-bin/index.asp?page=adv_nat_top.asp',
+  grading: {
+    description: 'Kiểm tra quy tắc Port Forwarding',
+    customGrading: function (allDocs) {
       var doc = null;
       for (var i = 0; i < allDocs.length; i++) {
-        if (allDocs[i].URL.toLowerCase().indexOf('adv_firewall.asp') !== -1) {
+        if (allDocs[i].URL.toLowerCase().indexOf('adv_nat_top.asp') !== -1) {
           doc = allDocs[i];
           break;
         }
       }
-      
+
       function getVal(selector) {
         if (!doc) return '';
         try {
           var el = doc.querySelector(selector);
-          if (el) return el.value.trim();
-        } catch(e) {}
-        return '';
+          return el ? el.value.trim() : '';
+        } catch (e) {
+          return '';
+        }
       }
-      
-      function getRadioVal(name) {
+
+      function getSelectText(selector) {
         if (!doc) return '';
         try {
-          var radios = doc.querySelectorAll('input[name="' + name + '"]');
-          for (var i = 0; i < radios.length; i++) {
-            if (radios[i].checked) return radios[i].value;
-          }
-        } catch(e) {}
-        return '';
+          var el = doc.querySelector(selector);
+          return el && el.selectedIndex >= 0 ? el.options[el.selectedIndex].text.trim() : '';
+        } catch (e) {
+          return '';
+        }
       }
-      
-      // 1. Firewall
-      var firewall = getRadioVal('firewallEnable');
-      var firewallText = firewall === '1' ? 'Enable' : (firewall === '0' ? 'Disable' : 'Chưa chọn');
-      
-      // 2. SPI
-      var spi = getRadioVal('spiEnable');
-      var spiText = spi === '1' ? 'Enable' : (spi === '0' ? 'Disable' : 'Chưa chọn');
-      
-      // 3. Remote Web
-      var remoteWeb = getRadioVal('wanAccessLanWebRadio');
-      var remoteWebText = remoteWeb === 'Yes' ? 'Enable' : (remoteWeb === 'No' ? 'Disable' : 'Chưa chọn');
-      
-      // 4. Remote SSH
-      var remoteSsh = getRadioVal('sshradio');
-      var remoteSshText = remoteSsh === '1' ? 'Enable' : (remoteSsh === '0' ? 'Disable' : 'Chưa chọn');
-      
+
       var rules = [
-        { id: '1', name: 'Firewall', expected: 'Enable', actual: firewallText },
-        { id: '2', name: 'SPI', expected: 'Disable', actual: spiText },
-        { id: '3', name: 'Remote Web', expected: 'Enable', actual: remoteWebText },
-        { id: '4', name: 'Remote SSH', expected: 'Disable', actual: remoteSshText },
-        { id: '5', name: 'Username', expected: 'admin99', actual: getVal('input[name="remote_username"]') },
-        { id: '6', name: 'Password', expected: 'ftc12345', actual: getVal('input[name="remote_password"]') }
+        { id: 'nat_type', name: 'IPv4 NAT Type', expected: 'Virtual Server', actual: getSelectText('select[name="NATtyleChange"]') },
+        { id: 'external_start', name: 'Start External Port', expected: '3389', actual: getVal('input[name="start_port1"]') },
+        { id: 'external_end', name: 'End External Port', expected: '3389', actual: getVal('input[name="end_port1"]') },
+        { id: 'ip_mode', name: 'Local IP Address', expected: 'Manually Enter IP Address', actual: getSelectText('select[name="Virsvr_IP_select"]') },
+        { id: 'ip_address', name: 'IP Address', expected: '192.168.1.254', actual: getVal('input[name="Addr1"]') },
+        { id: 'internal_start', name: 'Start Internal Port', expected: '3389', actual: getVal('input[name="local_sport"]') },
+        { id: 'internal_end', name: 'End Internal Port', expected: '3389', actual: getVal('input[name="local_eport"]') }
       ];
 
       var passedCount = 0;
-      var details = [];
-      rules.forEach(function(r) {
-        var actualVal = (r.actual || '').toString().trim();
-        var expectVal = (r.expected || '').toString().trim();
-        
-        var isMatch = false;
-        if (r.id === '6') {
-          // Password: case-sensitive
-          isMatch = (actualVal === expectVal);
-        } else {
-          // Others: case-insensitive
-          isMatch = (actualVal.toLowerCase() === expectVal.toLowerCase());
-        }
-        
-        if (isMatch) passedCount++;
-        details.push({
-          id: r.id,
-          name: r.name,
-          expected: r.expected,
-          actual: r.actual,
-          passed: isMatch
-        });
+      var details = rules.map(function (rule) {
+        var passed = rule.actual === rule.expected;
+        if (passed) passedCount++;
+        return {
+          id: rule.id,
+          name: rule.name,
+          expected: rule.expected,
+          actual: rule.actual || '(Chưa nhập / Chưa chọn)',
+          passed: passed
+        };
       });
+
       return {
         passed: passedCount === rules.length,
         score: Math.round((passedCount / rules.length) * 100),
@@ -107,6 +82,3 @@ window.DEVICE_AC1000F_LESSONS.push({
     }
   }
 });
-
-
-

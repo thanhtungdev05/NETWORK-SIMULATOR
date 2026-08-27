@@ -1,106 +1,184 @@
 ﻿/**
- * devices/ac1000f/lessons/bai3.js
- * Bài 3: CẤU HÌNH IP LAN trên ONT AC1000F
+ * devices/ac1000f/lessons/bai2.js
+ * Bài 2: Cấu hình mạng Wi-Fi trên ONT AC1000F
  */
 
-window.DEVICE_AC1000F_LESSONS = window.DEVICE_AC1000F_LESSONS || [];
+(function () {
+  window.DEVICE_AC1000F_LESSONS = window.DEVICE_AC1000F_LESSONS || [];
 
-window.DEVICE_AC1000F_LESSONS.push({
-  id: 'LAB_AC1000F_03',
-  title: 'Bài 3 - Cấu hình IP LAN',
-  subtitle: 'Thay đổi địa chỉ IP LAN và DHCP Pool',
-  instructions: [
-    '<b>Yêu cầu:</b>',
-    'Thực hiện thay đổi cấu hình địa chỉ IP LAN trên thiết bị theo các thông số được cung cấp dưới đây.',
-    '- IP Address: <span class="val">192.168.1.1</span>',
-    '- IP Subnet Mask: <span class="val">255.255.255.0</span>',
-    '- Start IP: <span class="val">192.168.1.2</span>',
-    '- End IP: <span class="val">192.168.1.254</span>',
-    '- Lease Time: <span class="val">86400</span>',
-  ],
-  practiceUrl: '/sim_ac1000f/cgi-bin/index.asp?page=home_lan.asp',
+  window.DEVICE_AC1000F_LESSONS.push({
+    id: 'LAB_AC1000F_03',
+    title: 'Bài 3 - Cấu hình WiFi IoT',
+    subtitle: 'Cấu hình wifi IoT',
+    instructions: [
+      '<b>Yêu cầu:</b>',
+      'Cấu hình đúng cho cả 2 băng tần <b>2.4G</b> và <b>5G</b> theo thông số:',
+      '- SSID Name: <span class="val">FPT Telecom-7EA8</span>',
+      '- WPA Key: <span class="val">00032934</span>',
+      '<br><b>Cách làm:</b>',
+      '1. Vào Wireless 2.4G → cấu hình → bấm <b>Save & Apply</b>',
+      '2. Vào Wireless 5G → cấu hình → bấm <b>Save & Apply</b>',
+      '→ Dữ liệu được lưu tự động khi bấm Save, chuyển trang vẫn còn.'
+    ],
+    practiceUrl: '/sim_ac1000f/cgi-bin/index.asp?page=home_wireless.asp',
+    // Clear old wifi localStorage when starting a new session (on login page only)
+    onSimLoad: function(iframeWindow) {
+      try {
+        var loc = (iframeWindow.location.href || '').toLowerCase();
+        if (loc.indexOf('home_wireless') === -1) {
+          localStorage.removeItem('ftc_sim_wifi24');
+          localStorage.removeItem('ftc_sim_wifi5g');
+        }
+      } catch(e) {}
+    },
 
-  // Xóa trắng các ô nhập liệu khi bài lab mở (học viên phải tự nhập)
-  clearFields: [
-    'input[name="uiViewIPAddr"]',
-    'input[name="uiViewNetMask"]',
-    'input[name="StartIp"]',
-    'input[name="EndIp"]',
-    'input[name="dhcp_LeaseTime"]',
-  ],
+    // CSS selectors for fields to clear at session start
+    clearFields: [
+      'input[name="ESSID"]',
+      'input[name="PreSharedKey1"]',
+      'input[name="PreSharedKey2"]',
+      'input[name="PreSharedKey3"]'
+    ],
 
-  // Ràng buộc điều kiện chấm đúng
-  grading: {
-    description: 'Kiểm tra cấu hình IP LAN (15 tiêu chí)',
-    customGrading: function (allDocs) {
-      var doc = null;
-      for (var i = 0; i < allDocs.length; i++) {
-        if (allDocs[i].URL.toLowerCase().indexOf('home_lan.asp') !== -1) {
-          doc = allDocs[i];
-          break;
+
+    grading: {
+      description: 'Kiểm tra thông số cấu hình Wi-Fi 2.4G và 5G',
+
+      customGrading: function (allDocs) {
+        // ── 1. Đọc từ localStorage (chỉ ghi nhận đã lưu thực sự khi có trong storage) ──
+        var data24 = null;
+        var data5G = null;
+        var is24Saved = false;
+        var is5gSaved = false;
+        try {
+          var raw24 = localStorage.getItem('ftc_sim_wifi24');
+          if (raw24) {
+            data24 = JSON.parse(raw24);
+            is24Saved = true;
+          }
+        } catch (e) { }
+        try {
+          var raw5g = localStorage.getItem('ftc_sim_wifi5g');
+          if (raw5g) {
+            data5G = JSON.parse(raw5g);
+            is5gSaved = true;
+          }
+        } catch (e) { }
+
+        // ── 2. Cập nhật thêm từ trang hiện tại đang mở trong iframe để hiển thị giá trị đang gõ ──
+        for (var i = 0; i < allDocs.length; i++) {
+          try {
+            var url = allDocs[i].URL.toLowerCase();
+            if (url.indexOf('home_wireless_5g.asp') !== -1) {
+              data5G = _captureFormData(allDocs[i]);
+            } else if (url.indexOf('home_wireless.asp') !== -1) {
+              data24 = _captureFormData(allDocs[i]);
+            }
+          } catch (e) { }
+        }
+
+        var allDetails = [];
+        var totalRules = 0, passedRules = 0;
+
+        function g(data, name) {
+          return data && data[name] ? String(data[name]).trim() : '';
+        }
+
+        // Lấy đúng mật khẩu theo chuẩn mã nguồn AC1000F
+        function getKey(data) {
+          if (!data) return '';
+          var auth = g(data, 'WEP_Selection');
+          if (auth === 'WPA2PSK') return g(data, 'PreSharedKey1');
+          if (auth === 'WPAPSK') return g(data, 'PreSharedKey2');
+          if (auth === 'WPAPSKWPA2PSK') return g(data, 'PreSharedKey3');
+          // Mặc định giao diện FPT dùng mixed mode (PreSharedKey3)
+          return g(data, 'PreSharedKey3') || g(data, 'PreSharedKey1') || g(data, 'PreSharedKey2') || g(data, 'PreSharedKey');
+        }
+
+        function addRule(id, name, expected, actual, passed) {
+          totalRules++;
+          if (passed) passedRules++;
+          allDetails.push({
+            id: id,
+            name: name,
+            expected: expected,
+            actual: actual || '(Trống)',
+            passed: passed,
+            message: passed ? 'Chính xác' : 'Sai'
+          });
+        }
+
+        // ─── 2.4G ───
+        allDetails.push({ id: '_h24', name: '━━ PHẦN 2.4G ━━', expected: '', actual: '', passed: true, message: '', _isHeader: true });
+        if (data24) {
+          var ap24 = g(data24, 'wlan_APenable');
+          addRule('24_ap', '[2.4G] Radio', 'Enable', ap24 === '1' ? 'Enable' : 'Disable', ap24 === '1' && is24Saved);
+
+          var ssid24 = g(data24, 'ESSID') || g(data24, 'ssid');
+          addRule('24_ssid', '[2.4G] SSID Name', 'FPT Telecom-7EA8', ssid24, ssid24 === 'FPT Telecom-7EA8' && is24Saved);
+
+          var key24 = getKey(data24);
+          addRule('24_key', '[2.4G] WPA Passphrase', '00032934', key24, key24 === '00032934' && is24Saved);
+
+          if (!is24Saved) {
+            totalRules++;
+            allDetails.push({ id: 'hint_24', name: '⚠ Chưa lưu cấu hình 2.4G', expected: 'Bấm Save & Apply để lưu cấu hình', actual: 'Chưa lưu', passed: false, _isHint: true });
+          }
+        } else {
+          totalRules++;
+          allDetails.push({ id: 'hint_24', name: '⚠ Chưa cấu hình 2.4G', expected: 'Vào Wireless 2.4G → cấu hình → bấm Save', actual: 'Chưa lưu', passed: false, _isHint: true });
+        }
+
+        // ─── 5G ───
+        allDetails.push({ id: '_h5g', name: '━━ PHẦN 5G ━━', expected: '', actual: '', passed: true, message: '', _isHeader: true });
+        if (data5G) {
+          var ap5 = g(data5G, 'wlan_APenable');
+          addRule('5g_ap', '[5G] Radio', 'Enable', ap5 === '1' ? 'Enable' : 'Disable', ap5 === '1' && is5gSaved);
+
+          var ssid5 = g(data5G, 'ESSID') || g(data5G, 'ssid');
+          addRule('5g_ssid', '[5G] SSID Name', 'FPT Telecom-7EA8', ssid5, ssid5 === 'FPT Telecom-7EA8' && is5gSaved);
+
+          var key5 = getKey(data5G);
+          addRule('5g_key', '[5G] WPA Passphrase', '00032934', key5, key5 === '00032934' && is5gSaved);
+
+          if (!is5gSaved) {
+            totalRules++;
+            allDetails.push({ id: 'hint_5g', name: '⚠ Chưa lưu cấu hình 5G', expected: 'Bấm Save & Apply để lưu cấu hình', actual: 'Chưa lưu', passed: false, _isHint: true });
+          }
+        } else {
+          totalRules++;
+          allDetails.push({ id: 'hint_5g', name: '⚠ Chưa cấu hình 5G', expected: 'Vào Wireless 5G → cấu hình → bấm Save', actual: 'Chưa lưu', passed: false, _isHint: true });
+        }
+
+        var score = totalRules === 0 ? 0 : Math.round((passedRules / totalRules) * 100);
+        return {
+          passed: passedRules > 0 && passedRules === totalRules,
+          score: score,
+          passedCount: passedRules,
+          totalRules: totalRules,
+          details: allDetails
+        };
+      }
+    }
+  });
+
+  // Helper: lấy dữ liệu form từ một document
+  function _captureFormData(doc) {
+    try {
+      var form = doc.WLAN || doc.forms[0];
+      if (!form) return null;
+      var data = {};
+      for (var i = 0; i < form.elements.length; i++) {
+        var el = form.elements[i];
+        if (!el.name) continue;
+        if (el.type === 'radio' || el.type === 'checkbox') {
+          if (el.checked) data[el.name] = el.value;
+        } else {
+          data[el.name] = el.value;
         }
       }
-
-      // Hàm tiện ích
-      function getVal(selector) {
-        if (!doc) return '';
-        try {
-          var el = doc.querySelector(selector);
-          if (el) return el.value.trim();
-        } catch (e) { }
-        return '';
-      }
-
-      function getRadio(name) {
-        if (!doc) return '';
-        try {
-          var el = doc.querySelector('input[name="' + name + '"]:checked');
-          if (el) return el.value;
-        } catch (e) { }
-        return '';
-      }
-
-      var rules = [
-        { id: '1', name: 'IP Address', expected: '192.168.1.1', actual: getVal('input[name="uiViewIPAddr"]') },
-        { id: '2', name: 'IP Subnet Mask', expected: '255.255.255.0', actual: getVal('input[name="uiViewNetMask"]') },
-        { id: '3', name: 'Limit NAT Session', expected: 'Disable', actual: getRadio('Limit_natsession') === '0' ? 'Disable' : 'Enable' },
-        { id: '4', name: 'Isolate all clients', expected: 'Disable', actual: getRadio('isolate_client') === 'No' ? 'Disable' : 'Enable' },
-        { id: '5', name: 'DHCP', expected: 'Enable', actual: getRadio('dhcpTypeRadio') === '1' ? 'Enable' : 'Disable' },
-        { id: '6', name: 'Start IP', expected: '192.168.1.2', actual: getVal('input[name="StartIp"]') },
-        { id: '7', name: 'End IP', expected: '192.168.1.254', actual: getVal('input[name="EndIp"]') },
-        { id: '8', name: 'Lease Time', expected: '86400', actual: getVal('input[name="dhcp_LeaseTime"]') },
-        { id: '9', name: 'IP Address', expected: 'Rỗng', actual: getVal('input[name="IpAddr"]') === '' ? 'Rỗng' : getVal('input[name="IpAddr"]') },
-        { id: '10', name: 'MAC Address', expected: 'Rỗng', actual: getVal('input[name="MACAddr"]') === '' ? 'Rỗng' : getVal('input[name="MACAddr"]') },
-        { id: '11', name: 'IPv6 Global Address', expected: 'Rỗng', actual: getVal('input[name="uiViewIPv6Addr"]') === '' ? 'Rỗng' : getVal('input[name="uiViewIPv6Addr"]') },
-        { id: '12', name: 'DHCPv6 Server', expected: 'Disable', actual: getRadio('dhcp6sEnableRadio') === '1' ? 'Enable' : 'Disable' },
-        { id: '13', name: 'DHCPv6 Mode', expected: 'Manually', actual: getRadio('dhcp6sModeRadio') === '0' ? 'Automatically' : 'Manually' },
-        { id: '14', name: 'DNS Mode', expected: 'Automatically', actual: getVal('select[name="dhcp6sdnsmode"]') === '0' ? 'Automatically' : 'Manually' }
-      ];
-
-      var passedCount = 0;
-      var details = [];
-      rules.forEach(function (r) {
-        var isMatch = (r.actual === r.expected);
-        if (isMatch) passedCount++;
-        details.push({
-          id: r.id,
-          name: r.name,
-          expected: r.expected,
-          actual: r.actual || '(Chưa nhập)',
-          passed: isMatch,
-          message: isMatch ? 'Chính xác' : ('Mong muốn: "' + r.expected + '", Thực tế: "' + (r.actual || 'Trống') + '"')
-        });
-      });
-
-      return {
-        passed: passedCount === rules.length,
-        score: Math.round((passedCount / rules.length) * 100),
-        passedCount: passedCount,
-        totalRules: rules.length,
-        details: details
-      };
-    }
+      return data;
+    } catch (e) { return null; }
   }
-});
 
-
+})();

@@ -1,0 +1,96 @@
+{
+  "_tieu_de": "HỢP ĐỒNG GHI của ONT AC1000HI — rút từ HAR thật khi bấm Apply ở Maintenance ▸ Time Zone",
+  "_ngay_do": "2026-08-22",
+  "_nguon": "reference/har/tools_time_apply.har (1,8 MB, 20 request, do anh Huynn ghi bằng DevTools)",
+  "_cach_do": [
+    "Anh Huynn mở DevTools ▸ Network ▸ tick Preserve log.",
+    "Vào Maintenance ▸ Time Zone, đổi múi giờ GMT+07:00 → GMT+08:00, bấm Save.",
+    "Đổi ngược lại GMT+08:00 → GMT+07:00, bấm Save (để thiết bị về đúng như cũ).",
+    "Xuất 'Save all as HAR with content'.",
+    "=> Trong HAR có 4 lần POST (mỗi lần bấm Save sinh 2 POST — xem mục 'vì sao 4 lần')."
+  ],
+
+  "hop_dong": {
+    "phuong_thuc": "POST",
+    "dia_chi": "CHÍNH URL của trang đang xem — /cgi-bin/tools_time.asp",
+    "_nhan_manh": "KHÔNG có endpoint riêng kiểu /cgi-bin/save.cgi hay /api/... Form POST thẳng về chính nó.",
+    "content_type_gui": "application/x-www-form-urlencoded",
+    "than_gui": "TOÀN BỘ trường của form, kể cả trường RỖNG (24 tham số trong trường hợp này) — không chỉ trường vừa thay đổi",
+    "co_hanh_dong": {
+      "ten": "SaveTime",
+      "gia_tri": "1",
+      "ghi_chu": "Mỗi trang có tên cờ riêng, đặt theo tên hàm Save của trang đó. Xem bảng 'cờ theo trang' bên dưới."
+    },
+    "phan_hoi": {
+      "ma_http": 200,
+      "content_type": "text/html;charset=utf-8",
+      "so_byte": 42170,
+      "noi_dung": "CHÍNH TRANG ĐÓ đã được render lại với giá trị mới",
+      "co_redirect": false,
+      "co_json": false
+    }
+  },
+
+  "bang_chung_server_that_su_luu": {
+    "_cach_kiem": "So từng dòng response của POST #1 (đổi sang GMT+08) và POST #2 (đổi về GMT+07).",
+    "khac_nhau_o_dung_2_dong": [
+      {
+        "dong": 535,
+        "sau_khi_chon_GMT+08": "<option value=\"GMT+07:00\" >(GMT+07:00) Bangkok, Jakarta, Hanoi",
+        "sau_khi_chon_GMT+07": "<option value=\"GMT+07:00\" selected>(GMT+07:00) Bangkok, Jakarta, Hanoi"
+      },
+      {
+        "dong": 536,
+        "sau_khi_chon_GMT+08": "<option value=\"GMT+08:00\" selected>(GMT+08:00) Beijing, Hong Kong, Perth, Singapore, Taipei",
+        "sau_khi_chon_GMT+07": "<option value=\"GMT+08:00\" >(GMT+08:00) Beijing, Hong Kong, Perth, Singapore, Taipei"
+      }
+    ],
+    "ket_luan": "Server lưu giá trị thật rồi render lại trang, đánh dấu `selected` đúng vào option mới. Toàn bộ phần còn lại của trang giữ nguyên từng byte."
+  },
+
+  "danh_sach_24_tham_so_gui_len": {
+    "_ghi_chu": "Đây là toàn bộ trường của form tools_time.asp. Trường rỗng vẫn được gửi (chuỗi rỗng). Giá trị đã được URL-encode.",
+    "SaveTime": "1  <-- cờ hành động",
+    "uiCurrentTime2": "",
+    "ToolsTimeSetFlag": "0",
+    "uiRadioValue": "0",
+    "uiClearPCSyncFlag": "0",
+    "uiwPCdateMonth": "0",
+    "uiwPCdateDay": "",
+    "uiwPCdateYear": "",
+    "uiwPCdateHour": "",
+    "uiwPCdateMinute": "",
+    "uiwPCdateSec": "",
+    "uiTimezoneType": "0",
+    "uiViewSyncWith": "0",
+    "uiPCdateMonth": "1",
+    "uiPCdateDay": "",
+    "uiPCdateYear": "",
+    "uiPCdateHour": "",
+    "uiPCdateMinute": "",
+    "uiPCdateSec": "",
+    "uiViewdateToolsTZ": "GMT%2B08%3A00  (= GMT+08:00)  <-- trường thực sự thay đổi",
+    "uiViewSNTPServer": "vn.pool.ntp.org",
+    "uiViewSNTPServer2": "asia.pool.ntp.org",
+    "ntp2ServerFlag": "Yes",
+    "ntp3ServerFlag": "N%2FA  (= N/A)"
+  },
+
+  "vi_sao_4_lan_POST": "Anh Huynn bấm Save 2 lần nhưng HAR ghi 4 POST, nội dung lặp theo cặp (GMT+08, GMT+07, GMT+08, GMT+07). Có thể do trang tự gửi lại, hoặc do thao tác lặp. CHƯA XÁC ĐỊNH chắc chắn — ghi vào ISSUES.md. Không ảnh hưởng việc dựng hợp đồng vì cả 4 lần đều giống hệt nhau về cấu trúc.",
+
+  "co_hanh_dong_theo_trang": {
+    "_cach_tim": "Đọc thuộc tính onClick của nút Save trong từng trang gốc, rồi đọc hàm JS đó xem nó đặt trường ẩn nào = 1 trước khi submit.",
+    "tools_time.asp": {"nut": "VALUE=\"Save\" onClick=\"uiTimeSave()\"", "co": "SaveTime=1", "da_xac_nhan_bang_HAR": true},
+    "home_lan.asp": {"nut": "VALUE=\"Save\" onClick=\"uiSave()\"", "co": "CHƯA ĐO", "da_xac_nhan_bang_HAR": false},
+    "home_wan.asp": {"nut": "VALUE=\"Save\" onClick=\"uiSave()\"", "co": "CHƯA ĐO", "da_xac_nhan_bang_HAR": false},
+    "tools_admin.asp": {"nut": "VALUE=\"Save\" onClick=\"uiSave()\"", "co": "CHƯA ĐO", "da_xac_nhan_bang_HAR": false},
+    "_canh_bao": "Nhiều trang dùng chung tên hàm uiSave() nhưng tên CỜ có thể khác nhau. KHÔNG được suy từ tools_time sang các trang khác — phải đọc hàm uiSave() của từng trang, hoặc ghi thêm HAR."
+  },
+
+  "ap_dung_cho_ban_gia_lap": [
+    "server.py: nhận POST tới bất kỳ /cgi-bin/*.asp nào, phân giải body urlencoded.",
+    "Ghi các trường vào config_store theo ĐÚNG tên trường (đó là lý do khoá trong kho đã đặt trùng tên name= của input).",
+    "Trả về HTTP 200 + chính trang đó đã render lại từ kho (đi qua render_dong), KHÔNG redirect, KHÔNG JSON.",
+    "Chỉ ghi những trường CÓ TRONG kho — trường lạ thì bỏ qua và ghi log, để không âm thầm tạo khoá rác."
+  ]
+}

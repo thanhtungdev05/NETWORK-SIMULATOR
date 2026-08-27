@@ -1,78 +1,183 @@
-﻿/**
+/**
  * devices/ax3000gz/lessons/bai6.js
- * Bài 6: Cấu hình DDNS trên AX3000GZ
+ * Bài 6: Cấu hình Port Forwarding trên AX3000GZ
  */
 
 window.DEVICE_AX3000GZ_LESSONS = window.DEVICE_AX3000GZ_LESSONS || [];
 
-window.DEVICE_AX3000GZ_LESSONS.push({
+var idx = window.DEVICE_AX3000GZ_LESSONS.findIndex(function (l) { return l.id === 'LAB_AX3000GZ_06'; });
+var lessonObj = {
   id: 'LAB_AX3000GZ_06',
-  title: 'Bài 6 - Cấu hình DDNS',
-  subtitle: 'Đăng ký tên miền động để truy cập từ Internet',
+  title: 'Bài 6 - Cấu hình Port Forwarding',
+  subtitle: 'Cấu hình Port Forwarding',
   instructions: [
     '<b>Yêu cầu:</b>',
-    'Thực hiện cấu hình dịch vụ tên miền động DDNS theo các thông số:',
-    '- Provider: <span class="val">No-IP</span>',
-    '- Username: <span class="val"> binhnt3@fpt.net</span>',
-    '- Password: <span class="val">fpt12345</span>',
-    '- Host Name: <span class="val">test23122021.ddns.net</span>',
+    'Thực hiện cấu hình Mở Port trên thiết bị theo các thông số được cung cấp dưới đây:',
+    '- Name: <span class="val">FPT Telecom</span>',
+    '- Enable: <span class="val">On</span>',
+    '- Protocol: <span class="val">TCP/UDP</span>',
+    '- WAN Host IP Address: <span class="val">21.143.157.184</span>',
+    '- LAN Host: <span class="val">192.168.1.254</span>',
+    '- WAN Port: <span class="val">8080</span>',
+    '- LAN Host Port: <span class="val">8080</span>'
   ],
-  practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/internet/ddns/ddns',
+  practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/internet/security/forwards',
   clearFields: [
-    '[id="widget.cbid.ddns.myddns_ipv4.username"]',
-    '[id="widget.cbid.ddns.myddns_ipv4.password"]',
-    '[id="widget.cbid.ddns.myddns_ipv4.lookup_host"]',
-    'input[data-widget-id="widget.cbid.ddns.myddns_ipv4.enabled"]'
+    '[id="modal_field_name"]',
+    '[id="modal_field_proto"]',
+    '[id="modal_field_src_ip"]',
+    '[id="modal_field_dest_ip"]',
+    '[id="modal_field_src_dport"]',
+    '[id="modal_field_dest_port"]'
   ],
   grading: {
-    description: 'Kiểm tra Dynamic DDNS configuration',
+    description: 'Kiểm tra Port Forwarding rules trên AX3000GZ',
     rules: [
       {
-        id: 'ddns_provider',
-        name: 'DDNS Provider',
-        selector: '[id="widget.cbid.ddns.myddns_ipv4.service_name"]',
-        expected: 'no-ip.com',
+        id: 'pf_name',
+        name: 'Name',
+        selector: '[id="modal_field_name"]',
+        expected: 'FPT Telecom',
         type: 'text_exact',
         trim: true,
         required: true
       },
       {
-        id: 'ddns_enabled',
-        name: 'DDNS Enabled',
-        selector: 'input[data-widget-id="widget.cbid.ddns.myddns_ipv4.enabled"]',
+        id: 'pf_enabled',
+        name: 'Enable Status',
+        selector: '[id="modal_field_enabled"] input[value="1"]',
         expected: '1',
         type: 'text_exact',
         trim: true,
         required: true
       },
       {
-        id: 'ddns_username',
-        name: 'DDNS Username',
-        selector: '[id="widget.cbid.ddns.myddns_ipv4.username"]',
-        expected: 'binhnt3@fpt.net',
+        id: 'pf_proto',
+        name: 'Protocol',
+        selector: '[id="modal_field_proto"]',
+        expected: 'tcp udp',
         type: 'text_exact',
         trim: true,
         required: true
       },
       {
-        id: 'ddns_password',
-        name: 'DDNS Password',
-        selector: '[id="widget.cbid.ddns.myddns_ipv4.password"]',
-        expected: 'fpt12345',
+        id: 'pf_wan_ip',
+        name: 'WAN Host IP Address',
+        selector: '[id="modal_field_src_ip"]',
+        expected: '21.143.157.184',
         type: 'text_exact',
         trim: true,
         required: true
       },
       {
-        id: 'ddns_hostname',
-        name: 'DDNS Host Name',
-        selector: '[id="widget.cbid.ddns.myddns_ipv4.lookup_host"]',
-        expected: 'test23122021.ddns.net',
+        id: 'pf_lan_ip',
+        name: 'LAN Host',
+        selector: '[id="modal_field_dest_ip"]',
+        expected: '192.168.1.254',
+        type: 'text_exact',
+        trim: true,
+        required: true
+      },
+      {
+        id: 'pf_wan_port',
+        name: 'WAN Port',
+        selector: '[id="modal_field_src_dport"]',
+        expected: '8080',
+        type: 'text_exact',
+        trim: true,
+        required: true
+      },
+      {
+        id: 'pf_lan_port',
+        name: 'LAN Host Port',
+        selector: '[id="modal_field_dest_port"]',
+        expected: '8080',
         type: 'text_exact',
         trim: true,
         required: true
       }
     ]
   },
-  guidePopups: []
-});
+  guidePopups: [
+    {
+      selector: '#topmenu a[href*="internet"]',
+      text: 'Chọn Internet',
+      position: 'bottom',
+      hideOnPage: 'internet'
+    },
+    {
+      selector: '#sidebarmenu a[href*="/internet/security"]',
+      text: 'Chọn Security',
+      position: 'right',
+      page: 'internet',
+      hideOnPage: 'security'
+    },
+    {
+      selector: '.tabs a[href*="forwards"]',
+      text: 'Chọn tab Port Forwards',
+      position: 'bottom',
+      page: 'security',
+      hideOnPage: 'forwards'
+    },
+    {
+      selector: '.cbi-button-add',
+      text: 'Bấm Add để thêm Port Forwarding',
+      position: 'top',
+      page: 'forwards'
+    },
+    {
+      selector: '[id="modal_field_name"]',
+      text: 'Nhập Name: FPT Telecom',
+      position: 'right',
+      page: 'forwards'
+    },
+    {
+      selector: '[id="modal_field_enabled"] label:nth-child(2)',
+      text: 'Chọn Enable: On',
+      position: 'right',
+      page: 'forwards'
+    },
+    {
+      selector: '[id="modal_field_proto"]',
+      text: 'Chọn Protocol: TCP/UDP',
+      position: 'right',
+      page: 'forwards'
+    },
+    {
+      selector: '[id="modal_field_src_ip"]',
+      text: 'Nhập WAN Host IP Address: 21.143.157.184',
+      position: 'right',
+      page: 'forwards'
+    },
+    {
+      selector: '[id="modal_field_dest_ip"]',
+      text: 'Nhập LAN Host: 192.168.1.254',
+      position: 'right',
+      page: 'forwards'
+    },
+    {
+      selector: '[id="modal_field_src_dport"]',
+      text: 'Nhập WAN Port: 8080',
+      position: 'right',
+      page: 'forwards'
+    },
+    {
+      selector: '[id="modal_field_dest_port"]',
+      text: 'Nhập LAN Host Port: 8080',
+      position: 'right',
+      page: 'forwards'
+    },
+    {
+      selector: '#modal_overlay .cbi-button-save, .modal .cbi-button-save',
+      text: 'Chọn Apply để lưu',
+      position: 'bottom',
+      page: 'forwards'
+    }
+  ]
+};
+
+if (idx !== -1) {
+  window.DEVICE_AX3000GZ_LESSONS[idx] = lessonObj;
+} else {
+  window.DEVICE_AX3000GZ_LESSONS.push(lessonObj);
+}

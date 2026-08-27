@@ -1,0 +1,587 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="utf-8" dir="ltr" lang="utf-8">
+        <head>
+                <meta http-equiv="X-UA-Compatible" content="IE=11;IE=10;IE=9; IE=8; IE=7; IE=EDGE">
+                <meta http-equiv=Content-Script-Type content=text/javascript>
+                <meta http-equiv=Content-Style-Type content=text/css>
+                <meta http-equiv=Content-Type content="text/html; charset=UTF-8">
+                <style  type="text/css">
+                        body{color:  #404040;}
+                </style>
+
+                <script language="JavaScript" src="/val.js"></script>
+                <script language="JavaScript" src="/general.js"></script>
+                <script language="JavaScript" type='text/javascript' src="/ip_new.js"></script>
+                <script type="text/javascript" src="/spin.js" ></script>
+				<link rel="stylesheet" type="text/css" href="/style.css">
+               <script language="JavaScript">
+function showSpin(){
+        var opts = {
+                  lines: 8, // The number of lines to draw
+                  length: 0, // The length of each line
+                  width: 6, // The line thickness
+                  radius: 7, // The radius of the inner circle
+                  scale: 1, // Scales overall size of the spinner
+                  corners: 1, // Corner roundness (0..1)
+                  color: '#999999', // CSS color or array of colors
+                  fadeColor: '#transparent', // CSS color or array of colors
+                  speed: 1.1, // Rounds per second
+                  rotate: 0, // The rotation offset
+                  animation: 'spinner-line-fade-quick', // The CSS animation name for the lines
+                  direction: 1, // 1: clockwise, -1: counterclockwise
+                  zIndex: 2e9, // The z-index (defaults to 2000000000)
+                  className: 'spinner', // The CSS class to assign to the spinner
+                  top: '50%', // Top position relative to parent
+                  left: '50%', // Left position relative to parent
+                  shadow:false, // Box-shadow for the lines
+                  position: 'absolute' // Element positioning
+                };
+
+var target = document.getElementById('firstDiv');
+var spinner = new Spinner(opts).spin(target);
+}
+
+                        function start_tcpdump_settings() 
+                        {
+                                var TcpdumpPcapNumValue=document.Test_Form.TcpdumpPcapNum.value;
+                                document.Test_Form.TcpdumpStart.value="Start";
+                                if(TcpdumpPcapNumValue<=0)
+                                {
+                                         alert("PcapNum can not be null !");
+                                        return -1;
+                                }
+
+                                if(TcpdumpPcapNumValue>2000)
+                                {
+                                         alert("The maximum of PcapNum is 2000");
+                                        return -1;
+                                }
+                                showSpin();
+                                document.Test_Form.Tcpdump_flag.value=1;
+                                document.Test_Form.submit();
+                                return;
+                        }
+
+                        function stop_tcpdump_settings() 
+                        {
+                                document.Test_Form.TcpdumpStart.value="Stop";
+                                showSpin();
+                                document.Test_Form.Tcpdump_flag.value=2;
+                                document.Test_Form.submit();
+                                return;
+                        }
+
+                        function backup_tcpdump_settings()
+                        {
+                                var value;
+                                var interface;
+                                var serialnumber= "FPTH22800025";
+                                if(document.Test_Form.TcpdumpInterface[0].selected)
+                                        value="br0";
+                                else if(document.Test_Form.TcpdumpInterface[1].selected)
+                                        value="eth0.1";
+                                else if(document.Test_Form.TcpdumpInterface[2].selected)
+                                        value="eth0.2";
+                                else if(document.Test_Form.TcpdumpInterface[3].selected)
+                                        value="eth0.3";
+                                else if(document.Test_Form.TcpdumpInterface[4].selected)
+                                        value="eth0.4";
+                                else if(document.Test_Form.TcpdumpInterface[5].selected)
+                                        value="ra0";
+                                else if(document.Test_Form.TcpdumpInterface[6].selected)
+                                        value="rai0";
+                                else if(document.Test_Form.TcpdumpInterface[7].selected)
+                                        value="pon";
+
+                                interface=value;
+
+                                var cfg='/'+interface+'.pcap';
+                                //var cfg='/cgi-bin/Tcpdump.cap';
+                                var code = 'location.assign("' + cfg + '")';
+                                eval(code);
+                        }
+
+                        function DoRefresh() 
+                        {
+                                document.Test_Form.testFlag.value = 2;
+                                document.Test_Form.submit();
+                        }
+
+                        function doTest()
+                        {
+                                if(document.Test_Form.pingtest_type[0].checked)
+                                {
+                                        value = document.Test_Form.IP.value;
+                                        //if(inValidIPAddr(value))
+										if(DestIPAddr_Chk(value) == true && isValidUrlName(value) == false)
+										{
+											alert("Invalid address " + value);
+											return false;
+										}
+                                }    
+                                document.Test_Form.testFlag.value = 1;
+                                document.Test_Form.submit();
+                        }
+
+                        function doReload() 
+                        {
+                                if(document.Test_Form.pingtest_type[0].checked)
+                                {
+                                        document.Test_Form.pingtest_type.value = "Yes";
+                                }
+                                else
+                                {
+                                        document.Test_Form.pingtest_type.value = "No";
+                                }
+                                document.Test_Form.submit();
+                                return;
+                        }
+
+                                    
+                                function DestIPAddr_Chk(Address)
+                                {
+                                        var address = Address.match("^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$");
+                                        var digits;
+                                        var i;
+                                        if(address == null) { 
+                                                //alert("Invalid IP address " + Address);
+                                                return true;
+                                        }
+
+                                        digits = address[0].split(".");
+                                        for(i=0; i < 4; i++)
+                                        {
+                                                if((Number(digits[i]) > 255 ) || (Number(digits[i]) < 0 ) || (Number(digits[0]) == 0) || (digits[i] == null))
+                                                { 
+                                                        //alert("Invalid IP address " + Address);
+                                                        return true;
+                                                }
+                                        }
+                                        return false;
+                                }
+
+                                function doTracertTest()
+                                {
+                                       setDisplay('WaitMsgTracert', 1);        
+
+                                        var destip=document.Test_Form.tracert_destaddr.value;
+                                        //if(DestIPAddr_Chk(destip))
+										if(DestIPAddr_Chk(destip) == true && isValidUrlName(destip) == false)
+										{
+											alert("Invalid address " + destip);
+											return false;
+										}
+
+                                        document.Test_Form.testFlag.value = 1;
+                                        document.Test_Form.tracert_enable.value = 1;
+                                        document.Test_Form.submit();
+                                        return ;
+                                }
+
+                                function RefeshForTracert()
+                                {
+                                        var str1="Wait";
+                                        var str2=document.Test_Form.tracert_result.value;
+                                        if(str1 == str2)
+                                        {
+                                                setTimeout("RefeshForTracert()",5000);
+                                                document.location.href="/cgi-bin/tools_test.asp";
+                                        }
+                                }
+                        
+                </script>
+
+        </head>
+
+        
+                <body onLoad="setTimeout('RefeshForTracert()',5000);" style="background:#4acbd6;">
+        
+                        <FORM METHOD="POST" ACTION="/cgi-bin/tools_test.asp" name="Test_Form">
+                                <div id="pagestyle">
+                                        <div id="contenttype">
+                                                <div id="block1">
+												<div  class="main_item">
+                                                        <table width="640px" border="0"  cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" class="tabdata" style="margin:5px 0px;">
+                                                                <INPUT TYPE="HIDDEN" NAME="testFlag" VALUE="0">
+                                                                <tr height="25px" style="background-color:#e6e6e6;">
+                                                                        <td width="20px">&nbsp;</td>
+                                                                        <td colspan="2" align="left" valign="middle" class="title-main">Diagnostic Test</td>
+                                                                </tr>
+                                                        </table>
+
+                                                        <table width="640px" border="0"  cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" class="tabdata">
+                                                                <tr height="30px" style="display:none">
+                                                                        <td width="20px">&nbsp;</td>
+                                                                        
+                                                                                <td width="340px" align=left class="tabdata">WAN</td>
+                                                                                <td align=left class="tabdata">
+                                                                                     <SELECT NAME="Test_PVC" SIZE="1" onChange="DoRefresh()"  style="width:80px;">
+                                                                                     <OPTION value="0" selected> 0
+                                                                                     <!--
+                                                                                     <OPTION value="1" > 1
+                                                                                     <OPTION value="2" > 2
+                                                                                     <OPTION value="3" > 3
+                                                                                     <!--
+                                                                                     <OPTION value="4" > 4
+                                                                                     <OPTION value="5" > 5
+                                                                                     <OPTION value="6" > 6
+                                                                                     <OPTION value="7" > 7
+                                                                                     -->
+                                                                        
+                                                                                     </SELECT>
+                                                                                </td>
+                                                                </tr>
+
+                                                                
+
+                                                                
+
+                                                                <tr height="30px">
+                                                                        <td width="20px">&nbsp;</td>
+                                                                        <td width="500px" align=left class="tabdata">&gt;&gt;Testing Ethernet LAN connection</td>
+                                                                        <td align=left class="tabdata">
+                                                                                <script language="JavaScript" type="text/JavaScript">
+                                                                                     var strlanconn = "N/A";
+                                                                                     if(strlanconn == "Fail")
+                                                                                     document.writeln('<font face="Arial" color="red"><strong>Fail</strong></font>');
+                                                                                     else if(strlanconn == "PASS")
+                                                                                     document.writeln('<font face="Arial" color="green"><strong>PASS</strong></font>');
+                                                                                     else if(strlanconn == "Skipped")
+                                                                                     document.writeln('<font face="Arial" color="green"><strong>Skipped</strong></font>');
+                                                                                     else
+                                                                                     document.writeln('<font face="Arial" color="green"><strong>' +strlanconn+ '</strong></font>');
+                                                                                </script>
+                                                                        </td>
+                                                                </tr>
+
+                                                                
+                                                                        <tr height="30px">
+                                                                                <td width="20px">&nbsp;</td>
+                                                                                <td width="340px" align=left class="tabdata">&gt;&gt;Testing GPON MAC Status</td>
+                                                                                <td align=left class="tabdata">
+                                                                                     <script language="JavaScript" type="text/JavaScript">
+                                                                                     var xponLinkStatus = "N/A";
+                                                                                     if(xponLinkStatus == "Fail")
+                                                                                     document.writeln('<font face="Arial" color="red"><strong>Fail</strong></font>');
+                                                                                     else if(xponLinkStatus == "PASS")
+                                                                                     document.writeln('<font face="Arial" color="green"><strong>PASS</strong></font>');
+                                                                                     else if(xponLinkStatus == "Skipped")
+                                                                                     document.writeln('<font face="Arial" color="green"><strong>Skipped</strong></font>');
+                                                                                     else
+                                                                                     document.writeln('<font face="Arial" color="green"><strong>' +xponLinkStatus+ '</strong></font>');
+                                                                                     </script>
+                                                                                </td>
+                                                                        </tr>
+
+                                                                        <tr height="30px">
+                                                                                <td width="20px">&nbsp;</td>
+                                                                                <td width="340px" align=left class="tabdata">&gt;&gt;Testing GPON Link Status</td>
+                                                                                <td align=left class="tabdata">
+                                                                                     <script language="JavaScript" type="text/JavaScript">
+                                                                                     var xPONAppLinkStatus = "N/A";
+                                                                                     if(xPONAppLinkStatus == "Fail")
+                                                                                     document.writeln('<font face="Arial" color="red"><strong>Fail</strong></font>');
+                                                                                     else if(xPONAppLinkStatus == "PASS")
+                                                                                     document.writeln('<font face="Arial" color="green"><strong>PASS</strong></font>');
+                                                                                     else if(xPONAppLinkStatus == "Skipped")
+                                                                                     document.writeln('<font face="Arial" color="green"><strong>Skipped</strong></font>');
+                                                                                     else
+                                                                                     document.writeln('<font face="Arial" color="green"><strong>' +xPONAppLinkStatus+ '</strong></font>');
+                                                                                     </script>
+                                                                                </td>
+                                                                        </tr>
+                                                                
+
+                                                                <tr height="30px">
+                                                                        <td width="20px">&nbsp;</td>
+                                                                        <td width="340px" align=left class="tabdata">&gt;&gt;Ping DHCP Primary DNS (
+                                                                                N/A  ) 
+                                                                        </td>
+                                                                        <td align=left class="tabdata">
+                                                                                <script language="JavaScript" type="text/JavaScript">
+                                                                                     var strpingdns = "N/A";
+                                                                                     if(strpingdns == "Fail")
+                                                                                     document.writeln('<font face="Arial" color="red"><strong>Fail</strong></font>');
+                                                                                     else if(strpingdns == "PASS")
+                                                                                     document.writeln('<font face="Arial" color="green"><strong>PASS</strong></font>');
+                                                                                     else if(strpingdns == "Skipped")
+                                                                                     document.writeln('<font face="Arial" color="green"><strong>Skipped</strong></font>');
+                                                                                     else
+                                                                                     document.writeln('<font face="Arial" color="green"><strong>' +strpingdns+ '</strong></font>');
+                                                                                </script>
+                                                                        </td>
+                                                                </tr>
+
+                                                                <tr height="30px">
+                                                                        <td width="20px">&nbsp;</td>
+                                                                        <td width="340px" align=left class="tabdata">&gt;&gt;Ping www.google.com.vn ( use DHCP Pri. or Sec. DNS )</td>
+                                                                        <td align=left class="tabdata">
+                                                                                <script language="JavaScript" type="text/JavaScript">
+                                                                                     var strpingyahoo = "N/A";
+                                                                                     if(strpingyahoo == "Fail")
+                                                                                     document.writeln('<font face="Arial" color="red"><strong>Fail</strong></font>');
+                                                                                     else if(strpingyahoo == "PASS")
+                                                                                     document.writeln('<font face="Arial" color="green"><strong>PASS</strong></font>');
+                                                                                     else if(strpingyahoo == "Skipped")
+                                                                                     document.writeln('<font face="Arial" color="green"><strong>Skipped</strong></font>');
+                                                                                     else
+                                                                                     document.writeln('<font face="Arial" color="green"><strong>' +strpingyahoo+ '</strong></font>');
+                                                                                </script>
+                                                                        </td>
+                                                                </tr>
+
+                                                                <tr height="30px">
+                                                                        <td width="20px">&nbsp;</td>
+                                                                        <td width="340px" align=left class="tabdata">&gt;&gt;Ping other IP address 
+                                                                                <INPUT TYPE="RADIO" NAME="pingtest_type" VALUE="Yes"  onClick="doReload()">  
+                                                                                Enable 
+
+                                                                                <INPUT TYPE="RADIO" NAME="pingtest_type" VALUE="No"  checked onClick="doReload()">  
+                                                                                Disable 
+                                                                        </td>
+                                                                        <td align=left class="tabdata">
+                                                                                <script language="JavaScript" type="text/JavaScript">
+                                                                                     var strpingother = "N/A";
+                                                                                     if(strpingother == "Fail")
+                                                                                     document.writeln('<font face="Arial" color="red"><strong>Fail</strong></font>');
+                                                                                     else if(strpingother == "PASS")
+                                                                                     document.writeln('<font face="Arial" color="green"><strong>PASS</strong></font>');
+                                                                                     else if(strpingother == "Skipped")
+                                                                                     document.writeln('<font face="Arial" color="green"><strong>Skipped</strong></font>');
+                                                                                     else
+                                                                                     document.writeln('<font face="Arial" color="green"><strong>' +strpingother+ '</strong></font>');
+                                                                                </script>
+                                                                        </td>
+                                                                </tr>
+
+                                                                
+                                                        </table>
+														</div>
+
+														<div  class="main_item">
+                                                        <table width="640px" border="0"  cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" class="tabdata" style="margin:5px 0px;">
+                                                                <tr height="25px">
+                                                                        <td width="20px">&nbsp;</td>
+                                                                        <td colspan="2" align="left" class="title-main">Click "Start" to start diagnostic test</td>
+                                                                </tr>
+                                                        </table>
+
+                                                        <table width="640px" border="0"  cellpadding="0" cellspacing="0" class="tabdata">
+                                                                
+                                                                        <tr height="30px">
+                                                                                <td width="20px">&nbsp;</td>
+                                                                                <td colspan="2" align=left class="tabdata">
+                                                                                     <INPUT TYPE="SUBMIT" NAME="TestBtn" class="button1" VALUE="Start" onClick="doTest();">
+                                                                                </td>
+                                                                        </tr>
+                                                                
+                                                        </table>
+                                                </div>
+
+                                                
+                                                        <div id="block1" class="main_item">
+                                                                <table width="640" border="0"  cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" class="tabdata" style="margin:5px 0px;">
+                                                                        <tr height="25px" style="background-color:#e6e6e6;">
+                                                                                <td width="20px">&nbsp;</td>
+                                                                                <td colspan="2" align="left" class="title-main">Trace Route Test</td>
+                                                                        </tr>
+                                                                </table>
+
+                                                                <table width="640px" border="0"  cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" class="tabdata">
+                                                                        
+                                                                                <tr height="30px" style="display:none">
+                                                                                     <td width="20px">&nbsp;</td>
+                                                                                     <td width="250px" colspan="2" align=left class="tabdata">
+                                                                                     <DIV id="WaitMsgTracert"><font color="#FF0000" size="-1"> traceroute is testing, please wait</font></DIV>
+                                                                                     <script language="JavaScript" type="text/JavaScript">
+                                                                                     setDisplay('WaitMsgTracert', 0);
+                                                                                     </script>
+                                                                                     </td>
+                                                                                </tr>
+                                                                        
+
+                                                                        <tr height="30px">
+                                                                                <td width="20px">&nbsp;</td>
+                                                                                <td width="250px" align=left class="tabdata">Dest Address</td>
+                                                                                <td align=left class="tabdata" color="#F36F22">
+                                                                                     <INPUT TYPE="TEXT" NAME="tracert_destaddr" SIZE="30" MAXLENGTH="60" VALUE="" >
+
+                                                                                     <script language="JavaScript" type="text/JavaScript">
+                                                                                     var strTracertResult = "N/A";
+                                                                                     if(strTracertResult == "Fail")
+                                                                                     document.writeln('<font face="Arial" color="red"><strong>Fail</strong></font>');
+                                                                                     else     if(strTracertResult == "Skipped")
+                                                                                     document.writeln('<font face="Arial" color="green"><strong>Skipped</strong></font>');
+                                                                                     else     if(strTracertResult == "Wait")
+                                                                                     document.writeln('<font face="Arial" color="green"><strong>Wait</strong></font>');
+                                                                                     </script>
+                                                                                </td>
+                                                                        </tr>
+
+                                                                        
+
+                                                                        <INPUT TYPE="HIDDEN" NAME="PingorTracertDNS" VALUE="0">
+                                                                        <INPUT TYPE="HIDDEN" NAME="tracert_enable" VALUE="0">
+                                                                        <INPUT TYPE="HIDDEN" NAME="tracert_result" VALUE="N/A">
+                                                                </table>
+
+                                                                <table width="640" border="0"  cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" class="tabdata" style="margin:5px 0px;">
+                                                                        <tr height="25px">
+                                                                                <td width="20px">&nbsp;</td>
+                                                                                <td colspan="2" align="left" class="title-main">Click "Start" to start trace route test</td>
+                                                                        </tr>
+                                                                </table>
+
+                                                                <table width="640px" border="0"  cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" class="tabdata">
+                                                                        <tr height="30px">
+                                                                                <td width="20px">&nbsp;</td>
+                                                                                <td colspan="2" align=left class="tabdata">
+                                                                                     <INPUT TYPE="BUTTON" NAME="TestTracertBtn" class="button1" VALUE="Start" onClick="doTracertTest();" >
+                                                                                </td>
+                                                                        </tr>
+                                                                </table>
+                                                        </div>
+                                                
+
+                                                <div id="block1" class="main_item">
+                                                        <table width="640" border="0"  cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" class="tabdata" style="margin:5px 0px;">
+                                                                <tr height="25px" style="background-color:#e6e6e6;">
+                                                                        <td width="20px">&nbsp;</td>
+                                                                        <td colspan="2" align="left" class="title-main">TcpDump Test</td>
+                                                                </tr>
+                                                        </table>
+
+                                                        <table width="640px" border="0"  cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" class="tabdata">
+                                                                <tr height="30px">
+                                                                        <td width="20px">&nbsp;</td>
+                                                                        <td width="250px" align=left class="tabdata">Interface</td>
+                                                                        <td align=left class="tabdata">
+                                                                                <SELECT NAME="TcpdumpInterface" SIZE="1" >
+                                                                                     <OPTION value="br0"  >All
+                                                                                     <OPTION value="eth0.1"  >Ethernet1
+                                                                                     <OPTION value="eth0.2"  >Ethernet2
+                                                                                     <OPTION value="eth0.3"   >Ethernet3
+                                                                                     <OPTION value="eth0.4"   >Ethernet4
+                                                                                     <OPTION value="ra0"   >WLAN 2.4G
+                                                                                     <OPTION value="rai0"  >WLAN 5G
+                                                                                     <OPTION value="pon"   >PON
+                                                                                </SELECT>
+                                                                        </td>
+                                                                </tr>
+
+                                                                <tr height="30px">
+                                                                        <td width="20px">&nbsp;</td>
+                                                                        <td width="250px" align=left class="tabdata">Packets Num</td>
+                                                                        <td align=left class="tabdata">
+                                                                                <INPUT TYPE="TEXT" NAME="TcpdumpPcapNum" SIZE="9" MAXLENGTH="4" VALUE="" >
+                                                                                The max of packets number is : 2000
+                                                                        </td>
+                                                                </tr>
+                                                        </table>
+
+                                                        <table width="640" border="0"  cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" class="tabdata" style="table-layout: fixed;">
+                                                                <tr height="30px">
+                                                                        <td align=left class="tabdata">
+                                                                                <div id="tcpdumpstatus"></div>         
+                                                                                <script language=JavaScript>
+                                                                                     setInterval(loadDoc, 1000);
+                                                                                     //setTimeout(loadDoc,500);
+                                                                                     function loadDoc() 
+                                                                                     {
+                                                                                     var xmlhttp;
+                                                                                     if (window.XMLHttpRequest) 
+                                                                                     {
+                                                                                     // code for IE7+, Firefox, Chrome, Opera, Safari
+                                                                                      xmlhttp=new XMLHttpRequest();
+                                                                                     }
+                                                                                     else
+                                                                                     {
+                                                                                     // code for IE6, IE5
+                                                                                     xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+                                                                                     }
+
+                                                                                     xmlhttp.onreadystatechange = function() 
+                                                                                     {
+                                                                                     if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+                                                                                     {
+                                                                                     document.getElementById("tcpdumpstatus").innerHTML =xmlhttp.responseText;
+                                                                                     }
+                                                                                     };
+                                                                                     xmlhttp.open("GET", "/cgi-bin/tcpdump_status.asp", true);
+                                                                                     xmlhttp.setRequestHeader('If-Modified-Since', '0');
+                                                                                     xmlhttp.send();
+                                                                                     }
+                                                                                </script>
+                                                                        </td>
+                                                                </tr>
+                                                        </table>
+                                                </div>
+
+                                                <div id="button0" class="main_item">
+                                                        <table width="640" border="0"  cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" class="tabdata" style="table-layout: fixed; margin:5px 0px;">
+                                                                <tr height="25px">
+                                                                        <td width="20px">&nbsp;</td>
+                                                                        <td colspan="2" align="left" class="title-main">Click "Start" to start capturing packets. Click "Save" to save the packets.</td>
+                                                                </tr>
+                                                        </table>
+
+                                                        <table width="640px" border="0"  cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" class="tabdata">
+                                                                <tr height="30px">
+                                                                        <td width="20px">&nbsp;</td>
+                                                                        <td width="60px" align=left>
+                                                                        <!--
+                                                                                <INPUT TYPE="SUBMIT" NAME="TcpStart" class="button1" VALUE="Start" onClick='start_tcpdump_settings()'>
+                                                                        
+                                                                                <INPUT TYPE="HIDDEN" NAME="TcpdumpStart" VALUE="Start">
+                                                                                <INPUT TYPE="HIDDEN" NAME="Tcpdump_flag" VALUE="0">
+                                                                                <INPUT TYPE="BUTTON"  class="button1" VALUE="Save" onClick='backup_tcpdump_settings()'>
+                                                                        -->
+																		<div id="tcpdumpbutton"></div>         
+                                                                                <script language=JavaScript>
+                                                                                     setInterval(loadDoc, 1000);
+                                                                                     //setTimeout(loadDoc,500);
+                                                                                     function loadDoc() 
+                                                                                     {
+                                                                                     var xmlhttp;
+                                                                                     if (window.XMLHttpRequest) 
+                                                                                     {
+                                                                                     // code for IE7+, Firefox, Chrome, Opera, Safari
+                                                                                      xmlhttp=new XMLHttpRequest();
+                                                                                     }
+                                                                                     else
+                                                                                     {
+                                                                                     // code for IE6, IE5
+                                                                                     xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+                                                                                     }
+
+                                                                                     xmlhttp.onreadystatechange = function() 
+                                                                                     {
+                                                                                     if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+                                                                                     {
+                                                                                     document.getElementById("tcpdumpbutton").innerHTML =xmlhttp.responseText;
+                                                                                     }
+                                                                                     };
+                                                                                     xmlhttp.open("GET", "/cgi-bin/tcpdump_button.asp", true);
+                                                                                     xmlhttp.setRequestHeader('If-Modified-Since', '0');
+                                                                                     xmlhttp.send();
+                                                                                     }
+                                                                                </script>
+																			</td>
+																			<td><INPUT TYPE="HIDDEN" NAME="TcpdumpStart" VALUE="Start">
+                                                                                <INPUT TYPE="HIDDEN" NAME="Tcpdump_flag" VALUE="0">
+																				<INPUT TYPE="BUTTON"  class="button1" VALUE="Save" onClick='backup_tcpdump_settings()'>
+																			</td>
+                                                                        <td id="firstDiv" style="float:left;"></td>
+                                                                        <td >&nbsp;</td>
+                                                                </tr>
+                                                        </table>
+                                                </div>
+                                        </div>
+                                </div>
+
+                
+                        </form>
+                </body>
+</html>

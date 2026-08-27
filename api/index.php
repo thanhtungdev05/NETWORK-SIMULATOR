@@ -2340,7 +2340,10 @@ function handle_dashboard(array $segments, string $method): void
                       )
                       AND s.mode = 'Thực hành'
                   )
-                 WHERE u.role = 'KTV' AND u.is_terminated = FALSE
+                 WHERE u.role = 'KTV'
+                   AND u.is_terminated = FALSE
+                   AND lab.is_active = TRUE
+                   AND device.is_active = TRUE
                  GROUP BY u.email, u.class_code, device.device_name, lab.lab_name
                  ORDER BY u.class_code, u.email, device.device_name, lab.lab_name
                 SQL

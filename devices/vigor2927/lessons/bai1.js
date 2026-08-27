@@ -7,8 +7,8 @@ window.DEVICE_VIGOR2927_LESSONS = window.DEVICE_VIGOR2927_LESSONS || [];
 
 window.DEVICE_VIGOR2927_LESSONS.push({
   id: 'vg2927-bai1',
-  title: 'Bài 1 - Khám phá Vigor2927',
-  subtitle: 'Đăng nhập và xem trạng thái',
+  title: 'Cấu hình PPPoE',
+  subtitle: 'Cấu hình PPPoE',
   instructions: [
     '<b>Yêu cầu:</b>',
     'Đăng nhập vào thiết bị và xem trạng thái thiết bị',

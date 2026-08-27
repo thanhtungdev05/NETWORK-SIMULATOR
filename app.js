@@ -229,6 +229,10 @@
           // Xóa trắng trường của bài học cho cả Hướng dẫn và Thực hành khi load trang mới
           clearLessonFields();
 
+            if (currentMode === 'guide') {
+              applyGuidePopups();
+            }
+
           // Theo dõi sự kiện click vào nút Save/Apply trong iframe (chạy cho cả Hướng dẫn và Thực hành)
           try {
             const allDocs = getAllAccessibleDocuments(deviceIframe.contentWindow);
@@ -365,11 +369,11 @@
                   let el = e.target;
                   while (el && el !== doc) {
                     if ((el.tagName === 'INPUT' || el.tagName === 'BUTTON') &&
-                      (el.type === 'submit' || (el.value || el.textContent || '').toLowerCase().includes('save') || (el.value || el.textContent || '').toLowerCase().includes('apply'))) {
+                      (el.type === 'submit' || (el.value || el.textContent || '').toLowerCase().includes('save') || (el.value || el.textContent || '').toLowerCase().includes('apply') || el.name === 'AddBtn')) {
                       window._hasClickedSaveInGuide = true;
                       if (currentDeviceId === 'ax3000s') {
                         doc._ftcIsSaved = true;
-                        if (typeof window.onSimulatorSave === 'function') window.onSimulatorSave(doc.defaultView || doc.parentWindow);
+                        try { if (typeof window.onSimulatorSave === 'function') window.onSimulatorSave(doc.defaultView || doc.parentWindow); } catch(ex) { console.warn('[FTC] onSimulatorSave error:', ex); }
                       }
                     }
                     el = el.parentNode;
@@ -901,7 +905,14 @@
    */
   function clearLessonFields() {
     if (window._hasClickedSaveInGuide) return;
-    if (!_currentLesson || !Array.isArray(_currentLesson.clearFields) || _currentLesson.clearFields.length === 0) return;
+    if (!_currentLesson) return;
+
+    // Nếu lesson có hàm customClear riêng thì chạy hàm đó
+    if (typeof _currentLesson.customClear === 'function') {
+      try { _currentLesson.customClear(); } catch (e) { console.error(e); }
+    }
+
+    if (!Array.isArray(_currentLesson.clearFields) || _currentLesson.clearFields.length === 0) return;
     try {
       const allDocs = getAllAccessibleDocuments(deviceIframe.contentWindow);
       allDocs.forEach(doc => {
@@ -1659,7 +1670,7 @@
   }
 
   function applyGuidePopups() {
-    if (currentMode !== 'guide') {
+    if (currentMode !== 'guide' || window._hasClickedSaveInGuide) {
       clearGuidePopups();
       return;
     }

@@ -1,47 +1,85 @@
 ﻿/**
  * devices/ax3000gz/lessons/bai4.js
- * Bài 4: Cấu hình Mesh WiFi trên AX3000GZ
+ * Bài 4: Cấu hình DNS trên AX3000GZ
  */
 
 window.DEVICE_AX3000GZ_LESSONS = window.DEVICE_AX3000GZ_LESSONS || [];
 
 window.DEVICE_AX3000GZ_LESSONS.push({
   id: 'LAB_AX3000GZ_04',
-  title: 'Bài 4 - Cấu hình Mesh WiFi',
-  subtitle: 'Thiết lập và quản lý mạng Mesh WiFi',
+  title: 'Bài 4 - Cấu hình DNS',
+  subtitle: 'Cấu hình DNS',
   instructions: [
     '<b>Yêu cầu:</b>',
-    'Thực hiện cấu hình tính năng Mesh WiFi liên kết các thiết bị trong hệ thống:',
-    '- Roaming Limit(2.4G): <span class="val">-65</span>',
-    '- Roaming Limit(5G): <span class="val">-65</span>',
+    'Thiết lập thông số DNS thủ công (Manually) trên cổng LAN:',
+    '- Primary DNS: <span class="val">8.8.8.8</span>',
+    '- Secondary DNS: <span class="val">8.8.8.8</span>'
   ],
-  practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/localnetwork/WLAN/mesh',
+  practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/localnetwork/lan',
   clearFields: [
-    '[id="widget.cbid.json.data.RoamRssiLmt24G"]',
-    '[id="widget.cbid.json.data.RoamRssiLmt5G"]'
+    '[id="widget.cbid.network.lan.Primary_DNS"]',
+    '[id="widget.cbid.network.lan.Secondary_DNS"]'
   ],
   grading: {
-    description: 'Kiểm tra Mesh WiFi settings',
+    description: 'Kiểm tra cấu hình DNS trên AX3000GZ',
     rules: [
       {
-        id: 'roaming_24g',
-        name: 'Roaming Limit 2.4G',
-        selector: '[id="widget.cbid.json.data.RoamRssiLmt24G"]',
-        expected: '-65',
+        id: 'dns_primary',
+        name: 'Primary DNS',
+        selector: '[id="widget.cbid.network.lan.Primary_DNS"]',
+        expected: '8.8.8.8',
         type: 'text_exact',
         trim: true,
         required: true
       },
       {
-        id: 'roaming_5g',
-        name: 'Roaming Limit 5G',
-        selector: '[id="widget.cbid.json.data.RoamRssiLmt5G"]',
-        expected: '-65',
+        id: 'dns_secondary',
+        name: 'Secondary DNS',
+        selector: '[id="widget.cbid.network.lan.Secondary_DNS"]',
+        expected: '8.8.8.8',
         type: 'text_exact',
         trim: true,
         required: true
       }
     ]
   },
-  guidePopups: []
+  guidePopups: [
+    {
+      selector: '#topmenu a[href*="localnetwork"]',
+      text: 'Chọn Local Network',
+      position: 'bottom',
+      hideOnPage: 'localnetwork'
+    },
+    {
+      selector: '#sidebarmenu a[href*="/localnetwork/lan"]',
+      text: 'Chọn LAN',
+      position: 'right',
+      page: 'localnetwork',
+      hideOnPage: 'lan'
+    },
+    {
+      selector: '#cbi-network h3',
+      text: 'Chọn DHCP Server',
+      position: 'right',
+      page: 'lan'
+    },
+    {
+      selector: '[id="widget.cbid.network.lan.Primary_DNS"]',
+      text: 'Nhập Primary DNS: 8.8.8.8',
+      position: 'right',
+      page: 'lan'
+    },
+    {
+      selector: '[id="widget.cbid.network.lan.Secondary_DNS"]',
+      text: 'Nhập Secondary DNS: 8.8.8.8',
+      position: 'right',
+      page: 'lan'
+    },
+    {
+      selector: '.cbi-page-actions .cbi-button-save',
+      text: 'Chọn Apply để lưu cấu hình',
+      position: 'top',
+      page: 'lan'
+    }
+  ]
 });

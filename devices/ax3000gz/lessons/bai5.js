@@ -1,101 +1,150 @@
 /**
- * devices/ax3000gz/lessons/bai8.js
- * Bài 5 - Cấu hình Port Forwarding trên AX3000GZ
+ * devices/ax3000gz/lessons/bai5.js
+ * Bài 5: Cấu hình DHCP trên AX3000GZ
  */
 
 window.DEVICE_AX3000GZ_LESSONS = window.DEVICE_AX3000GZ_LESSONS || [];
 
 window.DEVICE_AX3000GZ_LESSONS.push({
   id: 'LAB_AX3000GZ_05',
-  title: 'Bài 5 - Cấu hình Port Forwarding',
-  subtitle: 'Mở cổng NAT để máy trong LAN nhận kết nối từ ngoài',
+  title: 'Bài 5 - Cấu hình DHCP',
+  subtitle: 'Cấu hình DHCP',
   instructions: [
-    '<b>Yêu cầu:</b>',
-    'Thực hiện cấu hình Mở Port trên thiết bị theo các thông số được cung cấp dưới đây:',
-    '- Name: <span class="val">FPT Telecom</span>',
-    '- Enable: <span class="val">On</span>',
-    '- Protocol: <span class="val">TCP/UDP</span>',
-    '- WAN Host IP Address: <span class="val">21.143.157.184</span>',
-    '- LAN Host: <span class="val">192.168.1.254</span>',
-    '- WAN Port: <span class="val">8080</span>',
-    '- LAN Host Port: <span class="val">8080</span>'
+    '<b>Yêu cầu:</b> Thực hiện thay đổi cấu hình DHCP trên thiết bị theo các thông số:',
+    '- IP Address: <span class="val">192.168.1.1</span>',
+    '- IP Subnet Mask: <span class="val">255.255.255.0</span>',
+    '- DHCP Server: <span class="val">On</span>',
+    '- Start IP: <span class="val">192.168.1.2</span>',
+    '- End IP: <span class="val">192.168.1.254</span>',
+    '- Lease Time: <span class="val">86400</span>'
   ],
-  practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/internet/security/forwards',
+  practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/localnetwork/lan',
   clearFields: [
-    '[id="modal_field_name"]',
-    '[id="modal_field_proto"]',
-    '[id="modal_field_src_ip"]',
-    '[id="modal_field_dest_ip"]',
-    '[id="modal_field_src_dport"]',
-    '[id="modal_field_dest_port"]'
+    '[id="widget.cbid.network.lan.ipaddr"]',
+    '[id="widget.cbid.network.lan.netmask"]',
+    '[id="widget.cbid.network.lan.start"]',
+    '[id="widget.cbid.network.lan.end"]',
+    '[id="widget.cbid.network.lan.leasetime"]'
   ],
   grading: {
-    description: 'Kiểm tra Port Forwarding rules trên AX3000GZ',
+    description: 'Kiểm tra cấu hình DHCP trên AX3000GZ',
     rules: [
       {
-        id: 'pf_name',
-        name: 'Name',
-        selector: '[id="modal_field_name"]',
-        expected: 'FPT Telecom',
+        id: 'dhcp_enable',
+        name: 'DHCP Server Enable',
+        selector: '[id="widget.cbid.network.lan.ignore.0"]',
+        expected: 'true',
+        type: 'radio',
+        required: true
+      },
+      {
+        id: 'dhcp_ip',
+        name: 'LAN IP Address',
+        selector: '[id="widget.cbid.network.lan.ipaddr"]',
+        expected: '192.168.1.1',
         type: 'text_exact',
         trim: true,
         required: true
       },
       {
-        id: 'pf_enabled',
-        name: 'Enable Status',
-        selector: '[id="modal_field_enabled"] input[value="1"]',
-        expected: '1',
+        id: 'dhcp_mask',
+        name: 'Subnet Mask',
+        selector: '[id="widget.cbid.network.lan.netmask"]',
+        expected: '255.255.255.0',
         type: 'text_exact',
         trim: true,
         required: true
       },
       {
-        id: 'pf_proto',
-        name: 'Protocol',
-        selector: '[id="modal_field_proto"]',
-        expected: 'tcp udp',
+        id: 'dhcp_start',
+        name: 'Start IP Address',
+        selector: '[id="widget.cbid.network.lan.start"]',
+        expected: '192.168.1.2',
         type: 'text_exact',
         trim: true,
         required: true
       },
       {
-        id: 'pf_wan_ip',
-        name: 'WAN Host IP Address',
-        selector: '[id="modal_field_src_ip"]',
-        expected: '21.143.157.184',
-        type: 'text_exact',
-        trim: true,
-        required: true
-      },
-      {
-        id: 'pf_lan_ip',
-        name: 'LAN Host',
-        selector: '[id="modal_field_dest_ip"]',
+        id: 'dhcp_end',
+        name: 'End IP Address',
+        selector: '[id="widget.cbid.network.lan.end"]',
         expected: '192.168.1.254',
         type: 'text_exact',
         trim: true,
         required: true
       },
       {
-        id: 'pf_wan_port',
-        name: 'WAN Port',
-        selector: '[id="modal_field_src_dport"]',
-        expected: '8080',
-        type: 'text_exact',
-        trim: true,
-        required: true
-      },
-      {
-        id: 'pf_lan_port',
-        name: 'LAN Host Port',
-        selector: '[id="modal_field_dest_port"]',
-        expected: '8080',
+        id: 'dhcp_lease',
+        name: 'Lease Time',
+        selector: '[id="widget.cbid.network.lan.leasetime"]',
+        expected: '86400',
         type: 'text_exact',
         trim: true,
         required: true
       }
     ]
   },
-  guidePopups: []
+  guidePopups: [
+    {
+      selector: '#topmenu a[href*="localnetwork"]',
+      text: 'Chọn Local Network',
+      position: 'bottom',
+      hideOnPage: 'localnetwork'
+    },
+    {
+      selector: '#sidebarmenu a[href*="/localnetwork/lan"]',
+      text: 'Chọn LAN',
+      position: 'right',
+      page: 'localnetwork',
+      hideOnPage: 'lan'
+    },
+    {
+      selector: '#cbi-network h3',
+      text: 'Chọn DHCP Server',
+      position: 'right',
+      page: 'lan'
+    },
+    {
+      selector: 'label[for="widget.cbid.network.lan.ignore.1"] + span',
+      text: 'Chọn Enable: On',
+      position: 'right',
+      page: 'lan'
+    },
+    {
+      selector: '[id="widget.cbid.network.lan.ipaddr"]',
+      text: 'Nhập LAN IP Address: 192.168.1.1',
+      position: 'right',
+      page: 'lan'
+    },
+    {
+      selector: '[id="widget.cbid.network.lan.netmask"]',
+      text: 'Nhập Subnet Mask: 255.255.255.0',
+      position: 'right',
+      page: 'lan'
+    },
+    {
+      selector: '[id="widget.cbid.network.lan.start"]',
+      text: 'Nhập Start IP: 192.168.1.2',
+      position: 'right',
+      page: 'lan'
+    },
+    {
+      selector: '[id="widget.cbid.network.lan.end"]',
+      text: 'Nhập End IP: 192.168.1.254',
+      position: 'right',
+      page: 'lan'
+    },
+    {
+      selector: '[id="widget.cbid.network.lan.leasetime"]',
+      text: 'Nhập Lease Time: 86400',
+      position: 'right',
+      page: 'lan'
+    },
+    {
+      selector: '.cbi-page-actions .cbi-button-save',
+      text: 'Chọn Apply để lưu cấu hình',
+      position: 'top',
+      page: 'lan'
+    }
+  ]
 });

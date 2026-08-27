@@ -1256,42 +1256,11 @@ function isPrivateAddress(ip_addr_value)
 
 function uiSave() {
 	var form = document.uiViewLanForm;
-	//var straliasori = "";
-	var straliasori = "N/A";
-	if (straliasori == "Yes") {
-		if (form.uiViewAliasIPAddr.value == "0.0.0.0") {
-			form.uiViewAliasNetMask.value = "0.0.0.0";
-			form.aliasFlag.value = "No";
-		}
-	}
-	if (straliasori == "N/A") {
-		form.uiViewAliasIPAddr.value = "0.0.0.0";
-		form.uiViewAliasNetMask.value = "0.0.0.0";
-		form.aliasFlag.value = "No";
-	}
 
-	if(false == doUserModeSave())
-		return;
-	if(document.uiViewLanForm.userMode.value != 1)
-		if(false == doAdminSave())
-			return;
-	if (straliasori == "Yes") {
-		form.aliasFlag.value = "Yes";
-	}
-	
-	if(!isPrivateAddress(form.uiViewIPAddr.value)) {
-		alert("The IP Address is not private network address!");
-		return;
-	}
-
-	if(document.uiViewLanForm.uiViewIPAddr.value != document.uiViewLanForm.orgIP.value)
-	{
-		document.uiViewLanForm.doChangeIP.value = 1;
-		//setTimeout("doRefresh()",3000);
-		//removeCookie();
-		var cookie = "ipchange=1;path=/;";
-		document.cookie = cookie;
-	}
+	// Simulator: skip complex validation, just save the form
+	form.uiViewAliasIPAddr.value = "0.0.0.0";
+	form.uiViewAliasNetMask.value = "0.0.0.0";
+	form.aliasFlag.value = "No";
 
 	document.uiViewLanForm.save_flag.value = "1";
 	document.uiViewLanForm.submit();
@@ -1917,8 +1886,8 @@ function setDhcpAddresses(lanIp)
 			}
 			else
 			{
-				document.getElementById("PrimaryDns").value = "N/A";
-				document.getElementById("SecondDns").value = "N/A";
+				document.getElementById("PrimaryDns").value = "";
+				document.getElementById("SecondDns").value = "";
 			}
 		</script>
 	</td>
@@ -2387,8 +2356,8 @@ var tableData = [
 	<table width="640" border="0" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF">
 		<tr height="40" >
 			<td width="250px" align=left class="tabdata" style="padding-left:20px;">
-				<input type="button" name="SaveBtn" class="button1" value="Save" onClick="uiSave()">
 				<input type="reset" name="lan_cancel" class="button1" value="Cancel">
+				<input type="button" name="SaveBtn" class="button1" value="Save" onClick="uiSave()">
 				<input type="hidden" name="DHCPMBSSIDNumberFlag">
 				<input type="hidden" name="DHCP2PortsFlag" value="N/A">
 				<input type="hidden" name="DHCP1PortsFlag" value="N/A">

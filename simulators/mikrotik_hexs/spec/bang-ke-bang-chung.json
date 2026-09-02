@@ -1,0 +1,602 @@
+{
+ "ghi_chu": "Bang ke bang chung goc MikroTik hEX S, thu 2026-08-24 tu thiet bi that qua Chrome.",
+ "so_tep": 119,
+ "tong_byte": 1751093,
+ "tep": [
+  {
+   "duong_dan": "har/000-req.bin",
+   "byte": 89,
+   "sha256": "b4439b841c90bde6c04c7933777cfb736f45fceb3c7f13884e9d954e1a3615b4"
+  },
+  {
+   "duong_dan": "har/000-resp.bin",
+   "byte": 9250,
+   "sha256": "11ca5edb31422a848b1f43045bd71bd0c7f0f715658e75b551e2b0e2b110fede"
+  },
+  {
+   "duong_dan": "har/001-req.bin",
+   "byte": 89,
+   "sha256": "6aa8ffd3fb62024c240305edfffeb392ea18f7cd5b9ebb6558a97f3a2885d294"
+  },
+  {
+   "duong_dan": "har/001-resp.bin",
+   "byte": 9250,
+   "sha256": "8eddd7b1fed9e3c9ebe0a75cdb9b5f474a3ca679385dcd73803f9be56a932ff0"
+  },
+  {
+   "duong_dan": "har/002-req.bin",
+   "byte": 89,
+   "sha256": "302cca4093f1d583d9941129985dcddb5ef21ee0823e82c4d1e8333d07872839"
+  },
+  {
+   "duong_dan": "har/002-resp.bin",
+   "byte": 9250,
+   "sha256": "81d12f7e694ce66eb391eb8005a3ba139e36774551bb017b796e189f34e7ab3f"
+  },
+  {
+   "duong_dan": "har/003-req.bin",
+   "byte": 89,
+   "sha256": "d5a3a6de073eb9c1674d63a412b1cc05b9c8203c8a9e511396413b6b31cc4e48"
+  },
+  {
+   "duong_dan": "har/003-resp.bin",
+   "byte": 9250,
+   "sha256": "5b88e34854fec759133768be3d2fcf6e94574e34abdbed1c6ad934807d66f6ed"
+  },
+  {
+   "duong_dan": "har/004-req.bin",
+   "byte": 89,
+   "sha256": "2c1dcf300845b59d972d57cc13189485cbbcea3fb85415158d5686ede173eea6"
+  },
+  {
+   "duong_dan": "har/004-resp.bin",
+   "byte": 9250,
+   "sha256": "eea166c50a1f42da33c4e9458d8302e81a6cf10cb1dbab74019ad27b548f5509"
+  },
+  {
+   "duong_dan": "har/005-req.bin",
+   "byte": 89,
+   "sha256": "dbf221478e155154842d4e78560c1e9e2ff6f9724e1efca6d4d6147eab22aa07"
+  },
+  {
+   "duong_dan": "har/005-resp.bin",
+   "byte": 9250,
+   "sha256": "9478a77d3dca51695714b127c19d278b99b1cc4d9e55ce3a6bf6df9f9880a654"
+  },
+  {
+   "duong_dan": "har/006-req.bin",
+   "byte": 89,
+   "sha256": "af9d34606885824cacd9a9137804fab898ded209dd085de1d4641171d69bffc7"
+  },
+  {
+   "duong_dan": "har/006-resp.bin",
+   "byte": 9250,
+   "sha256": "fdb0009f2cdeb378c3d30fab8e8b8032887afe19ae7045bc2f9fdb0d88722e0d"
+  },
+  {
+   "duong_dan": "har/007-req.bin",
+   "byte": 89,
+   "sha256": "588eab75282f90dc1a76b27b7c359899e8e07f07716182fbcdeb65c148e40101"
+  },
+  {
+   "duong_dan": "har/007-resp.bin",
+   "byte": 9250,
+   "sha256": "a3d8f82f6e29db50fc701943d965b1e56017ab7fb09a7788d121d1b03681c2f8"
+  },
+  {
+   "duong_dan": "har/008-req.bin",
+   "byte": 89,
+   "sha256": "8873c2323c6cb2bc71571052d934dd2ff1fdd51ea193b4a34357d3708446a234"
+  },
+  {
+   "duong_dan": "har/008-resp.bin",
+   "byte": 9250,
+   "sha256": "6e0cb45a7e55aca8309dd3839c83f8cf8475b01bf86d0144b5599d79c0218085"
+  },
+  {
+   "duong_dan": "har/009-req.bin",
+   "byte": 89,
+   "sha256": "81cc2777ec92d3852000425c4e895bbd1fdb401f5bf67b9445db23743c7a07bc"
+  },
+  {
+   "duong_dan": "har/009-resp.bin",
+   "byte": 9250,
+   "sha256": "056b628a69c39d0fd61c9a632ba1274560e0ecaca64846185d4cde33306ae5a9"
+  },
+  {
+   "duong_dan": "har/010-req.bin",
+   "byte": 89,
+   "sha256": "3448be02362bbbef31ebe09dc270fa6d61653c35bc82c71b407fc22f1c95da68"
+  },
+  {
+   "duong_dan": "har/010-resp.bin",
+   "byte": 9250,
+   "sha256": "147de2efb70dfdefc956194208a0a86b7d3a11aedfe9e9b20ee2546a1cc4f298"
+  },
+  {
+   "duong_dan": "har/011-req.bin",
+   "byte": 89,
+   "sha256": "09fee3adf17491d601d26e38970a411841eefe6415ef3efec72d69d309fd23ca"
+  },
+  {
+   "duong_dan": "har/011-resp.bin",
+   "byte": 9250,
+   "sha256": "74fb6a5042d8032616fd6c138c2ecb4de7009846bbdc94954d02a35f37fd8df5"
+  },
+  {
+   "duong_dan": "har/012-req.bin",
+   "byte": 89,
+   "sha256": "f2b8a130216c7f0c53a4aced0daa8d2f777db6f96373fcfded89fca3da517a39"
+  },
+  {
+   "duong_dan": "har/012-resp.bin",
+   "byte": 9250,
+   "sha256": "1606dccca99d52dd76ce1fadf8d3232d2b65a58c5e6cd0518c8782f9abff246a"
+  },
+  {
+   "duong_dan": "har/013-req.bin",
+   "byte": 89,
+   "sha256": "de93737319e8dd74ff47a928b24b64c3fb3a420785bf4750e06c459c2535332e"
+  },
+  {
+   "duong_dan": "har/013-resp.bin",
+   "byte": 9250,
+   "sha256": "7c4b99e341988f594fe7f8f47473c9509149aa2a76ac5ef0b1cb753ce9476f00"
+  },
+  {
+   "duong_dan": "har/014-req.bin",
+   "byte": 89,
+   "sha256": "b8bfd63f1f7967bb33f49d4ffbab5725edc09a5b6122025f863ee8d1800b126f"
+  },
+  {
+   "duong_dan": "har/014-resp.bin",
+   "byte": 9250,
+   "sha256": "1fd35a8d905dbe205f75bdd7d07be8a6d206292620f5e9e1bcf637be9bdfc2c5"
+  },
+  {
+   "duong_dan": "har/015-req.bin",
+   "byte": 89,
+   "sha256": "6d403b61a1f5ceb927821e529af8007ae2c8b39c01eedf743d43e1f55c36217f"
+  },
+  {
+   "duong_dan": "har/015-resp.bin",
+   "byte": 9250,
+   "sha256": "712400823a8f875e398a0f758565a0ac319109e3140fce63fe3ace787f08d55b"
+  },
+  {
+   "duong_dan": "har/016-req.bin",
+   "byte": 89,
+   "sha256": "1aa564cacc03d4f567286c30909501a1925f6c8384c575e5a71eff995dc4011c"
+  },
+  {
+   "duong_dan": "har/016-resp.bin",
+   "byte": 9250,
+   "sha256": "b5fac2ceaabe808f631801ded23085c81f872636a82319481da66e379a0656d1"
+  },
+  {
+   "duong_dan": "har/017-req.bin",
+   "byte": 89,
+   "sha256": "0df3f5eb2ae74cccb03c2294cd3b497796053de76ad82e8bce19238c65baa3cc"
+  },
+  {
+   "duong_dan": "har/017-resp.bin",
+   "byte": 9247,
+   "sha256": "060bd15c4341238922321790900676d81b01e260e7527efc26c5e959d7e4e199"
+  },
+  {
+   "duong_dan": "har/018-req.bin",
+   "byte": 86,
+   "sha256": "5e63b7970692711ea4b08c88f7d41f683c44197b045b63f6ed3a398bf2166717"
+  },
+  {
+   "duong_dan": "har/018-resp.bin",
+   "byte": 117,
+   "sha256": "cc2fbe2af5a9b64e87f9c15870ca52a78360e8b64a9f13b6188471fd24d5743e"
+  },
+  {
+   "duong_dan": "har/022-req.bin",
+   "byte": 86,
+   "sha256": "32f396ce35b478dfb458c4f170ae1bc0ad76887e716c988bd8c39f43874734cd"
+  },
+  {
+   "duong_dan": "har/022-resp.bin",
+   "byte": 628,
+   "sha256": "59f74cc8c757263812050387757ad465d2c8007c7a1a5e1e485c394c42425890"
+  },
+  {
+   "duong_dan": "har/030-req.bin",
+   "byte": 86,
+   "sha256": "569fd41c9042bf3998210afe8a91b6dc1b8d664a18e35e46bc7dd7bc42733566"
+  },
+  {
+   "duong_dan": "har/030-resp.bin",
+   "byte": 18491,
+   "sha256": "5022d0dc3144dafd7b01ccf77d8e1bf0f0ac80130966cc68eaadaa48373929b3"
+  },
+  {
+   "duong_dan": "har/033-req.bin",
+   "byte": 73,
+   "sha256": "c1c9fc6ea7a28b2a7d5744e9ae4c144f9f3e99b5080fef785b597bd69f188614"
+  },
+  {
+   "duong_dan": "har/033-resp.bin",
+   "byte": 55,
+   "sha256": "ef46d4a789d7a32819413f80de74a98109d52f7c450f9c6bda5772cf7fde81ce"
+  },
+  {
+   "duong_dan": "har/035-req.bin",
+   "byte": 78,
+   "sha256": "e678ab9f5e7ff253f64b859c593aa13fdf9192fd4afa7e888bcf788df7dd099a"
+  },
+  {
+   "duong_dan": "har/035-resp.bin",
+   "byte": 149,
+   "sha256": "fa1f96a2e791f8b969b44106a4fbc138c6c08a99c2039977c614c8fbd509d177"
+  },
+  {
+   "duong_dan": "har/036-req.bin",
+   "byte": 89,
+   "sha256": "bc01c9cee6f044a29724a03d73869edd2edb5be125a09069f6549a09359817e1"
+  },
+  {
+   "duong_dan": "har/036-resp.bin",
+   "byte": 9250,
+   "sha256": "5e40ff3d3b9202f4f63be21aa64164cbc4d01ccc110362b84f53ec4ffda45bd1"
+  },
+  {
+   "duong_dan": "har/037-req.bin",
+   "byte": 78,
+   "sha256": "352d9a7bd1acbba1b940aff8fc6189bd8213f65505ffbca90d6ca26dfa1231dc"
+  },
+  {
+   "duong_dan": "har/037-resp.bin",
+   "byte": 385,
+   "sha256": "582c0001851c49a9c321d9f06d2f4f243b60f9ec874f6b5b25f36d1844cf6093"
+  },
+  {
+   "duong_dan": "har/038-req.bin",
+   "byte": 78,
+   "sha256": "cad487d27829a6b4b6f031410287b5e9e9e05b16299807f61ab8d409ae9bcdb0"
+  },
+  {
+   "duong_dan": "har/038-resp.bin",
+   "byte": 149,
+   "sha256": "bcbfeb21b434b20807f7afe562fb696217d730baf56b9f9811f142e4aa29d254"
+  },
+  {
+   "duong_dan": "har/039-req.bin",
+   "byte": 89,
+   "sha256": "896d2b252eeb214a820bde769f49083a912a063399b7832c944c54b2f25eb383"
+  },
+  {
+   "duong_dan": "har/039-resp.bin",
+   "byte": 9250,
+   "sha256": "60848740499cb1c22759cf16625add54bd93b7cd1373eba255d5bc1960fd85a3"
+  },
+  {
+   "duong_dan": "har/040-req.bin",
+   "byte": 78,
+   "sha256": "099224d3f11da4723556cd047082dcb1e167623639e3d4c48e998a8743fe027f"
+  },
+  {
+   "duong_dan": "har/040-resp.bin",
+   "byte": 385,
+   "sha256": "f320349bc871a432d927d285025995df3471e6288ef8452de1f794af31095a67"
+  },
+  {
+   "duong_dan": "har/041-req.bin",
+   "byte": 78,
+   "sha256": "eb9f91355ce49373ca8608d8216318086ec948037b6d21a721a022445179f147"
+  },
+  {
+   "duong_dan": "har/041-resp.bin",
+   "byte": 149,
+   "sha256": "9dec01c89c25f0061b5e0c852e49862df6198c9fc09dfd7c0a99ff1e8a14a853"
+  },
+  {
+   "duong_dan": "har/042-req.bin",
+   "byte": 73,
+   "sha256": "ade8dad98e4e40f7108d1c7ab5feb219fe3a72d036cef69c8cc9757afa6f2f7c"
+  },
+  {
+   "duong_dan": "har/042-resp.bin",
+   "byte": 55,
+   "sha256": "a698545d019f0330ed50ff532b783198b9add0daf2e5373dde670cb7ee1354e7"
+  },
+  {
+   "duong_dan": "har/044-req.bin",
+   "byte": 78,
+   "sha256": "135854e63fab54b5d83582009c6a0ab38320de2a05b13da80ca25dee475b4085"
+  },
+  {
+   "duong_dan": "har/044-resp.bin",
+   "byte": 385,
+   "sha256": "1a3ce584ffa84f66e4a14b9d52afab6952013083cbb401e655fae2976250bf44"
+  },
+  {
+   "duong_dan": "har/045-req.bin",
+   "byte": 78,
+   "sha256": "314b618d714fecdd02788bc294e02b8a6de868bb355398b377caaf8403bd932c"
+  },
+  {
+   "duong_dan": "har/045-resp.bin",
+   "byte": 149,
+   "sha256": "7d1a04d2cf6fdcb47a0fb6363416aa355c0ce18570eb56eae77032501d3f8cb1"
+  },
+  {
+   "duong_dan": "har/046-req.bin",
+   "byte": 78,
+   "sha256": "95ccf343a467eebb22d9afea57eece6d934a4e0f0601bd4642e43bb4680469c8"
+  },
+  {
+   "duong_dan": "har/046-resp.bin",
+   "byte": 385,
+   "sha256": "2d2593da5f92fa3537928dfe7906176a4c470ac2e0dbbe34a2761000d4607b39"
+  },
+  {
+   "duong_dan": "har/047-req.bin",
+   "byte": 78,
+   "sha256": "3fef0a5b654adfb89050811124145ffe3e1720ee79f43258e9cd841b43dbc268"
+  },
+  {
+   "duong_dan": "har/047-resp.bin",
+   "byte": 149,
+   "sha256": "1b6c6f8250a0710f13d7a84717b3b6693a1db07e2a5b47a73e1119cec86ad73d"
+  },
+  {
+   "duong_dan": "har/048-req.bin",
+   "byte": 73,
+   "sha256": "853a59be6bef320554d738b9b7d66f93c965848bddc2d002d32bcbe744befd18"
+  },
+  {
+   "duong_dan": "har/048-resp.bin",
+   "byte": 55,
+   "sha256": "6e7d8404075a9cb8ec8f373e4cae2c459ff69b0b984f793ff743a1504cb6cb59"
+  },
+  {
+   "duong_dan": "har/053-req.bin",
+   "byte": 78,
+   "sha256": "2ce647ed011c46ed756b5bcd8ab8c3640cf2494e10c900e2e48f82b8d30a6d48"
+  },
+  {
+   "duong_dan": "har/053-resp.bin",
+   "byte": 385,
+   "sha256": "ae7cbcbb93ad259db092be2eff5bd8668d5e5cffd972791b70e1acbe451761a3"
+  },
+  {
+   "duong_dan": "har/054-req.bin",
+   "byte": 78,
+   "sha256": "217b557c0b146645582c968e64b1f838c067da73b8b7d9b14d0cf0e37f5f5ee4"
+  },
+  {
+   "duong_dan": "har/054-resp.bin",
+   "byte": 149,
+   "sha256": "c107d73075922b20bede5c58e069a687c73261dbb342af9f563ca543e984aa42"
+  },
+  {
+   "duong_dan": "har/055-req.bin",
+   "byte": 73,
+   "sha256": "fed5e85e13600be574ae81136171065def9ec9e3ae32c369bf5575f08a156d92"
+  },
+  {
+   "duong_dan": "har/055-resp.bin",
+   "byte": 55,
+   "sha256": "fa6b22079b4d41cc2fefbcee9b424c5a48365776a950d754b1d814696dd780b6"
+  },
+  {
+   "duong_dan": "har/060-req.bin",
+   "byte": 118,
+   "sha256": "6b762e8593202ba78b5de626298c37952d0ab9560574beaced14ca78372d5802"
+  },
+  {
+   "duong_dan": "har/060-resp.bin",
+   "byte": 33454,
+   "sha256": "8d11af0fcbed2f261b27c33faab9f3a80bb8c890920a6d3aca6fc83de97d8b23"
+  },
+  {
+   "duong_dan": "har/063-req.bin",
+   "byte": 148,
+   "sha256": "b2f85c28b27f1f9ff5957cf3e14aba4a00f021f203478bce490779f2d924921e"
+  },
+  {
+   "duong_dan": "har/063-resp.bin",
+   "byte": 18991,
+   "sha256": "e2eee8f02a869fa9bfc08ac9ef0b1cdebe54222392e794d21285fd1366c071ba"
+  },
+  {
+   "duong_dan": "har/064-req.bin",
+   "byte": 78,
+   "sha256": "4da1cc60d1a4b4ce97621a943350c4a85950b004ad6766e61ca2b856fdd94498"
+  },
+  {
+   "duong_dan": "har/064-resp.bin",
+   "byte": 385,
+   "sha256": "b1e9f586bc8810056aad7f195be021f35b943dc2ae5473d5b68fa110d8d1472a"
+  },
+  {
+   "duong_dan": "har/065-req.bin",
+   "byte": 75,
+   "sha256": "c6858db240bbc6c900313a4a0105a93b185b782b464b8e61f6d262dd6a14e71e"
+  },
+  {
+   "duong_dan": "har/065-resp.bin",
+   "byte": 65,
+   "sha256": "3200162edad39c8cb4afe3a490b548e177a541d7b3b7ba35d9ba9327e6de9df0"
+  },
+  {
+   "duong_dan": "har/067-req.bin",
+   "byte": 51,
+   "sha256": "5f3d608d6e60b3a4d2ae32a2913d6badffffe41031dd87465009ca1135869b5b"
+  },
+  {
+   "duong_dan": "har/067-resp.bin",
+   "byte": 225,
+   "sha256": "b28827a35aa604a7be1938dad0e015e10256f8e17e2823da8c859d7422d9ba6c"
+  },
+  {
+   "duong_dan": "har/075-req.bin",
+   "byte": 73,
+   "sha256": "e11ad67457fe3b0db13452eee442f65b86ba302bdd919cb7214f7c7ab6fa0ccc"
+  },
+  {
+   "duong_dan": "har/075-resp.bin",
+   "byte": 55,
+   "sha256": "9b333b16c31fb6d7705ffbb905bb725a862f45ff694bfc16159a918bff028c2d"
+  },
+  {
+   "duong_dan": "har/078-req.bin",
+   "byte": 73,
+   "sha256": "779bb3e700ae5a1031d500f17fa232b04ad01f9cd6e465cee6baf853c4579f14"
+  },
+  {
+   "duong_dan": "har/078-resp.bin",
+   "byte": 55,
+   "sha256": "f083f2b7bd3948a36707d34fcb88de5f6b999887de8b810fbf4851cdf38df7d0"
+  },
+  {
+   "duong_dan": "har/087-req.bin",
+   "byte": 69,
+   "sha256": "18d9972b48311334501a99eb227a55fcb2511ea717dc817a052d0368a61b906c"
+  },
+  {
+   "duong_dan": "har/087-resp.bin",
+   "byte": 51,
+   "sha256": "74bffebd6e382927a25763f8f1c157c6925480b23dc8717ad3e564b76d6129a9"
+  },
+  {
+   "duong_dan": "har/chi-muc.json",
+   "byte": 9700,
+   "sha256": "687647df2a0261b2e066939994be0b7cb02c3c58809ecebe4a47ec0854126b88"
+  },
+  {
+   "duong_dan": "jg/advtool-89d29caa39a2.jg",
+   "byte": 9039,
+   "sha256": "2545cd8603f082790ac1722954fcfe7d6fffcb981508977b5bc93506a53726e7"
+  },
+  {
+   "duong_dan": "jg/dhcp-accdf83c6abd.jg",
+   "byte": 20479,
+   "sha256": "b2e8190b0e2dd369ceb8c3e4e0ec18101aa8dd15358244b9e14026e222c02333"
+  },
+  {
+   "duong_dan": "jg/hotspot-f1e2e1d4af99.jg",
+   "byte": 19549,
+   "sha256": "4aa94fc4536b258bfdca4edb6eddb2648a85632f5865eec68858850048a7c0a0"
+  },
+  {
+   "duong_dan": "jg/ipv6-9efe97e331aa.jg",
+   "byte": 64512,
+   "sha256": "2bff565f16b325ea74e3ee931591a3a41b36b2cefd2f539df6855b7cc1f584fc"
+  },
+  {
+   "duong_dan": "jg/ppp-0531971e726b.jg",
+   "byte": 36471,
+   "sha256": "174c1b6583e7556fa112a76ff5d02c2a2667612c42d21b3dfceb2fd14013986a"
+  },
+  {
+   "duong_dan": "jg/roteros-6fb93413ec27.jg",
+   "byte": 795444,
+   "sha256": "bb7a12c6a2a1b23c179fd2586226b8e3e501ee71b5ab3be39f645804ca4c9261"
+  },
+  {
+   "duong_dan": "jg/secure-453c6a560083.jg",
+   "byte": 18078,
+   "sha256": "55563b3a80fa956e3892850882f9b35caa71250f1d9732819a38911a58ad1dbe"
+  },
+  {
+   "duong_dan": "jg/wave2-4be31cf85401.jg",
+   "byte": 56593,
+   "sha256": "bd7b589073b908884e2fb76aded4a35f5c76e81b0164056e8b622971df21ab5b"
+  },
+  {
+   "duong_dan": "root/favicon.png",
+   "byte": 600,
+   "sha256": "6e08f1f90e778da22f07537040dfcdab9c29ac443d8386ba5be71fcbc418ff47"
+  },
+  {
+   "duong_dan": "root/favicon.svg",
+   "byte": 689,
+   "sha256": "b674ae7902192a88e82246fe8e1ba1f7b3abd6405e6d0e1fc2fdca09db085176"
+  },
+  {
+   "duong_dan": "root/green.png",
+   "byte": 1083,
+   "sha256": "3e39b2fa11ba5c881a2742e11854237f9c53e8a4201223e95d2613dcdc17364d"
+  },
+  {
+   "duong_dan": "root/help.png",
+   "byte": 2116,
+   "sha256": "904b0f8068e0d81e3dd71727a30e94aa780e77d316cf6d676843e5e907e8181c"
+  },
+  {
+   "duong_dan": "root/index.html",
+   "byte": 2723,
+   "sha256": "e2dd2d7e7a9cf514cd2e91c7e66c0462bc05cd6c821bfe4671ba7bbd6fe9a17d"
+  },
+  {
+   "duong_dan": "root/license.png",
+   "byte": 868,
+   "sha256": "fb57a8c99f762d7023a8d379d63a768260e4bd62b9f26ec867b3e46f7048b746"
+  },
+  {
+   "duong_dan": "root/logo.png",
+   "byte": 8627,
+   "sha256": "ca05e09a325722a753df4b1950e6651da14863bcd1cb4fe0da3c129608609d3f"
+  },
+  {
+   "duong_dan": "root/mikrotik_logo.png",
+   "byte": 1089,
+   "sha256": "b540bd26191ea801657156b713fa911a97b1e33ecc0aa9875ed24fa1cbfe9a16"
+  },
+  {
+   "duong_dan": "root/script.js",
+   "byte": 797,
+   "sha256": "a810815173a50d51c409fdf5a08690e20e9d15d202c701f821e049a67eb13b7e"
+  },
+  {
+   "duong_dan": "root/winbox.png",
+   "byte": 1971,
+   "sha256": "041f003e165cd892ea08ab140d637468343aa737eebd1470d36f7790096445e1"
+  },
+  {
+   "duong_dan": "webfig/curve255-541e54a862be.js",
+   "byte": 9157,
+   "sha256": "972bdbcea19d2cc7690ea6f2324e13e6edef641a26a3a05bf93fa4ef4e11e412"
+  },
+  {
+   "duong_dan": "webfig/icons.png",
+   "byte": 20380,
+   "sha256": "e985fb6f7ad3122a3ffb461bb581b2d60da72df8b239f0ad44fd79356ba36e5a"
+  },
+  {
+   "duong_dan": "webfig/index.html",
+   "byte": 557,
+   "sha256": "af8e621da1ba43ccbea4425a6d2fc43e733cb6b095cbe55385ccf7661f98b4a4"
+  },
+  {
+   "duong_dan": "webfig/list",
+   "byte": 1010,
+   "sha256": "0644d9cbb42710c7c8ad6c19e76d74a9310db13323b11af71cc8577a2006717a"
+  },
+  {
+   "duong_dan": "webfig/master-d3bb55452204.css",
+   "byte": 27225,
+   "sha256": "9ae5e53f45fd345b3072e99f33b1891330ae5f6d2461594e174fa95bc7f22ad3"
+  },
+  {
+   "duong_dan": "webfig/master-min-99e951c770b2.js",
+   "byte": 374830,
+   "sha256": "2fbddf679841ca20e2dc75a3acc538b128f942b8cc36e3114fd895c0b4a287f5"
+  },
+  {
+   "duong_dan": "webfig/progress.gif",
+   "byte": 2892,
+   "sha256": "914244cefc6978d91d7d848bdccafabdc40acb79383766fd5ee8894cd3066290"
+  },
+  {
+   "duong_dan": "webfig/right-arrow.svg",
+   "byte": 188,
+   "sha256": "a078d8f335412594dbb882d6d675e8288a4414ceec70fa56b736d8600f224383"
+  }
+ ]
+}

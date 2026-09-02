@@ -1,0 +1,76 @@
+{
+ "ghi_chu": "Khung LOI THAT khi bam Start cac cong cu ma hEX S khong ho tro. Thu 2026-08-25. Bam Start roi thiet bi tu tu choi — KHONG co tac dung phu. | 2026-08-28 (dot 3): THU LAI duoc [119,1] Traffic Generator Quick Start — Tools>>Traffic Generator>>Quick Start>>Start tren thiet bi that. Truoc do da do duoc nhung XOA NHAM tep bang chung va phai rut khai bao (xem ISSUES.md). Nay co lai tep goc, khai bao duoc phuc hoi hop le.",
+ "y_nghia": {
+  "0xfe0004": "khong co doi tuong — phan cung khong ton tai (WiFi/LTE)",
+  "0xfe0005": "thieu tham so bat buoc",
+  "0xfe0006": "dich vu chua bat (RoMON)"
+ },
+ "loi_theo_duong_dan": {
+  "127-2": {
+   "ma_loi": 16646150,
+   "mo_ta": "RoMON not running"
+  },
+  "127-4": {
+   "ma_loi": 16646150,
+   "mo_ta": "RoMON not running"
+  },
+  "135-8": {
+   "ma_loi": 16646149,
+   "mo_ta": "required parametrs missing"
+  },
+  "138-2": {
+   "ma_loi": 16646148,
+   "mo_ta": null
+  },
+  "138-21": {
+   "ma_loi": 16646148,
+   "mo_ta": null
+  },
+  "138-3": {
+   "ma_loi": 16646148,
+   "mo_ta": null
+  },
+  "20-61": {
+   "ma_loi": 16646148,
+   "mo_ta": null
+  },
+  "119-1": {
+   "ma_loi": 16646150,
+   "mo_ta": "no streams defined"
+  }
+ },
+ "tep": {
+  "127-2.bin": {
+   "byte": 90,
+   "sha256": "b7e9569c472499101494cf78df8f328ce489fc71effb01e160616fc9ee556825"
+  },
+  "127-4.bin": {
+   "byte": 90,
+   "sha256": "5b80781a4bece3701ee8e984f42e068765e264f21c90588eef3adb6d083a8275"
+  },
+  "135-8.bin": {
+   "byte": 99,
+   "sha256": "deaf8f1b88c0473c7b4db62dfdbec1ed50c95db1649cd400e4a1a50fca9fd155"
+  },
+  "138-2.bin": {
+   "byte": 68,
+   "sha256": "2266049af2c42ae4dfc4428c2c47caac5be5f70c3c355f91e250e2e517cbc7eb"
+  },
+  "138-21.bin": {
+   "byte": 68,
+   "sha256": "081602a6717f19bd3a4886496338e7cddb47c7cb65d4af2324dd8440e0b2b930"
+  },
+  "138-3.bin": {
+   "byte": 68,
+   "sha256": "5470f023d0f99ee76a1ceca46306deecbdc163d7d6b5a81eb967863c656f7612"
+  },
+  "20-61.bin": {
+   "byte": 64,
+   "sha256": "6e22512bcfeaf666d080b435b00b176d8709da66d63befb9e38af6c5c4aaa5a0"
+  },
+  "119-1.bin": {
+   "byte": 91,
+   "sha256": "933f5e56d5af2128f25648af400fa889bfc103c1efd3795ad0df0d80363e8a71"
+  }
+ }
+}

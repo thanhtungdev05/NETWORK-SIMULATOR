@@ -1,0 +1,14 @@
+{
+ "__mo__": "mo",
+ "__khong_biet__": "khong_biet",
+ "__phim__": "phim",
+ "/system identity print": "system_identity_print",
+ "/interface print": "interface_print",
+ "/ip address print": "ip_address_print",
+ "/system resource print": "system_resource_print",
+ "/ip route print": "ip_route_print",
+ "/interface ethernet print": "interface_ethernet_print",
+ "/ip arp print": "ip_arp_print",
+ "/ip dhcp-server lease print": "ip_dhcp_server_lease_print",
+ "/user print": "user_print"
+}

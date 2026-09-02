@@ -20,9 +20,9 @@ window.TOOLTIPS_AC1000F['LAB_AC1000F_01'] = [
   // Bước 1: Ô nhập PPPoE Username (Frame main)
   {
     selector: 'input[name="wan_PPPUsername"], input[name="pppUserName"], input[name="username"], #username',
-    text: 'Bước 1: nhập tên khách hàng ví dụ: Sgfdl-210208-218',
+    text: 'Bước 1: nhập tên khách hàng ví dụ: sgfdl-210208-218',
     position: 'right',
-    expected: 'Sgfdl-210208-218'
+    expected: 'sgfdl-210208-218'
   },
   // Bước 2: Ô nhập PPPoE Password (Frame main)
   {

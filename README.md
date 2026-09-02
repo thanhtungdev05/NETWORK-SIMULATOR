@@ -53,7 +53,7 @@ python run_all.py
 Dự án không chỉ mô phỏng thiết bị mà còn tích hợp bộ công cụ Đào tạo và Chấm điểm tự động:
 
 ### A. Danh sách các dòng thiết bị giả lập (Simulators)
-Dự án đã giả lập thành công Web Admin Interface của 11 dòng thiết bị mạng thực tế phổ biến của FPT Telecom:
+Dự án đã giả lập thành công Web Admin Interface của 12 dòng thiết bị mạng thực tế phổ biến của FPT Telecom:
 1. **AC1000F** (`/sim_ac1000f`)
 2. **AC1000HI** (`/sim_ac1000HI`)
 3. **AX3000C** (`/sim_ax3000c`)
@@ -65,6 +65,7 @@ Dự án đã giả lập thành công Web Admin Interface của 11 dòng thiế
 9. **ONT BE6500C** (`/sim_ONT_be6500c`)
 10. **AP BE6500C** (`/sim_be6500c`)
 11. **Vigor2927** (`/sim_vigor2927`)
+12. **Router MikroTik** (`/sim_mikrotik_hexs`)
 
 ### B. Hai Chế Độ Hoạt Động (Dual Modes)
 1. **💡 Chế độ Hướng dẫn (Guide Mode)**

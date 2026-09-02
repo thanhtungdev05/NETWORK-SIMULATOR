@@ -1,0 +1,3177 @@
+{
+ "tong": 397,
+ "dat": [
+  {
+   "path": [
+    2,
+    1
+   ],
+   "kieu": "item",
+   "ten": "MAC Server >> MAC WinBox Server"
+  },
+  {
+   "path": [
+    3,
+    1
+   ],
+   "kieu": "map",
+   "ten": "Logging >> Actions"
+  },
+  {
+   "path": [
+    3,
+    2
+   ],
+   "kieu": "map",
+   "ten": "Logging >> Rules"
+  },
+  {
+   "path": [
+    3,
+    3
+   ],
+   "kieu": "map",
+   "ten": "Logging"
+  },
+  {
+   "path": [
+    3,
+    5
+   ],
+   "kieu": "map",
+   "ten": "Logging"
+  },
+  {
+   "path": [
+    5,
+    1
+   ],
+   "kieu": "map",
+   "ten": "RADIUS >> RADIUS"
+  },
+  {
+   "path": [
+    5,
+    3
+   ],
+   "kieu": "item",
+   "ten": "RADIUS >> Incoming"
+  },
+  {
+   "path": [
+    8,
+    1
+   ],
+   "kieu": "map",
+   "ten": "User List >> SSH Keys"
+  },
+  {
+   "path": [
+    8,
+    2
+   ],
+   "kieu": "item",
+   "ten": "SSH >> SSH"
+  },
+  {
+   "path": [
+    8,
+    3
+   ],
+   "kieu": "map",
+   "ten": "User List >> SSH Private Keys"
+  },
+  {
+   "path": [
+    10,
+    1
+   ],
+   "kieu": "map",
+   "ten": "Neighbor List >> Neighbors"
+  },
+  {
+   "path": [
+    10,
+    2
+   ],
+   "kieu": "map",
+   "ten": "IP Packing >> IP Packing"
+  },
+  {
+   "path": [
+    13,
+    1
+   ],
+   "kieu": "map",
+   "ten": "User List >> Users"
+  },
+  {
+   "path": [
+    13,
+    2
+   ],
+   "kieu": "map",
+   "ten": "User List >> Groups"
+  },
+  {
+   "path": [
+    13,
+    3
+   ],
+   "kieu": "map",
+   "ten": "User List"
+  },
+  {
+   "path": [
+    13,
+    4
+   ],
+   "kieu": "map",
+   "ten": "User List >> Active Users"
+  },
+  {
+   "path": [
+    13,
+    5
+   ],
+   "kieu": "item",
+   "ten": "User List >> AAA"
+  },
+  {
+   "path": [
+    13,
+    8
+   ],
+   "kieu": "map",
+   "ten": "User List >> Skins"
+  },
+  {
+   "path": [
+    13,
+    9
+   ],
+   "kieu": "item",
+   "ten": "User List >> Settings"
+  },
+  {
+   "path": [
+    14,
+    1
+   ],
+   "kieu": "map",
+   "ten": "DNS >> Cache"
+  },
+  {
+   "path": [
+    14,
+    2
+   ],
+   "kieu": "item",
+   "ten": "DNS >> Settings"
+  },
+  {
+   "path": [
+    14,
+    3
+   ],
+   "kieu": "map",
+   "ten": "DNS >> Static"
+  },
+  {
+   "path": [
+    15,
+    1
+   ],
+   "kieu": "item",
+   "ten": "MAC Server >> MAC Telnet Server"
+  },
+  {
+   "path": [
+    15,
+    2
+   ],
+   "kieu": "map",
+   "ten": "MAC Server >> Active Sessions"
+  },
+  {
+   "path": [
+    16,
+    2
+   ],
+   "kieu": "map",
+   "ten": "Bridge >> Ports"
+  },
+  {
+   "path": [
+    16,
+    9
+   ],
+   "kieu": "map",
+   "ten": "Bridge >> MDB"
+  },
+  {
+   "path": [
+    16,
+    11
+   ],
+   "kieu": "map",
+   "ten": "Bridge >> MSTIs"
+  },
+  {
+   "path": [
+    16,
+    12
+   ],
+   "kieu": "map",
+   "ten": "Bridge >> Port MST Overrides"
+  },
+  {
+   "path": [
+    16,
+    13
+   ],
+   "kieu": "map",
+   "ten": "Bridge >> VLANs"
+  },
+  {
+   "path": [
+    16,
+    20
+   ],
+   "kieu": "item",
+   "ten": "Bridge >> Port Extender"
+  },
+  {
+   "path": [
+    16,
+    30
+   ],
+   "kieu": "item",
+   "ten": "Bridge >> Port Controller"
+  },
+  {
+   "path": [
+    16,
+    31
+   ],
+   "kieu": "map",
+   "ten": "Bridge >> PE Devices"
+  },
+  {
+   "path": [
+    16,
+    40
+   ],
+   "kieu": "item",
+   "ten": "Bridge >> MLAG"
+  },
+  {
+   "path": [
+    18
+   ],
+   "kieu": "item",
+   "ten": "MAC Server >> MAC Ping Server"
+  },
+  {
+   "path": [
+    19,
+    1
+   ],
+   "kieu": "map",
+   "ten": "Certificates >> Certificates"
+  },
+  {
+   "path": [
+    19,
+    4
+   ],
+   "kieu": "map",
+   "ten": "Certificates >> SCEP Servers"
+  },
+  {
+   "path": [
+    19,
+    5
+   ],
+   "kieu": "map",
+   "ten": "Certificates >> Requests"
+  },
+  {
+   "path": [
+    19,
+    6
+   ],
+   "kieu": "map",
+   "ten": "Certificates >> OTP"
+  },
+  {
+   "path": [
+    19,
+    11
+   ],
+   "kieu": "map",
+   "ten": "Certificates >> SCEP RA"
+  },
+  {
+   "path": [
+    19,
+    12
+   ],
+   "kieu": "map",
+   "ten": "Certificates >> CRL"
+  },
+  {
+   "path": [
+    19,
+    13
+   ],
+   "kieu": "item",
+   "ten": "Certificates >> Settings"
+  },
+  {
+   "path": [
+    20,
+    0
+   ],
+   "kieu": "map",
+   "ten": "Interface List >> Interface"
+  },
+  {
+   "path": [
+    20,
+    1
+   ],
+   "kieu": "map",
+   "ten": "Address List >> Address"
+  },
+  {
+   "path": [
+    20,
+    2
+   ],
+   "kieu": "map",
+   "ten": "Firewall"
+  },
+  {
+   "path": [
+    20,
+    3
+   ],
+   "kieu": "map",
+   "ten": "Firewall >> Filter Rules"
+  },
+  {
+   "path": [
+    20,
+    4
+   ],
+   "kieu": "map",
+   "ten": "Firewall"
+  },
+  {
+   "path": [
+    20,
+    5
+   ],
+   "kieu": "map",
+   "ten": "Firewall >> NAT"
+  },
+  {
+   "path": [
+    20,
+    6
+   ],
+   "kieu": "map",
+   "ten": "Firewall"
+  },
+  {
+   "path": [
+    20,
+    7
+   ],
+   "kieu": "map",
+   "ten": "Firewall >> Mangle"
+  },
+  {
+   "path": [
+    20,
+    8
+   ],
+   "kieu": "map",
+   "ten": "ARP List >> ARP List"
+  },
+  {
+   "path": [
+    20,
+    9
+   ],
+   "kieu": "map",
+   "ten": "Queue List >> Simple Queues"
+  },
+  {
+   "path": [
+    20,
+    10
+   ],
+   "kieu": "map",
+   "ten": "Queue List >> Queue Types"
+  },
+  {
+   "path": [
+    20,
+    13
+   ],
+   "kieu": "map",
+   "ten": "Marks"
+  },
+  {
+   "path": [
+    20,
+    14
+   ],
+   "kieu": "map",
+   "ten": "Marks"
+  },
+  {
+   "path": [
+    20,
+    28
+   ],
+   "kieu": "map",
+   "ten": "Bridge"
+  },
+  {
+   "path": [
+    20,
+    29
+   ],
+   "kieu": "map",
+   "ten": "Bridge >> NAT"
+  },
+  {
+   "path": [
+    20,
+    30
+   ],
+   "kieu": "map",
+   "ten": "Bridge"
+  },
+  {
+   "path": [
+    20,
+    31
+   ],
+   "kieu": "map",
+   "ten": "Bridge >> Filters"
+  },
+  {
+   "path": [
+    20,
+    32
+   ],
+   "kieu": "map",
+   "ten": "Firewall >> Connections"
+  },
+  {
+   "path": [
+    20,
+    33
+   ],
+   "kieu": "map",
+   "ten": "Firewall >> Service Ports"
+  },
+  {
+   "path": [
+    20,
+    34
+   ],
+   "kieu": "map",
+   "ten": "Firewall"
+  },
+  {
+   "path": [
+    20,
+    35
+   ],
+   "kieu": "map",
+   "ten": "Firewall >> Address Lists"
+  },
+  {
+   "path": [
+    20,
+    37
+   ],
+   "kieu": "map",
+   "ten": "IPv6 Address List >> Address"
+  },
+  {
+   "path": [
+    20,
+    38
+   ],
+   "kieu": "map",
+   "ten": "IPv6 Neighbor List >> Neighbors"
+  },
+  {
+   "path": [
+    20,
+    41
+   ],
+   "kieu": "map",
+   "ten": "IPv6 Firewall"
+  },
+  {
+   "path": [
+    20,
+    42
+   ],
+   "kieu": "map",
+   "ten": "IPv6 Firewall >> Filter Rules"
+  },
+  {
+   "path": [
+    20,
+    43
+   ],
+   "kieu": "map",
+   "ten": "IPv6 Firewall"
+  },
+  {
+   "path": [
+    20,
+    44
+   ],
+   "kieu": "map",
+   "ten": "IPv6 Firewall >> Mangle"
+  },
+  {
+   "path": [
+    20,
+    45
+   ],
+   "kieu": "map",
+   "ten": "Firewall >> Layer7 Protocols"
+  },
+  {
+   "path": [
+    20,
+    47
+   ],
+   "kieu": "map",
+   "ten": "IPv6 Firewall"
+  },
+  {
+   "path": [
+    20,
+    48
+   ],
+   "kieu": "map",
+   "ten": "IPv6 Firewall >> Address Lists"
+  },
+  {
+   "path": [
+    20,
+    49
+   ],
+   "kieu": "map",
+   "ten": "Traffic Monitor List >> Traffic Monitor"
+  },
+  {
+   "path": [
+    20,
+    51
+   ],
+   "kieu": "map",
+   "ten": "Switch >> Switch"
+  },
+  {
+   "path": [
+    20,
+    52
+   ],
+   "kieu": "map",
+   "ten": "Switch >> Host"
+  },
+  {
+   "path": [
+    20,
+    53
+   ],
+   "kieu": "map",
+   "ten": "Switch >> VLAN"
+  },
+  {
+   "path": [
+    20,
+    54
+   ],
+   "kieu": "map",
+   "ten": "Switch >> Rule"
+  },
+  {
+   "path": [
+    20,
+    55
+   ],
+   "kieu": "map",
+   "ten": "Switch >> Port"
+  },
+  {
+   "path": [
+    20,
+    57
+   ],
+   "kieu": "map",
+   "ten": "Resources >> IRQ"
+  },
+  {
+   "path": [
+    20,
+    58
+   ],
+   "kieu": "map",
+   "ten": "Resources >> RPS"
+  },
+  {
+   "path": [
+    20,
+    59
+   ],
+   "kieu": "map",
+   "ten": "IPv6 Firewall >> Connections"
+  },
+  {
+   "path": [
+    20,
+    64
+   ],
+   "kieu": "map",
+   "ten": "Switch FDBs >> Unicast FDB"
+  },
+  {
+   "path": [
+    20,
+    65
+   ],
+   "kieu": "map",
+   "ten": "Switch FDBs >> Multicast FDB"
+  },
+  {
+   "path": [
+    20,
+    66
+   ],
+   "kieu": "map",
+   "ten": "Switch FDBs >> Reserved FDB"
+  },
+  {
+   "path": [
+    20,
+    67
+   ],
+   "kieu": "map",
+   "ten": "Switch VLAN >> VLAN"
+  },
+  {
+   "path": [
+    20,
+    68
+   ],
+   "kieu": "map",
+   "ten": "Switch VLAN >> Eg. VLAN Tag"
+  },
+  {
+   "path": [
+    20,
+    69
+   ],
+   "kieu": "map",
+   "ten": "Switch VLAN >> In. VLAN Tran."
+  },
+  {
+   "path": [
+    20,
+    70
+   ],
+   "kieu": "map",
+   "ten": "Switch VLAN >> Eg. VLAN Tran."
+  },
+  {
+   "path": [
+    20,
+    71
+   ],
+   "kieu": "map",
+   "ten": "Switch VLAN >> MAC Based VLAN"
+  },
+  {
+   "path": [
+    20,
+    72
+   ],
+   "kieu": "map",
+   "ten": "Switch VLAN >> 1:1 VLAN Switching"
+  },
+  {
+   "path": [
+    20,
+    73
+   ],
+   "kieu": "map",
+   "ten": "Switch VLAN >> Protocol Based VLAN"
+  },
+  {
+   "path": [
+    20,
+    74
+   ],
+   "kieu": "map",
+   "ten": "Switch Ports >> Ports"
+  },
+  {
+   "path": [
+    20,
+    75
+   ],
+   "kieu": "map",
+   "ten": "Switch QoS >> QoS DSCP Map"
+  },
+  {
+   "path": [
+    20,
+    76
+   ],
+   "kieu": "map",
+   "ten": "Switch QoS >> QoS Groups"
+  },
+  {
+   "path": [
+    20,
+    77
+   ],
+   "kieu": "map",
+   "ten": "Switch QoS >> Shaper"
+  },
+  {
+   "path": [
+    20,
+    78
+   ],
+   "kieu": "map",
+   "ten": "Switch Ports >> Port Isolation"
+  },
+  {
+   "path": [
+    20,
+    79
+   ],
+   "kieu": "map",
+   "ten": "Switch Ports >> Port Leakage"
+  },
+  {
+   "path": [
+    20,
+    80
+   ],
+   "kieu": "map",
+   "ten": "Switch ACL >> ACL"
+  },
+  {
+   "path": [
+    20,
+    81
+   ],
+   "kieu": "map",
+   "ten": "Switch Ports >> Trunk"
+  },
+  {
+   "path": [
+    20,
+    82
+   ],
+   "kieu": "map",
+   "ten": "Switch ACL >> Policer"
+  },
+  {
+   "path": [
+    20,
+    83
+   ],
+   "kieu": "map",
+   "ten": "Switch QoS >> Ingress Port Policer"
+  },
+  {
+   "path": [
+    20,
+    84
+   ],
+   "kieu": "map",
+   "ten": "Switch QoS >> Policer QoS Map"
+  },
+  {
+   "path": [
+    20,
+    85
+   ],
+   "kieu": "map",
+   "ten": "Interface List >> LTE Bands"
+  },
+  {
+   "path": [
+    20,
+    86
+   ],
+   "kieu": "map",
+   "ten": "Firewall"
+  },
+  {
+   "path": [
+    20,
+    87
+   ],
+   "kieu": "map",
+   "ten": "Firewall >> Raw"
+  },
+  {
+   "path": [
+    20,
+    88
+   ],
+   "kieu": "map",
+   "ten": "IPv6 Firewall"
+  },
+  {
+   "path": [
+    20,
+    89
+   ],
+   "kieu": "map",
+   "ten": "IPv6 Firewall >> Raw"
+  },
+  {
+   "path": [
+    20,
+    90
+   ],
+   "kieu": "map",
+   "ten": "Interface List >> Interface Lists"
+  },
+  {
+   "path": [
+    20,
+    91
+   ],
+   "kieu": "map",
+   "ten": "Interface List >> Interface List"
+  },
+  {
+   "path": [
+    20,
+    101
+   ],
+   "kieu": "map",
+   "ten": "VRF List >> VRF"
+  },
+  {
+   "path": [
+    20,
+    102
+   ],
+   "kieu": "map",
+   "ten": "Interface List >> LTE APNs"
+  },
+  {
+   "path": [
+    20,
+    103
+   ],
+   "kieu": "map",
+   "ten": "Interface List >> NR Bands"
+  },
+  {
+   "path": [
+    20,
+    104
+   ],
+   "kieu": "map",
+   "ten": "Interface List >> VTEP"
+  },
+  {
+   "path": [
+    20,
+    105
+   ],
+   "kieu": "map",
+   "ten": "Interface List >> LTE Network Modes"
+  },
+  {
+   "path": [
+    20,
+    107
+   ],
+   "kieu": "item",
+   "ten": "Interface List >> Modem"
+  },
+  {
+   "path": [
+    20,
+    108
+   ],
+   "kieu": "map",
+   "ten": "RouterBOARD >> SIM Slots"
+  },
+  {
+   "path": [
+    20,
+    111
+   ],
+   "kieu": "map",
+   "ten": "IPv6 Firewall >> NAT"
+  },
+  {
+   "path": [
+    20,
+    112
+   ],
+   "kieu": "map",
+   "ten": "IPv6 Firewall"
+  },
+  {
+   "path": [
+    20,
+    113
+   ],
+   "kieu": "map",
+   "ten": "Interface List >> FDB"
+  },
+  {
+   "path": [
+    20,
+    125
+   ],
+   "kieu": "item",
+   "ten": "SMS >> SMS"
+  },
+  {
+   "path": [
+    23,
+    0
+   ],
+   "kieu": "map",
+   "ten": "DHCP Server >> DHCP"
+  },
+  {
+   "path": [
+    23,
+    1
+   ],
+   "kieu": "map",
+   "ten": "DHCP Server >> Leases"
+  },
+  {
+   "path": [
+    23,
+    2
+   ],
+   "kieu": "map",
+   "ten": "DHCP Server >> Networks"
+  },
+  {
+   "path": [
+    23,
+    4
+   ],
+   "kieu": "map",
+   "ten": "DHCP Relay >> DHCP Relay"
+  },
+  {
+   "path": [
+    23,
+    5
+   ],
+   "kieu": "item",
+   "ten": "DHCP Server >> DHCP Config"
+  },
+  {
+   "path": [
+    23,
+    6
+   ],
+   "kieu": "map",
+   "ten": "DHCP Server >> Options"
+  },
+  {
+   "path": [
+    23,
+    7
+   ],
+   "kieu": "map",
+   "ten": "DHCPv6 Server >> Bindings"
+  },
+  {
+   "path": [
+    23,
+    8
+   ],
+   "kieu": "map",
+   "ten": "DHCPv6 Server >> DHCP"
+  },
+  {
+   "path": [
+    23,
+    9
+   ],
+   "kieu": "map",
+   "ten": "DHCP Server >> Option Sets"
+  },
+  {
+   "path": [
+    23,
+    10
+   ],
+   "kieu": "map",
+   "ten": "DHCPv6 Relay >> DHCP Relay"
+  },
+  {
+   "path": [
+    23,
+    11
+   ],
+   "kieu": "map",
+   "ten": "DHCPv6 Server >> Options"
+  },
+  {
+   "path": [
+    23,
+    12
+   ],
+   "kieu": "map",
+   "ten": "DHCPv6 Server >> Option Sets"
+  },
+  {
+   "path": [
+    23,
+    13
+   ],
+   "kieu": "map",
+   "ten": "DHCP Server >> Option Matcher"
+  },
+  {
+   "path": [
+    24,
+    0
+   ],
+   "kieu": "item",
+   "ten": "Clock >> Clock"
+  },
+  {
+   "path": [
+    24,
+    1
+   ],
+   "kieu": "item",
+   "ten": "Identity >> Identity"
+  },
+  {
+   "path": [
+    24,
+    2
+   ],
+   "kieu": "item",
+   "ten": "Resources >> Resources"
+  },
+  {
+   "path": [
+    24,
+    5
+   ],
+   "kieu": "map",
+   "ten": "Resources >> PCI"
+  },
+  {
+   "path": [
+    24,
+    6
+   ],
+   "kieu": "map",
+   "ten": "Resources >> USB"
+  },
+  {
+   "path": [
+    24,
+    7
+   ],
+   "kieu": "map",
+   "ten": "Clock"
+  },
+  {
+   "path": [
+    24,
+    8
+   ],
+   "kieu": "item",
+   "ten": "Reset Configuration >> Default Configuration"
+  },
+  {
+   "path": [
+    24,
+    10
+   ],
+   "kieu": "item",
+   "ten": "Resources >> Hardware"
+  },
+  {
+   "path": [
+    24,
+    14
+   ],
+   "kieu": "item",
+   "ten": "System Health >> Settings"
+  },
+  {
+   "path": [
+    24,
+    15
+   ],
+   "kieu": "map",
+   "ten": "Console >> Console"
+  },
+  {
+   "path": [
+    24,
+    16
+   ],
+   "kieu": "item",
+   "ten": "Console >> Screen"
+  },
+  {
+   "path": [
+    24,
+    17
+   ],
+   "kieu": "item",
+   "ten": "RouterBOARD >> RouterBOARD"
+  },
+  {
+   "path": [
+    24,
+    18
+   ],
+   "kieu": "map",
+   "ten": "RouterBOARD >> Boot Devices"
+  },
+  {
+   "path": [
+    24,
+    19
+   ],
+   "kieu": "map",
+   "ten": "RouterBOARD >> Mem Data Rate"
+  },
+  {
+   "path": [
+    24,
+    20
+   ],
+   "kieu": "map",
+   "ten": "RouterBOARD >> CPU Frequency"
+  },
+  {
+   "path": [
+    24,
+    21
+   ],
+   "kieu": "item",
+   "ten": "RouterBOARD >> PoE Settings"
+  },
+  {
+   "path": [
+    24,
+    22
+   ],
+   "kieu": "item",
+   "ten": "RouterBOARD >> USB"
+  },
+  {
+   "path": [
+    24,
+    23
+   ],
+   "kieu": "map",
+   "ten": "Package List >> Packages"
+  },
+  {
+   "path": [
+    24,
+    26
+   ],
+   "kieu": "item",
+   "ten": "RouterBOARD >> Mode Button"
+  },
+  {
+   "path": [
+    24,
+    27
+   ],
+   "kieu": "item",
+   "ten": "SwOS >> SwOS"
+  },
+  {
+   "path": [
+    24,
+    29
+   ],
+   "kieu": "map",
+   "ten": "System Health >> System Health"
+  },
+  {
+   "path": [
+    24,
+    30
+   ],
+   "kieu": "item",
+   "ten": "RouterBOARD >> Reset Button"
+  },
+  {
+   "path": [
+    25,
+    1
+   ],
+   "kieu": "map",
+   "ten": "Graphing >> Queue Graphs"
+  },
+  {
+   "path": [
+    25,
+    2
+   ],
+   "kieu": "map",
+   "ten": "Graphing >> Queue Rules"
+  },
+  {
+   "path": [
+    25,
+    3
+   ],
+   "kieu": "map",
+   "ten": "Graphing >> Interface Rules"
+  },
+  {
+   "path": [
+    25,
+    4
+   ],
+   "kieu": "map",
+   "ten": "Graphing >> Interface Graphs"
+  },
+  {
+   "path": [
+    25,
+    5
+   ],
+   "kieu": "map",
+   "ten": "Graphing >> Resource Rules"
+  },
+  {
+   "path": [
+    25,
+    6
+   ],
+   "kieu": "map",
+   "ten": "Graphing >> Resource Graphs"
+  },
+  {
+   "path": [
+    25,
+    10
+   ],
+   "kieu": "item",
+   "ten": "Graphing >> Graphing Settings"
+  },
+  {
+   "path": [
+    27,
+    12
+   ],
+   "kieu": "map",
+   "ten": "PPP >> PPPoE Servers"
+  },
+  {
+   "path": [
+    27,
+    21
+   ],
+   "kieu": "item",
+   "ten": "PPP >> PPTP Server"
+  },
+  {
+   "path": [
+    27,
+    31
+   ],
+   "kieu": "item",
+   "ten": "PPP >> L2TP Server"
+  },
+  {
+   "path": [
+    27,
+    33
+   ],
+   "kieu": "map",
+   "ten": "PPP >> L2TP Secrets"
+  },
+  {
+   "path": [
+    27,
+    51
+   ],
+   "kieu": "item",
+   "ten": "PPP >> OVPN Server"
+  },
+  {
+   "path": [
+    27,
+    61
+   ],
+   "kieu": "item",
+   "ten": "PPP >> SSTP Server"
+  },
+  {
+   "path": [
+    27,
+    101
+   ],
+   "kieu": "map",
+   "ten": "PPP >> Secrets"
+  },
+  {
+   "path": [
+    27,
+    102
+   ],
+   "kieu": "map",
+   "ten": "PPP >> Profiles"
+  },
+  {
+   "path": [
+    27,
+    103
+   ],
+   "kieu": "map",
+   "ten": "PPP >> Active Connections"
+  },
+  {
+   "path": [
+    27,
+    104
+   ],
+   "kieu": "item",
+   "ten": "PPP >> PPP Authentication&Accounting"
+  },
+  {
+   "path": [
+    28,
+    0
+   ],
+   "kieu": "item",
+   "ten": "UPnP >> UPnP Settings"
+  },
+  {
+   "path": [
+    29,
+    1
+   ],
+   "kieu": "item",
+   "ten": "BTest Server >> BTest Server Settings"
+  },
+  {
+   "path": [
+    30,
+    1
+   ],
+   "kieu": "map",
+   "ten": "IPv6 Pool >> Pools"
+  },
+  {
+   "path": [
+    30,
+    2
+   ],
+   "kieu": "map",
+   "ten": "IPv6 Pool >> Used Prefixes"
+  },
+  {
+   "path": [
+    31,
+    1
+   ],
+   "kieu": "map",
+   "ten": "Neighbor Discovery >> Interfaces"
+  },
+  {
+   "path": [
+    31,
+    2
+   ],
+   "kieu": "map",
+   "ten": "Neighbor Discovery >> Prefixes"
+  },
+  {
+   "path": [
+    31,
+    3
+   ],
+   "kieu": "item",
+   "ten": "Neighbor Discovery >> Default"
+  },
+  {
+   "path": [
+    34
+   ],
+   "kieu": "item",
+   "ten": "SNMP Server >> SNMP Settings"
+  },
+  {
+   "path": [
+    34,
+    1
+   ],
+   "kieu": "map",
+   "ten": "SNMP Server >> Communities"
+  },
+  {
+   "path": [
+    34,
+    2
+   ],
+   "kieu": "map",
+   "ten": "SNMP Server >> Trap Generators"
+  },
+  {
+   "path": [
+    40
+   ],
+   "kieu": "item",
+   "ten": "Email >> Email Settings"
+  },
+  {
+   "path": [
+    42,
+    3
+   ],
+   "kieu": "item",
+   "ten": "Socks >> Settings"
+  },
+  {
+   "path": [
+    42,
+    4
+   ],
+   "kieu": "map",
+   "ten": "Socks >> Connections"
+  },
+  {
+   "path": [
+    42,
+    5
+   ],
+   "kieu": "map",
+   "ten": "Socks >> Access"
+  },
+  {
+   "path": [
+    42,
+    6
+   ],
+   "kieu": "map",
+   "ten": "Socks >> Users"
+  },
+  {
+   "path": [
+    43,
+    1
+   ],
+   "kieu": "map",
+   "ten": "DHCP Client >> DHCP Client"
+  },
+  {
+   "path": [
+    43,
+    3
+   ],
+   "kieu": "map",
+   "ten": "DHCP Server >> Alerts"
+  },
+  {
+   "path": [
+    43,
+    4
+   ],
+   "kieu": "map",
+   "ten": "DHCPv6 Client >> DHCP Client"
+  },
+  {
+   "path": [
+    43,
+    5
+   ],
+   "kieu": "map",
+   "ten": "DHCP Client >> DHCP Client Options"
+  },
+  {
+   "path": [
+    43,
+    6
+   ],
+   "kieu": "map",
+   "ten": "DHCPv6 Client >> Client Options"
+  },
+  {
+   "path": [
+    44,
+    18
+   ],
+   "kieu": "map",
+   "ten": "Rules >> Rules"
+  },
+  {
+   "path": [
+    44,
+    20
+   ],
+   "kieu": "map",
+   "ten": "Tables >> Tables"
+  },
+  {
+   "path": [
+    44,
+    21
+   ],
+   "kieu": "map",
+   "ten": "Route List >> All Routes"
+  },
+  {
+   "path": [
+    44,
+    25
+   ],
+   "kieu": "map",
+   "ten": "Router ID >> Router IDs"
+  },
+  {
+   "path": [
+    44,
+    32
+   ],
+   "kieu": "map",
+   "ten": "BGP >> Templates"
+  },
+  {
+   "path": [
+    44,
+    34
+   ],
+   "kieu": "map",
+   "ten": "BGP >> Connection"
+  },
+  {
+   "path": [
+    44,
+    37
+   ],
+   "kieu": "map",
+   "ten": "BFD >> Configuration"
+  },
+  {
+   "path": [
+    44,
+    38
+   ],
+   "kieu": "map",
+   "ten": "BFD >> Session"
+  },
+  {
+   "path": [
+    44,
+    44
+   ],
+   "kieu": "map",
+   "ten": "BGP >> VPN"
+  },
+  {
+   "path": [
+    44,
+    47
+   ],
+   "kieu": "item",
+   "ten": "Settings >> Routing Settings"
+  },
+  {
+   "path": [
+    44,
+    80
+   ],
+   "kieu": "map",
+   "ten": "Route Filters >> Chain"
+  },
+  {
+   "path": [
+    44,
+    81
+   ],
+   "kieu": "map",
+   "ten": "Route Filters >> Rule"
+  },
+  {
+   "path": [
+    44,
+    82
+   ],
+   "kieu": "map",
+   "ten": "Route Filters >> Select Chain"
+  },
+  {
+   "path": [
+    44,
+    83
+   ],
+   "kieu": "map",
+   "ten": "Route Filters >> Select Rule"
+  },
+  {
+   "path": [
+    44,
+    84
+   ],
+   "kieu": "map",
+   "ten": "Route Filters"
+  },
+  {
+   "path": [
+    44,
+    85
+   ],
+   "kieu": "map",
+   "ten": "Route Filters >> Num Set"
+  },
+  {
+   "path": [
+    44,
+    86
+   ],
+   "kieu": "map",
+   "ten": "OSPF"
+  },
+  {
+   "path": [
+    44,
+    87
+   ],
+   "kieu": "map",
+   "ten": "Route Filters >> Community Set"
+  },
+  {
+   "path": [
+    44,
+    88
+   ],
+   "kieu": "map",
+   "ten": "Route Filters >> Community Ext Set"
+  },
+  {
+   "path": [
+    44,
+    89
+   ],
+   "kieu": "map",
+   "ten": "Route Filters >> Community Large Set"
+  },
+  {
+   "path": [
+    44,
+    90
+   ],
+   "kieu": "map",
+   "ten": "Route Filters"
+  },
+  {
+   "path": [
+    44,
+    91
+   ],
+   "kieu": "map",
+   "ten": "Route Filters"
+  },
+  {
+   "path": [
+    44,
+    92
+   ],
+   "kieu": "map",
+   "ten": "Route Filters"
+  },
+  {
+   "path": [
+    44,
+    93
+   ],
+   "kieu": "map",
+   "ten": "RPKI"
+  },
+  {
+   "path": [
+    44,
+    95
+   ],
+   "kieu": "map",
+   "ten": "RPKI >> RPKI"
+  },
+  {
+   "path": [
+    44,
+    96
+   ],
+   "kieu": "map",
+   "ten": "PIM SM >> Instance"
+  },
+  {
+   "path": [
+    44,
+    97
+   ],
+   "kieu": "map",
+   "ten": "PIM SM >> Interface Template"
+  },
+  {
+   "path": [
+    44,
+    99
+   ],
+   "kieu": "map",
+   "ten": "PIM SM >> Interface"
+  },
+  {
+   "path": [
+    44,
+    101
+   ],
+   "kieu": "map",
+   "ten": "PIM SM >> Neighbor"
+  },
+  {
+   "path": [
+    44,
+    102
+   ],
+   "kieu": "map",
+   "ten": "PIM SM >> Static RP"
+  },
+  {
+   "path": [
+    44,
+    103
+   ],
+   "kieu": "map",
+   "ten": "PIM SM >> UIB G"
+  },
+  {
+   "path": [
+    44,
+    104
+   ],
+   "kieu": "map",
+   "ten": "PIM SM >> UIB SG"
+  },
+  {
+   "path": [
+    44,
+    105
+   ],
+   "kieu": "map",
+   "ten": "PIM SM >> BSR"
+  },
+  {
+   "path": [
+    44,
+    106
+   ],
+   "kieu": "map",
+   "ten": "PIM SM >> Candidate"
+  },
+  {
+   "path": [
+    44,
+    107
+   ],
+   "kieu": "map",
+   "ten": "PIM SM >> RP Candidate"
+  },
+  {
+   "path": [
+    44,
+    109
+   ],
+   "kieu": "map",
+   "ten": "OSPF >> Instances"
+  },
+  {
+   "path": [
+    44,
+    110
+   ],
+   "kieu": "map",
+   "ten": "OSPF >> Neighbors"
+  },
+  {
+   "path": [
+    44,
+    111
+   ],
+   "kieu": "map",
+   "ten": "OSPF >> Interfaces"
+  },
+  {
+   "path": [
+    44,
+    112
+   ],
+   "kieu": "map",
+   "ten": "OSPF >> Interface Templates"
+  },
+  {
+   "path": [
+    44,
+    113
+   ],
+   "kieu": "map",
+   "ten": "OSPF >> Areas"
+  },
+  {
+   "path": [
+    44,
+    114
+   ],
+   "kieu": "map",
+   "ten": "OSPF >> Area Ranges"
+  },
+  {
+   "path": [
+    44,
+    115
+   ],
+   "kieu": "map",
+   "ten": "OSPF >> LSA"
+  },
+  {
+   "path": [
+    44,
+    116
+   ],
+   "kieu": "map",
+   "ten": "OSPF >> Static Neighbors"
+  },
+  {
+   "path": [
+    44,
+    117
+   ],
+   "kieu": "map",
+   "ten": "RIP >> Instance"
+  },
+  {
+   "path": [
+    44,
+    118
+   ],
+   "kieu": "map",
+   "ten": "RIP >> Interface Templates"
+  },
+  {
+   "path": [
+    44,
+    119
+   ],
+   "kieu": "map",
+   "ten": "RIP >> Interface"
+  },
+  {
+   "path": [
+    44,
+    120
+   ],
+   "kieu": "map",
+   "ten": "RIP >> Neighbors"
+  },
+  {
+   "path": [
+    44,
+    121
+   ],
+   "kieu": "map",
+   "ten": "RIP >> Static Neighbors"
+  },
+  {
+   "path": [
+    44,
+    122
+   ],
+   "kieu": "map",
+   "ten": "RIP >> Keys"
+  },
+  {
+   "path": [
+    44,
+    123
+   ],
+   "kieu": "map",
+   "ten": "RIP"
+  },
+  {
+   "path": [
+    44,
+    126
+   ],
+   "kieu": "map",
+   "ten": "GMP >> GMP"
+  },
+  {
+   "path": [
+    44,
+    144
+   ],
+   "kieu": "map",
+   "ten": "MPLS >> LDP Instance"
+  },
+  {
+   "path": [
+    44,
+    145
+   ],
+   "kieu": "map",
+   "ten": "MPLS >> LDP Interface"
+  },
+  {
+   "path": [
+    44,
+    146
+   ],
+   "kieu": "map",
+   "ten": "MPLS >> LDP Neighbor"
+  },
+  {
+   "path": [
+    44,
+    149
+   ],
+   "kieu": "map",
+   "ten": "MPLS >> Accept Filter"
+  },
+  {
+   "path": [
+    44,
+    150
+   ],
+   "kieu": "map",
+   "ten": "MPLS >> Advertise Filter"
+  },
+  {
+   "path": [
+    44,
+    151
+   ],
+   "kieu": "map",
+   "ten": "MPLS >> MPLS Interface"
+  },
+  {
+   "path": [
+    44,
+    152
+   ],
+   "kieu": "map",
+   "ten": "MPLS >> Remote Mapping"
+  },
+  {
+   "path": [
+    44,
+    153
+   ],
+   "kieu": "map",
+   "ten": "MPLS >> Local Mapping"
+  },
+  {
+   "path": [
+    44,
+    155
+   ],
+   "kieu": "map",
+   "ten": "Traffic Eng >> Interface"
+  },
+  {
+   "path": [
+    44,
+    156
+   ],
+   "kieu": "map",
+   "ten": "Traffic Eng >> Flow"
+  },
+  {
+   "path": [
+    44,
+    157
+   ],
+   "kieu": "map",
+   "ten": "Traffic Eng >> Tunnel"
+  },
+  {
+   "path": [
+    44,
+    158
+   ],
+   "kieu": "map",
+   "ten": "Traffic Eng >> Tunnel Path"
+  },
+  {
+   "path": [
+    44,
+    160
+   ],
+   "kieu": "map",
+   "ten": "VPLS >> BGP VPLS"
+  },
+  {
+   "path": [
+    44,
+    161
+   ],
+   "kieu": "item",
+   "ten": "MPLS Settings >> MPLS Settings"
+  },
+  {
+   "path": [
+    45,
+    1
+   ],
+   "kieu": "item",
+   "ten": "Packet Sniffer >> Packet Sniffer Settings"
+  },
+  {
+   "path": [
+    45,
+    2
+   ],
+   "kieu": "map",
+   "ten": "Packet Sniffer >> Protocols"
+  },
+  {
+   "path": [
+    45,
+    3
+   ],
+   "kieu": "map",
+   "ten": "Packet Sniffer >> Hosts"
+  },
+  {
+   "path": [
+    45,
+    4
+   ],
+   "kieu": "map",
+   "ten": "Packet Sniffer >> Connections"
+  },
+  {
+   "path": [
+    45,
+    6
+   ],
+   "kieu": "map",
+   "ten": "Packet Sniffer >> Packets"
+  },
+  {
+   "path": [
+    47,
+    1
+   ],
+   "kieu": "item",
+   "ten": "NTP Client >> NTP Client"
+  },
+  {
+   "path": [
+    47,
+    2
+   ],
+   "kieu": "map",
+   "ten": "NTP Client >> Servers"
+  },
+  {
+   "path": [
+    47,
+    3
+   ],
+   "kieu": "map",
+   "ten": "NTP Server >> Keys"
+  },
+  {
+   "path": [
+    48,
+    3
+   ],
+   "kieu": "map",
+   "ten": "Scheduler >> Scheduler"
+  },
+  {
+   "path": [
+    48,
+    4
+   ],
+   "kieu": "map",
+   "ten": "Special Login List >> Special Login"
+  },
+  {
+   "path": [
+    48,
+    5
+   ],
+   "kieu": "item",
+   "ten": "Note >> System Note"
+  },
+  {
+   "path": [
+    48,
+    8
+   ],
+   "kieu": "map",
+   "ten": "Script List >> Environment"
+  },
+  {
+   "path": [
+    48,
+    101
+   ],
+   "kieu": "map",
+   "ten": "Script List >> Scripts"
+  },
+  {
+   "path": [
+    48,
+    102
+   ],
+   "kieu": "map",
+   "ten": "Script List >> Jobs"
+  },
+  {
+   "path": [
+    51,
+    1
+   ],
+   "kieu": "map",
+   "ten": "Netwatch >> Netwatch"
+  },
+  {
+   "path": [
+    52,
+    1
+   ],
+   "kieu": "map",
+   "ten": "Port List >> Ports"
+  },
+  {
+   "path": [
+    63,
+    1
+   ],
+   "kieu": "map",
+   "ten": "Hotspot >> Users"
+  },
+  {
+   "path": [
+    63,
+    3
+   ],
+   "kieu": "map",
+   "ten": "Hotspot >> User Profiles"
+  },
+  {
+   "path": [
+    63,
+    5
+   ],
+   "kieu": "map",
+   "ten": "Hotspot >> Cookies"
+  },
+  {
+   "path": [
+    63,
+    8
+   ],
+   "kieu": "map",
+   "ten": "Hotspot >> Hosts"
+  },
+  {
+   "path": [
+    63,
+    9
+   ],
+   "kieu": "map",
+   "ten": "Hotspot >> Service Ports"
+  },
+  {
+   "path": [
+    63,
+    10
+   ],
+   "kieu": "map",
+   "ten": "Hotspot >> IP Bindings"
+  },
+  {
+   "path": [
+    63,
+    11
+   ],
+   "kieu": "map",
+   "ten": "Hotspot >> Servers"
+  },
+  {
+   "path": [
+    63,
+    12
+   ],
+   "kieu": "map",
+   "ten": "Hotspot >> Walled Garden IP List"
+  },
+  {
+   "path": [
+    63,
+    13
+   ],
+   "kieu": "map",
+   "ten": "Hotspot >> Active"
+  },
+  {
+   "path": [
+    63,
+    14
+   ],
+   "kieu": "map",
+   "ten": "Hotspot >> Server Profiles"
+  },
+  {
+   "path": [
+    64,
+    1
+   ],
+   "kieu": "map",
+   "ten": "TFTP >> TFTP Rules"
+  },
+  {
+   "path": [
+    64,
+    2
+   ],
+   "kieu": "item",
+   "ten": "TFTP >> Settings"
+  },
+  {
+   "path": [
+    65
+   ],
+   "kieu": "item",
+   "ten": "License >> License"
+  },
+  {
+   "path": [
+    68,
+    1
+   ],
+   "kieu": "map",
+   "ten": "IP Service List >> Services"
+  },
+  {
+   "path": [
+    72
+   ],
+   "kieu": "map",
+   "ten": "File List >> File"
+  },
+  {
+   "path": [
+    72,
+    2
+   ],
+   "kieu": "map",
+   "ten": "Auto Upgrade >> Upgrade Package Sources"
+  },
+  {
+   "path": [
+    72,
+    3
+   ],
+   "kieu": "map",
+   "ten": "Auto Upgrade >> Available Packages"
+  },
+  {
+   "path": [
+    72,
+    4
+   ],
+   "kieu": "item",
+   "ten": "Auto Upgrade >> Mirror"
+  },
+  {
+   "path": [
+    79,
+    1
+   ],
+   "kieu": "map",
+   "ten": "Disk List >> Disks"
+  },
+  {
+   "path": [
+    79,
+    3
+   ],
+   "kieu": "map",
+   "ten": "SMB >> Shares"
+  },
+  {
+   "path": [
+    79,
+    4
+   ],
+   "kieu": "map",
+   "ten": "SMB >> Users"
+  },
+  {
+   "path": [
+    79,
+    5
+   ],
+   "kieu": "item",
+   "ten": "SMB >> Settings"
+  },
+  {
+   "path": [
+    80,
+    1
+   ],
+   "kieu": "item",
+   "ten": "IGMP Proxy >> Settings"
+  },
+  {
+   "path": [
+    80,
+    2
+   ],
+   "kieu": "map",
+   "ten": "IGMP Proxy >> Interface"
+  },
+  {
+   "path": [
+    80,
+    3
+   ],
+   "kieu": "map",
+   "ten": "IGMP Proxy >> MFC"
+  },
+  {
+   "path": [
+    83,
+    1
+   ],
+   "kieu": "map",
+   "ten": "Port List >> Remote Access"
+  },
+  {
+   "path": [
+    84,
+    1
+   ],
+   "kieu": "map",
+   "ten": "IP Pool >> Used Addresses"
+  },
+  {
+   "path": [
+    84,
+    2
+   ],
+   "kieu": "map",
+   "ten": "IP Pool >> Pools"
+  },
+  {
+   "path": [
+    85,
+    1
+   ],
+   "kieu": "map",
+   "ten": "IPsec >> Policies"
+  },
+  {
+   "path": [
+    85,
+    2
+   ],
+   "kieu": "map",
+   "ten": "IPsec >> Installed SAs"
+  },
+  {
+   "path": [
+    85,
+    4
+   ],
+   "kieu": "map",
+   "ten": "IPsec >> Peers"
+  },
+  {
+   "path": [
+    85,
+    5
+   ],
+   "kieu": "map",
+   "ten": "IPsec >> Keys"
+  },
+  {
+   "path": [
+    85,
+    6
+   ],
+   "kieu": "map",
+   "ten": "IPsec >> Mode Configs"
+  },
+  {
+   "path": [
+    85,
+    7
+   ],
+   "kieu": "map",
+   "ten": "IPsec >> Proposals"
+  },
+  {
+   "path": [
+    85,
+    8
+   ],
+   "kieu": "item",
+   "ten": "IPsec >> Statistics"
+  },
+  {
+   "path": [
+    85,
+    9
+   ],
+   "kieu": "map",
+   "ten": "IPsec >> Active Peers"
+  },
+  {
+   "path": [
+    85,
+    10
+   ],
+   "kieu": "map",
+   "ten": "IPsec >> Groups"
+  },
+  {
+   "path": [
+    85,
+    12
+   ],
+   "kieu": "item",
+   "ten": "IPsec >> Settings"
+  },
+  {
+   "path": [
+    85,
+    13
+   ],
+   "kieu": "map",
+   "ten": "IPsec >> Profiles"
+  },
+  {
+   "path": [
+    85,
+    14
+   ],
+   "kieu": "map",
+   "ten": "IPsec >> Identities"
+  },
+  {
+   "path": [
+    88,
+    27
+   ],
+   "kieu": "map",
+   "ten": "Quick Set >> Countries"
+  },
+  {
+   "path": [
+    92,
+    1
+   ],
+   "kieu": "map",
+   "ten": "Partitions >> Partitions"
+  },
+  {
+   "path": [
+    96,
+    1
+   ],
+   "kieu": "item",
+   "ten": "Web Proxy >> Web Proxy Settings"
+  },
+  {
+   "path": [
+    96,
+    3
+   ],
+   "kieu": "map",
+   "ten": "Web Proxy >> Access"
+  },
+  {
+   "path": [
+    96,
+    4
+   ],
+   "kieu": "map",
+   "ten": "Hotspot >> Walled Garden"
+  },
+  {
+   "path": [
+    96,
+    5
+   ],
+   "kieu": "map",
+   "ten": "Web Proxy >> Cache"
+  },
+  {
+   "path": [
+    96,
+    6
+   ],
+   "kieu": "map",
+   "ten": "Web Proxy >> Direct"
+  },
+  {
+   "path": [
+    96,
+    7
+   ],
+   "kieu": "map",
+   "ten": "Web Proxy"
+  },
+  {
+   "path": [
+    96,
+    8
+   ],
+   "kieu": "map",
+   "ten": "Web Proxy >> Cache Contents"
+  },
+  {
+   "path": [
+    97,
+    1
+   ],
+   "kieu": "item",
+   "ten": "Traffic Flow >> Traffic Flow Settings"
+  },
+  {
+   "path": [
+    97,
+    2
+   ],
+   "kieu": "map",
+   "ten": "Traffic Flow >> Targets"
+  },
+  {
+   "path": [
+    109,
+    1
+   ],
+   "kieu": "map",
+   "ten": "MetaROUTERs >> MetaROUTERs"
+  },
+  {
+   "path": [
+    109,
+    3
+   ],
+   "kieu": "map",
+   "ten": "MetaROUTERs >> Interfaces"
+  },
+  {
+   "path": [
+    118,
+    1
+   ],
+   "kieu": "map",
+   "ten": "LEDs >> LEDs"
+  },
+  {
+   "path": [
+    118,
+    2
+   ],
+   "kieu": "map",
+   "ten": "LEDs >> Triggers"
+  },
+  {
+   "path": [
+    118,
+    3
+   ],
+   "kieu": "item",
+   "ten": "LEDs >> Settings"
+  },
+  {
+   "path": [
+    119,
+    1
+   ],
+   "kieu": "item",
+   "ten": "Traffic Generator >> Traffic Generator"
+  },
+  {
+   "path": [
+    119,
+    2
+   ],
+   "kieu": "map",
+   "ten": "Traffic Generator >> Streams"
+  },
+  {
+   "path": [
+    119,
+    3
+   ],
+   "kieu": "map",
+   "ten": "Traffic Generator Stats >> Raw"
+  },
+  {
+   "path": [
+    119,
+    4
+   ],
+   "kieu": "map",
+   "ten": "Traffic Generator Stats >> Streams"
+  },
+  {
+   "path": [
+    119,
+    5
+   ],
+   "kieu": "map",
+   "ten": "Traffic Generator Stats >> Ports"
+  },
+  {
+   "path": [
+    119,
+    6
+   ],
+   "kieu": "map",
+   "ten": "Traffic Generator >> Raw Packet Templates"
+  },
+  {
+   "path": [
+    119,
+    8
+   ],
+   "kieu": "map",
+   "ten": "Traffic Generator >> Ports"
+  },
+  {
+   "path": [
+    119,
+    9
+   ],
+   "kieu": "map",
+   "ten": "Traffic Generator >> Packet Templates"
+  },
+  {
+   "path": [
+    120,
+    1
+   ],
+   "kieu": "item",
+   "ten": "Quick Set >> CPE"
+  },
+  {
+   "path": [
+    120,
+    2
+   ],
+   "kieu": "item",
+   "ten": "Quick Set >> WISP AP"
+  },
+  {
+   "path": [
+    120,
+    3
+   ],
+   "kieu": "item",
+   "ten": "Quick Set >> PTP Bridge AP"
+  },
+  {
+   "path": [
+    120,
+    4
+   ],
+   "kieu": "item",
+   "ten": "Quick Set >> Home AP"
+  },
+  {
+   "path": [
+    120,
+    5
+   ],
+   "kieu": "item",
+   "ten": "Quick Set >> LTE"
+  },
+  {
+   "path": [
+    120,
+    6
+   ],
+   "kieu": "item",
+   "ten": "Quick Set >> Ethernet"
+  },
+  {
+   "path": [
+    120,
+    7
+   ],
+   "kieu": "item",
+   "ten": "Quick Set >> Home AP Dual"
+  },
+  {
+   "path": [
+    120,
+    8
+   ],
+   "kieu": "item",
+   "ten": "Quick Set >> Basic AP"
+  },
+  {
+   "path": [
+    120,
+    9
+   ],
+   "kieu": "item",
+   "ten": "Quick Set >> PTP Bridge CPE"
+  },
+  {
+   "path": [
+    120,
+    10
+   ],
+   "kieu": "item",
+   "ten": "Quick Set >> LTE AP"
+  },
+  {
+   "path": [
+    120,
+    11
+   ],
+   "kieu": "item",
+   "ten": "Quick Set >> LTE AP Dual"
+  },
+  {
+   "path": [
+    120,
+    12
+   ],
+   "kieu": "item",
+   "ten": "Quick Set >> W60G"
+  },
+  {
+   "path": [
+    120,
+    13
+   ],
+   "kieu": "item",
+   "ten": "Quick Set >> Home Mesh"
+  },
+  {
+   "path": [
+    120,
+    14
+   ],
+   "kieu": "item",
+   "ten": "Quick Set >> CAP"
+  },
+  {
+   "path": [
+    120,
+    15
+   ],
+   "kieu": "item",
+   "ten": "Quick Set >> Home AP Dual"
+  },
+  {
+   "path": [
+    120,
+    16
+   ],
+   "kieu": "item",
+   "ten": "Quick Set >> LTE AP Dual"
+  },
+  {
+   "path": [
+    120,
+    17
+   ],
+   "kieu": "item",
+   "ten": "Quick Set >> Home AP"
+  },
+  {
+   "path": [
+    120,
+    18
+   ],
+   "kieu": "item",
+   "ten": "Quick Set >> LTE Mesh"
+  },
+  {
+   "path": [
+    120,
+    104
+   ],
+   "kieu": "map",
+   "ten": "Quick Set"
+  },
+  {
+   "path": [
+    120,
+    105
+   ],
+   "kieu": "map",
+   "ten": "Port Mapping >> Port Mapping"
+  },
+  {
+   "path": [
+    123,
+    1
+   ],
+   "kieu": "item",
+   "ten": "Cloud >> Cloud"
+  },
+  {
+   "path": [
+    124,
+    1
+   ],
+   "kieu": "item",
+   "ten": "LCD >> LCD"
+  },
+  {
+   "path": [
+    124,
+    2
+   ],
+   "kieu": "map",
+   "ten": "LCD >> LCD Screen List"
+  },
+  {
+   "path": [
+    124,
+    3
+   ],
+   "kieu": "map",
+   "ten": "LCD >> LCD Interface List"
+  },
+  {
+   "path": [
+    124,
+    4
+   ],
+   "kieu": "map",
+   "ten": "LCD >> LCD Page List"
+  },
+  {
+   "path": [
+    127,
+    1
+   ],
+   "kieu": "map",
+   "ten": "RoMON >> Ports"
+  },
+  {
+   "path": [
+    127,
+    2
+   ],
+   "kieu": "item",
+   "ten": "RoMON >> RoMON"
+  },
+  {
+   "path": [
+    129,
+    1
+   ],
+   "kieu": "item",
+   "ten": "Watchdog >> Watchdog"
+  },
+  {
+   "path": [
+    130,
+    1
+   ],
+   "kieu": "map",
+   "ten": "Dot1X >> State"
+  },
+  {
+   "path": [
+    130,
+    2
+   ],
+   "kieu": "map",
+   "ten": "Dot1X >> Server"
+  },
+  {
+   "path": [
+    130,
+    3
+   ],
+   "kieu": "map",
+   "ten": "Dot1X >> Active"
+  },
+  {
+   "path": [
+    130,
+    4
+   ],
+   "kieu": "map",
+   "ten": "Dot1X >> Client"
+  },
+  {
+   "path": [
+    130,
+    6
+   ],
+   "kieu": "map",
+   "ten": "Interface List >> Profiles"
+  },
+  {
+   "path": [
+    132,
+    1
+   ],
+   "kieu": "item",
+   "ten": "Interface List >> Detect Internet"
+  },
+  {
+   "path": [
+    132,
+    2
+   ],
+   "kieu": "map",
+   "ten": "Interface List >> Detect Internet State"
+  },
+  {
+   "path": [
+    134,
+    1
+   ],
+   "kieu": "map",
+   "ten": "Kid Control >> Devices"
+  },
+  {
+   "path": [
+    134,
+    2
+   ],
+   "kieu": "map",
+   "ten": "Kid Control >> Kids"
+  },
+  {
+   "path": [
+    135,
+    6
+   ],
+   "kieu": "map",
+   "ten": "Mesh >> Ports"
+  },
+  {
+   "path": [
+    135,
+    7
+   ],
+   "kieu": "map",
+   "ten": "Mesh >> FDB"
+  },
+  {
+   "path": [
+    137,
+    1
+   ],
+   "kieu": "map",
+   "ten": "PTP >> PTP"
+  },
+  {
+   "path": [
+    137,
+    2
+   ],
+   "kieu": "map",
+   "ten": "PTP >> Port"
+  },
+  {
+   "path": [
+    137,
+    3
+   ],
+   "kieu": "map",
+   "ten": "PTP >> Status"
+  },
+  {
+   "path": [
+    138,
+    4
+   ],
+   "kieu": "map",
+   "ten": "WiFi >> Registration"
+  },
+  {
+   "path": [
+    138,
+    6
+   ],
+   "kieu": "map",
+   "ten": "Quick Set >> Countries"
+  },
+  {
+   "path": [
+    138,
+    8
+   ],
+   "kieu": "map",
+   "ten": "WiFi >> Access List"
+  },
+  {
+   "path": [
+    138,
+    9
+   ],
+   "kieu": "map",
+   "ten": "WiFi >> AAA"
+  },
+  {
+   "path": [
+    138,
+    10
+   ],
+   "kieu": "map",
+   "ten": "WiFi >> Radios"
+  },
+  {
+   "path": [
+    138,
+    12
+   ],
+   "kieu": "map",
+   "ten": "WiFi >> Security"
+  },
+  {
+   "path": [
+    138,
+    13
+   ],
+   "kieu": "map",
+   "ten": "WiFi >> Configuration"
+  },
+  {
+   "path": [
+    138,
+    14
+   ],
+   "kieu": "map",
+   "ten": "WiFi >> Channel"
+  },
+  {
+   "path": [
+    138,
+    15
+   ],
+   "kieu": "item",
+   "ten": "WiFi >> CAP"
+  },
+  {
+   "path": [
+    138,
+    16
+   ],
+   "kieu": "item",
+   "ten": "WiFi >> CAPsMAN"
+  },
+  {
+   "path": [
+    138,
+    17
+   ],
+   "kieu": "map",
+   "ten": "WiFi >> Remote CAP"
+  },
+  {
+   "path": [
+    138,
+    18
+   ],
+   "kieu": "map",
+   "ten": "WiFi >> Provisioning"
+  },
+  {
+   "path": [
+    138,
+    19
+   ],
+   "kieu": "map",
+   "ten": "WiFi >> Datapath"
+  },
+  {
+   "path": [
+    138,
+    20
+   ],
+   "kieu": "map",
+   "ten": "WiFi >> Interworking"
+  },
+  {
+   "path": [
+    138,
+    25
+   ],
+   "kieu": "map",
+   "ten": "WiFi >> Countries"
+  },
+  {
+   "path": [
+    138,
+    26
+   ],
+   "kieu": "map",
+   "ten": "WiFi >> Steering"
+  },
+  {
+   "path": [
+    138,
+    27
+   ],
+   "kieu": "map",
+   "ten": "WiFi >> Neighbor Group"
+  },
+  {
+   "path": [
+    154,
+    0
+   ],
+   "kieu": "item",
+   "ten": "NAT PMP >> NAT PMP Settings"
+  },
+  {
+   "path": [
+    156,
+    1
+   ],
+   "kieu": "map",
+   "ten": "Cloud >> Back To Home Users"
+  }
+ ],
+ "loi": []
+}

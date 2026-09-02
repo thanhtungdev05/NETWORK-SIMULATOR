@@ -1,0 +1,46 @@
+{
+ "nguon": "hEX S that 192.168.1.1, do 2026-08-27",
+ "vi_sao": "Mot duong dan tra ve hai kieu khung khac nhau tuy LENH hoi. [24,2] hoi kieu MAP (0xfe0004) tra 4 dong cpu0..cpu3 — nguon cua o chon CPU o trang Tools >> Profile. Dot thu 2026-08-24 chi hoi kieu ITEM.",
+ "tep": [
+  {
+   "ten": "24-2__map.bin",
+   "byte": 253,
+   "sha256": "2c9f0dc27a0c1c94c8022c361ed35433100aceb5ea1af9389c2f1d7dfb66d424"
+  },
+  {
+   "ten": "125-1__map.bin",
+   "byte": 76,
+   "sha256": "af7ef3e4520377cfa3a6500c73684400fdb458f4d35a5601ae4fcb3b123a920c"
+  },
+  {
+   "ten": "135-7__map.bin",
+   "byte": 55,
+   "sha256": "b5da7c3b71b865459a992552405801e90182d928ce0b9d55200ae0cfb7474d4d"
+  },
+  {
+   "ten": "19-1__map.bin",
+   "byte": 66,
+   "sha256": "df7283963e76cad79ec965c81240562a51cb05d29ce35d003d1fbd75ccd9f3bc"
+  },
+  {
+   "ten": "19-7__map.bin",
+   "byte": 68,
+   "sha256": "68ff7a8c02af450ecd5994c833fddab36289d9ce035660ece9a0b757db7d2f7b"
+  },
+  {
+   "ten": "20-12__map.bin",
+   "byte": 2136,
+   "sha256": "a2a91115563bffd7f2c666efbe49b1276c2ac600eb855b3ad302583f06fd40c1"
+  },
+  {
+   "ten": "3-3__map.bin",
+   "byte": 1773,
+   "sha256": "22e96537c8fa8b67fbd79dcc2baa8142ed37cd53baba7e243f0050f1fae48f90"
+  },
+  {
+   "ten": "88-22__map.bin",
+   "byte": 76,
+   "sha256": "9ee2bb7aac9b113ddaa1f527164597d5403041384e1dd34a1de5bfd830d5b595"
+  }
+ ]
+}

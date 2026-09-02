@@ -1,4 +1,4 @@
-﻿/**
+/**
  * devices/ax3000c/lessons/bai3.js
  * Bài 3: Cấu hình WiFi IoT trên AX3000C
  */

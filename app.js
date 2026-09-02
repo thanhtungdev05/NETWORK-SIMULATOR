@@ -1855,11 +1855,14 @@
       const winH = win.innerHeight || doc.documentElement.clientHeight || 768;
       let pos = pop.position || 'right';
 
+      // Tắt tự động lật tooltip theo yêu cầu
+      /*
       if (!pop.forcePosition && pos === 'right' && (rect.left + rect.width + bWidth + 16) > winW) {
         if (rect.left - bWidth - 12 >= 10) {
           pos = 'left';
         }
       }
+      */
 
       bubble.className = `ftc-guide-bubble pos-${pos}`;
 

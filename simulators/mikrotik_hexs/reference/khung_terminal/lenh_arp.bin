@@ -1,0 +1,6 @@
+/ip arp print[13D[m[36m/ip[m [m[36marp[m [m[35mprint[m
+Flags: D - [m[1mDYNAMIC[m; C - [m[1mCOMPLETE
+[mColumns: [m[1mADDRESS[m, [m[1mMAC-ADDRESS[m, [m[1mINTERFACE[m, [m[1mSTATUS
+#[m    [m[1mADDRESS[m        [m[1mMAC-ADDRESS[m        [m[1mINTERFACE[m   [m[1mSTATUS[m   
+0 DC 192.168.1.254  D8:43:AE:2E:65:45  bridge-LAN  reachable
+[9999B[K[[m[36madmin[m@[m[32mFPT[m] > 

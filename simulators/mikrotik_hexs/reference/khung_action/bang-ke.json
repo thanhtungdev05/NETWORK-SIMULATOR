@@ -1,0 +1,334 @@
+{
+ "nguon": "hEX S that 192.168.1.1, WebFig 7.14.3, do ngay 2026-08-28",
+ "cach_do": "dieu khien WebFig that qua Chrome, nghe XHR /jsproxy (doc TRE 400ms + tu kiem magic 'M2')",
+ "ghi_chu": {
+  "24-25": "Make Supout.rif, ten tep 'claude-do.rif'. g00=ACK bat dau, g01..g25=poll tien do 0->100%, g26=ack cuoi. The 0xfe000b=co XONG.",
+  "29": "Bandwidth Test -> 192.168.1.1 (chinh no). Thiet bi tra 'can't connect' (btest server tat mac dinh). 0 bps luu luong.",
+  "29-2": "Speed Test -> 192.168.1.1. Chay that pha 'ping' (382/427/800us, loss 0.633%). DA DUNG truoc pha bom bang thong TCP/UDP.",
+  "27-53": "Import .ovpn, khong chon tep -> 'config file is empty' (the 0x194).",
+  "63": "Hotspot Setup wizard, buoc 2..9. DA HUY truoc buoc ghi cau hinh. The 0xfe000e=so buoc, 0xfe000f=trang thai tich luy.",
+  "77": "Ping Speed -> 127.0.0.1 (loopback, an toan). g00=ACK Start co ufe0001=1 (id phien truy van), g01..g10=poll moi khung mang u1(Current)+u2(Average) bitrate = 0 vi ping loopback, g11=ACK Stop (khong con u1/u2). Dac ta .jg advtool: startcmd=2 pollcmd=1 cancelcmd=3 autorefresh=1000 — KHONG phai 0xfe000f/10/11 mac dinh."
+ },
+ "tep": [
+  {
+   "ten": "ACT_24-25_g00.bin",
+   "byte": 60,
+   "sha256": "e4e926e596ba48efcc4d52acf0e2bd65c5431f3910389c0f70f861051dbc4191"
+  },
+  {
+   "ten": "ACT_24-25_g01.bin",
+   "byte": 64,
+   "sha256": "d99c52fd681dc1e170b74e6b21a2a1ba5e2c31473709d8310e208eb5713e03dd"
+  },
+  {
+   "ten": "ACT_24-25_g02.bin",
+   "byte": 64,
+   "sha256": "642b6483f6ae46823cca636bb88c699351d5841ed27472725f125cc795cb7d25"
+  },
+  {
+   "ten": "ACT_24-25_g03.bin",
+   "byte": 64,
+   "sha256": "6778004a6e8ec7eb4ac8d3609dabce047ad3076730f5a05f2928e6215241242c"
+  },
+  {
+   "ten": "ACT_24-25_g04.bin",
+   "byte": 64,
+   "sha256": "a2eafe0d984675978a572515f51d59a594fc5bdae7622152d0bcde5d2bcc1f49"
+  },
+  {
+   "ten": "ACT_24-25_g05.bin",
+   "byte": 64,
+   "sha256": "4cf034d2919c2d56876eb4da46cfaed0fdae721c2edc1e33602d1d798b0089b4"
+  },
+  {
+   "ten": "ACT_24-25_g06.bin",
+   "byte": 64,
+   "sha256": "f142ac1348fc1690b1c5b0b2b859595109abfbd7d18c6b83201071178b157ad6"
+  },
+  {
+   "ten": "ACT_24-25_g07.bin",
+   "byte": 64,
+   "sha256": "f3bf968a749200c93174e1e9f71f9885959ced3b606edb9a1a7370f7c65f82ab"
+  },
+  {
+   "ten": "ACT_24-25_g08.bin",
+   "byte": 64,
+   "sha256": "1049f67efa1abdffb4d6f99a9c26cdc0e43215368f353c7c815940673b4534eb"
+  },
+  {
+   "ten": "ACT_24-25_g09.bin",
+   "byte": 64,
+   "sha256": "dae528cacb856f18bf7f49405dbfab54406e16e621ddfa92ff5bc043de11e5f0"
+  },
+  {
+   "ten": "ACT_24-25_g10.bin",
+   "byte": 64,
+   "sha256": "ffdb6bd409a6ae614860391427b38184488d478e8d52bf656c3e3853f4008aa4"
+  },
+  {
+   "ten": "ACT_24-25_g11.bin",
+   "byte": 64,
+   "sha256": "97ae2d8adb88fc772e71616be7aa6d074ece601e19a1eae4f201cc14a3f596b3"
+  },
+  {
+   "ten": "ACT_24-25_g12.bin",
+   "byte": 64,
+   "sha256": "58976accdfa5e7e95a8b8740ef855d8d7ea281c3716f4f03612aa5c995e7e037"
+  },
+  {
+   "ten": "ACT_24-25_g13.bin",
+   "byte": 64,
+   "sha256": "d4fc3d4a7a736bdd36649fb370a4eac52293133b3af7c797d65c791cdaf83b99"
+  },
+  {
+   "ten": "ACT_24-25_g14.bin",
+   "byte": 64,
+   "sha256": "1c1cf67998a837615a68fbfdd723926241d4217b2ef933e605d1429047f1a2e4"
+  },
+  {
+   "ten": "ACT_24-25_g15.bin",
+   "byte": 64,
+   "sha256": "67af04fa61f55b7dae8ac6da1ccd7a89e020e6b7279eb923a95421f03d559a44"
+  },
+  {
+   "ten": "ACT_24-25_g16.bin",
+   "byte": 64,
+   "sha256": "32724058df327356bf30e839ddda70214fc2f3367be5130990cbbc633e62a4c7"
+  },
+  {
+   "ten": "ACT_24-25_g17.bin",
+   "byte": 64,
+   "sha256": "26e6ede6786256794da198475d1fcb3b6fbb39e57e9226363de2eb8807ae2e81"
+  },
+  {
+   "ten": "ACT_24-25_g18.bin",
+   "byte": 64,
+   "sha256": "8eb56a761b23d96671d7ea17c5d443c546e635ff286e4058b653ac9902ad748a"
+  },
+  {
+   "ten": "ACT_24-25_g19.bin",
+   "byte": 64,
+   "sha256": "f9fdd90904c0607a17c3d157b6c7bc567b3d8ee1ee9922b4926f1c50db7ad12f"
+  },
+  {
+   "ten": "ACT_24-25_g20.bin",
+   "byte": 64,
+   "sha256": "ad5792cd5aca4c7383563df74416da541b1dbce1a46458871dd1fc244d3a22d2"
+  },
+  {
+   "ten": "ACT_24-25_g21.bin",
+   "byte": 64,
+   "sha256": "f1773d46b0d933506de25a16f42398b797dbb4efbc271ce585e32795b9386f7e"
+  },
+  {
+   "ten": "ACT_24-25_g22.bin",
+   "byte": 64,
+   "sha256": "73225810d98871221d3fce1da369c5f75b04dd0ce27a19c9906d6a5d92aeca18"
+  },
+  {
+   "ten": "ACT_24-25_g23.bin",
+   "byte": 64,
+   "sha256": "fd95b90ed889287278e6bcb831778a00fb5130691a34554960281ef21f1aebf2"
+  },
+  {
+   "ten": "ACT_24-25_g24.bin",
+   "byte": 64,
+   "sha256": "ee12d18a5c2ebf35e6932c5062a394944255f36052d95b5a08d592bfa1309553"
+  },
+  {
+   "ten": "ACT_24-25_g25.bin",
+   "byte": 64,
+   "sha256": "fb5788d13cd8e5bb228e323122b16f3419b479b23e2bff372cda01d392d5a22b"
+  },
+  {
+   "ten": "ACT_24-25_g26.bin",
+   "byte": 55,
+   "sha256": "e16db94a0462c9abd7491407b2d6a84f1efdf1ef333e8b0b7f4363e9e01061fe"
+  },
+  {
+   "ten": "ACT_27-53_g00.bin",
+   "byte": 84,
+   "sha256": "d027dbae46f3c98a227780e67c7cd82f0264620dfaca775982dcf045eb0202d4"
+  },
+  {
+   "ten": "ACT_27-53_g01.bin",
+   "byte": 84,
+   "sha256": "feafa3261a89c5f33c60b85a9af4abbf40dbe157328a9645bee315c463d8b427"
+  },
+  {
+   "ten": "ACT_27-53_g02.bin",
+   "byte": 55,
+   "sha256": "cf23be388057440e14cc4ae30cddcfad45f90a57f7288b98bc6b72d05ffc5be3"
+  },
+  {
+   "ten": "ACT_29-2_g00.bin",
+   "byte": 60,
+   "sha256": "4fc0f6bd1ffbd2be44a6332f1ea4cb736edb5679e85456b1bcf2ae742559df85"
+  },
+  {
+   "ten": "ACT_29-2_g01.bin",
+   "byte": 114,
+   "sha256": "b3828df0d33121a2773cb2f0ceebb35833c5fb78553d241ae8c02cdd4770fbfd"
+  },
+  {
+   "ten": "ACT_29-2_g02.bin",
+   "byte": 137,
+   "sha256": "43b55a4b21fe86eab84297083881dcba74a1f36a28201064f3b7d0d15f56651d"
+  },
+  {
+   "ten": "ACT_29-2_g03.bin",
+   "byte": 137,
+   "sha256": "8365bc7089b68189bb6d1fa5a7de242f2b1a8708469ba80c71692985ee02ef56"
+  },
+  {
+   "ten": "ACT_29-2_g04.bin",
+   "byte": 138,
+   "sha256": "0faf632b09b201dea8b0ab2c5b77500a47aebccc6348b6da44ef33f5b1c4c285"
+  },
+  {
+   "ten": "ACT_29-2_g05.bin",
+   "byte": 142,
+   "sha256": "a2649a819e90b7497d418be4283737a6b2e85e574bced6b14bb9f4049735b2ab"
+  },
+  {
+   "ten": "ACT_29-2_g06.bin",
+   "byte": 55,
+   "sha256": "f8809a0b0d2ff2fc74ba4782e22fc7eba4c1b9032d63481a83ae464d37b5b227"
+  },
+  {
+   "ten": "ACT_29_g00.bin",
+   "byte": 56,
+   "sha256": "175af2c15f854bf3ec8816b1f350e7fb3e74052f817406b0e19ee4e694939022"
+  },
+  {
+   "ten": "ACT_29_g01.bin",
+   "byte": 174,
+   "sha256": "867f506d574aa2773d1c5412d848e0554b671da8cb4526d6d173147e27833519"
+  },
+  {
+   "ten": "ACT_29_g02.bin",
+   "byte": 51,
+   "sha256": "cfe0d31e75806e4292ac8278f0986990d5ea1218da625bc474b52241ea429d85"
+  },
+  {
+   "ten": "ACT_63_g00.bin",
+   "byte": 84,
+   "sha256": "d6a2ddf1b1c1aaafabd4b0ec5022f575778a43a3baa153e185a3988d71475855"
+  },
+  {
+   "ten": "ACT_63_g02.bin",
+   "byte": 64,
+   "sha256": "68b251d886990c4b8dac4fb2424a20d44057b9c786aba0aa6ccd900b9e105913"
+  },
+  {
+   "ten": "ACT_63_g04.bin",
+   "byte": 102,
+   "sha256": "75773c81425582c23cf9092943647ad512dfd9695f17f12e6099003749d8b83c"
+  },
+  {
+   "ten": "ACT_63_g06.bin",
+   "byte": 107,
+   "sha256": "ba0c8f45ad98833f1edc38d38d2f778a051e61c881d5155dc25fbdb776e1afa8"
+  },
+  {
+   "ten": "ACT_63_g08.bin",
+   "byte": 107,
+   "sha256": "972474517f5360cd04b5f34a84abb595546d7ab076745752028835888aaa1965"
+  },
+  {
+   "ten": "ACT_63_g10.bin",
+   "byte": 271,
+   "sha256": "b2fb7ff75655a03d1c6234de979a6ba7c0ecada63cce407f0dc89e4c965856fe"
+  },
+  {
+   "ten": "ACT_63_g11.bin",
+   "byte": 271,
+   "sha256": "c43519c19bd77071aee755b12c8658a319ed7a2bf44bc97381c85e7770ce389a"
+  },
+  {
+   "ten": "ACT_63_g13.bin",
+   "byte": 115,
+   "sha256": "24e1e81699b87f7535b94dd859c731983ef65f8daecaebe2791070f53839b5de"
+  },
+  {
+   "ten": "ACT_63_g16.bin",
+   "byte": 115,
+   "sha256": "47627d392752c511f61272e1d46e03a7300f58a74f0426b4355e3f15652b0153"
+  },
+  {
+   "ten": "ACT_63_g18.bin",
+   "byte": 134,
+   "sha256": "035220c5e8eb938f04242e13b75fd5483a223790fb2b31272663d9755437e84e"
+  },
+  {
+   "ten": "ACT_63_g20.bin",
+   "byte": 134,
+   "sha256": "27eac5c928294153614b78aabe49a9ab4f4712fa2639f4a16741c11ac5dccb49"
+  },
+  {
+   "ten": "ACT_63_g22.bin",
+   "byte": 139,
+   "sha256": "cbfa11620351c709fc06ab2dc29552b8b9a639f6f4c28db3e2360dca0ccc05c1"
+  },
+  {
+   "ten": "ACT_77_g00.bin",
+   "byte": 56,
+   "sha256": "4929ca9d6eb072f2a157c21d12e62f366d9744c618b6fb4b42ae358827c129d5"
+  },
+  {
+   "ten": "ACT_77_g01.bin",
+   "byte": 61,
+   "sha256": "076355310f47e3626ee95b8ea7cbbd1be5a1fc6cdac0876256397a4c24788936"
+  },
+  {
+   "ten": "ACT_77_g02.bin",
+   "byte": 61,
+   "sha256": "96d12e334f4620d3f737b986cd5403a4d34d8a16d5e2778fbd205d26a5d043df"
+  },
+  {
+   "ten": "ACT_77_g03.bin",
+   "byte": 61,
+   "sha256": "5eb120639bdba5465975dce1aed5517f5655edd24859d86196fc851d42a9850c"
+  },
+  {
+   "ten": "ACT_77_g04.bin",
+   "byte": 61,
+   "sha256": "473f4bf3c94ef204e6804ec215fa4ed7fb0793e522591f8e9458212760dcc4de"
+  },
+  {
+   "ten": "ACT_77_g05.bin",
+   "byte": 61,
+   "sha256": "58c91566679e0129da758bb6667f9fd6a7c0bdbf793243d5817e046cbe9f6987"
+  },
+  {
+   "ten": "ACT_77_g06.bin",
+   "byte": 61,
+   "sha256": "2049c98a98813614381e819b5639466db6961819a94afef70594db1e68ff28d0"
+  },
+  {
+   "ten": "ACT_77_g07.bin",
+   "byte": 61,
+   "sha256": "df9922cb15590f5b7a5eaed39de745fd1ac614cfa0957a0b2d5ccdfd864f98eb"
+  },
+  {
+   "ten": "ACT_77_g08.bin",
+   "byte": 61,
+   "sha256": "43f2862c895b933fe58fc019489e1e795273f1db54d37cfed4b2d9d8c632115d"
+  },
+  {
+   "ten": "ACT_77_g09.bin",
+   "byte": 61,
+   "sha256": "385ece3f239b41328149d77e3e973b447943571035897f458ad9be54954693bd"
+  },
+  {
+   "ten": "ACT_77_g10.bin",
+   "byte": 61,
+   "sha256": "dd5624ba02cee4512be800d56840abebcd69a65af42e3fda9dcbf18d3b1fe789"
+  },
+  {
+   "ten": "ACT_77_g11.bin",
+   "byte": 51,
+   "sha256": "375ed03addcdf429dbe8fc4ec4ce28caa14a062f99ff25f35714d4b626b5f245"
+  }
+ ]
+}

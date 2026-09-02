@@ -18,6 +18,7 @@
     window.DEVICE_VIGOR2927,
     window.DEVICE_BE6500C,
     window.DEVICE_ONT_BE6500C,
+    window.DEVICE_MIKROTIK_HEXS,
   ].filter(Boolean);
 
   // Mapping thiết bị chạy cùng cổng (cần server riêng)

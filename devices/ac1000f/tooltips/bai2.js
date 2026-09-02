@@ -27,19 +27,19 @@ window.TOOLTIPS_AC1000F['LAB_AC1000F_02'] = [
   {
     page: 'home_wireless.asp',
     selector: 'select[name="WirelessMode"]',
-    text: 'Bước 4: Đảm bảo đã chọn 802.11b+g+n',
+    text: 'Bước 4: Chọn 802.11b+g+n',
     position: 'right'
   },
   {
     page: 'home_wireless.asp',
     selector: 'select[name="Countries_Channels"]',
-    text: 'Bước 5: Đảm bảo chọn VIETNAM và Auto',
+    text: 'Bước 5: Chọn VIETNAM và Auto',
     position: 'bottom'
   },
   {
     page: 'home_wireless.asp',
     selector: 'select[name="WLANChannelBandwidth"]',
-    text: 'Bước 6: Đảm bảo đã chọn 40 MHz',
+    text: 'Bước 6: Chọn Auto',
     position: 'right'
   },
   {
@@ -80,19 +80,19 @@ window.TOOLTIPS_AC1000F['LAB_AC1000F_02'] = [
   {
     page: 'home_wireless_5g.asp',
     selector: 'select[name="WirelessMode"]',
-    text: 'Bước 12: Đảm bảo đã chọn Auto',
+    text: 'Bước 12: Chọn Auto',
     position: 'right'
   },
   {
     page: 'home_wireless_5g.asp',
     selector: 'select[name="Countries_Channels"]',
-    text: 'Bước 13: Đảm bảo chọn VIETNAM và Auto',
+    text: 'Bước 13: Chọn VIETNAM và Auto',
     position: 'bottom'
   },
   {
     page: 'home_wireless_5g.asp',
     selector: 'select[name="WLANChannelBandwidth"]',
-    text: 'Bước 14: Đảm bảo đã chọn Auto',
+    text: 'Bước 14: Chọn Auto',
     position: 'right'
   },
   {

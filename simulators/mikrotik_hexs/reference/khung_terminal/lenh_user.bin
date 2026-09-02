@@ -1,0 +1,6 @@
+/user print[11D[m[36m/user[m [m[35mprint[m
+Columns: [m[1mNAME[m, [m[1mGROUP[m, [m[1mLAST-LOGGED-IN
+#[m [m[1mNAME[m   [m[1mGROUP[m  [m[1mLAST-LOGGED-IN[m     
+;;; system default user
+0 admin  full   1970-01-03 07:00:20
+[9999B[K[[m[36madmin[m@[m[32mFPT[m] > 

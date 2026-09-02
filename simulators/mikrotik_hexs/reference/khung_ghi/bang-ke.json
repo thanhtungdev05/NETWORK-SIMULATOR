@@ -1,0 +1,97 @@
+{
+ "ghi_chu": "Khung THAT cua cac thao tac GHI, thu 2026-08-25 tren hEX S. __tl = khung tra loi; __day = goi thiet bi tu DAY xuong kenh cho dai ngay sau khi ghi.",
+ "thao_tac": {
+  "B_identity_set": "0xfe000e sua muc don [24,1] Identity, ghi de dung gia tri cu FPT",
+  "C_addrlist_add": "0xfe0005 them dong [20,35] Firewall Address Lists",
+  "D_addrlist_edit": "0xfe0003 sua dong (ufe0001=1)",
+  "E_addrlist_del": "0xfe0006 xoa dong (ufe0001=1)",
+  "L1_sua_id_khong_co": "0xfe0003 voi ufe0001=9999 tren [14,3] -> khung LOI 0xfe0004",
+  "L2_xoa_id_khong_co": "0xfe0006 voi ufe0001=9999 -> khung LOI 0xfe0004",
+  "L3_them_thieu_truong": "0xfe0005 thieu truong bat buoc -> LOI 0xfe0006 + sff0009",
+  "M1_them_A": "0xfe0005 them dong DNS Static, thiet bi cap id 2",
+  "M2_them_B": "0xfe0005 them dong thu hai, id 3",
+  "M3_doi_cho": "0xfe0007 dua id=3 len TRUOC id=2 (ufe0005=2)",
+  "M4_doi_ve_cuoi": "0xfe0007 dua id=3 xuong CUOI (ufe0005=0xffffffff)",
+  "M5_xoa_A": "0xfe0006 xoa id=2",
+  "M6_xoa_B": "0xfe0006 xoa id=3"
+ },
+ "tep": {
+  "B_identity_set__day0.bin": {
+   "byte": 78,
+   "sha256": "e4bfc03fcdc7d379c9a7cf5882e8dffe525b48a22e4f2676802c3f84b169e820"
+  },
+  "B_identity_set__day1.bin": {
+   "byte": 9258,
+   "sha256": "dfe15ed39f604365887562522414cc6d31eb60e4b0827f43875de0ae24dfd77b"
+  },
+  "B_identity_set__day2.bin": {
+   "byte": 9249,
+   "sha256": "241e665deb417c4a760ab4cb4b98d4abceb55bd522bd14aeb573b8c03776ca4b"
+  },
+  "B_identity_set__tl0.bin": {
+   "byte": 55,
+   "sha256": "293fb6543d80d8052628672b7c8f66ef3f0adc8e0369a8ed1187d71081f612fe"
+  },
+  "C_addrlist_add__day0.bin": {
+   "byte": 9258,
+   "sha256": "457e290a3b8cb0d5c681c9d9440edd0a2a6b6861ca37df38b60a78747b1bfea3"
+  },
+  "C_addrlist_add__tl0.bin": {
+   "byte": 60,
+   "sha256": "986842496923e5dfc9297b728bbb25af43521e204720c76f492032dd986be777"
+  },
+  "D_addrlist_edit__day0.bin": {
+   "byte": 9258,
+   "sha256": "84535f632cce2fbaf24f9cc3e5281ac2121526e991146895004060a878084480"
+  },
+  "D_addrlist_edit__tl0.bin": {
+   "byte": 55,
+   "sha256": "3e3db13a279d10caae7dc269394e850763164ea46b754b2f92fe2e91431881d4"
+  },
+  "E_addrlist_del__day0.bin": {
+   "byte": 9258,
+   "sha256": "309ed449f7311ab498b72313cfaf4a93af79d77a92fe0da9005e040b4954fde1"
+  },
+  "E_addrlist_del__tl0.bin": {
+   "byte": 55,
+   "sha256": "fb6bd527b429fcd6382528419f841472ad3240f5a93c751d816ca571be60fd60"
+  },
+  "L1_sua_id_khong_co.bin": {
+   "byte": 68,
+   "sha256": "9123bed426c86cb28605491e519e1089b16fa1ddc211fbdfabca66a66f3a5b39"
+  },
+  "L2_xoa_id_khong_co.bin": {
+   "byte": 68,
+   "sha256": "ccbcae92d6b87d175b2ac30aa9309590c66edeeafa8b858ea55e38b5e920e1bf"
+  },
+  "L3_them_thieu_truong.bin": {
+   "byte": 96,
+   "sha256": "fdcc437604fc3f8128ea2d6cf85d4172d0de078e9a1c9aba1d3facb480045611"
+  },
+  "M1_them_A.bin": {
+   "byte": 60,
+   "sha256": "bd88cdbff17f5fa49f7f762614a41bac60216faa52f6806a7b126c84c2d0a0e1"
+  },
+  "M2_them_B.bin": {
+   "byte": 60,
+   "sha256": "68443d0e5243d32117b00071e40d2a2848b8782f943abc3387277a759254da81"
+  },
+  "M3_doi_cho.bin": {
+   "byte": 55,
+   "sha256": "eb3c9b265b01806009f3215add07d654c8d898147811f9ca2e0c99b5040c7895"
+  },
+  "M4_doi_ve_cuoi.bin": {
+   "byte": 55,
+   "sha256": "584ba1114a25a3fe3df8730725b6e89af8121bda90b685dae3e0bab907074dc9"
+  },
+  "M5_xoa_A.bin": {
+   "byte": 55,
+   "sha256": "165579ff641ee368c895b79967d90404805495a26fb3d2df3dd127369833f1e2"
+  },
+  "M6_xoa_B.bin": {
+   "byte": 55,
+   "sha256": "acb9e8d18992553a9e1e973e59f6209faaeac46d94d72748368567ab325a1f1b"
+  }
+ },
+ "so_tep": 19
+}

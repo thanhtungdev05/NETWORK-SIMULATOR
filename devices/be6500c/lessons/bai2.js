@@ -1,0 +1,67 @@
+/**
+ * devices/be6500c/lessons/bai2.js
+ */
+window.DEVICE_BE6500C_LESSONS = window.DEVICE_BE6500C_LESSONS || [];
+window.DEVICE_BE6500C_LESSONS.push({
+  id: 'be6500c-bai2',
+  title: 'Cấu hình mạng Wi-Fi (Gộp sóng Band Steering)',
+  subtitle: 'Cấu hình mạng Wi-Fi (Gộp sóng Band Steering)',
+  instructions: [
+  "<b>Yêu cầu:</b>",
+  "Kích hoạt Band Steering (Tắt Use separate network) và cấu hình:",
+  "- SSID Name: <span class=\"val\">FPT Telecom</span>",
+  "- WPA Key: <span class=\"val\">fpt12345</span>"
+],
+  practiceUrl: '/sim_be6500c/wifi__general.html',
+  clearFields: [],
+  grading: {
+    description: 'Kiểm tra bài 2',
+    rules: [
+  {
+    "id": "wifi_ssid",
+    "name": "SSID",
+    "selector": "input[name=\"networks.1.name\"]",
+    "expected": "FPT Telecom",
+    "type": "text_exact",
+    "trim": true,
+    "required": true
+  },
+  {
+    "id": "wifi_key",
+    "name": "WPA Key",
+    "selector": "input[name=\"networks.1.passphrase\"]",
+    "expected": "fpt12345",
+    "type": "text_exact",
+    "trim": true,
+    "required": true
+  }
+]
+  },
+  guidePopups: [
+  {
+    "selector": ".MuiTypography-subtitle2:contains(\"Wi-Fi\")",
+    "text": "Chọn Wi-Fi",
+    "position": "right"
+  },
+  {
+    "selector": "input[name=\"useSeparateNetwork\"]",
+    "text": "Tắt Use separate network",
+    "position": "top"
+  },
+  {
+    "selector": "input[name=\"networks.1.name\"]",
+    "text": "Nhập tên WIFI VD: FPT Telecom",
+    "position": "right"
+  },
+  {
+    "selector": "input[name=\"networks.1.passphrase\"]",
+    "text": "Nhập mật khẩu VD: fpt12345",
+    "position": "right"
+  },
+  {
+    "selector": "button:contains(\"Save\")",
+    "text": "Chọn Save",
+    "position": "right"
+  }
+]
+});

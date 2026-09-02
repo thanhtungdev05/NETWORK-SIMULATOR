@@ -1,0 +1,212 @@
+{
+ "ghi_chu": "Khung THAT cua mot phien Terminal WebFig tren hEX S, thu 2026-08-25. Chi go lenh CHI DOC.",
+ "hop_dong": {
+  "mo": "uff0007=0xa0065, s7=vt102, u5=rong, u6=cao -> ACK + ufe0001 = id terminal",
+  "go_phim": "uff0007=0xa0067, r2=[byte], u3=so byte da nhan, ufe0001=id",
+  "doi_co": "uff0007=0xa0068, u5/u6",
+  "dong": "uff0007=0xa0066, ufe0001=id",
+  "dau_ra": "Thiet bi DAY ve tren duong dan [76] qua kenh cho dai, byte VT102 nam trong the r2 (0x000002). May khach dang ky bang subscribers[[76]]=this trong Terminal.listen()."
+ },
+ "tep": {
+  "01_mo__day0.bin": {
+   "byte": 107,
+   "sha256": "9bb79966b7ebf52ec756abd3e08184523dc9f68e9c888afbf1a647c25856a1ce"
+  },
+  "01_mo__day1.bin": {
+   "byte": 488,
+   "sha256": "47b9fc10b6c474ccf08c31b3d01c99dd960d1283e9a2bbf5dc657c61882ce582"
+  },
+  "01_mo__day2.bin": {
+   "byte": 70,
+   "sha256": "ce3d25686ee4b037bd0a9424c4531e3718bf45eb2e12f08a66dbd363005e4ddd"
+  },
+  "01_mo__day3.bin": {
+   "byte": 425,
+   "sha256": "b82c7dda01dbd80fc34267b67462087ff90ea0b0efcca2e07bc30d2ab5d57f9f"
+  },
+  "01_mo__day4.bin": {
+   "byte": 101,
+   "sha256": "320f0e299a92d46e5609a423f380c9c978d0c1f8ce6b354f958299fbd3e182dd"
+  },
+  "01_mo__day5.bin": {
+   "byte": 9249,
+   "sha256": "87020a9d248e418df09a940e78069c92eaf3ad82351d4ef62775cf4c2cd6a61d"
+  },
+  "01_mo__day6.bin": {
+   "byte": 9252,
+   "sha256": "dba0d65cb8f28e47ddaa511bd7bfb4a0af628e1b37c090348a20f058cdcc3729"
+  },
+  "01_mo__tl0.bin": {
+   "byte": 51,
+   "sha256": "4deaca32db734320e61cf8f7b498a878be4b95855522f3507dba7788d29c48f4"
+  },
+  "01_mo__tl1.bin": {
+   "byte": 56,
+   "sha256": "7c1eb1d3363c1620ecd6bb08ecc47266948b74765e4e4d72944d5297213c1a3e"
+  },
+  "02_traloi_n__day0.bin": {
+   "byte": 68,
+   "sha256": "42bf757bd8c659ce81c9b4a8e644673b06a39d2ca31034b3d9422b44c024ae87"
+  },
+  "02_traloi_n__day1.bin": {
+   "byte": 138,
+   "sha256": "06344d8232c7bd9194645b772586c8cff3987053a5662fd32a5f6a311c5db26f"
+  },
+  "02_traloi_n__day2.bin": {
+   "byte": 9258,
+   "sha256": "0e7f9786abbfac34518706eec6c69500187f499bb965c694e142b9f446425f26"
+  },
+  "02_traloi_n__tl0.bin": {
+   "byte": 51,
+   "sha256": "33dd666da27643761c957c5a7c3fa28f0ca6af48a479f9785fbe583cf8262728"
+  },
+  "03_identity__day0.bin": {
+   "byte": 9246,
+   "sha256": "0114446e09e5639c9a0037ca29976ed4f896a2a4dca02e08b2d7ce50ca83c42d"
+  },
+  "03_identity__day1.bin": {
+   "byte": 9246,
+   "sha256": "0b92a2b6b8bea8b4003dde96f0e1a2f440ce078ca10f2ee5b337e287ee45123f"
+  },
+  "03_identity__day2.bin": {
+   "byte": 9246,
+   "sha256": "e9414d9fc504dcd09164f598288cc40301c173a5ea72b539d10e3901f6a21ce3"
+  },
+  "03_identity__day3.bin": {
+   "byte": 9246,
+   "sha256": "ba424ae8e95c87ea998859547071a82e2fe9a37c02f66cfe13e1560d602d859d"
+  },
+  "03_identity__day4.bin": {
+   "byte": 9246,
+   "sha256": "1d0af5a01e9be343a376dac5a08b16ec4f89ed785b0983548bc0d0b140cd32ac"
+  },
+  "03_identity__day5.bin": {
+   "byte": 168,
+   "sha256": "8d532eb75c1e574d35b44f98c4fddfe824d4199f70638d9afc4937ca8972ee55"
+  },
+  "03_identity__day6.bin": {
+   "byte": 188,
+   "sha256": "2de6c73972aef15b2644460c3ec141439d9adc8f8743fe5a349e6763936d1065"
+  },
+  "03_identity__day7.bin": {
+   "byte": 9246,
+   "sha256": "cca88613462bf75b76d51272503d152fb22a8e02257cb8a29684e785494447fe"
+  },
+  "03_identity__tl0.bin": {
+   "byte": 51,
+   "sha256": "2cf89037dad27f5a11d2cf5ab22f98afedceb83605cad8d050fc3abc012c217c"
+  },
+  "04_interface__day0.bin": {
+   "byte": 145,
+   "sha256": "2edefe3fb0e172c71ef068fdbb341c2b7513137ff0d1af037241db78a4c1dd57"
+  },
+  "04_interface__day1.bin": {
+   "byte": 9246,
+   "sha256": "dfa260ebc8fcad51bde5c3cae0c93247d9e4670385717eb7b5225f37f305be8b"
+  },
+  "04_interface__day2.bin": {
+   "byte": 309,
+   "sha256": "3b4e4059c67672a9bc9d247ff574e33f0d97d784251e8afd6b88cd32431db12f"
+  },
+  "04_interface__day3.bin": {
+   "byte": 1035,
+   "sha256": "7e15080211568c165472488553bd138225628846fc1ee58fab4d85075dffc733"
+  },
+  "04_interface__day4.bin": {
+   "byte": 9246,
+   "sha256": "f68f95e697e3f553086a21e339ed1103c667d3fa29ba5c332a73edc2acc7c03f"
+  },
+  "04_interface__tl0.bin": {
+   "byte": 51,
+   "sha256": "ae2b3c78512ea48230126f72279798685417deedcc3da72555c1e36ddbe42cc9"
+  },
+  "05_ipaddr__day0.bin": {
+   "byte": 158,
+   "sha256": "713d9cccf05bec357d3ed12547f8bf9ea9e9ed58277246b0cbe6380a236a4ef2"
+  },
+  "05_ipaddr__day1.bin": {
+   "byte": 291,
+   "sha256": "7e9c85a6004bd6b66caf39a564872e9171c48419834471220161b9a4a8f53cf0"
+  },
+  "05_ipaddr__day2.bin": {
+   "byte": 139,
+   "sha256": "50ecd72a18445dc48950fc675a4fccefc20c2dca9adf52c39fb738e7dc676c70"
+  },
+  "05_ipaddr__day3.bin": {
+   "byte": 9258,
+   "sha256": "b076f847a50d1f3f189a829cd8ff47adbe603700829620d22864fefb81523f2d"
+  },
+  "05_ipaddr__tl0.bin": {
+   "byte": 51,
+   "sha256": "498080c9002290ddb1db8869603b317095ef284e20f98bf9ad0176ca731b5d90"
+  },
+  "06_lenh_sai__day0.bin": {
+   "byte": 106,
+   "sha256": "2aeb97277f405a9c2562b57473c01d9eeb58e192ecf57e256949db80be3972b7"
+  },
+  "06_lenh_sai__day1.bin": {
+   "byte": 152,
+   "sha256": "b4a4140c80ff84ede09eaed5b34bc684e25128a79b870239e683fbaa102cdb69"
+  },
+  "06_lenh_sai__day2.bin": {
+   "byte": 9246,
+   "sha256": "57fc2e2532bceefbf78ade487a0aa399e771c14a3dbef14fdf97d256b15cd0c6"
+  },
+  "06_lenh_sai__tl0.bin": {
+   "byte": 51,
+   "sha256": "71817bd3e782d2fdd079ecffc9402cac7b748297434c44f408b07f69c633a0c0"
+  },
+  "07_dong__day0.bin": {
+   "byte": 9246,
+   "sha256": "08fde3188dfef9b6440ca9f1e45142b8f5a032ce60efd5323a6dfc976bef0cba"
+  },
+  "07_dong__day1.bin": {
+   "byte": 9246,
+   "sha256": "881dde8ec638659d2d8ab15e2fbd2e68c223411a4f0c0c523f697b0a750b4f6a"
+  },
+  "07_dong__day2.bin": {
+   "byte": 9246,
+   "sha256": "98baf3a6a3d9f9a0459286249b96bd9b2463527140deab185705b04460e3c882"
+  },
+  "07_dong__day3.bin": {
+   "byte": 9246,
+   "sha256": "50ce39e957cbe986707727f416e76bbf2e1d57ed88348a576b4e745b41616fa4"
+  },
+  "lenh_arp.bin": {
+   "byte": 425,
+   "sha256": "f4207f0688ae1bc0ebe2cb8c07c026559dd8e02ff80f818e4faaffb6d62dfa24"
+  },
+  "lenh_dhcp_lease.bin": {
+   "byte": 577,
+   "sha256": "cd15325374aa01126ac7084a8863221bfc71e72b2ef4bcc56fafb86edec43fe0"
+  },
+  "lenh_eth.bin": {
+   "byte": 762,
+   "sha256": "3cce7a5cb1ad0b5e948d2f20ca5f0fdec1e96a7828f777a464ff925db56acb08"
+  },
+  "lenh_ip_route.bin": {
+   "byte": 794,
+   "sha256": "6ec33a97e5ead16e45b6faad24bdfa099b1dbdaeb0f7e88b83a303f4e8b4aa2a"
+  },
+  "lenh_sys_resource.bin": {
+   "byte": 785,
+   "sha256": "18cfcaaac9eb043a096c32ff8a8a510aeea4a6ceb0e05119a1964749319ef73f"
+  },
+  "lenh_user.bin": {
+   "byte": 299,
+   "sha256": "c64a0d75fac661ba0e933e6066cb8a2a25e242a164c27fc492d435504261e810"
+  }
+ },
+ "so_tep": 47,
+ "lenh_da_do": [
+  "/system identity print",
+  "/interface print",
+  "/ip address print",
+  "/system resource print",
+  "/ip route print",
+  "/interface ethernet print",
+  "/ip arp print",
+  "/ip dhcp-server lease print",
+  "/user print"
+ ]
+}

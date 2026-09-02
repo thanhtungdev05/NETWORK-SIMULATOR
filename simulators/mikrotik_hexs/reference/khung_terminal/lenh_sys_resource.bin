@@ -1,0 +1,19 @@
+/system resource print[[m[36madmin[m@[m[32mFPT[m] > [m[36m/system[m [m[36mresource[m [m[35mprint[m
+                   uptime: 1d6m52s
+                  version: 7.14.3 (stable)
+               build-time: 2024-04-17 12:47:58
+         factory-software: 6.46.4
+              free-memory: 194.0MiB
+             total-memory: 256.0MiB
+                      cpu: MIPS 1004Kc V2.15
+                cpu-count: 4
+            cpu-frequency: 880MHz
+                 cpu-load: 0%
+           free-hdd-space: 5.8MiB
+          total-hdd-space: 16.0MiB
+  write-sect-since-reboot: 16636
+         write-sect-total: 16636
+        architecture-name: mmips
+               board-name: hEX S
+                 platform: FPT
+[9999B[K[[m[36madmin[m@[m[32mFPT[m] > 

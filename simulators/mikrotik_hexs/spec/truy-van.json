@@ -1,0 +1,151 @@
+{
+ "22": {
+  "ten": "Ping",
+  "start": 16646159,
+  "cancel": 16646161,
+  "nhip": 1000
+ },
+ "26": {
+  "ten": "Traceroute",
+  "start": 16646159,
+  "cancel": 16646161,
+  "nhip": 1000
+ },
+ "49": {
+  "ten": "Profile",
+  "start": 16646159,
+  "cancel": 16646161,
+  "nhip": 1000
+ },
+ "101-1": {
+  "ten": "IP Scan",
+  "start": 1,
+  "cancel": 2,
+  "nhip": 1000
+ },
+ "27-2": {
+  "ten": "PPP Scanner",
+  "start": 16646159,
+  "cancel": 16646161,
+  "nhip": 1000
+ },
+ "27-15": {
+  "ten": "PPPoE Scan",
+  "start": 16646159,
+  "cancel": 16646161,
+  "nhip": 1000
+ },
+ "20-109": {
+  "ten": "Monitor Slaves",
+  "start": 16646159,
+  "cancel": 16646161,
+  "nhip": 1000
+ },
+ "20-61": {
+  "ten": "LTE Scanner",
+  "start": 16646159,
+  "cancel": 16646161,
+  "nhip": 1000
+ },
+ "135-8": {
+  "ten": "Mesh Traceroute",
+  "start": 16646159,
+  "cancel": 16646161,
+  "nhip": 1000
+ },
+ "119-7": {
+  "ten": "Latency Distribution",
+  "start": 4294967295,
+  "cancel": 16646161,
+  "nhip": null
+ },
+ "45-5": {
+  "ten": "Torch",
+  "start": 1,
+  "cancel": 2,
+  "nhip": 1000
+ },
+ "79-1": {
+  "ten": "Format Drive",
+  "start": 16646159,
+  "cancel": 16646161,
+  "nhip": 1000
+ },
+ "127-4": {
+  "ten": "Discovery",
+  "start": 16646159,
+  "cancel": 16646161,
+  "nhip": 1000
+ },
+ "127-2": {
+  "ten": "Ping",
+  "start": 7,
+  "cancel": 8,
+  "nhip": 1000
+ },
+ "47-1": {
+  "ten": "Peers",
+  "start": 16646159,
+  "cancel": 16646161,
+  "nhip": 1000
+ },
+ "138-2": {
+  "ten": "Scan",
+  "start": 16646159,
+  "cancel": 16646161,
+  "nhip": 1000
+ },
+ "138-3": {
+  "ten": "Freq. Usage",
+  "start": 16646159,
+  "cancel": 16646161,
+  "nhip": 1000
+ },
+ "138-21": {
+  "ten": "Sniffer",
+  "start": 16646159,
+  "cancel": 16646161,
+  "nhip": 1000
+ },
+ "24-25": {
+  "ten": "Make Supout.rif",
+  "start": 16646159,
+  "poll": 16646160,
+  "cancel": 16646161,
+  "nhip": 1000
+ },
+ "29": {
+  "ten": "Bandwidth Test",
+  "start": 2,
+  "poll": 1,
+  "cancel": 3,
+  "nhip": 1000
+ },
+ "29-2": {
+  "ten": "Speed Test",
+  "start": 2,
+  "poll": 1,
+  "cancel": 3,
+  "nhip": 1000
+ },
+ "27-53": {
+  "ten": "Import .ovpn",
+  "start": 401,
+  "poll": 403,
+  "cancel": 402,
+  "nhip": 1000
+ },
+ "77": {
+  "ten": "Ping Speed",
+  "start": 2,
+  "poll": 1,
+  "cancel": 3,
+  "nhip": 1000
+ },
+ "119-1": {
+  "ten": "Traffic Generator Quick Start",
+  "start": 1,
+  "cancel": 2,
+  "nhip": 1000
+ }
+}

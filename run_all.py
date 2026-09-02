@@ -43,6 +43,7 @@ import simulators.sim_ac1000HI.src.server as ac1000HI
 import simulators.sim_vigor2927.src.server as vigor2927
 import simulators.sim_ONT_be6500c.src.server as be6500c
 import simulators.ont_be6500c.src.server as ONT_be6500c
+import simulators.mikrotik_hexs.src.server as mikrotik_hexs
 
 # Mapping từ device id sang module
 SIM_MODULES = {
@@ -56,7 +57,8 @@ SIM_MODULES = {
     'sim_ac1000HI': ac1000HI,
     'sim_vigor2927': vigor2927,
     'sim_be6500c': be6500c,
-    'sim_ONT_be6500c': ONT_be6500c
+    'sim_ONT_be6500c': ONT_be6500c,
+    'sim_mikrotik_hexs': mikrotik_hexs
 }
 
 # Các class Handler của từng thiết bị
@@ -71,7 +73,8 @@ SIM_HANDLERS = {
     'sim_ac1000HI': ac1000HI.H,
     'sim_vigor2927': vigor2927.H,
     'sim_be6500c': be6500c.H,
-    'sim_ONT_be6500c': ONT_be6500c.H
+    'sim_ONT_be6500c': ONT_be6500c.H,
+    'sim_mikrotik_hexs': mikrotik_hexs.H
 }
 
 # File/thư mục Portal luôn do Portal phục vụ (chống bị 'cướp' bởi Referer/Cookie)

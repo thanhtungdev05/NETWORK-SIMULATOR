@@ -190,6 +190,7 @@
 
     // 1. Click backdrop (viền đen ngoài bảng điểm)
     if (gradingBackdrop) gradingBackdrop.addEventListener('click', () => {
+      if (trackingSaveInFlight) return;
       // KHÓA màn hình nếu CHƯA ĐẠT ở chế độ Thực hành
       if (_lastEvalResult && !_lastEvalResult.passed && currentMode === 'practice') return;
 
@@ -988,6 +989,7 @@
   }
 
   function backToLesson() {
+    if (trackingSaveInFlight) return;
     // Reset đồng hồ và session tracking
     const sessionToClose = _trackingSession;
     const elapsedSec = stopPracticeTimer();
@@ -1331,13 +1333,14 @@
     // =========================================================================
     setTrackingSaveStatus('', '');
     if (currentMode === 'practice' || (currentMode === 'guide' && evalResult.passed)) {
-      sendTrackingTimer(evalResult, durationSec);
+      const savePromise = sendTrackingTimer(evalResult, durationSec);
+      Promise.resolve(savePromise).finally(function () {
+        showGradingModal(evalResult, device, lesson, currentMode, durationSec);
+      });
     } else {
       setTrackingSaveStatus('warning', 'Lần thử ở chế độ Hướng dẫn chưa đạt nên không được ghi vào tiến độ.');
+      showGradingModal(evalResult, device, lesson, currentMode, durationSec);
     }
-
-    // Hiển thị modal kết quả cho KTV xem
-    showGradingModal(evalResult, device, lesson, currentMode, durationSec);
   }
 
   function showGradingModal(res, device, lesson, mode, durationSec) {
@@ -1651,7 +1654,7 @@
             ? ` Lần thực hành ${item.practice_attempt_no}.`
             : '';
           if (item.normalized_saved === false) {
-            setTrackingSaveStatus('warning', 'Đã lưu lịch sử làm bài, nhưng bài này chưa được giao trong lớp nên chưa cộng vào tiến độ.');
+            setTrackingSaveStatus('success', `Đã lưu kết quả luyện tập.${attemptNote} Bài ngoài phạm vi giao không cộng vào tiến độ lớp.`);
           } else {
             setTrackingSaveStatus('success', item.duplicate
               ? `Kết quả này đã được lưu trước đó.${attemptNote}`

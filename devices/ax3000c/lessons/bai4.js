@@ -19,6 +19,7 @@ window.DEVICE_AX3000C_LESSONS.push({
   ],
   practiceUrl: '/sim_ax3000c/#/network/lan',
   clearFields: [
+    '.card .bd .row:nth-child(6) select',
     '.card .bd .row:nth-child(7) input',
     '.card .bd .row:nth-child(8) input'
   ],
@@ -26,9 +27,18 @@ window.DEVICE_AX3000C_LESSONS.push({
     description: 'Kiểm tra cấu hình DNS Server trên AX3000C',
     rules: [
       {
+        id: 'dns_custom_enable',
+        name: 'Define custom servers',
+        selector: '.card .bd .row:nth-child(6) select',
+        expected: 'Enable',
+        type: 'text_exact',
+        trim: true,
+        required: true
+      },
+      {
         id: 'dns_server_1',
         name: 'DNS Server 1',
-        selector: '.card .bd .row:nth-child(7) input, .row:has(.lbl:contains("DNS Server 1")) input',
+        selector: '.card .bd .row:nth-child(7) input',
         expected: '210.245.31.220',
         type: 'text_exact',
         trim: true,
@@ -37,7 +47,7 @@ window.DEVICE_AX3000C_LESSONS.push({
       {
         id: 'dns_server_2',
         name: 'DNS Server 2',
-        selector: '.card .bd .row:nth-child(8) input, .row:has(.lbl:contains("DNS Server 2")) input',
+        selector: '.card .bd .row:nth-child(8) input',
         expected: '8.8.8.8',
         type: 'text_exact',
         trim: true,
@@ -85,7 +95,7 @@ window.DEVICE_AX3000C_LESSONS.push({
     {
       selector: 'button.apply, button.btn.apply, button[onclick*="save"], input[type="submit"]',
       text: 'Bước 4: chọn Apply',
-      position: 'right',
+      position: 'bottom',
       page: 'lan'
     }
   ]

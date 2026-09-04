@@ -74,4 +74,49 @@ for (const device of context.DEVICES) {
   });
 }
 
+function getLesson(deviceId, lessonId) {
+  const device = context.DEVICES.find((item) => item.id === deviceId);
+  return device.categories.flatMap((category) => category.lessons || [])
+    .find((lesson) => lesson.id === lessonId);
+}
+
+function expectedRuleValue(lesson, ruleId) {
+  return lesson.grading.rules.find((rule) => rule.id === ruleId)?.expected;
+}
+
+const ax3000cDns = getLesson('ax3000c', 'LAB_AX3000CV2_04');
+assert.equal(expectedRuleValue(ax3000cDns, 'dns_custom_enable'), 'Enable');
+assert.ok(ax3000cDns.clearFields.includes('.card .bd .row:nth-child(6) select'));
+
+const ax3000cDhcp = getLesson('ax3000c', 'LAB_AX3000CV2_05');
+assert.equal(ax3000cDhcp.clearFields, undefined, 'DHCP defaults must remain for automatic pool updates');
+
+const ax3000cPortForward = getLesson('ax3000c', 'LAB_AX3000CV2_06');
+assert.equal(expectedRuleValue(ax3000cPortForward, 'rule_name'), 'Camera');
+assert.equal(expectedRuleValue(ax3000cPortForward, 'protocol'), 'TCP+UDP');
+assert.equal(expectedRuleValue(ax3000cPortForward, 'int_ip'), '192.168.100.55');
+
+const ax3000gzPppoe = getLesson('ax3000gz', 'LAB_AX3000GZ_01');
+assert.equal(expectedRuleValue(ax3000gzPppoe, 'pppoe_user'), 'sgfdl-123456-789');
+const ax3000gzDns = getLesson('ax3000gz', 'LAB_AX3000GZ_04');
+assert.equal(expectedRuleValue(ax3000gzDns, 'dns_primary'), '8.8.8.8');
+assert.equal(expectedRuleValue(ax3000gzDns, 'dns_secondary'), '8.8.4.4');
+const ax3000gzPortForward = getLesson('ax3000gz', 'LAB_AX3000GZ_06');
+assert.equal(expectedRuleValue(ax3000gzPortForward, 'pf_wan_ip'), '0.0.0.0/0');
+
+const ax3000cLanPage = fs.readFileSync(
+  path.join(root, 'sim_ax3000c/www/sim-pages/lan.html'),
+  'utf8'
+);
+assert.match(ax3000cLanPage, /value="192\.168\.1\.1" id="lanIp"/);
+assert.match(ax3000cLanPage, /id="dhcpStart"/);
+assert.match(ax3000cLanPage, /id="dhcpEnd"/);
+assert.match(ax3000cLanPage, /ipInput\.addEventListener\('input', updateDhcp\)/);
+
+const ax3000cWifiPage = fs.readFileSync(
+  path.join(root, 'sim_ax3000c/www/sim-pages/wifi.html'),
+  'utf8'
+);
+assert.match(ax3000cWifiPage, /class="tabs" style="margin-top: 40px;"/);
+
 console.log('Portal/catalog audit passed: 6 devices, 36 unique labs, complete tooltip coverage.');

@@ -18,7 +18,7 @@ window.DEVICE_AX3000GZ_LESSONS.push({
   instructions: [
     '<b>Yêu cầu:</b>',
     'Thực hiện cấu hình kết nối WAN/Internet trên thiết bị và thiết lập kết nối PPPoE theo các thông số được cung cấp dưới đây:',
-    '- Username: <span class="val">Sgfdl-123456-789</span>',
+    '- Username: <span class="val">sgfdl-123456-789</span>',
     '- Password: <span class="val">fpt12345</span>'
   ],
   practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/internet/wan', // LuCI based path usually, or we can just start at home
@@ -33,7 +33,7 @@ window.DEVICE_AX3000GZ_LESSONS.push({
         id: 'pppoe_user',
         name: 'Username',
         selector: '[id="widget.cbid.network.wan.username"], [name="cbid.network.wan.username"]',
-        expected: 'Sgfdl-123456-789',
+        expected: 'sgfdl-123456-789',
         type: 'text_exact',
         trim: true,
         required: true
@@ -64,7 +64,7 @@ window.DEVICE_AX3000GZ_LESSONS.push({
     },
     {
       selector: '[id="widget.cbid.network.wan.username"], [name="cbid.network.wan.username"]',
-      text: 'Bước 1: Nhập Username: Sgfdl-123456-789',
+      text: 'Bước 1: Nhập Username: sgfdl-123456-789',
       position: 'right',
       page: 'wan'
     },

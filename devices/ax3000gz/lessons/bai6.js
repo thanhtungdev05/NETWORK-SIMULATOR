@@ -16,7 +16,7 @@ var lessonObj = {
     '- Name: <span class="val">FPT Telecom</span>',
     '- Enable: <span class="val">On</span>',
     '- Protocol: <span class="val">TCP/UDP</span>',
-    '- WAN Host IP Address: <span class="val">21.143.157.184</span>',
+    '- WAN Host IP Address: <span class="val">0.0.0.0/0</span>',
     '- LAN Host: <span class="val">192.168.1.254</span>',
     '- WAN Port: <span class="val">8080</span>',
     '- LAN Host Port: <span class="val">8080</span>'
@@ -64,7 +64,7 @@ var lessonObj = {
         id: 'pf_wan_ip',
         name: 'WAN Host IP Address',
         selector: '[id="modal_field_src_ip"]',
-        expected: '21.143.157.184',
+        expected: '0.0.0.0/0',
         type: 'text_exact',
         trim: true,
         required: true
@@ -145,7 +145,7 @@ var lessonObj = {
     },
     {
       selector: '[id="modal_field_src_ip"]',
-      text: 'Nhập WAN Host IP Address: 21.143.157.184',
+      text: 'Nhập WAN Host IP Address: 0.0.0.0/0',
       position: 'right',
       page: 'forwards'
     },

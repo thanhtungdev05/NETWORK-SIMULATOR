@@ -559,46 +559,18 @@ function training_class_catalog(PDO $pdo): array
     ];
 }
 
-function training_class_learning_catalog(PDO $pdo, array $user): array
+function training_class_learning_catalog(PDO $pdo, array $_user): array
 {
-    if (role_is_admin($user)) {
-        $stmt = $pdo->query(
-            "SELECT device.device_id, device.device_name, device.model,
-                    lab.lab_id, lab.lab_name, lab.sort_order
-               FROM device_catalog device
-               JOIN lab_catalog lab ON lab.device_id = device.device_id
-              WHERE device.is_active = TRUE AND lab.is_active = TRUE
-              ORDER BY device.sort_order, device.device_name, lab.sort_order, lab.lab_name"
-        );
-    } else {
-        $stmt = $pdo->prepare(
-            <<<'SQL'
-            SELECT DISTINCT device.device_id, device.device_name, device.model,
-                   lab.lab_id, lab.lab_name, lab.sort_order
-              FROM class_enrollments enrollment
-              JOIN training_classes training ON training.class_id = enrollment.class_id
-              JOIN lab_assignments assignment ON assignment.enrollment_id = enrollment.enrollment_id
-              JOIN curriculum_labs curriculum_lab
-                ON curriculum_lab.curriculum_lab_id = assignment.curriculum_lab_id
-              JOIN lab_catalog lab ON lab.lab_id = curriculum_lab.lab_id
-              JOIN device_catalog device ON device.device_id = lab.device_id
-             WHERE enrollment.user_id = CAST(:user_id AS uuid)
-               AND enrollment.status = 'active'
-               AND enrollment.valid_from <= CURRENT_DATE
-               AND (enrollment.valid_to IS NULL OR enrollment.valid_to >= CURRENT_DATE)
-               AND training.status IN ('planned', 'active')
-               AND training.start_date <= CURRENT_DATE
-               AND (training.end_date IS NULL OR training.end_date >= CURRENT_DATE)
-               AND assignment.status IN ('assigned', 'in_progress', 'passed')
-               AND assignment.assigned_at <= NOW()
-               AND (assignment.due_at IS NULL OR assignment.due_at >= NOW())
-               AND device.is_active = TRUE
-               AND lab.is_active = TRUE
-             ORDER BY device.device_name, lab.sort_order, lab.lab_name
-            SQL
-        );
-        $stmt->execute(['user_id' => $user['user_id']]);
-    }
+    // Authentication is enforced by handle_learning(). Assignments define the
+    // reporting scope, not access to the practice catalog.
+    $stmt = $pdo->query(
+        "SELECT device.device_id, device.device_name, device.model,
+                lab.lab_id, lab.lab_name, lab.sort_order
+           FROM device_catalog device
+           JOIN lab_catalog lab ON lab.device_id = device.device_id
+          WHERE device.is_active = TRUE AND lab.is_active = TRUE
+          ORDER BY device.sort_order, device.device_name, lab.sort_order, lab.lab_name"
+    );
     $devices = [];
     foreach ($stmt->fetchAll() as $row) {
         $deviceId = (string)$row['device_id'];
@@ -616,37 +588,6 @@ function training_class_learning_catalog(PDO $pdo, array $user): array
         ];
     }
     return array_values($devices);
-}
-
-function training_class_user_has_lab(PDO $pdo, array $user, string $labId): bool
-{
-    if (role_is_admin($user)) {
-        return true;
-    }
-    $stmt = $pdo->prepare(
-        <<<'SQL'
-        SELECT 1
-          FROM class_enrollments enrollment
-          JOIN training_classes training ON training.class_id = enrollment.class_id
-          JOIN lab_assignments assignment ON assignment.enrollment_id = enrollment.enrollment_id
-          JOIN curriculum_labs curriculum_lab
-            ON curriculum_lab.curriculum_lab_id = assignment.curriculum_lab_id
-         WHERE enrollment.user_id = CAST(:user_id AS uuid)
-           AND curriculum_lab.lab_id = :lab_id
-           AND enrollment.status = 'active'
-           AND enrollment.valid_from <= CURRENT_DATE
-           AND (enrollment.valid_to IS NULL OR enrollment.valid_to >= CURRENT_DATE)
-           AND training.status IN ('planned', 'active')
-           AND training.start_date <= CURRENT_DATE
-           AND (training.end_date IS NULL OR training.end_date >= CURRENT_DATE)
-           AND assignment.status IN ('assigned', 'in_progress', 'passed')
-           AND assignment.assigned_at <= NOW()
-           AND (assignment.due_at IS NULL OR assignment.due_at >= NOW())
-         LIMIT 1
-        SQL
-    );
-    $stmt->execute(['user_id' => $user['user_id'], 'lab_id' => $labId]);
-    return (bool)$stmt->fetchColumn();
 }
 
 function training_class_import_header(string $value): string

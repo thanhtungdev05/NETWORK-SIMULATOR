@@ -42,16 +42,34 @@ class TrainingClassAssignmentContractTests(unittest.TestCase):
         self.assertIsNotNone(learning_handler)
         self.assertIn("require_user()", learning_handler.group(0))
 
-    def test_tracking_rejects_unassigned_labs(self):
+    def test_tracking_accepts_active_catalog_labs_without_assignment(self):
         tracking = (ROOT / "api" / "lib" / "tracking_handler.php").read_text(encoding="utf-8")
-        self.assertGreaterEqual(tracking.count("training_class_user_has_lab"), 2)
-        self.assertIn("tracking/not-assigned", tracking)
+        self.assertNotIn("training_class_user_has_lab", tracking)
+        self.assertNotIn("tracking/not-assigned", tracking)
+        self.assertGreaterEqual(tracking.count("lab.is_active = TRUE"), 2)
+        self.assertGreaterEqual(tracking.count("device.is_active = TRUE"), 2)
 
-    def test_portal_uses_server_assignment_catalog(self):
+    def test_learning_catalog_is_full_active_catalog_for_every_user(self):
+        library = (ROOT / "api" / "lib" / "training_classes.php").read_text(encoding="utf-8")
+        catalog = re.search(
+            r"function training_class_learning_catalog\(.*?\n}\n\nfunction training_class_import_header",
+            library,
+            re.S,
+        )
+        self.assertIsNotNone(catalog)
+        self.assertIn("FROM device_catalog device", catalog.group(0))
+        self.assertIn("JOIN lab_catalog lab", catalog.group(0))
+        self.assertIn("device.is_active = TRUE AND lab.is_active = TRUE", catalog.group(0))
+        self.assertNotIn("class_enrollments", catalog.group(0))
+        self.assertNotIn("lab_assignments", catalog.group(0))
+
+    def test_portal_uses_server_active_catalog(self):
         portal = (ROOT / "app.js").read_text(encoding="utf-8")
         self.assertIn("/api/index.php/learning/catalog", portal)
-        self.assertIn("_allowedDeviceIds", portal)
-        self.assertIn("_allowedLabIds", portal)
+        self.assertIn("_catalogDeviceIds", portal)
+        self.assertIn("_catalogLabIds", portal)
+        self.assertNotIn("_allowedDeviceIds", portal)
+        self.assertNotIn("_allowedLabIds", portal)
 
     def test_class_member_import_is_previewed_inside_create_tab(self):
         html = (ROOT / "dashboard-authen" / "index.html").read_text(encoding="utf-8")

@@ -174,9 +174,6 @@ function reserve_tracking_timer_start(array $trackingActor, array $input): array
     if ($userId === '') {
         fail(401, 'auth/unauthenticated', 'Sign in before starting a lab session.');
     }
-    if (!training_class_user_has_lab($pdo, $trackingActor, $labId)) {
-        fail(403, 'tracking/not-assigned', 'This lab is not assigned to an effective class for the signed-in user.');
-    }
     $employeeId = (string)($trackingActor['employee_id'] ?? '');
     $email = (string)($trackingActor['email'] ?? '');
     $name = (string)($trackingActor['display_name'] ?? '');
@@ -476,9 +473,6 @@ function handle_tracking(array $segments, string $method): void
         $catalog = $catalogLookup->fetch();
         if (!$catalog) {
             fail(422, 'tracking/unknown-lab', 'lab_id is not in the active catalog.');
-        }
-        if (!is_array($trackingActor) || !training_class_user_has_lab($pdo, $trackingActor, $labId)) {
-            fail(403, 'tracking/not-assigned', 'This lab is not assigned to an effective class for the signed-in user.');
         }
         $deviceId = (string)$catalog['device_id'];
         $device = (string)$catalog['device_name'];

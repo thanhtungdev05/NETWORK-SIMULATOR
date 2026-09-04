@@ -2253,8 +2253,12 @@ function handle_training_classes(array $segments, string $method): void
 function handle_learning(array $segments, string $method): void
 {
     $user = require_user();
-    if (($segments[1] ?? '') === 'catalog' && $method === 'GET') {
-        respond(['devices'=>training_class_learning_catalog(db(), $user)]);
+    $action = $segments[1] ?? '';
+    if ($action === 'catalog' && $method === 'GET') {
+        respond(['devices' => training_class_learning_catalog(db(), $user)]);
+    }
+    if (($action === 'personal-dashboard' || $action === 'me' || $action === 'progress') && $method === 'GET') {
+        respond(['data' => training_class_personal_dashboard_payload(db(), $user)]);
     }
     fail(404, 'not-found', 'Learning endpoint not found.');
 }

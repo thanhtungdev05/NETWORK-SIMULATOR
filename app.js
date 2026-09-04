@@ -115,8 +115,22 @@
         }));
         const visibleDevices = DEVICES.filter(function (device) { return _catalogDeviceIds.has(device.id); });
         populateDeviceDropdown(visibleDevices);
-        if (visibleDevices.length > 0) {
-          selectDevice(visibleDevices[0].id);
+        const urlParams = new URLSearchParams(window.location.search);
+        const reqDevice = urlParams.get('device');
+        const reqLab = urlParams.get('lab');
+        let initialDev = null;
+        if (reqDevice) {
+          const normReq = reqDevice.replace(/^DEV_/i, '').toLowerCase();
+          initialDev = visibleDevices.find(function (d) {
+            const did = d.id.toLowerCase();
+            return did === normReq || did === (normReq === 'ax3000cv2' ? 'ax3000c' : normReq);
+          });
+        }
+        if (!initialDev && visibleDevices.length > 0) {
+          initialDev = visibleDevices[0];
+        }
+        if (initialDev) {
+          selectDevice(initialDev.id, reqLab);
         } else {
           currentDeviceId = null;
           navList.innerHTML = '<div class="empty-state"><p>Chưa có thiết bị luyện tập đang hoạt động.</p></div>';
@@ -646,7 +660,7 @@
   }
 
   // ── Device Selection ─────────────────────────────────────────────
-  function selectDevice(deviceId) {
+  function selectDevice(deviceId, targetLabId = null) {
     if (_catalogDeviceIds && !_catalogDeviceIds.has(deviceId)) return;
     currentDeviceId = deviceId;
     currentLessonId = null;
@@ -660,12 +674,19 @@
     // Render nav list
     renderNavList(device);
 
-    // Automatically select first lesson if available
-    const firstLessonItem = navList.querySelector('.nav-item');
-    const firstAllowedLesson = device.categories?.flatMap(category => category.lessons || [])
-      .find(lesson => !_catalogLabIds || _catalogLabIds.has(lesson.id));
-    if (firstLessonItem && firstAllowedLesson) {
-      selectLesson(device, firstAllowedLesson, firstLessonItem);
+    // Automatically select requested or first lesson if available
+    const allAllowedLessons = device.categories?.flatMap(category => category.lessons || [])
+      .filter(lesson => !_catalogLabIds || _catalogLabIds.has(lesson.id)) || [];
+    let chosenLesson = null;
+    if (targetLabId) {
+      chosenLesson = allAllowedLessons.find(l => l.id === targetLabId || l.id.endsWith(targetLabId) || targetLabId.endsWith(l.id));
+    }
+    if (!chosenLesson && allAllowedLessons.length > 0) {
+      chosenLesson = allAllowedLessons[0];
+    }
+    if (chosenLesson) {
+      const lessonItem = navList.querySelector(`[data-lesson-id="${chosenLesson.id}"]`) || navList.querySelector('.nav-item');
+      selectLesson(device, chosenLesson, lessonItem);
     } else {
       showHero();
       setBreadcrumb([device.name]);

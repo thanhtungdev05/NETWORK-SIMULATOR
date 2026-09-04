@@ -1027,3 +1027,332 @@ function apply_training_class_import(PDO $pdo, array $validated, string $batchId
     $log->execute(['batch_id'=>$batchId, 'imported_by'=>training_class_actor_user_id($pdo, $actor), 'file_name'=>$fileName, 'class_count'=>$result['class_count'], 'member_count'=>$result['member_count'], 'device_count'=>$result['device_count'], 'assignment_count'=>$result['assignment_count']]);
     return $result;
 }
+
+function training_class_personal_dashboard_payload(PDO $pdo, array $user): array
+{
+    $userId = (string)($user['user_id'] ?? '');
+    if ($userId === '') {
+        fail(401, 'auth/unauthenticated', 'Sign in to access personal dashboard.');
+    }
+
+    // 1. User profile and region
+    $userQuery = $pdo->prepare(
+        'SELECT u.user_id, u.employee_id, u.display_name, u.email, u.role, u.job_title,
+                u.unit_code, u.unit_name, u.region_id, r.region_code, r.region_name, r.branch_name
+           FROM users u
+           LEFT JOIN regions r ON r.region_id = u.region_id
+          WHERE u.user_id = CAST(:user_id AS uuid)'
+    );
+    $userQuery->execute(['user_id' => $userId]);
+    $userInfo = $userQuery->fetch(PDO::FETCH_ASSOC) ?: $user;
+
+    // 2. Active class enrollments
+    $enrollmentsQuery = $pdo->prepare(
+        <<<'SQL'
+        SELECT e.enrollment_id, e.status AS enrollment_status, e.valid_from, e.valid_to,
+               c.class_id, c.class_code, c.class_name, c.start_date, c.end_date, c.status AS class_status
+          FROM class_enrollments e
+          JOIN training_classes c ON c.class_id = e.class_id
+         WHERE e.user_id = CAST(:user_id AS uuid)
+           AND e.status = 'active'
+           AND e.valid_from <= CURRENT_DATE
+           AND (e.valid_to IS NULL OR e.valid_to >= CURRENT_DATE)
+           AND c.status IN ('planned', 'active')
+           AND c.start_date <= CURRENT_DATE
+           AND (c.end_date IS NULL OR c.end_date >= CURRENT_DATE)
+         ORDER BY c.start_date DESC
+        SQL
+    );
+    $enrollmentsQuery->execute(['user_id' => $userId]);
+    $enrolledClasses = $enrollmentsQuery->fetchAll(PDO::FETCH_ASSOC);
+
+    // 3. Assigned labs from v_lab_assignment_progress
+    $assignmentsQuery = $pdo->prepare(
+        <<<'SQL'
+        SELECT progress.assignment_id,
+               progress.class_code,
+               progress.class_name,
+               progress.device_id,
+               progress.device_name,
+               progress.lab_id,
+               progress.lab_name,
+               progress.assignment_status AS status,
+               progress.assigned_at,
+               progress.due_at,
+               progress.completed_at,
+               progress.passed_at,
+               progress.first_pass_attempt_no,
+               progress.first_try_success,
+               device.model,
+               device.sort_order AS device_sort_order,
+               lab.sort_order AS lab_sort_order
+          FROM v_lab_assignment_progress progress
+          JOIN device_catalog device ON device.device_id = progress.device_id
+          JOIN lab_catalog lab ON lab.lab_id = progress.lab_id
+         WHERE progress.user_id = CAST(:user_id AS uuid)
+         ORDER BY device.sort_order, progress.device_name, lab.sort_order, progress.lab_name
+        SQL
+    );
+    $assignmentsQuery->execute(['user_id' => $userId]);
+    $rawAssignments = $assignmentsQuery->fetchAll(PDO::FETCH_ASSOC);
+
+    // 4. Group by device
+    $deviceProgressMap = [];
+    $totalAssignedLabs = count($rawAssignments);
+    $passedLabsCount = 0;
+    $inProgressLabsCount = 0;
+    $firstTryPassCount = 0;
+    $assignments = [];
+
+    foreach ($rawAssignments as $row) {
+        $devId = (string)$row['device_id'];
+        if (!isset($deviceProgressMap[$devId])) {
+            $deviceProgressMap[$devId] = [
+                'device_id' => $devId,
+                'device_name' => (string)$row['device_name'],
+                'model' => $row['model'] ?? null,
+                'total_labs' => 0,
+                'passed_labs' => 0,
+                'in_progress_labs' => 0,
+                'assigned_labs' => 0,
+                'progress_percent' => 0,
+                'labs' => [],
+            ];
+        }
+        $deviceProgressMap[$devId]['total_labs']++;
+        $status = (string)$row['status'];
+        if ($status === 'passed') {
+            $deviceProgressMap[$devId]['passed_labs']++;
+            $passedLabsCount++;
+            if (!empty($row['first_try_success']) || (int)($row['first_pass_attempt_no'] ?? 0) === 1) {
+                $firstTryPassCount++;
+            }
+        } elseif ($status === 'in_progress') {
+            $deviceProgressMap[$devId]['in_progress_labs']++;
+            $inProgressLabsCount++;
+        } else {
+            $deviceProgressMap[$devId]['assigned_labs']++;
+        }
+
+        $assignmentItem = [
+            'assignment_id' => (string)$row['assignment_id'],
+            'class_code' => (string)$row['class_code'],
+            'class_name' => (string)$row['class_name'],
+            'device_id' => $devId,
+            'device_name' => (string)$row['device_name'],
+            'lab_id' => (string)$row['lab_id'],
+            'lab_name' => (string)$row['lab_name'],
+            'status' => $status,
+            'assigned_at' => safe_datetime($row['assigned_at']),
+            'due_at' => safe_datetime($row['due_at']),
+            'completed_at' => safe_datetime($row['completed_at'] ?? $row['passed_at']),
+            'first_pass_attempt_no' => $row['first_pass_attempt_no'] !== null ? (int)$row['first_pass_attempt_no'] : null,
+            'first_try_success' => $row['first_try_success'] !== null ? (bool)$row['first_try_success'] : null,
+        ];
+        $deviceProgressMap[$devId]['labs'][] = $assignmentItem;
+        $assignments[] = $assignmentItem;
+    }
+
+    foreach ($deviceProgressMap as &$dev) {
+        $dev['progress_percent'] = $dev['total_labs'] > 0
+            ? round(($dev['passed_labs'] / $dev['total_labs']) * 100, 1)
+            : 0;
+    }
+    unset($dev);
+    $deviceProgressList = array_values($deviceProgressMap);
+
+    // 5. Timer sessions history
+    $sessionsQuery = $pdo->prepare(
+        <<<'SQL'
+        SELECT s.id,
+               s.lab_id,
+               s.lab_name,
+               s.device AS device_name_snapshot,
+               s.device_id,
+               COALESCE(d.device_name, s.device) AS device_name,
+               s.mode,
+               s.session_type,
+               s.status,
+               s.is_passed,
+               s.score,
+               s.duration_sec,
+               s.started_at,
+               s.finished_at,
+               s.practice_attempt_no,
+               s.last_action
+          FROM timer_sessions s
+          LEFT JOIN device_catalog d ON d.device_id = s.device_id
+         WHERE s.user_id = CAST(:user_id AS uuid)
+            OR (NULLIF(:email, '') IS NOT NULL AND LOWER(s.email) = LOWER(:email))
+            OR (NULLIF(:employee_id, '') IS NOT NULL AND s.technician_id = :employee_id)
+         ORDER BY s.finished_at DESC NULLS LAST, s.id DESC
+         LIMIT 500
+        SQL
+    );
+    $sessionsQuery->execute([
+        'user_id' => $userId,
+        'email' => $user['email'] ?? '',
+        'employee_id' => $user['employee_id'] ?? '',
+    ]);
+    $rawSessions = $sessionsQuery->fetchAll(PDO::FETCH_ASSOC);
+
+    $sessions = [];
+    $totalDurationSec = 0;
+    $totalScores = 0;
+    $scoredSessionsCount = 0;
+    $practiceCount = 0;
+    $guideCount = 0;
+    $trendDaysMap = [];
+
+    // Stats computed from timer_sessions (independent of assignments)
+    // so KTVs who did labs not yet assigned still get counted in the overview.
+    $sessionPassedLabIds  = [];   // lab_id => true  (passed at least once)
+    $sessionAttemptedLabs = [];   // lab_id => true  (attempted at least once)
+    $sessionFirstTryPass  = 0;    // sessions with practice_attempt_no=1 AND is_passed=true
+    $sessionFirstTryTotal = 0;    // sessions with practice_attempt_no=1 (practice mode)
+
+    foreach ($rawSessions as $sess) {
+        $mode = (string)($sess['mode'] ?? 'Thực hành');
+        $sessionType = (string)($sess['session_type'] ?? ($mode === 'Hướng dẫn' ? 'guide' : 'practice'));
+        $duration = (int)($sess['duration_sec'] ?? 0);
+        $score = $sess['score'] !== null ? (float)$sess['score'] : null;
+        $finishedAt = safe_datetime($sess['finished_at']);
+        $startedAt = safe_datetime($sess['started_at']);
+        $isPractice = !($mode === 'Hướng dẫn' || $sessionType === 'guide');
+        $labId = (string)($sess['lab_id'] ?? '');
+
+        if (!$isPractice) {
+            $guideCount++;
+        } else {
+            $practiceCount++;
+            $totalDurationSec += $duration;
+            if ($score !== null) {
+                $totalScores += $score;
+                $scoredSessionsCount++;
+            }
+
+            // Track unique labs attempted/passed from sessions
+            if ($labId !== '') {
+                $sessionAttemptedLabs[$labId] = true;
+                $isPassed = isset($sess['is_passed']) && (bool)$sess['is_passed'];
+                if ($isPassed) {
+                    $sessionPassedLabIds[$labId] = true;
+                }
+            }
+
+            // First-try stats
+            $attemptNo = $sess['practice_attempt_no'] !== null ? (int)$sess['practice_attempt_no'] : null;
+            if ($attemptNo === 1) {
+                $sessionFirstTryTotal++;
+                if (isset($sess['is_passed']) && (bool)$sess['is_passed']) {
+                    $sessionFirstTryPass++;
+                }
+            }
+        }
+
+        $timestamp = $sess['finished_at'] ?? $sess['started_at'] ?? null;
+        if ($timestamp) {
+            $dateKey = substr((string)$timestamp, 0, 10);
+            if (!isset($trendDaysMap[$dateKey])) {
+                $trendDaysMap[$dateKey] = [
+                    'date' => $dateKey,
+                    'practice_count' => 0,
+                    'guide_count' => 0,
+                    'scores' => [],
+                    'duration_sec' => 0,
+                ];
+            }
+            if (!$isPractice) {
+                $trendDaysMap[$dateKey]['guide_count']++;
+            } else {
+                $trendDaysMap[$dateKey]['practice_count']++;
+                if ($score !== null) {
+                    $trendDaysMap[$dateKey]['scores'][] = $score;
+                }
+                $trendDaysMap[$dateKey]['duration_sec'] += $duration;
+            }
+        }
+
+        $sessions[] = [
+            'id' => (int)$sess['id'],
+            'lab_id' => $labId,
+            'lab_name' => (string)($sess['lab_name'] ?? ''),
+            'device_id' => (string)($sess['device_id'] ?? ''),
+            'device_name' => (string)($sess['device_name'] ?? ($sess['device_name_snapshot'] ?? '')),
+            'mode' => $mode,
+            'session_type' => $sessionType,
+            'status' => (string)($sess['status'] ?? 'completed'),
+            'is_passed' => isset($sess['is_passed']) ? (bool)$sess['is_passed'] : null,
+            'score' => $score,
+            'duration_sec' => $duration,
+            'started_at' => $startedAt,
+            'finished_at' => $finishedAt,
+            'practice_attempt_no' => $sess['practice_attempt_no'] !== null ? (int)$sess['practice_attempt_no'] : null,
+            'last_action' => (string)($sess['last_action'] ?? ''),
+        ];
+    }
+
+    // Merge assignment-based counts with session-based counts.
+    // For labs that ARE assigned, assignment progress is authoritative.
+    // For labs that are NOT assigned (or when assignment tracking is absent),
+    // fall back to what timer_sessions actually recorded.
+    $effectivePassedLabs     = max($passedLabsCount, count($sessionPassedLabIds));
+    $effectiveInProgressLabs = $inProgressLabsCount; // kept from assignment view
+    // Denominator: prefer assigned total; if none, use unique attempted labs
+    $effectiveTotalLabs = $totalAssignedLabs > 0 ? $totalAssignedLabs : count($sessionAttemptedLabs);
+
+    // First-try rate: combine assignment-based and session-based counts
+    $effectiveFirstTryPass  = max($firstTryPassCount, $sessionFirstTryPass);
+    $effectiveFirstTryTotal = $passedLabsCount > 0 ? $passedLabsCount : $sessionFirstTryTotal;
+
+    ksort($trendDaysMap);
+    $trendList = [];
+    foreach ($trendDaysMap as $d => $data) {
+        $avgScore = count($data['scores']) > 0 ? round(array_sum($data['scores']) / count($data['scores']), 1) : null;
+        $trendList[] = [
+            'date' => $d,
+            'total_sessions' => $data['practice_count'] + $data['guide_count'],
+            'practice_count' => $data['practice_count'],
+            'guide_count' => $data['guide_count'],
+            'avg_score' => $avgScore,
+            'duration_sec' => $data['duration_sec'],
+        ];
+    }
+
+    $completionRate = $effectiveTotalLabs > 0 ? round(($effectivePassedLabs / $effectiveTotalLabs) * 100, 1) : 0;
+    $firstTryRate = $effectiveFirstTryTotal > 0 ? round(($effectiveFirstTryPass / $effectiveFirstTryTotal) * 100, 1) : 0;
+    $avgScore = $scoredSessionsCount > 0 ? round($totalScores / $scoredSessionsCount, 1) : 0;
+
+    return [
+        'user' => [
+            'user_id' => (string)($userInfo['user_id'] ?? $userId),
+            'employee_id' => (string)($userInfo['employee_id'] ?? ($user['employee_id'] ?? '')),
+            'display_name' => (string)($userInfo['display_name'] ?? ($user['display_name'] ?? 'Kỹ thuật viên')),
+            'email' => (string)($userInfo['email'] ?? ($user['email'] ?? '')),
+            'role' => (string)($userInfo['role'] ?? ($user['role'] ?? 'KTV')),
+            'role_name' => (string)($userInfo['role_name'] ?? 'Kỹ thuật viên'),
+            'job_title' => $userInfo['job_title'] ?? null,
+            'unit_name' => $userInfo['unit_name'] ?? null,
+            'region_name' => $userInfo['region_name'] ?? null,
+        ],
+        'classes' => $enrolledClasses,
+        'stats' => [
+            'total_assigned_labs'        => $totalAssignedLabs,
+            'passed_labs'                => $effectivePassedLabs,
+            'in_progress_labs'           => $effectiveInProgressLabs,
+            'unstarted_labs'             => max(0, $effectiveTotalLabs - $effectivePassedLabs - $effectiveInProgressLabs),
+            'completion_rate_percent'    => $completionRate,
+            'first_try_pass_rate_percent'=> $firstTryRate,
+            'total_sessions_count'       => count($sessions),
+            'practice_sessions_count'    => $practiceCount,
+            'guide_sessions_count'       => $guideCount,
+            'average_score'              => $avgScore,
+            'total_practice_duration_sec'=> $totalDurationSec,
+        ],
+        'device_progress' => $deviceProgressList,
+        'assignments' => $assignments,
+        'sessions' => $sessions,
+        'trend' => $trendList,
+    ];
+}
+

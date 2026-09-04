@@ -1,4 +1,4 @@
-﻿/* ============================================================
+/* ============================================================
    styles.css â€” Network Simulator Portal
    Dark admin dashboard theme
    ============================================================ */
@@ -389,6 +389,18 @@ html, body {
   white-space: nowrap;
 }
 .action-btn:hover { background: #c62828; }
+
+.personal-dashboard-btn {
+  background: linear-gradient(135deg, #4f46e5, #4338ca) !important;
+  color: #fff !important;
+  text-decoration: none !important;
+  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25);
+}
+.personal-dashboard-btn:hover {
+  background: linear-gradient(135deg, #4338ca, #3730a3) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.35);
+}
 
 .action-dropdown-menu {
   display: none;

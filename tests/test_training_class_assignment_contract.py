@@ -101,6 +101,21 @@ class TrainingClassAssignmentContractTests(unittest.TestCase):
         self.assertIn("function training_class_actor_user_id", library)
         self.assertIn("'created_by' => training_class_actor_user_id($pdo, $actor)", library)
 
+    def test_personal_dashboard_endpoint_and_portal_integration(self):
+        api = (ROOT / "api" / "index.php").read_text(encoding="utf-8")
+        library = (ROOT / "api" / "lib" / "training_classes.php").read_text(encoding="utf-8")
+        portal = (ROOT / "portal.html").read_text(encoding="utf-8")
+        dashboard_html = (ROOT / "personal-dashboard.html").read_text(encoding="utf-8")
+        dashboard_js = (ROOT / "assets" / "personal-dashboard.js").read_text(encoding="utf-8")
+
+        self.assertIn("training_class_personal_dashboard_payload", api)
+        self.assertIn("personal-dashboard", api)
+        self.assertIn("function training_class_personal_dashboard_payload", library)
+        self.assertIn('id="btn-personal-dashboard"', portal)
+        self.assertIn('href="/personal-dashboard.html"', portal)
+        self.assertIn('id="btn-goto-practice"', dashboard_html)
+        self.assertIn("/api/index.php/learning/personal-dashboard", dashboard_js)
+
 
 if __name__ == "__main__":
     unittest.main()

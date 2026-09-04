@@ -100,6 +100,7 @@ SIM_HANDLERS = {
 
 # File/thư mục Portal luôn do Portal phục vụ (chống bị 'cướp' bởi Referer/Cookie)
 PORTAL_PATHS = {'/', '/index.html', '/styles.css', '/app.js', '/data.js', '/portal.html',
+                '/personal-dashboard.html',
                 '/favicon.ico', '/login', '/login/index.html', '/api',
                 '/dashboard', '/dashboard/', '/dashboard-authen', '/dashboard-authen/',
                 '/admin', '/admin/', '/templates/Mau_Import_KTV.xlsx'}
@@ -107,7 +108,7 @@ PORTAL_PREFIXES = ('/devices/', '/assets/', '/login/', '/api/',
                    '/dashboard/', '/dashboard-authen/', '/admin/', '/admin-static/')
 
 PUBLIC_ROOT_FILES = {
-    '/index.html', '/portal.html', '/styles.css', '/app.js', '/data.js', '/favicon.ico',
+    '/index.html', '/portal.html', '/personal-dashboard.html', '/styles.css', '/app.js', '/data.js', '/favicon.ico',
     '/templates/Mau_Import_KTV.xlsx'
 }
 DOWNLOADABLE_ROOT_FILES = {

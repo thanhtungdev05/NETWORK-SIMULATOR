@@ -43,7 +43,10 @@ class DispatcherSecurityTests(unittest.TestCase):
         for path in (
             '/',
             '/portal.html',
+            '/personal-dashboard.html',
             '/styles.css',
+            '/assets/personal-dashboard.css',
+            '/assets/personal-dashboard.js',
             '/dashboard/',
             '/dashboard/css/dashboard-professional.css',
             '/dashboard/js/app.js',

@@ -87,11 +87,24 @@
           <span>Đang tải hệ thống...</span>
         </div>
 
-        <!-- Dashboard button (Admin only) -->
-        <button id="btn-dashboard" class="action-btn" style="display:none" aria-label="Quản lý Dashboard">
-          <span>🖥️</span>
-          Dashboard
-        </button>
+        <div class="topbar-right">
+          <!-- Personal Dashboard button (For KTV & all users) -->
+          <a id="btn-personal-dashboard" class="action-btn personal-dashboard-btn" href="/personal-dashboard.html" aria-label="Tiến độ cá nhân" title="Xem tiến độ cá nhân & lịch sử thực hành">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <rect x="3" y="3" width="7" height="9"></rect>
+              <rect x="14" y="3" width="7" height="5"></rect>
+              <rect x="14" y="12" width="7" height="9"></rect>
+              <rect x="3" y="16" width="7" height="5"></rect>
+            </svg>
+            <span>Tiến độ cá nhân</span>
+          </a>
+
+          <!-- Dashboard button (Admin only) -->
+          <button id="btn-dashboard" class="action-btn" style="display:none" aria-label="Quản lý Dashboard">
+            <span>🖥️</span>
+            Dashboard
+          </button>
+        </div>
       </header>
 
       <!-- Content Area -->

@@ -1393,10 +1393,7 @@ function roster_item_response(array $row): array
 
 function roster_base_where(array &$params, bool $includeFilters = true, ?array $filters = null): array
 {
-    $where = [
-        "(ktv.employee_id IS NOT NULL OR ktv.employee_source LIKE 'firestore:%')",
-        "(ktv.job_title = 'CB Kỹ thuật TKBT' OR ktv.employee_source IS NOT NULL)",
-    ];
+    $where = [];
 
     if (!$includeFilters) {
         return $where;
@@ -2350,8 +2347,6 @@ function handle_dashboard(array $segments, string $method): void
                            employee_id
                       FROM v_ktv_directory
                      WHERE is_terminated = FALSE
-                       AND (employee_id IS NOT NULL OR employee_source LIKE \'firestore:%\')
-                       AND (job_title = \'CB Kỹ thuật TKBT\' OR employee_source LIKE \'firestore:%\')
                  ),
                  eligible_dashboard_identities AS (
                     SELECT person_id, \'user:\' || user_id::text AS identity_key
@@ -2455,9 +2450,7 @@ function handle_dashboard(array $segments, string $method): void
                    FROM v_ktv_directory directory
                    LEFT JOIN v_current_training_class active_class
                      ON active_class.user_id = directory.user_id
-                  WHERE (directory.employee_id IS NOT NULL OR directory.employee_source LIKE \'firestore:%\')
-                    AND directory.is_terminated = FALSE
-                    AND (directory.job_title = \'CB Kỹ thuật TKBT\' OR directory.employee_source LIKE \'firestore:%\')
+                  WHERE directory.is_terminated = FALSE
                   ORDER BY active_class.class_code NULLS LAST,
                            directory.class_code NULLS LAST,
                            directory.display_name NULLS LAST, directory.email'

@@ -37,8 +37,6 @@ WITH eligible AS (
            branch_name
       FROM v_ktv_directory
      WHERE is_terminated = FALSE
-       AND (employee_id IS NOT NULL OR employee_source LIKE 'firestore:%')
-       AND (job_title = 'CB Kỹ thuật TKBT' OR employee_source LIKE 'firestore:%')
 ),
 eligible_identities AS (
     SELECT person_id, 'user:' || user_id::text AS identity_key FROM eligible WHERE user_id IS NOT NULL

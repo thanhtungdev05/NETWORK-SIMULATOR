@@ -1,0 +1,30 @@
+{
+  "_tieu_de": "Do mau chip trang thai Disabled cua Port Forwarding -- gap ghi trong ISSUES.md 'Mau chip trang thai Disabled CHUA do duoc'.",
+  "_ngay_do": "2026-08-20",
+  "_thiet_bi": "ONT-BE6500C, 192.168.1.1, firmware 1PZ108WZ110",
+  "_cach_do": [
+    "Anh Huynn tu dang nhap lai, vao Network > Port Forwarding, bam '+ ADD NEW', tao rule 'TestDisabledColor' (TCP, External/Internal Port 54321, Device Admin-PC) va DE TAT cong tac Enable truoc khi Save.",
+    "Doc class + CSSOM cua chip 'Disabled' vua hien qua javascript_tool (getComputedStyle + doc truc tiep document.styleSheets tim luat co selector chua 'stateDisabled').",
+    "Sau khi do xong, xoa ngay rule thu qua giao dien that (Delete + xac nhan)."
+  ],
+  "ket_qua_do": {
+    "chip_disabled_class": "MuiChip-root MuiChip-filled MuiChip-sizeMedium MuiChip-colorDefault MuiChip-filledDefault stateDisabled css-1a2im0e",
+    "computed_style": {
+      "backgroundColor": "rgba(0, 0, 0, 0.12)",
+      "color": "rgb(117, 117, 117)",
+      "border": "0px none rgb(117, 117, 117)",
+      "fontWeight": "400",
+      "fontSize": "13px",
+      "borderRadius": "0px",
+      "padding": "0px",
+      "height": "18px"
+    },
+    "css_rule_that_doc_duoc_tu_CSSOM": [
+      ".css-15ejc2r.stateDisabled { color: rgb(117, 117, 117); background-color: rgba(0, 0, 0, 0.12); }",
+      ".css-1a2im0e.stateDisabled { color: rgb(117, 117, 117); background-color: rgba(0, 0, 0, 0.12); }"
+    ],
+    "ghi_chu_css-15ejc2r": "Cung mot luat mau nhung gan cho mot lop Emotion KHAC (css-15ejc2r) -- co the la bien the chip o mot trang/component khac chua xac dinh duoc pham vi (ngoai pham vi viec nay). Da ghi lai bang chung THAT nay nhung CHUA gan vao code nao, vi khong ro dung o dau -- tranh bia cach dung.",
+    "stateEnabled_khong_ton_tai": "Kiem CSSOM luc do: KHONG co bat ky luat nao voi selector chua '.stateEnabled' -- xac nhan trang thai Enabled KHONG co lop state rieng, chi dung mau xanh mac dinh cua .css-1a2im0e (rgb(76,175,80) / bg rgb(232,245,233), da co san tu GD1)."
+  },
+  "ket_luan": "Sua ham oChip() trong bang_binding.js: khi batTat=false (Disabled) them lop 'stateDisabled' vao class (truoc day de trong 2 khoang trang, chua biet dien gi). Them luat CSS moi '.css-1a2im0e.stateDisabled' vao emotion.css. Ham oChip() dung CHUNG cho ca bang may tinh va the dien thoai (Port Forwarding), nen sua 1 cho la ap dung ca 2 noi."
+}

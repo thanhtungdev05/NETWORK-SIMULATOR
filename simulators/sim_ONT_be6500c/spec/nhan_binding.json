@@ -1,0 +1,41 @@
+{
+ "_nguon": "TRICH TU MA GOC cua thiet bi: reference/source/assets_goc/index-De9Ihmse.js (component Overview / Interface detail). Moi dong duoi day doi chieu 1-1 voi mot loi goi {name:\"<nhan>\",value:<bieu thuc>} trong ma goc -- xem spec/nhan_tu_ma_goc.json de tra nguyen van bieu thuc.",
+ "_cach_dinh_vi": "Tim text node dung bang <nhan> trong trang, roi ghi gia tri vao text node KE TIEP trong cung the cha cap tren (cau truc goc: <li><span>nhan</span><span>gia tri</span></li>). On dinh hon nhieu so voi dem chi so DOM.",
+ "_ham_dinh_dang_goc": {
+  "S": "format-CzzNSHpH.js ham 'g': gia tri rong/undefined -> in dau '−' (U+2212), khong phai dau tru ASCII",
+  "Ht": "dinh dang khoang thoi gian tu mili-giay -> '6h 15m 23s'",
+  "be": "thanh progress + so lam tron toFixed(0) roi them '%'"
+ },
+ "_luu_y": "Cac truong nhu Uptime / Memory Usage / CPU Usage thay doi lien tuc nen KHONG the doi chieu bang cach so gia tri chup o hai thoi diem khac nhau -- day la ly do lan do bang cach so gia tri that bai (0 ket qua). Phai dua vao nhan + ma goc.",
+
+ "home__overview": {
+  "Hostname": {
+   "resource": "system/info", "duong_dan": "hostname",
+   "ma_goc": "S(n.hostname)", "dinh_dang": "S"
+  },
+  "Model": {
+   "resource": "system/info", "duong_dan": "modelName",
+   "ma_goc": "S(n.modelName)", "dinh_dang": "S"
+  },
+  "Serial Number": {
+   "resource": "system/info", "duong_dan": "serialNumber",
+   "ma_goc": "S(n.serialNumber)", "dinh_dang": "S"
+  },
+  "Firmware Version": {
+   "resource": "system/info", "duong_dan": "firmwareVersion",
+   "ma_goc": "S(n.firmwareVersion)", "dinh_dang": "S"
+  },
+  "Uptime": {
+   "resource": "system/status", "duong_dan": "uptime",
+   "ma_goc": "Ht(0,s.uptime*1e3)", "dinh_dang": "thoi_luong_giay"
+  },
+  "Memory Usage": {
+   "resource": "system/status", "duong_dan": "memoryUsage",
+   "ma_goc": "r.jsx(be,{value:s.memoryUsage??0,color:\"purple\"})", "dinh_dang": "phan_tram"
+  },
+  "CPU Usage": {
+   "resource": "system/status", "duong_dan": "cpuUsage.total",
+   "ma_goc": "r.jsx(be,{value:s.cpuUsage?.total??0,color:\"teal\"})", "dinh_dang": "phan_tram"
+  }
+ }
+}

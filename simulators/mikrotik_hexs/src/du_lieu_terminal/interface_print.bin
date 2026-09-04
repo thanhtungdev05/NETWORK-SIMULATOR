@@ -1,0 +1,16 @@
+/interface print[[m[36madmin[m@[m[32mFPT[m] > [m[36m/interface[m [m[35mprint[m
+Flags: X - [m[1mDISABLED[m, R - [m[1mRUNNING[m; S - [m[1mSLAVE
+[mColumns: [m[1mNAME[m, [m[1mTYPE[m, [m[1mACTUAL-MTU[m, [m[1mL2MTU[m, [m[1mMAX-L2MTU[m, [m[1mMAC-ADDRESS
+#[m    [m[1mNAME[m        [m[1mTYPE[m       [m[1mACTUAL-MTU[m  [m[1mL2MTU[m  [m[1mMAX-L2MTU[m  [m[1mMAC-ADDRESS[m      
+0    ether1      ether            1500   1596       2026  D4:01:C3:24:92:CD
+1    ether2      ether            1500   1596       2026  D4:01:C3:24:92:CE
+2  S ether3      ether            1500   1596       2026  D4:01:C3:24:92:CF
+3  S ether4      ether            1500   1596       2026  D4:01:C3:24:92:D0
+4 RS ether5      ether            1500   1596       2026  D4:01:C3:24:92:D1
+5    sfp1        ether            1500   1596       2026  D4:01:C3:24:92:D2
+;;; LAN
+6 R  bridge-LAN  bridge           1500   1596             D4:01:C3:24:92:CF
+7 R  lo          loopback        65536                    00:00:00:00:00:00
+8    pppoe-out1  pppoe-out                                                 
+9 X  pppoe-out2  pppoe-out                                                 
+[9999B[K[[m[36madmin[m@[m[32mFPT[m] > 

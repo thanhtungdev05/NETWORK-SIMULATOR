@@ -1,0 +1,69 @@
+{
+  "_tieu_de": "Do markup THAT cua menu Edit/Delete (nut 3 cham) LUC DANG MO tren ban dien thoai -- gap ghi trong ISSUES.md 'Menu Edit/Delete cua nut 3 cham chua co anh chup luc MO, tam dung __moMenuChon dung chung cua Select'.",
+  "_ngay_do": "2026-08-20",
+  "_thiet_bi": "ONT-BE6500C, 192.168.1.1, firmware 1PZ108WZ110",
+  "_cach_do": [
+    "Vao Advanced > LAN. Chen iframe cung-origin rong 420px vao trang chinh (ky thuat da dung nhieu lan truoc: SPA tu doc innerWidth cua iframe de ve dung layout dien thoai).",
+    "Trong iframe, bam tab 'Reserved IP'.",
+    "Doc contentDocument, tim cac <button> chua svg data-testid MoreVertRoundedIcon (3 nut, ung voi 3 dong: '0 selected', dong MAC d8:43:ae:2e:65:45 (Admin-PC, id cfg08fe63), dong MAC 22:ca:16:9a:7a:d5).",
+    "Bam nut 3 cham cua dong Admin-PC (scrollIntoView roi .click()).",
+    "Doc DOM cua menu vua mo qua contentDocument (walk thu cong tung thuoc tinh vi outerHTML bi cong cu chan do trung mau 'query string').",
+    "Doc CSSOM (document.styleSheets) cho tung class Emotion lien quan.",
+    "KHONG bam Edit/Delete -- chi doc DOM/CSS luc mo, khong tao thay doi nao tren thiet bi."
+  ],
+  "ket_qua_do": {
+    "wrapper_ngoai_cung": {
+      "role_presentation_id": "long-menu",
+      "role_presentation_class": "MuiPopover-root MuiMenu-root MuiModal-root css-1sucic7",
+      "backdrop_class": "MuiBackdrop-root MuiBackdrop-invisible MuiModal-backdrop css-esi9ax",
+      "gan_vao": "cuoi <body>, khong phai con cua nut 3 cham",
+      "ghi_chu": "Trung 100% voi 2 lop shell da dung san cho __moMenuChon (Select) va __moPopupAutocomplete -- xac nhan day la MUI Popover/Menu dung chung 1 shell component that, khong phai bia rieng."
+    },
+    "paper": {
+      "class": "MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation8 MuiPopover-paper MuiMenu-paper MuiMenu-paper css-cn14vc",
+      "inline_style_do_duoc": "opacity: 1; transform: none; transition: opacity 254ms cubic-bezier(0.4, 0, 0.2, 1), transform 169ms cubic-bezier(0.4, 0, 0.2, 1); top: 480px; left: 64px; transform-origin: 249.6px 0px;",
+      "css_cn14vc": ".css-cn14vc { background-color: rgb(255, 255, 255); color: rgba(0, 0, 0, 0.87); transition: box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1); border-radius: 4px; box-shadow: rgba(189, 189, 189, 0.2) 0px 5px 5px -3px, rgba(189, 189, 189, 0.14) 0px 8px 10px 1px, rgba(189, 189, 189, 0.12) 0px 3px 14px 2px; position: absolute; overflow: hidden auto; min-width: 16px; min-height: 16px; max-width: calc(100% - 32px); outline: 0px; max-height: calc(100% - 96px); width: calc(100% - 80px); left: 40px !important; }",
+      "ghi_chu": "KHAC voi paper cua Select-popup (css-ivedc8, min-width theo rect.width). Menu nay dung width:calc(100% - 80px) + left:40px !important -- gan nhu FULL-WIDTH tren dien thoai, khong bam sat canh nut nhu Select. Day la bien the rieng cua menu Edit/Delete, phai dung dung class/gia tri nay, khong duoc dung lai css-ivedc8."
+    },
+    "list": {
+      "class": "MuiList-root MuiList-padding MuiMenu-list css-r8u8y9",
+      "role": "menu",
+      "tabindex": "0",
+      "css_r8u8y9": "list-style: none; margin: 0px; padding: 8px 0px; position: relative; outline: 0px;",
+      "ghi_chu": "css-r8u8y9 da co san trong emotion.css tu lan do Select popup truoc -- TRUNG class, xac nhan dung chung dung."
+    },
+    "cau_truc_con_ul": ["li.menuitem (Edit)", "hr.divider", "li.menuitem (Delete)"],
+    "menu_item": {
+      "class": "MuiButtonBase-root MuiMenuItem-root MuiMenuItem-gutters MuiMenuItem-root MuiMenuItem-gutters css-e68ia9",
+      "role": "menuitem",
+      "tabindex_muc_dau": "0",
+      "tabindex_muc_sau": "-1",
+      "css_e68ia9_rut_gon": "display:flex; align-items:center; min-height:48px; padding:6px 16px; cursor:pointer; font-family:Inter; font-size:1rem; hover-bg: rgba(0,0,0,.04)",
+      "con_ben_trong": [
+        "<div class=\"MuiListItemIcon-root css-1f8bwsm\"><svg class=\"MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-vubbuv\" data-testid=\"EditOutlinedIcon|DeleteOutlineRoundedIcon\">...</svg></div>",
+        "<div class=\"MuiListItemText-root css-1tsvksn\"><span class=\"MuiTypography-root MuiTypography-body1 MuiListItemText-primary css-8hzn2u\">Edit|Delete</span></div>",
+        "<span class=\"MuiTouchRipple-root css-w0pj6f\"></span> (suy doan chuan MUI, khong doc rieng noi dung ripple luc tinh)"
+      ]
+    },
+    "divider": {
+      "tag": "HR",
+      "class": "MuiDivider-root MuiDivider-fullWidth css-9y6cpa",
+      "css_9y6cpa": "margin: 0px 0px 0px 52px; flex-shrink: 0; border-width: 0px 0px thin; border-style: solid; border-color: rgba(0, 0, 0, 0.12);",
+      "vi_tri": "GIUA li Edit va li Delete -- KHOP voi comment cu trong bang_binding.js suy tu bundle RuleList-*.js (Edit -> Divider -> Delete)."
+    },
+    "icon_svg": {
+      "EditOutlinedIcon_pathD": "m14.06 9.02.92.92L5.92 19H5v-.92zM17.66 3c-.25 0-.51.1-.7.29l-1.83 1.83 3.75 3.75 1.83-1.83c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.2-.2-.45-.29-.71-.29m-3.6 3.19L3 17.25V21h3.75L17.81 9.94z",
+      "DeleteOutlineRoundedIcon_pathD": "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2zM9 9h6c.55 0 1 .45 1 1v8c0 .55-.45 1-1 1H9c-.55 0-1-.45-1-1v-8c0-.55.45-1 1-1m6.5-5-.71-.71c-.18-.18-.44-.29-.7-.29H9.91c-.26 0-.52.11-.7.29L8.5 4H6c-.55 0-1 .45-1 1s.45 1 1 1h12c.55 0 1-.45 1-1s-.45-1-1-1z",
+      "ghi_chu": "TRUNG 100% voi D_EDIT/D_DEL da co san trong bang_binding.js (dung cho nut icon rieng le o bang may tinh) -- xac nhan tai su dung dung, khong bia icon moi."
+    },
+    "css_1f8bwsm_da_co_san": "min-width: 56px; color: rgba(0, 0, 0, 0.54); flex-shrink: 0; display: inline-flex;",
+    "css_1tsvksn_da_co_san": "flex: 1 1 auto; min-width: 0px; margin-top: 4px; margin-bottom: 4px;",
+    "css_8hzn2u_moi": ".css-8hzn2u { margin: 0px; letter-spacing: 0.009rem; font-family: Inter; font-weight: 400; font-size: 1rem; line-height: 1.5; display: block; }"
+  },
+  "ket_luan": [
+    "Cau truc THAT khac han markup Select-popup dang tam dung: co icon (EditOutlinedIcon/DeleteOutlineRoundedIcon), co Divider giua Edit/Delete, role='menuitem' (khong phai 'option'), khong co data-value/aria-selected kieu Select.",
+    "Da them window.__moMenuBaCham(oNeo, dsTuyChon, khiChon) rieng trong dialog_data.js, dung dung markup nay. bang_binding.js's moMenuBaCham() doi tu goi __moMenuChon() sang __moMenuChon Chon Ba Cham moi, tai su dung D_EDIT/D_DEL da co san.",
+    "Them 4 luat CSS moi vao emotion.css: .css-cn14vc (paper, full-width dien thoai), .css-e68ia9 (menu item), .css-9y6cpa (divider), .css-8hzn2u (label). Cac lop .css-r8u8y9/.css-1f8bwsm/.css-1tsvksn/.css-vubbuv DA CO SAN tu lan do truoc, khong doi.",
+    "Dong gap trong ISSUES.md: menu 3 cham nay tu 'muc 2 (dung markup gia tam)' len 'muc 2 dung markup THAT + muc 1 dung hinh anh THAT' -- van la muc 2 vi day la giao dien tinh, chua co API rieng (Edit/Delete goi qua PATCH/DELETE cua bang da co san)."
+  ]
+}

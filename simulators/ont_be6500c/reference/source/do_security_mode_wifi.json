@@ -1,0 +1,80 @@
+{
+  "_tieu_de": "Do dropdown 'Security Mode' o trang Wi-Fi > General -- ca hai kien truc: GOP bang tan (Primary/Guest khi chua tach) va TACH rieng tung bang (SmartHome)",
+  "_ngay_do": "2026-08-18",
+  "_thiet_bi": "ONT-BE6500C, 192.168.1.1, firmware 1PZ108WZ110",
+  "_vi_sao": [
+    "GD5/GD6 (2026-08-14) da ghi trong ISSUES.md: o Select nay chua tung",
+    "duoc noi __noiOChon()/__moMenuChon() vi KHONG co bang chung markup",
+    "danh sach chon (chi biet nhan hien tai qua text, khong biet cau truc",
+    "cua tung muc trong danh sach khi mo). Phien nay do truc tiep bang",
+    "Chrome dieu khien vao thiet bi that de lay du bang chung, KHONG doi",
+    "gi tren thiet bi (chi mo dropdown de doc DOM/CSSOM, khong bam chon",
+    "gia tri khac vi se lam gian doan Wi-Fi that dang dung)."
+  ],
+
+  "che_do_GOP": {
+    "_ghi_chu": "Do o tab PRIMARY NETWORK ('2.4GHz, 5GHz' gop lam mot). Gia tri dang chon luc do: WPA3-Personal-Transition.",
+    "o_dong_luc_chua_bam__mui_component_select_networksN_securityMode": {
+      "cau_truc": "div.MuiSelect-select > div.MuiStack-root.css-fhxiwe > p.css-v6shwc + p.css-1ian9w8",
+      "vi_du_thuc_do": {
+        "chip_p1_css-v6shwc": "Default",
+        "text_p2_css-1ian9w8": "WPA2/WPA3 (2.4GHz & 5GHz)"
+      },
+      "_luu_y": "CHI co bang chung cho gia tri WPA3-Personal-Transition. Chua doi duoc sang WPA2-Personal/WPA23T tren thiet bi that (se lam gian doan Wi-Fi that) nen KHONG co bang chung o-dong cho 2 gia tri con lai."
+    },
+    "danh_sach_mo__li_trong_ul.MuiMenu-list": [
+      {
+        "data-value": "WPA3-Personal-Transition",
+        "co_chip": "Default (span.MuiChip-label.css-9iedg7 trong div.MuiChip-root.css-o8x9y1, boc trong div.MuiStack-root.css-1r9kwv0)",
+        "cac_doan_p": ["WPA2/3 (p.css-v6shwc)", "(2.4GHz, 5GHz) (p.css-u79te2)"],
+        "aria-selected": "true"
+      },
+      {
+        "data-value": "WPA2-Personal",
+        "co_chip": null,
+        "cac_doan_p": ["WPA2", "(2.4GHz, 5GHz)"],
+        "aria-selected": "false"
+      },
+      {
+        "data-value": "WPA23T",
+        "co_chip": null,
+        "cac_doan_p": ["WPA2", "(2.4GHz)", "WPA2/3", "(5GHz)"],
+        "aria-selected": "false",
+        "_luu_y": "4 doan p rieng biet (khac 2 doan cua hai muc kia). Da do dung 4 chuoi that, nhung CHUA doi chieu duoc class css- rieng cua doan p thu 3/4 (suy theo mau lap lai v6shwc/u79te2 cua muc 1, chua xac nhan rieng)."
+      }
+    ],
+    "css_that_lay_tu_CSSOM": {
+      "css-x3whsd": ".css-x3whsd{...min-height:48px;padding:14px 16px;...} .Mui-selected{background-color:rgba(47,84,235,.08)} :hover{background-color:rgba(0,0,0,.04)} .Mui-selected:hover{rgba(47,84,235,.12)} .Mui-selected.Mui-focusVisible{rgba(47,84,235,.2)} .Mui-focusVisible{rgba(0,0,0,.12)} .Mui-disabled{opacity:.38;pointer-events:none;cursor:default}",
+      "css-r8u8y9": ".css-r8u8y9{list-style:none;margin:0;padding:8px 0;position:relative;outline:0}",
+      "css-o8x9y1": ".css-o8x9y1{height:18px;padding:0 2px;background-color:rgb(47,84,235);font-size:.8125rem;...} .Mui-disabled{opacity:.38;pointer-events:none}",
+      "css-9iedg7": ".css-9iedg7{overflow:hidden;text-overflow:ellipsis;padding-left:12px;padding-right:12px;white-space:nowrap} (da co san trong emotion.css tu truoc)",
+      "css-1r9kwv0": ".css-1r9kwv0{display:flex;flex-direction:row;gap:4px;align-items:center} (da co san)",
+      "css-v6shwc": ".css-v6shwc{margin:0;letter-spacing:.009rem;font-family:Inter;font-weight:400;font-size:1rem;line-height:1.5;color:rgba(0,0,0,.87)} (da co san)",
+      "css-u79te2": ".css-u79te2{margin:0;letter-spacing:.009rem;font-family:Inter;font-weight:400;line-height:1.5;color:rgba(0,0,0,.6);font-size:14px}",
+      "css-w0pj6f": "(rippler, da co san)",
+      "css-fhxiwe": ".css-fhxiwe{display:flex;flex-direction:row;gap:4px} (da co san, dung cho Stack cua O DONG)",
+      "css-1ian9w8": ".css-1ian9w8{margin:0;letter-spacing:.009rem;font-family:Inter;font-weight:400;font-size:1rem;line-height:1.5;color:rgba(0,0,0,.6)} (da co san, dung cho doan van ban chinh cua O DONG)"
+    }
+  },
+
+  "che_do_TACH": {
+    "_ghi_chu": "Do o tab SMARTHOME NETWORK, dai 2.4GHz (o duy nhat dang BAT trong 2 dai cua tab nay -- 5GHz dang tat nen KHONG mo duoc dropdown de do, Guest Network cung dang tat toan bo nen khong do duoc). Gia tri dang chon luc do: WPA3-Personal-Transition.",
+    "diem_dac_biet": "O day O DONG va MUC TRONG DANH SACH hien CUNG MOT chuoi van ban tho, khong co Stack/Chip/nhieu doan nhu che do gop -- da xac nhan qua do that, KHONG phai suy doan.",
+    "danh_sach_va_o_dong": [
+      { "data-value": "WPA2-Personal", "van_ban_hien_thi": "WPA2-Personal", "_luu_y": "Hien NGUYEN VAN gia tri enum, khong dich sang ten than thien -- la hanh vi THAT cua thiet bi (khac han muc WPA3T ben duoi), khong phai loi." },
+      { "data-value": "WPA3-Personal-Transition", "van_ban_hien_thi": "WPA2/WPA3 Personal", "aria-selected": "true (dang chon luc do)" }
+    ],
+    "_gap_chua_do_duoc": [
+      "Dai 5GHz khi TACH rieng (SmartHome 5GHz dang tat, Guest 5GHz/2.4GHz cung tat) -- chua ro danh sach tuy chon co giong het 2.4GHz hay khac (vd co them tuy chon WPA3-only cho 5GHz).",
+      "Guest Network khi duoc BAT va o che do TACH (hien Guest dang o che do GOP, giong Primary) -- chua co bang chung rieng."
+    ]
+  },
+
+  "_ket_luan_cho_bo_gia_lap": [
+    "1. Da noi day du danh sach MO cho ca 2 kien truc (gop: 3 tuy chon; tach 2.4G: 2 tuy chon).",
+    "2. O DONG cua che do gop: dung dung bang chung that cho gia tri WPA3-Personal-Transition; 2 gia tri con lai CHUA co bang chung o-dong rieng, tam ghep lai tu cac doan cua muc trong danh sach (KHONG doi chieu pixel, ghi ro trong code va ISSUES.md).",
+    "3. O DONG cua che do tach 2.4G: dung CHINH XAC boi vi da xac nhan no giong het chu cua muc trong danh sach.",
+    "4. KHONG noi Select cho dai 5GHz/6GHz khi tach rieng, va KHONG noi cho Guest khi (neu sau nay) chuyen sang tach rieng -- thieu bang chung, giu nguyen hanh vi cu (khong bam mo duoc) thay vi doan.",
+    "5. Cac lop CSS that (css-x3whsd, css-r8u8y9, css-o8x9y1, css-u79te2) duoc dung CHUNG cho MOI popup Select tu dung trong toan thiet bi (khong rieng Wi-Fi) vi window.__moMenuChon() gan cung ten lop cho moi noi goi -- thay the quy tac TAM (mau MUI mac dinh 25,118,210) bang mau thuong hieu that (47,84,235)."
+  ]
+}

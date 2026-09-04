@@ -1,0 +1,18 @@
+{
+ "wizard": {
+  "step": 5
+ },
+ "ext/logpull": {
+  "status": 0,
+  "logFile": ""
+ },
+ "system/logServer": {
+  "remoteServer": {
+   "protocol": "",
+   "enabled": false,
+   "ipAddress": "",
+   "port": 514
+  },
+  "level": 7
+ }
+}

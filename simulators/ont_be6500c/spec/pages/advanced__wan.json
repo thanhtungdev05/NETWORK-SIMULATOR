@@ -1,0 +1,545 @@
+{
+  "_route": "advanced/wan",
+  "_duong_dan_trinh_duyet": "#/advanced/wan",
+  "_nguon": {
+    "chunk": "index-D_2ztGgf.js",
+    "kich_thuoc_byte": 34003,
+    "chunk_phu_thuoc": [
+      "assets/index-D_2ztGgf.js",
+      "assets/groupBy-Cprh38Ig.js",
+      "assets/TabList-CMoR7mS_.js",
+      "assets/KeyboardArrowRight-C7P-Q0WC.js",
+      "assets/TabPanel-D6RFuHOG.js",
+      "assets/PageHeading-B0ZcsD9H.js",
+      "assets/AlertDialog-DcZGNdPg.js",
+      "assets/useSnackbar-DeOFrJDC.js",
+      "assets/isNumber-CjKC2f0Q.js",
+      "assets/schema-BT0LOWg1.js",
+      "assets/cloneDeep-DVNSNFN2.js",
+      "assets/_baseClone-BoSTy1YA.js",
+      "assets/FormRadios-CChkrIKK.js",
+      "assets/RadioGroup-Bf2DXGOk.js",
+      "assets/sortBy-BbK4aBfn.js",
+      "assets/_baseFlatten-g6JNov8F.js",
+      "assets/reverse-Bt8l-Q-w.js",
+      "assets/Tooltip-DjW0OUsG.js",
+      "assets/Popper-BinJnTg_.js",
+      "assets/FormSelect-CJAio79q.js"
+    ],
+    "bundle_loi": "index-CW0UhNxy.js",
+    "_da_quet": [
+      "AlertDialog-DcZGNdPg.js",
+      "FormRadios-CChkrIKK.js",
+      "FormSelect-CJAio79q.js",
+      "KeyboardArrowRight-C7P-Q0WC.js",
+      "PageHeading-B0ZcsD9H.js",
+      "RadioGroup-Bf2DXGOk.js",
+      "TabPanel-D6RFuHOG.js",
+      "Tooltip-DjW0OUsG.js",
+      "cloneDeep-DVNSNFN2.js",
+      "groupBy-Cprh38Ig.js",
+      "index-D_2ztGgf.js",
+      "isNumber-CjKC2f0Q.js",
+      "reverse-Bt8l-Q-w.js",
+      "schema-BT0LOWg1.js",
+      "sortBy-BbK4aBfn.js",
+      "useSnackbar-DeOFrJDC.js"
+    ]
+  },
+  "_cach_trich": "src/trich_dac_ta_trang.py (doc ma goc, khong doan)",
+  "goi_api": [
+    {
+      "ham_goc": "getEthernetPorts",
+      "doi_tuong_goc": "use",
+      "tim_thay_o": [
+        "index-D_2ztGgf.js"
+      ],
+      "resource": "api/v1/data/ethernetPorts",
+      "method": "GET",
+      "kenh": "REST"
+    },
+    {
+      "ham_goc": "getInterfaceConfigurations",
+      "doi_tuong_goc": "use",
+      "tim_thay_o": [
+        "index-D_2ztGgf.js"
+      ],
+      "resource": "api/v1/data/interfaces/configurations",
+      "method": "GET",
+      "kenh": "REST"
+    },
+    {
+      "ham_goc": "getPonStatus",
+      "doi_tuong_goc": "use",
+      "tim_thay_o": [
+        "index-D_2ztGgf.js"
+      ],
+      "resource": "api/v1/data/pon/status",
+      "method": "GET",
+      "kenh": "REST"
+    },
+    {
+      "ham_goc": "setInterfaceConfigurations",
+      "doi_tuong_goc": "use",
+      "tim_thay_o": [
+        "index-D_2ztGgf.js"
+      ],
+      "resource": "api/v1/data/interfaces/configurations",
+      "method": "PATCH",
+      "kenh": "REST"
+    }
+  ],
+  "goi_khac": {
+    "rpc": [],
+    "duong_dan_tuyet_doi": []
+  },
+  "truong_form": [
+    {
+      "name": "ipv4Settings.protocol",
+      "label": "Connection Type"
+    },
+    {
+      "name": "ipv4Settings.pppoe.username",
+      "label": "PPP Username"
+    },
+    {
+      "name": "ipv4Settings.pppoe.password",
+      "label": "PPP Password"
+    },
+    {
+      "name": "ipv4Settings.ipAddress",
+      "label": "IPv4 Static IP"
+    },
+    {
+      "name": "ipv4Settings.mask",
+      "label": "IPv4 Subnet Mask"
+    },
+    {
+      "name": "ipv4Settings.gateway",
+      "label": "IPv4 Gateway Address"
+    },
+    {
+      "name": "ipv6Settings.protocol",
+      "label": "Connection Type"
+    },
+    {
+      "name": "ipv6Settings.ipAddress",
+      "label": "IPv6 WAN Address"
+    },
+    {
+      "name": "ipv6Settings.gateway",
+      "label": "IPv6 Gateway Address"
+    },
+    {
+      "name": "vlan.enabled",
+      "label": "Enable VLAN"
+    },
+    {
+      "name": "vlan.autoDetectionEnabled"
+    },
+    {
+      "name": "enabled",
+      "label": "Enable backup Internet"
+    }
+  ],
+  "gia_tri_mac_dinh": [
+    {
+      "bien": "we",
+      "ma": "{enabled:!0,ipVersion:\"10\",devices:[\"eth5\"],mtu:\"1500\",vlan:{autoDetectionEnabled:\"auto\",enabled:!0,id:\"0\"},ipv4Settings:{id:\"wan\",enabled:!0,protocol:\"dhcp\",gateway:\"\",ipAddress:\"\",mask:\"\",pppoe:{username:\"\",password:\"\"},dns:{autoDnsEnabled:\"auto\",dnsServers:{primary:\"\",secondary:\"\"}}},ipv6Settings:{id:\"wan6\",enabled:!1,protocol:\"dhcpv6\",ipAddress:\"\",gateway:\"\",prefix:\"\",dns:{autoDnsEnabled:\"auto\",dnsServers:{primary:\"\",secondary:\"\"}}}}"
+    }
+  ],
+  "schema_kiem_tra": [
+    {
+      "ma": "{username:$,password:$}"
+    },
+    {
+      "ma": "{autoDnsEnabled:n.literal(u.Manual),dnsServers:n.object({primary:n.string().refine(ee,{message:ce.join(te[2].text)}),secondary:n.string().refine(ee,{message:ce.join(te[3].text)}).or(n.literal(\"\"))}).superRefine((t,i)=>{const{primary:a,secondary:s}=t;s&&s===a&&i.addIssue({code:n.ZodIssueCode.custom,message:\"The Secondary DNS cannot be the same as the Primary DNS.\",path:[\"secondary\"]})})}"
+    },
+    {
+      "ma": "{primary:n.string().refine(ee,{message:ce.join(te[2].text)}),secondary:n.string().refine(ee,{message:ce.join(te[3].text)}).or(n.literal(\"\"))}"
+    },
+    {
+      "ma": "{autoDnsEnabled:n.literal(u.Automatic)}"
+    },
+    {
+      "ma": "{enabled:n.literal(!0),protocol:n.literal(P.DHCP),dns:Ie,pppoe:Ve,...Ae}"
+    },
+    {
+      "ma": "{enabled:n.literal(!0),protocol:n.literal(P.PPPoE),pppoe:n.object({username:n.string().min(1,{message:\"PPP Username cannot be empty.\"}),password:n.string().min(1,{message:\"PPP Password cannot be empty.\"})}),dns:Ie,...Ae}"
+    },
+    {
+      "ma": "{username:n.string().min(1,{message:\"PPP Username cannot be empty.\"}),password:n.string().min(1,{message:\"PPP Password cannot be empty.\"})}"
+    },
+    {
+      "ma": "{protocol:n.literal(P.Static),gateway:n.string().refine(ee,{message:ce.join(te[1].text)}),ipAddress:n.string().refine(ee,{message:ce.join(te[0].text)}),mask:n.string().min(1,{message:\"IPv4 Subnet Mask cannot be empty.\"}).refine(xe,{message:\"Invalid IPv4 Subnet Mask.\"}),dns:Fe,pppoe:Ve}"
+    },
+    {
+      "ma": "{autoDnsEnabled:n.literal(u.Manual),dnsServers:n.object({primary:n.string().min(1,{message:\"Primary DNS cannot be empty.\"}).ip({version:\"v6\",message:\"Invalid Primary DNS.\"}),secondary:n.string().ip({version:\"v6\",message:\"Invalid Secondary DNS.\"}).or(n.literal(\"\"))}).superRefine((t,i)=>{const{primary:a,secondary:s}=t;s&&s===a&&i.addIssue({code:n.ZodIssueCode.custom,message:\"The Secondary DNS cannot be the same as the Primary DNS.\",path:[\"secondary\"]})})}"
+    },
+    {
+      "ma": "{primary:n.string().min(1,{message:\"Primary DNS cannot be empty.\"}).ip({version:\"v6\",message:\"Invalid Primary DNS.\"}),secondary:n.string().ip({version:\"v6\",message:\"Invalid Secondary DNS.\"}).or(n.literal(\"\"))}"
+    },
+    {
+      "ma": "{enabled:n.literal(!0),protocol:n.literal(A.DHCPv6),dns:ke,...Ee}"
+    },
+    {
+      "ma": "{enabled:n.literal(!0),protocol:n.literal(A.SLAAC),dns:ke,...Ee}"
+    },
+    {
+      "ma": "{enabled:n.literal(!0),protocol:n.literal(A.Static),ipAddress:n.string().min(1,{message:\"IPv6 WAN Address cannot be empty.\"}).ip({version:\"v6\",message:\"Invalid IPv6 WAN Address.\"}),prefix:n.string().min(1,{message:\"IPv6-Prefix cannot be empty.\"}).superRefine((t,i)=>{let a=\"\";const[s,r]=t.split(\"/\"),l=je(s)||je(`${s}0`),v=r&&!Pt(L(r))&&r===r.trim();l&&v?(L(r)<4||L(r)>128)&&(a=\"Prefix length out of range. The prefix length must be between 4 and 128.\"):l&&!r?a=\"Invalid IPv6-Prefix format. Please enter a valid IPv6 address followed by a slash and prefix length.\":a=\"Invalid IPv6-Prefix format.\",a&&i.addIssue({code:n.ZodIssueCode.custom,message:a})}),gateway:n.string().min(1,{message:\"IPv6 Gateway Address cannot be empty.\"}).ip({version:\"v6\",message:\"Invalid IPv6 Gateway Address.\"}),dns:Re}"
+    },
+    {
+      "ma": "{autoDetectionEnabled:n.string(),enabled:n.boolean(),id:n.string()}"
+    },
+    {
+      "ma": "{enabled:n.literal(!1)}"
+    },
+    {
+      "ma": "{mtu:n.string().min(1,{message:\"MTU size cannot be empty.\"}).refine(Le,{message:\"MTU size must be an integer.\"}),vlan:jt,ipv4Settings:n.union([At,De]),ipv6Settings:n.union([Et,De])}"
+    }
+  ],
+  "chuoi_hien_thi": [
+    " cannot be a network ID or a broadcast address.",
+    " that does not start with 0, 127, or numbers in the range of 224 to 255.",
+    "& .MuiTooltip-tooltip",
+    "&&U.protocol===A.Static&&U.dns.autoDnsEnabled===u.Automatic&&E(",
+    "&&e.jsx(me,{name:`${s}.dns.autoDnsEnabled`,options:v}),l.autoDnsEnabled===u.Manual&&e.jsxs(f,{spacing:1,className:re({manualInputs:r.protocol!==",
+    "&&e.jsxs(e.Fragment,{children:[e.jsx(F,{name:",
+    "&&k.protocol===P.Static&&k.dns.autoDnsEnabled===u.Automatic&&E(",
+    "&.mtuTooltip .MuiTooltip-tooltip",
+    "&.normal",
+    "&.vlanTooltip .MuiTooltip-tooltip",
+    "&::-webkit-outer-spin-button, &::-webkit-inner-spin-button",
+    ")&&(W&&B.ipVersion!==b.IPv6&&R.protocol===P.PPPoE&&L(B.mtu)>1492?E(",
+    ")&&(k.ipAddress&&g(",
+    ")&&Y&&(!z||k.protocol!==P.DHCP)&&q.autoDetectionEnabled===u.Automatic&&E(",
+    ")&&z&&k.protocol===P.PPPoE&&ne&&U.protocol===A.Static&&E(",
+    ")(({theme:t})=>({color:t.palette.info.main})),bt=K(f)(({theme:t})=>{const{spacing:i,breakpoints:a,palette:s}=t;return{width:",
+    ")(({theme:t})=>{const{palette:i}=t;return{display:",
+    ")(({theme:t})=>{const{spacing:i,breakpoints:a,palette:s}=t;return{padding:i(7,8),backgroundColor:s.fill.blank,borderRadius:8,border:`1px solid ${s.border.light}`,[a.down(",
+    ")),[p]),{data:E}=de(j?{key:",
+    ")),c===",
+    ")),{interfaceConfig:s,ethernetPorts:r=[],usage:l,handleFormSubmit:v,setIsFormDirty:h,mtuTips:y,setMtuTips:H,isPon:T,ponStatus:V}=t,N=[{label:",
+    ")),{palette:h}=l,{setValue:y,trigger:H,watch:T,formState:{errors:V}}=se(),N=T(",
+    ")),{watch:a,formState:{errors:s}}=se(),r=a(",
+    "));if(s){const D=S.includes(",
+    "))}).superRefine((t,i)=>{const{primary:a,secondary:s}=t;s&&s===a&&i.addIssue({code:n.ZodIssueCode.custom,message:",
+    "))});return()=>g()},[G,E,a,y,T]),e.jsxs(f,{spacing:4,children:[e.jsxs(f,{spacing:1,children:[e.jsx(Oe,{id:",
+    "))},[N,p,w,E,a,H]);return m.useEffect(()=>{const{unsubscribe:g}=T((B,{name:D})=>{const{ipv4Settings:R,enabled:W}=B;(D===",
+    "))},[l,g]),R=m.useCallback(I=>{T(I),N(!0)},[]),W=m.useCallback(async()=>{try{await ie.setInterfaceConfigurations({token:w,payload:H}),S(),r(",
+    "),H(",
+    "),R=be(r==null?void 0:r.maxBitRate,{returnAsObject:!0});B.push({port:B.length,name:`PON-${x(R)}`,active:D,icon:D?gt:mt})}return v?B.filter(D=>D.active):B},[S,t,x,v,s,r]),E=m.useCallback(g=>{y(",
+    "),R=j(",
+    "),S=T(",
+    "),[l,v]=m.useState(!1),[h,y]=m.useState(!1),[H,T]=m.useState([]),[V,N]=m.useState(!1),w=Je(I=>I.token),{data:p,mutate:S}=de({key:",
+    "),h=a(",
+    "),h=l&&[b.IPv4,b.Both].includes(v),y=a(",
+    "),helperText:C(s,",
+    "),helperText:e.jsx(Be,{fixedTxt:",
+    "),k.dns.dnsServers.primary&&g(",
+    "),k.dns.dnsServers.secondary&&g(",
+    "),k.gateway&&g(",
+    "),k.protocol!==P.PPPoE&&M(",
+    "),k.protocol!==P.Static&&M([",
+    "),l&&i.addIssue({code:n.ZodIssueCode.custom,message:l,path:[",
+    "),l=[{label:",
+    "),l=a(",
+    "),l=je(s)||je(`${s}0`),v=r&&!Pt(L(r))&&r===r.trim();l&&v?(L(r)<4||L(r)>128)&&(a=",
+    "),ne||M(",
+    "),p=T(",
+    "),v=a(",
+    "),w=T(",
+    "),x=m.useCallback(g=>`${g.value}${g.unit.replace(",
+    "),y=v&&[b.IPv4,b.Both].includes(h),H=[{label:",
+    "),{autoDetectionEnabled:H}=y,T=",
+    "):a(",
+    "):l&&!r?a=",
+    "):l=",
+    ");return{wanInterfaceConfig:I,backupWanInterfaceConfig:o,lanInterfaceConfig:d}},[p]),M=m.useMemo(()=>{const I=[],o=(p==null?void 0:p.map(d=>d.usage))??[];return kt.forEach(d=>{o.includes(d)&&I.push({id:d,label:d})}),I},[p]),{selectedKey:Z=",
+    ")]:{border:",
+    ")]:{padding:i(3)}}});function ht(){const t=X(),i=J(t.breakpoints.down(",
+    ")}),e.jsx(F,{name:",
+    ")})]}),r===",
+    ")})]})]}),e.jsx(Ne,{ipVersion:",
+    ")})})]})]}),e.jsx(Ne,{ipVersion:",
+    ")}`,[]),j=m.useMemo(()=>{const g=t.map(D=>{const{port:R,name:W,maxBitRate:I}=D,o=be(I,{returnAsObject:!0}),d=S.includes(W);return{port:R,name:W===",
+    ")}catch{a({title:",
+    ")}}),e.jsx(Se,{dialogTitle:",
+    ",A.DHCPv6),c===",
+    ",PopperProps:{disablePortal:!0},onClose:p,open:N,disableFocusListener:!0,disableHoverListener:!0,disableTouchListener:!0,title:T,children:e.jsx(pe,{sx:{fontSize:16},onClick:S})})})}),!i&&e.jsx(ue,{title:T,className:",
+    ",V=[{label:",
+    ",[a.down(",
+    ",[n.object({autoDnsEnabled:n.literal(u.Automatic)}),Fe]),At=n.discriminatedUnion(",
+    ",[n.object({autoDnsEnabled:n.literal(u.Automatic)}),Re]),Et=n.discriminatedUnion(",
+    ",[n.object({enabled:n.literal(!0),protocol:n.literal(A.DHCPv6),dns:ke,...Ee}),n.object({enabled:n.literal(!0),protocol:n.literal(A.SLAAC),dns:ke,...Ee}),n.object({enabled:n.literal(!0),protocol:n.literal(A.Static),ipAddress:n.string().min(1,{message:",
+    ",[n.object({enabled:n.literal(!0),protocol:n.literal(P.DHCP),dns:Ie,pppoe:Ve,...Ae}),n.object({enabled:n.literal(!0),protocol:n.literal(P.PPPoE),pppoe:n.object({username:n.string().min(1,{message:",
+    ",a&&i.addIssue({code:n.ZodIssueCode.custom,message:a})}),gateway:n.string().min(1,{message:",
+    ",alignItems:",
+    ",alt:",
+    ",background:",
+    ",background:`linear-gradient(white, white) padding-box, ${t.palette.gradient[5]} border-box`,backgroundClip:",
+    ",borderColor:s.border.lighter},",
+    ",children:",
+    ",children:We(g.name)}),e.jsx(f,{className:re(",
+    ",children:[e.jsx(O,{variant:",
+    ",children:e.jsx(O,{variant:",
+    ",children:e.jsx(pe,{sx:{fontSize:16}})})]}),e.jsx(F,{name:",
+    ",children:e.jsx(pe,{sx:{fontSize:16}})})]}),e.jsx(Te,{name:",
+    ",children:t}),!!i&&e.jsx(Pe,{children:i})]})}function St(){const t=X(),i=J(t.breakpoints.down(",
+    ",className:",
+    ",color:",
+    ",color:g.active?h.primary.main:h.text.secondary,className:",
+    ",defaultValues:we,values:w,resolver:ze(It)}),{handleSubmit:S,reset:x,watch:j,setValue:E,setError:G,clearErrors:M,formState:{isDirty:Z},trigger:g,getValues:B}=p,D=j(",
+    ",devices:[",
+    ",dialogContent:",
+    ",dns:{autoDnsEnabled:",
+    ",dnsServers:{primary:",
+    ",enabled:!0,id:",
+    ",enabled:!0,protocol:",
+    ",enabled:!1,protocol:",
+    ",errTxt:(E=(j=s==null?void 0:s.vlan)==null?void 0:j.id)==null?void 0:E.message})})]})]})})}var yt=ct;function Ct(t){return yt(t)&&t!=+t}var wt=Ct;const Pt=Ue(wt),te=[{key:",
+    ",errTxt:C(s,",
+    ",error:!!C(a,`${s}.dns.dnsServers.primary`),helperText:C(a,`${s}.dns.dnsServers.primary.message`)}),e.jsx(F,{name:`${s}.dns.dnsServers.secondary`,label:",
+    ",error:!!C(a,`${s}.dns.dnsServers.secondary`),helperText:C(a,`${s}.dns.dnsServers.secondary.message`)})]})]})]})}const ge=K(",
+    ",error:!!C(s,",
+    ",fullWidth:!0}),e.jsxs(f,{spacing:1,children:[y.enabled&&h&&r===P.DHCP&&e.jsx(me,{name:",
+    ",g),a(g===",
+    ",gateway:",
+    ",gateway:d.protocol===A.Static?d.gateway:",
+    ",gateway:o.protocol===P.Static?o.gateway:",
+    ",inputProps:{max:1500,min:1280,maxLength:4},error:!!(V!=null&&V.mtu),helperText:i?e.jsx(vt,{children:i}):((Z=(M=V==null?void 0:V.mtu)==null?void 0:M.message)==null?void 0:Z.toString())??",
+    ",inputProps:{max:4094,min:1,maxLength:4},error:!!((x=s==null?void 0:s.vlan)!=null&&x.id),helperText:e.jsx(Be,{fixedTxt:",
+    ",ipAddress:",
+    ",ipAddress:d.protocol===A.Static?d.ipAddress:",
+    ",isOpen:h,handleClose:()=>y(!1),handleContinuance:()=>{g(...B.current||[]),y(!1),v(!1),r(",
+    ",justifyContent:",
+    ",label:",
+    ",mask:",
+    ",message:",
+    ",onBlur:G})]})]})}function Ne({ipVersion:t}){const{watch:i,formState:{errors:a}}=se(),s=`ipv${t}Settings`,r=i(s),{dns:l}=r,v=[{label:",
+    ",onChangeTab:g}=et(M,_.Internet),B=m.useRef(null),D=m.useCallback((I,o)=>{B.current=[I,o],l?y(!0):(g(I,o),r(",
+    ",options:H,label:",
+    ",options:V}),y.enabled&&H===u.Manual&&e.jsx(F,{className:re({manualInputs:r===P.DHCP}),sx:{width:i?",
+    ",options:l,label:",
+    ",padding:i(.5,1),display:",
+    ",password:",
+    ",password:o.protocol===P.PPPoE?o.pppoe.password:",
+    ",path:[",
+    ",placement:",
+    ",pppoe:{username:",
+    ",pppoe:{username:o.protocol===P.PPPoE?o.pppoe.username:",
+    ",prefix:",
+    ",secondary:",
+    ",secondary:c.dnsServers[1]||",
+    ",size:",
+    ",spacing:.5,justifyContent:",
+    ",spacing:1,children:[e.jsxs(f,{direction:",
+    ",spacing:1,children:j.map(g=>e.jsx(bt,{children:e.jsxs(f,{alignItems:",
+    ",sx:{width:56},className:re({disabled:!g.active}),children:[e.jsx(O,{variant:",
+    ",sx:{width:v?",
+    ",t))(b||{}),u=(t=>(t.Automatic=",
+    ",t))(u||{});const we={enabled:!0,ipVersion:",
+    ",t.Both=",
+    ",t.IPv6=",
+    ",t.Manual=",
+    ",text:",
+    ",textOfContinuation:",
+    ",token:w},ie.getEthernetPorts),j=m.useMemo(()=>p==null?void 0:p.some(I=>I.devices.includes(",
+    ",token:w},ie.getInterfaceConfigurations),{data:x}=de({key:",
+    ",token:w}:null,ie.getPonStatus),G=m.useMemo(()=>{const{Internet:I=[],Backup:o=[],LAN:d=[]}=Qe(p,",
+    ",type:",
+    ",u.Manual),(c===",
+    ",u.Manual),z||M(",
+    ",value:",
+    ",value:A.DHCPv6},{label:",
+    ",value:A.SLAAC},{label:",
+    ",value:A.Static,disabled:y&&r===P.PPPoE}];return e.jsx(ge,{children:e.jsxs(f,{spacing:i?4:6,children:[e.jsxs(f,{spacing:2,children:[e.jsx(O,{variant:",
+    ",value:b.Both},{label:",
+    ",value:b.IPv4},{label:",
+    ",value:b.IPv6}],w=m.useMemo(()=>{const o=ye(we);if(s.length>0){const d=$e(s);d&&(o.devices=d.devices,o.mtu=fe(d.mtu),o.vlan={enabled:d.vlan.enabled,autoDetectionEnabled:d.vlan.autoDetectionEnabled?u.Automatic:u.Manual,id:fe(d.vlan.id)},s.forEach(c=>{c.id!==",
+    ",value:u.Automatic},{label:",
+    ",value:u.Manual}],[N,w]=m.useState(!1),p=()=>{w(!1)},S=()=>{w(!N)};return e.jsx(ge,{children:e.jsxs(f,{spacing:2,children:[e.jsxs(f,{spacing:1,direction:",
+    ",value:u.Manual}];return e.jsxs(f,{spacing:2,children:[e.jsx(O,{variant:",
+    ",vlan:{autoDetectionEnabled:",
+    ",{children:e.jsx(ue,{placement:",
+    ",{portFlame_active:g.active}),children:e.jsx(",
+    ",{src:g.icon,className:",
+    ".manualInputs",
+    ":268},name:",
+    ":450},type:",
+    ":Le(r)||(l=",
+    ":a=",
+    ":{border:",
+    ":{borderColor:",
+    ":{cursor:",
+    ":{width:32,height:32,margin:i(.5)},",
+    ":{width:56,height:40,borderRadius:4,gap:4,borderWidth:1,borderStyle:",
+    ";a&&s===u.Manual&&(r?L(r)>4094||L(r)<1?l=",
+    ";const[s,r]=t.split(",
+    "?`WAN-${x(o)}`:x(o),active:d,icon:d?ut:pt}}),B=it(ot(g,",
+    "Backup",
+    "Basics",
+    "Enable backup Internet",
+    "Internet",
+    "Save",
+    "The ",
+    "Your input was exceeded the maximum allowed for your connection type. We've adjusted it to fit the required limits.",
+    "Your input was lower the minimum allowed for your connection type. We've adjusted it to fit the required limits.",
+    "],mtu:",
+    "]})}),De=n.object({enabled:n.literal(!1)}),It=n.object({mtu:n.string().min(1,{message:",
+    "]})})}),Ie=n.discriminatedUnion(",
+    "]})})}),ke=n.discriminatedUnion(",
+    "alternative-layout alternative-layout--submit",
+    "calc(100% - 32px)",
+    "clientX",
+    "ipVersion",
+    "ipv4Settings.dns.dnsServers",
+    "ipv4Settings.ipAddress",
+    "ipv4Settings.mask",
+    "ipv6Settings.dns.dnsServers",
+    "ipv6Settings.gateway",
+    "ipv6Settings.ipAddress",
+    "ipv6Settings.prefix",
+    "onClick",
+    "onTouchEnd",
+    "||D===",
+    "||c===",
+    "}),children:[e.jsx(F,{name:`${s}.dns.dnsServers.primary`,label:",
+    "}),dns:Re})]),jt=n.object({autoDetectionEnabled:n.string(),enabled:n.boolean(),id:n.string()}).superRefine((t,i)=>{const{enabled:a,autoDetectionEnabled:s,id:r}=t;let l=",
+    "}),e.jsx(Me,{name:",
+    "}),e.jsx(O,{variant:",
+    "}),e.jsxs(f,{spacing:1,children:[r.protocol!==",
+    "}),i&&e.jsx(dt,{onClickAway:p,children:e.jsx(",
+    "}),l===",
+    "}),password:n.string().min(1,{message:",
+    "}),prefix:n.string().min(1,{message:",
+    "}),r===",
+    "}),secondary:n.string().ip({version:",
+    "}),vlan:jt,ipv4Settings:n.union([At,De]),ipv6Settings:n.union([Et,De])});function He(t){const i=X(),a=J(i.breakpoints.down(",
+    "}).ip({version:",
+    "}).or(n.literal(",
+    "}).refine(Le,{message:",
+    "}).refine(xe,{message:",
+    "}).superRefine((t,i)=>{let a=",
+    "})]}),!v&&e.jsx(ue,{title:",
+    "})]})})}const Pe=K(",
+    "})]})})}function xt(){var x,j,E;const t=X(),i=J(t.breakpoints.down(",
+    "}){return e.jsxs(e.Fragment,{children:[e.jsx(Pe,{className:",
+    "})}),dns:Ie,...Ae}),n.object({protocol:n.literal(P.Static),gateway:n.string().refine(ee,{message:ce.join(te[1].text)}),ipAddress:n.string().refine(ee,{message:ce.join(te[0].text)}),mask:n.string().min(1,{message:",
+    "})}),e.jsx(f,{direction:",
+    "})})]})},g.port))})]}),e.jsxs(f,{spacing:1,children:[e.jsxs(f,{direction:",
+    "},",
+    "},dns:{autoDnsEnabled:",
+    "},ipAddress:o.protocol===P.Static?o.ipAddress:",
+    "},ipv4Settings:{id:",
+    "},{alertProps:{severity:",
+    "},{key:",
+    "},{label:",
+    "}],ce=[",
+    "}];return e.jsx(ge,{children:e.jsxs(f,{spacing:i?4:6,children:[e.jsxs(f,{spacing:2,children:[e.jsx(O,{variant:",
+    "}}))}),o.enabled=o.ipv4Settings.enabled||o.ipv6Settings.enabled,o.ipv4Settings.enabled&&!o.ipv6Settings.enabled?o.ipVersion=b.IPv4:!o.ipv4Settings.enabled&&o.ipv6Settings.enabled?o.ipVersion=b.IPv6:o.ipVersion=b.Both)}return o},[s]),p=Ge({mode:",
+    "}})}},[w,S,a,H]);return e.jsxs(Dt,{children:[e.jsxs(f,{spacing:2,children:[i&&e.jsx(st,{children:",
+    "}}});function ft({ethernetPorts:t,mtuTips:i,setMtuTips:a,isPon:s,ponStatus:r}){var M,Z;const l=X(),v=J(l.breakpoints.down(",
+    "}}},ipv6Settings:{id:",
+    "}}}},vt=K("
+  ],
+  "_can_doc_tay": [
+    "chunk 34003 byte -- qua lon de trich tu dong het, phai doc tay phan logic hien/an va bang bieu"
+  ],
+  "_doc_tay_gd4_2026-08-13": {
+    "_nguon": "Doc tay index-D_2ztGgf.js: Ht() (goc, tab), He() (form 1 tab), ht() (IPv4), St() (IPv6), xt() (MTU+VLAN), Ne() (DNS dung chung), ft() (cong vat ly)",
+
+    "enum": {
+      "_ (usage/tab)": {"Internet": "Internet", "Backup": "Backup"},
+      "P (giao thuc IPv4)": {"DHCP": "dhcp", "PPPoE": "pppoe", "Static": "static"},
+      "A (giao thuc IPv6)": {"DHCPv6": "dhcpv6", "SLAAC": "slaac", "Static": "static"},
+      "b (ipVersion)": {"IPv4": "4", "IPv6": "6", "Both": "10"},
+      "u (auto/manual)": {"Automatic": "auto", "Manual": "manual"}
+    },
+
+    "tab": {
+      "danh_sach_goc": ["Internet", "Backup"],
+      "quy_tac": "kt=['Internet','Backup'], CHI them tab neu co ban ghi interfaces/configurations mang usage do",
+      "trong_kho_hien_tai": "chi co usage='Internet' (2 ban ghi: wan + wan6) -> DUNG MOT tab, khop ban chup (chi 1 role=tab 'Internet'). Khong co tab Backup."
+    },
+
+    "nhan_dien_ban_ghi": "MOT tab gom NHIEU ban ghi interfaces/configurations cung usage: ban ghi co ipv4Settings -> form ipv4Settings (id='wan'), ban ghi co ipv6Settings -> form ipv6Settings (id='wan6'). Bo qua ban ghi id='guest'.",
+
+    "doi_hinh_dang_khi_NAP": {
+      "mtu": "chuoi hoa tu so",
+      "vlan": "{enabled, autoDetectionEnabled: (bool -> 'auto'|'manual'), id: chuoi hoa}",
+      "ipv4Settings": "lay tu ban ghi wan: protocol, gateway, ipAddress, mask, pppoe; dns={autoDnsEnabled: autoDnsEnabled?'auto':'manual', dnsServers:{primary:dnsServers[0]||'', secondary:dnsServers[1]||''}}",
+      "ipv6Settings": "lay tu ban ghi wan6: protocol = (slaacEnabled && protocol==='dhcpv6') ? 'slaac' : protocol; ipAddress, gateway, prefix; dns nhu tren",
+      "ipVersion": "SUY RA: ipv4.enabled && !ipv6.enabled -> '4'; !ipv4.enabled && ipv6.enabled -> '6'; con lai -> '10'",
+      "enabled": "ipv4Settings.enabled || ipv6Settings.enabled"
+    },
+
+    "cay_an_hien": {
+      "1_goc": [
+        "usage===Backup -> hien cong tac 'Enable backup Internet' (name='enabled'). Tab Internet KHONG co cong tac nay.",
+        "(enabled || usage===Internet) -> hien nhom radio ipVersion (IPv4 & IPv6 / IPv4 / IPv6), bay ngang (MenuProps row)",
+        "enabled=false -> AN toan bo phan con lai (cong vat ly, MTU, IPv4, IPv6, VLAN)"
+      ],
+      "2_khoi_IPv4": "chi hien khi ipVersion thuoc {4, 10}",
+      "3_khoi_IPv6": "chi hien khi ipVersion thuoc {6, 10}",
+      "4_trong_khoi_IPv4 (ht)": [
+        "luon: Select 'Connection Type' (DHCP/PPPoE/Static)",
+        "protocol==='pppoe' -> hien 'PPP Username' + 'PPP Password'",
+        "protocol==='static' -> hien 'IPv4 Static IP' + 'IPv4 Subnet Mask' + 'IPv4 Gateway Address'",
+        "protocol==='dhcp' -> khong hien them o nao"
+      ],
+      "5_trong_khoi_IPv6 (St)": [
+        "luon: Select 'Connection Type' voi 3 tuy chon NHAN KHAC gia tri: 'DHCPv6 (Stateful)'=dhcpv6, 'DHCPv6 (Stateless)'=slaac, 'Static'=static",
+        "tuy chon 'Static' bi VO HIEU HOA khi: ipv4 dang bat (enabled && ipVersion thuoc {4,10}) VA ipv4 protocol==='pppoe'",
+        "protocol==='static' -> hien 'IPv6 WAN Address' + 'IPv6 Gateway Address' + 'Custom Delegated IPv6-Prefix' (goi y: 'e.g., 2001:0db8:85a3::/64')"
+      ],
+      "6_khoi_DNS (Ne, dung chung cho ca IPv4 va IPv6)": [
+        "protocol!=='static' -> hien nhom radio Automatic/Manual (name='<ipvXSettings>.dns.autoDnsEnabled')",
+        "protocol==='static' -> AN nhom radio (vi bi ep sang Manual, xem rang buoc lien dong)",
+        "dns.autoDnsEnabled==='manual' -> hien 'Primary DNS' + 'Secondary DNS (Optional)'; co lop 'manualInputs' (thut le) khi protocol!=='static'"
+      ],
+      "7_khoi_VLAN (xt)": [
+        "luon: cong tac 'Enable VLAN' (name='vlan.enabled')",
+        "vlan.enabled && ipv4 dang bat && ipv4 protocol==='dhcp' -> hien nhom radio Automatic/Manual (name='vlan.autoDetectionEnabled')",
+        "vlan.enabled && vlan.autoDetectionEnabled==='manual' -> hien o 'VLAN ID' (so, 1..4094, goi y 'Range: 1 to 4094.'); co lop 'manualInputs' khi ipv4 protocol==='dhcp'"
+      ]
+    },
+
+    "rang_buoc_lien_dong (watch effect)": [
+      "doi ipv4 protocol sang 'static' ma DNS dang 'auto' -> EP dns.autoDnsEnabled='manual'",
+      "doi ipv6 protocol sang 'static' ma DNS dang 'auto' -> EP dns.autoDnsEnabled='manual'",
+      "doi ipVersion/enabled/ipv4 protocol: neu (ipv4 KHONG bat HOAC protocol!=='dhcp') va vlan.autoDetectionEnabled==='auto' -> EP vlan.autoDetectionEnabled='manual'",
+      "neu ipv4 bat + protocol==='pppoe' + ipv6 bat + ipv6 protocol==='static' -> EP ipv6 protocol='dhcpv6' (khong cho Static IPv6 khi IPv4 chay PPPoE)"
+    ],
+
+    "hop_dong_GHI (PATCH interfaces/configurations)": {
+      "_luu_y": "Gui MOT MANG gom ca hai ban ghi (wan + wan6) trong MOT lan PATCH, KHONG phai hai lan.",
+      "bien_phu": "Q = enabled && ipVersion thuoc {4,10} (IPv4 dang bat); z = enabled && ipVersion thuoc {6,10} (IPv6 dang bat)",
+      "vlan_dung_chung": "{enabled: vlan.enabled, autoDetectionEnabled: vlan.autoDetectionEnabled==='auto', id: (vlan.enabled && autoDetectionEnabled==='manual') ? So(vlan.id) : 0}",
+      "ban_ghi_ipv4 (khi Q=true)": "{mtu:So(mtu), name:<id ipv4>, ipv4Settings:{protocol, mask: protocol==='static'?mask:'', pppoe:{username: protocol==='pppoe'?username:'', password: protocol==='pppoe'?password:''}, ipAddress: protocol==='static'?ipAddress:'', gateway: protocol==='static'?gateway:''}, id:<id ipv4>, vlan, enabled:Q, usage, dnsServers: dns auto ? [] : [primary,secondary], autoDnsEnabled: dns==='auto', devices}",
+      "ban_ghi_ipv6 (khi z=true)": "{mtu:So(mtu), name:<id ipv6>, ipv6Settings:{enabled:z, protocol: protocol==='slaac'?'dhcpv6':protocol, prefix: protocol==='static'?prefix:'', ipAddress: protocol==='static'?ipAddress:'', gateway: protocol==='static'?gateway:'', slaacEnabled: protocol==='slaac'}, id:<id ipv6>, vlan, enabled:z, usage, dnsServers/autoDnsEnabled nhu tren, devices}",
+      "ban_ghi_ipv6 (khi z=false)": "giu nguyen ban ghi cu nhung dat ipv6Settings.enabled=false, enabled=false, mtu, vlan",
+      "ban_ghi_khac (khi Q=false)": "giu nguyen ban ghi cu, dat enabled=false, mtu, vlan",
+      "truong_hop_tat_backup": "usage===Backup va enabled=false -> gui lai TOAN BO ban ghi cua tab do voi enabled=false"
+    },
+
+    "thanh_save": "e.jsx(Xe,{actions:[{action:'submit',children:'Save'},{action:'cancel',variant:'text'}]}) nam NGOAI moi dieu kien -> LUON HIEN, giong advanced__lan (da do DOM that, xem reference/source/do_thanh_save_lan.json)",
+
+    "_ban_chup_THIEU_markup_cua_cac_nhanh": {
+      "_ly_do": "Luc chup, thiet bi dang o ipv4 protocol='static', ipv6 protocol='slaac', vlan.enabled=false -> React khong render cac nhanh khac",
+      "thieu": [
+        "ipv4Settings.pppoe.username + .password (nhanh PPPoE)",
+        "ipv6Settings.ipAddress + .gateway + .prefix (nhanh IPv6 Static)",
+        "ipv4Settings.dns.autoDnsEnabled (nhom radio -- bi an vi protocol='static')",
+        "vlan.autoDetectionEnabled (nhom radio) + vlan.id"
+      ],
+      "_da_co_san_tren_CUNG_TRANG_de_nhan_ban": [
+        "o van ban: ipv4Settings.ipAddress / .mask / .gateway (MuiTextField chuan)",
+        "nhom radio Automatic/Manual: ipv6Settings.dns.autoDnsEnabled (da render)",
+        "o so: mtu (type=number, co inputProps)"
+      ]
+    },
+
+    "_bay_da_gap_o_ban_chup": "Thuoc tinh HTML 'checked' KHONG dang tin: radio 'auto' co checked nhung KHONG co lop Mui-checked, trong khi 'manual' co Mui-checked (dung voi kho: autoDnsEnabled=false). Cong tac vlan.enabled cung vay (checked=true nhung Mui-checked=false, kho ghi enabled=false). => LUON lay lop 'Mui-checked' lam su that, dung lay thuoc tinh 'checked'. interact.js init() da lam dung dieu nay."
+  }
+}

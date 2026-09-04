@@ -1,0 +1,12 @@
+[
+ {
+  "url": "api/v1/data/ext/parentalControl/policies",
+  "body": null,
+  "resp": "[]"
+ },
+ {
+  "url": "api/v1/data/ext/devicelist",
+  "body": null,
+  "resp": "[{\"expires\":0,\"macAddress\":\"d8:43:ae:2e:65:45\",\"ipAddress\":\"192.168.1.179\",\"hostname\":\"\"}]"
+ }
+]

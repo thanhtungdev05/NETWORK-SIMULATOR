@@ -51,7 +51,7 @@ window.TOOLTIPS_AX3000C['LAB_AX3000CV2_04'] = [
   {
     selector: 'button.apply, button.btn.apply, button[onclick*="save"], input[type="submit"]',
     text: 'Bước 4: chọn Apply',
-    position: 'right',
+    position: 'bottom',
     page: 'lan'
   }
 ];

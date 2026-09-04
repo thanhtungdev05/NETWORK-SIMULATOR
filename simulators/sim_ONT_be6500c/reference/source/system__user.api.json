@@ -1,0 +1,7 @@
+[
+ {
+  "url": "/oui-rpc",
+  "body": "{\"method\":\"call\",\"params\":[\"OlC9fttg6Vim8j3Q6j6fgQQO5wYoKiZy\",\"user\",\"get_users\",{}]}",
+  "resp": "{\"result\":{\"users\":[{\"username\":\"admin\",\"acl\":\"admin\",\"id\":\"cfg042e84\"}]}}"
+ }
+]

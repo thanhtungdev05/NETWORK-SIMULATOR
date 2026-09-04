@@ -1,0 +1,7 @@
+[
+ {
+  "url": "api/v1/data/dhcp/servers",
+  "body": null,
+  "resp": "[{\"interfaceId\":\"lan\",\"ipv4Settings\":{\"leaseTime\":43200,\"startAddress\":\"192.168.1.2\",\"enabled\":true,\"autoReserved\":{\"limit\":50,\"enabled\":true},\"dnsServers\":[\"192.168.1.1\"],\"autoDnsEnabled\":true,\"endAddress\":\"192.168.1.254\"},\"ipv6Settings\":{\"endSuffix\":\"ffff\",\"enabled\":true,\"startSuffix\":\"2\",\"autoDnsEnabled\":true,\"dnsServers\":[\"fe80::6d6:88ff:fe8d:525e\"]},\"id\":\"lan\"},{\"interfaceId\":\"guest\",\"ipv4Settings\":{\"leaseTime\":14400,\"startAddress\":\"192.168.5.100\",\"enabled\":true,\"autoReserved\":{\"limit\":50,\"enabled\":true},\"dnsServers\":[\"192.168.5.1\"],\"autoDnsEnabled\":true,\"endAddress\":\"192.168.5.249\"},\"ipv6Settings\":{\"endSuffix\":\"3e8\",\"enabled\":true,\"startSuffix\":\"2\",\"autoDnsEnabled\":true,\"dnsServers\":[]},\"id\":\"guest\"}]"
+ }
+]

@@ -1,0 +1,120 @@
+{
+ "nguon": "hEX S that 192.168.1.1, WebFig 7.14.3, do ngay 2026-08-27",
+ "cach_do": "dieu khien chinh giao dien WebFig (bam Start/Stop), nghe XHR /jsproxy",
+ "ghi_chu": {
+  "101-1": "IP Scan, Interface=bridge-LAN, Address Range=192.168.1.0/24. g00=ACK bat dau (ufe0001=1), g02..g10=getall, g12=ACK huy.",
+  "27-15": "PPPoE Scan, Interface=ether1. g00=ACK bat dau, g02..g26=getall (deu RONG: luc do cong WAN khong thay AC nao), g28=ACK huy."
+ },
+ "tep": [
+  {
+   "ten": "TV2_101-1_g00.bin",
+   "byte": 60,
+   "sha256": "0548fdc0372744c69f7369cf009249925aed3dfe421585eb13067ef21602b7e8"
+  },
+  {
+   "ten": "TV2_101-1_g02.bin",
+   "byte": 61,
+   "sha256": "5ba989102818155c2d4096a19cf25b34d76c3a28c2b692965bc9803c6902e354"
+  },
+  {
+   "ten": "TV2_101-1_g04.bin",
+   "byte": 102,
+   "sha256": "685e97c9b86850fa1e46941df16163decdd2fa984151bb8d6deca5a787d9665c"
+  },
+  {
+   "ten": "TV2_101-1_g06.bin",
+   "byte": 102,
+   "sha256": "8e79eca215e79fa9e23143dc37923b5d251ff432b2bdb682726fd94d5e5563d2"
+  },
+  {
+   "ten": "TV2_101-1_g08.bin",
+   "byte": 102,
+   "sha256": "d37c5db06da0acbf73ec6284ce8f702dbd6e350e073d2dae49a6c4dc291926e5"
+  },
+  {
+   "ten": "TV2_101-1_g10.bin",
+   "byte": 102,
+   "sha256": "fdf00a0a39a61648f90e196c32ae1ebf2dfb72ca9533fb43f350b9a7f88f2634"
+  },
+  {
+   "ten": "TV2_101-1_g12.bin",
+   "byte": 55,
+   "sha256": "089e9c9b5f615f444cd9e36605cffb791a600326f72d39a72121c6eec65f16e6"
+  },
+  {
+   "ten": "TV2_27-15_g00.bin",
+   "byte": 60,
+   "sha256": "1c49c8287de89dfcde37a4304bcfa258e304c36143b2b68c335e7369740c3a46"
+  },
+  {
+   "ten": "TV2_27-15_g02.bin",
+   "byte": 61,
+   "sha256": "161e0e0156b863c17774997547c99d96f9acec3c8e282aaa02d4c79b31e3ceba"
+  },
+  {
+   "ten": "TV2_27-15_g04.bin",
+   "byte": 61,
+   "sha256": "67c0e06cda4caf9f3b01c83260bbfb9a82935079fd838e1798ba09b21aaa51c7"
+  },
+  {
+   "ten": "TV2_27-15_g06.bin",
+   "byte": 61,
+   "sha256": "22b2cf4e0a52534718efc17a92a5614c141382fd2fde2dcfbe9aac3dd3099be3"
+  },
+  {
+   "ten": "TV2_27-15_g08.bin",
+   "byte": 61,
+   "sha256": "499126fc7c1c38249adc87275cd34f7a004cf29cf991f0f0a67b8badafddf6bd"
+  },
+  {
+   "ten": "TV2_27-15_g10.bin",
+   "byte": 61,
+   "sha256": "ee668a9b03b4e43d777752fd92381e8a2ba0c4f4f9f5c44a7ed0058a9d65aa8b"
+  },
+  {
+   "ten": "TV2_27-15_g12.bin",
+   "byte": 61,
+   "sha256": "221d0c1e93f3f79b5758882004536e75525900a4056053421f341cc4bf10af85"
+  },
+  {
+   "ten": "TV2_27-15_g14.bin",
+   "byte": 61,
+   "sha256": "4eb295b2ff8bc95830797b6a9cdd817f0c59025104e8d6adf94b3e5052e61e41"
+  },
+  {
+   "ten": "TV2_27-15_g16.bin",
+   "byte": 61,
+   "sha256": "d8831bd8276f373e18ab11497df34d9f3fe3c1ddddfda93220c804da7ae8448b"
+  },
+  {
+   "ten": "TV2_27-15_g18.bin",
+   "byte": 61,
+   "sha256": "892d8893ace7ac8c06895201ebf8fbf84a6a9f380af21c60fb10fff80d9ae140"
+  },
+  {
+   "ten": "TV2_27-15_g20.bin",
+   "byte": 61,
+   "sha256": "5595942b5a2133881a942ec58fcbd5528794deb155f8b0c992172c7fa74de411"
+  },
+  {
+   "ten": "TV2_27-15_g22.bin",
+   "byte": 61,
+   "sha256": "986ea4955acfa0291611ce6379da0ddb392425e04899c8db6597e5bc3ca24c67"
+  },
+  {
+   "ten": "TV2_27-15_g24.bin",
+   "byte": 61,
+   "sha256": "a3f84250483b52126379c61461508e120537da4fa6cf434bf902790d7f06670b"
+  },
+  {
+   "ten": "TV2_27-15_g26.bin",
+   "byte": 61,
+   "sha256": "ad584e0f25e7522a7f2e40e8e35eaf8657617b680d22bd11ab9606d4c6035830"
+  },
+  {
+   "ten": "TV2_27-15_g28.bin",
+   "byte": 55,
+   "sha256": "b16aa33f27dab585acb29d37b72a47b521ce01a2a33a56bcade7de15a7c4c106"
+  }
+ ]
+}

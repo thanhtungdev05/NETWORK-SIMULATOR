@@ -36,7 +36,7 @@ window.TOOLTIPS_AX3000C['LAB_AX3000CV2_01'] = [
   // Bước 2: Nhập tên VD: sgfdl-123456-789 (chỉ hiện khi đã vào trang WAN)
   {
     selector: '.grp[data-t="PPPoE"] input[type="text"], input[name="username"], #username',
-    text: 'Bước 2: nhập tên VD: Sgfdl-123456-789',
+    text: 'Bước 2: nhập tên VD: sgfdl-123456-789',
     position: 'right',
     page: 'wan'
   },

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * devices/ax3000gz/lessons/bai4.js
  * Bài 4: Cấu hình DNS trên AX3000GZ
  */
@@ -13,7 +13,7 @@ window.DEVICE_AX3000GZ_LESSONS.push({
     '<b>Yêu cầu:</b>',
     'Thiết lập thông số DNS thủ công (Manually) trên cổng LAN:',
     '- Primary DNS: <span class="val">8.8.8.8</span>',
-    '- Secondary DNS: <span class="val">8.8.8.8</span>'
+    '- Secondary DNS: <span class="val">8.8.4.4</span>'
   ],
   practiceUrl: '/sim_ax3000gz/cgi-bin/luci/admin/localnetwork/lan',
   clearFields: [
@@ -36,7 +36,7 @@ window.DEVICE_AX3000GZ_LESSONS.push({
         id: 'dns_secondary',
         name: 'Secondary DNS',
         selector: '[id="widget.cbid.network.lan.Secondary_DNS"]',
-        expected: '8.8.8.8',
+        expected: '8.8.4.4',
         type: 'text_exact',
         trim: true,
         required: true
@@ -71,7 +71,7 @@ window.DEVICE_AX3000GZ_LESSONS.push({
     },
     {
       selector: '[id="widget.cbid.network.lan.Secondary_DNS"]',
-      text: 'Nhập Secondary DNS: 8.8.8.8',
+      text: 'Nhập Secondary DNS: 8.8.4.4',
       position: 'right',
       page: 'lan'
     },

@@ -1,0 +1,976 @@
+[
+ {
+  "tep": "ipv6-9efe97e331aa.jg",
+  "title": "6to4",
+  "soCon": 3
+ },
+ {
+  "tep": "ipv6-9efe97e331aa.jg",
+  "title": "gre6",
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "title": "Marks",
+  "soCon": 2
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Bridge",
+  "title": "Bridge",
+  "prio": 101,
+  "soCon": 17
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Dot1X",
+  "title": "Dot1X",
+  "coDieuKien": 1,
+  "soCon": 4
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Files",
+  "title": "File List",
+  "soCon": 14
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Interfaces",
+  "title": "Interface List",
+  "prio": 99,
+  "soCon": 37
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "LCD",
+  "title": "LCD",
+  "coDieuKien": 1,
+  "soCon": 5
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Log",
+  "title": "Log",
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Make Supout.rif",
+  "title": "Make Supout.rif",
+  "prio": 1000,
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Mesh",
+  "title": "Mesh",
+  "prio": 102,
+  "soCon": 4
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "MetaROUTER",
+  "title": "MetaROUTERs",
+  "prio": 999,
+  "coDieuKien": 1,
+  "soCon": 4
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "New Terminal",
+  "title": "Terminal",
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Partition",
+  "title": "Partitions",
+  "prio": 999,
+  "coDieuKien": 1,
+  "soCon": 5
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Port Mapping",
+  "title": "Port Mapping",
+  "nonpublic": 1,
+  "soCon": 1
+ },
+ {
+  "tep": "ppp-0531971e726b.jg",
+  "name": "PPP",
+  "title": "PPP",
+  "prio": 101,
+  "soCon": 29
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Queues",
+  "title": "Queue List",
+  "prio": 130,
+  "soCon": 4
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Quick Set",
+  "title": "Quick Set",
+  "prio": 10,
+  "coDieuKien": 1,
+  "soCon": 26
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "RADIUS",
+  "title": "RADIUS",
+  "soCon": 2
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Switch",
+  "title": "Switch",
+  "prio": 101,
+  "coDieuKien": 1,
+  "soCon": 7
+ },
+ {
+  "tep": "wave2-4be31cf85401.jg",
+  "name": "WiFi",
+  "title": "WiFi",
+  "prio": 97,
+  "soCon": 24
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "WireGuard",
+  "title": "WireGuard",
+  "prio": 100,
+  "soCon": 4
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Addresses",
+  "title": "Address List",
+  "group": "IP",
+  "prio": 110,
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "ARP",
+  "title": "ARP List",
+  "group": "IP",
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Cloud",
+  "title": "Cloud",
+  "group": "IP",
+  "coDieuKien": 1,
+  "soCon": 2
+ },
+ {
+  "tep": "dhcp-accdf83c6abd.jg",
+  "name": "DHCP Client",
+  "title": "DHCP Client",
+  "group": "IP",
+  "soCon": 2
+ },
+ {
+  "tep": "dhcp-accdf83c6abd.jg",
+  "name": "DHCP Relay",
+  "title": "DHCP Relay",
+  "group": "IP",
+  "soCon": 1
+ },
+ {
+  "tep": "dhcp-accdf83c6abd.jg",
+  "name": "DHCP Server",
+  "title": "DHCP Server",
+  "group": "IP",
+  "soCon": 9
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "DNS",
+  "title": "DNS",
+  "group": "IP",
+  "soCon": 3
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Firewall",
+  "title": "Firewall",
+  "group": "IP",
+  "soCon": 14
+ },
+ {
+  "tep": "hotspot-f1e2e1d4af99.jg",
+  "name": "Hotspot",
+  "title": "Hotspot",
+  "group": "IP",
+  "soCon": 12
+ },
+ {
+  "tep": "secure-453c6a560083.jg",
+  "name": "IPsec",
+  "title": "IPsec",
+  "group": "IP",
+  "soCon": 12
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Kid Control",
+  "title": "Kid Control",
+  "group": "IP",
+  "prio": 110,
+  "soCon": 2
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "NAT PMP",
+  "title": "NAT PMP",
+  "group": "IP",
+  "soCon": 2
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Neighbors",
+  "title": "Neighbor List",
+  "group": "IP",
+  "soCon": 2
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Packing",
+  "title": "IP Packing",
+  "group": "IP",
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Pool",
+  "title": "IP Pool",
+  "group": "IP",
+  "soCon": 2
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Routes",
+  "title": "Route List",
+  "group": "IP",
+  "prio": 110,
+  "soCon": 2
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Services",
+  "title": "IP Service List",
+  "group": "IP",
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Settings",
+  "title": "Settings",
+  "group": "IP",
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "SMB",
+  "title": "SMB",
+  "group": "IP",
+  "coDieuKien": 1,
+  "soCon": 3
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "SNMP",
+  "title": "SNMP Server",
+  "group": "IP",
+  "soCon": 3
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Socks",
+  "title": "Socks",
+  "group": "IP",
+  "soCon": 4
+ },
+ {
+  "tep": "secure-453c6a560083.jg",
+  "name": "SSH",
+  "title": "SSH",
+  "group": "IP",
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "TFTP",
+  "title": "TFTP",
+  "group": "IP",
+  "soCon": 2
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Traffic Flow",
+  "title": "Traffic Flow",
+  "group": "IP",
+  "soCon": 2
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "UPnP",
+  "title": "UPnP",
+  "group": "IP",
+  "soCon": 2
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "VRF",
+  "title": "VRF List",
+  "group": "IP",
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Web Proxy",
+  "title": "Web Proxy",
+  "group": "IP",
+  "soCon": 7
+ },
+ {
+  "tep": "ipv6-9efe97e331aa.jg",
+  "name": "Addresses",
+  "title": "IPv6 Address List",
+  "group": "IPv6",
+  "prio": 110,
+  "soCon": 1
+ },
+ {
+  "tep": "dhcp-accdf83c6abd.jg",
+  "name": "DHCP Client",
+  "title": "DHCPv6 Client",
+  "group": "IPv6",
+  "coDieuKien": 1,
+  "soCon": 2
+ },
+ {
+  "tep": "dhcp-accdf83c6abd.jg",
+  "name": "DHCP Relay",
+  "title": "DHCPv6 Relay",
+  "group": "IPv6",
+  "coDieuKien": 1,
+  "soCon": 1
+ },
+ {
+  "tep": "dhcp-accdf83c6abd.jg",
+  "name": "DHCP Server",
+  "title": "DHCPv6 Server",
+  "group": "IPv6",
+  "coDieuKien": 1,
+  "soCon": 4
+ },
+ {
+  "tep": "ipv6-9efe97e331aa.jg",
+  "name": "Firewall",
+  "title": "IPv6 Firewall",
+  "group": "IPv6",
+  "soCon": 11
+ },
+ {
+  "tep": "ipv6-9efe97e331aa.jg",
+  "name": "ND",
+  "title": "Neighbor Discovery",
+  "group": "IPv6",
+  "soCon": 3
+ },
+ {
+  "tep": "ipv6-9efe97e331aa.jg",
+  "name": "Neighbors",
+  "title": "IPv6 Neighbor List",
+  "group": "IPv6",
+  "soCon": 1
+ },
+ {
+  "tep": "ipv6-9efe97e331aa.jg",
+  "name": "Pool",
+  "title": "IPv6 Pool",
+  "group": "IPv6",
+  "soCon": 2
+ },
+ {
+  "tep": "ipv6-9efe97e331aa.jg",
+  "name": "Routes",
+  "title": "IPv6 Route List",
+  "group": "IPv6",
+  "prio": 110,
+  "soCon": 1
+ },
+ {
+  "tep": "ipv6-9efe97e331aa.jg",
+  "name": "Settings",
+  "title": "IPv6 Settings",
+  "group": "IPv6",
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "MPLS",
+  "title": "MPLS",
+  "group": "MPLS",
+  "prio": 110,
+  "coDieuKien": 1,
+  "soCon": 8
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Settings",
+  "title": "MPLS Settings",
+  "group": "MPLS",
+  "coDieuKien": 1,
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Traffic Eng",
+  "title": "Traffic Eng",
+  "group": "MPLS",
+  "prio": 110,
+  "coDieuKien": 1,
+  "soCon": 4
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "VPLS",
+  "title": "VPLS",
+  "group": "MPLS",
+  "prio": 110,
+  "coDieuKien": 1,
+  "soCon": 2
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "BFD",
+  "title": "BFD",
+  "group": "Routing",
+  "soCon": 2
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "BGP",
+  "title": "BGP",
+  "group": "Routing",
+  "coDieuKien": 1,
+  "soCon": 8
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Filters",
+  "title": "Route Filters",
+  "group": "Routing",
+  "prio": 111,
+  "soCon": 12
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "GMP",
+  "title": "GMP",
+  "group": "Routing",
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "IGMP Proxy",
+  "title": "IGMP Proxy",
+  "group": "Routing",
+  "prio": 111,
+  "soCon": 3
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Nexthops",
+  "title": "Nexthops",
+  "group": "Routing",
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "OSPF",
+  "title": "OSPF",
+  "group": "Routing",
+  "soCon": 9
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "PIM SM",
+  "title": "PIM SM",
+  "group": "Routing",
+  "coDieuKien": 1,
+  "soCon": 10
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "RIP",
+  "title": "RIP",
+  "group": "Routing",
+  "prio": 111,
+  "soCon": 7
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Router ID",
+  "title": "Router ID",
+  "group": "Routing",
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "RPKI",
+  "title": "RPKI",
+  "group": "Routing",
+  "soCon": 2
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Rules",
+  "title": "Rules",
+  "group": "Routing",
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Settings",
+  "title": "Settings",
+  "group": "Routing",
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Tables",
+  "title": "Tables",
+  "group": "Routing",
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "ACL",
+  "title": "Switch ACL",
+  "group": "Switch",
+  "prio": 101,
+  "coDieuKien": 1,
+  "soCon": 2
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "FDBs",
+  "title": "Switch FDBs",
+  "group": "Switch",
+  "prio": 101,
+  "coDieuKien": 1,
+  "soCon": 3
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Ports",
+  "title": "Switch Ports",
+  "group": "Switch",
+  "prio": 101,
+  "coDieuKien": 1,
+  "soCon": 4
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "QoS",
+  "title": "Switch QoS",
+  "group": "Switch",
+  "prio": 101,
+  "coDieuKien": 1,
+  "soCon": 5
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Settings",
+  "title": "Switch Settings",
+  "group": "Switch",
+  "prio": 101,
+  "coDieuKien": 1,
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "VLAN",
+  "title": "Switch VLAN",
+  "group": "Switch",
+  "prio": 101,
+  "coDieuKien": 1,
+  "soCon": 7
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Auto Upgrade",
+  "title": "Auto Upgrade",
+  "group": "System",
+  "soCon": 3
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Certificates",
+  "title": "Certificates",
+  "group": "System",
+  "soCon": 11
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Clock",
+  "title": "Clock",
+  "group": "System",
+  "soCon": 2
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Console",
+  "title": "Console",
+  "group": "System",
+  "soCon": 3
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Disks",
+  "title": "Disk List",
+  "group": "System",
+  "coDieuKien": 1,
+  "soCon": 3
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Health",
+  "title": "System Health",
+  "group": "System",
+  "coDieuKien": 1,
+  "soCon": 3
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "History",
+  "title": "History",
+  "group": "System",
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Identity",
+  "title": "Identity",
+  "group": "System",
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "LEDs",
+  "title": "LEDs",
+  "group": "System",
+  "soCon": 3
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "License",
+  "title": "License",
+  "group": "System",
+  "soCon": 3
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Logging",
+  "title": "Logging",
+  "group": "System",
+  "soCon": 4
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Note",
+  "title": "Note",
+  "group": "System",
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "NTP Client",
+  "title": "NTP Client",
+  "group": "System",
+  "soCon": 3
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "NTP Server",
+  "title": "NTP Server",
+  "group": "System",
+  "soCon": 2
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Packages",
+  "title": "Package List",
+  "group": "System",
+  "soCon": 3
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Password",
+  "title": "Password",
+  "group": "System",
+  "soCon": 2
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Ports",
+  "title": "Port List",
+  "group": "System",
+  "prio": 120,
+  "soCon": 2
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "PTP",
+  "title": "PTP",
+  "group": "System",
+  "coDieuKien": 1,
+  "soCon": 3
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Reboot",
+  "title": "Reboot",
+  "group": "System",
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Reset Configuration",
+  "title": "Reset Configuration",
+  "group": "System",
+  "soCon": 2
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Resources",
+  "title": "Resources",
+  "group": "System",
+  "soCon": 7
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "RouterBOARD",
+  "title": "RouterBOARD",
+  "group": "System",
+  "coDieuKien": 1,
+  "soCon": 11
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Scheduler",
+  "title": "Scheduler",
+  "group": "System",
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Scripts",
+  "title": "Script List",
+  "group": "System",
+  "soCon": 3
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Shutdown",
+  "title": "Shutdown",
+  "group": "System",
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Special Login",
+  "title": "Special Login List",
+  "group": "System",
+  "prio": 121,
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "SwOS",
+  "title": "SwOS",
+  "group": "System",
+  "coDieuKien": 1,
+  "soCon": 2
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Users",
+  "title": "User List",
+  "group": "System",
+  "soCon": 10
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Watchdog",
+  "title": "Watchdog",
+  "group": "System",
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Bandwidth Test",
+  "title": "Bandwidth Test",
+  "group": "Tools",
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "BTest Server",
+  "title": "BTest Server",
+  "group": "Tools",
+  "soCon": 2
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Email",
+  "title": "Email",
+  "group": "Tools",
+  "soCon": 2
+ },
+ {
+  "tep": "advtool-89d29caa39a2.jg",
+  "name": "Flood Ping",
+  "title": "Flood Ping",
+  "group": "Tools",
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Graphing",
+  "title": "Graphing",
+  "group": "Tools",
+  "soCon": 7
+ },
+ {
+  "tep": "advtool-89d29caa39a2.jg",
+  "name": "IP Scan",
+  "title": "IP Scan",
+  "group": "Tools",
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "MAC Server",
+  "title": "MAC Server",
+  "group": "Tools",
+  "soCon": 4
+ },
+ {
+  "tep": "advtool-89d29caa39a2.jg",
+  "name": "Netwatch",
+  "title": "Netwatch",
+  "group": "Tools",
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Packet Sniffer",
+  "title": "Packet Sniffer",
+  "group": "Tools",
+  "soCon": 5
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Ping",
+  "title": "Ping",
+  "group": "Tools",
+  "soCon": 1
+ },
+ {
+  "tep": "advtool-89d29caa39a2.jg",
+  "name": "Ping Speed",
+  "title": "Ping Speed",
+  "group": "Tools",
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Profile",
+  "title": "Profile",
+  "group": "Tools",
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "RoMON",
+  "title": "RoMON",
+  "group": "Tools",
+  "soCon": 4
+ },
+ {
+  "tep": "advtool-89d29caa39a2.jg",
+  "name": "SMS",
+  "title": "SMS",
+  "group": "Tools",
+  "soCon": 3
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Speed Test",
+  "title": "Speed Test",
+  "group": "Tools",
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Telnet",
+  "title": "Telnet",
+  "group": "Tools",
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Torch",
+  "title": "Torch",
+  "group": "Tools",
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Traceroute",
+  "title": "Traceroute",
+  "group": "Tools",
+  "soCon": 1
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Traffic Generator",
+  "title": "Traffic Generator",
+  "group": "Tools",
+  "soCon": 7
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Traffic Generator Stats",
+  "title": "Traffic Generator Stats",
+  "group": "Tools",
+  "nonpublic": 1,
+  "soCon": 4
+ },
+ {
+  "tep": "roteros-6fb93413ec27.jg",
+  "name": "Traffic Monitor",
+  "title": "Traffic Monitor List",
+  "group": "Tools",
+  "soCon": 1
+ },
+ {
+  "tep": "advtool-89d29caa39a2.jg",
+  "name": "WoL",
+  "title": "Wake on LAN",
+  "group": "Tools",
+  "soCon": 1
+ }
+]

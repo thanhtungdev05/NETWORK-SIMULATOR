@@ -1,0 +1,121 @@
+[
+ {
+  "route": "home/overview",
+  "i": 0,
+  "label": "WAN",
+  "file": "home__overview__t0",
+  "len": 24127
+ },
+ {
+  "route": "home/overview",
+  "i": 1,
+  "label": "LAN",
+  "file": "home__overview__t1",
+  "len": 31727
+ },
+ {
+  "route": "home/overview",
+  "i": 2,
+  "label": "Total(0)",
+  "file": "home__overview__t2",
+  "len": 31727
+ },
+ {
+  "route": "home/overview",
+  "i": 3,
+  "label": "Wireless(0)",
+  "file": "home__overview__t3",
+  "len": 31733
+ },
+ {
+  "route": "home/overview",
+  "i": 4,
+  "label": "Wired(0)",
+  "file": "home__overview__t4",
+  "len": 31734
+ },
+ {
+  "route": "wifi/general",
+  "i": 0,
+  "label": "PRIMARY NETWORK",
+  "file": "wifi__general__t0",
+  "len": 18531
+ },
+ {
+  "route": "wifi/general",
+  "i": 1,
+  "label": "GUEST NETWORK",
+  "file": "wifi__general__t1",
+  "len": 18789
+ },
+ {
+  "route": "wifi/general",
+  "i": 2,
+  "label": "SMARTHOME NETWORK",
+  "file": "wifi__general__t2",
+  "len": 25154
+ },
+ {
+  "route": "advanced/lan",
+  "i": 0,
+  "label": "General",
+  "file": "advanced__lan__t0",
+  "len": 24475
+ },
+ {
+  "route": "advanced/lan",
+  "i": 1,
+  "label": "Reserved IP",
+  "file": "advanced__lan__t1",
+  "len": 15945
+ },
+ {
+  "route": "advanced/routing",
+  "i": 0,
+  "label": "IPv4",
+  "file": "advanced__routing__t0",
+  "len": 11809
+ },
+ {
+  "route": "advanced/routing",
+  "i": 1,
+  "label": "IPv6",
+  "file": "advanced__routing__t1",
+  "len": 11809
+ },
+ {
+  "route": "system/general",
+  "i": 0,
+  "label": "General Settings",
+  "file": "system__general__t0",
+  "len": 10444
+ },
+ {
+  "route": "system/general",
+  "i": 1,
+  "label": "Time Synchronization",
+  "file": "system__general__t1",
+  "len": 10658
+ },
+ {
+  "route": "system/upgrade",
+  "i": 0,
+  "label": "Factory Reset",
+  "file": "system__upgrade__t0",
+  "len": 10373
+ },
+ {
+  "route": "system/upgrade",
+  "i": 1,
+  "label": "Firmware Update",
+  "file": "system__upgrade__t1",
+  "len": 9594
+ },
+ {
+  "route": "system/upgrade",
+  "i": 2,
+  "label": "SMARTHOME NETWORK",
+  "file": "system__upgrade__t2",
+  "len": 18789
+ }
+]

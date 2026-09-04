@@ -1,0 +1,323 @@
+{
+  "_mo_ta": "BANG CHUNG GOC -- hop dong PHAN HOI khi GHI (PATCH/POST/DELETE) do TRUC TIEP tren thiet bi that 192.168.1.1.",
+  "_ngay": "2026-08-13",
+  "_cach_do": "Dieu khien Chrome, goi fetch that voi Bearer token that. Moi phep do deu: doc gia tri goc -> ghi -> doc lai xac nhan da doi -> ghi tra ve nhu cu -> doc lai xac nhan da hoan tac. Anh Huynn dong y cho cham nhe co hoan tac.",
+  "_da_hoan_tac_het": true,
+  "_pham_vi": "4 resource dai dien: object (upnp), mang co id (portForwarding/policies, staticRouting/policies), va cap doc-ghi khac nhau (system/info doc, system ghi).",
+  "KET_LUAN_QUAN_TRONG": {
+    "1_PATCH_tra_than_RONG": {
+      "quan_sat": "PATCH luon tra HTTP 200, Content-Type application/json, than dai 0 byte.",
+      "do_o": [
+        "api/v1/data/upnp",
+        "api/v1/data/portForwarding/policies",
+        "api/v1/data/system"
+      ],
+      "he_qua": "Gia lap KHONG duoc tra ve doi tuong da cap nhat. Phai tra 200 + than rong. Truoc do config_store.ghi() tra ve du lieu moi -- SAI hop dong."
+    },
+    "2_POST_tra_danh_sach_id": {
+      "quan_sat": "POST tra HTTP 200 kem than {\"ids\": [\"<id moi>\"]}",
+      "do_o": [
+        "api/v1/data/portForwarding/policies"
+      ],
+      "he_qua": "Gia lap phai tra dung dang nay, khong tra ca ban ghi vua tao."
+    },
+    "3_DELETE_tra_than_RONG": {
+      "quan_sat": "DELETE tra HTTP 200, than 0 byte. Than GUI DI la {\"ids\": [...]} chu khong phai mang doi tuong.",
+      "do_o": [
+        "api/v1/data/portForwarding/policies"
+      ]
+    },
+    "4_id_do_THIET_BI_sinh": {
+      "quan_sat": "Client POST khong kem id; THIET BI tu sinh. Dinh dang KHAC NHAU tung resource:",
+      "da_do": {
+        "portForwarding/policies": "cfg303837   -- 'cfg' + 6 chu so",
+        "staticRouting/policies": "S_route_fd1a0d9d -- 'S_route_' + 8 ky tu hex"
+      },
+      "he_qua": "Gia lap phai sinh id dung dinh dang cua TUNG resource (bang DINH_DANG_ID trong config_store.py). Ban nhap tam cua GD2 dung 'sim-1' cho moi thu -- da bo. Resource chua do thi dung mau chung va ghi ro o ISSUES."
+    },
+    "5_thiet_bi_tu_dien_truong_thieu": {
+      "quan_sat": "Client POST chi gui source.portRange va destination.{portRange,ipAddress}. Thiet bi tu them source.interfaceId='wan' va destination.interfaceId='lan'.",
+      "he_qua": "Gia lap phai bo sung hai truong nay khi tao moi, neu khong trang Edit se thieu du lieu."
+    },
+    "6_doc_va_ghi_o_HAI_resource_khac_nhau": {
+      "quan_sat": "GET api/v1/data/system/info tra 10 khoa. PATCH phai gui vao api/v1/data/system (khong phai system/info) thi hostname moi doi. GET api/v1/data/system tra HTTP 0 (dong ket noi, khong tra gi).",
+      "he_qua": "Xac nhan GHI_CHUYEN_HUONG {'system': 'system/info'} la dung. Khop voi phat hien GD1 ve 4 endpoint 'HTTP 0'."
+    }
+  },
+  "phep_do": [
+    {
+      "nhom": "A -- resource dang OBJECT (upnp)",
+      "gia_tri_goc": {
+        "enabled": true
+      },
+      "buoc": [
+        {
+          "nhan": "A1 doc goc",
+          "method": "GET",
+          "url": "/api/v1/data/upnp",
+          "status": 200,
+          "content_type": "application/json",
+          "do_dai_than": 16,
+          "than_nhan": {
+            "enabled": true
+          }
+        },
+        {
+          "nhan": "A2 PATCH lat trang thai",
+          "method": "PATCH",
+          "url": "/api/v1/data/upnp",
+          "than_gui": {
+            "enabled": false
+          },
+          "status": 200,
+          "content_type": "application/json",
+          "do_dai_than": 0,
+          "than_nhan": "(rong)"
+        },
+        {
+          "nhan": "A3 doc sau khi lat",
+          "method": "GET",
+          "url": "/api/v1/data/upnp",
+          "status": 200,
+          "do_dai_than": 17,
+          "than_nhan": {
+            "enabled": false
+          }
+        },
+        {
+          "nhan": "A4 PATCH tra ve nhu cu",
+          "method": "PATCH",
+          "url": "/api/v1/data/upnp",
+          "than_gui": {
+            "enabled": true
+          },
+          "status": 200,
+          "do_dai_than": 0,
+          "than_nhan": "(rong)"
+        },
+        {
+          "nhan": "A5 doc sau khi tra",
+          "method": "GET",
+          "url": "/api/v1/data/upnp",
+          "status": 200,
+          "do_dai_than": 16,
+          "than_nhan": {
+            "enabled": true
+          }
+        }
+      ],
+      "da_hoan_tac_dung": true
+    },
+    {
+      "nhom": "B -- resource dang MANG co id (portForwarding/policies)",
+      "gia_tri_goc": [],
+      "buoc": [
+        {
+          "nhan": "B1 doc goc",
+          "method": "GET",
+          "url": "/api/v1/data/portForwarding/policies",
+          "status": 200,
+          "do_dai_than": 2,
+          "than_nhan": []
+        },
+        {
+          "nhan": "B2 POST tao luat thu",
+          "method": "POST",
+          "url": "/api/v1/data/portForwarding/policies",
+          "than_gui": [
+            {
+              "enabled": true,
+              "name": "TEST-XOA-NGAY",
+              "protocol": "TCP",
+              "source": {
+                "portRange": "55551"
+              },
+              "destination": {
+                "portRange": "55551",
+                "ipAddress": "192.168.1.109"
+              }
+            }
+          ],
+          "status": 200,
+          "content_type": "application/json",
+          "do_dai_than": 21,
+          "than_nhan": {
+            "ids": [
+              "cfg303837"
+            ]
+          }
+        },
+        {
+          "nhan": "B3 doc sau POST",
+          "method": "GET",
+          "url": "/api/v1/data/portForwarding/policies",
+          "status": 200,
+          "do_dai_than": 210,
+          "than_nhan": [
+            {
+              "id": "cfg303837",
+              "destination": {
+                "portRange": "55551",
+                "ipAddress": "192.168.1.109",
+                "interfaceId": "lan"
+              },
+              "enabled": true,
+              "protocol": "TCP",
+              "source": {
+                "interfaceId": "wan",
+                "portRange": "55551"
+              },
+              "name": "TEST-XOA-NGAY"
+            }
+          ],
+          "_chu_y": "interfaceId 'wan'/'lan' do THIET BI tu them, client khong gui"
+        },
+        {
+          "nhan": "B4 PATCH sua luat",
+          "method": "PATCH",
+          "url": "/api/v1/data/portForwarding/policies",
+          "than_gui": [
+            {
+              "id": "cfg303837",
+              "enabled": false,
+              "name": "TEST-XOA-NGAY-2",
+              "protocol": "UDP",
+              "source": {
+                "portRange": "55552",
+                "interfaceId": "wan"
+              },
+              "destination": {
+                "portRange": "55552",
+                "ipAddress": "192.168.1.109",
+                "interfaceId": "lan"
+              }
+            }
+          ],
+          "status": 200,
+          "do_dai_than": 0,
+          "than_nhan": "(rong)"
+        },
+        {
+          "nhan": "B5 doc sau PATCH",
+          "method": "GET",
+          "url": "/api/v1/data/portForwarding/policies",
+          "status": 200,
+          "do_dai_than": 213,
+          "than_nhan": [
+            {
+              "id": "cfg303837",
+              "destination": {
+                "portRange": "55552",
+                "ipAddress": "192.168.1.109",
+                "interfaceId": "lan"
+              },
+              "enabled": false,
+              "protocol": "UDP",
+              "source": {
+                "interfaceId": "wan",
+                "portRange": "55552"
+              },
+              "name": "TEST-XOA-NGAY-2"
+            }
+          ]
+        },
+        {
+          "nhan": "B6 DELETE xoa luat",
+          "method": "DELETE",
+          "url": "/api/v1/data/portForwarding/policies",
+          "than_gui": {
+            "ids": [
+              "cfg303837"
+            ]
+          },
+          "status": 200,
+          "do_dai_than": 0,
+          "than_nhan": "(rong)"
+        },
+        {
+          "nhan": "B7 doc sau DELETE",
+          "method": "GET",
+          "url": "/api/v1/data/portForwarding/policies",
+          "status": 200,
+          "do_dai_than": 2,
+          "than_nhan": []
+        }
+      ],
+      "da_don_sach": true
+    },
+    {
+      "nhom": "C -- doc va ghi o HAI resource khac nhau (system/info vs system)",
+      "gia_tri_goc": {
+        "hostname": "ONT-BE6500C-C150"
+      },
+      "buoc": [
+        {
+          "nhan": "C1 doc system/info",
+          "method": "GET",
+          "url": "/api/v1/data/system/info",
+          "status": 200,
+          "do_dai_than": 300,
+          "than_nhan": "10 khoa -- xem seed_api.json"
+        },
+        {
+          "nhan": "C2 PATCH system doi hostname",
+          "method": "PATCH",
+          "url": "/api/v1/data/system",
+          "than_gui": {
+            "hostname": "ONT-BE6500C-C150X"
+          },
+          "status": 200,
+          "do_dai_than": 0,
+          "than_nhan": "(rong)"
+        },
+        {
+          "nhan": "C3 doc lai system/info",
+          "method": "GET",
+          "url": "/api/v1/data/system/info",
+          "status": 200,
+          "do_dai_than": 301,
+          "_ket_qua": "hostname = 'ONT-BE6500C-C150X' -> ghi vao 'system' lam doi 'system/info'"
+        },
+        {
+          "nhan": "C4 PATCH tra lai hostname",
+          "method": "PATCH",
+          "url": "/api/v1/data/system",
+          "than_gui": {
+            "hostname": "ONT-BE6500C-C150"
+          },
+          "status": 200,
+          "do_dai_than": 0,
+          "than_nhan": "(rong)"
+        },
+        {
+          "nhan": "C5 doc lai lan cuoi",
+          "method": "GET",
+          "url": "/api/v1/data/system/info",
+          "status": 200,
+          "do_dai_than": 300,
+          "_ket_qua": "hostname = 'ONT-BE6500C-C150' -> da hoan tac"
+        },
+        {
+          "nhan": "C6 GET system (khong phai system/info)",
+          "method": "GET",
+          "url": "/api/v1/data/system",
+          "status": 0,
+          "do_dai_than": 0,
+          "than_nhan": "(rong)",
+          "_chu_y": "HTTP 0 = thiet bi dong ket noi khong tra gi. Khop phat hien GD1 ve 4 endpoint chi-ghi."
+        }
+      ],
+      "da_hoan_tac_dung": true
+    }
+  ],
+  "_con_thieu": [
+    "Cac resource dang mang khac (dhcp/reservedHosts, staticRouting/policies, publicLan/*) chua do truc tiep. Suy tu B la HOP LY vi cung khuon REST va cung 4 method, nhung CHUA co bang chung rieng -- neu sau nay thay lech thi day la cho can do lai.",
+    "ssids / radios / easyMesh: chua do vi ghi that se lam Wi-Fi khoi dong lai, gay mat ket noi. Da co bang chung than GUI DI tu luong dang nhap GD1, chua co bang chung than NHAN VE."
+  ],
+  "bang_chup_bang_co_dong": {
+    "_vi_sao": "Tren thiet bi that ca hai bang deu RONG nen ban chup GD1 khong co markup cua dong. Da tao mot dong thu, chup, roi XOA -- anh Huynn dong y truoc.",
+    "network__portforward__co_dong.html": "51.666 byte, 2 <tr>, 9 <td>. Cot: State, Name, Protocol, External Port, Device/IP, Internal Port.",
+    "advanced__routing__co_dong.html": "51.897 byte, 2 <tr>, 7 <td>. Cot: Destination IP, Mask, Gateway IP, Interface. Dong thu: 203.0.113.0 / 255.255.255.0 / 192.168.1.254 / Internet.",
+    "_da_don_sach": "Ca hai bang deu ve 0 dong sau khi chup."
+  }
+}

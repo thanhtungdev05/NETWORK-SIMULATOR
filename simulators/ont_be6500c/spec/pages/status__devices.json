@@ -1,0 +1,52 @@
+{
+  "_route": "status/devices",
+  "_duong_dan_trinh_duyet": "#/status/devices",
+  "_nguon": {
+    "chunk": "index-CDBqBPYE.js",
+    "kich_thuoc_byte": 1495,
+    "chunk_phu_thuoc": [
+      "assets/index-CDBqBPYE.js",
+      "assets/DevicesContent-DY0XQxoh.js",
+      "assets/TabList-CMoR7mS_.js",
+      "assets/KeyboardArrowRight-C7P-Q0WC.js",
+      "assets/device-Du0sN_xE.js",
+      "assets/schema-BT0LOWg1.js",
+      "assets/Chip-Ck-8K0QZ.js",
+      "assets/TableRow-CJLJKR0z.js"
+    ],
+    "bundle_loi": "index-CW0UhNxy.js",
+    "_da_quet": [
+      "Chip-Ck-8K0QZ.js",
+      "DevicesContent-DY0XQxoh.js",
+      "KeyboardArrowRight-C7P-Q0WC.js",
+      "TableRow-CJLJKR0z.js",
+      "device-Du0sN_xE.js",
+      "index-CDBqBPYE.js",
+      "schema-BT0LOWg1.js"
+    ]
+  },
+  "_cach_trich": "src/trich_dac_ta_trang.py (doc ma goc, khong doan)",
+  "goi_api": [],
+  "goi_khac": {
+    "rpc": [],
+    "duong_dan_tuyet_doi": []
+  },
+  "truong_form": [],
+  "gia_tri_mac_dinh": [],
+  "schema_kiem_tra": [],
+  "chuoi_hien_thi": [
+    "A0:78:17:64:8B:F7",
+    "AP-AX3000C-C9B9",
+    "Camera",
+    "Car",
+    "Computer",
+    "Devices",
+    "Extender",
+    "Printer",
+    "TV",
+    "WEB6000Q"
+  ],
+  "_can_doc_tay": [
+    "khong tim thay loi goi API/RPC nao -- co the la trang tinh, hoac doc du lieu tu kho Zustand thay vi goi truc tiep. PHAI doc tay xac nhan, khong duoc mac dinh la trang tinh"
+  ]
+}

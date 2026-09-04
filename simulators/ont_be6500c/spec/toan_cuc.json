@@ -1,0 +1,209 @@
+{
+  "_mo_ta": "Dac ta TOAN CUC cua ung dung ONT-BE6500C -- phan chung cho moi trang. Doc truc tiep tu ma goc, khong suy dien.",
+  "_nguon": "reference/source/assets_goc/index-CW0UhNxy.js",
+  "_ngay": "2026-08-12",
+  "_giai_doan": "GD3",
+
+  "tang_http": {
+    "ham_bao": "Ae({resource, method, payload, token})",
+    "ham_fetch_that": "IP(url, method, {payload, query, headers})",
+    "url_goi_di": "resource duoc dung NGUYEN VAN lam URL, KHONG co dau '/' dau -- vd fetch('api/v1/data/upnp'), tuc la duong dan TUONG DOI so voi goc trang",
+    "header_mac_dinh": {
+      "Accept": "application/json",
+      "Authorization": "Bearer <token tu localStorage.token>"
+    },
+    "content_type_khi_co_than": "application/json (tru khi payload la FormData thi trinh duyet tu dat)",
+    "khong_gui_than_voi": ["GET", "HEAD"],
+    "timeout_ms": 10000,
+    "timeout_bao_loi": "new Error('Timeout') qua AbortController",
+    "_trich_tu": "IP = async(e,t='GET',n={}) => {...} tai offset ~316385; Ae tai ~317608"
+  },
+
+  "kenh_rpc": {
+    "duong_dan": "/oui-rpc",
+    "http_method": "POST",
+    "than": "{method, params}  (KHONG kem id/jsonrpc vi co build DP = false)",
+    "ham_bao": "Ea({method, params, url='/oui-rpc', httpMethod='POST'})",
+    "ham_goi_module": "dt({module, action='call', payload, token}) -> Ea({method:'call', params:[sid, module, action, payload]})",
+    "sid_lay_tu": "localStorage.sessionId",
+    "bang_ma_loi": {
+      "0": "Success",
+      "1": "Invalid command",
+      "2": "Invalid argument",
+      "3": "Method not found",
+      "4": "Not found",
+      "5": "No response",
+      "6": "Permission denied",
+      "7": "Request timed out",
+      "8": "Operation not supported",
+      "9": "Unknown error",
+      "10": "Connection failed"
+    },
+    "ma_loi_gay_dang_xuat": "-32002 -> reset session store + chuyen ve /login",
+    "_trich_tu": "tq = {0:'Success',...} tai ~316900; Ea, dt ngay sau do"
+  },
+
+  "dang_nhap": {
+    "buoc": [
+      "POST /oui-rpc {method:'challenge', params:{username}} -> {nonce}",
+      "POST /oui-rpc {method:'login', params:{username, password:<bam>}} -> {sid, token}",
+      "POST /oui-rpc {method:'alive', params:{sid}} + header Authorization -> {alive}",
+      "POST /oui-rpc {method:'logout', params:{sid}} + header Authorization"
+    ],
+    "thuat_toan_bam": "o = md5(`${username}:${password}`); gui di = md5(`${o}:${nonce}`)",
+    "chu_ky_kiem_tra_con_song_ms": 60000,
+    "_trich_tu": "Hf.signIn tai ~318300; LP = 60*1e3"
+  },
+
+  "phep_chon_luc_build": {
+    "_giai_thich": "Bundle chua CA HAI cai dat REST va RPC cho cung mot nghiep vu; co build (JSON.parse('true'/'false') do Vite thay the) quyet dinh dung cai nao. Ban dung tren THIET BI NAY chon REST cho ca ba.",
+    "use": {"bieu_thuc": "sse ? lse : ase", "sse": false, "chon": "ase (REST /api/v1/data/*)"},
+    "B_": {"bieu_thuc": "bA ? wA : _A", "bA": false, "chon": "_A (REST /api/v1/data/*)"},
+    "Ble": {"bieu_thuc": "Mle ? Fle : Nle", "Mle": false, "chon": "Nle (REST /api/v1/data/*)"},
+    "_he_qua": "Gia lap chi can dung /api/v1/data/* cho du lieu -- dung voi cach GD2 da lam. Kenh /oui-rpc VAN can cho: dang nhap, cay menu, va toan bo trang system/upgrade."
+  },
+
+  "goi_o_muc_khung_ung_dung": {
+    "_giai_thich": "Nhung loi goi nay do LAYOUT thuc hien, chay tren MOI trang, khong phu thuoc route dang mo. Gia lap phai phuc vu duoc chung o moi trang.",
+    "danh_sach": [
+      {
+        "ham": "getSystemInfo",
+        "doi_tuong": "B_ (_A)",
+        "resource": "api/v1/data/system/info",
+        "method": "GET",
+        "khoa_swr": "getSystemInfo",
+        "lap_lai": "khong",
+        "ghi_vao_kho": "system-store.systemInfo"
+      },
+      {
+        "ham": "getSsidConfiguration",
+        "doi_tuong": "Ble (Nle)",
+        "resource": "api/v1/data/ssids",
+        "method": "GET",
+        "khoa_swr": "getSsidConfiguration",
+        "lap_lai": "khong",
+        "ghi_vao_kho": "ssid-store.ssids"
+      },
+      {
+        "ham": "getInstances",
+        "doi_tuong": "use (ase)",
+        "resource": "api/v1/data/devices",
+        "method": "GET",
+        "khoa_swr": "getInstances",
+        "lap_lai": "refreshInterval 30000 ms + revalidateOnFocus",
+        "ghi_vao_kho": "instance-store.instances",
+        "dieu_kien": "chi goi khi da dang nhap VA renewTokenRequired dung"
+      },
+      {
+        "ham": "getMenu",
+        "doi_tuong": "n0e",
+        "kenh": "RPC /oui-rpc",
+        "rpc": {"module": "oui.ui", "action": "menu"},
+        "khoa_swr": "menu",
+        "lap_lai": "khong (revalidateOnFocus: false)",
+        "ghi_vao_kho": "menu-store.rawMenuData"
+      },
+      {
+        "ham": "getWizardSettings",
+        "doi_tuong": "B_ (_A)",
+        "resource": "api/v1/data/wizard",
+        "method": "GET",
+        "khoa_swr": "getWizardSettings",
+        "lap_lai": "khong",
+        "goi_o": "ca hai cho: cong kiem tra dang nhap VA bo chuyen huong trang chu"
+      }
+    ]
+  },
+
+  "hang_so_bo_cuc": {
+    "_nguon": "Xu=52, GA=160, Th=20, Yl=16 tai ~780817; KA=56, Ef=64 tai ~785513",
+    "thanh_ben_thu_gon_px": 52,
+    "thanh_ben_mo_rong_px": 160,
+    "co_icon_menu_px": 20,
+    "dau_trang_may_tinh_px": 56,
+    "dau_trang_dien_thoai_px": 64
+  },
+
+  "diem_gay_man_hinh": {
+    "_nguon": "N2={xs:0,sm:600,md:900,lg:1200,xl:1536} -- MUI mac dinh, ung dung KHONG ghi de",
+    "xs": 0, "sm": 600, "md": 900, "lg": 1200, "xl": 1536,
+    "chuyen_sang_giao_dien_dien_thoai": {
+      "dieu_kien": "theme.breakpoints.down('md')  ->  chieu rong < 900px",
+      "_canh_bao": "KHONG phai 600px. Ban chup bang chung o 502px nen thoa man; nhung neu kiem thu o 700px thi VAN la giao dien dien thoai.",
+      "khi_thoa_man": [
+        "thanh ben bi go bo hoan toan (khong render)",
+        "hien Drawer anchor='top', height 100%, transitionDuration 300ms -> phu kin man hinh",
+        "chieu cao dau trang doi tu 56px sang 64px",
+        "phan noi dung: marginLeft 0, width 100vw"
+      ]
+    }
+  },
+
+  "trang_wizard": {
+    "_canh_bao": "Route nay lam THIET BI THAT thu hoi token va dang xuat (kiem chung 3/3 lan). KHONG dung.",
+    "bo_chuyen_huong_doc_duoc": "if (isRouterMode && isConfigured === false && wizard.step < 5 && pathname !== '/home/wizard') -> chuyen huong toi /home/wizard",
+    "trang_thai_that_cua_thiet_bi": {"isConfigured": true, "wizard.step": 5},
+    "_ket_luan": "Voi trang thai that thi bo chuyen huong KHONG kich hoat. Nguyen nhan bi dang xuat khi vao thang route nay VAN CHUA giai thich duoc tu ma goc phia trinh duyet -- nhieu kha nang o phia may chu. Ghi nhan hien tuong, khong ket luan.",
+    "nen_giao_dien_rieng": "isWizardPage = pathname === '/home/wizard' || location.state?.fromWizard -> bo thanh ben, bo dau trang, nen mau palette.fill.blank, width 100vw"
+  },
+
+  "khoi_dong_lai": {
+    "_nguon": "qme() tai ~782000; ou = {IDLE, WAITING, REBOOTING, COMPLETED}",
+    "cac_buoc": ["IDLE", "WAITING", "REBOOTING", "COMPLETED"],
+    "cho_truoc_khi_bat_dau_ms": 5000,
+    "thoi_gian_khoi_dong_lay_tu": "rebootInfo.rebootTime (giay) trong ket qua RPC",
+    "sau_khi_xong": "neu isLocal -> window.location.href = redirectUrl; nguoc lai -> hien canh bao showRemoteRebootWarning",
+    "hop_thoai_xac_nhan": {
+      "tieu_de": "Are you sure you want to reboot your router?",
+      "than": "Your Internet access will be unavailable for a minute or two while the system restarts.",
+      "nut": ["Cancel", "Reboot Now"],
+      "be_rong_nut_reboot_px": 104
+    }
+  },
+
+  "kho_zustand": {
+    "_giai_thich": "8 kho, deu co persist ra localStorage. Mot so trang KHONG goi API ma doc thang tu kho -- vd status/devices doc instance-store.",
+    "app-store": {
+      "trang_thai_ban_dau": {
+        "sidebarWidth": 220,
+        "isSidebarOpen": false,
+        "modals": [],
+        "rebootingTimerId": null,
+        "modalState": {
+          "rebootConfirm": false,
+          "rebootProcess": false,
+          "unexpectedError": false,
+          "showRemoteRebootWarning": false
+        }
+      },
+      "chi_luu_lai": ["sidebarWidth"],
+      "_giai_dap_sidebarWidth_220": "Quet TOAN BO bundle: chuoi 'sidebarWidth' chi xuat hien DUNG 2 lan -- mot lan dat gia tri ban dau (Hde = JSON.parse('220')), mot lan trong partialize de luu xuong localStorage. KHONG CO thanh phan bo cuc nao DOC no. Bo cuc that dung hai hang so cung Xu=52 va GA=160. Ket luan: sidebarWidth=220 la CAU HINH CHET, tan du cua ban thiet ke cu. Day la ket qua doc ma, khong phai phong doan -- da go nghi van ghi trong ISSUES.md 2026-08-11 muc 5."
+    },
+    "danh_sach_kho": ["token", "session-store", "app-store", "ssid-store",
+                       "system-store", "sessionId", "menu-store", "instance-store"]
+  },
+
+  "bang_liet_ke": {
+    "kieu_ssid": ["Primary", "Guest", "Backhaul", "SmartHome"],
+    "kieu_ma_hoa": ["None", "WPA2-Personal", "WPA3-Personal", "WPA3-Personal-Transition", "WPA23T"],
+    "bang_tan": ["2.4G", "5G", "6G"],
+    "_nguon": "cse / dse / fse tai ~729800",
+    "_ghi_chu": "Gia tri enum WPA23T KHONG co dau gach ngang nhu ba cai kia -- giu nguyen, khong 'sua cho dep'."
+  },
+
+  "api_khong_bao_gio_duoc_goi": {
+    "_giai_thich": "Cac ham nay CO dinh nghia trong bundle nhung TIM THAY DUNG 1 LAN (chinh la dinh nghia) -- tuc la giao dien khong bao gio goi toi. Ma chet cua hang. Gia lap khong can nghiep vu cho chung; van giu nguyen phan hoi da chup duoc khi GET truc tiep.",
+    "resource": [
+      "api/v1/data/access/http/connections",
+      "api/v1/data/access/ssh/connections",
+      "api/v1/data/alg",
+      "api/v1/data/eapProfiles",
+      "api/v1/data/publicLan",
+      "api/v1/data/publicLan/routing/reservedHosts",
+      "api/v1/data/publicLan/staticNat/policies",
+      "api/v1/data/system/logServer",
+      "api/v1/data/system/logs"
+    ],
+    "_luu_y": "api/v1/data/devices KHONG nam trong danh sach nay -- no duoc goi o muc khung ung dung (getInstances), lap 30 giay."
+  }
+}

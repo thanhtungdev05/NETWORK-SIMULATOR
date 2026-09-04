@@ -1,0 +1,7 @@
+[
+ {
+  "url": "api/v1/data/ext/timer/wifi",
+  "body": null,
+  "resp": "{\"endTime\":\"23:00\",\"enabled\":false,\"tue\":true,\"wed\":true,\"mon\":true,\"sun\":true,\"sat\":true,\"startTime\":\"06:00\",\"fri\":true,\"thu\":true}"
+ }
+]

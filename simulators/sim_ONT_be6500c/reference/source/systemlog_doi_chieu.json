@@ -1,0 +1,34 @@
+{
+ "bangHienThi": [],
+ "apiLogs4Dong": [
+  {
+   "log": "repacd.wifimon: MLO Assoc timeout in 157",
+   "level": 6,
+   "time": 1786403157000
+  },
+  {
+   "log": "repacd.wifimon: repacd-wifimon-map.sh: __repacd_wifimon_is_sta_iface() get 'ath12' station and disabled='0',network='lan', network_to_match='', hwmode='11bea'",
+   "level": 7,
+   "time": 1786403158000
+  },
+  {
+   "log": "repacd.wifimon: repacd-wifimon-map.sh: __repacd_wifimon_is_sta_iface() get 'ath03' station and disabled='0',network='lan', network_to_match='', hwmode='11beg'",
+   "level": 6,
+   "time": 1786403158000
+  },
+  {
+   "log": "repacd.wifimon: repacd-wifimon-map.sh: __repacd_wifimon_get_sta_iface(): return sta_iface_24g='ath03', sta_iface_5g='ath12'",
+   "level": 7,
+   "time": 1786403158000
+  }
+ ],
+ "logServer": {
+  "remoteServer": {
+   "protocol": "",
+   "enabled": false,
+   "ipAddress": "",
+   "port": 514
+  },
+  "level": 7
+ }
+}

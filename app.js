@@ -397,7 +397,6 @@
                       const txt = (el.value || el.textContent || el.innerText || '').toLowerCase().trim();
                       const cls = (el.className && typeof el.className === 'string') ? el.className.toLowerCase() : '';
                       const id = (el.id || '').toLowerCase();
-
                       const isSubmitInput = el.tagName === 'INPUT' && (el.type === 'submit' || el.type === 'button') &&
                         (txt.includes('login') || txt.includes('log in') || txt.includes('đăng nhập') || id.includes('login') || cls.includes('login') || cls.includes('submit'));
                       const isButton = (el.tagName === 'BUTTON' || el.tagName === 'A' || el.tagName === 'SPAN') &&
@@ -2159,11 +2158,14 @@
       const winH = win.innerHeight || doc.documentElement.clientHeight || 768;
       let pos = pop.position || 'right';
 
+      // Tắt tự động lật tooltip theo yêu cầu
+      /*
       if (!pop.forcePosition && pos === 'right' && (rect.left + rect.width + bWidth + 16) > winW) {
         if (rect.left - bWidth - 12 >= 10) {
           pos = 'left';
         }
       }
+      */
 
       bubble.className = `ftc-guide-bubble pos-${pos}`;
 

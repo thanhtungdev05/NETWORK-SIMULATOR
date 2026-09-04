@@ -1,0 +1,6 @@
+/ip dhcp-server lease print[[m[36madmin[m@[m[32mFPT[m] > [m[36m/ip[m [m[36mdhcp-server[m [m[36mlease[m [m[35mprint[m
+Flags: D - [m[1mDYNAMIC
+[mColumns: [m[1mADDRESS[m, [m[1mMAC-ADDRESS[m, [m[1mHOST-NAME[m, [m[1mSERVER[m, [m[1mSTATUS[m, [m[1mLAST-SEEN
+#[m   [m[1mADDRESS[m        [m[1mMAC-ADDRESS[m        [m[1mHOST-NAME[m  [m[1mSERVER[m           [m[1mSTATUS[m  [m[1mLAST-SEEN
+[m0 D 192.168.1.254  D8:43:AE:2E:65:45  Admin-PC   LAN-DHCP-Server  bound   3m41s    
+[9999B[K[[m[36madmin[m@[m[32mFPT[m] > 

@@ -1,0 +1,320 @@
+{
+  "_nguon": "reference/source/assets_goc/index-CW0UhNxy.js",
+  "_cach_trich": "regex bat mau <tenHam>:async(...)=>Ae({resource,method}) -- xem src/trich_api_methods.py",
+  "_ngay": "2026-08-12",
+  "_tong_resource": 40,
+  "_ghi_chu": "Gia tri la {METHOD: [ten ham goc trong bundle]}. Resource khong co trong bang nay = ung dung KHONG bao gio goi.",
+  "resources": {
+    "api/v1/data/access/http/connections": {
+      "DELETE": [
+        "deleteAccessHttpConnections"
+      ],
+      "GET": [
+        "getAccessHttpConnections"
+      ],
+      "POST": [
+        "postAccessHttpConnections"
+      ]
+    },
+    "api/v1/data/access/ssh/connections": {
+      "DELETE": [
+        "deleteAccessSshConnections"
+      ],
+      "GET": [
+        "getAccessSshConnections"
+      ],
+      "POST": [
+        "postAccessSshConnections"
+      ]
+    },
+    "api/v1/data/alg": {
+      "GET": [
+        "getAlgConfigurations"
+      ],
+      "PATCH": [
+        "updateAlgConfigurations"
+      ]
+    },
+    "api/v1/data/ddns": {
+      "GET": [
+        "getDynamicDNSStatus"
+      ]
+    },
+    "api/v1/data/ddns/configurations": {
+      "GET": [
+        "getDynamicDNSConfigurations"
+      ],
+      "PATCH": [
+        "setDynamicDNSConfigurations"
+      ]
+    },
+    "api/v1/data/devices": {
+      "GET": [
+        "getInstances"
+      ]
+    },
+    "api/v1/data/dhcp/reservedHosts": {
+      "DELETE": [
+        "deleteDhcpReservedHosts"
+      ],
+      "GET": [
+        "getDhcpReservedHosts"
+      ],
+      "PATCH": [
+        "setDhcpReservedHosts"
+      ],
+      "POST": [
+        "postDhcpReservedHosts"
+      ]
+    },
+    "api/v1/data/dhcp/servers": {
+      "GET": [
+        "getDhcpServers"
+      ],
+      "PATCH": [
+        "setDhcpServers"
+      ]
+    },
+    "api/v1/data/diagnostic": {
+      "POST": [
+        "postDiagnostic"
+      ]
+    },
+    "api/v1/data/dmz/configurations": {
+      "GET": [
+        "getDmzConfiguration"
+      ],
+      "PATCH": [
+        "setDmzConfiguration"
+      ]
+    },
+    "api/v1/data/eapProfiles": {
+      "DELETE": [
+        "deleteEapProfiles"
+      ],
+      "GET": [
+        "getEapProfiles"
+      ],
+      "PATCH": [
+        "setEapProfiles"
+      ],
+      "POST": [
+        "postEapProfiles"
+      ]
+    },
+    "api/v1/data/easyMesh": {
+      "GET": [
+        "getEasyMeshConfiguration"
+      ],
+      "PATCH": [
+        "setEasyMeshConfiguration"
+      ]
+    },
+    "api/v1/data/ethernetPorts": {
+      "GET": [
+        "getEthernetPorts"
+      ],
+      "PATCH": [
+        "setEthernetPorts"
+      ]
+    },
+    "api/v1/data/firewall": {
+      "GET": [
+        "getFirewallConfigurations"
+      ],
+      "PATCH": [
+        "updateFirewallConfigurations"
+      ]
+    },
+    "api/v1/data/interfaces": {
+      "GET": [
+        "getInterfaceStatus"
+      ]
+    },
+    "api/v1/data/interfaces/configurations": {
+      "GET": [
+        "getInterfaceConfigurations"
+      ],
+      "PATCH": [
+        "setInterfaceConfigurations"
+      ]
+    },
+    "api/v1/data/internetConnection": {
+      "GET": [
+        "getInternetStatus"
+      ]
+    },
+    "api/v1/data/pon/status": {
+      "GET": [
+        "getPonStatus"
+      ]
+    },
+    "api/v1/data/portForwarding/policies": {
+      "DELETE": [
+        "deletePortForwardingEntries"
+      ],
+      "GET": [
+        "getPortForwardingEntries"
+      ],
+      "PATCH": [
+        "updatePortForwardingEntries"
+      ],
+      "POST": [
+        "createPortForwardingEntries"
+      ]
+    },
+    "api/v1/data/publicLan": {
+      "GET": [
+        "getPublicLanConfiguration"
+      ],
+      "PATCH": [
+        "setPublicLanConfiguration"
+      ]
+    },
+    "api/v1/data/publicLan/routing/reservedHosts": {
+      "DELETE": [
+        "deletePublicLanReservedHosts"
+      ],
+      "GET": [
+        "getPublicLanReservedHosts"
+      ],
+      "PATCH": [
+        "setPublicLanReservedHosts"
+      ],
+      "POST": [
+        "postPublicLanReservedHosts"
+      ]
+    },
+    "api/v1/data/publicLan/staticNat/policies": {
+      "DELETE": [
+        "deleteStaticNatPolicies"
+      ],
+      "GET": [
+        "getStaticNatPolicies"
+      ],
+      "PATCH": [
+        "setStaticNatPolicies"
+      ],
+      "POST": [
+        "postStaticNatPolicies"
+      ]
+    },
+    "api/v1/data/radios": {
+      "GET": [
+        "getRadios"
+      ],
+      "PATCH": [
+        "setRadios"
+      ]
+    },
+    "api/v1/data/speedTest": {
+      "POST": [
+        "doSpeedTest"
+      ]
+    },
+    "api/v1/data/speedTest/records/{id}": {
+      "GET": [
+        "getSpeedTestRecords"
+      ]
+    },
+    "api/v1/data/speedTest/servers": {
+      "GET": [
+        "getSpeedTestServers"
+      ]
+    },
+    "api/v1/data/ssids": {
+      "GET": [
+        "getSsidConfiguration"
+      ],
+      "PATCH": [
+        "setSsidConfiguration"
+      ]
+    },
+    "api/v1/data/staticRouting/policies": {
+      "DELETE": [
+        "deleteStaticRoutingPolicies"
+      ],
+      "GET": [
+        "getStaticRoutingPolicies"
+      ],
+      "PATCH": [
+        "setStaticRoutingPolicies"
+      ],
+      "POST": [
+        "postStaticRoutingPolicies"
+      ]
+    },
+    "api/v1/data/system": {
+      "PATCH": [
+        "setSystemInfo"
+      ]
+    },
+    "api/v1/data/system/info": {
+      "GET": [
+        "getSystemInfo"
+      ]
+    },
+    "api/v1/data/system/logServer": {
+      "GET": [
+        "getSystemLogConfig"
+      ],
+      "PATCH": [
+        "setSystemLogConfig"
+      ]
+    },
+    "api/v1/data/system/logs": {
+      "GET": [
+        "getSystemLogs"
+      ]
+    },
+    "api/v1/data/system/services/actions": {
+      "POST": [
+        "postServicesActions"
+      ]
+    },
+    "api/v1/data/system/services/cache": {
+      "GET": [
+        "getServicesCache"
+      ]
+    },
+    "api/v1/data/system/status": {
+      "GET": [
+        "getSystemStatus"
+      ]
+    },
+    "api/v1/data/tcpdump/interfaces/{id}": {
+      "GET": [
+        "getTcpDumpResult"
+      ]
+    },
+    "api/v1/data/tcpdump/interfaces/{id}/action": {
+      "POST": [
+        "sendTcpDumpAction"
+      ]
+    },
+    "api/v1/data/time": {
+      "GET": [
+        "getTime"
+      ],
+      "PATCH": [
+        "setTime"
+      ]
+    },
+    "api/v1/data/upnp": {
+      "GET": [
+        "getUpnp"
+      ],
+      "PATCH": [
+        "setUpnp"
+      ]
+    },
+    "api/v1/data/wizard": {
+      "GET": [
+        "getWizardSettings"
+      ],
+      "PATCH": [
+        "setWizardSettings"
+      ]
+    }
+  }
+}

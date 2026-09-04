@@ -12,7 +12,7 @@ window.DEVICE_AX3000C_LESSONS.push({
   instructions: [
     '<b>Yêu cầu:</b>',
     'Thực hiện cấu hình kết nối WAN/Internet trên thiết bị và thiết lập kết nối PPPoE theo các thông số được cung cấp dưới đây:',
-    '- Username: <span class="val">Sgfdl-123456-789</span>',
+    '- Username: <span class="val">sgfdl-123456-789</span>',
     '- Password: <span class="val">d123456</span>',
   ],
   practiceUrl: '/sim_ax3000c/#/home',
@@ -27,7 +27,7 @@ window.DEVICE_AX3000C_LESSONS.push({
         id: 'pppoe_user',
         name: 'PPPoE Username',
         selector: '.grp[data-t="PPPoE"] input[type="text"], input[name="username"], #username',
-        expected: 'Sgfdl-123456-789',
+        expected: 'sgfdl-123456-789',
         type: 'text_exact',
         trim: true,
         required: true

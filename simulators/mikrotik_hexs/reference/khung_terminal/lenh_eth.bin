@@ -1,0 +1,11 @@
+/interface ethernet print[[m[36madmin[m@[m[32mFPT[m] > [m[36m/interface[m [m[36methernet[m [m[35mprint[m
+Flags: R - [m[1mRUNNING[m; S - [m[1mSLAVE
+[mColumns: [m[1mNAME[m, [m[1mMTU[m, [m[1mMAC-ADDRESS[m, [m[1mARP[m, [m[1mSWITCH
+#[m    [m[1mNAME[m     [m[1mMTU[m  [m[1mMAC-ADDRESS[m        [m[1mARP[m      [m[1mSWITCH[m 
+0    ether1  1500  D4:01:C3:24:92:CD  enabled  switch1
+1    ether2  1500  D4:01:C3:24:92:CE  enabled  switch1
+2  S ether3  1500  D4:01:C3:24:92:CF  enabled  switch1
+3  S ether4  1500  D4:01:C3:24:92:D0  enabled  switch1
+4 RS ether5  1500  D4:01:C3:24:92:D1  enabled  switch1
+5    sfp1    1500  D4:01:C3:24:92:D2  enabled         
+[9999B[K[[m[36madmin[m@[m[32mFPT[m] > 

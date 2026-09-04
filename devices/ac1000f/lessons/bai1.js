@@ -12,7 +12,7 @@ window.DEVICE_AC1000F_LESSONS.push({
   instructions: [
     '<b>Yêu cầu:</b>',
     'Thực hiện cấu hình kết nối WAN/Internet trên thiết bị và thiết lập kết nối PPPoE theo các thông số được cung cấp dưới đây:',
-    '- Username: <span class="val">Sgfdl-210208-218</span>',
+    '- Username: <span class="val">sgfdl-210208-218</span>',
     '- Password: <span class="val">fpt12345</span>',
   ],
   practiceUrl: '/sim_ac1000f/cgi-bin/index.asp?page=home_wan.asp',
@@ -76,7 +76,7 @@ window.DEVICE_AC1000F_LESSONS.push({
         id: 'wan_PPPUsername',
         name: 'PPPoE Username',
         selector: 'input[name="wan_PPPUsername"]',
-        expected: 'Sgfdl-210208-218',
+        expected: 'sgfdl-210208-218',
         type: 'text_exact',
         trim: true,
         required: true

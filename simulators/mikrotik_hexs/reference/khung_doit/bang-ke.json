@@ -1,0 +1,18 @@
+{
+ "ghi_chu": "Khung THAT cua lenh hanh dong (doit) tren hEX S, thu 2026-08-25. Chi chay hai lenh VO HAI.",
+ "hop_dong": "Doit.prototype.doit: req.Uff0001 = duong dan; req.uff0007 = attrs.cmd (so NHO rieng tung duong dan, khong phai ma lenh chung); kem cac truong cua bieu mau.",
+ "thao_tac": {
+  "82_wol": "[82] cmd 1 Wake on LAN toi MAC 02:00:00:00:00:01 (quan tri cuc bo, khong ton tai) -> ACK tran 4 the, 51 byte",
+  "138-1_wps": "[138,1] cmd 1 WPS Accept tren hEX S von KHONG co WiFi -> loi 0xfe0004, 68 byte"
+ },
+ "tep": {
+  "138-1_wps.bin": {
+   "byte": 68,
+   "sha256": "734c8ef7630194238ba804a3bc36d91b8b1d25fdb87f81eb9cd7fe0849b2a681"
+  },
+  "82_wol.bin": {
+   "byte": 51,
+   "sha256": "f858944237447017a92582caaa75b5ccac2c4afa447c9ca62131c4c60c36f89c"
+  }
+ }
+}

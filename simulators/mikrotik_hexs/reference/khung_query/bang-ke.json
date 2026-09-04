@@ -1,0 +1,151 @@
+{
+ "ghi_chu": "Khung THAT cua mot phien QUERY (Ping toi 127.0.0.1) tren hEX S, thu 2026-08-25.",
+ "co_che": {
+  "bat_dau": "uff0007=0xfe000f -> ACK + ufe0001 = id phien truy van",
+  "lay_ket_qua": "uff0007=0xfe0004 kem ufe0001=id -> MOI khung mot dong, kem ufe0003 = CON TRO. May khach phai hoi tiep NGAY kem con tro do; khong hoi thi thiet bi DONG phien (loi 0xfe0004).",
+  "huy": "uff0007=0xfe0011 kem ufe0001=id -> ACK tran 4 the"
+ },
+ "ghi_chu_ket_qua": "Thiet bi tra \"no route to host\" khi ping 127.0.0.1 — day LA cau tra loi that cua RouterOS, khong phai loi cua bo giai lap.",
+ "tep": {
+  "20-109_g0.bin": {
+   "byte": 55,
+   "sha256": "d77b2adbe7e5b7136eaad990fc1ea4d2d1e05cd0adb3ece61f06371a40c883c9"
+  },
+  "26_g0.bin": {
+   "byte": 56,
+   "sha256": "019ae939642b256a6c39edec36b1100c4b682f00e8cc093e0ff4fa655761058d"
+  },
+  "26_g1.bin": {
+   "byte": 165,
+   "sha256": "0a05aff62c4d91866b2df68ccbcd6914614f5b2e432b85b98b5c048984ecdcec"
+  },
+  "26_g2.bin": {
+   "byte": 283,
+   "sha256": "fb8f6983bf1b41a112560d7ec1fc73d6528927346065ca3bfaa4fb0f7011c85f"
+  },
+  "26_g3.bin": {
+   "byte": 364,
+   "sha256": "c97270828ed1e04ced19ebb968cef617e2813d864ffab74473aefc9eb7fa39c2"
+  },
+  "26_g4.bin": {
+   "byte": 388,
+   "sha256": "03245caf766e5f00a2effefde7da4e7f1e17377e9edf9fbc75c07540f0202fc6"
+  },
+  "26_g5.bin": {
+   "byte": 412,
+   "sha256": "444f67919dbbd9ef05412ba2563e09ca12d518bcf2df2e5d9df5ab14b3612198"
+  },
+  "26_g6.bin": {
+   "byte": 436,
+   "sha256": "612e137c1c02542a4016e67b3ca5ff16aa818fd4accc6ffb874381a6802345c9"
+  },
+  "26_g7.bin": {
+   "byte": 436,
+   "sha256": "d6619fae151da89635c82b0810499d5060326c83ce89f08afd693532d1b43f99"
+  },
+  "38_g0.bin": {
+   "byte": 51,
+   "sha256": "6adc3efbf60a8ca33ab19abc918d589277fd68ec0c5b6150ca87a1ac070b79ce"
+  },
+  "45-5_g0.bin": {
+   "byte": 60,
+   "sha256": "3422ff41f05f3b4371ceacf95dd5da7e624ca4f3d4fd93a0aa1fd91baca6a98f"
+  },
+  "45-5_g1.bin": {
+   "byte": 114,
+   "sha256": "7143e1b1dd74ff41adfb7a8147455056e1d93a81bd5c2f1e0d79a55da5e03726"
+  },
+  "45-5_g2.bin": {
+   "byte": 126,
+   "sha256": "781cc254a33c6c127d6b23f87487b7ac4d3b3924fb1512ad233d69633eca9938"
+  },
+  "45-5_g3.bin": {
+   "byte": 120,
+   "sha256": "fdb3ed829601199cd82f677b16a0575f2aafeead25bf64772c6106a14c952e40"
+  },
+  "45-5_g4.bin": {
+   "byte": 114,
+   "sha256": "e28dd7a246fcc30ed884dfd18e861459778420ae7145aa034811d265259eabfc"
+  },
+  "45-5_g5.bin": {
+   "byte": 114,
+   "sha256": "7db33489d6dbc3c06eb12042d08dccf89d2494f317b9e8706cc9b1cb88624669"
+  },
+  "45-5_g6.bin": {
+   "byte": 114,
+   "sha256": "8889a688d444ad77ce9ad73dc50c5f95ba43efbd74d1d1909fc4cfa5e9992629"
+  },
+  "45-5_g7.bin": {
+   "byte": 114,
+   "sha256": "525e4fc8b5b194aafa72a31881af856d50205ed6e23d12383bfb033ad10af95a"
+  },
+  "47-1_g0.bin": {
+   "byte": 55,
+   "sha256": "8bb03804feccfb17d491e6d589f8270376ac20caaaa43a65650c3eeef4f9dc6e"
+  },
+  "49_g0.bin": {
+   "byte": 59,
+   "sha256": "1fb025717f8e3d740726bbe6da1daba72fdbb126ee07220c0d44b34bf32fac57"
+  },
+  "49_g1.bin": {
+   "byte": 197,
+   "sha256": "d5c14ef98d376fe424227843e365aaa37e848345db5b2e8af83105807fab1caf"
+  },
+  "49_g2.bin": {
+   "byte": 290,
+   "sha256": "6c7005eb9ed3c557b412e4b7d631294bd7488e7ee0dc14bb6e35ac5b5f388be5"
+  },
+  "49_g3.bin": {
+   "byte": 378,
+   "sha256": "0eb8adc516940d0c686de04ceedb44a4f6ae01b5eb5dfd92e37ae350cd687060"
+  },
+  "49_g4.bin": {
+   "byte": 378,
+   "sha256": "a1770354319c44f14d1376aa0ab5711ffa081ebf1757cf1bca2e0291b1320656"
+  },
+  "49_g5.bin": {
+   "byte": 352,
+   "sha256": "200e0096a51829f1f777c1d0456103cc063c72bb09feb152d7af9f74212958c1"
+  },
+  "ping_cancel.bin": {
+   "byte": 51,
+   "sha256": "03f2e307ddf8300b5307ea8abb9e87b86d33f47c1e42a5314c3e0ae65ed721ed"
+  },
+  "ping_g0.bin": {
+   "byte": 174,
+   "sha256": "5c04672d25dfa04dc82a1907b95fd1549ddd979843b85ae52b25fc8e6b2fa4cd"
+  },
+  "ping_g1.bin": {
+   "byte": 174,
+   "sha256": "7826d7aae352608b8aad557342c46424099f88c21b3a35122e55f887c550216f"
+  },
+  "ping_g2.bin": {
+   "byte": 174,
+   "sha256": "c5b64837a1b0188e5912abd5269959eab7c2f10865caac1a6462b5971543cd04"
+  },
+  "ping_g3.bin": {
+   "byte": 174,
+   "sha256": "4e258116f9aba106790059d94b252839bd307c8606c191e3bae7f47d341f7d4d"
+  },
+  "ping_g4.bin": {
+   "byte": 174,
+   "sha256": "a85ac84f5e9f9a723b9c3d6239773758dbcffea164b83098c2aac87841b42a59"
+  },
+  "ping_g5.bin": {
+   "byte": 174,
+   "sha256": "fbbd9da43f8bca84ee21e180ff993ba609f02f4fc2e7fd5c5564a6283ec1267a"
+  },
+  "ping_start.bin": {
+   "byte": 56,
+   "sha256": "a4fa78b0fa6edf9c8984b740e39b888bbdd1a7d7de5d21955afac30e6ddd4fe7"
+  }
+ },
+ "so_tep": 33,
+ "cong_cu_da_do": {
+  "22": "Ping -> 127.0.0.1",
+  "26": "Traceroute -> 127.0.0.1",
+  "49": "Profile (CPU)",
+  "45-5": "Torch tren bridge-LAN (id 8)"
+ },
+ "hai_nhip_chay_ve": "ObjectMap.getall co HAI nhip: (a) khung co the 0xfe0003 -> hoi TIEP NGAY; (b) khung KHONG co con tro -> cho attrs.autorefresh (1000 ms) roi hoi lai. Ping dung nhip (a); Traceroute/Profile/Torch dung nhip (b). Bo thu chi lam mot nhip thi chi lay duoc 1 khung."
+}

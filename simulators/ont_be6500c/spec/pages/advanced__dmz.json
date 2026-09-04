@@ -1,0 +1,122 @@
+{
+  "_route": "advanced/dmz",
+  "_duong_dan_trinh_duyet": "#/advanced/dmz",
+  "_nguon": {
+    "chunk": "index-CxJ1Hdez.js",
+    "kich_thuoc_byte": 3728,
+    "chunk_phu_thuoc": [
+      "assets/index-CxJ1Hdez.js",
+      "assets/FormHeading-Wrbr2YtD.js",
+      "assets/FormAutocomplete-L6F1ijaU.js",
+      "assets/Popper-BinJnTg_.js",
+      "assets/Chip-Ck-8K0QZ.js",
+      "assets/PageHeading-B0ZcsD9H.js",
+      "assets/useDevices-DwHuFieu.js",
+      "assets/_baseClone-BoSTy1YA.js",
+      "assets/_baseSlice-z0Zd1-Ev.js",
+      "assets/_baseFlatten-g6JNov8F.js",
+      "assets/useSnackbar-DeOFrJDC.js",
+      "assets/isNumber-CjKC2f0Q.js"
+    ],
+    "bundle_loi": "index-CW0UhNxy.js",
+    "_da_quet": [
+      "Chip-Ck-8K0QZ.js",
+      "FormAutocomplete-L6F1ijaU.js",
+      "FormHeading-Wrbr2YtD.js",
+      "PageHeading-B0ZcsD9H.js",
+      "index-CxJ1Hdez.js",
+      "isNumber-CjKC2f0Q.js",
+      "useDevices-DwHuFieu.js",
+      "useSnackbar-DeOFrJDC.js"
+    ]
+  },
+  "_cach_trich": "src/trich_dac_ta_trang.py (doc ma goc, khong doan)",
+  "goi_api": [
+    {
+      "ham_goc": "getDmzConfiguration",
+      "doi_tuong_goc": "use",
+      "tim_thay_o": [
+        "index-CxJ1Hdez.js"
+      ],
+      "resource": "api/v1/data/dmz/configurations",
+      "method": "GET",
+      "kenh": "REST"
+    },
+    {
+      "ham_goc": "setDmzConfiguration",
+      "doi_tuong_goc": "use",
+      "tim_thay_o": [
+        "index-CxJ1Hdez.js"
+      ],
+      "resource": "api/v1/data/dmz/configurations",
+      "method": "PATCH",
+      "kenh": "REST"
+    }
+  ],
+  "goi_khac": {
+    "rpc": [],
+    "duong_dan_tuyet_doi": []
+  },
+  "truong_form": [
+    {
+      "name": "enabled",
+      "label": "Enable DMZ"
+    }
+  ],
+  "gia_tri_mac_dinh": [
+    {
+      "bien": "K",
+      "ma": "{enabled:!1,ipAddress:\"\"}"
+    }
+  ],
+  "schema_kiem_tra": [
+    {
+      "ma": "{enabled:e.literal(k.enum.false)}"
+    },
+    {
+      "ma": "{enabled:e.literal(k.enum.true),destIpAddress:e.string().ip({version:\"v4\",message:\"Device IP must be an IPv4 address\"})}"
+    },
+    {
+      "ma": "{enabled:e.literal(!1),ipAddress:e.string().optional()}"
+    },
+    {
+      "ma": "{enabled:e.literal(!0),ipAddress:e.string({required_error:\"Please input a valid IPv4 address.\"}).ip({version:\"v4\",message:\"Please input a valid IPv4 address.\"})}"
+    }
+  ],
+  "chuoi_hien_thi": [
+    ")),s=T(a=>a.token),{enqueueSnackbar:r}=L(),u=B(),A=c.useMemo(()=>u.map(X),[u]),[o,w]=c.useState(),{data:p,mutate:D}=N({key:",
+    ");c.useEffect(()=>{!b&&o&&x(",
+    ")]:{display:",
+    ")]:{width:",
+    ",0),[s.down(",
+    ",[Q,G]),X=i=>{const{id:n,hostname:s,ip4Address:r}=i;return{key:n,value:r,label:`${s||",
+    ",actions:[{action:",
+    ",children:",
+    ",className:",
+    ",defaultValues:K,resolver:U(J)}),{handleSubmit:S,watch:C,reset:m,resetField:x,formState:{errors:d}}=v,b=C(",
+    ",fullWidth:!0}),t.jsx(Z,{name:",
+    ",label:",
+    ",margin:0,minWidth:",
+    ",maxWidth:980,minWidth:600,margin:n(4,",
+    ",message:",
+    ",onClick:j},{action:",
+    ",options:A,disabled:!b,sx:{",
+    ",token:s},y.getDmzConfiguration,{revalidateOnFocus:!1}),v=R({mode:",
+    ",variant:",
+    ":{backgroundColor:",
+    "Device IP must be an IPv4 address",
+    "} (${r})`}},Y=h(f)(({theme:i})=>{const{spacing:n,breakpoints:s}=i;return{width:",
+    "}),t.jsx(W,{providerProps:v,sx:{width:",
+    "}),t.jsx(ee,{variant:",
+    "}).ip({version:",
+    "})}),J=e.discriminatedUnion(",
+    "},Q=e.object({enabled:e.literal(!1),ipAddress:e.string().optional()}),G=e.object({enabled:e.literal(!0),ipAddress:e.string({required_error:",
+    "},children:t.jsxs(f,{spacing:2,children:[t.jsx($,{name:",
+    "},{alertProps:{severity:",
+    "}}),l}}),z=c.useCallback(()=>{m(o)},[o,m]);return t.jsx(Y,{children:t.jsxs(f,{spacing:4,children:[n&&t.jsx(q,{children:",
+    "}},Input:a=>{var l;return t.jsx(O,{...a,error:!!(d!=null&&d.ipAddress),helperText:(l=d==null?void 0:d.ipAddress)==null?void 0:l.message})},disableClearable:!0,forcePopupIcon:!0}),t.jsx(V,{className:",
+    "}}}),ee=h(E)(({theme:i})=>{const{spacing:n,palette:s,breakpoints:r}=i;return{color:s.text.secondary,padding:n(2),backgroundColor:s.fill.blank,borderRadius:n(.5),[r.down(",
+    "}}});function te(){const i=F(),n=M(i.breakpoints.down("
+  ],
+  "_can_doc_tay": []
+}

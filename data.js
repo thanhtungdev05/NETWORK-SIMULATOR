@@ -7,11 +7,17 @@ if (!window.DEVICES || window.DEVICES.length === 0) {
   if (typeof window.DEVICES === 'undefined') {
     window.DEVICES = [
       window.DEVICE_AC1000F,
+      window.DEVICE_AC1000HI,
       window.DEVICE_AX3000C,
       window.DEVICE_AX3000GZ,
       window.DEVICE_AX3000HV2,
       window.DEVICE_AX3000S,
-      window.DEVICE_AC1000HI,
+      window.DEVICE_BE12000,
+      window.DEVICE_BE15000,
+      window.DEVICE_VIGOR2927,
+      window.DEVICE_BE6500C,
+      window.DEVICE_ONT_BE6500C,
+      window.DEVICE_MIKROTIK_HEXS,
     ].filter(Boolean);
   }
 }

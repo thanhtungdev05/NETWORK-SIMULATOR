@@ -1,0 +1,80 @@
+{
+  "_tieu_de": "Do markup popup THAT cua MUI Autocomplete o o 'Device / MAC' trong dialog Add New Reserved IP (Advanced > LAN > Reserved IP) -- gap ghi trong ISSUES.md muc 'Advanced LAN GD4 phan 3, 3 cho de ngo, muc 2'.",
+  "_ngay_do": "2026-08-20",
+  "_thiet_bi": "ONT-BE6500C, 192.168.1.1, firmware 1PZ108WZ110",
+  "_vi_sao": [
+    "Ban chup tinh GD1 (dialog_reserved_add.html) chi bat duoc o input o TRANG THAI NGHI (dong), khong bat duoc popup luc dang mo -- popup la <div> rieng do React portal ra ngoai <body> khi runtime, khong ton tai trong HTML tinh.",
+    "Code hien tai (bang_binding.js, wireMacAutocomplete()) dang MUON markup cua Select (window.__moMenuChon) de hien danh sach thay vi dung markup Autocomplete that -- da ghi ro trong comment code va ISSUES.md la gap.",
+    "Dieu khien Chrome MCP vao thang 192.168.1.1 de do, KHONG bam Save/ADD o buoc nao, chi mo dialog + mo popup + doc DOM qua javascript_tool, roi bam Cancel dong dialog."
+  ],
+
+  "cach_do": "Advanced > LAN > tab Reserved IP > bam 'Add New' -> dialog mo -> bam vao o 'Device / MAC' -> popup hien 1 goi y (thiet bi that dang co dung 1 ban ghi client duoc dat ten 'Admin-PC'). Doc cay DOM cua ca '.MuiAutocomplete-root' (o input luc dang mo) lan '.MuiAutocomplete-popper' (popup) qua javascript_tool, khong dung outerHTML nguyen khoi (tranh bi cong cu chan noi dung dai) ma di tung phan nho.",
+
+  "input_luc_dang_mo": {
+    "root_class": "MuiAutocomplete-root Mui-expanded Mui-focused MuiAutocomplete-fullWidth MuiAutocomplete-hasPopupIcon css-9en7mf",
+    "root_aria_owns": ":r2i:-listbox (id sinh dong moi lan mo, KHONG co dinh -- ban gia lap tu sinh id rieng, khong can khop chinh xac chuoi id)",
+    "input_attrs": {
+      "aria-invalid": "false",
+      "autocomplete": "off",
+      "type": "text",
+      "class": "MuiInputBase-input MuiOutlinedInput-input MuiInputBase-inputAdornedEnd MuiAutocomplete-input MuiAutocomplete-inputFocused css-1uvydh2",
+      "aria-activedescendant": "",
+      "aria-autocomplete": "list",
+      "aria-controls": "<id>-listbox",
+      "aria-expanded": "true",
+      "autocapitalize": "none",
+      "spellcheck": "false",
+      "role": "combobox",
+      "value": ""
+    },
+    "ghi_chu": "So voi trang thai NGHI da co san trong reference/source/dialog_reserved_add.html (aria-expanded=false, khong co lop MuiAutocomplete-inputFocused, khong co Mui-expanded/Mui-focused o root), luc MO chi khac o CAC LOP/THUOC TINH TRANG THAI nay -- cau truc input/label/fieldset con lai GIONG HET ban chup tinh (da doi chieu tung ky tu). Khong can markup input moi, chi can code JS tu them/bo cac lop/thuoc tinh nay khi mo/dong."
+  },
+
+  "end_adornment_luc_mo": {
+    "html": "<div class=\"MuiAutocomplete-endAdornment css-mxlkbn\"><button class=\"MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeMedium MuiAutocomplete-popupIndicator MuiAutocomplete-popupIndicatorOpen css-yznpbe\" tabindex=\"-1\" type=\"button\" aria-label=\"Close\" title=\"Close\"><svg class=\"MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-vubbuv\" focusable=\"false\" aria-hidden=\"true\" viewBox=\"0 0 24 24\" data-testid=\"ArrowDropDownIcon\"><path d=\"M7 10l5 5 5-5z\"></path></svg><span class=\"MuiTouchRipple-root css-w0pj6f\"></span></button></div>",
+    "so_voi_luc_dong": "Ban chup tinh (dialog_reserved_add.html) luc DONG: nut mang lop 'MuiAutocomplete-popupIndicator css-16ntwwr' (KHONG co hau to '-Open'), aria-label/title='Open'. Luc MO: them hau to lop '-Open' (css-yznpbe la bien the CSS rieng cho trang thai mo -- da co san trong emotion.css, kiem xac nhan), doi nhan/tieu de thanh 'Close'."
+  },
+
+  "popup_popper": {
+    "html_day_du": "<div class=\"MuiPopper-root MuiAutocomplete-popper css-1mtsuo7\" role=\"presentation\"><div class=\"MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiAutocomplete-paper css-1b4fw37\"><ul class=\"MuiAutocomplete-listbox css-1cv6o38\" role=\"listbox\" id=\"<id>-listbox\"><li class=\"MuiButtonBase-root MuiMenuItem-root MuiMenuItem-gutters MuiMenuItem-root MuiMenuItem-gutters MuiAutocomplete-option css-1u4mc98\" tabindex=\"-1\" role=\"option\" id=\"<id>-option-0\" data-option-index=\"0\" aria-selected=\"false\">Admin-PC (d8:43:ae:2e:65:45)<span class=\"MuiTouchRipple-root css-w0pj6f\"></span></li></ul></div></div>",
+    "ghi_chu": [
+      "Khac Select: popup dung <ul class='MuiAutocomplete-listbox'> + <li ... MuiAutocomplete-option ...> (KHONG phai MuiList-root MuiMenu-list / khong co MuiPopover-paper), khong co MuiMenu-paper.",
+      "Moi <li> mang ca 'role=option data-option-index aria-selected' (giong Select) LAN 'id=<listboxid>-option-N' (rieng cua Autocomplete).",
+      "Thiet bi that CHI co dung 1 thiet bi client trong danh sach goi y luc do (Admin-PC, d8:43:ae:2e:65:45) -- gia tri thay doi theo so client dang ket noi that su, khong phai hang so; ban gia lap van dung du lieu DHCP client that (DS_THIET_BI_MAC da co tu truoc, chi doi markup hien thi)."
+    ]
+  },
+
+  "css_da_co_san": "SUA LAI (2026-08-20, cung phien, sau khi kiem tren ban gia lap cuc bo phat hien bullet cham xau o danh sach): CHI 7/11 lop (css-mxlkbn, css-16ntwwr, css-9en7mf, css-9aopjy, css-4mi22k, css-1uvydh2 -- thuoc phan O INPUT, luon co mat trong DOM tinh) da co san. 4 lop thuoc PHAN POPUP (css-1mtsuo7, css-1b4fw37, css-1cv6o38, css-1u4mc98) va 1 lop bien the nut mo (css-yznpbe) CHUA co luat nao -- vi popup chi ton tai luc runtime, ban chup CSSOM toan cuc GD1 khong bat duoc. Da do bo sung bang getComputedStyle() truc tiep tren thiet bi that luc popup dang mo (khong bam Save/ADD):",
+
+  "css_do_bo_sung_2026_08_20": {
+    "css-1mtsuo7 (.MuiAutocomplete-popper)": {
+      "position": "absolute (thiet bi that dung Popper.js: position:absolute + transform dich chuyen; ban gia lap dung position:fixed + top/left truc tiep -- CUNG cach da chon cho __moMenuChon() cua Select, ghi ro ly do trong comment goc: don gian hoa, khong can cong scrollX/Y, ket qua hien thi cuoi cung giong nhau)",
+      "zIndex": "1300",
+      "width": "377px (do dung do rong o Device/MAC luc do -- se khac theo tung dialog, ban gia lap tinh dong tu getBoundingClientRect() cua root, khong hardcode so nay)"
+    },
+    "css-1b4fw37 (.MuiAutocomplete-paper)": {
+      "margin": "0px", "padding": "0px", "borderRadius": "4px",
+      "boxShadow": "rgba(189,189,189,.2) 0 2px 1px -1px, rgba(189,189,189,.14) 0 1px 1px 0, rgba(189,189,189,.12) 0 1px 3px 0",
+      "backgroundColor": "rgb(255,255,255)", "overflow": "auto"
+    },
+    "css-1cv6o38 (.MuiAutocomplete-listbox)": {
+      "listStyle": "none (thiet bi that computed la 'outside none none' -- rut gon ve 'none')",
+      "margin": "0px", "padding": "0px", "maxHeight": "255.68px (gia tri tinh theo khong gian con lai duoi input luc do -- KHONG hardcode, chi ghi nhan co gioi han maxHeight + overflow:auto)",
+      "overflow": "auto"
+    },
+    "css-1u4mc98 (.MuiAutocomplete-option, li)": {
+      "padding": "14px 16px", "minHeight": "0px", "fontSize": "16px",
+      "fontFamily": "Inter", "fontWeight": "400", "color": "rgba(0,0,0,.87)",
+      "cursor": "pointer", "lineHeight": "24px", "minWidth": "0px",
+      "boxSizing": "border-box", "wordBreak": "normal", "whiteSpace": "nowrap",
+      "webkitTapHighlightColor": "transparent"
+    },
+    "css-yznpbe (.MuiAutocomplete-popupIndicatorOpen, nut mui ten luc mo)": {
+      "transform": "matrix(-1,0,0,-1,0,0) = rotate(180deg) -- svg con khong tu xoay rieng (transform:none tren <svg>), chi <button> xoay ca khoi"
+    }
+  },
+
+  "khong_bam_save_lan_2": "Doi ra ngoai (findElement/Cancel) sau khi doc xong, khong chon gia tri nao, khong bam ADD."
+
+  "khong_dong_gi": "Chi mo dialog + mo popup de doc DOM, KHONG chon gia tri nao, KHONG bam ADD/Save. Da bam Cancel dong dialog ngay sau khi do xong. Xac nhan lai bang GET /api/v1/data/dhcp/reservedHosts: khong co ban ghi moi nao duoc tao."
+}

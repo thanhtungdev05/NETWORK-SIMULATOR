@@ -1,0 +1,7 @@
+[
+ {
+  "url": "api/v1/data/firewall",
+  "body": null,
+  "resp": "{\"dosDefense\":{\"icmpFlood\":{\"rate\":100,\"burst\":100,\"enabled\":true},\"fraggleAttack\":{\"enabled\":false},\"portScan\":{\"rate\":0,\"burst\":0,\"enabled\":false},\"enabled\":true,\"pingOfDeath\":{\"enabled\":false},\"smurf\":{\"enabled\":false},\"unknownProtocol\":{\"enabled\":true},\"synFragment\":{\"enabled\":false},\"icmpFragment\":{\"enabled\":false},\"land\":{\"enabled\":false},\"traceRoute\":{\"enabled\":false},\"tcpFlood\":{\"rate\":25,\"burst\":50,\"enabled\":true},\"tcpFlagScan\":{\"enabled\":true},\"udpFlood\":{\"rate\":0,\"burst\":0,\"enabled\":false}},\"clientIsolationEnabled\":false,\"icmpPing\":{\"lanEnabled\":true,\"wanEnabled\":true},\"spiEnabled\":true}"
+ }
+]

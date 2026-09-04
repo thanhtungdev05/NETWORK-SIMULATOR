@@ -1,68 +1,38 @@
-﻿/**
- * devices/ac1000f/tooltips/bai3.js — Tooltip Hướng dẫn cho Bài 3: Cấu hình IP LAN
+/**
+ * devices/ac1000f/tooltips/bai3.js — Tooltip Hướng dẫn cho Bài 3: Cấu hình Wi-Fi IoT
  */
 
 if (!window.TOOLTIPS_AC1000F) window.TOOLTIPS_AC1000F = {};
 
 window.TOOLTIPS_AC1000F['LAB_AC1000F_03'] = [
-  // Tab Network ở Header
   {
     selector: 'a[onclick*="change_bg2"]',
-    text: 'Network',
+    text: 'Bước 1: Chọn tab Network',
     position: 'top'
   },
-  // Bước 2: Nút LAN ở Menu bên trái (Nav frame)
   {
-    selector: 'a[href*="home_lan.asp"]',
-    text: 'Bước 2: chọn LAN',
-    position: 'bottom'
+    selector: 'a[href*="home_wireless.asp"]',
+    text: 'Bước 2: Chọn Wireless 2.4G',
+    position: 'top'
   },
-  // Bước 3: Ô nhập IP Address (Main frame)
   {
-    selector: 'input[name="uiViewIPAddr"], input[name="ipAddress"], #ipAddress',
-    text: 'Bước 3: nhập IP LAN theo yêu cầu, ví dụ 192.168.1.1',
-    position: 'right'
+    page: 'home_wireless.asp',
+    selector: 'input[name="ESSID"], input[name="ssid"]',
+    text: 'Bước 3: Nhập tên Wifi IoT (VD: FPT Telecom-7EA8)',
+    position: 'right',
+    expected: 'FPT Telecom-7EA8'
   },
-  // Bước 4: Ô nhập IP Subnet Mask (Main frame)
   {
-    selector: 'input[name="uiViewNetMask"], input[name="subnetMask"]',
-    text: 'Bước 4: nhập IP Subnet Mask thích hợp, ví dụ 255.255.255.0',
-    position: 'right'
+    page: 'home_wireless.asp',
+    selector: 'input[name="PreSharedKey1"], input[name="PreSharedKey2"], input[name="PreSharedKey3"], input[name*="PreSharedKey"]',
+    text: 'Bước 4: Nhập mật khẩu (VD: 00032934)',
+    position: 'right',
+    expected: '00032934'
   },
-  // Bước 5: Đảm bảo chọn Enable ở mục DHCP
   {
-    selector: 'input[name="dhcpTypeRadio"][value="1"], input[name="dhcpTypeRadio"]',
-    text: 'Bước 5: đảm bảo chọn Enable',
-    position: 'right'
-  },
-  // Bước 6: Ô nhập Start IP
-  {
-    selector: 'input[name="StartIp"], input[name="startIP"]',
-    text: 'Bước 6: nhập IP đầu tiên, ví dụ: 192.168.1.2',
-    position: 'right'
-  },
-  // Bước 7: Ô nhập End IP
-  {
-    selector: 'input[name="EndIp"], input[name="endIP"]',
-    text: 'Bước 7: nhập IP cuối, ví dụ: 192.168.1.254',
-    position: 'right'
-  },
-  // Bước 8: Ô nhập Lease Time
-  {
-    selector: 'input[name="dhcp_LeaseTime"], input[name="leaseTime"]',
-    text: 'Bước 8: nhập 86400',
-    position: 'bottom'
-  },
-  // Bước 9: Chọn Automatically ở mục DNS Relay
-  {
-    selector: 'select[name="dnsTypeRadio"], select[name="dnsRelay"]',
-    text: 'Bước 9: chọn Automatically',
-    position: 'right'
-  },
-  // Bước 10: Chọn SAVE
-  {
+    page: 'home_wireless.asp',
     selector: 'input[name="SaveBtn"], input[value="Save"], input[name="save"], #save, #btnSave, .button1',
-    text: 'Bước 10: chọn SAVE',
+    text: 'Bước 5: Chọn Save & Apply',
     position: 'right'
   }
 ];

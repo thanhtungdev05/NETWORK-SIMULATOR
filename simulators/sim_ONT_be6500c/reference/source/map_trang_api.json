@@ -1,0 +1,188 @@
+{
+ "home__overview": [
+  "wizard",
+  "system/info",
+  "ssids",
+  "devices",
+  "internetConnection",
+  "easyMesh",
+  "system/status",
+  "interfaces",
+  "interfaces/configurations",
+  "speedTest/records/",
+  "radios",
+  "ethernetPorts"
+ ],
+ "home__topology": [
+  "wizard",
+  "system/info",
+  "ssids",
+  "devices",
+  "radios",
+  "internetConnection"
+ ],
+ "home__lanstatus": [
+  "wizard",
+  "system/info",
+  "ssids",
+  "devices",
+  "ext/lanstatus"
+ ],
+ "wifi__general": [
+  "wizard",
+  "system/info",
+  "ssids",
+  "devices",
+  "easyMesh",
+  "radios"
+ ],
+ "wifi__advanced": [
+  "wizard",
+  "system/info",
+  "ssids",
+  "devices",
+  "radios"
+ ],
+ "network__portforward": [
+  "wizard",
+  "system/info",
+  "ssids",
+  "devices",
+  "portForwarding/policies",
+  "interfaces/configurations"
+ ],
+ "network__speedtest": [
+  "wizard",
+  "system/info",
+  "ssids",
+  "devices",
+  "speedTest/servers",
+  "speedTest/records/"
+ ],
+ "network__diagnostics": [
+  "wizard",
+  "system/info",
+  "ssids",
+  "devices"
+ ],
+ "security__firewall": [
+  "wizard",
+  "system/info",
+  "ssids",
+  "devices",
+  "firewall"
+ ],
+ "security__parentalcontrol": [
+  "wizard",
+  "system/info",
+  "ssids",
+  "devices",
+  "ext/devicelist",
+  "ext/parentalControl/policies"
+ ],
+ "system__general": [
+  "wizard",
+  "system/info",
+  "ssids",
+  "devices",
+  "time"
+ ],
+ "system__upgrade": [
+  "wizard",
+  "system/info",
+  "ssids",
+  "devices"
+ ],
+ "system__user": [
+  "wizard",
+  "system/info",
+  "ssids",
+  "devices"
+ ],
+ "system__wifitimer": [
+  "wizard",
+  "system/info",
+  "ssids",
+  "devices",
+  "ext/timer/wifi"
+ ],
+ "system__reboottimer": [
+  "wizard",
+  "system/info",
+  "ssids",
+  "devices",
+  "ext/timer/reboot"
+ ],
+ "system__systemlog": [
+  "wizard",
+  "system/info",
+  "ssids",
+  "devices"
+ ],
+ "system__techsupportinfo": [
+  "wizard",
+  "system/info",
+  "ssids",
+  "devices",
+  "ext/logpull"
+ ],
+ "advanced__wan": [
+  "wizard",
+  "system/info",
+  "ssids",
+  "devices",
+  "interfaces/configurations",
+  "ethernetPorts"
+ ],
+ "advanced__lan": [
+  "wizard",
+  "system/info",
+  "ssids",
+  "devices",
+  "interfaces/configurations",
+  "dhcp/servers"
+ ],
+ "advanced__ddns": [
+  "wizard",
+  "system/info",
+  "ssids",
+  "devices",
+  "ddns",
+  "ddns/configurations"
+ ],
+ "advanced__routing": [
+  "wizard",
+  "system/info",
+  "ssids",
+  "devices",
+  "staticRouting/policies",
+  "interfaces/configurations"
+ ],
+ "advanced__dmz": [
+  "wizard",
+  "system/info",
+  "ssids",
+  "devices",
+  "dmz/configurations"
+ ],
+ "advanced__upnp": [
+  "wizard",
+  "system/info",
+  "ssids",
+  "devices",
+  "upnp"
+ ],
+ "advanced__tcpdump": [
+  "wizard",
+  "system/info",
+  "ssids",
+  "devices",
+  "interfaces/configurations"
+ ],
+ "help": [
+  "wizard",
+  "system/info",
+  "ssids",
+  "devices"
+ ]
+}

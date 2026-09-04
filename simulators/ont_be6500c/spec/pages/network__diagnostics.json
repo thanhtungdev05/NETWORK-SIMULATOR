@@ -1,0 +1,123 @@
+{
+  "_route": "network/diagnostics",
+  "_duong_dan_trinh_duyet": "#/network/diagnostics",
+  "_nguon": {
+    "chunk": "index-DOrO-0P0.js",
+    "kich_thuoc_byte": 7541,
+    "chunk_phu_thuoc": [
+      "assets/index-DOrO-0P0.js",
+      "assets/FormHeading-Wrbr2YtD.js",
+      "assets/FormSelect-CJAio79q.js",
+      "assets/schema-BT0LOWg1.js",
+      "assets/PageHeading-B0ZcsD9H.js",
+      "assets/useSnackbar-DeOFrJDC.js",
+      "assets/isNumber-CjKC2f0Q.js"
+    ],
+    "bundle_loi": "index-CW0UhNxy.js",
+    "_da_quet": [
+      "FormHeading-Wrbr2YtD.js",
+      "FormSelect-CJAio79q.js",
+      "PageHeading-B0ZcsD9H.js",
+      "index-DOrO-0P0.js",
+      "isNumber-CjKC2f0Q.js",
+      "schema-BT0LOWg1.js",
+      "useSnackbar-DeOFrJDC.js"
+    ]
+  },
+  "_cach_trich": "src/trich_dac_ta_trang.py (doc ma goc, khong doan)",
+  "goi_api": [
+    {
+      "ham_goc": "postDiagnostic",
+      "doi_tuong_goc": "use",
+      "tim_thay_o": [
+        "index-DOrO-0P0.js"
+      ],
+      "resource": "api/v1/data/diagnostic",
+      "method": "POST",
+      "kenh": "REST"
+    }
+  ],
+  "goi_khac": {
+    "rpc": [],
+    "duong_dan_tuyet_doi": []
+  },
+  "truong_form": [
+    {
+      "name": "MuiLoadingButton"
+    },
+    {
+      "name": "target",
+      "label": "Domain Name / IP Address"
+    }
+  ],
+  "gia_tri_mac_dinh": [
+    {
+      "bien": "xo",
+      "ma": "{method:\"PingIPv4\",target:\"\"}"
+    }
+  ],
+  "schema_kiem_tra": [
+    {
+      "ma": "{action:a.string(),host:a.union([a.string().ip(),j()])}"
+    },
+    {
+      "ma": "{method:a.literal(t),target:o}"
+    }
+  ],
+  "chuoi_hien_thi": [
+    "& .MuiFilledInput-underline:after",
+    "& .MuiFormHelperText-root",
+    "& .MuiInput-root:hover:not(.Mui-disabled, .Mui-error):before",
+    "& .MuiInput-underline:after",
+    "& label.Mui-focused",
+    "&&t.error?t.error:t.output:",
+    ")(({theme:t})=>{const{palette:o,spacing:n}=t;return{padding:n(.5),backgroundColor:o.fill.light}}),ko=u(F)(({theme:t})=>{const{palette:o,typography:n}=t;return{",
+    ")]:{width:",
+    ",0),[n.down(",
+    ",Lo=t=>t?t.status===",
+    ",margin:0,minWidth:",
+    ",maxWidth:980,minWidth:600,margin:o(4,",
+    ",yo=u(C)(({theme:t})=>{const{spacing:o,breakpoints:n}=t;return{width:",
+    "1px solid rgba(0, 0, 0, 0.42)",
+    ":{...n.codeBold,fontSize:",
+    ":{...n.code},",
+    "An error has occurred. Please try again.",
+    "DNS Lookup",
+    "DNSLookup",
+    "Diagnose",
+    "Diagnostics",
+    "Domain Name / IP Address",
+    "IPv4 Ping",
+    "IPv4 Trace Route",
+    "IPv6 Ping",
+    "IPv6 Trace Route",
+    "LoadingIndicator",
+    "Method",
+    "MuiLoadingButton",
+    "Ping",
+    "PingIPv4",
+    "PingIPv6",
+    "Result",
+    "Root",
+    "Test target must be a domain name.",
+    "Test target must be either an IPv4 address or a domain name.",
+    "Test target must be either an IPv6 address or a domain name.",
+    "Traceroute",
+    "TracerouteIPv4",
+    "TracerouteIPv6",
+    "endIconLoadingEnd",
+    "loadingIndicator",
+    "loadingIndicatorCenter",
+    "loadingIndicatorEnd",
+    "loadingIndicatorStart",
+    "loadingPosition",
+    "onTouched",
+    "ownerState",
+    "startIconLoadingStart",
+    "translate(-50%)",
+    "},fo=",
+    "},width:",
+    "}}}),To=u("
+  ],
+  "_can_doc_tay": []
+}

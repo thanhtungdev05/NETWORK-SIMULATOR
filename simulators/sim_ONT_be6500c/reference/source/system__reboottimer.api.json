@@ -1,0 +1,7 @@
+[
+ {
+  "url": "api/v1/data/ext/timer/reboot",
+  "body": null,
+  "resp": "{\"sat\":true,\"enabled\":false,\"tue\":true,\"fri\":true,\"mon\":true,\"time\":\"06:00\",\"sun\":true,\"wed\":true,\"thu\":true}"
+ }
+]

@@ -1,0 +1,23 @@
+[
+ [
+  "LAN1(eth1.5)",
+  "Disconnected",
+  "0 bps",
+  "0 bps",
+  "0"
+ ],
+ [
+  "LAN2(eth1.6)",
+  "Connected/1000Mbps",
+  "0 bps",
+  "0 bps",
+  "0"
+ ],
+ [
+  "LAN3(eth1.7)",
+  "Disconnected",
+  "0 bps",
+  "0 bps",
+  "0"
+ ]
+]

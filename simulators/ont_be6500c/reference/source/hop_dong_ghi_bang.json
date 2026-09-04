@@ -1,0 +1,38 @@
+{
+  "_mo_ta": "BANG CHUNG GOC cho GD4 phan BANG (Port Forwarding, Static Routing). Hai nguon: (A) doc truc tiep ma goc RuleList-Ce4Vxx8G.js / index-Bz95h4Eb.js / index-CZBnlfHf.js, (B) do truc tiep tren thiet bi that 192.168.1.1 ngay 2026-08-13 qua Chrome (nut Add/Delete that, khong dung fetch tay).",
+  "_ngay": "2026-08-13",
+
+  "portForwarding_payload_tu_ma_goc": {
+    "nguon": "index-Bz95h4Eb.js, ham Re (Add), je (Edit), N (Delete)",
+    "create_createPortForwardingEntries": "payload la MANG 1 phan tu: [{enabled, name, protocol, source:{portRange}, destination:{portRange, ipAddress}}]. KHONG gui id, KHONG gui interfaceId -- thiet bi tu dien (da do GD4 truoc, xem hop_dong_ghi_that.json muc 5).",
+    "update_updatePortForwardingEntries": "payload la MANG 1 phan tu: [{id, enabled, name, protocol, source:{portRange, interfaceId: <lay tu ban ghi goc p.source.interfaceId>}, destination:{portRange, ipAddress, interfaceId: <lay tu p.destination.interfaceId>}}]. Khac voi create: Edit GUI KEM interfaceId, lay nguyen tu ban ghi dang sua (khong cho nguoi dung doi).",
+    "delete_deletePortForwardingEntries": "payload {ids: [...rowKey]}. Khop 100% voi hop_dong_ghi_that.json muc 3."
+  },
+
+  "staticRouting_payload_tu_ma_goc": {
+    "nguon": "index-CZBnlfHf.js, ham i (Add/Edit dung chung), O (Delete)",
+    "create_postStaticRoutingPolicies_va_update_setStaticRoutingPolicies": "CUNG MOT payload dang MANG 1 phan tu: [{...S, ipVersion}] trong do S la nguyen form {id?, interfaceId, target, mask?, gateway} va ipVersion la SO (4 hoac 6) CLIENT TU THEM tuy tab dang mo (te(n.replace('ipv',''))). Khi tao moi 'id' khong co trong S nen JSON.stringify se bo qua (device tu sinh id dang S_route_xxxxxxxx). Khi sua, S co san 'id' lay tu ban ghi goc.",
+    "_quan_trong": "ipVersion la truong DUY NHAT trong toan bo du an ma CLIENT tu them (khac voi cac truong 'thiet bi tu dien' o portForwarding). Config store phai CHAP NHAN va LUU truong nay nguyen ven, khong duoc tu sinh hay bo qua.",
+    "delete_deleteStaticRoutingPolicies": "payload {ids: [...rowKey]}. Khop voi quy uoc chung."
+  },
+
+  "hop_thoai_xac_nhan_xoa": {
+    "do_tren_thiet_bi_that": "Chup outerHTML .MuiDialog-paper luc bam icon Delete tren dong Static Routing IPv4 (203.0.113.0), ngay 2026-08-13, roi bam Delete that de don don du lieu thu.",
+    "ket_qua": "Tieu de 'Are you sure to delete the selected item(s)?', noi dung 'This action cannot be undone.', nut CANCEL/Delete. Cung mot hop thoai (cung class 'css-1um5ogo'/'css-1hftikr'/'css-19i32em'/'css-1vl1q01') duoc doc ma goc xac nhan DUNG CHUNG cho ca Port Forwarding va Static Routing (RuleList-Ce4Vxx8G.js goi chung ham confirm() voi cung title/message).",
+    "da_luu_vao": "src/www/dialog_data.js -> window.__DIALOG.delete_confirm"
+  },
+
+  "do_ipv6_routing": {
+    "cach_do": "Tren tab IPv6 that, bam Add New, doc thuoc tinh cua tung o qua DOM (khong doan), dien '2001:db8::1/64' + gateway 'fe80::1', bam ADD, doc dong bang vua tao, roi Delete de don sach.",
+    "phat_hien_1_radio_wan6": "O Interface, gia tri radio 'Internet' la 'wan6' (khong phai 'wan' nhu IPv4). LAN/Guest van la 'lan'/'guest' -- CHUA ro co doi theo IPv6 hay khong (form chi cho chon 1, khong doi chieu duoc voi 'lan6'/'guest6'; tam thoi gia dinh KHONG doi vi API interfaceId thuong dung chung id cho ca 2 IP version tru rieng WAN. Neu sau nay thay sai thi day la cho can do lai).",
+    "phat_hien_2_textarea": "O 'Destination IP/Prefix Length' la THE <textarea>, KHONG PHAI <input> nhu IPv4. Da xac nhan qua el.tagName==='TEXTAREA'. Class list day du CHUA doc duoc tron ven (cong cu chan xuat mot phan chuoi dai) -- dialog_data.js dang TAI SU DUNG class cua input tuong duong ben IPv4 cho textarea nay (hop ly vi MUI TextField multiline dung chung bo class MuiInputBase-input/MuiOutlinedInput-input), NHUNG CHUA duoc doi chieu tung ky tu voi thiet bi that. Ghi ISSUES.",
+    "phat_hien_3_khong_co_Mask": "Dialog IPv6 KHONG co o Mask (dung nhien vi prefix nam trong chinh o Destination).",
+    "phat_hien_4_bang_tach_cot": "Bang KET QUA (khong phai dialog) tach 'Destination IP' va 'Prefix Length' thanh HAI cot rieng du du lieu goc la mot chuoi target='2001:db8::1/64'. Vi du da do: cot 1 = '2001:db8::1', cot 2 = '64'. Suy ra client tach bang split('/') luc hien thi.",
+    "da_don_sach": true
+  },
+
+  "_con_thieu": [
+    "Class list day du cua <textarea> IPv6 Destination chua doc tron ven -- dang tai su dung class cua input IPv4 tuong duong, CHUA doi chieu tung ky tu.",
+    "Chua xac nhan radio LAN/Guest co doi gia tri theo IPv6 hay khong (vd 'lan6') -- gia dinh KHONG doi, chua kiem chung truc tiep."
+  ]
+}

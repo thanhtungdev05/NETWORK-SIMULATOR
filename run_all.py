@@ -62,15 +62,18 @@ except ValueError:
 API_PROXY_TIMEOUT_SECONDS = max(10, min(API_PROXY_TIMEOUT_SECONDS, 300))
 
 # Import các Handler của từng thiết bị
-import sim_ac1000f.server2 as ac1000f
-import sim_ax3000c.server as ax3000c
-import sim_ax3000gz.server as ax3000gz
-import sim_ax3000hv2.server2 as ax3000hv2
-import sim_ax3000s.server as ax3000s
-import sim_be12000.src.server as be12000
-import sim_be15000.server as be15000
-import sim_ac1000HI.src.server as ac1000HI
-import sim_vigor2927.src.server as vigor2927
+import simulators.sim_ac1000f.server2 as ac1000f
+import simulators.sim_ax3000c.server as ax3000c
+import simulators.sim_ax3000gz.server as ax3000gz
+import simulators.sim_ax3000hv2.server2 as ax3000hv2
+import simulators.sim_ax3000s.server as ax3000s
+import simulators.sim_be12000.src.server as be12000
+import simulators.sim_be15000.server as be15000
+import simulators.sim_ac1000HI.src.server as ac1000HI
+import simulators.sim_vigor2927.src.server as vigor2927
+import simulators.sim_ONT_be6500c.src.server as be6500c
+import simulators.ont_be6500c.src.server as ONT_be6500c
+import simulators.mikrotik_hexs.src.server as mikrotik_hexs
 
 # Mapping từ device id sang module
 SIM_MODULES = {
@@ -82,7 +85,10 @@ SIM_MODULES = {
     'sim_be12000': be12000,
     'sim_be15000': be15000,
     'sim_ac1000HI': ac1000HI,
-    'sim_vigor2927': vigor2927
+    'sim_vigor2927': vigor2927,
+    'sim_be6500c': be6500c,
+    'sim_ONT_be6500c': ONT_be6500c,
+    'sim_mikrotik_hexs': mikrotik_hexs
 }
 
 # Các class Handler của từng thiết bị
@@ -95,7 +101,10 @@ SIM_HANDLERS = {
     'sim_be12000': be12000.Handler,
     'sim_be15000': be15000.H,
     'sim_ac1000HI': ac1000HI.H,
-    'sim_vigor2927': vigor2927.H
+    'sim_vigor2927': vigor2927.H,
+    'sim_be6500c': be6500c.H,
+    'sim_ONT_be6500c': ONT_be6500c.H,
+    'sim_mikrotik_hexs': mikrotik_hexs.H
 }
 
 # File/thư mục Portal luôn do Portal phục vụ (chống bị 'cướp' bởi Referer/Cookie)
@@ -181,6 +190,10 @@ def is_portal_path(path):
         return True
     for prefix in PORTAL_PREFIXES:
         if path.startswith(prefix):
+            if prefix == '/assets/':
+                file_path = os.path.join(BASE_DIR, path.lstrip('/'))
+                if not os.path.exists(file_path):
+                    return False
             return True
     return False
 
@@ -531,7 +544,16 @@ class MasterDispatcher(SimpleHTTPRequestHandler):
                     elif hasattr(mod, 'WWW'):
                         self.directory = getattr(mod, 'WWW')
                     else:
-                        self.directory = os.path.join(BASE_DIR, sim_id, 'www')
+                        sim_dir_candidates = [
+                            os.path.join(BASE_DIR, "simulators", sim_id, "www"),
+                            os.path.join(BASE_DIR, sim_id, "www"),
+                            os.path.join(BASE_DIR, "simulators", sim_id),
+                            os.path.join(BASE_DIR, sim_id),
+                        ]
+                        for cand in sim_dir_candidates:
+                            if os.path.isdir(cand):
+                                self.directory = cand
+                                break
 
                     def custom_send_header(keyword, value):
                         if keyword.lower() == 'location' and value.startswith('/'):

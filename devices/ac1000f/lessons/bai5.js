@@ -21,11 +21,10 @@ var lesson = {
   ],
   practiceUrl: '/sim_ac1000f/cgi-bin/index.asp?page=home_lan.asp',
 
-  // Xóa trắng các ô nhập liệu khi bài lab mở
+  // Xóa trắng ô IP Address và Subnet Mask để bắt buộc học viên tự nhập
   clearFields: [
-    'input[name="StartIp"]',
-    'input[name="EndIp"]',
-    'input[name="dhcp_LeaseTime"]'
+    'input[name="uiViewIPAddr"]',
+    'input[name="uiViewNetMask"]'
   ],
 
   grading: {

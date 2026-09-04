@@ -1,0 +1,187 @@
+{
+  "_route": "system/general",
+  "_duong_dan_trinh_duyet": "#/system/general",
+  "_nguon": {
+    "chunk": "index-C7yhm04W.js",
+    "kich_thuoc_byte": 16223,
+    "chunk_phu_thuoc": [
+      "assets/index-C7yhm04W.js",
+      "assets/useSnackbar-DeOFrJDC.js",
+      "assets/isNumber-CjKC2f0Q.js",
+      "assets/Add-tn7x3fTr.js",
+      "assets/Close-mKDEAbfE.js",
+      "assets/FormSelect-CJAio79q.js",
+      "assets/TabList-CMoR7mS_.js",
+      "assets/KeyboardArrowRight-C7P-Q0WC.js",
+      "assets/TabPanel-D6RFuHOG.js",
+      "assets/schema-BT0LOWg1.js",
+      "assets/timezone-DtTaowKW.js",
+      "assets/time-DkCa3OgQ.js",
+      "assets/PageTitle-B7Z6U_Hg.js"
+    ],
+    "bundle_loi": "index-CW0UhNxy.js",
+    "_da_quet": [
+      "Add-tn7x3fTr.js",
+      "Close-mKDEAbfE.js",
+      "FormSelect-CJAio79q.js",
+      "KeyboardArrowRight-C7P-Q0WC.js",
+      "PageTitle-B7Z6U_Hg.js",
+      "TabPanel-D6RFuHOG.js",
+      "index-C7yhm04W.js",
+      "isNumber-CjKC2f0Q.js",
+      "schema-BT0LOWg1.js",
+      "time-DkCa3OgQ.js",
+      "timezone-DtTaowKW.js",
+      "useSnackbar-DeOFrJDC.js"
+    ]
+  },
+  "_cach_trich": "src/trich_dac_ta_trang.py (doc ma goc, khong doan)",
+  "goi_api": [
+    {
+      "ham_goc": "getSystemInfo",
+      "doi_tuong_goc": "B_",
+      "tim_thay_o": [
+        "index-C7yhm04W.js"
+      ],
+      "resource": "api/v1/data/system/info",
+      "method": "GET",
+      "kenh": "REST"
+    },
+    {
+      "ham_goc": "getTime",
+      "doi_tuong_goc": "B_",
+      "tim_thay_o": [
+        "index-C7yhm04W.js"
+      ],
+      "resource": "api/v1/data/time",
+      "method": "GET",
+      "kenh": "REST"
+    },
+    {
+      "ham_goc": "setSystemInfo",
+      "doi_tuong_goc": "B_",
+      "tim_thay_o": [
+        "index-C7yhm04W.js"
+      ],
+      "resource": "api/v1/data/system",
+      "method": "PATCH",
+      "kenh": "REST"
+    },
+    {
+      "ham_goc": "setTime",
+      "doi_tuong_goc": "B_",
+      "tim_thay_o": [
+        "index-C7yhm04W.js"
+      ],
+      "resource": "api/v1/data/time",
+      "method": "PATCH",
+      "kenh": "REST"
+    }
+  ],
+  "goi_khac": {
+    "rpc": [],
+    "duong_dan_tuyet_doi": []
+  },
+  "truong_form": [
+    {
+      "name": "ntp.servers"
+    },
+    {
+      "name": "hostname",
+      "label": "Router Hostname"
+    }
+  ],
+  "gia_tri_mac_dinh": [
+    {
+      "bien": "it",
+      "ma": "{hostname:\"\",timezoneName:\"\",localTimeZone:\"\",ntp:{servers:[]}}"
+    }
+  ],
+  "schema_kiem_tra": [
+    {
+      "ma": "{hostname:Ue(),timezoneName:_.string(),localTimeZone:_.string(),ntp:_.object({servers:_.array(_.object({value:_.union([_.string().ip({message:\"NTP server must be either an IP address or a domain name.\"}),He()])}))})}"
+    },
+    {
+      "ma": "{servers:_.array(_.object({value:_.union([_.string().ip({message:\"NTP server must be either an IP address or a domain name.\"}),He()])}))}"
+    },
+    {
+      "ma": "{value:_.union([_.string().ip({message:\"NTP server must be either an IP address or a domain name.\"}),He()])}"
+    }
+  ],
+  "chuoi_hien_thi": [
+    ")&&m({value:",
+    ")(({theme:r})=>{const{spacing:e,breakpoints:n}=r;return{width:",
+    ")({display:",
+    "),helperText:F(z,",
+    "),paddingTop:e(4),[n.down(",
+    ")]:{width:",
+    ")||",
+    ",...e&&{color:n.green[8]},",
+    ",alignItems:",
+    ",children:",
+    ",children:e}),p.jsx(",
+    ",children:n})]})})(({theme:r})=>{const{palette:e,spacing:n,breakpoints:o}=r;return{marginBottom:0,display:",
+    ",children:p.jsxs(W,{spacing:2,children:[le,p.jsx(J,{name:",
+    ",children:p.jsxs(W,{spacing:2,children:[p.jsx(lt,{title:",
+    ",className:o,children:[e,n&&p.jsx(",
+    ",className:o,children:[p.jsx(",
+    ",color:",
+    ",component:",
+    ",control:C}),{enqueueSnackbar:s}=me(),a=w.useMemo(()=>Ve,[]);Be(r==null?void 0:r.localTime,{timeFormat:ot,utc:!0});const i=w.useCallback(async()=>{await b(",
+    ",defaultValues:it,values:I,resolver:Oe(at)}),{handleSubmit:v,reset:x,trigger:b,formState:{errors:z},control:C}=y,{fields:g,append:m,remove:t}=ke({name:",
+    ",error:!!F(z,",
+    ",flexDirection:",
+    ",height:3,backgroundColor:n.green[8],margin:o(-3/8,.25,0,.25),borderRadius:",
+    ",height:40,paddingRight:3},children:",
+    ",justifyContent:",
+    ",label:",
+    ",localTimeZone:",
+    ",maxWidth:980,minWidth:600,margin:e(0,",
+    ",minWidth:",
+    ",ntp:{servers:[]}};E(r=>{const{label:e,selected:n,className:o}=r;return p.jsxs(de,{variant:",
+    ",onChangeTab:T}=De(o),I=w.useMemo(()=>{var u,f;if(!Pe(e)){const M=(f=(u=e==null?void 0:e.ntp)==null?void 0:u.servers)==null?void 0:f.map(P=>({value:P}));return Q(e,P=>{P.ntp={},P.ntp.servers=M})}},[e]),y=_e({mode:",
+    ",onClick:S},{action:",
+    ",onClick:c}]})]})}he.propTypes={systemStatus:A.object,systemSettings:A.object,onApply:A.func.isRequired};const ut=E(",
+    ",options:a,sx:{",
+    ",paddingTop:0}}});function dt(){const r=je(v=>v.token),{data:e,mutate:n}=X({key:",
+    ",right:12,top:8},children:p.jsx(We,{})})]},u.id)}),p.jsx(Ne,{variant:",
+    ",spacing:1,children:[p.jsx(J,{name:`ntp.servers.${f}.value`,error:M,helperText:P,sx:{flex:1}}),p.jsx(Re,{onClick:()=>d(f),sx:{position:",
+    ",startIcon:p.jsx(Ae,{}),onClick:i,sx:{width:",
+    ",textTransform:",
+    ",timezoneName:",
+    ",token:r},j.getSystemInfo,{revalidateOnFocus:!1}),{data:o,mutate:l}=X({key:",
+    ",token:r},j.getTime,{revalidateOnFocus:!1}),{enqueueSnackbar:T}=me(),I=w.useMemo(()=>({hostname:e==null?void 0:e.hostname,localTimeZone:o==null?void 0:o.localTimeZone,ntp:{servers:o==null?void 0:o.servers},timezoneName:",
+    ",variant:",
+    ",whiteSpace:",
+    ",wordBreak:",
+    ",{className:",
+    ".deleteButton",
+    ":{maxHeight:7*nt},",
+    ":{width:",
+    ":{wordWrap:",
+    "Duplicate IP address.",
+    "Duplicate domain.",
+    "General Settings",
+    "NTP server must be either an IP address or a domain name.",
+    "Time Synchronization",
+    "TimezoneMenuList",
+    "WebKit",
+    "ddd, DD/MM/YYYY hh:mm:ss",
+    "timezoneName",
+    "}),[e,o]),y=w.useCallback(async v=>{try{const{hostname:x,ntp:{servers:b},localTimeZone:z}=v,C={hostname:x},g={enabled:!0,localTimeZone:z,servers:b},m=[j.setSystemInfo({token:r,payload:C}),j.setTime({token:r,payload:g})];await Promise.all(m),n(),l()}catch{T({title:",
+    "}),g.map((u,f)=>{const M=!!F(z,`ntp.servers.${f}.value`),P=F(z,`ntp.servers.${f}.value.message`);return p.jsxs(ct,{direction:",
+    "}),p.jsx(Le,{name:",
+    "}),p.jsx(ee,{selectedKey:l,value:",
+    "}),p.jsx(he,{systemStatus:{localTime:o==null?void 0:o.time},systemSettings:I,onApply:y})]})}E(",
+    "})]})})(({theme:r,selected:e})=>{const{palette:n,spacing:o}=r;return{height:48,lineHeight:",
+    "})]})}),p.jsx(Fe,{actions:[{action:",
+    "})},[b,m]),d=w.useCallback(u=>{t(u)},[t]),S=v(async u=>{try{const f=Q(u,M=>{var P,O;M.ntp.servers=(O=(P=u.ntp)==null?void 0:P.servers)==null?void 0:O.map(D=>D.value)});n(f)}catch(f){throw s({title:",
+    "},{alertProps:{severity:",
+    "}}),f}}),c=w.useCallback(()=>{x(I)},[x,I]),h=w.useCallback((u,f)=>{x(I),T(u,f)},[x,I,T]);return p.jsxs(Ee,{providerProps:y,sx:{marginTop:0},children:[p.jsx($e,{tabs:o,selectedKey:l,onChange:h,TabItemLabel:null,sx:{marginBottom:{sm:4,xs:6}},variant:",
+    "}})}},[r,T,n,l]);return p.jsxs(ut,{children:[p.jsx(Ze,{title:",
+    "}},MenuProps:{MenuListProps:{component:L},sx:{",
+    "}}});const lt=E(r=>{const{title:e,value:n,className:o}=r;return p.jsxs(de,{variant:",
+    "}}}})]})}),p.jsx(ee,{selectedKey:l,value:"
+  ],
+  "_can_doc_tay": []
+}

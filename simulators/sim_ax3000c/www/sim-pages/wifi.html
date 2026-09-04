@@ -1,0 +1,57 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="/sim-pages/sim.css"></head>
+<body>
+
+<div class="tabs" style="margin-top: 40px;">
+  <div class="tab active" data-t="host">Host SSID</div>
+  <div class="tab" data-t="guest">Guest SSID</div>
+  <div class="tab" data-t="specific">Specific SSID</div>
+</div>
+
+<div class="toprow">
+  <span class="lbl">Use separate SSID</span>
+  <label class="sw"><input type="checkbox"><span class="slider"></span></label>
+</div>
+
+<div class="card">
+  <div class="hd">Wi-Fi</div>
+  <div class="bd">
+    <div class="row">
+      <div class="lbl">SSID Enabled</div>
+      <div class="ctrl"><label class="sw"><input type="checkbox" checked><span class="slider"></span></label></div>
+    </div>
+    <div class="row">
+      <div class="lbl"><span class="req">*</span>SSID</div>
+      <div class="ctrl"><input type="text" value="FPT_AX3000CV2"></div>
+    </div>
+    <div class="row">
+      <div class="lbl"><span class="req">*</span>Encryption</div>
+      <div class="ctrl"><select>
+        <option>WPA2-Personal</option>
+        <option>WPA2/WPA3 Mixed</option>
+        <option>WPA3-Personal</option>
+      </select></div>
+    </div>
+    <div class="row">
+      <div class="lbl">Passphrase</div>
+      <div class="ctrl"><div class="pass-wrap">
+        <input type="password" value="fpt@12345" id="pp">
+        <span class="eye" onclick="var p=document.getElementById('pp');p.type=p.type==='password'?'text':'password'">&#9673;</span>
+      </div></div>
+    </div>
+  </div>
+</div>
+
+<div class="actions">
+  <button class="btn apply" onclick="simState.save()">Apply</button>
+  <button class="btn undo" onclick="location.reload()">Undo</button>
+</div>
+
+<script>
+document.querySelectorAll('.tabs .tab').forEach(function(t){
+  t.onclick=function(){document.querySelectorAll('.tabs .tab').forEach(function(x){x.classList.remove('active')});t.classList.add('active');};
+});
+</script>
+<script src="/sim-pages/state.js"></script>
+</body></html>

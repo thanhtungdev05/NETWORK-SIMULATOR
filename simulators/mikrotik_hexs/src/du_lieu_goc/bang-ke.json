@@ -1,0 +1,2210 @@
+{
+ "ghi_chu": "Khung tra loi THAT (ban ro M2) thu tu thiet bi hEX S. Ten tep = duong dan lenh; hau to __pN = trang thu N cua duong dan phan trang.",
+ "so_tep": 440,
+ "so_duong_dan": 424,
+ "co_du_lieu": 411,
+ "thiet_bi_chua_ho_tro": 22,
+ "rong_that": 7,
+ "tep": {
+  "10-1": {
+   "byte": 66,
+   "sha256": "e7e07725c09c8f2fcdc968aaab21984617325ef3e19c2e956e1677f4e428fb5c",
+   "loai": "co-du-lieu"
+  },
+  "10-2": {
+   "byte": 66,
+   "sha256": "c1c79549add43dd336589e50cec6016d19ea63449dd3fd5edb3406b00021fd2f",
+   "loai": "co-du-lieu"
+  },
+  "101-1": {
+   "byte": 78,
+   "sha256": "9a2f1e238d22e1f339426d696e1962eecadd7bd672cc7c653356f8cd61b75d32",
+   "loai": "thiet-bi-chua-ho-tro"
+  },
+  "109-1": {
+   "byte": 76,
+   "sha256": "009892fb8d038269d0da55083c7b56544722f0ab9908bb76bd9386ee044fec19",
+   "loai": "thiet-bi-chua-ho-tro"
+  },
+  "109-3": {
+   "byte": 76,
+   "sha256": "b38dd677ff78371d0c4e64055a3b1a7f3e67f32d70748fb1c986c80f5634c8ed",
+   "loai": "thiet-bi-chua-ho-tro"
+  },
+  "118-1": {
+   "byte": 108,
+   "sha256": "9127eac91a075756e6d003f260535fe526b2c10fc5c7f5fcb3a2d0b125db82a9",
+   "loai": "co-du-lieu"
+  },
+  "118-2": {
+   "byte": 121,
+   "sha256": "5db5a0bccbcc990584d74724e5fd86b035c98e30dbc25518ac494e30856061f5",
+   "loai": "co-du-lieu"
+  },
+  "118-3": {
+   "byte": 60,
+   "sha256": "0586bfc55d8a216c50e1e43871c783c06492aa4246606f7d18f8e551da7ffb80",
+   "loai": "co-du-lieu"
+  },
+  "119-1": {
+   "byte": 83,
+   "sha256": "f2c71513c436a67480ecf726440e37a52be65430e251101d77fc4ba35e0b0c6e",
+   "loai": "thiet-bi-chua-ho-tro"
+  },
+  "119-2": {
+   "byte": 66,
+   "sha256": "95766178294484426a23591297c36acfa3b27aa5c033d0cffa890336adb225a3",
+   "loai": "co-du-lieu"
+  },
+  "119-3": {
+   "byte": 66,
+   "sha256": "e27caed2927673d21e59de3b287d190c3521637e3cd7bcb80505b6ade7e8215c",
+   "loai": "co-du-lieu"
+  },
+  "119-4": {
+   "byte": 66,
+   "sha256": "3add29c3271b25a5ef1b8e49bffe34ad152dba49bc12c5b99ce03d1fe67a8c01",
+   "loai": "co-du-lieu"
+  },
+  "119-5": {
+   "byte": 66,
+   "sha256": "e40ca2b0a898283ff613ae5441db56a57000bc686443964672d1f7fd5860b58f",
+   "loai": "co-du-lieu"
+  },
+  "119-6": {
+   "byte": 66,
+   "sha256": "06be1c043ec855e8bdc48a3aa4bc38a08a9792f9f38be9d75e2866a8f184ce1b",
+   "loai": "co-du-lieu"
+  },
+  "119-7": {
+   "byte": 2911,
+   "sha256": "579aae09ae77ecc123483e8b4bb774d263d961ada3ffaf0f763cd06ee9ac4a08",
+   "loai": "co-du-lieu"
+  },
+  "119-8": {
+   "byte": 66,
+   "sha256": "0a1686b8cfbe1a26dcfeb7b0cfe50f60d90b4a2416cc25d9206684f5eb3ca28f",
+   "loai": "co-du-lieu"
+  },
+  "119-9": {
+   "byte": 66,
+   "sha256": "cbe4bc183dc4da71aac21c341a8f6ec8945a95b5971945cfcc2ac6e8e1321216",
+   "loai": "co-du-lieu"
+  },
+  "120-1": {
+   "byte": 292,
+   "sha256": "3c7f61cf9eedeae4873b917f4c087d4e5c51243d75df612e9deea707456cca60",
+   "loai": "co-du-lieu"
+  },
+  "120-10": {
+   "byte": 375,
+   "sha256": "53ca6a116803fa5e266fcdb8cca5531fdba6b0bc851bbd2ba04ebbd39013d244",
+   "loai": "co-du-lieu"
+  },
+  "120-101": {
+   "byte": 64,
+   "sha256": "ca9f9ae01b9a44d1bd454677e45b4f8d61dfddc76c1df9c67a94bfbb3a19c361",
+   "loai": "thiet-bi-chua-ho-tro"
+  },
+  "120-102": {
+   "byte": 61,
+   "sha256": "0eb4482577c6f53efb6bcffc1684a99c6a5e1443b0a6a2bcd18deed9095bb60c",
+   "loai": "co-du-lieu"
+  },
+  "120-104": {
+   "byte": 83,
+   "sha256": "2707f1758b6ee12f3bbb5f4467e369d1a258fddad5df80d1ca5ec7ea4e5b7aea",
+   "loai": "co-du-lieu"
+  },
+  "120-105": {
+   "byte": 61,
+   "sha256": "e6623238ef327e79d2dec68c4372267339ad82fd0d852e346f5f71cdf5775078",
+   "loai": "co-du-lieu"
+  },
+  "120-11": {
+   "byte": 383,
+   "sha256": "a8ce64b5325b5c8a83e3e7f88667abfd68fd75d42623fd26ce5409e95267aa48",
+   "loai": "co-du-lieu"
+  },
+  "120-12": {
+   "byte": 282,
+   "sha256": "e240c7d8759362891a738774a8126e0ded27ba53324aef66befa03ac0a24657b",
+   "loai": "co-du-lieu"
+  },
+  "120-13": {
+   "byte": 451,
+   "sha256": "d5eddc3051cdb574e15c564ec505950beb5bf24ae898b7afb0f6e8b2e3e079f4",
+   "loai": "co-du-lieu"
+  },
+  "120-14": {
+   "byte": 379,
+   "sha256": "88dcc0a18ba4b2a79ae73a4283ae73ffb695d27c49338d2ce2bebf1c47b15db4",
+   "loai": "co-du-lieu"
+  },
+  "120-15": {
+   "byte": 443,
+   "sha256": "f4c0c28719ac2eb64f3187d927a48e15fade8fabc636522abfbab08606e68c1d",
+   "loai": "co-du-lieu"
+  },
+  "120-16": {
+   "byte": 348,
+   "sha256": "083a2dc977077887de3f61eb5d56a1036c95fd59cc6864212a0d32c2fe955a97",
+   "loai": "co-du-lieu"
+  },
+  "120-17": {
+   "byte": 443,
+   "sha256": "e8b49bfdb04a148dd11976d553c9106dc981f529e62fb69fec4b5d75a50bdbef",
+   "loai": "co-du-lieu"
+  },
+  "120-18": {
+   "byte": 373,
+   "sha256": "eb930d75a5099ae78105429283bb1e0dd573854aacd39180577b8ea43b02d596",
+   "loai": "co-du-lieu"
+  },
+  "120-2": {
+   "byte": 454,
+   "sha256": "1d7d286f4a1dee63da0350c7d095d9d0552ed19a42cf790685af8bd2fa2be411",
+   "loai": "co-du-lieu"
+  },
+  "120-3": {
+   "byte": 405,
+   "sha256": "ae96b4ed4595127e02593ae05d91e5cb4dae08c3f4e1ed35c70c68143a1cca1b",
+   "loai": "co-du-lieu"
+  },
+  "120-4": {
+   "byte": 470,
+   "sha256": "e51ac35b9ad329cb118a292518b4c16ab6f731c3163c2bf9bc8c7815bc12d28e",
+   "loai": "co-du-lieu"
+  },
+  "120-5": {
+   "byte": 344,
+   "sha256": "22d09bfae3c8d77355db2abc0e39a6ffc3db14fc59d65eb90aa8035a0f33854a",
+   "loai": "co-du-lieu"
+  },
+  "120-6": {
+   "byte": 422,
+   "sha256": "8955850f897d6825b7e02237379875b1340f5b2ced2d990d63c468323cd5b474",
+   "loai": "co-du-lieu"
+  },
+  "120-7": {
+   "byte": 478,
+   "sha256": "121e2873aa14559f7cde54801c66a5ba31d918437fb5b5297094857e8c38ecfe",
+   "loai": "co-du-lieu"
+  },
+  "120-8": {
+   "byte": 271,
+   "sha256": "064f0cf12dd1de2ece9ce81d8b0a173288f3f25a9e6b43ab806b63f3ec1d6890",
+   "loai": "co-du-lieu"
+  },
+  "120-9": {
+   "byte": 282,
+   "sha256": "3a4942e5e357a27cdb922320066eb1df0b49e303197f627a6934c94f54435c38",
+   "loai": "co-du-lieu"
+  },
+  "123-1": {
+   "byte": 169,
+   "sha256": "124bfaed709e540cf500ce262c3cb5a86f927b6f43574e3a369bd9e1e97473f4",
+   "loai": "co-du-lieu"
+  },
+  "123-2__p0": {
+   "byte": 79,
+   "sha256": "85ca9173e8559ee923dba150ef7aff6203c50b2d8cd75bb3844f8330f0789af3",
+   "loai": "co-du-lieu"
+  },
+  "123-2__p1": {
+   "byte": 79,
+   "sha256": "58db68be4aedf4318bd264a6d02acd1aa5f9233e8c87544a69a26089fec209aa",
+   "loai": "co-du-lieu"
+  },
+  "123-2__p10": {
+   "byte": 89,
+   "sha256": "6b63bf58b7eeb8e9a4fca825137af3196efda1fd494ab6c64db9e9fc0dfc08cf",
+   "loai": "thiet-bi-chua-ho-tro"
+  },
+  "123-2__p2": {
+   "byte": 79,
+   "sha256": "4afba33750b9e436bc102340a592e2924b80290a368bdf085bc862d76792a139",
+   "loai": "co-du-lieu"
+  },
+  "123-2__p3": {
+   "byte": 79,
+   "sha256": "e5e09dc8d0a4b03103480dc854d40829895fededa94e3c18a9ebe84a99c6065c",
+   "loai": "co-du-lieu"
+  },
+  "123-2__p4": {
+   "byte": 79,
+   "sha256": "4f503ca3ffc42ec1d2d95ade5ad0fdeb0e1edf7de26f84859998bd2fed1980c6",
+   "loai": "co-du-lieu"
+  },
+  "123-2__p5": {
+   "byte": 79,
+   "sha256": "c8f8200268fee28c42f2f64969a53fe5d1a9a04b021a755ae3bf813a70c0a582",
+   "loai": "co-du-lieu"
+  },
+  "123-2__p6": {
+   "byte": 79,
+   "sha256": "6f58cd19c66eb090a04e48e52fc2b19bc0a6f7c1c5124ba979a596e84d047937",
+   "loai": "co-du-lieu"
+  },
+  "123-2__p7": {
+   "byte": 79,
+   "sha256": "a2b49dfbb8babf1169c74822586debaadf8e7f39e764f144b82c48636dd65aa3",
+   "loai": "co-du-lieu"
+  },
+  "123-2__p8": {
+   "byte": 79,
+   "sha256": "5bb1c9b432273a3bc121a8a064a45d31c41b1da170e305fd13b5c0b6ce1a6022",
+   "loai": "co-du-lieu"
+  },
+  "123-2__p9": {
+   "byte": 79,
+   "sha256": "a35223284a0953e7e54d82852d2e700718a02d37157ea6e99089de4cc6d2a2f8",
+   "loai": "co-du-lieu"
+  },
+  "124-1": {
+   "byte": 121,
+   "sha256": "b6bffe3fca148af5e3423ad292ffe42874e5ee61dbe04d0b163242b18046ad03",
+   "loai": "co-du-lieu"
+  },
+  "124-2": {
+   "byte": 66,
+   "sha256": "f7827c83077b7e221a0f7956176ab5f71515729766d88301a770b8e26646543f",
+   "loai": "co-du-lieu"
+  },
+  "124-3": {
+   "byte": 66,
+   "sha256": "89d49cff39315a4dd6a052a8bf23bc8aa08a545086ddfeded871e62965093127",
+   "loai": "co-du-lieu"
+  },
+  "124-4": {
+   "byte": 66,
+   "sha256": "3b2a4c07a71680ccfa3f84173fe166ef5a69f0bfcb588c7d03d1962958b2fd48",
+   "loai": "co-du-lieu"
+  },
+  "127-1": {
+   "byte": 115,
+   "sha256": "195c14d483b6ffa03c6fdf9372a3e67de7d711c8a8f1d49f7b595f682a6882c1",
+   "loai": "co-du-lieu"
+  },
+  "127-2": {
+   "byte": 68,
+   "sha256": "6a7a85b3c78098e9bbd123c18e2db1c48ad3b9ba267a2fc95214e08fa1ac6e8d",
+   "loai": "thiet-bi-chua-ho-tro"
+  },
+  "127-4": {
+   "byte": 68,
+   "sha256": "7c5bed0e4653cc0b0a7e910c99a9df1f3cdf069e896f5e0ff6f3b763dac4d928",
+   "loai": "thiet-bi-chua-ho-tro"
+  },
+  "129-1": {
+   "byte": 105,
+   "sha256": "6fbfb8313b27f2efd5bd5802008e427140559f065369499014f61cf60f766f4f",
+   "loai": "co-du-lieu"
+  },
+  "13-1": {
+   "byte": 163,
+   "sha256": "735f44a28e212eec7de98af5d736217f9b34eb238d2b4406942e0c145447f32d",
+   "loai": "co-du-lieu"
+  },
+  "13-2": {
+   "byte": 220,
+   "sha256": "e1bb077fe33d71870107e70d134205d2ccaf17e1144a801ba1025435fb4a4ff1",
+   "loai": "co-du-lieu"
+  },
+  "13-3": {
+   "byte": 950,
+   "sha256": "4c3e9c1b1101addae52c95a6f01a897007b6d5e8f18a8f3015ac299894062044",
+   "loai": "co-du-lieu"
+  },
+  "13-4": {
+   "byte": 174,
+   "sha256": "4b7c2942dc8d970b76bf89df84247757d55c2bc9d01bd974080077aa84edb26c",
+   "loai": "co-du-lieu"
+  },
+  "13-5": {
+   "byte": 79,
+   "sha256": "99b3a6bba1d900df5f6f58b5eb9a31ad83eb6f98abd6cca86d20fafdafdc9601",
+   "loai": "co-du-lieu"
+  },
+  "13-8": {
+   "byte": 87,
+   "sha256": "bf3d6416022a3b2b480fa9f3886c5764145278db75ca8843710112b82e4364aa",
+   "loai": "co-du-lieu"
+  },
+  "13-9": {
+   "byte": 65,
+   "sha256": "da77f32c3d98c87692e5331358145a229b3c79dc562e62157a25ba291b946cad",
+   "loai": "co-du-lieu"
+  },
+  "130-1": {
+   "byte": 66,
+   "sha256": "1fa49375601b7bbb67a85f255c178290c29f0e483227cd86f46319d633353b7a",
+   "loai": "co-du-lieu"
+  },
+  "130-2": {
+   "byte": 66,
+   "sha256": "704f0e20e7b4348489ecbf1edc3a6b61f4a3c5bf45224043e354fdeeda841df0",
+   "loai": "co-du-lieu"
+  },
+  "130-3": {
+   "byte": 66,
+   "sha256": "c4ae13fe5c7c8eebf0dc39b57415184f99cab9cdf5e58856bf5007c0b6b8d1f3",
+   "loai": "co-du-lieu"
+  },
+  "130-4": {
+   "byte": 66,
+   "sha256": "1e7a7d3755163eaa632f4b8f6779556368d91fe658870d5816327c7d3a37a58f",
+   "loai": "co-du-lieu"
+  },
+  "130-6": {
+   "byte": 108,
+   "sha256": "fe5132e2b8f049bb8024ed17f3a7ba77fb01593a4cd3a55de4e922543706a809",
+   "loai": "co-du-lieu"
+  },
+  "132-1": {
+   "byte": 87,
+   "sha256": "db0be678a7cf8919ede99c9e6fe1fa7515bae05013df6c3a9e0f6e72ebf96370",
+   "loai": "co-du-lieu"
+  },
+  "132-2": {
+   "byte": 66,
+   "sha256": "6c6d606ff7528c96e26f0972dacfbe7d1a18298f931287d73f2ab6c09f5576ee",
+   "loai": "co-du-lieu"
+  },
+  "134-1": {
+   "byte": 66,
+   "sha256": "3e4ff880f410a6d88631847b17a8909b309a4cd99a29e53679732bc81916ad78",
+   "loai": "co-du-lieu"
+  },
+  "134-2": {
+   "byte": 66,
+   "sha256": "85d7e978ece151158063d3f193460335cf0527878c56783e5f7c6fdc402793e8",
+   "loai": "co-du-lieu"
+  },
+  "135-6": {
+   "byte": 66,
+   "sha256": "b4c09618c98b1b0957d0ae65324b46a3405a75916443690d39079833a78d5b05",
+   "loai": "co-du-lieu"
+  },
+  "135-7": {
+   "byte": 55,
+   "sha256": "5b1ee1281f3ab85215c69e6dea5fe587c52180a2e06e8eea468cb21e558c46a8",
+   "loai": "rong-that"
+  },
+  "135-8": {
+   "byte": 78,
+   "sha256": "c0eb58c0f54133543e7b59a88b8535c8383bc3074ca6f5450c4ca6b5fc029c5a",
+   "loai": "thiet-bi-chua-ho-tro"
+  },
+  "137-1": {
+   "byte": 66,
+   "sha256": "79bca046cfd7e8a351ae06e39e008053b1eb4bdccc37c37076559b0f88c1dc85",
+   "loai": "co-du-lieu"
+  },
+  "137-2": {
+   "byte": 66,
+   "sha256": "54dd79b420d65a8a5843fca169d66b77ba5ec7e8e715764d94b264a0a10744b4",
+   "loai": "co-du-lieu"
+  },
+  "137-3": {
+   "byte": 66,
+   "sha256": "59ed171e1afdd95d5bc82330021c04c699cd23909b6a92145f3f10d7fc76e489",
+   "loai": "co-du-lieu"
+  },
+  "138-10": {
+   "byte": 66,
+   "sha256": "0f0d2a3e766d7538a1aa5bdd528dfc1ed807dee46cfdc23eb389f5f0cd6826ed",
+   "loai": "co-du-lieu"
+  },
+  "138-12": {
+   "byte": 66,
+   "sha256": "e8386970e9876c0702e2ff0e04957a06eece165b1e6aef1c8a9da9b1ff3c0d6a",
+   "loai": "co-du-lieu"
+  },
+  "138-13": {
+   "byte": 66,
+   "sha256": "ad91bb0714e15a03b62dd0874019043c7a36514fb563b584b641b7aa84e6626c",
+   "loai": "co-du-lieu"
+  },
+  "138-14": {
+   "byte": 66,
+   "sha256": "58f40583bd402b5d6c4c8ef9089f2a730ac040d19dfa05fdd773012f197bf59f",
+   "loai": "co-du-lieu"
+  },
+  "138-15": {
+   "byte": 59,
+   "sha256": "9e1399bfa3f5525602492824b9be5cf5f386ca64f16482b5c80f01283ec9cd3a",
+   "loai": "co-du-lieu"
+  },
+  "138-16": {
+   "byte": 59,
+   "sha256": "eb6572d26b49b72f5a323eafb75d663c1a1586db318cfd5012fabff0b327a8b4",
+   "loai": "co-du-lieu"
+  },
+  "138-17": {
+   "byte": 66,
+   "sha256": "9a47e90fd5b3fb1cb9f71ea4445f5a2138bbde9da5ab15c98b8b24667f2147c0",
+   "loai": "co-du-lieu"
+  },
+  "138-18": {
+   "byte": 66,
+   "sha256": "8addb0be720e498a1e3fb67437d63ff1f50fadbd430f45b313bbe778004b9c30",
+   "loai": "co-du-lieu"
+  },
+  "138-19": {
+   "byte": 66,
+   "sha256": "73f3851e31f6479cb730517291fff2d36b4899ace71f613465b841f3ddf993e6",
+   "loai": "co-du-lieu"
+  },
+  "138-2": {
+   "byte": 68,
+   "sha256": "4c136d5b5fc02a83c19643d8e2c7d197e57246b69b2d779e716c45b5422a9938",
+   "loai": "thiet-bi-chua-ho-tro"
+  },
+  "138-20": {
+   "byte": 66,
+   "sha256": "950ae454edb71ca551bba1eead2e0ef229712d420646104a61e39376e82d4873",
+   "loai": "co-du-lieu"
+  },
+  "138-21": {
+   "byte": 68,
+   "sha256": "ec8c2f2b6e22983b8e6edcf593f858960f9a086a0d3a0e780ff56c370374a4f8",
+   "loai": "thiet-bi-chua-ho-tro"
+  },
+  "138-25": {
+   "byte": 5152,
+   "sha256": "eba4cd697a52b561de07e676be41ce159d92bb5326cc43fd576d0319f948fa1b",
+   "loai": "co-du-lieu"
+  },
+  "138-26": {
+   "byte": 66,
+   "sha256": "3318980ffe205c2232085055d1bdff3c7281eb52d7cbb698103e0e152dc792b1",
+   "loai": "co-du-lieu"
+  },
+  "138-27": {
+   "byte": 66,
+   "sha256": "7856da856c78739bc3d80ad99c4efd6fc3be81c6d1be96da29ae12531d1d1c95",
+   "loai": "co-du-lieu"
+  },
+  "138-3": {
+   "byte": 68,
+   "sha256": "01ad28dd11c5231934b609c58e7035b135b3aa7f3dd6e777b8b6ca5e87c9c3b3",
+   "loai": "thiet-bi-chua-ho-tro"
+  },
+  "138-4": {
+   "byte": 61,
+   "sha256": "32af569a7dc2fb71eef11b3342a8e2f7341d7cf25a5d5b8a297f4b935a02fdf6",
+   "loai": "co-du-lieu"
+  },
+  "138-6": {
+   "byte": 5152,
+   "sha256": "607e787bb8a34a32d05a3ccf422b1056dec0c029304a2ea7cce1621a3b87961f",
+   "loai": "co-du-lieu"
+  },
+  "138-8": {
+   "byte": 66,
+   "sha256": "1b21d7c4eae8b09cedaac42fab93bbdf0aa9329a35c2b502cdf25cc126303ec3",
+   "loai": "co-du-lieu"
+  },
+  "138-9": {
+   "byte": 66,
+   "sha256": "20fc8d26bae924d01039b9692834a6931d7ca8de4fce829b5a401c9e7f1351cd",
+   "loai": "co-du-lieu"
+  },
+  "14-1": {
+   "byte": 66,
+   "sha256": "1a39be7f46b428c1e7438560437becb8161c54a4b9ddc52a150ab407420e36ea",
+   "loai": "co-du-lieu"
+  },
+  "14-2": {
+   "byte": 318,
+   "sha256": "6a54481f81aa9b72c3ea180cb05490dd1ca30f2a5fb42b170e081a67ee935445",
+   "loai": "co-du-lieu"
+  },
+  "14-3": {
+   "byte": 66,
+   "sha256": "576da2a2dba4226bacddece34a096b6487a661f9b15b75efc10a9fb1f3ede0fa",
+   "loai": "co-du-lieu"
+  },
+  "15-1": {
+   "byte": 63,
+   "sha256": "60520d4ef9f4dfec32af4aa33d202fa56ae7c02948c55246775276bf2a2db342",
+   "loai": "co-du-lieu"
+  },
+  "15-2": {
+   "byte": 66,
+   "sha256": "8b1a9e7ef20fdc7a998f1bb4607eacc3ce73117d16b34ee3ec410281071b5c5b",
+   "loai": "co-du-lieu"
+  },
+  "154-0": {
+   "byte": 66,
+   "sha256": "6097ed02bb01f181738aae553f6690d64c942228b7368fbee5d9efff3bb9ddd3",
+   "loai": "co-du-lieu"
+  },
+  "156-1": {
+   "byte": 66,
+   "sha256": "4605b0771f3919fd08bf77b1998e262286899d60f2d4192df16db470a100fdcd",
+   "loai": "co-du-lieu"
+  },
+  "16-11": {
+   "byte": 66,
+   "sha256": "016d6fb8f8a81ced7ba89000f1f548c93df0b974ef2d00926aa82f674641b0ea",
+   "loai": "co-du-lieu"
+  },
+  "16-12": {
+   "byte": 66,
+   "sha256": "c060faf2af7aea692d2f790107169ff0cf2b36963ad45dd15dc379c56bac5086",
+   "loai": "co-du-lieu"
+  },
+  "16-13": {
+   "byte": 66,
+   "sha256": "349ef455ccc5b8492c109750362114699fc49236d12d44952ec8cef1670ad99e",
+   "loai": "co-du-lieu"
+  },
+  "16-2": {
+   "byte": 534,
+   "sha256": "84c599aafe2e8220419b982634fd289662274e298493301b5b7cb95560372779",
+   "loai": "co-du-lieu"
+  },
+  "16-20": {
+   "byte": 91,
+   "sha256": "8d28081b28ce0aac86e5deb5e76621baa02c875bf5b420aa996abbbc7b84bfdf",
+   "loai": "co-du-lieu"
+  },
+  "16-3": {
+   "byte": 268,
+   "sha256": "5fa4e5a4e8ac96496b4e989ca3d0b6b1997879270a20b1b4a231cdfb77562d0d",
+   "loai": "co-du-lieu"
+  },
+  "16-30": {
+   "byte": 93,
+   "sha256": "016d4db78c3477389c7abddeb51e2d983dd051a20b9a6fdf4c9f90d2133b5a7c",
+   "loai": "co-du-lieu"
+  },
+  "16-31": {
+   "byte": 66,
+   "sha256": "d05f59c89602a898dc902d0ecc1cfa8ac8448bbdcc1a558e4e70148ee3fa39d2",
+   "loai": "co-du-lieu"
+  },
+  "16-40": {
+   "byte": 92,
+   "sha256": "2fabe32377cad459179ddae542e36e7ae324fb08b30e840e1fd6e3c527156227",
+   "loai": "co-du-lieu"
+  },
+  "16-9": {
+   "byte": 835,
+   "sha256": "e162caa5d3188f8e15040e26891e943cbab4d5925d84740a35090958cac564a2",
+   "loai": "co-du-lieu"
+  },
+  "17__p0": {
+   "byte": 5161,
+   "sha256": "daab8b6883543a4c5cea5261dcd7db5c3820a73049cf8adc19bba8b94ed4c22f",
+   "loai": "co-du-lieu"
+  },
+  "17__p1": {
+   "byte": 5484,
+   "sha256": "d6cd9b197828fea61067a877a3c676e69ad010895482edf40ea6220d3281eade",
+   "loai": "co-du-lieu"
+  },
+  "17__p2": {
+   "byte": 5760,
+   "sha256": "450bb436ba5a650d9e89a2211b43d99381c728740273e0b10329db90e816826c",
+   "loai": "co-du-lieu"
+  },
+  "17__p3": {
+   "byte": 5205,
+   "sha256": "511715b5b24ccf4a4eb68a9bb859b99c07d158bad6d5109e9b5e523454431646",
+   "loai": "co-du-lieu"
+  },
+  "17__p4": {
+   "byte": 5523,
+   "sha256": "27ee3bd62c5f2c2b0c666e116f58dbc21967891fe142b033436d7a18d62f15b3",
+   "loai": "co-du-lieu"
+  },
+  "18": {
+   "byte": 55,
+   "sha256": "7027ab825a0cc79b88773b78843ba5a10538675877ddcb312a56341f387264f6",
+   "loai": "co-du-lieu"
+  },
+  "19-1": {
+   "byte": 55,
+   "sha256": "f083f2b7bd3948a36707d34fcb88de5f6b999887de8b810fbf4851cdf38df7d0",
+   "loai": "rong-that"
+  },
+  "19-11": {
+   "byte": 66,
+   "sha256": "7dc66221c0a484737155e4e3a8b95b2a8a446f45119fd6478d1a3aef5c039d34",
+   "loai": "co-du-lieu"
+  },
+  "19-12": {
+   "byte": 66,
+   "sha256": "a67dab28c08046c857dfb5c3dfac08164c7e97ee351781d762bd1b092a8d8776",
+   "loai": "co-du-lieu"
+  },
+  "19-13": {
+   "byte": 68,
+   "sha256": "d2b85dd3e2d81ecca2e1fb5c619f41b67205a5d86b36ca8f2c31d03927a2141a",
+   "loai": "co-du-lieu"
+  },
+  "19-4": {
+   "byte": 66,
+   "sha256": "8b751f74388d7f79b7f526aa88957f63eab5b9bc1940134a3d52a88b409f287e",
+   "loai": "co-du-lieu"
+  },
+  "19-5": {
+   "byte": 66,
+   "sha256": "cab70051c203db28bb7c1deced21e2f2a58a242e06bad30112a737bcc7bafd1d",
+   "loai": "co-du-lieu"
+  },
+  "19-6": {
+   "byte": 66,
+   "sha256": "a7aa00ad9a5c60f0b15aae33a1c6864c7c6d0cc68a97df34cefa7e71b4ed0af4",
+   "loai": "co-du-lieu"
+  },
+  "2-1": {
+   "byte": 63,
+   "sha256": "c248b2846adbb64e72cfe4aca0fe988796ea65ac3470c8c6885d3c142796bf32",
+   "loai": "co-du-lieu"
+  },
+  "20-0": {
+   "byte": 9250,
+   "sha256": "11ca5edb31422a848b1f43045bd71bd0c7f0f715658e75b551e2b0e2b110fede",
+   "loai": "co-du-lieu"
+  },
+  "20-1": {
+   "byte": 199,
+   "sha256": "4e0da613420e357f010e01b947e98e91f35e3117de150e56c089e4bc21bf6d1d",
+   "loai": "co-du-lieu"
+  },
+  "20-10": {
+   "byte": 3582,
+   "sha256": "d075558784632b78c3cd240e763deebe2c895de8c002b894409f96d60dc09c42",
+   "loai": "co-du-lieu"
+  },
+  "20-101": {
+   "byte": 114,
+   "sha256": "09af86a572a9da6e45d87275889e3493dc7aaabf5bf4cdd8f3e29716e8c43763",
+   "loai": "co-du-lieu"
+  },
+  "20-102": {
+   "byte": 170,
+   "sha256": "6f09fcc94cd66a1b2a7b0d41eb00d4628e186a6c53c23c549660e0d4b11a4a97",
+   "loai": "co-du-lieu"
+  },
+  "20-103": {
+   "byte": 61,
+   "sha256": "221dbdb3eb8672e3c606f0e064eef0c039389ae6a09e075be515b9729d1e2580",
+   "loai": "co-du-lieu"
+  },
+  "20-104": {
+   "byte": 66,
+   "sha256": "1064b39e4e156ea333c4d314efe1125e3475246b50e64f405e348b1d9621ce07",
+   "loai": "co-du-lieu"
+  },
+  "20-105": {
+   "byte": 61,
+   "sha256": "9320b15c9eb86062a0470752b5a800f238b3e053e17b2c75996cb7cfa13e1987",
+   "loai": "co-du-lieu"
+  },
+  "20-107": {
+   "byte": 105,
+   "sha256": "19fe653d2ecb17fa9fd4e2b4a25f855d8e9727475e167a4c1c39ab1709bae7da",
+   "loai": "co-du-lieu"
+  },
+  "20-108": {
+   "byte": 61,
+   "sha256": "e4ef08cc6202faad7177796e2e605d752490515deaff9c9eb29278bd7ace2686",
+   "loai": "co-du-lieu"
+  },
+  "20-109": {
+   "byte": 68,
+   "sha256": "b106b984a6952b56435282ee45cd5b5e18be75c601de538d171927fabcdd37b2",
+   "loai": "thiet-bi-chua-ho-tro"
+  },
+  "20-110": {
+   "byte": 66,
+   "sha256": "fea4eadc1298408258e5a047bea6d05c4fcec45d9a836dcad4adc9099dbed84c",
+   "loai": "co-du-lieu"
+  },
+  "20-111": {
+   "byte": 66,
+   "sha256": "48ba472cc2a2b402adb26826ef90ce3524a43b16aca149ce9192962592ca45d2",
+   "loai": "co-du-lieu"
+  },
+  "20-112": {
+   "byte": 145,
+   "sha256": "35f39ac164104ffd2d9c81521ef1e3d3c946f57ddc73f04c40ce830c88715c24",
+   "loai": "co-du-lieu"
+  },
+  "20-113": {
+   "byte": 66,
+   "sha256": "38d82d5c513ba18002bf7885c049596ad87e13277411c8183f37759281312afe",
+   "loai": "co-du-lieu"
+  },
+  "20-12": {
+   "byte": 65,
+   "sha256": "3200162edad39c8cb4afe3a490b548e177a541d7b3b7ba35d9ba9327e6de9df0",
+   "loai": "co-du-lieu"
+  },
+  "20-125": {
+   "byte": 60,
+   "sha256": "3496715899390dd44b002a680cada04576992928a2c1fbf4f72c812fe0ae5532",
+   "loai": "rong-that"
+  },
+  "20-13": {
+   "byte": 214,
+   "sha256": "11c9acfa567665a8a954871abb5ffb2f0d1eeb09ca3ff84dcf02cbfea8a2d2b5",
+   "loai": "co-du-lieu"
+  },
+  "20-14": {
+   "byte": 265,
+   "sha256": "3608642d139f361732566980eb195526fd0df855d9a5d67274b2034611167664",
+   "loai": "co-du-lieu"
+  },
+  "20-17": {
+   "byte": 529,
+   "sha256": "61625ffcd659a058753efa6e42cf5ec2287aa3628e9e5de4100fd66a5e38d302",
+   "loai": "co-du-lieu"
+  },
+  "20-2": {
+   "byte": 126,
+   "sha256": "a119a46313ea486988cfc681ddeb83ca4e9c8495bdd5e40de997e0e0c3ea1fd0",
+   "loai": "co-du-lieu"
+  },
+  "20-28": {
+   "byte": 106,
+   "sha256": "2477c7a7276f0a660eebd9f7997cabe9d035e56b02c70f4d55532a42a8f4ee71",
+   "loai": "co-du-lieu"
+  },
+  "20-29": {
+   "byte": 66,
+   "sha256": "dcae5e5f8c102be38f031973753808c573f1235386ee073ae584a4c1d95c5daf",
+   "loai": "co-du-lieu"
+  },
+  "20-3": {
+   "byte": 6400,
+   "sha256": "c6e683729ac724aa4c7336466018ae71738ed266f6db8ecafc7a2ece8f7e0d5c",
+   "loai": "co-du-lieu"
+  },
+  "20-30": {
+   "byte": 126,
+   "sha256": "15a7747f62983542cf9023f129021f63b10ac8b2a9ef4a54dacc11ce4a182399",
+   "loai": "co-du-lieu"
+  },
+  "20-31": {
+   "byte": 66,
+   "sha256": "4cdd7720c84a3673eb0fb58b1908b0206982d8847098061b52792ff1c5b48d28",
+   "loai": "co-du-lieu"
+  },
+  "20-32": {
+   "byte": 1248,
+   "sha256": "df559e9ec1f37c6981f02abda283a48f32938f25393914462ea3ffe1d6a020d2",
+   "loai": "co-du-lieu"
+  },
+  "20-33": {
+   "byte": 392,
+   "sha256": "ab8e0915f9bba161a287bf18b4d2a8b368e9871afe06d7b57a8086b3fe3c20ab",
+   "loai": "co-du-lieu"
+  },
+  "20-34": {
+   "byte": 331,
+   "sha256": "f64381b1a98772df2210aa0dc883682c319ae9ae562e6559badb1274a867f7d4",
+   "loai": "co-du-lieu"
+  },
+  "20-35": {
+   "byte": 66,
+   "sha256": "8e2fd2d156c8fefbbd8c37c392345ddd9a7837ea05b4ef628565d8578c0bf67f",
+   "loai": "co-du-lieu"
+  },
+  "20-37": {
+   "byte": 407,
+   "sha256": "3edf7e1deef212984299639a202fc5450e119c5c44d2e5ce80f44a28dff4f1d8",
+   "loai": "co-du-lieu"
+  },
+  "20-38": {
+   "byte": 121,
+   "sha256": "079423daa4cbe82b0a3c000d1e432d4bc0098421acb8edf75e6decab2df736b0",
+   "loai": "co-du-lieu"
+  },
+  "20-4": {
+   "byte": 145,
+   "sha256": "b5b667b2abad2e77e287e20ca8ea10394a7902da21924329fd1413190496109f",
+   "loai": "co-du-lieu"
+  },
+  "20-41": {
+   "byte": 126,
+   "sha256": "3e13c29787c56222aa171a5213acf9217dc07e279ec463fdb90382346a03390b",
+   "loai": "co-du-lieu"
+  },
+  "20-42": {
+   "byte": 3589,
+   "sha256": "a409c8fcdc5b53461e5f6b640bbf1563eddac1aca6631f7d07fd8e6af98914ee",
+   "loai": "co-du-lieu"
+  },
+  "20-43": {
+   "byte": 175,
+   "sha256": "1b914e95260665baaf5e6c4808e2a354578aa47431a0484c7a43b5d2ebce4483",
+   "loai": "co-du-lieu"
+  },
+  "20-44": {
+   "byte": 2312,
+   "sha256": "93fd2d068efa46c0eba6669eae1002cf86609b376177192b68b124a6b34d6f79",
+   "loai": "co-du-lieu"
+  },
+  "20-45": {
+   "byte": 66,
+   "sha256": "19c04fc0a6c7be9611fcddad6f7401bc11cd7b2969ed3ef23f32e0c5c63876a6",
+   "loai": "co-du-lieu"
+  },
+  "20-47": {
+   "byte": 91,
+   "sha256": "4ad7593fb3100584994f6e054262b32d610d34060d0a8c9249495224817305ba",
+   "loai": "co-du-lieu"
+  },
+  "20-48": {
+   "byte": 1320,
+   "sha256": "58652f69750bca3da165f33d9e6c06e9694bfe2962ec64d994758b78dd3c62ac",
+   "loai": "co-du-lieu"
+  },
+  "20-49": {
+   "byte": 66,
+   "sha256": "94af1bb39378a5281f3ce668c438a54bcf19207f5d2569e7f402d54137988159",
+   "loai": "co-du-lieu"
+  },
+  "20-5": {
+   "byte": 195,
+   "sha256": "0e0bc4b639678530583b78cf9a7b042425b87c1373ab9ee7e915cd247390306e",
+   "loai": "co-du-lieu"
+  },
+  "20-51": {
+   "byte": 305,
+   "sha256": "15c5433a55158c58cfe42cc9889e54054e0c55cdcf7d5f76feb54349219fb9ad",
+   "loai": "co-du-lieu"
+  },
+  "20-52": {
+   "byte": 66,
+   "sha256": "d82c9926f915618b47edf7fb0e828ca4f153142b5a7be2e1be0c028f42fbc624",
+   "loai": "co-du-lieu"
+  },
+  "20-53": {
+   "byte": 66,
+   "sha256": "7f892e76fd856faeecc387a824f12b623e25d9cd90605b6da9e8029489a6d73b",
+   "loai": "co-du-lieu"
+  },
+  "20-54": {
+   "byte": 66,
+   "sha256": "b296576cdfe89e686db9b5c4e81c9cdc0e932a7bcb9ec3020d54a1c9bdeb49c8",
+   "loai": "co-du-lieu"
+  },
+  "20-55": {
+   "byte": 620,
+   "sha256": "98cdf9abc9f6e000c2ef4116136fa1c9608e0c2656e8c250a5841b6cdbef6fac",
+   "loai": "co-du-lieu"
+  },
+  "20-57": {
+   "byte": 550,
+   "sha256": "6757088f5703eed52883b8c9945220bb67c981979a4b684155e6bff1a16075cb",
+   "loai": "co-du-lieu"
+  },
+  "20-58": {
+   "byte": 144,
+   "sha256": "025c76937ffccdbcee42ad04298eec2b7149633b513c538135b3d1ee81400ff3",
+   "loai": "co-du-lieu"
+  },
+  "20-59": {
+   "byte": 66,
+   "sha256": "d633d16f94dd8a75c65dccef25fb3c82f8e83c75743ecb1e08024af5e61c10f9",
+   "loai": "co-du-lieu"
+  },
+  "20-6": {
+   "byte": 175,
+   "sha256": "6800a84d7f6e273df862ee788afc2cd3215467fecb903486da5480b8336d7b27",
+   "loai": "co-du-lieu"
+  },
+  "20-61": {
+   "byte": 68,
+   "sha256": "4523d8926e8aa893e9d00ff4b483a536bfd02b3ece8a43579515e2acb6d7d155",
+   "loai": "thiet-bi-chua-ho-tro"
+  },
+  "20-64": {
+   "byte": 161,
+   "sha256": "b29f85d24c638beebbaeebed2a1ec65f1042daaa7642a5185de7cb679ac6ad3b",
+   "loai": "co-du-lieu"
+  },
+  "20-65": {
+   "byte": 125,
+   "sha256": "ee8b55b077ecd89bf7d1bddd7fadd969def3bc376e74e93604af3b470648dc9a",
+   "loai": "co-du-lieu"
+  },
+  "20-66": {
+   "byte": 66,
+   "sha256": "ffd09fef8c74a827ce86bc954e1dd572c5a7e3c878f396a6f0a82ce2c7f3140a",
+   "loai": "co-du-lieu"
+  },
+  "20-67": {
+   "byte": 143,
+   "sha256": "d3a7091f4a6eaddd19d021d1ddbbf46115e7b808e026e460705910c15679bb44",
+   "loai": "co-du-lieu"
+  },
+  "20-68": {
+   "byte": 15970,
+   "sha256": "e05ac39c526406404245b12c16ca65354a5185448a573f3248363d932ba1b87e",
+   "loai": "co-du-lieu"
+  },
+  "20-69": {
+   "byte": 66,
+   "sha256": "3f67062cdf1cf0f716cca471445d46eb766880b88adf87e8d302d5532d7d2977",
+   "loai": "co-du-lieu"
+  },
+  "20-7": {
+   "byte": 3649,
+   "sha256": "335f16e9e1e4373485004a7c8efead70d17d0f3754f1491e6d409ee38c7157af",
+   "loai": "co-du-lieu"
+  },
+  "20-70": {
+   "byte": 66,
+   "sha256": "b018b8cfd87e704062d686587e7e5ffd880a6d886fc8814a940b03867e919a76",
+   "loai": "co-du-lieu"
+  },
+  "20-71": {
+   "byte": 66,
+   "sha256": "34f4f61f8d3c2af983e722a9f1672cd3b12a1de2b539040564041aca169624b9",
+   "loai": "co-du-lieu"
+  },
+  "20-72": {
+   "byte": 66,
+   "sha256": "781857968ddf073962546c5d299a42b4e1845e4adddcf5457593ac418e07ad81",
+   "loai": "co-du-lieu"
+  },
+  "20-73": {
+   "byte": 66,
+   "sha256": "904a0ff274216ac95b709ea5b3de33e000bed8ff8ec7228b64c63553ce7af11b",
+   "loai": "co-du-lieu"
+  },
+  "20-74": {
+   "byte": 66,
+   "sha256": "385a10f425d81e7ffdbd35a1775ac5933e14211779b426a702e84155155db062",
+   "loai": "co-du-lieu"
+  },
+  "20-75": {
+   "byte": 66,
+   "sha256": "87d934a4e330d08fe9b9c3acd24a1e180eee78add232086caa347777c19e713d",
+   "loai": "co-du-lieu"
+  },
+  "20-76": {
+   "byte": 66,
+   "sha256": "c54cdf14195236e1de323721560db3c3ee8e333c143d335ff19c56df95181ba2",
+   "loai": "co-du-lieu"
+  },
+  "20-77": {
+   "byte": 66,
+   "sha256": "bb2850ae3c3f4e08224d96f7d32f3100cbe02d6d1fafc716be74f52639e656ef",
+   "loai": "co-du-lieu"
+  },
+  "20-78": {
+   "byte": 66,
+   "sha256": "e4aa1146ff52418eba9b12efd2afcc3b62000a5773fe586222b42b959ec861da",
+   "loai": "co-du-lieu"
+  },
+  "20-79": {
+   "byte": 66,
+   "sha256": "739a6f2f80d2ec23701c7d0b384580e0c432c77568877c0b01ca6b76d1488e6f",
+   "loai": "co-du-lieu"
+  },
+  "20-8": {
+   "byte": 150,
+   "sha256": "437d22adcfabbeb00ac6faf5673b010adedc0c36fa937f5a398f2b86ca0588f6",
+   "loai": "co-du-lieu"
+  },
+  "20-80": {
+   "byte": 66,
+   "sha256": "394299de3ef930c205d4829a7c0b77f22bd4e621108199b1c4cfb7ae42f6bc42",
+   "loai": "co-du-lieu"
+  },
+  "20-81": {
+   "byte": 66,
+   "sha256": "2e3b15fe698b2bf0262c9b622aaacd9a5455dba80f723e38ee566bd16071d7ee",
+   "loai": "co-du-lieu"
+  },
+  "20-82": {
+   "byte": 66,
+   "sha256": "3d1058cc2d7018d3441f7714e61fdeaea69ab40dbb65b105facea03c36334562",
+   "loai": "co-du-lieu"
+  },
+  "20-83": {
+   "byte": 66,
+   "sha256": "e1a89f242635695b3bdc021a4dcb8bb8a7f8a8b98e68921cbaa36af36efa4001",
+   "loai": "co-du-lieu"
+  },
+  "20-84": {
+   "byte": 66,
+   "sha256": "dc13190d190c23d7a69841de1372e0ef2f4266be0823f2e26047b60a473e3042",
+   "loai": "co-du-lieu"
+  },
+  "20-85": {
+   "byte": 61,
+   "sha256": "98f097bd2c16e4d1026ca1b03a5cb70323465c1a131d1227faa6da49819713de",
+   "loai": "co-du-lieu"
+  },
+  "20-86": {
+   "byte": 110,
+   "sha256": "99fe2088ad7f5d1ef634c160d2cb9bf36b6d9646571ae9e4482322d11cccd07e",
+   "loai": "co-du-lieu"
+  },
+  "20-87": {
+   "byte": 149,
+   "sha256": "c691345b80843ad49c18ea7dc7ee4091eebd45025178c63735aede7a36aa2fc2",
+   "loai": "co-du-lieu"
+  },
+  "20-88": {
+   "byte": 110,
+   "sha256": "d14203312c0209a0e50ee620f77c70aa89f29946fcd9d5bdd7616e0de0c04a6d",
+   "loai": "co-du-lieu"
+  },
+  "20-89": {
+   "byte": 66,
+   "sha256": "3f8a780423e1dd7d9e22606ec4041affd292335af785020fce66225b9220d122",
+   "loai": "co-du-lieu"
+  },
+  "20-9": {
+   "byte": 66,
+   "sha256": "0f60dfc06763d1f1e857678d9fda32aaf5b7c323e1522154f1d1ca5e3a210fb6",
+   "loai": "co-du-lieu"
+  },
+  "20-90": {
+   "byte": 628,
+   "sha256": "59f74cc8c757263812050387757ad465d2c8007c7a1a5e1e485c394c42425890",
+   "loai": "co-du-lieu"
+  },
+  "20-91": {
+   "byte": 171,
+   "sha256": "772c6c24dc9f8468fff642c9b74f63578121d26b1f0e424fc1b2ae8e9e3d3893",
+   "loai": "co-du-lieu"
+  },
+  "22": {
+   "byte": 51,
+   "sha256": "74bffebd6e382927a25763f8f1c157c6925480b23dc8717ad3e564b76d6129a9",
+   "loai": "rong-that"
+  },
+  "23-0": {
+   "byte": 225,
+   "sha256": "b458824d8f0afcc90451b72f364a5df0c7f13d9f99fbc538409c5c4336fbee9a",
+   "loai": "co-du-lieu"
+  },
+  "23-1": {
+   "byte": 338,
+   "sha256": "cf2bb2cfd3d58bd88817eac3fcd4e7e5a2f04d8f219d9309cd7aa30aae87208f",
+   "loai": "co-du-lieu"
+  },
+  "23-10": {
+   "byte": 66,
+   "sha256": "ef1da2d1443fc3e49f080d31ff36b06c36f8b913df1b8ef144c94fb957f1065a",
+   "loai": "co-du-lieu"
+  },
+  "23-11": {
+   "byte": 66,
+   "sha256": "98a8da4ef9924ceea4ec74a53fa8dffb8a350cc488e161e0d3e5db0b181426e4",
+   "loai": "co-du-lieu"
+  },
+  "23-12": {
+   "byte": 66,
+   "sha256": "51f996e278b07e2057e5c9dc5c25b58c508e65eb8c1ce82f2ab1cd4f819f7b9a",
+   "loai": "co-du-lieu"
+  },
+  "23-13": {
+   "byte": 66,
+   "sha256": "ee054446453b2bad5c3c71f172168150391794d6e696cc25e9b8cf040450ccad",
+   "loai": "co-du-lieu"
+  },
+  "23-2": {
+   "byte": 184,
+   "sha256": "9979676e91b36108e3d5810818bb64d0b3ba281f73bc525c2e38d0b6001dba78",
+   "loai": "co-du-lieu"
+  },
+  "23-4": {
+   "byte": 66,
+   "sha256": "704087d9dc5d892311c8a83f5219cd0a5669a34895035dbb3c420034a3328eda",
+   "loai": "co-du-lieu"
+  },
+  "23-5": {
+   "byte": 81,
+   "sha256": "40e4468684c628f900a6f21897cf81b93cccd3b3760d43ff95a77689a1c80d23",
+   "loai": "co-du-lieu"
+  },
+  "23-6": {
+   "byte": 66,
+   "sha256": "4d2d23ff4839a84607d8f625ab5e3280578cedaa3edc59b1aeeb3a153a1aee24",
+   "loai": "co-du-lieu"
+  },
+  "23-7": {
+   "byte": 66,
+   "sha256": "237a0f4dac79778670f1204e65cbac6b3de8f9b71b73ec89f1f36ac3dac108ec",
+   "loai": "co-du-lieu"
+  },
+  "23-8": {
+   "byte": 203,
+   "sha256": "2836c24c4f96a81a1e82697ad0d29b2c1ba40e02ae7ad00404ce7939744fedf6",
+   "loai": "co-du-lieu"
+  },
+  "23-9": {
+   "byte": 66,
+   "sha256": "bd6a382f79ad653adcaeb33095f1f24a5dc1686aeb8ff1e500a7e07710b543ca",
+   "loai": "co-du-lieu"
+  },
+  "24-0": {
+   "byte": 149,
+   "sha256": "fa1f96a2e791f8b969b44106a4fbc138c6c08a99c2039977c614c8fbd509d177",
+   "loai": "co-du-lieu"
+  },
+  "24-1": {
+   "byte": 78,
+   "sha256": "526e035789a9940ce64958ecd22eb8e6b95eaed1f27c89bd7742f76d2ad4d502",
+   "loai": "co-du-lieu"
+  },
+  "24-10": {
+   "byte": 63,
+   "sha256": "e2fe38c2fe9707d60d451cc11c9432b1ca15f257afa20feb39fa29e9c8b2aef3",
+   "loai": "co-du-lieu"
+  },
+  "24-14": {
+   "byte": 78,
+   "sha256": "3e336bbeadaa22b491cad73372bed5204ff4e0f6559ad302ee9257a77d64efdc",
+   "loai": "co-du-lieu"
+  },
+  "24-15": {
+   "byte": 66,
+   "sha256": "e2f105be4f8efaf24acbeaca90c87af65edc310ed5820208bf9923e3cda1021f",
+   "loai": "co-du-lieu"
+  },
+  "24-16": {
+   "byte": 64,
+   "sha256": "641c0fe692cf282c1566325789ab078c874c2767cef23b488ee456aa1eb8b998",
+   "loai": "thiet-bi-chua-ho-tro"
+  },
+  "24-17": {
+   "byte": 252,
+   "sha256": "44098c06f1f915059723fadbec9264a56debd0ecb9e047ea1a5b3f7fd816995f",
+   "loai": "co-du-lieu"
+  },
+  "24-18": {
+   "byte": 228,
+   "sha256": "022e2fb8d76eaee2ec51cd80cef822a6f7121356d1ed16c815f24df2f163c539",
+   "loai": "co-du-lieu"
+  },
+  "24-19": {
+   "byte": 132,
+   "sha256": "510de366befa479de9c351fe4b1d28fba154053e60c102324e8400aef40cac8a",
+   "loai": "co-du-lieu"
+  },
+  "24-2": {
+   "byte": 385,
+   "sha256": "582c0001851c49a9c321d9f06d2f4f243b60f9ec874f6b5b25f36d1844cf6093",
+   "loai": "co-du-lieu"
+  },
+  "24-20": {
+   "byte": 130,
+   "sha256": "5456a405c4669d0c452cbe00754ec3581756504329549a4bdc2e5599af0e3b5c",
+   "loai": "co-du-lieu"
+  },
+  "24-21": {
+   "byte": 97,
+   "sha256": "8ffc2138d547742c02401749c5d4d7829ed4ac18e9eb96c079653f98c48fd50c",
+   "loai": "co-du-lieu"
+  },
+  "24-22": {
+   "byte": 55,
+   "sha256": "1a99f19979ce96d186c5e75ff0c71ab9eec3ec2efbd667b491b42766423ffdc7",
+   "loai": "rong-that"
+  },
+  "24-23": {
+   "byte": 172,
+   "sha256": "fee6e514674376646a910e8c7ed020762b61631f5ed8fb7a3a123476b7b39534",
+   "loai": "co-du-lieu"
+  },
+  "24-24": {
+   "byte": 102,
+   "sha256": "3a393bf968ef0da95f14d8ce14dc03d21f839e8ddd0a7b8bfd5b59c41da4bac1",
+   "loai": "co-du-lieu"
+  },
+  "24-26": {
+   "byte": 74,
+   "sha256": "6e4de7825ee2b94b94848fe59b3a9b7262d0e1309b960be911b524058bec80e9",
+   "loai": "co-du-lieu"
+  },
+  "24-27": {
+   "byte": 64,
+   "sha256": "f4834d0047e5c2e79cd093a254e9da779bd1c34a9cd4d87d43bf47b6904c9553",
+   "loai": "thiet-bi-chua-ho-tro"
+  },
+  "24-29": {
+   "byte": 142,
+   "sha256": "93f018e2b2aadd0d2fafa48d071cad6dc1e05aa8033461ce42965b6ae18da263",
+   "loai": "co-du-lieu"
+  },
+  "24-30": {
+   "byte": 74,
+   "sha256": "d34a90826e56417a19691faa42401d1df1b6502ec251f26c2bfabbc70a095f9b",
+   "loai": "co-du-lieu"
+  },
+  "24-5": {
+   "byte": 66,
+   "sha256": "4d187bd63870b7ae9f85fd3c6c9aa0e82449537939de6d0902aa3417421a4c15",
+   "loai": "co-du-lieu"
+  },
+  "24-6": {
+   "byte": 335,
+   "sha256": "eb9d4538becfd7034f0cedce6885daed638f0ab06a83747caf168c4a4c0cb2a1",
+   "loai": "co-du-lieu"
+  },
+  "24-7": {
+   "byte": 18491,
+   "sha256": "5022d0dc3144dafd7b01ccf77d8e1bf0f0ac80130966cc68eaadaa48373929b3",
+   "loai": "co-du-lieu"
+  },
+  "24-8": {
+   "byte": 46892,
+   "sha256": "b8cd736c7428a79e863c21212919cf164dc4b84a7471bfa862dccd3e1fe7c686",
+   "loai": "co-du-lieu"
+  },
+  "25-1": {
+   "byte": 66,
+   "sha256": "bcb4f9e4fef102c8d8b9d79a3de98685d63c7212d1994a2ed9e0dd0ab323a998",
+   "loai": "co-du-lieu"
+  },
+  "25-10": {
+   "byte": 73,
+   "sha256": "4b4382ca27a021bd42cfd94f54f8a1ca134b61b1a4898570860514cde4ea9890",
+   "loai": "co-du-lieu"
+  },
+  "25-2": {
+   "byte": 66,
+   "sha256": "c5267b72d163a24638a06aa271e34661d83e6c346b87223888eab8abafdbb2e0",
+   "loai": "co-du-lieu"
+  },
+  "25-3": {
+   "byte": 66,
+   "sha256": "276a1370afc9f1f4fc5f732e35be6f37ccd4e62d752f787a926ddb81fb51731d",
+   "loai": "co-du-lieu"
+  },
+  "25-4": {
+   "byte": 66,
+   "sha256": "c0ba36bbfe3f8bc9cb646f5db1c4cf46e2a0c91ba02ad2ad84521de1e0ded9e9",
+   "loai": "co-du-lieu"
+  },
+  "25-5": {
+   "byte": 66,
+   "sha256": "21f5c8b483aa2569146a411342d0a7e77f1839976f03299ea2c82357dd8b64d1",
+   "loai": "co-du-lieu"
+  },
+  "25-6": {
+   "byte": 219,
+   "sha256": "99a4542de7281d9867885df5548aadeda1df9e90b2dba67df817c8cc82b15387",
+   "loai": "co-du-lieu"
+  },
+  "26": {
+   "byte": 64,
+   "sha256": "86b5fe1cc6f5a43d68c9b43ac819f079828ca4de5c889782d0397e89891c0089",
+   "loai": "thiet-bi-chua-ho-tro"
+  },
+  "27-101": {
+   "byte": 66,
+   "sha256": "d58b42a97c2f541419e2e4bff2ddcaed2386d0cdacf7d1ad2a9b803f840b700b",
+   "loai": "co-du-lieu"
+  },
+  "27-102": {
+   "byte": 835,
+   "sha256": "7fed68531989737bf5b0b62fef9576ad3049741a1b0332f9924557fbc31ec1d9",
+   "loai": "co-du-lieu"
+  },
+  "27-103": {
+   "byte": 66,
+   "sha256": "ccec641f2d3716d6b194e3baa409616014880095596e48dac9b3891724d24059",
+   "loai": "co-du-lieu"
+  },
+  "27-104": {
+   "byte": 72,
+   "sha256": "3456a5a36126aeb798bec7f3c42daec3165116454cec1b9bbff7e60142d96058",
+   "loai": "co-du-lieu"
+  },
+  "27-12": {
+   "byte": 66,
+   "sha256": "3a27ff9c7d309ad38e28432283c8623e290a2961af356c862da3e128b87384e0",
+   "loai": "co-du-lieu"
+  },
+  "27-15": {
+   "byte": 68,
+   "sha256": "3258d2cc59c76f7e6815476cf3d06164a208e4eeb6451b7912a91d519bd8c19d",
+   "loai": "thiet-bi-chua-ho-tro"
+  },
+  "27-2": {
+   "byte": 68,
+   "sha256": "6418925957e4dea2e70f94d423a5fc3bb20e54699ea51c7abe1bb826621adb6d",
+   "loai": "thiet-bi-chua-ho-tro"
+  },
+  "27-21": {
+   "byte": 203,
+   "sha256": "34b08fcb81619242aa7d896b2ea540cf4454d40eb40491276c7da7dcd0fd8b8d",
+   "loai": "co-du-lieu"
+  },
+  "27-31": {
+   "byte": 167,
+   "sha256": "8d4ab3f3163eb2df13410637361aa49cfdb09b3e743bf31abd6bdeba6fcb4645",
+   "loai": "co-du-lieu"
+  },
+  "27-33": {
+   "byte": 66,
+   "sha256": "6f32d92ecc54aa4fa507050af349bb740a3e17d571fb2f341007b122ddc2f750",
+   "loai": "co-du-lieu"
+  },
+  "27-51": {
+   "byte": 185,
+   "sha256": "43853ed897c27597ad59109143f6258323f4c227bc1c33d39a1aafed1f557eff",
+   "loai": "co-du-lieu"
+  },
+  "27-61": {
+   "byte": 126,
+   "sha256": "63e707047faca12c57dc3ce95c7fc45d3d76fbd706ab0001b2ebf4ce77e70453",
+   "loai": "co-du-lieu"
+  },
+  "28-0": {
+   "byte": 66,
+   "sha256": "38406b447ac2986c6db77503768bb2429ecfcea398bc5d91978b700aa8b83d10",
+   "loai": "co-du-lieu"
+  },
+  "29-1": {
+   "byte": 61,
+   "sha256": "8fbf0b0e6fa2b5764f8939b4cff8747ffccd99a1290ca331169494e740c39bcc",
+   "loai": "co-du-lieu"
+  },
+  "3-1": {
+   "byte": 598,
+   "sha256": "b3eecc6a357c09927ec55374c84272c2aff5b2c81a7c01b6d91cdb0418d6921d",
+   "loai": "co-du-lieu"
+  },
+  "3-2": {
+   "byte": 254,
+   "sha256": "376f9462717e6ca067323c4f0a04cd791e737ba23d1ecb3a813368643f1c56e4",
+   "loai": "co-du-lieu"
+  },
+  "3-3": {
+   "byte": 55,
+   "sha256": "fa6b22079b4d41cc2fefbcee9b424c5a48365776a950d754b1d814696dd780b6",
+   "loai": "rong-that"
+  },
+  "3-4__p0": {
+   "byte": 33607,
+   "sha256": "31bf795a459f876ac6f7d7b5fbc22aed362346639349968971abaadaf965580a",
+   "loai": "co-du-lieu"
+  },
+  "3-4__p1": {
+   "byte": 33570,
+   "sha256": "7a33bc9bd186471b1790595404c9c66f2c1c88c9b71721b1445f2bf0a66a34b2",
+   "loai": "co-du-lieu"
+  },
+  "3-4__p2": {
+   "byte": 16349,
+   "sha256": "1fb7d8fad3af1a986ce4c90e610744f1883cdacbf5ce00c066ab106682547b89",
+   "loai": "co-du-lieu"
+  },
+  "3-5": {
+   "byte": 86,
+   "sha256": "af0427ef76337031e063e3cc7636eeb82eb8b45cd51977023da9fc9713761587",
+   "loai": "co-du-lieu"
+  },
+  "30-1": {
+   "byte": 128,
+   "sha256": "fc15a6378c2f289eec62dfc664cc6a4846018f9bf286eeb552ff71ba9e942b20",
+   "loai": "co-du-lieu"
+  },
+  "30-2": {
+   "byte": 132,
+   "sha256": "84dbf9102b66fd1e824593f71a4705b80356cee9fc6e2b49d51733aa812c7af8",
+   "loai": "co-du-lieu"
+  },
+  "31-1": {
+   "byte": 171,
+   "sha256": "ccdab563dbb2d31ec5a7761d4dddb4964e524cb8bd8d19a548c959ff7c3bf3fa",
+   "loai": "co-du-lieu"
+  },
+  "31-2": {
+   "byte": 66,
+   "sha256": "6f90bf790a1f40bdf2131b527750a94a8ce06de6d58df93d3e8cfb9f38c8d19c",
+   "loai": "co-du-lieu"
+  },
+  "31-3": {
+   "byte": 79,
+   "sha256": "033bf5c920d9435fd23bfc03e786f1d2699ef73d87532313dcd7f205146d0b92",
+   "loai": "co-du-lieu"
+  },
+  "34-1": {
+   "byte": 167,
+   "sha256": "ffd3b1d9c039ca1abb63fb0e8c367a05b5d7cf1ccd8a6b575eeb407064cab368",
+   "loai": "co-du-lieu"
+  },
+  "34-2": {
+   "byte": 143,
+   "sha256": "f1d5289f5170681a393ea4e787e20a02e29497496583f5cbb211c796de2c001d",
+   "loai": "co-du-lieu"
+  },
+  "34": {
+   "byte": 157,
+   "sha256": "909e9bf6d6434da02183504853e26612b71d890eeed6e1121b4fb7e5028ffe40",
+   "loai": "co-du-lieu"
+  },
+  "40": {
+   "byte": 88,
+   "sha256": "e4bf3c9657e68647aa4723526360ca27cd3e9f3ecea98dbc11eac7c2d1ea3634",
+   "loai": "co-du-lieu"
+  },
+  "42-3": {
+   "byte": 92,
+   "sha256": "0991ea917dffe133f21d9f9b4d813134d92844783df1b6bbf52975ed950d6d92",
+   "loai": "co-du-lieu"
+  },
+  "42-4": {
+   "byte": 66,
+   "sha256": "e1863442ddc4c011553e090ab8914f4c5f0cfef000b420288725fe1492c6fa4c",
+   "loai": "co-du-lieu"
+  },
+  "42-5": {
+   "byte": 66,
+   "sha256": "2231c543d04205f1686c9144076c3deedadac6db945f848101fedf82d2b3bfd3",
+   "loai": "co-du-lieu"
+  },
+  "42-6": {
+   "byte": 66,
+   "sha256": "f7f96a5788df1a3313b01198c50befc19ae1e08c38c08404c3d1b6ad6ae84183",
+   "loai": "co-du-lieu"
+  },
+  "43-1": {
+   "byte": 66,
+   "sha256": "195a02ccd9427bfbc2bba635b2b67c57de2df1615213b6bf16a05f35a44d9da6",
+   "loai": "co-du-lieu"
+  },
+  "43-3": {
+   "byte": 66,
+   "sha256": "f8e7fb5359e57fb9c5e90cc3172ed5b597ef426d507522b22b6bd74e678d629b",
+   "loai": "co-du-lieu"
+  },
+  "43-4": {
+   "byte": 255,
+   "sha256": "c5d5adffed9ee573a9160d23e1014ec39028f2c0d55e8cb9a6848719c5d9343e",
+   "loai": "co-du-lieu"
+  },
+  "43-5": {
+   "byte": 271,
+   "sha256": "5b116bf6377f09abf1bdf293135e4587a53a202f27a10db9287904b908a697a4",
+   "loai": "co-du-lieu"
+  },
+  "43-6": {
+   "byte": 66,
+   "sha256": "4470f590608a33458d8368907e675c5bd8b47d9e9d118bf4ab1b91249f27d9cb",
+   "loai": "co-du-lieu"
+  },
+  "44-101": {
+   "byte": 61,
+   "sha256": "24037925e4d5e6ec2d4dfb3b9f05f73eede83a5aa9f8f23a05b6de89c623536a",
+   "loai": "co-du-lieu"
+  },
+  "44-102": {
+   "byte": 66,
+   "sha256": "4e01c9ad0917c8f33947f3738732567084279b3c4fbb5f20a51ab9a3c0268eed",
+   "loai": "co-du-lieu"
+  },
+  "44-103": {
+   "byte": 61,
+   "sha256": "c547472f5e54da508229cdfaac0cb2f1027493d1a58c98c44961f41c132daa76",
+   "loai": "co-du-lieu"
+  },
+  "44-104": {
+   "byte": 61,
+   "sha256": "00db68301e88b5aac9401ff5618d1479bf09689b3293edd149aaae7d38425f24",
+   "loai": "co-du-lieu"
+  },
+  "44-105": {
+   "byte": 61,
+   "sha256": "230c86827696b074df6981a1dc0d5a6e19728cb6a35baba71215326139622677",
+   "loai": "co-du-lieu"
+  },
+  "44-106": {
+   "byte": 66,
+   "sha256": "2910cfe19b7b9a86c73e432933405de0a70418e0cf7f754a2daefb61ff35f612",
+   "loai": "co-du-lieu"
+  },
+  "44-107": {
+   "byte": 66,
+   "sha256": "dec167ca471d6a7f000b147e8192619a386717c5edb3e98aef5d1c65b296ef66",
+   "loai": "co-du-lieu"
+  },
+  "44-109": {
+   "byte": 66,
+   "sha256": "4fb896148d79b7965c66cb93d798547702a119aedc8e3079444b5232f7860480",
+   "loai": "co-du-lieu"
+  },
+  "44-110": {
+   "byte": 61,
+   "sha256": "51daf1c47627cad56323f3c991f1153088395db74c326bd1802840e51924dab7",
+   "loai": "co-du-lieu"
+  },
+  "44-111": {
+   "byte": 61,
+   "sha256": "3753f54ed6ed56772439360546db06c627624ba11b2da5ed63b0cd9d4ee5e05b",
+   "loai": "co-du-lieu"
+  },
+  "44-112": {
+   "byte": 66,
+   "sha256": "b7da72f7695ee79ce7efeed2ccab4d0cef6ec8847fff6e7bf2277775eade328b",
+   "loai": "co-du-lieu"
+  },
+  "44-113": {
+   "byte": 66,
+   "sha256": "8ca697019e089103e336ab4ec46e04d0510ac2cf11437791abb5085bb70b8c66",
+   "loai": "co-du-lieu"
+  },
+  "44-114": {
+   "byte": 66,
+   "sha256": "9c12f4c6bff7cadf14a9e3a2250056c41640eb23e8b44a708393d90b1728c6ee",
+   "loai": "co-du-lieu"
+  },
+  "44-115": {
+   "byte": 61,
+   "sha256": "9e9b26cdf2314b6edfe6f4da279a0e83037797fd1fbe74c7e207b1bb31afda7e",
+   "loai": "co-du-lieu"
+  },
+  "44-116": {
+   "byte": 66,
+   "sha256": "be9f1688ee1403b0b29296fc7c4283dd9df6fe1a133cc3ee5d611722c0e8a5af",
+   "loai": "co-du-lieu"
+  },
+  "44-117": {
+   "byte": 66,
+   "sha256": "9fa7e1692d4e7ee05ff8df9df9fa7da09f9257052e3e6011613490ba91ac208a",
+   "loai": "co-du-lieu"
+  },
+  "44-118": {
+   "byte": 66,
+   "sha256": "e23a1d3759f6fc789a3b29895b2f7895f9bde8344d482bff030830664f849725",
+   "loai": "co-du-lieu"
+  },
+  "44-119": {
+   "byte": 61,
+   "sha256": "23134f45664b4ae2cea2c3f27294a24b12df468468adf89bbce8cff111d7ae32",
+   "loai": "co-du-lieu"
+  },
+  "44-120": {
+   "byte": 61,
+   "sha256": "f30ef1078ab910d982eeecbeaae3b6d9285cb02031b53700a1bad462d562bd3d",
+   "loai": "co-du-lieu"
+  },
+  "44-121": {
+   "byte": 66,
+   "sha256": "726852acc9a6044f3d2126a6e47537754b1dec490adf336907aeadccfee93e83",
+   "loai": "co-du-lieu"
+  },
+  "44-122": {
+   "byte": 66,
+   "sha256": "c1c1758bd0ecbca0e0c9ea45f81c796b19f452f912b8a0051eae595fa7578669",
+   "loai": "co-du-lieu"
+  },
+  "44-123": {
+   "byte": 61,
+   "sha256": "093c5e244b8efe83aba0190037c5b7d4bdaabfa26d3ce6d95b031e6b044102c0",
+   "loai": "co-du-lieu"
+  },
+  "44-126": {
+   "byte": 66,
+   "sha256": "19289bfbd4540a47b7d4ea0b3519b353a7d8fa812ae46030385fad2132031d63",
+   "loai": "co-du-lieu"
+  },
+  "44-144": {
+   "byte": 66,
+   "sha256": "81c5b38d6a43229d26a9748167175319762faad6caeabeec19a668e4763a5831",
+   "loai": "co-du-lieu"
+  },
+  "44-145": {
+   "byte": 66,
+   "sha256": "a451af539533a4a0fb01ae94e75618a8b4b8802516a5e0fb819e2a1c31c88cbc",
+   "loai": "co-du-lieu"
+  },
+  "44-146": {
+   "byte": 66,
+   "sha256": "0e8c8acff3b2783f5c82c0c167b5acf5ee7cb6a647ca8200eb94570fd5f64d75",
+   "loai": "co-du-lieu"
+  },
+  "44-149": {
+   "byte": 66,
+   "sha256": "a682e2078ad916e941e8672f3a0053f5861f8e11cb17fff864e7bffc78274909",
+   "loai": "co-du-lieu"
+  },
+  "44-150": {
+   "byte": 66,
+   "sha256": "97053c40b7b92860ffbd9bd44b318407b123d07946e5fea6404d92fc3debc2a4",
+   "loai": "co-du-lieu"
+  },
+  "44-151": {
+   "byte": 66,
+   "sha256": "33e95d8ca00924a2bca241df69192e325933ef67f053b2bcdd763be8503cf391",
+   "loai": "co-du-lieu"
+  },
+  "44-152": {
+   "byte": 66,
+   "sha256": "d5265a6e086bd633e6f447fe2f5f4216c4d0df8850f9047b1d6a4ff3794579ee",
+   "loai": "co-du-lieu"
+  },
+  "44-153": {
+   "byte": 66,
+   "sha256": "f6a3a3eb2d064342cab4c87df85c50e810a9c1699aeef3af5c925732c5e7d2a2",
+   "loai": "co-du-lieu"
+  },
+  "44-155": {
+   "byte": 66,
+   "sha256": "a3b800cc879c9b8b6a1f082ec120c98528607e8322b82f1c485382595f290c01",
+   "loai": "co-du-lieu"
+  },
+  "44-156": {
+   "byte": 66,
+   "sha256": "92c55ee7b4e7f0658181c3235c4ca7ef7dfe40ed1f28009c8b95cb090d19734e",
+   "loai": "co-du-lieu"
+  },
+  "44-157": {
+   "byte": 66,
+   "sha256": "33b1bd1c0d25afdd2a344b6a265999c862e00095eb3acaf04a56f1b6a2249142",
+   "loai": "co-du-lieu"
+  },
+  "44-158": {
+   "byte": 66,
+   "sha256": "c7ed367048dd2d1099a1ddbdda55ed7cae37ba2ea894063a05db753d66104fee",
+   "loai": "co-du-lieu"
+  },
+  "44-16": {
+   "byte": 797,
+   "sha256": "019dadcd8f2ea11aa7e4ab54fe4b269c6f7625b330dc5671ee70cce317afa748",
+   "loai": "co-du-lieu"
+  },
+  "44-160": {
+   "byte": 66,
+   "sha256": "4bc56f597e2aace8417419b28d848c361db92705f02acb1d0bf99a7caa8faf26",
+   "loai": "co-du-lieu"
+  },
+  "44-161": {
+   "byte": 100,
+   "sha256": "7ff83073cc8c2c4a6465662ad7cba862f8ad90105e3d43c73a3c7eaa3773ae56",
+   "loai": "co-du-lieu"
+  },
+  "44-18": {
+   "byte": 66,
+   "sha256": "d98066d64a620b83a0d4e62b083c4f932b677691a7c17a9def0cf70ad391d84d",
+   "loai": "co-du-lieu"
+  },
+  "44-20": {
+   "byte": 198,
+   "sha256": "6ffba30da2cd18ac88d295c46cf8b5bd99ce8a2d3e6841405704a18bb838f834",
+   "loai": "co-du-lieu"
+  },
+  "44-21": {
+   "byte": 2829,
+   "sha256": "61c59469d9d94c1f1a848b2ee00dc1f5e61ddcb696dfbbacb043a6a9bf058799",
+   "loai": "co-du-lieu"
+  },
+  "44-25": {
+   "byte": 123,
+   "sha256": "9b5a491df086d2acc3fbf5fddb58a3e736cb54a513d42ac0ee4dcc8ea110e94c",
+   "loai": "co-du-lieu"
+  },
+  "44-32": {
+   "byte": 168,
+   "sha256": "b6123170197b45319d4ed66564e3ca700355f24346203eb278f1789cea2368eb",
+   "loai": "co-du-lieu"
+  },
+  "44-33": {
+   "byte": 61,
+   "sha256": "948b67de33a48c2bf45f5888d1657fcac7293ae38c2ffcceca0b99d137f37478",
+   "loai": "co-du-lieu"
+  },
+  "44-34": {
+   "byte": 66,
+   "sha256": "d8064894dfe300dcf39104269a9edd21d4967ac3d85d7931aacbcf301cabe49f",
+   "loai": "co-du-lieu"
+  },
+  "44-37": {
+   "byte": 66,
+   "sha256": "94b239f3015b09b9fd92968c0570e7cc7bcd3953785c55085b6eaf488e9ed8c8",
+   "loai": "co-du-lieu"
+  },
+  "44-38": {
+   "byte": 66,
+   "sha256": "cf78cb0ecd9b3a2503ae89a47feeed5df13859140e96de9c888d1cd1465dbd2b",
+   "loai": "co-du-lieu"
+  },
+  "44-44": {
+   "byte": 66,
+   "sha256": "a297c3500bce3ad7bae991b8ec17c6e5094c8f8ac50f30816ea2a7fc4bd7c656",
+   "loai": "co-du-lieu"
+  },
+  "44-47": {
+   "byte": 59,
+   "sha256": "b825aaa55a49440fbedbf73bbbcb02f9513e244e373249f8b0e02a1e29adce1e",
+   "loai": "co-du-lieu"
+  },
+  "44-80": {
+   "byte": 61,
+   "sha256": "9923668106eeabe0e58f02f31347dfb4f9dc2a1c3646e8ae715f258ec692d8ee",
+   "loai": "co-du-lieu"
+  },
+  "44-81": {
+   "byte": 66,
+   "sha256": "47ee087a03d6e402522a71e552e5e9bb85951ac901b5633b32d54982ff24a5f0",
+   "loai": "co-du-lieu"
+  },
+  "44-82": {
+   "byte": 61,
+   "sha256": "98216871118d85cb1cfad8f101f043c58841b95d7a7428a92505b0b86f275029",
+   "loai": "co-du-lieu"
+  },
+  "44-83": {
+   "byte": 66,
+   "sha256": "1205bac6bfc1414945d24b219ca9250889363f21a2c0be5c77bd3cb5e8c7c3c0",
+   "loai": "co-du-lieu"
+  },
+  "44-84": {
+   "byte": 61,
+   "sha256": "18e5dd585961963712fb7daa8bd7aa7a9ef86dd8d2532129e82fbfeaafeeba57",
+   "loai": "co-du-lieu"
+  },
+  "44-85": {
+   "byte": 66,
+   "sha256": "e01e7bf68484a67135a6896cdb934b6d6bdeb2997b865e702c32f1671a45bc95",
+   "loai": "co-du-lieu"
+  },
+  "44-86": {
+   "byte": 90,
+   "sha256": "889851e203f7e2a3228768f02d6bdf8366ffe290cfe31a1042469ba8f53ef0df",
+   "loai": "co-du-lieu"
+  },
+  "44-87": {
+   "byte": 66,
+   "sha256": "3491f8e183c5bc7c9170e1b5a64240559002ec905743ca3aab350d3695429aa8",
+   "loai": "co-du-lieu"
+  },
+  "44-88": {
+   "byte": 66,
+   "sha256": "1a571fea6a266bc1ae1279c1170e89d43359389a19f908e9bda215c9a67df2a6",
+   "loai": "co-du-lieu"
+  },
+  "44-89": {
+   "byte": 66,
+   "sha256": "f7a4e8872920347015cc52c70717cc0c122605d18e619a0c9521a20ff7609e7f",
+   "loai": "co-du-lieu"
+  },
+  "44-90": {
+   "byte": 61,
+   "sha256": "2e96654ba73e53706d3548c500c178f8eb0d6d798f80e03dbf7790e04063f363",
+   "loai": "co-du-lieu"
+  },
+  "44-91": {
+   "byte": 61,
+   "sha256": "f852b36d07007193ede941a9f201b6032deba01e6cc6227e7e2f52cac3825012",
+   "loai": "co-du-lieu"
+  },
+  "44-92": {
+   "byte": 61,
+   "sha256": "c2dbd598fa7c564e66081bf2c88a5ab342f4a397b14cde3c5499a85f92e3caa9",
+   "loai": "co-du-lieu"
+  },
+  "44-93": {
+   "byte": 61,
+   "sha256": "050ccd514323dc8af8ae95d369fb8a1f0a1be8589fcff8bafd9ddafd38607ee6",
+   "loai": "co-du-lieu"
+  },
+  "44-95": {
+   "byte": 61,
+   "sha256": "2ccfdf2898e0471e87ddf84f0e4e9d1c62477b7b132c18efbd38c20531240d4b",
+   "loai": "co-du-lieu"
+  },
+  "44-96": {
+   "byte": 66,
+   "sha256": "d91cf4be32ff85db5b0501d79a347870e534ed9dc15bf324de6de4100d1636c2",
+   "loai": "co-du-lieu"
+  },
+  "44-97": {
+   "byte": 66,
+   "sha256": "d778fb28eb0265d0bb8b5e7ef09731a7bf6122b517ec147b913bac570922e0fd",
+   "loai": "co-du-lieu"
+  },
+  "44-99": {
+   "byte": 61,
+   "sha256": "68e79d0a5cd8e4e7be104977310867c72a121651920c701928e1a5851614af39",
+   "loai": "co-du-lieu"
+  },
+  "45-1": {
+   "byte": 228,
+   "sha256": "1180e04a1d9f0f070aced51ec7e7bf1157f722d3d2e0a2bd55d4872bf04e36ca",
+   "loai": "co-du-lieu"
+  },
+  "45-2": {
+   "byte": 61,
+   "sha256": "5c762c8e736dfc6876556fc95e13bf8a9ddfa979b13026cdcaf5843df7805899",
+   "loai": "co-du-lieu"
+  },
+  "45-3": {
+   "byte": 61,
+   "sha256": "278ab1a5c55ce55723e1961aa19154184a96af04cb8bb29020bc7c7bfc420c14",
+   "loai": "co-du-lieu"
+  },
+  "45-4": {
+   "byte": 61,
+   "sha256": "67ec1d39488acb82a1bc536c8c1861787916805b1d13f11cbef4bba632101686",
+   "loai": "co-du-lieu"
+  },
+  "45-5": {
+   "byte": 78,
+   "sha256": "4bc0c7af738e08ed50b6547f70bd028d0cd450dc83c15b8aec9f3ba87be4167a",
+   "loai": "thiet-bi-chua-ho-tro"
+  },
+  "45-6": {
+   "byte": 66,
+   "sha256": "f66488637abed578fa05e7ff9193d832efcbe6c585675eee62f02cd8b58956b3",
+   "loai": "co-du-lieu"
+  },
+  "47-1": {
+   "byte": 150,
+   "sha256": "72b89eadaf7467aa628cf2695f955f313aef81a6fc40d703ee155814baae4a42",
+   "loai": "co-du-lieu"
+  },
+  "47-2": {
+   "byte": 178,
+   "sha256": "b2a53eb35a3ceaeba4b23f276d8915c44801370c115e4e109dd00a3c5e8b1525",
+   "loai": "co-du-lieu"
+  },
+  "47-3": {
+   "byte": 66,
+   "sha256": "dc20cb6310d15ff8501fcc87769d1bacacd0a36d08fce1d8c2df6cda96c4680c",
+   "loai": "co-du-lieu"
+  },
+  "48-101": {
+   "byte": 61,
+   "sha256": "444178c110aa664bba4f53dab16a29f60c346fa96c9b236c873262b4b9a16e25",
+   "loai": "co-du-lieu"
+  },
+  "48-102": {
+   "byte": 61,
+   "sha256": "64581bcb7c7b4dc8ebc5dd5b3a119b16b450ffd8173c0824399831cd76c8a1da",
+   "loai": "co-du-lieu"
+  },
+  "48-3": {
+   "byte": 61,
+   "sha256": "d59713221ff99af76f8e24b79f134f0443b20bb70dacfb7b5b9e862d1d3a146d",
+   "loai": "co-du-lieu"
+  },
+  "48-4": {
+   "byte": 61,
+   "sha256": "47e4247ff700a881f44048748981a302f458cf0fe3dee9589ef87221a6706796",
+   "loai": "co-du-lieu"
+  },
+  "48-5": {
+   "byte": 419,
+   "sha256": "b7c037a323033303067b0baf79d8010eb4422e16a5ee1dd05795eb5be4983da3",
+   "loai": "co-du-lieu"
+  },
+  "48-8": {
+   "byte": 61,
+   "sha256": "c6989aa46fe030c9268bd47c4599e48042b1bd3b328da7d722a2193314aadd46",
+   "loai": "co-du-lieu"
+  },
+  "49": {
+   "byte": 57,
+   "sha256": "8fd65c367a7a918d54dc7794b8a65ea58bbd4686eb71b8d5370893aed8a71600",
+   "loai": "co-du-lieu"
+  },
+  "5-1": {
+   "byte": 66,
+   "sha256": "c19f426e7aa94380500d669e0db635da9bfc772f9c2cf451b1a06503cbec962f",
+   "loai": "co-du-lieu"
+  },
+  "5-3": {
+   "byte": 72,
+   "sha256": "e966a6725bc96b00e5edadb8e0e5fd919bd3052a3f1678cb15a5682bbb103651",
+   "loai": "co-du-lieu"
+  },
+  "51-1": {
+   "byte": 66,
+   "sha256": "81ca1249573b040fb3fc5e2c85446be5b1f3a0df51267b2c6a4cc8a7be966bf8",
+   "loai": "co-du-lieu"
+  },
+  "52-1": {
+   "byte": 66,
+   "sha256": "8c191070b783520da0d16b4042bd5247f23185d085efa194a5320728257f2f89",
+   "loai": "co-du-lieu"
+  },
+  "63-1": {
+   "byte": 283,
+   "sha256": "b3314cb2bbed039577377928c8f4f2d983e4199e123b89406f3db41f66871436",
+   "loai": "co-du-lieu"
+  },
+  "63-10": {
+   "byte": 66,
+   "sha256": "5342cb7fa951ff8530d8487201a2a473d96493c5ec7a49b97b06952ba6035c7b",
+   "loai": "co-du-lieu"
+  },
+  "63-11": {
+   "byte": 66,
+   "sha256": "aab8e5abc60f2c35f71f2ba99ef319632a03b09cb2bae3b081e1f4878af3ea5d",
+   "loai": "co-du-lieu"
+  },
+  "63-12": {
+   "byte": 66,
+   "sha256": "62bc2f89fe1c8229e54ac7f5dc49ef1b8f156b363f0aeff80c5100c54b02c865",
+   "loai": "co-du-lieu"
+  },
+  "63-13": {
+   "byte": 66,
+   "sha256": "2498ed2c00abeaa0cf88853cc9876ddf4bdfa3781da98248f0534dea36c108c0",
+   "loai": "co-du-lieu"
+  },
+  "63-14": {
+   "byte": 235,
+   "sha256": "330fdae29ffac248e6a63551f0182c020391e659e0a7f6d70ab4ee306043c351",
+   "loai": "co-du-lieu"
+  },
+  "63-3": {
+   "byte": 272,
+   "sha256": "68278a9b30c359295621c3585296e052ab3e88ec45955c7205564a7228cc81a3",
+   "loai": "co-du-lieu"
+  },
+  "63-5": {
+   "byte": 66,
+   "sha256": "4ba8a9f51bd321d933c0293ac86ba4081cc03dceb7a9f42c9697ad3320e6f4a8",
+   "loai": "co-du-lieu"
+  },
+  "63-8": {
+   "byte": 66,
+   "sha256": "6872a1d4569621ae9b83799eb0434c58ed5eb46d09632a3aeb0cf7c36e00de9a",
+   "loai": "co-du-lieu"
+  },
+  "63-9": {
+   "byte": 97,
+   "sha256": "d0237311453f034bb424bfd68735e1c8aaff2a015301cf1bd64c8b86ddcb1e77",
+   "loai": "co-du-lieu"
+  },
+  "64-1": {
+   "byte": 66,
+   "sha256": "8a2c42e66d22b402cd649629174d34a871aecd975c73a67602266e6bc2996345",
+   "loai": "co-du-lieu"
+  },
+  "64-2": {
+   "byte": 63,
+   "sha256": "70701d732678af66d329f4cdcc0603cb0bd66f3c0ed55d8bcd3e901b5d103c7c",
+   "loai": "co-du-lieu"
+  },
+  "65": {
+   "byte": 238,
+   "sha256": "10373b59cb42f77d85e929e54a7c4f11e203346e5af35d7c5fb1d23c534be36a",
+   "loai": "co-du-lieu"
+  },
+  "68-1": {
+   "byte": 543,
+   "sha256": "a0a4013542a915f9bf065ae32b7e5ecaf6ac22bd5160abfaf93808cb0f90dbd4",
+   "loai": "co-du-lieu"
+  },
+  "72-2": {
+   "byte": 66,
+   "sha256": "db64131b6cb3ca8997266d988526707a99b5935f8d3cf8db5dfcbd367fbb463e",
+   "loai": "co-du-lieu"
+  },
+  "72-3": {
+   "byte": 66,
+   "sha256": "1482c34f887c6ff0977811aff3b73dd8751f128025cc0e056c20998007b02a46",
+   "loai": "co-du-lieu"
+  },
+  "72-4": {
+   "byte": 101,
+   "sha256": "de30ba66548b8bcf049ee809ff77281034413ddcf41e03a604e85a063d56c4d7",
+   "loai": "co-du-lieu"
+  },
+  "72": {
+   "byte": 396,
+   "sha256": "28b5ab540ce5e0711f0815574707bf1aa399c9f41d95a96b9595949cccda61aa",
+   "loai": "co-du-lieu"
+  },
+  "79-1": {
+   "byte": 66,
+   "sha256": "3aeced5275eb2f6afca2a3ecf951a44a8ed6621107cb744c6a6e89821ea54e11",
+   "loai": "co-du-lieu"
+  },
+  "79-3": {
+   "byte": 134,
+   "sha256": "b9fb56c857ccc0a669fc24f14aaa3ce0cfdb0a8efd06df17067efb3d6e96d4b5",
+   "loai": "co-du-lieu"
+  },
+  "79-4": {
+   "byte": 111,
+   "sha256": "bb0a5ea2e0609a5ea0bf2d207e1dc5ead064600720f6d71dba5c54ff8ce40789",
+   "loai": "co-du-lieu"
+  },
+  "79-5": {
+   "byte": 140,
+   "sha256": "b4e49545891f8708b32b2f6467129c497236220d516c4a488b70625bb37c9d70",
+   "loai": "co-du-lieu"
+  },
+  "8-1": {
+   "byte": 66,
+   "sha256": "a93cd1204355c2272ef27371b8da64d2534d730223effd16584eaedc116069e3",
+   "loai": "co-du-lieu"
+  },
+  "8-2": {
+   "byte": 90,
+   "sha256": "f36c3d2a17df933f6649e0df1c0fa93e7962a53b4a51813727479ad518b024f0",
+   "loai": "co-du-lieu"
+  },
+  "8-3": {
+   "byte": 66,
+   "sha256": "1e0c15e3ce15282d2ba08fb3db60c4392a869674c819baaf91630e2910b67643",
+   "loai": "co-du-lieu"
+  },
+  "80-1": {
+   "byte": 69,
+   "sha256": "96979fd0e0e0ca2ba88b002decb0114090f4d684bc35020e5e61ed01f0a27493",
+   "loai": "co-du-lieu"
+  },
+  "80-2": {
+   "byte": 66,
+   "sha256": "33b2ba0da0b5acf9ff4b09302ac12940e945db3d5c963d1e2605fb403ae42344",
+   "loai": "co-du-lieu"
+  },
+  "80-3": {
+   "byte": 66,
+   "sha256": "4e680296120f26f6dd0c2102b387186c40aff8ce65f18c754d901119c98dfcdc",
+   "loai": "co-du-lieu"
+  },
+  "83-1": {
+   "byte": 66,
+   "sha256": "fe4a8ac12ed893df1d5e9a3c35df0f5da17fc3677d50d76d0c0a59c56a3530ae",
+   "loai": "co-du-lieu"
+  },
+  "84-1": {
+   "byte": 122,
+   "sha256": "3f4d11e5437dcddd2f15a4c26e6a5a2cff99d751b2d232c72b4b4bbcf56a1dd8",
+   "loai": "co-du-lieu"
+  },
+  "84-2": {
+   "byte": 117,
+   "sha256": "cc2fbe2af5a9b64e87f9c15870ca52a78360e8b64a9f13b6188471fd24d5743e",
+   "loai": "co-du-lieu"
+  },
+  "85-1": {
+   "byte": 172,
+   "sha256": "2c96515db057b1531101f79e6802919bb817d92b68f125904dd20b0a4beb51fe",
+   "loai": "co-du-lieu"
+  },
+  "85-10": {
+   "byte": 91,
+   "sha256": "b79e4c1755fd585549091847cca75d2d42668f47a119a741f0bb0d3a5908d6c5",
+   "loai": "co-du-lieu"
+  },
+  "85-12": {
+   "byte": 73,
+   "sha256": "f5fa48e7f1f749adbea9be252211a3e3af36d3448afb26a6dcb700f0db28a7b3",
+   "loai": "co-du-lieu"
+  },
+  "85-13": {
+   "byte": 154,
+   "sha256": "0e124408b6b24d838b82626d6890b8a92bd5bde37d9e06728bcca4b16fdd2fed",
+   "loai": "co-du-lieu"
+  },
+  "85-14": {
+   "byte": 66,
+   "sha256": "3aca8d3d6a60ab591b5119779c24772518e5f498b004571f0198d48fbf6edd60",
+   "loai": "co-du-lieu"
+  },
+  "85-2": {
+   "byte": 66,
+   "sha256": "1ad39eb871401e9814d01acef62c1bc532abf59965d9ce52c1e90f8a3e8d6d05",
+   "loai": "co-du-lieu"
+  },
+  "85-4": {
+   "byte": 66,
+   "sha256": "67d722b0fff930b2445cdd21146c7ad37c6fb0cbaa81d9a6c8bca8b19d34b3e3",
+   "loai": "co-du-lieu"
+  },
+  "85-5": {
+   "byte": 66,
+   "sha256": "64e4ddddab72941493db9e0549daad61a476e07e31caaa149c1a84dd7c1317a6",
+   "loai": "co-du-lieu"
+  },
+  "85-6": {
+   "byte": 115,
+   "sha256": "12b87ce5a77bd3c7dbcdafa64c127c3dbd5e5859217c0321c26120fff1d63041",
+   "loai": "co-du-lieu"
+  },
+  "85-7": {
+   "byte": 133,
+   "sha256": "79f1a6a2be1d02a957f6ed73662c0032ff15a22ad3a642a6dad911869e8453d2",
+   "loai": "co-du-lieu"
+  },
+  "85-8": {
+   "byte": 180,
+   "sha256": "82be9cdc97cf1287eac6688c2cbba297d6207a9612a27bb9090928ccdb0d4773",
+   "loai": "co-du-lieu"
+  },
+  "85-9": {
+   "byte": 66,
+   "sha256": "0b891995cbe3ddd63a4fab1926d7e6e828709eb3775c4f5770f8a44d8eb896f6",
+   "loai": "co-du-lieu"
+  },
+  "88-27": {
+   "byte": 76,
+   "sha256": "ef493e3552c1a92938aff6e79edd93b70ed1193afd1721a21d0380ceea51f425",
+   "loai": "thiet-bi-chua-ho-tro"
+  },
+  "92-1": {
+   "byte": 152,
+   "sha256": "06da166a43109c8de892fcaf4194286a688d9ebff9f0948fc3f65528a7823280",
+   "loai": "co-du-lieu"
+  },
+  "96-1": {
+   "byte": 353,
+   "sha256": "e8bea2633fa3040be523fe0762fdde87e809d52a41543982b79d387285881d96",
+   "loai": "co-du-lieu"
+  },
+  "96-3": {
+   "byte": 66,
+   "sha256": "4fb0f9ee20d4fee55c22bcc7be40b86813f8939c86ac4797e70a486fcf4b86b6",
+   "loai": "co-du-lieu"
+  },
+  "96-4": {
+   "byte": 66,
+   "sha256": "e936497de76ea650883c923262a33e811c70415429f53f803f4686806b1102f1",
+   "loai": "co-du-lieu"
+  },
+  "96-5": {
+   "byte": 66,
+   "sha256": "abe177154da87985ff05a80f49a7bbd3369ec1f3b46c325879fa2c5d76087d7b",
+   "loai": "co-du-lieu"
+  },
+  "96-6": {
+   "byte": 66,
+   "sha256": "c554fac373cb66d0b7f7e1482dc470104c6275ff7d588268865f00264a03929f",
+   "loai": "co-du-lieu"
+  },
+  "96-7": {
+   "byte": 64,
+   "sha256": "a9ec5e1785c793c80b83991b8051739f9c3618cccd91a7b8a3cc890df9878abf",
+   "loai": "thiet-bi-chua-ho-tro"
+  },
+  "96-8": {
+   "byte": 61,
+   "sha256": "b53619b91ac619cdd42f7d82465b1c018cf01bbad6143cae9db190cc45f26dc2",
+   "loai": "co-du-lieu"
+  },
+  "97-1": {
+   "byte": 55,
+   "sha256": "d4d429662a1996de1d4c99a0263bed0c932d6f7b5ed6d792dd3916bc41e9dc32",
+   "loai": "rong-that"
+  },
+  "97-2": {
+   "byte": 66,
+   "sha256": "17d926a0f611920f2c5eb31f4e2871259b34cc187da38eee971a247bcc0531f9",
+   "loai": "co-du-lieu"
+  }
+ }
+}

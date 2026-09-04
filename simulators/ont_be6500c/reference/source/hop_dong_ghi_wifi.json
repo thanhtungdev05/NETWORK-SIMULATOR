@@ -1,0 +1,77 @@
+{
+  "_mo_ta": "BANG CHUNG GOC -- than PATCH that ma trang Wi-Fi General gui di, do TRUC TIEP tren thiet bi 192.168.1.1.",
+  "_ngay": "2026-08-13",
+  "_cach_do": "Ghi de window.fetch de CHAN moi request khac GET: bat lai than roi tra 200 rong tai cho, KHONG chuyen tiep toi thiet bi. Nho vay doc duoc than that ma Wi-Fi KHONG bi cau hinh lai, khong ai mat ket noi. Sau khi do: go chan, nap lai trang, doc lai /ssids va /easyMesh xac nhan thiet bi nguyen ven.",
+  "_thiet_bi_nguyen_ven_sau_khi_do": true,
+
+  "_vi_sao_phai_do": "Doc ma goc thay mot cho RAT dang ngo va suyt ket luan nham la LOI FIRMWARE. Do that cho ket qua NGUOC LAI -- khong co loi nao. Chi tiet o muc _doc_ma_gay_hieu_nham.",
+
+  "_doc_ma_gay_hieu_nham": {
+    "quan_sat_tren_ma": [
+      "O nhap render voi name = `networks.${s}` trong do s = L = chi so cua radio 5G = 1",
+      "Kiem tra hop le chay tren `networks.${A}` trong do A = (isNetworkSeparate ? s : 0) = 0",
+      "Ham dung than Be() o che do gop doc t[0] -- tuc networks[0]"
+    ],
+    "suy_luan_sai": "Nguoi dung sua networks.1 nhung luu lai doc networks[0] -> doi ten se khong an gi. Neu tin suy luan nay thi da ghi nham vao ISSUES la 'loi cua hang' va dung sai trong gia lap.",
+    "su_that_do_duoc": "Than PATCH chua TEN MOI cho CA HAI ban ghi SSID. Khong co loi nao. Trang thai form cua react-hook-form khong tuong ung 1-1 voi chi so hien tren thuoc tinh name, nen khong the suy tu ma minified.",
+    "bai_hoc": "Voi ma da nen, doc de ra GIA THUYET; chi phep do moi ra KET LUAN."
+  },
+
+  "phep_do": {
+    "trang": "wifi/general",
+    "tab": "PRIMARY NETWORK",
+    "che_do": "gop (useSeparateNetwork = false, khop easyMesh.Primary.separatedSsid = false)",
+    "thao_tac": "Doi o 'Wi-Fi Network Name' tu 'FPT Telecom-C151' thanh 'TEN-MOI-THU-NGHIEM' roi bam Save, sau do bam Continue tren hop thoai 'Before we continue...'",
+    "so_request_bat_duoc": 2,
+    "_thu_tu": "TUAN TU: ssids truoc, easyMesh sau. Ma goc dung await lan luot, KHONG phai Promise.all nhu trang System Settings.",
+
+    "request_1": {
+      "url": "api/v1/data/ssids",
+      "method": "PATCH",
+      "than": [
+        {
+          "id": "94:f7:17:a9:c1:59",
+          "enabled": true,
+          "name": "TEN-MOI-THU-NGHIEM",
+          "securityMode": "WPA3-Personal-Transition",
+          "passphrase": "12345678",
+          "broadcastEnabled": true
+        },
+        {
+          "id": "94:f7:17:a9:c1:61",
+          "enabled": true,
+          "name": "TEN-MOI-THU-NGHIEM",
+          "securityMode": "WPA3-Personal-Transition",
+          "passphrase": "12345678",
+          "broadcastEnabled": true
+        }
+      ],
+      "_ket_luan": [
+        "Che do GOP: gui CA HAI ban ghi cua loai do (2.4G va 5G), gia tri Y HET NHAU, chi khac id.",
+        "Dung DUNG 6 khoa: id, enabled, name, securityMode, passphrase, broadcastEnabled. KHONG gui radio, type, status, securityModesSupported.",
+        "id la dia chi MAC cua tung SSID, khong phai dang cfg+so nhu portForwarding."
+      ]
+    },
+
+    "request_2": {
+      "url": "api/v1/data/easyMesh",
+      "method": "PATCH",
+      "than": {
+        "enabled": true,
+        "ssidTypesConfigurations": [
+          {"type": "Primary", "separatedSsid": false}
+        ]
+      },
+      "_ket_luan": [
+        "enabled LUON la true (hang so trong ma goc, khong lay tu form).",
+        "ssidTypesConfigurations chi chua DUNG MOT muc -- loai cua tab dang mo. Cac loai khac khong gui, va nho merge-theo-id nen khong bi mat."
+      ]
+    }
+  },
+
+  "_con_thieu": [
+    "Chua do che do TACH (useSeparateNetwork = true) -- tab SmartHome dang o che do do. Suy tu ma goc: gui networks.map(...) tuc moi ban ghi lay gia tri RIENG cua no. Chua co bang chung truc tiep.",
+    "Chua do truong hop securityMode = WPA23T (che do gop, gia tri gia). Ma goc tach no ra: 2.4G -> WPA2-Personal, radio khac -> WPA3-Personal-Transition. Chua co bang chung truc tiep.",
+    "Chua do luc doi cong tac 'Use separate network' (quy tac them/cat hau to ten). Xem DAC_TA_DOC_TAY.md muc 6."
+  ]
+}

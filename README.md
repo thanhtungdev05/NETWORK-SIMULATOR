@@ -102,7 +102,7 @@ Toàn bộ hệ thống đều được truy cập qua **1 cổng duy nhất `80
 ## 🛠 4. Các Tính Năng Đào Tạo Cốt Lõi
 
 ### A. Danh sách các dòng thiết bị giả lập (Simulators)
-Dự án đã giả lập thành công Web Admin Interface của 9 dòng thiết bị mạng thực tế phổ biến của FPT Telecom:
+Dự án đã giả lập thành công Web Admin Interface của 12 dòng thiết bị mạng thực tế phổ biến của FPT Telecom:
 1. **AC1000F** (`/sim_ac1000f`)
 2. **AC1000HI** (`/sim_ac1000HI`)
 3. **AX3000C** (`/sim_ax3000c`)
@@ -111,7 +111,10 @@ Dự án đã giả lập thành công Web Admin Interface của 9 dòng thiết
 6. **AX3000S** (`/sim_ax3000s`)
 7. **BE12000** (`/sim_be12000`)
 8. **BE15000** (`/sim_be15000`)
-9. **Vigor2927** (`/sim_vigor2927`)
+9. **ONT BE6500C** (`/sim_ONT_be6500c`)
+10. **AP BE6500C** (`/sim_be6500c`)
+11. **Vigor2927** (`/sim_vigor2927`)
+12. **Router MikroTik** (`/sim_mikrotik_hexs`)
 
 ### B. Hai Chế Độ Hoạt Động (Dual Modes)
 1. **💡 Chế độ Hướng dẫn (Guide Mode):**
@@ -182,8 +185,9 @@ Các lệnh CLI hữu ích để quản lý cơ sở dữ liệu:
 
 ### A. Chuẩn Hóa Tên Danh Mục Thiết Bị
 - Tên thiết bị trên Dropdown Menu đã được cấu trúc lại với các tiền tố rõ ràng để KTV dễ phân biệt chủng loại:
-  - **Dòng ONT:** `ONT AC1000F`, `ONT AC1000HI`, `ONT AX3000CV2`, `ONT AX3000GZ`, `ONT AX3000HV2`, `ONT BE12000`, `ONT BE15000`
-  - **Dòng Khác:** `Internet Hub AX3000S`, `Router MikroTik`, `DrayTek Vigor2927`
+  - **Dòng ONT:** `ONT AC1000F`, `ONT AC1000HI`, `ONT AX3000CV2`, `ONT AX3000GZ`, `ONT AX3000HV2`, `ONT BE12000`, `ONT BE15000`, `ONT BE6500C`
+  - **Dòng Khác:** `Internet Hub AX3000S`, `AP BE6500C`, `Router MikroTik`, `DrayTek Vigor2927`
+- Thứ tự (Order) hiển thị trên giao diện đã được sắp xếp đồng bộ thành một khối logic chuẩn (ONT -> Hub -> Router) quản lý tập trung trong file `data.js`.
 
 ### B. Auto-Baseline Tracker (Tối ưu thiết bị SPA)
 - Thay vì lấy Baseline toàn bộ DOM ngay lúc load (gây lỗi với các thiết bị dạng SPA sinh form trễ do AJAX như AX3000S), hệ thống đổi sang **Interaction-Based Baseline**.

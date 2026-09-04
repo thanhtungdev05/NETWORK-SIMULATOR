@@ -1,0 +1,1940 @@
+{
+ "internetConnection": {
+  "status": "Down"
+ },
+ "easyMesh": {
+  "role": "Agent",
+  "ssidTypesConfigurations": [
+   {
+    "isolated": false,
+    "uiConfigurable": true,
+    "separatedSsid": false,
+    "isBackhaul": false,
+    "mloEnabled": false,
+    "type": "Primary"
+   },
+   {
+    "isolated": true,
+    "uiConfigurable": true,
+    "separatedSsid": false,
+    "isBackhaul": false,
+    "mloEnabled": false,
+    "type": "Guest"
+   },
+   {
+    "isolated": false,
+    "uiConfigurable": true,
+    "separatedSsid": true,
+    "isBackhaul": false,
+    "mloEnabled": false,
+    "type": "SmartHome"
+   },
+   {
+    "isolated": false,
+    "uiConfigurable": false,
+    "separatedSsid": false,
+    "isBackhaul": true,
+    "mloEnabled": true,
+    "type": "Backhaul"
+   }
+  ],
+  "enabled": true
+ },
+ "system/status": {
+  "memoryUsage": 46,
+  "uptime": 21144,
+  "cpuUsage": {
+   "cores": [
+    35,
+    72,
+    25,
+    8
+   ],
+   "total": 36
+  }
+ },
+ "system/info": {
+  "architecture": "arm_cortex-a7_neon-vfpv4",
+  "operatingMode": "router",
+  "manufacturer": "Actiontec",
+  "firmwareVersion": "WZ118",
+  "hostname": "AP-BE6500C-525E",
+  "modelName": "AP-BE6500C",
+  "kernelVersion": "ipq53xx/ipq53xx_32",
+  "serialNumber": "04D6888D525F",
+  "isConfigured": true,
+  "domainName": "my-router.top"
+ },
+ "system/logServer": {
+  "remoteServer": {
+   "protocol": "",
+   "enabled": false,
+   "ipAddress": "",
+   "port": 514
+  },
+  "level": 7
+ },
+ "system/logs": [
+  {
+   "log": "CPE-API: Enter /system/info",
+   "level": 7,
+   "time": 1786342491000
+  },
+  {
+   "log": "CPE-API: Exit /system/info",
+   "level": 7,
+   "time": 1786342491000
+  },
+  {
+   "log": "CPE-API: AUTH: {\"role\":\"admin\",\"username\":\"admin\",\"exp\":1786342705,\"iss\":\"actiontec\"}, URI: /ssids, METHOD: GET, BODY:null, REFERER:http://192.168.1.1/, IS LOCAL:true",
+   "level": 7,
+   "time": 1786342491000
+  },
+  {
+   "log": "CPE-API: Enter /ssids",
+   "level": 7,
+   "time": 1786342491000
+  },
+  {
+   "log": "CPE-API: [wireless__ssids_get:380] no group found for cfg123579",
+   "level": 7,
+   "time": 1786342491000
+  },
+  {
+   "log": "CPE-API: [wireless__ssids_get:380] no group found for cfg133579",
+   "level": 7,
+   "time": 1786342491000
+  },
+  {
+   "log": "CPE-API: [wireless__ssids_get:380] no group found for cfg143579",
+   "level": 7,
+   "time": 1786342491000
+  },
+  {
+   "log": "CPE-API: [wireless__ssids_get:380] no group found for cfg153579",
+   "level": 7,
+   "time": 1786342491000
+  },
+  {
+   "log": "CPE-API: Exit /ssids",
+   "level": 7,
+   "time": 1786342491000
+  },
+  {
+   "log": "CPE-API: AUTH: {\"role\":\"admin\",\"username\":\"admin\",\"exp\":1786342705,\"iss\":\"actiontec\"}, URI: /devices, METHOD: GET, BODY:null, REFERER:http://192.168.1.1/, IS LOCAL:true",
+   "level": 7,
+   "time": 1786342491000
+  },
+  {
+   "log": "CPE-API: Enter /devices",
+   "level": 7,
+   "time": 1786342491000
+  },
+  {
+   "log": "topo_repo: [ezmesh] Refresh failed since ezmesh connection is down",
+   "level": 5,
+   "time": 1786342491000
+  },
+  {
+   "log": "CPE-API: Ubus invoke failed",
+   "level": 4,
+   "time": 1786342491000
+  },
+  {
+   "log": "CPE-API: [devices] ubus call topo_repo.ezmesh refresh failed",
+   "level": 5,
+   "time": 1786342491000
+  },
+  {
+   "log": "topo_repo: [FPD] FPD receives TOPO_REPO_NOTIF_SQLITE notification",
+   "level": 6,
+   "time": 1786342491000
+  },
+  {
+   "log": "topo_repo: [NDP] receives TOPO_REPO_NOTIF_SQLITE notification",
+   "level": 6,
+   "time": 1786342491000
+  },
+  {
+   "log": "topo_repo: [DHCP] DHCP receives TOPO_REPO_NOTIF_SQLITE notification",
+   "level": 6,
+   "time": 1786342491000
+  },
+  {
+   "log": "topo_repo: [ARP] ARP receives TOPO_REPO_NOTIF_SQLITE notification",
+   "level": 6,
+   "time": 1786342491000
+  },
+  {
+   "log": "topo_repo: [MDNS] receives TOPO_REPO_NOTIF_SQLITE notification",
+   "level": 6,
+   "time": 1786342491000
+  },
+  {
+   "log": "topo_repo: [LO_DEV] receives TOPO_REPO_NOTIF_SQLITE notification",
+   "level": 6,
+   "time": 1786342491000
+  },
+  {
+   "log": "CPE-API: json_object_from_file: error opening file /www/dataElement.json: No such file or directory",
+   "level": 4,
+   "time": 1786342491000
+  },
+  {
+   "log": "CPE-API: [devices] data element validate failed",
+   "level": 5,
+   "time": 1786342491000
+  },
+  {
+   "log": "CPE-API: [devices] start to generate /devices method:GET reply message",
+   "level": 6,
+   "time": 1786342491000
+  },
+  {
+   "log": "CPE-API: Exit /devices",
+   "level": 7,
+   "time": 1786342491000
+  },
+  {
+   "log": "mcastds: Leaving mcsd executive program",
+   "level": 6,
+   "time": 1786342493000
+  },
+  {
+   "log": "kernel: [14923.615076] mc_detach: disabled snooping on br-lan.",
+   "level": 7,
+   "time": 1786342493000
+  },
+  {
+   "log": "mcastds: Entering evloopRun",
+   "level": 6,
+   "time": 1786342493000
+  },
+  {
+   "log": "kernel: [14923.888936] mc_attach: enabled snooping on br-lan.",
+   "level": 7,
+   "time": 1786342493000
+  },
+  {
+   "log": "CPE-API: AUTH: {\"role\":\"admin\",\"username\":\"admin\",\"exp\":1786342705,\"iss\":\"actiontec\"}, URI: /devices, METHOD: GET, BODY:null, REFERER:http://192.168.1.1/, IS LOCAL:true",
+   "level": 7,
+   "time": 1786342495000
+  },
+  {
+   "log": "CPE-API: Enter /devices",
+   "level": 7,
+   "time": 1786342495000
+  },
+  {
+   "log": "topo_repo: [ezmesh] Refresh failed since ezmesh connection is down",
+   "level": 5,
+   "time": 1786342495000
+  },
+  {
+   "log": "CPE-API: Ubus invoke failed",
+   "level": 4,
+   "time": 1786342495000
+  },
+  {
+   "log": "CPE-API: [devices] ubus call topo_repo.ezmesh refresh failed",
+   "level": 5,
+   "time": 1786342495000
+  },
+  {
+   "log": "topo_repo: [FPD] FPD receives TOPO_REPO_NOTIF_SQLITE notification",
+   "level": 6,
+   "time": 1786342495000
+  },
+  {
+   "log": "topo_repo: [NDP] receives TOPO_REPO_NOTIF_SQLITE notification",
+   "level": 6,
+   "time": 1786342495000
+  },
+  {
+   "log": "topo_repo: [DHCP] DHCP receives TOPO_REPO_NOTIF_SQLITE notification",
+   "level": 6,
+   "time": 1786342495000
+  },
+  {
+   "log": "topo_repo: [ARP] ARP receives TOPO_REPO_NOTIF_SQLITE notification",
+   "level": 6,
+   "time": 1786342495000
+  },
+  {
+   "log": "topo_repo: [MDNS] receives TOPO_REPO_NOTIF_SQLITE notification",
+   "level": 6,
+   "time": 1786342495000
+  },
+  {
+   "log": "topo_repo: [LO_DEV] receives TOPO_REPO_NOTIF_SQLITE notification",
+   "level": 6,
+   "time": 1786342495000
+  },
+  {
+   "log": "CPE-API: json_object_from_file: error opening file /www/dataElement.json: No such file or directory",
+   "level": 4,
+   "time": 1786342495000
+  },
+  {
+   "log": "CPE-API: [devices] data element validate failed",
+   "level": 5,
+   "time": 1786342495000
+  },
+  {
+   "log": "CPE-API: [devices] start to generate /devices method:GET reply message",
+   "level": 6,
+   "time": 1786342495000
+  },
+  {
+   "log": "CPE-API: Exit /devices",
+   "level": 7,
+   "time": 1786342495000
+  },
+  {
+   "log": "topo_repo: [ezmesh] Start to periodically collect topo from ezmesh",
+   "level": 6,
+   "time": 1786342495000
+  },
+  {
+   "log": "topo_repo: [ezmesh] socket closed! reconnect 127.0.0.1:7777 after 10 sec",
+   "level": 5,
+   "time": 1786342496000
+  },
+  {
+   "log": "kernel: [14927.611766] wlan: [32119:I:ANY] ol_ath_vap_set_param: Implicitly disabling dependant feature igmp ME",
+   "level": 4,
+   "time": 1786342497000
+  },
+  {
+   "log": "kernel: [14927.650649] wlan: [32122:I:ANY] ol_ath_vap_set_param: Implicitly disabling dependant feature igmp ME",
+   "level": 4,
+   "time": 1786342497000
+  },
+  {
+   "log": "kernel: [14927.691115] wlan: [32125:I:ANY] ol_ath_vap_set_param: Implicitly disabling dependant feature igmp ME",
+   "level": 4,
+   "time": 1786342497000
+  },
+  {
+   "log": "kernel: [14927.730158] wlan: [32128:I:ANY] ol_ath_vap_set_param: Implicitly disabling dependant feature igmp ME",
+   "level": 4,
+   "time": 1786342497000
+  },
+  {
+   "log": "kernel: [14927.730227] wlan: [32128:I:ANY] ol_ath_vap_set_param: Implicitly disabling dependant feature igmp ME",
+   "level": 4,
+   "time": 1786342497000
+  },
+  {
+   "log": "kernel: [14927.777753] wlan: [32131:I:ANY] ol_ath_vap_set_param: Implicitly disabling dependant feature igmp ME",
+   "level": 4,
+   "time": 1786342497000
+  },
+  {
+   "log": "kernel: [14927.777826] wlan: [32131:I:ANY] ol_ath_vap_set_param: Implicitly disabling dependant feature igmp ME",
+   "level": 4,
+   "time": 1786342497000
+  },
+  {
+   "log": "kernel: [14933.489693] wlan_mesh_set_get_params set STA_STATS callback timer to : 0",
+   "level": 5,
+   "time": 1786342503000
+  },
+  {
+   "log": "fpt_agent-init[30694]: Downloading: http://cpemat.fpt.vn/v2/AP-BE6500C/agent/stable",
+   "level": 7,
+   "time": 1786342503000
+  },
+  {
+   "log": "CPE-API: AUTH: {\"role\":\"admin\",\"username\":\"admin\",\"exp\":1786342705,\"iss\":\"actiontec\"}, URI: /wizard, METHOD: GET, BODY:null, REFERER:http://192.168.1.1/, IS LOCAL:true",
+   "level": 7,
+   "time": 1786342504000
+  },
+  {
+   "log": "CPE-API: Enter /wizard",
+   "level": 7,
+   "time": 1786342504000
+  },
+  {
+   "log": "CPE-API: Exit /wizard",
+   "level": 7,
+   "time": 1786342504000
+  },
+  {
+   "log": "CPE-API: AUTH: {\"role\":\"admin\",\"username\":\"admin\",\"exp\":1786342705,\"iss\":\"actiontec\"}, URI: /ssids, METHOD: GET, BODY:null, REFERER:http://192.168.1.1/, IS LOCAL:true",
+   "level": 7,
+   "time": 1786342504000
+  },
+  {
+   "log": "CPE-API: Enter /ssids",
+   "level": 7,
+   "time": 1786342504000
+  },
+  {
+   "log": "CPE-API: [wireless__ssids_get:380] no group found for cfg123579",
+   "level": 7,
+   "time": 1786342504000
+  },
+  {
+   "log": "CPE-API: [wireless__ssids_get:380] no group found for cfg133579",
+   "level": 7,
+   "time": 1786342504000
+  },
+  {
+   "log": "CPE-API: [wireless__ssids_get:380] no group found for cfg143579",
+   "level": 7,
+   "time": 1786342504000
+  },
+  {
+   "log": "CPE-API: [wireless__ssids_get:380] no group found for cfg153579",
+   "level": 7,
+   "time": 1786342504000
+  },
+  {
+   "log": "CPE-API: Exit /ssids",
+   "level": 7,
+   "time": 1786342504000
+  },
+  {
+   "log": "CPE-API: AUTH: {\"role\":\"admin\",\"username\":\"admin\",\"exp\":1786342705,\"iss\":\"actiontec\"}, URI: /devices, METHOD: GET, BODY:null, REFERER:http://192.168.1.1/, IS LOCAL:true",
+   "level": 7,
+   "time": 1786342504000
+  },
+  {
+   "log": "CPE-API: Enter /devices",
+   "level": 7,
+   "time": 1786342504000
+  },
+  {
+   "log": "topo_repo: [ezmesh] Refresh failed since ezmesh connection is down",
+   "level": 5,
+   "time": 1786342504000
+  },
+  {
+   "log": "CPE-API: Ubus invoke failed",
+   "level": 4,
+   "time": 1786342504000
+  },
+  {
+   "log": "CPE-API: [devices] ubus call topo_repo.ezmesh refresh failed",
+   "level": 5,
+   "time": 1786342504000
+  },
+  {
+   "log": "topo_repo: [FPD] FPD receives TOPO_REPO_NOTIF_SQLITE notification",
+   "level": 6,
+   "time": 1786342504000
+  },
+  {
+   "log": "topo_repo: [NDP] receives TOPO_REPO_NOTIF_SQLITE notification",
+   "level": 6,
+   "time": 1786342504000
+  },
+  {
+   "log": "topo_repo: [DHCP] DHCP receives TOPO_REPO_NOTIF_SQLITE notification",
+   "level": 6,
+   "time": 1786342504000
+  },
+  {
+   "log": "topo_repo: [ARP] ARP receives TOPO_REPO_NOTIF_SQLITE notification",
+   "level": 6,
+   "time": 1786342504000
+  },
+  {
+   "log": "topo_repo: [MDNS] receives TOPO_REPO_NOTIF_SQLITE notification",
+   "level": 6,
+   "time": 1786342504000
+  },
+  {
+   "log": "topo_repo: [LO_DEV] receives TOPO_REPO_NOTIF_SQLITE notification",
+   "level": 6,
+   "time": 1786342504000
+  },
+  {
+   "log": "CPE-API: json_object_from_file: error opening file /www/dataElement.json: No such file or directory",
+   "level": 4,
+   "time": 1786342504000
+  },
+  {
+   "log": "CPE-API: [devices] data element validate failed",
+   "level": 5,
+   "time": 1786342504000
+  },
+  {
+   "log": "CPE-API: [devices] start to generate /devices method:GET reply message",
+   "level": 6,
+   "time": 1786342504000
+  },
+  {
+   "log": "CPE-API: Exit /devices",
+   "level": 7,
+   "time": 1786342504000
+  },
+  {
+   "log": "CPE-API: AUTH: {\"role\":\"admin\",\"username\":\"admin\",\"exp\":1786342705,\"iss\":\"actiontec\"}, URI: /system/info, METHOD: GET, BODY:null, REFERER:http://192.168.1.1/, IS LOCAL:true",
+   "level": 7,
+   "time": 1786342504000
+  },
+  {
+   "log": "CPE-API: Enter /system/info",
+   "level": 7,
+   "time": 1786342504000
+  },
+  {
+   "log": "CPE-API: Exit /system/info",
+   "level": 7,
+   "time": 1786342504000
+  },
+  {
+   "log": "topo_repo: [ezmesh] create socket fail",
+   "level": 5,
+   "time": 1786342506000
+  },
+  {
+   "log": "topo_repo: [ezmesh] reconnect 127.0.0.1:7777 after 10 sec",
+   "level": 5,
+   "time": 1786342506000
+  },
+  {
+   "log": "fpt_agent-init[30694]: Failed to send request: Operation not permitted",
+   "level": 4,
+   "time": 1786342509000
+  },
+  {
+   "log": "fpt_agent-init[30694]: FATAL: Download Failed.",
+   "level": 7,
+   "time": 1786342509000
+  },
+  {
+   "log": "repacd.gwmon: debug Failed to resolve GW IP for br-lan",
+   "level": 7,
+   "time": 1786342509000
+  },
+  {
+   "log": "repacd.gwmon: info wait 0 rate_5g=0 rate_2g=0 is_ip=0",
+   "level": 7,
+   "time": 1786342509000
+  },
+  {
+   "log": "repacd.gwmon: debug Failed to resolve GW IP for br-lan",
+   "level": 7,
+   "time": 1786342509000
+  },
+  {
+   "log": "repacd.gwmon: info wait 0 rate_5g=0 rate_2g=0 is_ip=0",
+   "level": 6,
+   "time": 1786342509000
+  },
+  {
+   "log": "repacd: REPACD RUN cur_state NotAssociated sta_iface_5g ath12 staiface_24g ath03 staifacebackup ath12",
+   "level": 7,
+   "time": 1786342509000
+  },
+  {
+   "log": "repacd.wifimon: MLO Assoc timeout in 260",
+   "level": 6,
+   "time": 1786342510000
+  },
+  {
+   "log": "repacd.wifimon: repacd-wifimon-map.sh: __repacd_wifimon_is_sta_iface() get 'ath12' station and disabled='0',network='lan', network_to_match='', hwmode='11bea'",
+   "level": 7,
+   "time": 1786342511000
+  },
+  {
+   "log": "repacd.wifimon: repacd-wifimon-map.sh: __repacd_wifimon_is_sta_iface() get 'ath03' station and disabled='0',network='lan', network_to_match='', hwmode='11beg'",
+   "level": 5,
+   "time": 1786342511000
+  },
+  {
+   "log": "repacd.wifimon: repacd-wifimon-map.sh: __repacd_wifimon_get_sta_iface(): return sta_iface_24g='ath03', sta_iface_5g='ath12'",
+   "level": 5,
+   "time": 1786342511000
+  },
+  {
+   "log": "mcastds: Leaving mcsd executive program",
+   "level": 4,
+   "time": 1786342513000
+  },
+  {
+   "log": "kernel: [14943.643117] mc_detach: disabled snooping on br-lan.",
+   "level": 4,
+   "time": 1786342513000
+  },
+  {
+   "log": "mcastds: Entering evloopRun",
+   "level": 4,
+   "time": 1786342513000
+  },
+  {
+   "log": "kernel: [14943.906534] mc_attach: enabled snooping on br-lan.",
+   "level": 4,
+   "time": 1786342513000
+  },
+  {
+   "log": "topo_repo: [ezmesh] create socket fail",
+   "level": 4,
+   "time": 1786342516000
+  },
+  {
+   "log": "topo_repo: [ezmesh] reconnect 127.0.0.1:7777 after 10 sec",
+   "level": 4,
+   "time": 1786342516000
+  },
+  {
+   "log": "kernel: [14947.704613] wlan: [2879:I:ANY] ol_ath_vap_set_param: Implicitly disabling dependant feature igmp ME",
+   "level": 4,
+   "time": 1786342517000
+  },
+  {
+   "log": "kernel: [14947.745377] wlan: [2888:I:ANY] ol_ath_vap_set_param: Implicitly disabling dependant feature igmp ME",
+   "level": 7,
+   "time": 1786342517000
+  },
+  {
+   "log": "kernel: [14947.786762] wlan: [2896:I:ANY] ol_ath_vap_set_param: Implicitly disabling dependant feature igmp ME",
+   "level": 5,
+   "time": 1786342517000
+  },
+  {
+   "log": "kernel: [14947.829251] wlan: [2904:I:ANY] ol_ath_vap_set_param: Implicitly disabling dependant feature igmp ME",
+   "level": 7,
+   "time": 1786342517000
+  },
+  {
+   "log": "kernel: [14947.829320] wlan: [2904:I:ANY] ol_ath_vap_set_param: Implicitly disabling dependant feature igmp ME",
+   "level": 7,
+   "time": 1786342517000
+  },
+  {
+   "log": "kernel: [14947.884135] wlan: [2907:I:ANY] ol_ath_vap_set_param: Implicitly disabling dependant feature igmp ME",
+   "level": 5,
+   "time": 1786342517000
+  },
+  {
+   "log": "kernel: [14947.884204] wlan: [2907:I:ANY] ol_ath_vap_set_param: Implicitly disabling dependant feature igmp ME",
+   "level": 4,
+   "time": 1786342517000
+  },
+  {
+   "log": "fpt_agent-init[1985]: Downloading: http://cpemat.fpt.vn/v2/AP-BE6500C/agent/stable",
+   "level": 5,
+   "time": 1786342522000
+  },
+  {
+   "log": "kernel: [14953.603850] wlan_mesh_set_get_params set STA_STATS callback timer to : 0",
+   "level": 6,
+   "time": 1786342523000
+  },
+  {
+   "log": "CPE-API: AUTH: {\"role\":\"admin\",\"username\":\"admin\",\"exp\":1786342705,\"iss\":\"actiontec\"}, URI: /devices, METHOD: GET, BODY:null, REFERER:http://192.168.1.1/, IS LOCAL:true",
+   "level": 6,
+   "time": 1786342525000
+  },
+  {
+   "log": "CPE-API: Enter /devices",
+   "level": 6,
+   "time": 1786342525000
+  },
+  {
+   "log": "topo_repo: [ezmesh] Refresh failed since ezmesh connection is down",
+   "level": 6,
+   "time": 1786342525000
+  },
+  {
+   "log": "CPE-API: Ubus invoke failed",
+   "level": 6,
+   "time": 1786342525000
+  },
+  {
+   "log": "CPE-API: [devices] ubus call topo_repo.ezmesh refresh failed",
+   "level": 6,
+   "time": 1786342525000
+  },
+  {
+   "log": "topo_repo: [FPD] FPD receives TOPO_REPO_NOTIF_SQLITE notification",
+   "level": 4,
+   "time": 1786342525000
+  },
+  {
+   "log": "topo_repo: [NDP] receives TOPO_REPO_NOTIF_SQLITE notification",
+   "level": 5,
+   "time": 1786342525000
+  },
+  {
+   "log": "topo_repo: [DHCP] DHCP receives TOPO_REPO_NOTIF_SQLITE notification",
+   "level": 6,
+   "time": 1786342525000
+  },
+  {
+   "log": "topo_repo: [ARP] ARP receives TOPO_REPO_NOTIF_SQLITE notification",
+   "level": 7,
+   "time": 1786342525000
+  },
+  {
+   "log": "topo_repo: [MDNS] receives TOPO_REPO_NOTIF_SQLITE notification",
+   "level": 5,
+   "time": 1786342525000
+  },
+  {
+   "log": "topo_repo: [LO_DEV] receives TOPO_REPO_NOTIF_SQLITE notification",
+   "level": 5,
+   "time": 1786342525000
+  },
+  {
+   "log": "CPE-API: json_object_from_file: error opening file /www/dataElement.json: No such file or directory",
+   "level": 4,
+   "time": 1786342525000
+  },
+  {
+   "log": "CPE-API: [devices] data element validate failed",
+   "level": 7,
+   "time": 1786342525000
+  },
+  {
+   "log": "CPE-API: [devices] start to generate /devices method:GET reply message",
+   "level": 7,
+   "time": 1786342525000
+  },
+  {
+   "log": "CPE-API: Exit /devices",
+   "level": 7,
+   "time": 1786342525000
+  },
+  {
+   "log": "topo_repo: [ezmesh] create socket fail",
+   "level": 7,
+   "time": 1786342526000
+  },
+  {
+   "log": "topo_repo: [ezmesh] reconnect 127.0.0.1:7777 after 10 sec",
+   "level": 6,
+   "time": 1786342526000
+  },
+  {
+   "log": "fpt_agent-init[1985]: Failed to send request: Operation not permitted",
+   "level": 7,
+   "time": 1786342527000
+  },
+  {
+   "log": "fpt_agent-init[1985]: FATAL: Download Failed.",
+   "level": 6,
+   "time": 1786342527000
+  },
+  {
+   "log": "repacd.gwmon: debug Failed to resolve GW IP for br-lan",
+   "level": 7,
+   "time": 1786342529000
+  },
+  {
+   "log": "repacd.gwmon: info wait 0 rate_5g=0 rate_2g=0 is_ip=0",
+   "level": 5,
+   "time": 1786342529000
+  },
+  {
+   "log": "repacd.gwmon: debug Failed to resolve GW IP for br-lan",
+   "level": 5,
+   "time": 1786342529000
+  },
+  {
+   "log": "repacd.gwmon: info wait 0 rate_5g=0 rate_2g=0 is_ip=0",
+   "level": 4,
+   "time": 1786342529000
+  },
+  {
+   "log": "repacd: REPACD RUN cur_state NotAssociated sta_iface_5g ath12 staiface_24g ath03 staifacebackup ath12",
+   "level": 4,
+   "time": 1786342529000
+  },
+  {
+   "log": "repacd.wifimon: MLO Assoc timeout in 240",
+   "level": 4,
+   "time": 1786342530000
+  },
+  {
+   "log": "repacd.wifimon: repacd-wifimon-map.sh: __repacd_wifimon_is_sta_iface() get 'ath12' station and disabled='0',network='lan', network_to_match='', hwmode='11bea'",
+   "level": 4,
+   "time": 1786342531000
+  },
+  {
+   "log": "repacd.wifimon: repacd-wifimon-map.sh: __repacd_wifimon_is_sta_iface() get 'ath03' station and disabled='0',network='lan', network_to_match='', hwmode='11beg'",
+   "level": 4,
+   "time": 1786342531000
+  },
+  {
+   "log": "repacd.wifimon: repacd-wifimon-map.sh: __repacd_wifimon_get_sta_iface(): return sta_iface_24g='ath03', sta_iface_5g='ath12'",
+   "level": 4,
+   "time": 1786342531000
+  },
+  {
+   "log": "mcastds: Leaving mcsd executive program",
+   "level": 4,
+   "time": 1786342533000
+  },
+  {
+   "log": "kernel: [14963.733294] mc_detach: disabled snooping on br-lan.",
+   "level": 7,
+   "time": 1786342533000
+  },
+  {
+   "log": "mcastds: Entering evloopRun",
+   "level": 7,
+   "time": 1786342533000
+  },
+  {
+   "log": "kernel: [14964.000591] mc_attach: enabled snooping on br-lan.",
+   "level": 7,
+   "time": 1786342533000
+  },
+  {
+   "log": "topo_repo: [ezmesh] create socket fail",
+   "level": 7,
+   "time": 1786342536000
+  },
+  {
+   "log": "topo_repo: [ezmesh] reconnect 127.0.0.1:7777 after 10 sec",
+   "level": 7,
+   "time": 1786342536000
+  },
+  {
+   "log": "kernel: [14967.602384] wlan: [5694:I:ANY] ol_ath_vap_set_param: Implicitly disabling dependant feature igmp ME",
+   "level": 6,
+   "time": 1786342537000
+  },
+  {
+   "log": "kernel: [14967.644047] wlan: [5697:I:ANY] ol_ath_vap_set_param: Implicitly disabling dependant feature igmp ME",
+   "level": 7,
+   "time": 1786342537000
+  },
+  {
+   "log": "kernel: [14967.685153] wlan: [5700:I:ANY] ol_ath_vap_set_param: Implicitly disabling dependant feature igmp ME",
+   "level": 7,
+   "time": 1786342537000
+  },
+  {
+   "log": "kernel: [14967.724872] wlan: [5706:I:ANY] ol_ath_vap_set_param: Implicitly disabling dependant feature igmp ME",
+   "level": 7,
+   "time": 1786342537000
+  },
+  {
+   "log": "kernel: [14967.725034] wlan: [5706:I:ANY] ol_ath_vap_set_param: Implicitly disabling dependant feature igmp ME",
+   "level": 7,
+   "time": 1786342537000
+  },
+  {
+   "log": "kernel: [14967.774819] wlan: [5713:I:ANY] ol_ath_vap_set_param: Implicitly disabling dependant feature igmp ME",
+   "level": 7,
+   "time": 1786342537000
+  },
+  {
+   "log": "kernel: [14967.774891] wlan: [5713:I:ANY] ol_ath_vap_set_param: Implicitly disabling dependant feature igmp ME",
+   "level": 7,
+   "time": 1786342537000
+  },
+  {
+   "log": "CPE-API: AUTH: {\"role\":\"admin\",\"username\":\"admin\",\"exp\":1786342705,\"iss\":\"actiontec\"}, URI: /ssids, METHOD: PATCH, BODY:[{\"id\":\"04:d6:88:8d:52:61\",\"enabled\":true,\"name\":\"FPT Telecom-525F1\",\"securityMode\":\"WPA3-Personal-Transition\",\"passphrase\":\"7cf526b6d5\",\"broadcastEnabled\":true,\"radio\":\"2.4G\"},{\"id\":\"04:d6:88:8d:52:69\",\"enabled\":true,\"name\":\"FPT Telecom-525F1\",\"securityMode\":\"WPA3-Personal-Transition\",\"passphrase\":\"7cf526b6d5\",\"broadcastEnabled\":true,\"radio\":\"5G\"}], REFERER:http://192.168.1.1/, IS LOCAL:true",
+   "level": 7,
+   "time": 1786342539000
+  },
+  {
+   "log": "CPE-API: Enter /ssids",
+   "level": 7,
+   "time": 1786342539000
+  },
+  {
+   "log": "CPE-API: Exit /ssids",
+   "level": 7,
+   "time": 1786342539000
+  },
+  {
+   "log": "CPE-API: AUTH: {\"role\":\"admin\",\"username\":\"admin\",\"exp\":1786342705,\"iss\":\"actiontec\"}, URI: /easyMesh, METHOD: PATCH, BODY:{\"enabled\":true,\"ssidTypesConfigurations\":[{\"type\":\"Primary\",\"separatedSsid\":false,\"mloEnabled\":false}]}, REFERER:http://192.168.1.1/, IS LOCAL:true",
+   "level": 7,
+   "time": 1786342539000
+  },
+  {
+   "log": "CPE-API: Enter /easyMesh",
+   "level": 7,
+   "time": 1786342539000
+  },
+  {
+   "log": "CPE-API: section found = 1, section name is group1",
+   "level": 7,
+   "time": 1786342539000
+  },
+  {
+   "log": "CPE-API: Exit /easyMesh",
+   "level": 7,
+   "time": 1786342539000
+  },
+  {
+   "log": "CPE-API: AUTH: {\"role\":\"admin\",\"username\":\"admin\",\"exp\":1786342705,\"iss\":\"actiontec\"}, URI: /ssids, METHOD: GET, BODY:null, REFERER:http://192.168.1.1/, IS LOCAL:true",
+   "level": 5,
+   "time": 1786342539000
+  },
+  {
+   "log": "CPE-API: Enter /ssids",
+   "level": 7,
+   "time": 1786342539000
+  },
+  {
+   "log": "CPE-API: [wireless__ssids_get:380] no group found for cfg123579",
+   "level": 7,
+   "time": 1786342539000
+  },
+  {
+   "log": "CPE-API: [wireless__ssids_get:380] no group found for cfg133579",
+   "level": 5,
+   "time": 1786342539000
+  },
+  {
+   "log": "CPE-API: [wireless__ssids_get:380] no group found for cfg143579",
+   "level": 7,
+   "time": 1786342539000
+  },
+  {
+   "log": "CPE-API: [wireless__ssids_get:380] no group found for cfg153579",
+   "level": 7,
+   "time": 1786342539000
+  },
+  {
+   "log": "CPE-API: Exit /ssids",
+   "level": 5,
+   "time": 1786342539000
+  },
+  {
+   "log": "CPE-API: AUTH: {\"role\":\"admin\",\"username\":\"admin\",\"exp\":1786342705,\"iss\":\"actiontec\"}, URI: /easyMesh, METHOD: GET, BODY:null, REFERER:http://192.168.1.1/, IS LOCAL:true",
+   "level": 7,
+   "time": 1786342539000
+  },
+  {
+   "log": "CPE-API: Enter /easyMesh",
+   "level": 7,
+   "time": 1786342539000
+  },
+  {
+   "log": "CPE-API: Exit /easyMesh",
+   "level": 7,
+   "time": 1786342539000
+  },
+  {
+   "log": "kernel: [14972.761981] device ath0 left promiscuous mode",
+   "level": 5,
+   "time": 1786342542000
+  },
+  {
+   "log": "kernel: [14972.762788] br-lan: port 5(ath0) entered disabled state",
+   "level": 7,
+   "time": 1786342542000
+  },
+  {
+   "log": "kernel: [14972.767364] nss_ppe_lag_update_slave[131]:a987fe18: Upper dev is not LAG for dev: ath0",
+   "level": 7,
+   "time": 1786342542000
+  },
+  {
+   "log": "kernel: [14972.771726] device ath1 left promiscuous mode",
+   "level": 7,
+   "time": 1786342542000
+  },
+  {
+   "log": "kernel: [14972.779850] br-lan: port 7(ath1) entered disabled state",
+   "level": 7,
+   "time": 1786342542000
+  },
+  {
+   "log": "kernel: [14972.783693] nss_ppe_lag_update_slave[131]:a987fe18: Upper dev is not LAG for dev: ath1",
+   "level": 7,
+   "time": 1786342542000
+  },
+  {
+   "log": "kernel: [14972.791427] device ath01 left promiscuous mode",
+   "level": 7,
+   "time": 1786342542000
+  },
+  {
+   "log": "kernel: [14972.797099] br-lan: port 6(ath01) entered disabled state",
+   "level": 7,
+   "time": 1786342542000
+  },
+  {
+   "log": "kernel: [14972.801181] nss_ppe_lag_update_slave[131]:a987fe18: Upper dev is not LAG for dev: ath01",
+   "level": 7,
+   "time": 1786342542000
+  },
+  {
+   "log": "firewall_setting: Check LAN DHCP Query filter",
+   "level": 7,
+   "time": 1786342542000
+  },
+  {
+   "log": "fpt_agent-init[4686]: Downloading: http://cpemat.fpt.vn/v2/AP-BE6500C/agent/stable",
+   "level": 7,
+   "time": 1786342543000
+  },
+  {
+   "log": "dnsmasq[16426]: exiting on receipt of SIGTERM",
+   "level": 7,
+   "time": 1786342543000
+  },
+  {
+   "log": "kernel: [14974.331210] wlan_mesh_set_get_params set STA_STATS callback timer to : 0",
+   "level": 5,
+   "time": 1786342544000
+  },
+  {
+   "log": "dnsmasq[8072]: started, version 2.80 cachesize 150",
+   "level": 7,
+   "time": 1786342544000
+  },
+  {
+   "log": "dnsmasq[8072]: DNS service limited to local subnets",
+   "level": 7,
+   "time": 1786342544000
+  },
+  {
+   "log": "dnsmasq[8072]: compile time options: IPv6 GNU-getopt no-DBus no-i18n no-IDN DHCP DHCPv6 no-Lua TFTP conntrack ipset auth nettlehash DNSSEC no-ID loop-detect inotify dumpfile",
+   "level": 4,
+   "time": 1786342544000
+  },
+  {
+   "log": "dnsmasq-dhcp[8072]: DHCP, IP range 192.168.1.2 -- 192.168.1.254, lease time 12h",
+   "level": 7,
+   "time": 1786342544000
+  },
+  {
+   "log": "dnsmasq[8072]: using local addresses only for domain test",
+   "level": 7,
+   "time": 1786342544000
+  },
+  {
+   "log": "dnsmasq[8072]: using local addresses only for domain onion",
+   "level": 7,
+   "time": 1786342544000
+  },
+  {
+   "log": "dnsmasq[8072]: using local addresses only for domain localhost",
+   "level": 7,
+   "time": 1786342544000
+  },
+  {
+   "log": "dnsmasq[8072]: using local addresses only for domain local",
+   "level": 7,
+   "time": 1786342544000
+  },
+  {
+   "log": "dnsmasq[8072]: using local addresses only for domain invalid",
+   "level": 5,
+   "time": 1786342544000
+  },
+  {
+   "log": "dnsmasq[8072]: using local addresses only for domain bind",
+   "level": 5,
+   "time": 1786342544000
+  },
+  {
+   "log": "dnsmasq[8072]: using local addresses only for domain lan",
+   "level": 6,
+   "time": 1786342544000
+  },
+  {
+   "log": "dnsmasq[8072]: no servers found in /tmp/resolv.conf.auto, will retry",
+   "level": 6,
+   "time": 1786342544000
+  },
+  {
+   "log": "dnsmasq[8072]: read /etc/hosts - 4 addresses",
+   "level": 6,
+   "time": 1786342544000
+  },
+  {
+   "log": "dnsmasq[8072]: read /tmp/hosts/odhcpd - 0 addresses",
+   "level": 4,
+   "time": 1786342544000
+  },
+  {
+   "log": "dnsmasq[8072]: bad address at /tmp/hosts/odhcpd.json line 1",
+   "level": 7,
+   "time": 1786342544000
+  },
+  {
+   "log": "dnsmasq[8072]: read /tmp/hosts/odhcpd.json - 0 addresses",
+   "level": 5,
+   "time": 1786342544000
+  },
+  {
+   "log": "dnsmasq[8072]: read /tmp/hosts/dhcp.cfg01411c - 3 addresses",
+   "level": 5,
+   "time": 1786342544000
+  },
+  {
+   "log": "dnsmasq-dhcp[8072]: read /etc/ethers - 0 addresses",
+   "level": 6,
+   "time": 1786342544000
+  },
+  {
+   "log": "AEI_PC_RULE: Apply PC Rules Start",
+   "level": 6,
+   "time": 1786342544000
+  }
+ ],
+ "interfaces": [
+  {
+   "status": "Up",
+   "lastChangeTime": 1786328181000,
+   "macAddress": "04:d6:88:8d:52:5e",
+   "name": "lan",
+   "dnsServers": [],
+   "ipv4Addresses": [
+    {
+     "address": "192.168.1.1",
+     "gateway": "",
+     "mask": "255.255.255.0",
+     "protocol": "static"
+    }
+   ],
+   "id": "lan",
+   "ipv6Addresses": [
+    {
+     "prefix": 64,
+     "lifetimeState": "Infinite",
+     "lifetime": 0,
+     "type": "LLA",
+     "address": "fe80::6d6:88ff:fe8d:525e",
+     "gateway": "",
+     "protocol": "static"
+    }
+   ],
+   "usage": "LAN",
+   "device": [
+    "eth1.5",
+    "eth1.6",
+    "eth1.7"
+   ]
+  },
+  {
+   "status": "Down",
+   "lastChangeTime": 1786327569000,
+   "macAddress": "04:d6:88:8d:52:5f",
+   "name": "wan",
+   "dnsServers": [],
+   "ipv4Addresses": [],
+   "id": "wan",
+   "ipv6Addresses": [],
+   "usage": "Internet",
+   "device": [
+    "eth0"
+   ]
+  },
+  {
+   "status": "Down",
+   "macAddress": "",
+   "name": "wan6",
+   "dnsServers": [],
+   "ipv4Addresses": [],
+   "id": "wan6",
+   "ipv6Addresses": [],
+   "usage": "Internet",
+   "device": ""
+  },
+  {
+   "status": "Down",
+   "lastChangeTime": 0,
+   "macAddress": "",
+   "name": "guest",
+   "dnsServers": [],
+   "ipv4Addresses": [],
+   "id": "guest",
+   "ipv6Addresses": [],
+   "usage": "Guest",
+   "device": []
+  },
+  {
+   "status": "Up",
+   "lastChangeTime": 1786328181000,
+   "macAddress": "04:d6:88:8d:52:5e",
+   "name": "lan4",
+   "dnsServers": [],
+   "ipv4Addresses": [],
+   "id": "lan4",
+   "ipv6Addresses": [],
+   "usage": "",
+   "device": [
+    "eth1"
+   ]
+  },
+  {
+   "status": "Up",
+   "lastChangeTime": 1786328181000,
+   "macAddress": "04:d6:88:8d:52:5e",
+   "name": "lan5",
+   "dnsServers": [],
+   "ipv4Addresses": [],
+   "id": "lan5",
+   "ipv6Addresses": [],
+   "usage": "",
+   "device": [
+    "eth1"
+   ]
+  },
+  {
+   "status": "Up",
+   "lastChangeTime": 1786328182000,
+   "macAddress": "04:d6:88:8d:52:5e",
+   "name": "lan7",
+   "dnsServers": [],
+   "ipv4Addresses": [],
+   "id": "lan7",
+   "ipv6Addresses": [],
+   "usage": "",
+   "device": [
+    "eth1"
+   ]
+  }
+ ],
+ "interfaces/configurations": [
+  {
+   "dnsServers": [],
+   "ipv4Settings": {
+    "mask": "255.255.255.0",
+    "gateway": "",
+    "ipAddress": "192.168.1.1",
+    "protocol": "static"
+   },
+   "devices": [
+    "eth1",
+    "eth1",
+    "eth1"
+   ],
+   "mtu": 1500,
+   "autoDnsEnabled": true,
+   "name": "lan",
+   "enabled": true,
+   "id": "lan",
+   "ipv6Settings": {
+    "prefix": "",
+    "ulaPrefix": "",
+    "enabled": true,
+    "slaacEnabled": false,
+    "gateway": "",
+    "ipAddress": "",
+    "protocol": "dhcpv6"
+   },
+   "usage": "LAN"
+  },
+  {
+   "dnsServers": [],
+   "ipv4Settings": {
+    "gateway": "",
+    "pppoe": {
+     "password": "fpt",
+     "username": "fpt"
+    },
+    "mask": "",
+    "ipAddress": "",
+    "protocol": "pppoe"
+   },
+   "devices": [
+    "eth0"
+   ],
+   "mtu": 1500,
+   "autoDnsEnabled": true,
+   "name": "wan",
+   "enabled": true,
+   "usage": "Internet",
+   "vlan": {
+    "id": 0,
+    "enabled": false,
+    "autoDetectionEnabled": false
+   },
+   "id": "wan"
+  },
+  {
+   "dnsServers": [
+    "2001:4860:4860::8888",
+    "2001:4860:4860::8844"
+   ],
+   "devices": [
+    "@wan"
+   ],
+   "mtu": 1500,
+   "autoDnsEnabled": false,
+   "name": "wan6",
+   "enabled": true,
+   "usage": "Internet",
+   "id": "wan6",
+   "ipv6Settings": {
+    "prefix": "",
+    "ulaPrefix": "",
+    "enabled": true,
+    "slaacEnabled": true,
+    "gateway": "",
+    "ipAddress": "",
+    "protocol": "dhcpv6"
+   }
+  },
+  {
+   "dnsServers": [],
+   "ipv4Settings": {
+    "mask": "255.255.255.0",
+    "gateway": "",
+    "ipAddress": "192.168.5.1",
+    "protocol": "static"
+   },
+   "devices": [
+    ""
+   ],
+   "mtu": 1500,
+   "autoDnsEnabled": true,
+   "name": "guest",
+   "enabled": false,
+   "id": "guest",
+   "ipv6Settings": {
+    "prefix": "",
+    "ulaPrefix": "",
+    "enabled": true,
+    "slaacEnabled": false,
+    "gateway": "",
+    "ipAddress": "",
+    "protocol": "dhcpv6"
+   },
+   "usage": "Guest"
+  },
+  {
+   "dnsServers": [],
+   "id": "lan4",
+   "enabled": true,
+   "devices": [
+    "eth1"
+   ],
+   "usage": "",
+   "mtu": 1500,
+   "autoDnsEnabled": true,
+   "name": "lan4"
+  },
+  {
+   "dnsServers": [],
+   "id": "lan5",
+   "enabled": true,
+   "devices": [
+    "eth1"
+   ],
+   "usage": "",
+   "mtu": 1500,
+   "autoDnsEnabled": true,
+   "name": "lan5"
+  },
+  {
+   "dnsServers": [],
+   "id": "lan7",
+   "enabled": true,
+   "devices": [
+    "eth1"
+   ],
+   "usage": "",
+   "mtu": 1500,
+   "autoDnsEnabled": true,
+   "name": "lan7"
+  }
+ ],
+ "ssids": [
+  {
+   "status": "Up",
+   "securityMode": "WPA3-Personal-Transition",
+   "passphrase": "7cf526b6d5",
+   "radio": "2.4G",
+   "name": "FPT Telecom-525F",
+   "securityModesSupported": [
+    "WPA2-Personal",
+    "WPA3-Personal-Transition"
+   ],
+   "enabled": true,
+   "id": "04:d6:88:8d:52:61",
+   "broadcastEnabled": true,
+   "type": "Primary"
+  },
+  {
+   "status": "Up",
+   "securityMode": "WPA3-Personal-Transition",
+   "passphrase": "7cf526b6d5",
+   "radio": "5G",
+   "name": "FPT Telecom-525F",
+   "securityModesSupported": [
+    "WPA2-Personal",
+    "WPA3-Personal-Transition"
+   ],
+   "enabled": true,
+   "id": "04:d6:88:8d:52:69",
+   "broadcastEnabled": true,
+   "type": "Primary"
+  },
+  {
+   "status": "Down",
+   "securityMode": "WPA3-Personal-Transition",
+   "passphrase": "7cf526b6d5",
+   "radio": "2.4G",
+   "name": "Guest525F",
+   "securityModesSupported": [
+    "WPA2-Personal",
+    "WPA3-Personal-Transition"
+   ],
+   "enabled": false,
+   "id": "04:d6:88:8d:52:62",
+   "broadcastEnabled": true,
+   "type": "Guest"
+  },
+  {
+   "status": "Down",
+   "securityMode": "WPA3-Personal-Transition",
+   "passphrase": "7cf526b6d5",
+   "radio": "5G",
+   "name": "Guest525F",
+   "securityModesSupported": [
+    "WPA2-Personal",
+    "WPA3-Personal-Transition"
+   ],
+   "enabled": false,
+   "id": "04:d6:88:8d:52:6a",
+   "broadcastEnabled": true,
+   "type": "Guest"
+  },
+  {
+   "status": "Up",
+   "securityMode": "WPA3-Personal-Transition",
+   "passphrase": "7cf526b6d5",
+   "radio": "2.4G",
+   "name": "FPT Telecom-525F-IoT 2.4G",
+   "securityModesSupported": [
+    "WPA2-Personal",
+    "WPA3-Personal-Transition"
+   ],
+   "enabled": true,
+   "id": "04:d6:88:8d:52:63",
+   "broadcastEnabled": true,
+   "type": "SmartHome"
+  },
+  {
+   "status": "Down",
+   "securityMode": "WPA3-Personal-Transition",
+   "passphrase": "7cf526b6d5",
+   "radio": "5G",
+   "name": "FPT Telecom-525F-IoT 5G",
+   "securityModesSupported": [
+    "WPA2-Personal",
+    "WPA3-Personal-Transition"
+   ],
+   "enabled": false,
+   "id": "04:d6:88:8d:52:6b",
+   "broadcastEnabled": true,
+   "type": "SmartHome"
+  },
+  {
+   "status": "Up",
+   "securityMode": "WPA3-Personal",
+   "passphrase": "d10254036c",
+   "radio": "2.4G",
+   "name": "FPT Telecom-525F-BH_MLO",
+   "securityModesSupported": [
+    "WPA3-Personal"
+   ],
+   "enabled": true,
+   "id": "04:d6:88:8d:52:64",
+   "broadcastEnabled": false,
+   "type": "Backhaul"
+  },
+  {
+   "status": "Up",
+   "securityMode": "WPA3-Personal",
+   "passphrase": "d10254036c",
+   "radio": "5G",
+   "name": "FPT Telecom-525F-BH_MLO",
+   "securityModesSupported": [
+    "WPA3-Personal"
+   ],
+   "enabled": true,
+   "id": "04:d6:88:8d:52:6c",
+   "broadcastEnabled": false,
+   "type": "Backhaul"
+  }
+ ],
+ "radios": [
+  {
+   "channelInUse": 11,
+   "dtimInterval": 1,
+   "autoChannelEnabled": true,
+   "rtsThreshold": 2347,
+   "id": "wifi0",
+   "bandwidth": "20MHz",
+   "band": "2.4G",
+   "bandwidthInUse": "20MHz",
+   "operatingStandardsSupported": [
+    "ax",
+    "b",
+    "g",
+    "n",
+    "be"
+   ],
+   "macAddress": "04:d6:88:8d:52:60",
+   "beaconInterval": 100,
+   "bandwidthSupported": [
+    "20MHz",
+    "40MHz",
+    "Auto"
+   ],
+   "enabled": true,
+   "stats": {
+    "bytesSent": 0,
+    "bytesReceived": 0
+   },
+   "channel": -1,
+   "possibleChannels": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "operatingStandards": [
+    "beg"
+   ],
+   "status": "Up"
+  },
+  {
+   "channelInUse": 36,
+   "dtimInterval": 1,
+   "autoChannelEnabled": true,
+   "rtsThreshold": 2347,
+   "id": "wifi1",
+   "bandwidth": "160MHz",
+   "band": "5G",
+   "bandwidthInUse": "160MHz",
+   "operatingStandardsSupported": [
+    "ac",
+    "ax",
+    "a",
+    "n",
+    "be"
+   ],
+   "macAddress": "04:d6:88:8d:52:68",
+   "beaconInterval": 100,
+   "bandwidthSupported": [
+    "20MHz",
+    "40MHz",
+    "80MHz",
+    "160MHz",
+    "Auto"
+   ],
+   "stats": {
+    "bytesSent": 0,
+    "bytesReceived": 0
+   },
+   "enabled": true,
+   "dfsEnabled": true,
+   "channel": -1,
+   "possibleChannels": [
+    36,
+    40,
+    44,
+    48,
+    52,
+    56,
+    60,
+    64,
+    100,
+    104,
+    108,
+    112,
+    116,
+    120,
+    124,
+    128,
+    132,
+    136,
+    140,
+    144,
+    149,
+    153,
+    157,
+    161,
+    165
+   ],
+   "operatingStandards": [
+    "bea"
+   ],
+   "status": "Up"
+  }
+ ],
+ "ethernetPorts": [
+  {
+   "status": "Down",
+   "stats": {
+    "bytesSent": 0,
+    "bytesReceived": 0
+   },
+   "port": 1,
+   "isUpstream": true,
+   "macAddress": "04:d6:88:8d:52:5f",
+   "name": "eth0",
+   "maxBitRate": 2500000000,
+   "enabled": true,
+   "id": "eth0",
+   "eap": {
+    "id": "",
+    "status": ""
+   },
+   "duplexMode": "Auto",
+   "lastChangeTime": 1786327570000
+  },
+  {
+   "bitRate": 1000000000,
+   "stats": {
+    "bytesSent": 59964291,
+    "bytesReceived": 3818520
+   },
+   "port": 2,
+   "lastChangeTime": 0,
+   "macAddress": "04:d6:88:8d:52:5e",
+   "name": "lan1",
+   "maxBitRate": 1000000000,
+   "enabled": true,
+   "isUpstream": false,
+   "id": "lan1",
+   "status": "Up",
+   "eap": {
+    "id": "",
+    "status": ""
+   },
+   "duplexMode": "Auto"
+  },
+  {
+   "bitRate": 0,
+   "stats": {
+    "bytesSent": 0,
+    "bytesReceived": 0
+   },
+   "port": 3,
+   "lastChangeTime": 0,
+   "macAddress": "04:d6:88:8d:52:5e",
+   "name": "lan2",
+   "maxBitRate": 1000000000,
+   "enabled": true,
+   "isUpstream": false,
+   "id": "lan2",
+   "status": "Down",
+   "eap": {
+    "id": "",
+    "status": ""
+   },
+   "duplexMode": "Auto"
+  },
+  {
+   "bitRate": 0,
+   "stats": {
+    "bytesSent": 0,
+    "bytesReceived": 0
+   },
+   "port": 4,
+   "lastChangeTime": 0,
+   "macAddress": "04:d6:88:8d:52:5e",
+   "name": "lan3",
+   "maxBitRate": 1000000000,
+   "enabled": true,
+   "isUpstream": false,
+   "id": "lan3",
+   "status": "Down",
+   "eap": {
+    "id": "",
+    "status": ""
+   },
+   "duplexMode": "Auto"
+  },
+  {
+   "bitRate": 0,
+   "stats": {
+    "bytesSent": 0,
+    "bytesReceived": 0
+   },
+   "port": 5,
+   "lastChangeTime": 0,
+   "macAddress": "04:d6:88:8d:52:5e",
+   "name": "lan4",
+   "maxBitRate": 1000000000,
+   "enabled": true,
+   "isUpstream": false,
+   "id": "lan4",
+   "status": "Down",
+   "eap": {
+    "id": "",
+    "status": ""
+   },
+   "duplexMode": "Auto"
+  }
+ ],
+ "devices": [],
+ "firewall": {
+  "icmpPing": {
+   "lanEnabled": true,
+   "wanEnabled": true
+  },
+  "spiEnabled": true,
+  "dosDefense": {
+   "fraggleAttack": {
+    "enabled": false
+   },
+   "portScan": {
+    "enabled": false,
+    "burst": 0,
+    "rate": 0
+   },
+   "enabled": true,
+   "tcpFlagScan": {
+    "enabled": true
+   },
+   "land": {
+    "enabled": false
+   },
+   "icmpFlood": {
+    "enabled": true,
+    "burst": 100,
+    "rate": 100
+   },
+   "unknownProtocol": {
+    "enabled": true
+   },
+   "traceRoute": {
+    "enabled": false
+   },
+   "tcpFlood": {
+    "enabled": true,
+    "burst": 50,
+    "rate": 25
+   },
+   "icmpFragment": {
+    "enabled": false
+   },
+   "pingOfDeath": {
+    "enabled": false
+   },
+   "synFragment": {
+    "enabled": false
+   },
+   "udpFlood": {
+    "enabled": false,
+    "burst": 0,
+    "rate": 0
+   },
+   "smurf": {
+    "enabled": false
+   }
+  },
+  "clientIsolationEnabled": false
+ },
+ "upnp": {
+  "enabled": true
+ },
+ "time": {
+  "status": "Unsynchronized",
+  "enabled": true,
+  "time": 1786348720769,
+  "localTimeZone": "UTC-7",
+  "servers": [
+   "pool.ntp.org",
+   "0.openwrt.pool.ntp.org"
+  ]
+ },
+ "ddns": [
+  {
+   "status": "Failed",
+   "lastChangeTime": 0,
+   "id": "myddns_ipv4",
+   "ipVersion": 4,
+   "ipAddress": "",
+   "interfaceId": "wan"
+  }
+ ],
+ "ddns/configurations": [
+  {
+   "hostname": "yourhost.example.com",
+   "username": "your_username",
+   "enabled": false,
+   "password": "your_password",
+   "interfaceId": "wan",
+   "ipVersion": 4,
+   "serviceProvider": "noip",
+   "id": "myddns_ipv4"
+  }
+ ],
+ "dhcp/servers": [
+  {
+   "interfaceId": "lan",
+   "ipv4Settings": {
+    "dnsServers": [
+     "192.168.1.1"
+    ],
+    "autoReserved": {
+     "enabled": true,
+     "limit": 50
+    },
+    "enabled": true,
+    "startAddress": "192.168.1.2",
+    "endAddress": "192.168.1.254",
+    "autoDnsEnabled": true,
+    "leaseTime": 43200
+   },
+   "id": "lan",
+   "ipv6Settings": {
+    "endSuffix": "ffff",
+    "startSuffix": "2",
+    "enabled": true,
+    "autoDnsEnabled": true,
+    "dnsServers": [
+     "fe80::6d6:88ff:fe8d:525e"
+    ]
+   }
+  },
+  {
+   "interfaceId": "guest",
+   "ipv4Settings": {
+    "dnsServers": [
+     "192.168.5.1"
+    ],
+    "autoReserved": {
+     "enabled": true,
+     "limit": 50
+    },
+    "enabled": true,
+    "startAddress": "192.168.5.100",
+    "endAddress": "192.168.5.249",
+    "autoDnsEnabled": true,
+    "leaseTime": 14400
+   },
+   "id": "guest",
+   "ipv6Settings": {
+    "endSuffix": "3e8",
+    "startSuffix": "2",
+    "enabled": true,
+    "autoDnsEnabled": true,
+    "dnsServers": []
+   }
+  }
+ ],
+ "dmz/configurations": [
+  {
+   "id": "dmz_v4",
+   "ipVersion": 4,
+   "enabled": false
+  },
+  {
+   "id": "dmz_v6",
+   "ipVersion": 6,
+   "enabled": false
+  }
+ ],
+ "staticRouting/policies": [],
+ "portForwarding/policies": [],
+ "speedTest/records/": [],
+ "ext/lanstatus": [
+  {
+   "loopStatus": 0,
+   "phyRate": 0,
+   "ifName": "LAN1(eth1.5)",
+   "status": 0,
+   "tx": 0,
+   "rx": 0,
+   "crc": 0
+  },
+  {
+   "loopStatus": 0,
+   "phyRate": 1000,
+   "ifName": "LAN2(eth1.6)",
+   "status": 1,
+   "tx": 2410520,
+   "rx": 121696,
+   "crc": 0
+  },
+  {
+   "loopStatus": 0,
+   "phyRate": 0,
+   "ifName": "LAN3(eth1.7)",
+   "status": 0,
+   "tx": 0,
+   "rx": 0,
+   "crc": 0
+  }
+ ],
+ "ext/devicelist": [
+  {
+   "ipAddress": "192.168.1.179",
+   "hostname": "",
+   "macAddress": "d8:43:ae:2e:65:45",
+   "expires": 0
+  }
+ ],
+ "ext/parentalControl/policies": [],
+ "ext/timer/wifi": {
+  "sat": true,
+  "mon": true,
+  "endTime": "23:00",
+  "wed": true,
+  "tue": true,
+  "enabled": false,
+  "sun": true,
+  "fri": true,
+  "startTime": "06:00",
+  "thu": true
+ },
+ "ext/timer/reboot": {
+  "sat": true,
+  "mon": true,
+  "fri": true,
+  "thu": true,
+  "enabled": false,
+  "time": "06:00",
+  "sun": true,
+  "wed": true,
+  "tue": true
+ },
+ "wizard": {
+  "step": 5
+ },
+ "ext/logpull": {
+  "status": 2001,
+  "logFile": ""
+ },
+ "dhcp/reservedHosts": [],
+ "alg": {
+  "h323Enabled": true,
+  "l2tpEnabled": true,
+  "ftpEnabled": true,
+  "rtspEnabled": true,
+  "tftpEnabled": true,
+  "sipEnabled": true,
+  "ipsecEnabled": true,
+  "pptpEnabled": true
+ },
+ "eapProfiles": [
+  {
+   "username": "FTR",
+   "id": "pre_profile1",
+   "mode": "PEAP",
+   "password": "password",
+   "name": "predefine_peap"
+  }
+ ],
+ "publicLan": {
+  "enabled": false,
+  "routing": {
+   "dhcpServer": {
+    "enabled": false,
+    "dnsServers": []
+   }
+  }
+ },
+ "system/services/cache": [],
+ "access/http/connections": [],
+ "access/ssh/connections": []
+}

@@ -1,0 +1,46 @@
+{
+  "_route": "help",
+  "_duong_dan_trinh_duyet": "#/help",
+  "_nguon": {
+    "chunk": "index-CqEnHIyC.js",
+    "kich_thuoc_byte": 1179,
+    "chunk_phu_thuoc": [
+      "assets/index-CqEnHIyC.js",
+      "assets/PageHeading-B0ZcsD9H.js",
+      "assets/index-Bd0hIkuR.js",
+      "assets/AccordionSummary-Q8GsfrJR.js"
+    ],
+    "bundle_loi": "index-CW0UhNxy.js",
+    "_da_quet": [
+      "AccordionSummary-Q8GsfrJR.js",
+      "PageHeading-B0ZcsD9H.js",
+      "index-Bd0hIkuR.js",
+      "index-CqEnHIyC.js"
+    ]
+  },
+  "_cach_trich": "src/trich_dac_ta_trang.py (doc ma goc, khong doan)",
+  "goi_api": [],
+  "goi_khac": {
+    "rpc": [],
+    "duong_dan_tuyet_doi": []
+  },
+  "truong_form": [],
+  "gia_tri_mac_dinh": [],
+  "schema_kiem_tra": [],
+  "chuoi_hien_thi": [
+    "&.Mui-expanded",
+    ".MuiAccordion-root",
+    ".MuiAccordionDetails-root",
+    ".MuiAccordionSummary-content",
+    ".MuiAccordionSummary-root",
+    "0 !important",
+    "0 auto",
+    "40px !important",
+    "::before",
+    "Help",
+    "How to pair with other extenders?"
+  ],
+  "_can_doc_tay": [
+    "khong tim thay loi goi API/RPC nao -- co the la trang tinh, hoac doc du lieu tu kho Zustand thay vi goi truc tiep. PHAI doc tay xac nhan, khong duoc mac dinh la trang tinh"
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "_tieu_de": "Doi chieu rieng markup THAT cua the (card) mobile cho Static Routing va Reserved IP -- gap ghi trong ISSUES.md 'Static Routing va Reserved IP CHUA doi chieu rieng, dung chung kien truc voi Port Forwarding theo suy dien hop ly'.",
+  "_ngay_do": "2026-08-20",
+  "_thiet_bi": "ONT-BE6500C, 192.168.1.1, firmware 1PZ108WZ110",
+  "_cach_do": [
+    "Static Routing: anh Huynn tu dang nhap lai thiet bi (session cu het han), vao Advanced > Static Routing (tab IPv4), bam '+ ADD NEW', them 1 route thu: Destination IP=10.10.10.0, Mask=255.255.255.0, Gateway IP=192.168.1.1, Interface=Internet, bam Save.",
+    "Chen iframe cung-origin 420px tro '/#/advanced/routing' vao trang chinh, doc DOM cua <li> vua tao qua contentDocument (walk thu cong, tranh outerHTML vi bi cong cu chan do trung mau 'query string').",
+    "Reserved IP: dung ban ghi 'Admin-PC' co san tu truoc (id cfg08fe63, khong can tao moi). Chen iframe rieng tro '/#/advanced/lan', bam tab 'Reserved IP', doc DOM <li> tuong ung.",
+    "Sau khi doc xong ca 2, anh Huynn tu XOA route thu Static Routing qua giao ding that (bam Delete o dong 10.10.10.0), xac nhan bang trong lai."
+  ],
+  "ket_qua_do_static_routing": {
+    "tieu_de_the": {
+      "gia_tri_that": "10.10.10.0 (Destination IP)",
+      "khop_voi_suy_dien_cu": true,
+      "ghi_chu": "code cu (theTheRouting -> theTieuDe(diaChi)) da dung tu truoc, KHONG can sua."
+    },
+    "cac_dong_truong": [
+      {"nhan": "Mask :", "gia_tri": "255.255.255.0"},
+      {"nhan": "Gateway IP :", "gia_tri": "192.168.1.1"},
+      {"nhan": "Interface :", "gia_tri": "Internet"}
+    ],
+    "class_do_duoc": {
+      "li": "MuiListItem-root MuiListItem-gutters MuiListItem-padding css-1d0y6tz",
+      "textWrap": "MuiListItemText-root MuiListItemText-multiline css-midrsf",
+      "titleStack": "MuiStack-root css-z87aq2",
+      "h6": "MuiTypography-root MuiTypography-subtitle1 css-1nvyemi",
+      "nutBaCham": "MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeLarge css-a22n87",
+      "rowsStack": "MuiStack-root css-1lnevj1",
+      "rowBox": "MuiBox-root css-6n7j50",
+      "rowNhan": "MuiTypography-root MuiTypography-subtitle2 css-1axp2b2",
+      "rowGiaTriWrap": "MuiBox-root css-7izgf8",
+      "rowGiaTri": "MuiTypography-root MuiTypography-body2 css-fytoy1"
+    },
+    "ket_luan": "KHOP 100% voi markup dang dung cho Port Forwarding (theHang/theTieuDe/hangThe deu dung chung dung ham, dung class). Static Routing KHONG can sua gi trong bang_binding.js."
+  },
+  "ket_qua_do_reserved_ip": {
+    "tieu_de_the": {
+      "gia_tri_that": "d8:43:ae:2e:65:45 (DIA CHI MAC, khong phai hostname 'Admin-PC')",
+      "khop_voi_suy_dien_cu": false,
+      "ghi_chu": "code cu (theTheReserved -> theTieuDe(tb ? tb.hostname : 'Unknown')) dung SAI truong -- suy dien truoc day (dua theo Port Forwarding dung ten quy tac lam tieu de) KHONG dung cho Reserved IP. Thiet bi that dung MAC lam tieu de."
+    },
+    "cac_dong_truong": [
+      {"nhan": "Name :", "gia_tri": "Admin-PC", "ghi_chu": "DONG MOI, code cu KHONG co dong nay -- chi co Reserved IP + Added By."},
+      {"nhan": "Reserved IP :", "gia_tri": "192.168.1.109"},
+      {"nhan": "Added By :", "gia_tri": "Auto"}
+    ],
+    "class_do_duoc": "TRUNG HOAN TOAN voi Static Routing/Port Forwarding (cung 1 bo class: css-1d0y6tz/css-midrsf/css-z87aq2/css-1nvyemi/css-a22n87/css-1lnevj1/css-6n7j50/css-1axp2b2/css-7izgf8/css-fytoy1) -- chi khac NOI DUNG (tieu de + so dong truong), khong khac cau truc/CSS.",
+    "ket_luan": "SUA bang_binding.js's theTheReserved(): (1) tieu de doi tu tb.hostname sang bg.macAddress; (2) them dong 'Name' (gia tri = tb.hostname) o DAU danh sach hangThe(), truoc 'Reserved IP'."
+  }
+}

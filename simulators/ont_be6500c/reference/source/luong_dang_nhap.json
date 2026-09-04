@@ -1,0 +1,602 @@
+{
+ "_nguon": "Ghi fetch+XHR tren ONT-BE6500C that khi dang nhap, 2026-08-12T01:25:19.889Z",
+ "_ghi_chu": "Mat khau dang ro da che. Chuoi bam giu nguyen lam bang chung giao thuc.",
+ "so_ban_ghi": 30,
+ "ban_ghi": [
+  {
+   "stt": 1,
+   "thoi_diem": "2026-08-12T01:23:09.726Z",
+   "method": "GET",
+   "url": "/api/v1/data/system/info",
+   "req_headers": {},
+   "req_body": null,
+   "status": 401,
+   "res_headers": {
+    "connection": "close",
+    "date": "Mon, 10 Aug 2026 19:20:11 GMT",
+    "keep-alive": "timeout=20",
+    "server": "Lua-eco/3.2.0",
+    "transfer-encoding": "chunked"
+   },
+   "res_body": ""
+  },
+  {
+   "stt": 2,
+   "thoi_diem": "2026-08-12T01:24:19.910Z",
+   "method": "POST",
+   "url": "/oui-rpc",
+   "req_headers": {
+    "accept": "application/json",
+    "content-type": "application/json"
+   },
+   "req_body": "{\"method\":\"challenge\",\"params\":{\"username\":\"admin\"}}",
+   "status": 200,
+   "res_headers": {
+    "date": "Mon, 10 Aug 2026 19:21:21 GMT",
+    "keep-alive": "timeout=20",
+    "server": "Lua-eco/3.2.0",
+    "transfer-encoding": "chunked"
+   },
+   "res_body": "{\"nonce\":\"cbNEOwXLbTjiZZEnaxvA2n94Gk1bTRV5\"}"
+  },
+  {
+   "stt": 3,
+   "thoi_diem": "2026-08-12T01:24:19.922Z",
+   "method": "POST",
+   "url": "/oui-rpc",
+   "req_headers": {
+    "accept": "application/json",
+    "content-type": "application/json"
+   },
+   "req_body": "{\"method\":\"login\",\"params\":{\"username\":\"admin\",\"password\":\"d6ce4c82ae6dd55d3c92f1c4e502ff34\"}}",
+   "status": 200,
+   "res_headers": {
+    "date": "Mon, 10 Aug 2026 19:21:21 GMT",
+    "keep-alive": "timeout=20",
+    "server": "Lua-eco/3.2.0",
+    "transfer-encoding": "chunked"
+   },
+   "res_body": "{\"token\":\"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiYWRtaW4iLCJpc3MiOiJhY3Rpb250ZWMiLCJ1c2VybmFtZSI6ImFkbWluIiwiZXhwIjoxNzg2Mzg5OTgxfQ.MDM1OTUyNTQyNzQwZjBlOGY4MjMzMmJiMWQwZDc1NzM2ZGQxZGQ5Yzc1YjY0NzgzZTkxMzk5NGNlNGMxM2MyZg\",\"sid\":\"2JKQfICrBVKBUoY5VuGYSP3z94K3VF8X\"}"
+  },
+  {
+   "stt": 4,
+   "thoi_diem": "2026-08-12T01:24:19.938Z",
+   "method": "GET",
+   "url": "api/v1/data/wizard",
+   "req_headers": {
+    "accept": "application/json",
+    "authorization": "Bearer eyJ0eXAiOiJKV...<cat>"
+   },
+   "req_body": null,
+   "status": 200,
+   "res_headers": {
+    "content-type": "application/json",
+    "date": "Mon, 10 Aug 2026 19:21:21 GMT",
+    "keep-alive": "timeout=20",
+    "server": "Lua-eco/3.2.0",
+    "transfer-encoding": "chunked"
+   },
+   "res_body": "{\"step\":5}"
+  },
+  {
+   "stt": 5,
+   "thoi_diem": "2026-08-12T01:24:19.938Z",
+   "method": "GET",
+   "url": "api/v1/data/devices",
+   "req_headers": {
+    "accept": "application/json",
+    "authorization": "Bearer eyJ0eXAiOiJKV...<cat>"
+   },
+   "req_body": null,
+   "status": 200,
+   "res_headers": {
+    "content-type": "application/json",
+    "date": "Mon, 10 Aug 2026 19:21:21 GMT",
+    "keep-alive": "timeout=20",
+    "server": "Lua-eco/3.2.0",
+    "transfer-encoding": "chunked"
+   },
+   "res_body": "[{\"id\":\"94:f7:17:a9:c1:50\",\"status\":\"Up\",\"capabilities\":[{\"type\":\"Ethernet\"},{\"radio\":\"2.4G\",\"type\":\"Wireless\"},{\"radio\":\"5G\",\"type\":\"Wireless\"}],\"lastChangeTime\":1786389652000,\"macAddress\":\"94:f7:17:a9:c1:50\",\"connections\":[],\"ipAddresses\":[{\"lifetime\":0,\"lifetimeState\":\"Infinite\",\"version\":4,\"address\":\"192.168.1.1\"}],\"type\":\"Router\",\"hostname\":\"ONT-BE6500C-C150\",\"upstreamId\":\"00:00:00:00:00:00\"},{\"id\":\"d8:43:ae:2e:65:45\",\"status\":\"Up\",\"capabilities\":[],\"lastChangeTime\":1786389652000,\"macAddress\":\"d8:43:ae:2e:65:45\",\"connections\":[{\"type\":\"Ethernet\",\"uptime\":61468,\"ethernet\":{\"port\":2,\"bitRate\":2500000000}}],\"ipAddresses\":[{\"lifetime\":1786431116000,\"lifetimeState\":\"Valid\",\"version\":4,\"address\":\"192.168.1.109\"},{\"lifetimeState\":\"Unknown\",\"lifetime\":0,\"type\":\"LLA\",\"address\":\"fe80::19f6:b206:5131:4599\",\"version\":6}],\"type\":\"Device\",\"hostname\":\"Admin-PC\",\"upstreamId\":\"94:f7:17:a9:c1:50\"}]"
+  },
+  {
+   "stt": 6,
+   "thoi_diem": "2026-08-12T01:24:19.938Z",
+   "method": "GET",
+   "url": "api/v1/data/ssids",
+   "req_headers": {
+    "accept": "application/json",
+    "authorization": "Bearer eyJ0eXAiOiJKV...<cat>"
+   },
+   "req_body": null,
+   "status": 200,
+   "res_headers": {
+    "content-type": "application/json",
+    "date": "Mon, 10 Aug 2026 19:21:21 GMT",
+    "keep-alive": "timeout=20",
+    "server": "Lua-eco/3.2.0",
+    "transfer-encoding": "chunked"
+   },
+   "res_body": "[{\"securityModesSupported\":[\"WPA2-Personal\",\"WPA3-Personal-Transition\"],\"passphrase\":\"<DA CHE 8 ky tu>\",\"status\":\"Up\",\"name\":\"FPT Telecom-C151\",\"radio\":\"2.4G\",\"securityMode\":\"WPA3-Personal-Transition\",\"enabled\":true,\"type\":\"Primary\",\"broadcastEnabled\":true,\"id\":\"94:f7:17:a9:c1:59\"},{\"securityModesSupported\":[\"WPA2-Personal\",\"WPA3-Personal-Transition\"],\"passphrase\":\"<DA CHE 8 ky tu>\",\"status\":\"Up\",\"name\":\"FPT Telecom-C151\",\"radio\":\"5G\",\"securityMode\":\"WPA3-Personal-Transition\",\"enabled\":true,\"type\":\"Primary\",\"broadcastEnabled\":true,\"id\":\"94:f7:17:a9:c1:61\"},{\"securityModesSupported\":[\"WPA2-Personal\",\"WPA3-Personal-Transition\"],\"passphrase\":\"<DA CHE 10 ky tu>\",\"status\":\"Down\",\"name\":\"GuestC151\",\"radio\":\"2.4G\",\"securityMode\":\"WPA3-Personal-Transition\",\"enabled\":false,\"type\":\"Guest\",\"broadcastEnabled\":true,\"id\":\"94:f7:17:a9:c1:5a\"},{\"securityModesSupported\":[\"WPA2-Personal\",\"WPA3-Personal-Transition\"],\"passphrase\":\"<DA CHE 10 ky tu>\",\"status\":\"Down\",\"name\":\"GuestC151\",\"radio\":\"5G\",\"securityMode\":\"WPA3-Personal-Transition\",\"enabled\":false,\"type\":\"Guest\",\"broadcastEnabled\":true,\"id\":\"94:f7:17:a9:c1:62\"},{\"securityModesSupported\":[\"WPA2-Personal\",\"WPA3-Personal-Transition\"],\"passphrase\":\"<DA CHE 8 ky tu>\",\"status\":\"Up\",\"name\":\"FPT Telecom-C151 IoT 2.4G\",\"radio\":\"2.4G\",\"securityMode\":\"WPA3-Personal-Transition\",\"enabled\":true,\"type\":\"SmartHome\",\"broadcastEnabled\":true,\"id\":\"94:f7:17:a9:c1:5b\"},{\"securityModesSupported\":[\"WPA2-Personal\",\"WPA3-Personal-Transition\"],\"passphrase\":\"<DA CHE 10 ky tu>\",\"status\":\"Down\",\"name\":\"FPT Telecom-C151 IoT 5G\",\"radio\":\"5G\",\"securityMode\":\"WPA3-Personal-Transition\",\"enabled\":false,\"type\":\"SmartHome\",\"broadcastEnabled\":true,\"id\":\"94:f7:17:a9:c1:63\"},{\"securityModesSupported\":[\"WPA3-Personal\"],\"passphrase\":\"<DA CHE 10 ky tu>\",\"status\":\"Up\",\"name\":\"FPT Telecom-C151-BH_MLO\",\"radio\":\"2.4G\",\"securityMode\":\"WPA3-Personal\",\"enabled\":true,\"type\":\"Backhaul\",\"broadcastEnabled\":false,\"id\":\"94:f7:17:a9:c1:5c\"},{\"securityModesSupported\":[\"WPA3-Personal\"],\"passphrase\":\"<DA CHE 10 ky tu>\",\"status\":\"Up\",\"name\":\"FPT Telecom-C151-BH_MLO\",\"radio\":\"5G\",\"securityMode\":\"WPA3-Personal\",\"enabled\":true,\"type\":\"Backhaul\",\"broadcastEnabled\":false,\"id\":\"94:f7:17:a9:c1:64\"}]"
+  },
+  {
+   "stt": 7,
+   "thoi_diem": "2026-08-12T01:24:19.938Z",
+   "method": "GET",
+   "url": "api/v1/data/system/info",
+   "req_headers": {
+    "accept": "application/json",
+    "authorization": "Bearer eyJ0eXAiOiJKV...<cat>"
+   },
+   "req_body": null,
+   "status": 200,
+   "res_headers": {
+    "content-type": "application/json",
+    "date": "Mon, 10 Aug 2026 19:21:22 GMT",
+    "keep-alive": "timeout=20",
+    "server": "Lua-eco/3.2.0",
+    "transfer-encoding": "chunked"
+   },
+   "res_body": "{\"firmwareVersion\":\"1PZ108WZ110\",\"kernelVersion\":\"ipq53xx\\/ipq53xx_32\",\"architecture\":\"arm_cortex-a7_neon-vfpv4\",\"operatingMode\":\"router\",\"domainName\":\"my-router.top\",\"modelName\":\"ONT-BE6500C\",\"isConfigured\":true,\"hostname\":\"ONT-BE6500C-C150\",\"serialNumber\":\"94F717A9C151\",\"manufacturer\":\"Actiontec\"}"
+  },
+  {
+   "stt": 8,
+   "thoi_diem": "2026-08-12T01:24:19.973Z",
+   "method": "POST",
+   "url": "/oui-rpc",
+   "req_headers": {
+    "accept": "application/json",
+    "authorization": "Bearer eyJ0eXAiOiJKV...<cat>",
+    "content-type": "application/json"
+   },
+   "req_body": "{\"method\":\"alive\",\"params\":{\"sid\":\"2JKQfICrBVKBUoY5VuGYSP3z94K3VF8X\"}}",
+   "status": 200,
+   "res_headers": {
+    "date": "Mon, 10 Aug 2026 19:21:22 GMT",
+    "keep-alive": "timeout=20",
+    "server": "Lua-eco/3.2.0",
+    "transfer-encoding": "chunked"
+   },
+   "res_body": "{\"alive\":true}"
+  },
+  {
+   "stt": 9,
+   "thoi_diem": "2026-08-12T01:24:19.938Z",
+   "method": "POST",
+   "url": "/oui-rpc",
+   "req_headers": {
+    "accept": "application/json",
+    "content-type": "application/json"
+   },
+   "req_body": "{\"method\":\"call\",\"params\":[\"2JKQfICrBVKBUoY5VuGYSP3z94K3VF8X\",\"ui\",\"get_menus\",{}]}",
+   "status": 200,
+   "res_headers": {
+    "content-type": "application/json",
+    "date": "Mon, 10 Aug 2026 19:21:22 GMT",
+    "keep-alive": "timeout=20",
+    "server": "Lua-eco/3.2.0",
+    "transfer-encoding": "chunked"
+   },
+   "res_body": "{\"result\":{\"menus\":{\"\\/security\":{\"index\":30,\"id\":\"security\",\"isRouterOnly\":true,\"name\":\"Security\"},\"\\/network\\/speedtest\":{\"index\":40,\"id\":\"speedtest\",\"isRouterOnly\":true,\"name\":\"Speed Test\"},\"\\/network\\/diagnostics\":{\"index\":50,\"id\":\"diagnostics\",\"isRouterOnly\":true,\"name\":\"Diagnostics\"},\"\\/wifi\":{\"index\":10,\"id\":\"wifi\",\"isRouterOnly\":true,\"name\":\"Wi-Fi\"},\"\\/wifi\\/general\":{\"index\":10,\"id\":\"wifiGeneral\",\"isRouterOnly\":true,\"name\":\"General\"},\"\\/wifi\\/advanced\":{\"index\":20,\"id\":\"wifiAdvanced\",\"isRouterOnly\":true,\"name\":\"Advanced\"},\"\\/network\":{\"index\":20,\"id\":\"network\",\"isRouterOnly\":true,\"name\":\"Network\"},\"\\/system\\/user\":{\"index\":40,\"id\":\"user\",\"name\":\"User\"},\"\\/security\\/firewall\":{\"index\":10,\"id\":\"firewall\",\"isRouterOnly\":true,\"name\":\"Firewall\"},\"\\/home\\/overview\":{\"index\":10,\"id\":\"overview\",\"name\":\"Overview\"},\"\\/system\\/upgrade\":{\"index\":20,\"id\":\"fwupgrade\",\"name\":\"Update & Restore\"},\"\\/network\\/portforward\":{\"index\":30,\"id\":\"portforward\",\"isRouterOnly\":true,\"name\":\"Port Forwarding\"},\"\\/advanced\\/dmz\":{\"index\":20,\"id\":\"dmz\",\"isRouterOnly\":true,\"name\":\"DMZ\"},\"\\/home\\/wizard\":{\"id\":\"wizard\",\"isPathOnly\":true,\"isRouterOnly\":true,\"index\":80,\"name\":\"Wizard\"},\"\\/system\":{\"index\":40,\"id\":\"system\",\"name\":\"System\"},\"\\/system\\/general\":{\"index\":10,\"id\":\"systemGeneral\",\"name\":\"System Settings\"},\"\\/help\":{\"index\":5,\"id\":\"help\",\"isFooter\":true,\"name\":\"Help\"},\"\\/home\\/topology\":{\"index\":20,\"id\":\"topology\",\"isRouterOnly\":true,\"name\":\"Topology\"},\"\\/reboot\":{\"index\":10,\"id\":\"reboot\",\"isFooter\":true,\"name\":\"Reboot\"},\"\\/logout\":{\"index\":30,\"id\":\"logout\",\"isFooter\":true,\"name\":\"Log out\"},\"\\/home\":{\"index\":0,\"id\":\"home\",\"name\":\"Home\"},\"\\/advanced\\/wan\":{\"index\":1,\"id\":\"wan\",\"isRouterOnly\":true,\"name\":\"WAN\"},\"\\/advanced\\/upnp\":{\"index\":30,\"id\":\"upnp\",\"isRouterOnly\":true,\"name\":\"UPnP\"},\"\\/advanced\\/lan\":{\"index\":2,\"id\":\"lan\",\"isRouterOnly\":true,\"name\":\"LAN\"},\"\\/advanced\":{\"index\":50,\"id\":\"advanced\",\"isRouterOnly\":true,\"name\":\"Advanced\"},\"\\/advanced\\/routing\":{\"index\":5,\"id\":\"routing\",\"isRouterOnly\":true,\"name\":\"Static Routing\"},\"\\/advanced\\/ddns\":{\"index\":3,\"id\":\"dynamicDNS\",\"isRouterOnly\":true,\"name\":\"Dynamic DNS\"},\"\\/advanced\\/tcpdump\":{\"index\":40,\"id\":\"tcpdump\",\"isRouterOnly\":true,\"name\":\"TCPDump\"}}}}"
+  },
+  {
+   "stt": 10,
+   "thoi_diem": "2026-08-12T01:24:20.290Z",
+   "method": "GET",
+   "url": "api/v1/data/internetConnection",
+   "req_headers": {
+    "accept": "application/json",
+    "authorization": "Bearer eyJ0eXAiOiJKV...<cat>"
+   },
+   "req_body": null,
+   "status": 200,
+   "res_headers": {
+    "content-type": "application/json",
+    "date": "Mon, 10 Aug 2026 19:21:22 GMT",
+    "keep-alive": "timeout=20",
+    "server": "Lua-eco/3.2.0",
+    "transfer-encoding": "chunked"
+   },
+   "res_body": "{\"status\":\"Down\"}"
+  },
+  {
+   "stt": 11,
+   "thoi_diem": "2026-08-12T01:24:20.291Z",
+   "method": "GET",
+   "url": "api/v1/data/system/status",
+   "req_headers": {
+    "accept": "application/json",
+    "authorization": "Bearer eyJ0eXAiOiJKV...<cat>"
+   },
+   "req_body": null,
+   "status": 200,
+   "res_headers": {
+    "content-type": "application/json",
+    "date": "Mon, 10 Aug 2026 19:21:26 GMT",
+    "keep-alive": "timeout=20",
+    "server": "Lua-eco/3.2.0",
+    "transfer-encoding": "chunked"
+   },
+   "res_body": "{\"uptime\":62033,\"memoryUsage\":45,\"cpuUsage\":{\"cores\":[41,25,46,35],\"total\":37}}"
+  },
+  {
+   "stt": 12,
+   "thoi_diem": "2026-08-12T01:24:20.291Z",
+   "method": "GET",
+   "url": "api/v1/data/speedTest/records/",
+   "req_headers": {
+    "accept": "application/json",
+    "authorization": "Bearer eyJ0eXAiOiJKV...<cat>"
+   },
+   "req_body": null,
+   "status": 200,
+   "res_headers": {
+    "content-type": "application/json",
+    "date": "Mon, 10 Aug 2026 19:21:26 GMT",
+    "keep-alive": "timeout=20",
+    "server": "Lua-eco/3.2.0",
+    "transfer-encoding": "chunked"
+   },
+   "res_body": "[]"
+  },
+  {
+   "stt": 13,
+   "thoi_diem": "2026-08-12T01:24:20.291Z",
+   "method": "GET",
+   "url": "api/v1/data/interfaces/configurations",
+   "req_headers": {
+    "accept": "application/json",
+    "authorization": "Bearer eyJ0eXAiOiJKV...<cat>"
+   },
+   "req_body": null,
+   "status": 200,
+   "res_headers": {
+    "content-type": "application/json",
+    "date": "Mon, 10 Aug 2026 19:21:26 GMT",
+    "keep-alive": "timeout=20",
+    "server": "Lua-eco/3.2.0",
+    "transfer-encoding": "chunked"
+   },
+   "res_body": "[{\"ipv4Settings\":{\"gateway\":\"\",\"protocol\":\"static\",\"mask\":\"255.255.255.0\",\"ipAddress\":\"192.168.1.1\"},\"id\":\"lan\",\"devices\":[\"eth1\"],\"name\":\"lan\",\"mtu\":1500,\"dnsServers\":[],\"enabled\":true,\"ipv6Settings\":{\"gateway\":\"\",\"ipAddress\":\"\",\"prefix\":\"\",\"enabled\":true,\"protocol\":\"dhcpv6\",\"ulaPrefix\":\"\",\"slaacEnabled\":false},\"autoDnsEnabled\":true,\"usage\":\"LAN\"},{\"ipv4Settings\":{\"gateway\":\"192.168.1.254\",\"ipAddress\":\"192.168.1.1\",\"mask\":\"255.255.255.0\",\"pppoe\":{\"username\":\"\",\"password\":\"<DA CHE 0 ky tu>\"},\"protocol\":\"static\"},\"id\":\"wan\",\"devices\":[\"pon\"],\"name\":\"wan\",\"mtu\":1500,\"dnsServers\":[\"8.8.8.8\"],\"usage\":\"Internet\",\"vlan\":{\"autoDetectionEnabled\":false,\"id\":0,\"enabled\":false},\"autoDnsEnabled\":false,\"enabled\":true},{\"id\":\"wan6\",\"devices\":[\"@wan\"],\"name\":\"wan6\",\"mtu\":1500,\"dnsServers\":[\"2001:4860:4860::8888\",\"2001:4860:4860::8844\"],\"enabled\":true,\"ipv6Settings\":{\"gateway\":\"\",\"ipAddress\":\"\",\"prefix\":\"\",\"enabled\":true,\"protocol\":\"dhcpv6\",\"ulaPrefix\":\"\",\"slaacEnabled\":true},\"autoDnsEnabled\":false,\"usage\":\"Internet\"},{\"ipv4Settings\":{\"gateway\":\"\",\"protocol\":\"static\",\"mask\":\"255.255.255.0\",\"ipAddress\":\"192.168.5.1\"},\"id\":\"guest\",\"devices\":[\"\"],\"name\":\"guest\",\"mtu\":1500,\"dnsServers\":[],\"enabled\":false,\"ipv6Settings\":{\"gateway\":\"\",\"ipAddress\":\"\",\"prefix\":\"\",\"enabled\":true,\"protocol\":\"dhcpv6\",\"ulaPrefix\":\"\",\"slaacEnabled\":false},\"autoDnsEnabled\":true,\"usage\":\"Guest\"}]"
+  },
+  {
+   "stt": 14,
+   "thoi_diem": "2026-08-12T01:24:20.291Z",
+   "method": "GET",
+   "url": "api/v1/data/interfaces",
+   "req_headers": {
+    "accept": "application/json",
+    "authorization": "Bearer eyJ0eXAiOiJKV...<cat>"
+   },
+   "req_body": null,
+   "status": 200,
+   "res_headers": {
+    "content-type": "application/json",
+    "date": "Mon, 10 Aug 2026 19:21:26 GMT",
+    "keep-alive": "timeout=20",
+    "server": "Lua-eco/3.2.0",
+    "transfer-encoding": "chunked"
+   },
+   "res_body": "[{\"id\":\"lan\",\"status\":\"Up\",\"ipv6Addresses\":[{\"gateway\":\"\",\"lifetimeState\":\"Infinite\",\"prefix\":64,\"lifetime\":0,\"protocol\":\"static\",\"address\":\"fe80::96f7:17ff:fea9:c150\",\"type\":\"LLA\"}],\"device\":[\"eth1\"],\"lastChangeTime\":1786328184000,\"name\":\"lan\",\"dnsServers\":[],\"usage\":\"LAN\",\"ipv4Addresses\":[{\"gateway\":\"\",\"protocol\":\"static\",\"address\":\"192.168.1.1\",\"mask\":\"255.255.255.0\"}],\"macAddress\":\"94:f7:17:a9:c1:50\"},{\"id\":\"wan\",\"status\":\"Up\",\"ipv6Addresses\":[],\"device\":[\"pon\"],\"lastChangeTime\":1786328185000,\"name\":\"wan\",\"dnsServers\":[\"8.8.8.8\"],\"usage\":\"Internet\",\"ipv4Addresses\":[{\"gateway\":\"192.168.1.254\",\"protocol\":\"static\",\"address\":\"192.168.1.1\",\"mask\":\"255.255.255.0\"}],\"macAddress\":\"94:f7:17:a9:c1:51\"},{\"id\":\"wan6\",\"status\":\"Down\",\"ipv6Addresses\":[{\"gateway\":\"\",\"lifetimeState\":\"Infinite\",\"prefix\":64,\"lifetime\":0,\"protocol\":\"static\",\"address\":\"fe80::96f7:17ff:fea9:c151\",\"type\":\"LLA\"}],\"device\":[\"pon\"],\"lastChangeTime\":1786327654000,\"name\":\"wan6\",\"dnsServers\":[],\"usage\":\"Internet\",\"ipv4Addresses\":[],\"macAddress\":\"94:f7:17:a9:c1:51\"},{\"id\":\"guest\",\"status\":\"Down\",\"ipv6Addresses\":[],\"device\":[],\"lastChangeTime\":0,\"name\":\"guest\",\"dnsServers\":[],\"usage\":\"Guest\",\"ipv4Addresses\":[],\"macAddress\":\"94:f7:17:a9:c1:53\"}]"
+  },
+  {
+   "stt": 15,
+   "thoi_diem": "2026-08-12T01:24:20.291Z",
+   "method": "GET",
+   "url": "api/v1/data/easyMesh",
+   "req_headers": {
+    "accept": "application/json",
+    "authorization": "Bearer eyJ0eXAiOiJKV...<cat>"
+   },
+   "req_body": null,
+   "status": 200,
+   "res_headers": {
+    "content-type": "application/json",
+    "date": "Mon, 10 Aug 2026 19:21:26 GMT",
+    "keep-alive": "timeout=20",
+    "server": "Lua-eco/3.2.0",
+    "transfer-encoding": "chunked"
+   },
+   "res_body": "{\"role\":\"Controller\",\"enabled\":true,\"ssidTypesConfigurations\":[{\"uiConfigurable\":true,\"isBackhaul\":false,\"mloEnabled\":false,\"type\":\"Primary\",\"separatedSsid\":false,\"isolated\":false},{\"uiConfigurable\":true,\"isBackhaul\":false,\"mloEnabled\":false,\"type\":\"Guest\",\"separatedSsid\":false,\"isolated\":true},{\"uiConfigurable\":true,\"isBackhaul\":false,\"mloEnabled\":false,\"type\":\"SmartHome\",\"separatedSsid\":true,\"isolated\":false},{\"uiConfigurable\":false,\"isBackhaul\":true,\"mloEnabled\":true,\"type\":\"Backhaul\",\"separatedSsid\":false,\"isolated\":false}]}"
+  },
+  {
+   "stt": 16,
+   "thoi_diem": "2026-08-12T01:24:20.291Z",
+   "method": "GET",
+   "url": "api/v1/data/radios",
+   "req_headers": {
+    "accept": "application/json",
+    "authorization": "Bearer eyJ0eXAiOiJKV...<cat>"
+   },
+   "req_body": null,
+   "status": 200,
+   "res_headers": {
+    "content-type": "application/json",
+    "date": "Mon, 10 Aug 2026 19:21:26 GMT",
+    "keep-alive": "timeout=20",
+    "server": "Lua-eco/3.2.0",
+    "transfer-encoding": "chunked"
+   },
+   "res_body": "[{\"stats\":{\"bytesSent\":0,\"bytesReceived\":0},\"rtsThreshold\":2347,\"bandwidthInUse\":\"20MHz\",\"bandwidthSupported\":[\"20MHz\",\"40MHz\",\"Auto\"],\"operatingStandards\":[\"beg\"],\"bandwidth\":\"20MHz\",\"id\":\"wifi0\",\"status\":\"Up\",\"band\":\"2.4G\",\"possibleChannels\":[1,2,3,4,5,6,7,8,9,10,11],\"channel\":-1,\"dtimInterval\":1,\"beaconInterval\":100,\"operatingStandardsSupported\":[\"ax\",\"b\",\"g\",\"n\",\"be\"],\"enabled\":true,\"autoChannelEnabled\":true,\"channelInUse\":6,\"macAddress\":\"94:f7:17:a9:c1:58\"},{\"dfsEnabled\":false,\"stats\":{\"bytesSent\":0,\"bytesReceived\":0},\"rtsThreshold\":2347,\"bandwidthInUse\":\"80MHz\",\"bandwidthSupported\":[\"20MHz\",\"40MHz\",\"80MHz\",\"160MHz\",\"Auto\"],\"operatingStandards\":[\"bea\"],\"bandwidth\":\"80MHz\",\"id\":\"wifi1\",\"status\":\"Up\",\"band\":\"5G\",\"possibleChannels\":[36,40,44,48,52,56,60,64,100,104,108,112,116,120,124,128,132,136,140,144,149,153,157,161,165],\"channel\":-1,\"dtimInterval\":1,\"beaconInterval\":100,\"operatingStandardsSupported\":[\"ac\",\"ax\",\"a\",\"n\",\"be\"],\"enabled\":true,\"autoChannelEnabled\":true,\"channelInUse\":153,\"macAddress\":\"94:f7:17:a9:c1:60\"}]"
+  },
+  {
+   "stt": 17,
+   "thoi_diem": "2026-08-12T01:24:20.291Z",
+   "method": "GET",
+   "url": "api/v1/data/ethernetPorts",
+   "req_headers": {
+    "accept": "application/json",
+    "authorization": "Bearer eyJ0eXAiOiJKV...<cat>"
+   },
+   "req_body": null,
+   "status": 200,
+   "res_headers": {
+    "content-type": "application/json",
+    "date": "Mon, 10 Aug 2026 19:21:26 GMT",
+    "keep-alive": "timeout=20",
+    "server": "Lua-eco/3.2.0",
+    "transfer-encoding": "chunked"
+   },
+   "res_body": "[{\"duplexMode\":\"Auto\",\"id\":\"lan1\",\"stats\":{\"bytesReceived\":2320640,\"bytesSent\":33166286},\"lastChangeTime\":1786328184000,\"eap\":{\"status\":\"\",\"id\":\"\"},\"isUpstream\":false,\"macAddress\":\"94:f7:17:a9:c1:50\",\"name\":\"lan1\",\"bitRate\":1000000000,\"port\":1,\"enabled\":true,\"status\":\"Up\",\"maxBitRate\":1000000000},{\"duplexMode\":\"Auto\",\"id\":\"lan2\",\"stats\":{\"bytesReceived\":0,\"bytesSent\":0},\"lastChangeTime\":1786328184000,\"eap\":{\"status\":\"\",\"id\":\"\"},\"isUpstream\":false,\"macAddress\":\"94:f7:17:a9:c1:50\",\"name\":\"lan2\",\"bitRate\":0,\"port\":2,\"enabled\":true,\"status\":\"Down\",\"maxBitRate\":1000000000},{\"duplexMode\":\"Auto\",\"id\":\"lan3\",\"stats\":{\"bytesReceived\":0,\"bytesSent\":0},\"lastChangeTime\":1786328185000,\"eap\":{\"status\":\"\",\"id\":\"\"},\"isUpstream\":false,\"macAddress\":\"94:f7:17:a9:c1:50\",\"name\":\"lan3\",\"bitRate\":0,\"port\":3,\"enabled\":true,\"status\":\"Down\",\"maxBitRate\":1000000000},{\"duplexMode\":\"Auto\",\"id\":\"lan4\",\"stats\":{\"bytesReceived\":0,\"bytesSent\":0},\"lastChangeTime\":1786328185000,\"eap\":{\"status\":\"\",\"id\":\"\"},\"isUpstream\":false,\"macAddress\":\"94:f7:17:a9:c1:50\",\"name\":\"lan4\",\"bitRate\":0,\"port\":4,\"enabled\":true,\"status\":\"Down\",\"maxBitRate\":1000000000}]"
+  },
+  {
+   "stt": 18,
+   "thoi_diem": "2026-08-12T01:24:24.659Z",
+   "method": "GET",
+   "url": "api/v1/data/pon/status",
+   "req_headers": {
+    "accept": "application/json",
+    "authorization": "Bearer eyJ0eXAiOiJKV...<cat>"
+   },
+   "req_body": null,
+   "status": 200,
+   "res_headers": {
+    "content-type": "application/json",
+    "date": "Mon, 10 Aug 2026 19:21:27 GMT",
+    "keep-alive": "timeout=20",
+    "server": "Lua-eco/3.2.0",
+    "transfer-encoding": "chunked"
+   },
+   "res_body": "{\"transmittedPower\":6.2450045135165e-16,\"stats\":{\"packetsReceived\":0,\"packetsSent\":11},\"status\":\"O1\",\"temperature\":0,\"biasCurrent\":0,\"supplyPowerVoltage\":0,\"receivedPower\":-30,\"maxBitRate\":10000000000}"
+  },
+  {
+   "stt": 19,
+   "thoi_diem": "2026-08-12T01:24:30.301Z",
+   "method": "GET",
+   "url": "api/v1/data/system/status",
+   "req_headers": {
+    "accept": "application/json",
+    "authorization": "Bearer eyJ0eXAiOiJKV...<cat>"
+   },
+   "req_body": null,
+   "status": 200,
+   "res_headers": {
+    "content-type": "application/json",
+    "date": "Mon, 10 Aug 2026 19:21:32 GMT",
+    "keep-alive": "timeout=20",
+    "server": "Lua-eco/3.2.0",
+    "transfer-encoding": "chunked"
+   },
+   "res_body": "{\"uptime\":62039,\"memoryUsage\":45,\"cpuUsage\":{\"cores\":[34,37,28,22],\"total\":29}}"
+  },
+  {
+   "stt": 20,
+   "thoi_diem": "2026-08-12T01:24:33.437Z",
+   "method": "GET",
+   "url": "api/v1/data/devices",
+   "req_headers": {
+    "accept": "application/json",
+    "authorization": "Bearer eyJ0eXAiOiJKV...<cat>"
+   },
+   "req_body": null,
+   "status": 200,
+   "res_headers": {
+    "content-type": "application/json",
+    "date": "Mon, 10 Aug 2026 19:21:35 GMT",
+    "keep-alive": "timeout=20",
+    "server": "Lua-eco/3.2.0",
+    "transfer-encoding": "chunked"
+   },
+   "res_body": "[{\"id\":\"94:f7:17:a9:c1:50\",\"status\":\"Up\",\"capabilities\":[{\"type\":\"Ethernet\"},{\"radio\":\"2.4G\",\"type\":\"Wireless\"},{\"radio\":\"5G\",\"type\":\"Wireless\"}],\"lastChangeTime\":1786389682000,\"macAddress\":\"94:f7:17:a9:c1:50\",\"connections\":[],\"ipAddresses\":[{\"lifetime\":0,\"lifetimeState\":\"Infinite\",\"version\":4,\"address\":\"192.168.1.1\"}],\"type\":\"Router\",\"hostname\":\"ONT-BE6500C-C150\",\"upstreamId\":\"00:00:00:00:00:00\"},{\"id\":\"d8:43:ae:2e:65:45\",\"status\":\"Up\",\"capabilities\":[],\"lastChangeTime\":1786389682000,\"macAddress\":\"d8:43:ae:2e:65:45\",\"connections\":[{\"type\":\"Ethernet\",\"uptime\":61497,\"ethernet\":{\"port\":2,\"bitRate\":2500000000}}],\"ipAddresses\":[{\"lifetime\":1786431116000,\"lifetimeState\":\"Valid\",\"version\":4,\"address\":\"192.168.1.109\"},{\"lifetimeState\":\"Unknown\",\"lifetime\":0,\"type\":\"LLA\",\"address\":\"fe80::19f6:b206:5131:4599\",\"version\":6}],\"type\":\"Device\",\"hostname\":\"Admin-PC\",\"upstreamId\":\"94:f7:17:a9:c1:50\"}]"
+  },
+  {
+   "stt": 21,
+   "thoi_diem": "2026-08-12T01:24:33.438Z",
+   "method": "GET",
+   "url": "api/v1/data/system/status",
+   "req_headers": {
+    "accept": "application/json",
+    "authorization": "Bearer eyJ0eXAiOiJKV...<cat>"
+   },
+   "req_body": null,
+   "status": 200,
+   "res_headers": {
+    "content-type": "application/json",
+    "date": "Mon, 10 Aug 2026 19:21:35 GMT",
+    "keep-alive": "timeout=20",
+    "server": "Lua-eco/3.2.0",
+    "transfer-encoding": "chunked"
+   },
+   "res_body": "{\"uptime\":62042,\"memoryUsage\":45,\"cpuUsage\":{\"cores\":[30,3,0,9],\"total\":10}}"
+  },
+  {
+   "stt": 22,
+   "thoi_diem": "2026-08-12T01:24:33.437Z",
+   "method": "GET",
+   "url": "api/v1/data/system/info",
+   "req_headers": {
+    "accept": "application/json",
+    "authorization": "Bearer eyJ0eXAiOiJKV...<cat>"
+   },
+   "req_body": null,
+   "status": 200,
+   "res_headers": {
+    "content-type": "application/json",
+    "date": "Mon, 10 Aug 2026 19:21:35 GMT",
+    "keep-alive": "timeout=20",
+    "server": "Lua-eco/3.2.0",
+    "transfer-encoding": "chunked"
+   },
+   "res_body": "{\"firmwareVersion\":\"1PZ108WZ110\",\"kernelVersion\":\"ipq53xx\\/ipq53xx_32\",\"architecture\":\"arm_cortex-a7_neon-vfpv4\",\"operatingMode\":\"router\",\"domainName\":\"my-router.top\",\"modelName\":\"ONT-BE6500C\",\"isConfigured\":true,\"hostname\":\"ONT-BE6500C-C150\",\"serialNumber\":\"94F717A9C151\",\"manufacturer\":\"Actiontec\"}"
+  },
+  {
+   "stt": 23,
+   "thoi_diem": "2026-08-12T01:24:33.437Z",
+   "method": "GET",
+   "url": "api/v1/data/ssids",
+   "req_headers": {
+    "accept": "application/json",
+    "authorization": "Bearer eyJ0eXAiOiJKV...<cat>"
+   },
+   "req_body": null,
+   "status": 200,
+   "res_headers": {
+    "content-type": "application/json",
+    "date": "Mon, 10 Aug 2026 19:21:35 GMT",
+    "keep-alive": "timeout=20",
+    "server": "Lua-eco/3.2.0",
+    "transfer-encoding": "chunked"
+   },
+   "res_body": "[{\"securityModesSupported\":[\"WPA2-Personal\",\"WPA3-Personal-Transition\"],\"passphrase\":\"<DA CHE 8 ky tu>\",\"status\":\"Up\",\"name\":\"FPT Telecom-C151\",\"radio\":\"2.4G\",\"securityMode\":\"WPA3-Personal-Transition\",\"enabled\":true,\"type\":\"Primary\",\"broadcastEnabled\":true,\"id\":\"94:f7:17:a9:c1:59\"},{\"securityModesSupported\":[\"WPA2-Personal\",\"WPA3-Personal-Transition\"],\"passphrase\":\"<DA CHE 8 ky tu>\",\"status\":\"Up\",\"name\":\"FPT Telecom-C151\",\"radio\":\"5G\",\"securityMode\":\"WPA3-Personal-Transition\",\"enabled\":true,\"type\":\"Primary\",\"broadcastEnabled\":true,\"id\":\"94:f7:17:a9:c1:61\"},{\"securityModesSupported\":[\"WPA2-Personal\",\"WPA3-Personal-Transition\"],\"passphrase\":\"<DA CHE 10 ky tu>\",\"status\":\"Down\",\"name\":\"GuestC151\",\"radio\":\"2.4G\",\"securityMode\":\"WPA3-Personal-Transition\",\"enabled\":false,\"type\":\"Guest\",\"broadcastEnabled\":true,\"id\":\"94:f7:17:a9:c1:5a\"},{\"securityModesSupported\":[\"WPA2-Personal\",\"WPA3-Personal-Transition\"],\"passphrase\":\"<DA CHE 10 ky tu>\",\"status\":\"Down\",\"name\":\"GuestC151\",\"radio\":\"5G\",\"securityMode\":\"WPA3-Personal-Transition\",\"enabled\":false,\"type\":\"Guest\",\"broadcastEnabled\":true,\"id\":\"94:f7:17:a9:c1:62\"},{\"securityModesSupported\":[\"WPA2-Personal\",\"WPA3-Personal-Transition\"],\"passphrase\":\"<DA CHE 8 ky tu>\",\"status\":\"Up\",\"name\":\"FPT Telecom-C151 IoT 2.4G\",\"radio\":\"2.4G\",\"securityMode\":\"WPA3-Personal-Transition\",\"enabled\":true,\"type\":\"SmartHome\",\"broadcastEnabled\":true,\"id\":\"94:f7:17:a9:c1:5b\"},{\"securityModesSupported\":[\"WPA2-Personal\",\"WPA3-Personal-Transition\"],\"passphrase\":\"<DA CHE 10 ky tu>\",\"status\":\"Down\",\"name\":\"FPT Telecom-C151 IoT 5G\",\"radio\":\"5G\",\"securityMode\":\"WPA3-Personal-Transition\",\"enabled\":false,\"type\":\"SmartHome\",\"broadcastEnabled\":true,\"id\":\"94:f7:17:a9:c1:63\"},{\"securityModesSupported\":[\"WPA3-Personal\"],\"passphrase\":\"<DA CHE 10 ky tu>\",\"status\":\"Up\",\"name\":\"FPT Telecom-C151-BH_MLO\",\"radio\":\"2.4G\",\"securityMode\":\"WPA3-Personal\",\"enabled\":true,\"type\":\"Backhaul\",\"broadcastEnabled\":false,\"id\":\"94:f7:17:a9:c1:5c\"},{\"securityModesSupported\":[\"WPA3-Personal\"],\"passphrase\":\"<DA CHE 10 ky tu>\",\"status\":\"Up\",\"name\":\"FPT Telecom-C151-BH_MLO\",\"radio\":\"5G\",\"securityMode\":\"WPA3-Personal\",\"enabled\":true,\"type\":\"Backhaul\",\"broadcastEnabled\":false,\"id\":\"94:f7:17:a9:c1:64\"}]"
+  },
+  {
+   "stt": 24,
+   "thoi_diem": "2026-08-12T01:24:33.438Z",
+   "method": "POST",
+   "url": "/oui-rpc",
+   "req_headers": {
+    "accept": "application/json",
+    "authorization": "Bearer eyJ0eXAiOiJKV...<cat>",
+    "content-type": "application/json"
+   },
+   "req_body": "{\"method\":\"alive\",\"params\":{\"sid\":\"2JKQfICrBVKBUoY5VuGYSP3z94K3VF8X\"}}",
+   "status": 200,
+   "res_headers": {
+    "date": "Mon, 10 Aug 2026 19:21:35 GMT",
+    "keep-alive": "timeout=20",
+    "server": "Lua-eco/3.2.0",
+    "transfer-encoding": "chunked"
+   },
+   "res_body": "{\"alive\":true}"
+  },
+  {
+   "stt": 25,
+   "thoi_diem": "2026-08-12T01:24:33.437Z",
+   "method": "GET",
+   "url": "api/v1/data/wizard",
+   "req_headers": {
+    "accept": "application/json",
+    "authorization": "Bearer eyJ0eXAiOiJKV...<cat>"
+   },
+   "req_body": null,
+   "status": 200,
+   "res_headers": {
+    "content-type": "application/json",
+    "date": "Mon, 10 Aug 2026 19:21:35 GMT",
+    "keep-alive": "timeout=20",
+    "server": "Lua-eco/3.2.0",
+    "transfer-encoding": "chunked"
+   },
+   "res_body": "{\"step\":5}"
+  },
+  {
+   "stt": 26,
+   "thoi_diem": "2026-08-12T01:24:33.438Z",
+   "method": "GET",
+   "url": "api/v1/data/interfaces",
+   "req_headers": {
+    "accept": "application/json",
+    "authorization": "Bearer eyJ0eXAiOiJKV...<cat>"
+   },
+   "req_body": null,
+   "status": 200,
+   "res_headers": {
+    "content-type": "application/json",
+    "date": "Mon, 10 Aug 2026 19:21:35 GMT",
+    "keep-alive": "timeout=20",
+    "server": "Lua-eco/3.2.0",
+    "transfer-encoding": "chunked"
+   },
+   "res_body": "[{\"id\":\"lan\",\"status\":\"Up\",\"ipv6Addresses\":[{\"gateway\":\"\",\"lifetimeState\":\"Infinite\",\"prefix\":64,\"lifetime\":0,\"protocol\":\"static\",\"address\":\"fe80::96f7:17ff:fea9:c150\",\"type\":\"LLA\"}],\"device\":[\"eth1\"],\"lastChangeTime\":1786328183000,\"name\":\"lan\",\"dnsServers\":[],\"usage\":\"LAN\",\"ipv4Addresses\":[{\"gateway\":\"\",\"protocol\":\"static\",\"address\":\"192.168.1.1\",\"mask\":\"255.255.255.0\"}],\"macAddress\":\"94:f7:17:a9:c1:50\"},{\"id\":\"wan\",\"status\":\"Up\",\"ipv6Addresses\":[],\"device\":[\"pon\"],\"lastChangeTime\":1786328184000,\"name\":\"wan\",\"dnsServers\":[\"8.8.8.8\"],\"usage\":\"Internet\",\"ipv4Addresses\":[{\"gateway\":\"192.168.1.254\",\"protocol\":\"static\",\"address\":\"192.168.1.1\",\"mask\":\"255.255.255.0\"}],\"macAddress\":\"94:f7:17:a9:c1:51\"},{\"id\":\"wan6\",\"status\":\"Down\",\"ipv6Addresses\":[{\"gateway\":\"\",\"lifetimeState\":\"Infinite\",\"prefix\":64,\"lifetime\":0,\"protocol\":\"static\",\"address\":\"fe80::96f7:17ff:fea9:c151\",\"type\":\"LLA\"}],\"device\":[\"pon\"],\"lastChangeTime\":1786327653000,\"name\":\"wan6\",\"dnsServers\":[],\"usage\":\"Internet\",\"ipv4Addresses\":[],\"macAddress\":\"94:f7:17:a9:c1:51\"},{\"id\":\"guest\",\"status\":\"Down\",\"ipv6Addresses\":[],\"device\":[],\"lastChangeTime\":0,\"name\":\"guest\",\"dnsServers\":[],\"usage\":\"Guest\",\"ipv4Addresses\":[],\"macAddress\":\"94:f7:17:a9:c1:53\"}]"
+  },
+  {
+   "stt": 27,
+   "thoi_diem": "2026-08-12T01:24:33.438Z",
+   "method": "GET",
+   "url": "api/v1/data/interfaces/configurations",
+   "req_headers": {
+    "accept": "application/json",
+    "authorization": "Bearer eyJ0eXAiOiJKV...<cat>"
+   },
+   "req_body": null,
+   "status": 200,
+   "res_headers": {
+    "content-type": "application/json",
+    "date": "Mon, 10 Aug 2026 19:21:35 GMT",
+    "keep-alive": "timeout=20",
+    "server": "Lua-eco/3.2.0",
+    "transfer-encoding": "chunked"
+   },
+   "res_body": "[{\"ipv4Settings\":{\"gateway\":\"\",\"protocol\":\"static\",\"mask\":\"255.255.255.0\",\"ipAddress\":\"192.168.1.1\"},\"id\":\"lan\",\"devices\":[\"eth1\"],\"name\":\"lan\",\"mtu\":1500,\"dnsServers\":[],\"enabled\":true,\"ipv6Settings\":{\"gateway\":\"\",\"ipAddress\":\"\",\"prefix\":\"\",\"enabled\":true,\"protocol\":\"dhcpv6\",\"ulaPrefix\":\"\",\"slaacEnabled\":false},\"autoDnsEnabled\":true,\"usage\":\"LAN\"},{\"ipv4Settings\":{\"gateway\":\"192.168.1.254\",\"ipAddress\":\"192.168.1.1\",\"mask\":\"255.255.255.0\",\"pppoe\":{\"username\":\"\",\"password\":\"<DA CHE 0 ky tu>\"},\"protocol\":\"static\"},\"id\":\"wan\",\"devices\":[\"pon\"],\"name\":\"wan\",\"mtu\":1500,\"dnsServers\":[\"8.8.8.8\"],\"usage\":\"Internet\",\"vlan\":{\"autoDetectionEnabled\":false,\"id\":0,\"enabled\":false},\"autoDnsEnabled\":false,\"enabled\":true},{\"id\":\"wan6\",\"devices\":[\"@wan\"],\"name\":\"wan6\",\"mtu\":1500,\"dnsServers\":[\"2001:4860:4860::8888\",\"2001:4860:4860::8844\"],\"enabled\":true,\"ipv6Settings\":{\"gateway\":\"\",\"ipAddress\":\"\",\"prefix\":\"\",\"enabled\":true,\"protocol\":\"dhcpv6\",\"ulaPrefix\":\"\",\"slaacEnabled\":true},\"autoDnsEnabled\":false,\"usage\":\"Internet\"},{\"ipv4Settings\":{\"gateway\":\"\",\"protocol\":\"static\",\"mask\":\"255.255.255.0\",\"ipAddress\":\"192.168.5.1\"},\"id\":\"guest\",\"devices\":[\"\"],\"name\":\"guest\",\"mtu\":1500,\"dnsServers\":[],\"enabled\":false,\"ipv6Settings\":{\"gateway\":\"\",\"ipAddress\":\"\",\"prefix\":\"\",\"enabled\":true,\"protocol\":\"dhcpv6\",\"ulaPrefix\":\"\",\"slaacEnabled\":false},\"autoDnsEnabled\":true,\"usage\":\"Guest\"}]"
+  },
+  {
+   "stt": 28,
+   "thoi_diem": "2026-08-12T01:24:33.438Z",
+   "method": "GET",
+   "url": "api/v1/data/radios",
+   "req_headers": {
+    "accept": "application/json",
+    "authorization": "Bearer eyJ0eXAiOiJKV...<cat>"
+   },
+   "req_body": null,
+   "status": 200,
+   "res_headers": {
+    "content-type": "application/json",
+    "date": "Mon, 10 Aug 2026 19:21:35 GMT",
+    "keep-alive": "timeout=20",
+    "server": "Lua-eco/3.2.0",
+    "transfer-encoding": "chunked"
+   },
+   "res_body": "[{\"stats\":{\"bytesSent\":0,\"bytesReceived\":0},\"rtsThreshold\":2347,\"bandwidthInUse\":\"20MHz\",\"bandwidthSupported\":[\"20MHz\",\"40MHz\",\"Auto\"],\"operatingStandards\":[\"beg\"],\"bandwidth\":\"20MHz\",\"id\":\"wifi0\",\"status\":\"Up\",\"band\":\"2.4G\",\"possibleChannels\":[1,2,3,4,5,6,7,8,9,10,11],\"channel\":-1,\"dtimInterval\":1,\"beaconInterval\":100,\"operatingStandardsSupported\":[\"ax\",\"b\",\"g\",\"n\",\"be\"],\"enabled\":true,\"autoChannelEnabled\":true,\"channelInUse\":6,\"macAddress\":\"94:f7:17:a9:c1:58\"},{\"dfsEnabled\":false,\"stats\":{\"bytesSent\":0,\"bytesReceived\":0},\"rtsThreshold\":2347,\"bandwidthInUse\":\"80MHz\",\"bandwidthSupported\":[\"20MHz\",\"40MHz\",\"80MHz\",\"160MHz\",\"Auto\"],\"operatingStandards\":[\"bea\"],\"bandwidth\":\"80MHz\",\"id\":\"wifi1\",\"status\":\"Up\",\"band\":\"5G\",\"possibleChannels\":[36,40,44,48,52,56,60,64,100,104,108,112,116,120,124,128,132,136,140,144,149,153,157,161,165],\"channel\":-1,\"dtimInterval\":1,\"beaconInterval\":100,\"operatingStandardsSupported\":[\"ac\",\"ax\",\"a\",\"n\",\"be\"],\"enabled\":true,\"autoChannelEnabled\":true,\"channelInUse\":153,\"macAddress\":\"94:f7:17:a9:c1:60\"}]"
+  },
+  {
+   "stt": 29,
+   "thoi_diem": "2026-08-12T01:24:33.438Z",
+   "method": "GET",
+   "url": "api/v1/data/ethernetPorts",
+   "req_headers": {
+    "accept": "application/json",
+    "authorization": "Bearer eyJ0eXAiOiJKV...<cat>"
+   },
+   "req_body": null,
+   "status": 200,
+   "res_headers": {
+    "content-type": "application/json",
+    "date": "Mon, 10 Aug 2026 19:21:35 GMT",
+    "keep-alive": "timeout=20",
+    "server": "Lua-eco/3.2.0",
+    "transfer-encoding": "chunked"
+   },
+   "res_body": "[{\"duplexMode\":\"Auto\",\"id\":\"lan1\",\"stats\":{\"bytesReceived\":2330245,\"bytesSent\":33205476},\"lastChangeTime\":1786328184000,\"eap\":{\"status\":\"\",\"id\":\"\"},\"isUpstream\":false,\"macAddress\":\"94:f7:17:a9:c1:50\",\"name\":\"lan1\",\"bitRate\":1000000000,\"port\":1,\"enabled\":true,\"status\":\"Up\",\"maxBitRate\":1000000000},{\"duplexMode\":\"Auto\",\"id\":\"lan2\",\"stats\":{\"bytesReceived\":0,\"bytesSent\":0},\"lastChangeTime\":1786328185000,\"eap\":{\"status\":\"\",\"id\":\"\"},\"isUpstream\":false,\"macAddress\":\"94:f7:17:a9:c1:50\",\"name\":\"lan2\",\"bitRate\":0,\"port\":2,\"enabled\":true,\"status\":\"Down\",\"maxBitRate\":1000000000},{\"duplexMode\":\"Auto\",\"id\":\"lan3\",\"stats\":{\"bytesReceived\":0,\"bytesSent\":0},\"lastChangeTime\":1786328185000,\"eap\":{\"status\":\"\",\"id\":\"\"},\"isUpstream\":false,\"macAddress\":\"94:f7:17:a9:c1:50\",\"name\":\"lan3\",\"bitRate\":0,\"port\":3,\"enabled\":true,\"status\":\"Down\",\"maxBitRate\":1000000000},{\"duplexMode\":\"Auto\",\"id\":\"lan4\",\"stats\":{\"bytesReceived\":0,\"bytesSent\":0},\"lastChangeTime\":1786328185000,\"eap\":{\"status\":\"\",\"id\":\"\"},\"isUpstream\":false,\"macAddress\":\"94:f7:17:a9:c1:50\",\"name\":\"lan4\",\"bitRate\":0,\"port\":4,\"enabled\":true,\"status\":\"Down\",\"maxBitRate\":1000000000}]"
+  },
+  {
+   "stt": 30,
+   "thoi_diem": "2026-08-12T01:24:33.438Z",
+   "method": "GET",
+   "url": "api/v1/data/pon/status",
+   "req_headers": {
+    "accept": "application/json",
+    "authorization": "Bearer eyJ0eXAiOiJKV...<cat>"
+   },
+   "req_body": null,
+   "status": 200,
+   "res_headers": {
+    "content-type": "application/json",
+    "date": "Mon, 10 Aug 2026 19:21:36 GMT",
+    "keep-alive": "timeout=20",
+    "server": "Lua-eco/3.2.0",
+    "transfer-encoding": "chunked"
+   },
+   "res_body": "{\"transmittedPower\":6.2450045135165e-16,\"stats\":{\"packetsReceived\":0,\"packetsSent\":11},\"status\":\"O1\",\"temperature\":0,\"biasCurrent\":0,\"supplyPowerVoltage\":0,\"receivedPower\":-30,\"maxBitRate\":10000000000}"
+  }
+ ]
+}

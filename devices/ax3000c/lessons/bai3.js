@@ -85,7 +85,7 @@ var lessonObj = {
     {
       selector: '.tabs:has(.tab.active[data-t="guest"]) ~ .actions button.apply',
       text: 'Bước 4: Chọn Apply',
-      position: 'right',
+      position: 'bottom',
       page: 'wifi'
     }
   ]

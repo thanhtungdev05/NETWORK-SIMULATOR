@@ -1,0 +1,224 @@
+{
+ "_nguon": "suy ra tu 3 nguon do truc tiep tren thiet bi that 2026-08-10: map_trang_api.json + o_nhap_that.json + seed_api.json",
+ "_quy_tac": "chi noi khi tim duoc DUY NHAT 1 duong dan JSON vua trung ten o vua trung gia tri that; nhieu ung vien -> de vao _mo_ho, khong noi",
+ "_mo_ho": {
+  "advanced__dmz": {
+   "enabled": [
+    "dmz/configurations:[0].enabled",
+    "dmz/configurations:[1].enabled"
+   ]
+  },
+  "advanced__lan": {
+   "ipv6Settings.enabled": [
+    "dhcp/servers:[0].ipv6Settings.enabled",
+    "dhcp/servers:[1].ipv6Settings.enabled",
+    "interfaces/configurations:[0].ipv6Settings.enabled",
+    "interfaces/configurations:[2].ipv6Settings.enabled",
+    "interfaces/configurations:[3].ipv6Settings.enabled"
+   ]
+  }
+ },
+ "_khong_tim_thay": {
+  "advanced__ddns": [
+   "customDDnsEnabled",
+   "dynamicServer"
+  ],
+  "advanced__lan": [
+   "ipv4Settings.dhcp.enabled",
+   "ipv4Settings.dhcp.startAddress",
+   "ipv4Settings.dhcp.endAddress",
+   "ipv4Settings.dhcp.leaseTime.days",
+   "ipv4Settings.dhcp.leaseTime.hours",
+   "ipv6Settings.mode",
+   "ipv6Settings.dhcp.startSuffix",
+   "ipv6Settings.dhcp.endSuffix",
+   "ipv6Settings.ula.enabled",
+   "ipv6Settings.ula.prefix"
+  ],
+  "advanced__wan": [
+   "radio",
+   "radio",
+   "radio",
+   "radio",
+   "radio",
+   "ipv6Settings.protocol",
+   "radio",
+   "radio",
+   "ipv6Settings.dns.dnsServers.primary",
+   "ipv6Settings.dns.dnsServers.secondary"
+  ],
+  "security__firewall": [
+   "dosDefense.udpFlood.rate",
+   "dosDefense.udpFlood.burst",
+   "dosDefense.portScan.rate",
+   "dosDefense.portScan.burst"
+  ],
+  "system__general": [
+   "hostname"
+  ],
+  "wifi__advanced": [
+   "radios.0.channel",
+   "radios.1.channel"
+  ]
+ },
+ "binding": {
+  "advanced__ddns": {
+   "username": {
+    "resource": "ddns/configurations",
+    "duong_dan": "[0].username"
+   },
+   "password": {
+    "resource": "ddns/configurations",
+    "duong_dan": "[0].password"
+   },
+   "hostname": {
+    "resource": "ddns/configurations",
+    "duong_dan": "[0].hostname"
+   }
+  },
+  "advanced__lan": {
+   "ipv4Settings.ipAddress": {
+    "resource": "interfaces/configurations",
+    "duong_dan": "[0].ipv4Settings.ipAddress"
+   }
+  },
+  "advanced__upnp": {
+   "enabled": {
+    "resource": "upnp",
+    "duong_dan": "enabled"
+   }
+  },
+  "advanced__wan": {
+   "ipv4Settings.protocol": {
+    "resource": "interfaces/configurations",
+    "duong_dan": "[1].ipv4Settings.protocol"
+   },
+   "ipv4Settings.pppoe.username": {
+    "resource": "interfaces/configurations",
+    "duong_dan": "[1].ipv4Settings.pppoe.username"
+   },
+   "ipv4Settings.pppoe.password": {
+    "resource": "interfaces/configurations",
+    "duong_dan": "[1].ipv4Settings.pppoe.password"
+   },
+   "vlan.enabled": {
+    "resource": "interfaces/configurations",
+    "duong_dan": "[1].vlan.enabled"
+   }
+  },
+  "security__firewall": {
+   "spiEnabled": {
+    "resource": "firewall",
+    "duong_dan": "spiEnabled"
+   },
+   "icmpPing.wanEnabled": {
+    "resource": "firewall",
+    "duong_dan": "icmpPing.wanEnabled"
+   },
+   "dosDefense.enabled": {
+    "resource": "firewall",
+    "duong_dan": "dosDefense.enabled"
+   },
+   "dosDefense.tcpFlood.enabled": {
+    "resource": "firewall",
+    "duong_dan": "dosDefense.tcpFlood.enabled"
+   },
+   "dosDefense.tcpFlood.rate": {
+    "resource": "firewall",
+    "duong_dan": "dosDefense.tcpFlood.rate"
+   },
+   "dosDefense.tcpFlood.burst": {
+    "resource": "firewall",
+    "duong_dan": "dosDefense.tcpFlood.burst"
+   },
+   "dosDefense.udpFlood.enabled": {
+    "resource": "firewall",
+    "duong_dan": "dosDefense.udpFlood.enabled"
+   },
+   "dosDefense.icmpFlood.enabled": {
+    "resource": "firewall",
+    "duong_dan": "dosDefense.icmpFlood.enabled"
+   },
+   "dosDefense.icmpFlood.rate": {
+    "resource": "firewall",
+    "duong_dan": "dosDefense.icmpFlood.rate"
+   },
+   "dosDefense.icmpFlood.burst": {
+    "resource": "firewall",
+    "duong_dan": "dosDefense.icmpFlood.burst"
+   },
+   "dosDefense.portScan.enabled": {
+    "resource": "firewall",
+    "duong_dan": "dosDefense.portScan.enabled"
+   },
+   "dosDefense.tcpFlagScan.enabled": {
+    "resource": "firewall",
+    "duong_dan": "dosDefense.tcpFlagScan.enabled"
+   },
+   "dosDefense.land.enabled": {
+    "resource": "firewall",
+    "duong_dan": "dosDefense.land.enabled"
+   },
+   "dosDefense.smurf.enabled": {
+    "resource": "firewall",
+    "duong_dan": "dosDefense.smurf.enabled"
+   },
+   "dosDefense.pingOfDeath.enabled": {
+    "resource": "firewall",
+    "duong_dan": "dosDefense.pingOfDeath.enabled"
+   },
+   "dosDefense.traceRoute.enabled": {
+    "resource": "firewall",
+    "duong_dan": "dosDefense.traceRoute.enabled"
+   },
+   "dosDefense.icmpFragment.enabled": {
+    "resource": "firewall",
+    "duong_dan": "dosDefense.icmpFragment.enabled"
+   },
+   "dosDefense.synFragment.enabled": {
+    "resource": "firewall",
+    "duong_dan": "dosDefense.synFragment.enabled"
+   },
+   "dosDefense.fraggleAttack.enabled": {
+    "resource": "firewall",
+    "duong_dan": "dosDefense.fraggleAttack.enabled"
+   },
+   "dosDefense.unknownProtocol.enabled": {
+    "resource": "firewall",
+    "duong_dan": "dosDefense.unknownProtocol.enabled"
+   }
+  },
+  "system__general": {
+   "localTimeZone": {
+    "resource": "time",
+    "duong_dan": "localTimeZone"
+   }
+  },
+  "system__reboottimer": {
+   "enabled": {
+    "resource": "ext/timer/reboot",
+    "duong_dan": "enabled"
+   }
+  },
+  "system__wifitimer": {
+   "enabled": {
+    "resource": "ext/timer/wifi",
+    "duong_dan": "enabled"
+   }
+  },
+  "wifi__advanced": {
+   "radios.0.bandwidth": {
+    "resource": "radios",
+    "duong_dan": "[0].bandwidth"
+   },
+   "radios.1.dfsEnabled": {
+    "resource": "radios",
+    "duong_dan": "[1].dfsEnabled"
+   },
+   "radios.1.bandwidth": {
+    "resource": "radios",
+    "duong_dan": "[1].bandwidth"
+   }
+  }
+ }
+}

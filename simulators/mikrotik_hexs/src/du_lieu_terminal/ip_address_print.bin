@@ -1,0 +1,6 @@
+/ip address print[[m[36madmin[m@[m[32mFPT[m] > [m[36m/ip[m [m[36maddress[m [m[35mprint[m
+Columns: [m[1mADDRESS[m, [m[1mNETWORK[m, [m[1mINTERFACE
+#[m [m[1mADDRESS[m           [m[1mNETWORK[m        [m[1mINTERFACE[m 
+0 10.254.254.10/32  10.254.254.10  ether1    
+1 192.168.1.1/24    192.168.1.0    bridge-LAN
+[9999B[K[[m[36madmin[m@[m[32mFPT[m] > 

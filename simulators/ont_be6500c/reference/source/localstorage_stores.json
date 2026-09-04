@@ -1,0 +1,664 @@
+{
+ "token__payload_giai_ma": {
+  "role": "admin",
+  "iss": "actiontec",
+  "username": "admin",
+  "exp": 1786330396
+ },
+ "token": "<DA CHE - 218 ky tu>",
+ "session-store": {
+  "state": {
+   "username": "admin",
+   "sessionId": "eFVJXDzObwWWXEoyTiWzH98VG7hwyhGN",
+   "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiYWRtaW4iLCJpc3MiOiJhY3Rpb250ZWMiLCJ1c2VybmFtZSI6ImFkbWluIiwiZXhwIjoxNzg2MzMwMzk2fQ.ZTFhNTk2NWYwN2QyZGFiMDMwMmFiMGIyYzE1OGIxMDgzMWI1OTYyNmIyZDNkYzY4NTdlNmVkY2M4NGNlZTExYg",
+   "triedAutoLogin": true
+  },
+  "version": 0
+ },
+ "app-store": {
+  "state": {
+   "sidebarWidth": 220
+  },
+  "version": 0
+ },
+ "ssid-store": {
+  "state": {
+   "ssids": [
+    {
+     "securityModesSupported": [
+      "WPA2-Personal",
+      "WPA3-Personal-Transition"
+     ],
+     "passphrase": "12345678",
+     "status": "Up",
+     "name": "FPT Telecom-C151",
+     "radio": "2.4G",
+     "securityMode": "WPA3-Personal-Transition",
+     "enabled": true,
+     "type": "Primary",
+     "broadcastEnabled": true,
+     "id": "94:f7:17:a9:c1:59"
+    },
+    {
+     "securityModesSupported": [
+      "WPA2-Personal",
+      "WPA3-Personal-Transition"
+     ],
+     "passphrase": "12345678",
+     "status": "Up",
+     "name": "FPT Telecom-C151",
+     "radio": "5G",
+     "securityMode": "WPA3-Personal-Transition",
+     "enabled": true,
+     "type": "Primary",
+     "broadcastEnabled": true,
+     "id": "94:f7:17:a9:c1:61"
+    },
+    {
+     "securityModesSupported": [
+      "WPA2-Personal",
+      "WPA3-Personal-Transition"
+     ],
+     "passphrase": "119424b42f",
+     "status": "Down",
+     "name": "GuestC151",
+     "radio": "2.4G",
+     "securityMode": "WPA3-Personal-Transition",
+     "enabled": false,
+     "type": "Guest",
+     "broadcastEnabled": true,
+     "id": "94:f7:17:a9:c1:5a"
+    },
+    {
+     "securityModesSupported": [
+      "WPA2-Personal",
+      "WPA3-Personal-Transition"
+     ],
+     "passphrase": "119424b42f",
+     "status": "Down",
+     "name": "GuestC151",
+     "radio": "5G",
+     "securityMode": "WPA3-Personal-Transition",
+     "enabled": false,
+     "type": "Guest",
+     "broadcastEnabled": true,
+     "id": "94:f7:17:a9:c1:62"
+    },
+    {
+     "securityModesSupported": [
+      "WPA2-Personal",
+      "WPA3-Personal-Transition"
+     ],
+     "passphrase": "12345678",
+     "status": "Up",
+     "name": "FPT Telecom-C151 IoT 2.4G",
+     "radio": "2.4G",
+     "securityMode": "WPA3-Personal-Transition",
+     "enabled": true,
+     "type": "SmartHome",
+     "broadcastEnabled": true,
+     "id": "94:f7:17:a9:c1:5b"
+    },
+    {
+     "securityModesSupported": [
+      "WPA2-Personal",
+      "WPA3-Personal-Transition"
+     ],
+     "passphrase": "119424b42f",
+     "status": "Down",
+     "name": "FPT Telecom-C151 IoT 5G",
+     "radio": "5G",
+     "securityMode": "WPA3-Personal-Transition",
+     "enabled": false,
+     "type": "SmartHome",
+     "broadcastEnabled": true,
+     "id": "94:f7:17:a9:c1:63"
+    },
+    {
+     "securityModesSupported": [
+      "WPA3-Personal"
+     ],
+     "passphrase": "814826836e",
+     "status": "Up",
+     "name": "FPT Telecom-C151-BH_MLO",
+     "radio": "2.4G",
+     "securityMode": "WPA3-Personal",
+     "enabled": true,
+     "type": "Backhaul",
+     "broadcastEnabled": false,
+     "id": "94:f7:17:a9:c1:5c"
+    },
+    {
+     "securityModesSupported": [
+      "WPA3-Personal"
+     ],
+     "passphrase": "814826836e",
+     "status": "Up",
+     "name": "FPT Telecom-C151-BH_MLO",
+     "radio": "5G",
+     "securityMode": "WPA3-Personal",
+     "enabled": true,
+     "type": "Backhaul",
+     "broadcastEnabled": false,
+     "id": "94:f7:17:a9:c1:64"
+    }
+   ]
+  },
+  "version": 0
+ },
+ "system-store": {
+  "state": {
+   "systemInfo": {
+    "hostname": "ONT-BE6500C-C150",
+    "modelName": "ONT-BE6500C",
+    "serialNumber": "94F717A9C151",
+    "firmwareVersion": "1PZ108WZ110",
+    "manufacturer": "Actiontec",
+    "architecture": "arm_cortex-a7_neon-vfpv4",
+    "kernelVersion": "ipq53xx/ipq53xx_32",
+    "operatingMode": "router",
+    "isConfigured": true,
+    "domainName": "my-router.top",
+    "isRouterMode": true,
+    "username": "admin",
+    "isLocal": true,
+    "sid": "VIICJ1lN71wKJjTpovpk4G3FWKnJILlD",
+    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiYWRtaW4iLCJpc3MiOiJhY3Rpb250ZWMiLCJ1c2VybmFtZSI6ImFkbWluIiwiZXhwIjoxNzg2MzI4MTI2fQ.NDQzZDAwNmUxMjE4MzRlMDQyZGE3MGRkZTQwYjhkNDA1ZWVlZmE3MDY0OWM3YjBjOTlmZjk1YmZlNWM3NDc4MQ"
+   }
+  },
+  "version": 0
+ },
+ "sessionId": "eFVJXDzObwWWXEoyTiWzH98VG7hwyhGN",
+ "menu-store": {
+  "state": {
+   "rawMenuData": {
+    "/security": {
+     "index": 30,
+     "id": "security",
+     "isRouterOnly": true,
+     "name": "Security"
+    },
+    "/network/speedtest": {
+     "index": 40,
+     "id": "speedtest",
+     "isRouterOnly": true,
+     "name": "Speed Test"
+    },
+    "/network/diagnostics": {
+     "index": 50,
+     "id": "diagnostics",
+     "isRouterOnly": true,
+     "name": "Diagnostics"
+    },
+    "/wifi": {
+     "index": 10,
+     "id": "wifi",
+     "isRouterOnly": true,
+     "name": "Wi-Fi"
+    },
+    "/wifi/general": {
+     "index": 10,
+     "id": "wifiGeneral",
+     "isRouterOnly": true,
+     "name": "General"
+    },
+    "/wifi/advanced": {
+     "index": 20,
+     "id": "wifiAdvanced",
+     "isRouterOnly": true,
+     "name": "Advanced"
+    },
+    "/network": {
+     "index": 20,
+     "id": "network",
+     "isRouterOnly": true,
+     "name": "Network"
+    },
+    "/system/user": {
+     "index": 40,
+     "id": "user",
+     "name": "User"
+    },
+    "/security/firewall": {
+     "index": 10,
+     "id": "firewall",
+     "isRouterOnly": true,
+     "name": "Firewall"
+    },
+    "/home/overview": {
+     "index": 10,
+     "id": "overview",
+     "name": "Overview"
+    },
+    "/system/upgrade": {
+     "index": 20,
+     "id": "fwupgrade",
+     "name": "Update & Restore"
+    },
+    "/network/portforward": {
+     "index": 30,
+     "id": "portforward",
+     "isRouterOnly": true,
+     "name": "Port Forwarding"
+    },
+    "/advanced/dmz": {
+     "index": 20,
+     "id": "dmz",
+     "isRouterOnly": true,
+     "name": "DMZ"
+    },
+    "/home/wizard": {
+     "id": "wizard",
+     "isPathOnly": true,
+     "isRouterOnly": true,
+     "index": 80,
+     "name": "Wizard"
+    },
+    "/system": {
+     "index": 40,
+     "id": "system",
+     "name": "System"
+    },
+    "/system/general": {
+     "index": 10,
+     "id": "systemGeneral",
+     "name": "System Settings"
+    },
+    "/help": {
+     "index": 5,
+     "id": "help",
+     "isFooter": true,
+     "name": "Help"
+    },
+    "/home/topology": {
+     "index": 20,
+     "id": "topology",
+     "isRouterOnly": true,
+     "name": "Topology"
+    },
+    "/reboot": {
+     "index": 10,
+     "id": "reboot",
+     "isFooter": true,
+     "name": "Reboot"
+    },
+    "/logout": {
+     "index": 30,
+     "id": "logout",
+     "isFooter": true,
+     "name": "Log out"
+    },
+    "/home": {
+     "index": 0,
+     "id": "home",
+     "name": "Home"
+    },
+    "/advanced/wan": {
+     "index": 1,
+     "id": "wan",
+     "isRouterOnly": true,
+     "name": "WAN"
+    },
+    "/advanced/upnp": {
+     "index": 30,
+     "id": "upnp",
+     "isRouterOnly": true,
+     "name": "UPnP"
+    },
+    "/advanced/lan": {
+     "index": 2,
+     "id": "lan",
+     "isRouterOnly": true,
+     "name": "LAN"
+    },
+    "/advanced": {
+     "index": 50,
+     "id": "advanced",
+     "isRouterOnly": true,
+     "name": "Advanced"
+    },
+    "/advanced/routing": {
+     "index": 5,
+     "id": "routing",
+     "isRouterOnly": true,
+     "name": "Static Routing"
+    },
+    "/advanced/ddns": {
+     "index": 3,
+     "id": "dynamicDNS",
+     "isRouterOnly": true,
+     "name": "Dynamic DNS"
+    },
+    "/advanced/tcpdump": {
+     "index": 40,
+     "id": "tcpdump",
+     "isRouterOnly": true,
+     "name": "TCPDump"
+    }
+   },
+   "navTree": [
+    {
+     "path": "/home",
+     "index": 0,
+     "id": "home",
+     "name": "Home",
+     "children": [
+      {
+       "path": "/home/overview",
+       "index": 10,
+       "id": "overview",
+       "name": "Overview",
+       "children": []
+      },
+      {
+       "path": "/home/topology",
+       "index": 20,
+       "id": "topology",
+       "isRouterOnly": true,
+       "name": "Topology",
+       "children": []
+      }
+     ]
+    },
+    {
+     "path": "/help",
+     "index": 5,
+     "id": "help",
+     "isFooter": true,
+     "name": "Help",
+     "children": []
+    },
+    {
+     "path": "/wifi",
+     "index": 10,
+     "id": "wifi",
+     "isRouterOnly": true,
+     "name": "Wi-Fi",
+     "children": [
+      {
+       "path": "/wifi/general",
+       "index": 10,
+       "id": "wifiGeneral",
+       "isRouterOnly": true,
+       "name": "General",
+       "children": []
+      },
+      {
+       "path": "/wifi/advanced",
+       "index": 20,
+       "id": "wifiAdvanced",
+       "isRouterOnly": true,
+       "name": "Advanced",
+       "children": []
+      }
+     ]
+    },
+    {
+     "path": "/reboot",
+     "index": 10,
+     "id": "reboot",
+     "isFooter": true,
+     "name": "Reboot",
+     "children": []
+    },
+    {
+     "path": "/network",
+     "index": 20,
+     "id": "network",
+     "isRouterOnly": true,
+     "name": "Network",
+     "children": [
+      {
+       "path": "/network/portforward",
+       "index": 30,
+       "id": "portforward",
+       "isRouterOnly": true,
+       "name": "Port Forwarding",
+       "children": []
+      },
+      {
+       "path": "/network/speedtest",
+       "index": 40,
+       "id": "speedtest",
+       "isRouterOnly": true,
+       "name": "Speed Test",
+       "children": []
+      },
+      {
+       "path": "/network/diagnostics",
+       "index": 50,
+       "id": "diagnostics",
+       "isRouterOnly": true,
+       "name": "Diagnostics",
+       "children": []
+      }
+     ]
+    },
+    {
+     "path": "/security",
+     "index": 30,
+     "id": "security",
+     "isRouterOnly": true,
+     "name": "Security",
+     "children": [
+      {
+       "path": "/security/firewall",
+       "index": 10,
+       "id": "firewall",
+       "isRouterOnly": true,
+       "name": "Firewall",
+       "children": []
+      }
+     ]
+    },
+    {
+     "path": "/logout",
+     "index": 30,
+     "id": "logout",
+     "isFooter": true,
+     "name": "Log out",
+     "children": []
+    },
+    {
+     "path": "/system",
+     "index": 40,
+     "id": "system",
+     "name": "System",
+     "children": [
+      {
+       "path": "/system/general",
+       "index": 10,
+       "id": "systemGeneral",
+       "name": "System Settings",
+       "children": []
+      },
+      {
+       "path": "/system/upgrade",
+       "index": 20,
+       "id": "fwupgrade",
+       "name": "Update & Restore",
+       "children": []
+      },
+      {
+       "path": "/system/user",
+       "index": 40,
+       "id": "user",
+       "name": "User",
+       "children": []
+      }
+     ]
+    },
+    {
+     "path": "/advanced",
+     "index": 50,
+     "id": "advanced",
+     "isRouterOnly": true,
+     "name": "Advanced",
+     "children": [
+      {
+       "path": "/advanced/wan",
+       "index": 1,
+       "id": "wan",
+       "isRouterOnly": true,
+       "name": "WAN",
+       "children": []
+      },
+      {
+       "path": "/advanced/lan",
+       "index": 2,
+       "id": "lan",
+       "isRouterOnly": true,
+       "name": "LAN",
+       "children": []
+      },
+      {
+       "path": "/advanced/ddns",
+       "index": 3,
+       "id": "dynamicDNS",
+       "isRouterOnly": true,
+       "name": "Dynamic DNS",
+       "children": []
+      },
+      {
+       "path": "/advanced/routing",
+       "index": 5,
+       "id": "routing",
+       "isRouterOnly": true,
+       "name": "Static Routing",
+       "children": []
+      },
+      {
+       "path": "/advanced/dmz",
+       "index": 20,
+       "id": "dmz",
+       "isRouterOnly": true,
+       "name": "DMZ",
+       "children": []
+      },
+      {
+       "path": "/advanced/upnp",
+       "index": 30,
+       "id": "upnp",
+       "isRouterOnly": true,
+       "name": "UPnP",
+       "children": []
+      },
+      {
+       "path": "/advanced/tcpdump",
+       "index": 40,
+       "id": "tcpdump",
+       "isRouterOnly": true,
+       "name": "TCPDump",
+       "children": []
+      }
+     ]
+    }
+   ],
+   "availablePaths": [
+    "/security",
+    "/network/speedtest",
+    "/network/diagnostics",
+    "/wifi",
+    "/wifi/general",
+    "/wifi/advanced",
+    "/network",
+    "/system/user",
+    "/security/firewall",
+    "/home/overview",
+    "/system/upgrade",
+    "/network/portforward",
+    "/advanced/dmz",
+    "/home/wizard",
+    "/system",
+    "/system/general",
+    "/help",
+    "/home/topology",
+    "/reboot",
+    "/logout",
+    "/home",
+    "/advanced/wan",
+    "/advanced/upnp",
+    "/advanced/lan",
+    "/advanced",
+    "/advanced/routing",
+    "/advanced/ddns",
+    "/advanced/tcpdump"
+   ],
+   "error": null
+  },
+  "version": 0
+ },
+ "instance-store": {
+  "state": {
+   "instances": [
+    {
+     "id": "94:f7:17:a9:c1:50",
+     "status": "Up",
+     "capabilities": [
+      {
+       "type": "Ethernet"
+      },
+      {
+       "radio": "2.4G",
+       "type": "Wireless"
+      },
+      {
+       "radio": "5G",
+       "type": "Wireless"
+      }
+     ],
+     "lastChangeTime": 1786330103000,
+     "macAddress": "94:f7:17:a9:c1:50",
+     "connections": [],
+     "ipAddresses": [
+      {
+       "lifetime": 0,
+       "lifetimeState": "Infinite",
+       "version": 4,
+       "address": "192.168.1.1"
+      }
+     ],
+     "type": "Router",
+     "hostname": "ONT-BE6500C-C150",
+     "upstreamId": "00:00:00:00:00:00"
+    },
+    {
+     "id": "d8:43:ae:2e:65:45",
+     "status": "Up",
+     "capabilities": [],
+     "lastChangeTime": 1786330103000,
+     "macAddress": "d8:43:ae:2e:65:45",
+     "connections": [
+      {
+       "type": "Ethernet",
+       "uptime": 1918,
+       "ethernet": {
+        "port": 2,
+        "bitRate": 2500000000
+       }
+      }
+     ],
+     "ipAddresses": [
+      {
+       "lifetime": 1786371565000,
+       "lifetimeState": "Valid",
+       "version": 4,
+       "address": "192.168.1.109"
+      },
+      {
+       "lifetimeState": "Unknown",
+       "lifetime": 0,
+       "type": "LLA",
+       "address": "fe80::19f6:b206:5131:4599",
+       "version": 6
+      }
+     ],
+     "type": "Device",
+     "hostname": "Admin-PC",
+     "upstreamId": "94:f7:17:a9:c1:50"
+    }
+   ]
+  },
+  "version": 0
+ }
+}

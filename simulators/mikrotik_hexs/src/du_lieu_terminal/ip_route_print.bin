@@ -1,0 +1,13 @@
+/ip route print[15D[m[36m/ip[m [m[36mroute[m [m[35mprint[m
+Flags: D - [m[1mDYNAMIC[m; I - [m[1mINACTIVE[m, A - [m[1mACTIVE[m; c - [m[1mCONNECT[m, s - [m[1mSTATIC[m; H - [m[1mHW-OFFLOADED
+[mColumns: [m[1mDST-ADDRESS[m, [m[1mGATEWAY[m, [m[1mDISTANCE
+#[m      [m[1mDST-ADDRESS[m       [m[1mGATEWAY[m     [m[1mDISTANCE
+[m0  IsH 0.0.0.0/0         pppoe-out2         2
+1  IsH 0.0.0.0/0         pppoe-out1         1
+  DIcH 10.254.254.10/32  ether1             0
+  DAc  192.168.1.0/24    bridge-LAN         0
+2  IsH 0.0.0.0/0         pppoe-out2         2
+3  IsH 0.0.0.0/0         pppoe-out1         1
+4  IsH 0.0.0.0/0         pppoe-out1         2
+5  IsH 0.0.0.0/0         pppoe-out2         1
+[9999B[K[[m[36madmin[m@[m[32mFPT[m] > 

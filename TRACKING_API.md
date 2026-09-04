@@ -87,6 +87,8 @@ Giao diện phải hiển thị rõ trạng thái đang lưu, thành công, cả
 ## Nghiệp vụ dashboard
 
 - Chỉ attempt `practice` cập nhật trạng thái hoàn thành/đạt của `lab_assignments`.
+- KTV chỉ được bắt đầu hoặc nộp kết quả cho bài lab thuộc ít nhất một lớp đang hiệu lực;
+  gọi trực tiếp API với bài chưa được giao trả `403 tracking/not-assigned`.
 - Attempt `guide` vẫn lưu lịch sử nhưng không làm tăng KPI thực hành.
 - `completed` không có `is_passed: true` là “hoàn thành nhưng chưa có kết quả chấm”, không được tự suy diễn là đạt.
 - Chỉ dữ liệu có bằng chứng pass/fail mới được dùng cho tỷ lệ đạt và lần đầu.

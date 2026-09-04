@@ -71,6 +71,61 @@ function tracking_timer_response(array $timer): array
  */
 function sync_tracking_attempt(PDO $pdo, int $timerId, array $timer, ?string $userId): bool
 {
+    if (!$userId || ($timer['mode'] ?? '') !== 'Thực hành') {
+        return false;
+    }
+    $lookup = $pdo->prepare(
+        <<<'SQL'
+        SELECT assignment.assignment_id, assignment.status
+          FROM class_enrollments enrollment
+          JOIN training_classes training ON training.class_id = enrollment.class_id
+          JOIN lab_assignments assignment ON assignment.enrollment_id = enrollment.enrollment_id
+          JOIN curriculum_labs curriculum_lab
+            ON curriculum_lab.curriculum_lab_id = assignment.curriculum_lab_id
+         WHERE enrollment.user_id = CAST(:user_id AS uuid)
+           AND curriculum_lab.lab_id = :lab_id
+           AND enrollment.status = 'active'
+           AND enrollment.valid_from <= CURRENT_DATE
+           AND (enrollment.valid_to IS NULL OR enrollment.valid_to >= CURRENT_DATE)
+           AND training.start_date <= CURRENT_DATE
+           AND (training.end_date IS NULL OR training.end_date >= CURRENT_DATE)
+           AND assignment.status IN ('assigned', 'in_progress', 'passed')
+           AND assignment.assigned_at <= NOW()
+           AND (assignment.due_at IS NULL OR assignment.due_at >= NOW())
+         ORDER BY assignment.status = 'passed', training.start_date DESC, assignment.created_at DESC
+         LIMIT 1
+         FOR UPDATE OF assignment
+        SQL
+    );
+    $lookup->execute(['user_id' => $userId, 'lab_id' => $timer['lab_id']]);
+    $assignment = $lookup->fetch();
+    if (!$assignment) {
+        return false;
+    }
+    $passed = ($timer['is_passed'] ?? null) === true;
+    $attemptNo = isset($timer['practice_attempt_no']) ? (int)$timer['practice_attempt_no'] : null;
+    if ($passed && $attemptNo !== null) {
+        $update = $pdo->prepare(
+            <<<'SQL'
+            UPDATE lab_assignments
+               SET status = 'passed',
+                   first_pass_attempt_no = COALESCE(first_pass_attempt_no, :attempt_no),
+                   first_try_evidence = 'derived_complete',
+                   completed_at = COALESCE(completed_at, CAST(:completed_at AS timestamptz)),
+                   passed_at = COALESCE(passed_at, CAST(:completed_at AS timestamptz)),
+                   updated_at = NOW()
+             WHERE assignment_id = CAST(:assignment_id AS uuid)
+            SQL
+        );
+        $update->execute([
+            'attempt_no' => $attemptNo,
+            'completed_at' => $timer['finished_at'],
+            'assignment_id' => $assignment['assignment_id'],
+        ]);
+    } elseif (($timer['status'] ?? '') === 'failed' && $assignment['status'] === 'assigned') {
+        $update = $pdo->prepare("UPDATE lab_assignments SET status = 'in_progress', updated_at = NOW() WHERE assignment_id = CAST(:assignment_id AS uuid)");
+        $update->execute(['assignment_id' => $assignment['assignment_id']]);
+    }
     return true;
 }
 
@@ -118,6 +173,9 @@ function reserve_tracking_timer_start(array $trackingActor, array $input): array
     $userId = (string)($trackingActor['user_id'] ?? '');
     if ($userId === '') {
         fail(401, 'auth/unauthenticated', 'Sign in before starting a lab session.');
+    }
+    if (!training_class_user_has_lab($pdo, $trackingActor, $labId)) {
+        fail(403, 'tracking/not-assigned', 'This lab is not assigned to an effective class for the signed-in user.');
     }
     $employeeId = (string)($trackingActor['employee_id'] ?? '');
     $email = (string)($trackingActor['email'] ?? '');
@@ -418,6 +476,9 @@ function handle_tracking(array $segments, string $method): void
         $catalog = $catalogLookup->fetch();
         if (!$catalog) {
             fail(422, 'tracking/unknown-lab', 'lab_id is not in the active catalog.');
+        }
+        if (!is_array($trackingActor) || !training_class_user_has_lab($pdo, $trackingActor, $labId)) {
+            fail(403, 'tracking/not-assigned', 'This lab is not assigned to an effective class for the signed-in user.');
         }
         $deviceId = (string)$catalog['device_id'];
         $device = (string)$catalog['device_name'];
@@ -734,10 +795,15 @@ function handle_tracking(array $segments, string $method): void
                 $savedRow = $insert->fetch();
                 $timer['session_id'] = (string)$savedRow['id'];
             }
+            $timer['normalized_saved'] = sync_tracking_attempt(
+                $pdo,
+                (int)$timer['session_id'],
+                $timer,
+                $resolvedUserId ?: null
+            );
             $timer['saved'] = true;
             $timer['duplicate'] = !$savedRow;
-            $timer['normalized_saved'] = true;
-            $timer['normalization_issue'] = null;
+            $timer['normalization_issue'] = $timer['normalized_saved'] ? null : 'No effective assignment matched the saved timer.';
             $pdo->commit();
         } catch (Throwable $exception) {
             if ($pdo->inTransaction()) {

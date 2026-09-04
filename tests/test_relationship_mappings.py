@@ -165,21 +165,15 @@ class AdminRelationshipMappingTests(unittest.TestCase):
         self.assertEqual(TimerSessionAdmin.list_select_related, ['user', 'device'])
 
 
-class DashboardRelationshipPrecedenceTests(unittest.TestCase):
+class DashboardAssignmentSourceTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.api_source = (PROJECT_ROOT / 'api' / 'index.php').read_text(encoding='utf-8')
 
-    def test_canonical_ids_win_over_snapshot_fallbacks(self):
-        required_clauses = [
-            "OR (s.user_id IS NULL AND LOWER(s.email) = LOWER(u.email))",
-            "OR (s.device_id IS NULL AND s.device = device.device_name)",
-            "OR (s.lab_id IS NULL AND s.lab_name = lab.lab_name)",
-        ]
-
-        for clause in required_clauses:
-            with self.subTest(clause=clause):
-                self.assertIn(clause, self.api_source)
+    def test_dashboard_uses_explicit_assignment_read_model(self):
+        self.assertIn('FROM v_lab_assignment_progress progress', self.api_source)
+        self.assertIn('progress.assignment_status AS status', self.api_source)
+        self.assertNotIn('CROSS JOIN lab_catalog lab', self.api_source)
 
 
 if __name__ == '__main__':

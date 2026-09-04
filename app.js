@@ -17,6 +17,8 @@
   let _trackingSession = null; // { device, lesson, mode, startedAt }
   let _currentUser = null;    // { technician_id, name, email } — lấy từ API auth/session
   let _lastTrackingPayload = null; // Giữ nguyên payload/idempotency key khi retry lỗi mạng
+  let _allowedDeviceIds = null;
+  let _allowedLabIds = null;
 
   function escapeHTML(str) {
     if (!str) return '';
@@ -83,24 +85,53 @@
   let currentIframeUrl = '';
   let trackingSaveInFlight = false;
 
-  // ── Init ─────────────────────────────────────────────────────────
-  function init() {
-    // Populate device dropdown
-    DEVICES.forEach(device => {
+  function databaseDeviceToPortalId(device) {
+    const normalized = String(device.device_id || '').replace(/^DEV_/i, '').toLowerCase();
+    return normalized === 'ax3000cv2' ? 'ax3000c' : normalized;
+  }
+
+  function populateDeviceDropdown(devices) {
+    deviceSelect.replaceChildren();
+    devices.forEach(device => {
       const opt = document.createElement('option');
       opt.value = device.id;
       opt.textContent = device.name;
       deviceSelect.appendChild(opt);
     });
+    deviceSelect.disabled = devices.length === 0;
+  }
 
-    // Select initial device
-    const initialDeviceId = (deviceSelect.value && DEVICES.some(d => d.id === deviceSelect.value))
-      ? deviceSelect.value
-      : (DEVICES.length > 0 ? DEVICES[0].id : null);
+  function loadLearningCatalog() {
+    return fetch('/api/index.php/learning/catalog', { credentials: 'include' })
+      .then(function (response) {
+        if (!response.ok) throw new Error('Không thể tải danh sách bài được giao.');
+        return response.json();
+      })
+      .then(function (data) {
+        const assignedDevices = Array.isArray(data.devices) ? data.devices : [];
+        _allowedDeviceIds = new Set(assignedDevices.map(databaseDeviceToPortalId));
+        _allowedLabIds = new Set(assignedDevices.flatMap(function (device) {
+          return Array.isArray(device.labs) ? device.labs.map(function (lab) { return String(lab.lab_id || ''); }) : [];
+        }));
+        const visibleDevices = DEVICES.filter(function (device) { return _allowedDeviceIds.has(device.id); });
+        populateDeviceDropdown(visibleDevices);
+        if (visibleDevices.length > 0) {
+          selectDevice(visibleDevices[0].id);
+        } else {
+          currentDeviceId = null;
+          navList.innerHTML = '<div class="empty-state"><p>Bạn chưa có thiết bị thực hành đang hiệu lực.</p></div>';
+          showHero();
+          setBreadcrumb(['Chưa có bài được giao']);
+        }
+      });
+  }
 
-    if (initialDeviceId) {
-      selectDevice(initialDeviceId);
-    }
+  // ── Init ─────────────────────────────────────────────────────────
+  function init() {
+    const loadingOption = document.createElement('option');
+    loadingOption.textContent = 'Đang tải bài được giao...';
+    deviceSelect.replaceChildren(loadingOption);
+    deviceSelect.disabled = true;
 
     // Bind events
     deviceSelect.addEventListener('change', () => selectDevice(deviceSelect.value));
@@ -597,6 +628,11 @@
               };
             }
           }
+          loadLearningCatalog().catch(function (error) {
+            console.warn('[Assignment] Không thể tải danh sách bài được giao:', error);
+            populateDeviceDropdown([]);
+            navList.innerHTML = '<div class="empty-state"><p>Không thể tải danh sách bài được giao.</p></div>';
+          });
         } else {
           _currentUser = null;
           renderUserProfile();
@@ -611,6 +647,7 @@
 
   // ── Device Selection ─────────────────────────────────────────────
   function selectDevice(deviceId) {
+    if (_allowedDeviceIds && !_allowedDeviceIds.has(deviceId)) return;
     currentDeviceId = deviceId;
     currentLessonId = null;
 
@@ -625,8 +662,10 @@
 
     // Automatically select first lesson if available
     const firstLessonItem = navList.querySelector('.nav-item');
-    if (firstLessonItem && device.categories && device.categories[0] && device.categories[0].lessons[0]) {
-      selectLesson(device, device.categories[0].lessons[0], firstLessonItem);
+    const firstAllowedLesson = device.categories?.flatMap(category => category.lessons || [])
+      .find(lesson => !_allowedLabIds || _allowedLabIds.has(lesson.id));
+    if (firstLessonItem && firstAllowedLesson) {
+      selectLesson(device, firstAllowedLesson, firstLessonItem);
     } else {
       showHero();
       setBreadcrumb([device.name]);
@@ -647,6 +686,8 @@
     }
 
     device.categories.forEach(cat => {
+      const lessons = (cat.lessons || []).filter(lesson => !_allowedLabIds || _allowedLabIds.has(lesson.id));
+      if (!lessons.length) return;
       // Category title
       const catTitle = document.createElement('div');
       catTitle.className = 'nav-category-title';
@@ -654,7 +695,7 @@
       navList.appendChild(catTitle);
 
       // Lessons
-      cat.lessons.forEach((lesson, idx) => {
+      lessons.forEach((lesson, idx) => {
         const item = document.createElement('div');
         item.className = 'nav-item';
         item.dataset.lessonId = lesson.id;

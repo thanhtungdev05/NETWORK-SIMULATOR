@@ -7,8 +7,8 @@
     <meta name="theme-color" content="#f3f6fb">
     <meta name="color-scheme" content="light">
     <title>Dashboard giám sát thực hành KTV | FTC</title>
-    <link rel="stylesheet" href="css/styles.css?v=20260827-3">
-    <link rel="stylesheet" href="css/dashboard-professional.css?v=20260827-3">
+    <link rel="stylesheet" href="css/styles.css?v=20260904-unified-controls-v3">
+    <link rel="stylesheet" href="css/dashboard-professional.css?v=20260903-class-v2">
 </head>
 
 <body>
@@ -69,6 +69,12 @@
                 </a>
 
                 <span class="sidebar-nav-label">Quản trị</span>
+                <a class="sidebar-link" href="?view=classes" data-dashboard-view="classes" aria-label="Quản lý lớp học">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 2 2 7l10 5 10-5-10-5zm-8 9 8 4 8-4M4 16l8 4 8-4"/>
+                    </svg>
+                    <span>Quản lý lớp</span>
+                </a>
                 <a class="sidebar-link" href="?view=roster" data-dashboard-view="roster" aria-label="Quản lý KTV">
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                         <path
@@ -785,9 +791,93 @@
                                 </thead>
                                 <tbody id="sessionsBody"></tbody>
                             </table>
-                        <div class="table-meta" id="learnerTableMeta" role="status" aria-live="polite"></div>
                         </div>
+                        <div class="table-meta" id="learnerTableMeta" role="status" aria-live="polite"></div>
                     </div>
+                </section>
+
+                <!-- Quản lý lớp học (Admin) -->
+                <section class="section dashboard-page-view" id="classes" data-page-view="classes">
+                    <div class="roster-tab-bar" role="tablist" aria-label="Chức năng quản lý lớp học">
+                        <button type="button" class="roster-tab-btn active" role="tab" aria-selected="true"
+                            data-class-tab="list" aria-controls="classListPanel">Danh sách lớp</button>
+                        <button type="button" class="roster-tab-btn" role="tab" aria-selected="false"
+                            data-class-tab="create" aria-controls="classCreatePanel">Đăng ký lớp mới</button>
+                    </div>
+
+                    <div class="roster-panel" id="classListPanel" role="tabpanel">
+                        <div class="roster-table-wrapper" tabindex="0" aria-label="Danh sách lớp học">
+                            <table class="roster-table">
+                                <thead><tr><th>Mã lớp</th><th>Tên lớp</th><th>Hiệu lực</th><th>Trạng thái</th><th>KTV</th><th>Thiết bị</th></tr></thead>
+                                <tbody id="classTableBody"></tbody>
+                            </table>
+                        </div>
+                        <div id="classListEmpty" class="roster-empty" hidden>Chưa có lớp học nào.</div>
+                    </div>
+
+                    <div class="roster-panel" id="classCreatePanel" role="tabpanel" hidden>
+                        <form id="classCreateForm" class="class-create-form" autocomplete="off">
+                            <div class="class-form-grid">
+                                <label class="roster-form-row">Tên lớp
+                                    <input type="text" id="className" maxlength="200" required placeholder="Đặt tên cho lớp mới (Ví dụ: BDG01, HNI01, ...)">
+                                </label>
+                                <label class="roster-form-row">Hiệu lực từ
+                                    <input type="date" id="classValidFrom" required>
+                                </label>
+                            </div>
+
+                            <div class="class-member-import">
+                                <p><strong>Thành viên & Thiết bị đào tạo</strong></p>
+                                <p class="upload-hint">Chọn file Excel (.xlsx gồm 3 cột: Mã NV, Tên KTV, Email) để thêm nhanh KTV hoặc mở popup để tìm kiếm KTV và chọn thiết bị.</p>
+                                <div class="roster-template-actions">
+                                    <button type="button" class="button" id="classMemberFileBtn">
+                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                                        </svg>
+                                        Chọn file KTV
+                                    </button>
+                                    <button type="button" class="button secondary" id="classOpenConfigModalBtn">
+                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8m14-3h-6m3-3v6"/>
+                                        </svg>
+                                        Chọn KTV & Thiết bị
+                                    </button>
+                                    <a class="button secondary" href="/api/index.php/classes/members/template">Tải file mẫu</a>
+                                </div>
+                                <input type="file" id="classMemberFileInput" accept=".xlsx" hidden>
+                                <div class="upload-file-info" id="classMemberFileInfo" hidden></div>
+                            </div>
+
+                            <div class="class-summary-card" id="classSummaryCard">
+                                <div class="class-summary-header">
+                                    <h4>Tóm tắt phân công lớp</h4>
+                                    <button type="button" class="button-link" id="classSummaryEditBtn">Chỉnh sửa danh sách</button>
+                                </div>
+                                <div class="class-summary-chips">
+                                    <div class="class-summary-chip" id="classSummaryMemberChip">
+                                        <span class="chip-icon">👥</span>
+                                        <div class="chip-content">
+                                            <strong id="classSummaryMemberCount">0 KTV</strong>
+                                            <small id="classSummaryMemberSub">Chưa chọn KTV nào</small>
+                                        </div>
+                                    </div>
+                                    <div class="class-summary-chip" id="classSummaryDeviceChip">
+                                        <span class="chip-icon">💻</span>
+                                        <div class="chip-content">
+                                            <strong id="classSummaryDeviceCount">0 thiết bị</strong>
+                                            <small id="classSummaryDeviceSub">Chưa chọn thiết bị nào</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="roster-form-actions">
+                                <button type="submit" class="button primary" id="classCreateBtn">Tạo lớp và giao bài</button>
+                                <span id="classCreateResult" role="status" aria-live="polite"></span>
+                            </div>
+                        </form>
+                    </div>
+
                 </section>
 
                 <!-- Quản lý KTV (Admin) -->
@@ -1224,6 +1314,68 @@
         </div>
     </div>
 
+    <!-- Modal cấu hình thành viên lớp học & Thiết bị được giao -->
+    <div class="sub-modal-backdrop" id="classConfigModal" aria-hidden="true" hidden>
+        <div class="sub-modal-card class-config-modal-card" role="dialog" aria-modal="true" aria-labelledby="classConfigModalTitle" tabindex="-1">
+            <div class="sub-modal-header">
+                <div>
+                    <h3 id="classConfigModalTitle">Cấu hình thành viên & Thiết bị lớp học</h3>
+                    <div class="sub-modal-subtitle">Thêm KTV vào lớp học và chọn các thiết bị thực hành được phân công</div>
+                </div>
+                <button type="button" class="detail-close" id="classConfigModalClose" aria-label="Đóng popup">×</button>
+            </div>
+            <div class="sub-modal-body class-config-modal-body">
+                <div class="class-config-columns">
+                    <!-- Cột 1: Thành viên lớp học -->
+                    <div class="class-config-column">
+                        <div class="class-config-column-header">
+                            <h4>Thành viên lớp học (<span id="classModalMemberCount">0</span>)</h4>
+                            <button type="button" class="button-text-danger" id="classModalClearMembersBtn">Xóa tất cả</button>
+                        </div>
+
+                        <!-- Thanh tìm kiếm KTV với dropdown tối đa 5 kết quả -->
+                        <div class="class-ktv-search-box">
+                            <label class="sr-only" for="classKtvSearchInput">Tìm KTV</label>
+                            <div class="class-ktv-input-wrapper">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <circle cx="11" cy="11" r="7"></circle>
+                                    <path d="m16 16 5 5"></path>
+                                </svg>
+                                <input type="search" id="classKtvSearchInput" placeholder="Nhập tên, mã NV hoặc email để tìm..." autocomplete="off">
+                            </div>
+                            <div class="class-ktv-dropdown" id="classKtvSearchDropdown" hidden></div>
+                        </div>
+
+                        <!-- Danh sách KTV đã thêm vào lớp -->
+                        <div class="class-selected-members-container" id="classSelectedMembersContainer">
+                            <div class="class-selected-members-list" id="classSelectedMembersList" aria-live="polite"></div>
+                            <div class="class-selected-members-empty" id="classSelectedMembersEmpty">
+                                Chưa có KTV nào được thêm vào lớp. Hãy tìm kiếm ở trên hoặc chọn file KTV (.xlsx).
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cột 2: Thiết bị được giao -->
+                    <div class="class-config-column">
+                        <div class="class-config-column-header">
+                            <h4>Thiết bị được giao (<span id="classModalDeviceCount">0</span>)</h4>
+                            <div class="class-device-quick-actions">
+                                <button type="button" class="button-text" id="classModalSelectAllDevicesBtn">Chọn tất cả</button>
+                                <span class="divider">·</span>
+                                <button type="button" class="button-text" id="classModalDeselectAllDevicesBtn">Bỏ chọn</button>
+                            </div>
+                        </div>
+                        <div class="class-device-choices-list" id="classModalDeviceList" aria-live="polite"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="sub-modal-footer class-config-modal-footer">
+                <button type="button" class="button secondary" id="classConfigModalCancelBtn">Quay lại</button>
+                <button type="button" class="button primary" id="classConfigModalSaveBtn">Xác nhận danh sách</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Một điểm xuất báo cáo thống nhất cho toàn bộ dashboard -->
     <div class="report-export-backdrop" id="reportExportBackdrop" aria-hidden="true" hidden>
         <section class="report-export-dialog" role="dialog" aria-modal="true" tabindex="-1"
@@ -1301,7 +1453,7 @@
 
     <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
 
-    <script src="js/app.js?v=20260827-3"></script>
+    <script src="js/app.js?v=20260904-unified-controls-v3"></script>
 </body>
 
 </html>

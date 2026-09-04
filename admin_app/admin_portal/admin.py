@@ -11,6 +11,7 @@ from django.utils.html import format_html
 from .models import (
     DeviceCatalog, LabCatalog, Role, FtcUser, TimerSession,
     Region, LoginLog, RosterImportLog, SchemaMigration,
+    TrainingClass, ClassEnrollment, AssignmentImportLog,
 )
 
 
@@ -432,6 +433,29 @@ class ReadOnlyAuditAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+
+@admin.register(TrainingClass)
+class TrainingClassAdmin(ReadOnlyAuditAdmin):
+    list_display = ['class_code', 'class_name', 'start_date', 'end_date', 'status', 'created_by']
+    list_filter = ['status', 'start_date']
+    search_fields = ['class_code', 'class_name']
+    list_select_related = ['created_by']
+
+
+@admin.register(ClassEnrollment)
+class ClassEnrollmentAdmin(ReadOnlyAuditAdmin):
+    list_display = ['training_class', 'user', 'valid_from', 'valid_to', 'status']
+    list_filter = ['status', 'valid_from']
+    search_fields = ['training_class__class_code', 'user__employee_id', 'user__email']
+    list_select_related = ['training_class', 'user']
+
+
+@admin.register(AssignmentImportLog)
+class AssignmentImportLogAdmin(ReadOnlyAuditAdmin):
+    list_display = ['imported_at', 'batch_id', 'file_name', 'imported_by', 'class_count', 'member_count', 'device_count', 'assignment_count', 'error_count']
+    search_fields = ['batch_id', 'file_name', 'imported_by__email', 'imported_by__employee_id']
+    list_select_related = ['imported_by']
 
 
 @admin.register(LoginLog)

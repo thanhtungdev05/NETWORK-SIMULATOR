@@ -9,6 +9,7 @@ require_once __DIR__ . '/lib/PostgresSessionHandler.php';
 require_once __DIR__ . '/lib/iam_identity.php';
 require_once __DIR__ . '/lib/tracking_handler.php';
 require_once __DIR__ . '/lib/ktv_roster_import.php';
+require_once __DIR__ . '/lib/training_classes.php';
 require_once __DIR__ . '/lib/report_xlsx.php';
 require_once __DIR__ . '/lib/dashboard_report.php';
 load_app_environment($root);
@@ -2065,6 +2066,199 @@ function handle_roster(array $segments, string $method): void
     fail(404, 'not-found', 'Roster endpoint not found.');
 }
 
+function training_class_uploaded_file(): array
+{
+    $file = $_FILES['file'] ?? $_FILES['workbook'] ?? null;
+    if (!is_array($file)) {
+        fail(400, 'bad-request', 'Missing class assignment workbook.');
+    }
+    $error = (int)($file['error'] ?? UPLOAD_ERR_NO_FILE);
+    if ($error !== UPLOAD_ERR_OK) {
+        fail(400, 'upload-error', 'Unable to receive class assignment workbook.');
+    }
+    $maximumBytes = env_int('CLASS_IMPORT_MAX_BYTES', TRAINING_CLASS_IMPORT_MAX_BYTES, 1024, 20 * 1024 * 1024);
+    if ((int)($file['size'] ?? 0) > $maximumBytes) {
+        fail(413, 'payload-too-large', 'Class assignment workbook exceeds the allowed size.');
+    }
+    $name = (string)($file['name'] ?? '');
+    if (!preg_match('/\.xlsx$/iD', $name)) {
+        fail(400, 'bad-request', 'Class assignment import must be an .xlsx workbook.');
+    }
+    $path = (string)($file['tmp_name'] ?? '');
+    if ($path === '' || !is_uploaded_file($path)) {
+        fail(400, 'upload-error', 'Uploaded class assignment workbook is not available.');
+    }
+    $mime = (new finfo(FILEINFO_MIME_TYPE))->file($path);
+    $allowedMimeTypes = [
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/zip',
+        'application/x-zip-compressed',
+        'application/octet-stream',
+    ];
+    if (!in_array($mime, $allowedMimeTypes, true)) {
+        fail(400, 'bad-workbook', 'Uploaded file content is not a valid XLSX workbook.');
+    }
+    $zip = new ZipArchive();
+    if ($zip->open($path) !== true || $zip->locateName('xl/workbook.xml') === false || $zip->numFiles > 1000) {
+        if ($zip->status === ZipArchive::ER_OK) {
+            $zip->close();
+        }
+        fail(400, 'bad-workbook', 'Uploaded file is not a valid XLSX package.');
+    }
+    $expandedBytes = 0;
+    for ($index = 0; $index < $zip->numFiles; $index++) {
+        $stat = $zip->statIndex($index);
+        $expandedBytes += (int)($stat['size'] ?? 0);
+        if ($expandedBytes > 64 * 1024 * 1024) {
+            $zip->close();
+            fail(413, 'workbook-too-large', 'Expanded workbook content exceeds the allowed size.');
+        }
+    }
+    $zip->close();
+    return ['path'=>$path, 'name'=>$name, 'size'=>(int)($file['size'] ?? 0)];
+}
+
+function handle_training_class_member_preview(): void
+{
+    $className = trim((string)($_POST['class_name'] ?? $_POST['className'] ?? ''));
+    if ($className === '' || mb_strlen($className, 'UTF-8') > 200) {
+        fail(400, 'bad-request', 'Tên lớp là bắt buộc và không được vượt quá 200 ký tự.');
+    }
+    $validFrom = training_class_date($_POST['valid_from'] ?? $_POST['validFrom'] ?? null, 'validFrom');
+    $validTo = training_class_date($_POST['valid_to'] ?? $_POST['validTo'] ?? null, 'validTo', false);
+    training_class_assert_dates($validFrom, $validTo);
+    $file = training_class_uploaded_file();
+    try {
+        $parsed = parse_training_class_members_xlsx($file['path']);
+    } catch (Throwable $exception) {
+        report_exception($exception, 'class-member-preview');
+        fail(400, 'bad-workbook', 'Không thể đọc file danh sách KTV.');
+    }
+    $validated = validate_training_class_member_preview(db(), $parsed);
+    $existingCount = count(array_filter($validated['members'], static fn(array $member): bool => ($member['action'] ?? '') === 'existing'));
+    $newCount = count(array_filter($validated['members'], static fn(array $member): bool => ($member['action'] ?? '') === 'create'));
+    respond(['data'=>[
+        'file_name'=>$file['name'],
+        'member_count'=>count($validated['members']),
+        'existing_count'=>$existingCount,
+        'new_count'=>$newCount,
+        'error_count'=>count($validated['errors']),
+        'warning_count'=>count($validated['warnings']),
+        'members'=>$validated['members'],
+        'errors'=>$validated['errors'],
+        'warnings'=>$validated['warnings'],
+        'can_apply'=>count($validated['errors']) === 0 && count($validated['members']) > 0,
+    ]]);
+}
+
+function handle_training_class_import(array $actor): void
+{
+    $file = training_class_uploaded_file();
+    try {
+        $parsed = parse_training_class_xlsx($file['path']);
+    } catch (Throwable $exception) {
+        report_exception($exception, 'class-import-parse');
+        fail(400, 'bad-workbook', 'Unable to read the class assignment workbook.');
+    }
+    $validated = validate_training_class_import(db(), $parsed);
+    $batchId = trim((string)($_POST['batch_id'] ?? ''));
+    if ($batchId === '') {
+        $batchId = 'class-assignment-' . gmdate('Ymd-His') . '-' . bin2hex(random_bytes(4));
+    }
+    if (!preg_match('/^[A-Za-z0-9._:-]{8,100}$/D', $batchId)) {
+        fail(400, 'bad-request', 'Invalid class assignment import batch id.');
+    }
+    $preview = [
+        'batch_id'=>$batchId,
+        'file_name'=>$file['name'],
+        'class_count'=>count($validated['classes']),
+        'member_count'=>count($validated['members']),
+        'device_count'=>count($validated['devices']),
+        'error_count'=>count($validated['errors']),
+        'errors'=>$validated['errors'],
+        'can_import'=>count($validated['errors']) === 0 && count($validated['classes']) > 0,
+    ];
+    if (roster_parse_bool_query('dry_run') || roster_parse_bool_query('dryRun')) {
+        respond(['data'=>$preview]);
+    }
+    if (!$preview['can_import']) {
+        respond(['error'=>[
+            'code'=>'class-import-conflict',
+            'message'=>'Class assignment workbook contains invalid data.',
+            'requestId'=>$GLOBALS['request_id'] ?? null,
+            'details'=>$validated['errors'],
+        ]], 409);
+    }
+    $pdo = db();
+    $pdo->beginTransaction();
+    try {
+        $result = apply_training_class_import($pdo, $validated, $batchId, $actor, $file['name']);
+        $pdo->commit();
+        respond(['data'=>$result]);
+    } catch (Throwable $exception) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        report_exception($exception, 'class-import-apply');
+        fail(500, 'class-import-failed', 'Unable to apply the class assignment workbook.');
+    }
+}
+
+function handle_training_classes(array $segments, string $method): void
+{
+    $actor = require_admin();
+    $action = $segments[1] ?? '';
+    if ($action === '' && $method === 'GET') {
+        respond(['items'=>training_class_list(db())]);
+    }
+    if ($action === '' && $method === 'POST') {
+        $pdo = db();
+        $pdo->beginTransaction();
+        try {
+            $class = training_class_create(
+                $pdo,
+                json_body_with_limit(env_int('CLASS_API_MAX_BODY_BYTES', 1048576, 65536, 4194304)),
+                $actor
+            );
+            $pdo->commit();
+            respond(['item'=>$class], 201);
+        } catch (Throwable $exception) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $exception;
+        }
+    }
+    if ($action === 'catalog' && $method === 'GET') {
+        respond(['data'=>training_class_catalog(db())]);
+    }
+    if ($action === 'members' && ($segments[2] ?? '') === 'template' && $method === 'GET') {
+        stream_training_class_member_template();
+    }
+    if ($action === 'members' && ($segments[2] ?? '') === 'preview' && $method === 'POST') {
+        handle_training_class_member_preview();
+    }
+    if ($action === 'template' && $method === 'GET') {
+        stream_training_class_import_template();
+    }
+    if ($action === 'import' && $method === 'POST') {
+        handle_training_class_import($actor);
+    }
+    if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iD', $action) && $method === 'GET') {
+        respond(['item'=>training_class_detail(db(), $action)]);
+    }
+    fail(404, 'not-found', 'Training class endpoint not found.');
+}
+
+function handle_learning(array $segments, string $method): void
+{
+    $user = require_user();
+    if (($segments[1] ?? '') === 'catalog' && $method === 'GET') {
+        respond(['devices'=>training_class_learning_catalog(db(), $user)]);
+    }
+    fail(404, 'not-found', 'Learning endpoint not found.');
+}
+
 function handle_dashboard(array $segments, string $method): void
 {
     if ($method !== 'GET') {
@@ -2251,12 +2445,18 @@ function handle_dashboard(array $segments, string $method): void
 
         $technicianRows = $pdo
             ->query(
-                'SELECT *
-                   FROM v_ktv_directory
-                  WHERE (employee_id IS NOT NULL OR employee_source LIKE \'firestore:%\')
-                    AND is_terminated = FALSE
-                    AND (job_title = \'CB Kỹ thuật TKBT\' OR employee_source LIKE \'firestore:%\')
-                  ORDER BY class_code NULLS LAST, display_name NULLS LAST, email'
+                'SELECT directory.*,
+                        active_class.class_code AS active_class_code,
+                        active_class.class_name AS active_class_name
+                   FROM v_ktv_directory directory
+                   LEFT JOIN v_current_training_class active_class
+                     ON active_class.user_id = directory.user_id
+                  WHERE (directory.employee_id IS NOT NULL OR directory.employee_source LIKE \'firestore:%\')
+                    AND directory.is_terminated = FALSE
+                    AND (directory.job_title = \'CB Kỹ thuật TKBT\' OR directory.employee_source LIKE \'firestore:%\')
+                  ORDER BY active_class.class_code NULLS LAST,
+                           directory.class_code NULLS LAST,
+                           directory.display_name NULLS LAST, directory.email'
             )
             ->fetchAll();
 
@@ -2266,7 +2466,12 @@ function handle_dashboard(array $segments, string $method): void
     }
     foreach ($technicianRows as &$technicianRow) {
         $technicianRow['source_class_code'] = $technicianRow['class_code'] ?? null;
-        $technicianRow['class_name'] = $technicianRow['class_code'] ?? 'Lớp chung';
+        $technicianRow['class_code'] = $technicianRow['active_class_code']
+            ?? $technicianRow['class_code']
+            ?? null;
+        $technicianRow['class_name'] = $technicianRow['active_class_name']
+            ?? $technicianRow['class_code']
+            ?? 'Chưa xếp lớp';
     }
     unset($technicianRow);
 
@@ -2345,39 +2550,21 @@ function handle_dashboard(array $segments, string $method): void
             $assignmentRows = $pdo
                 ->query(
                 <<<'SQL'
-                SELECT
-                    u.email,
-                    u.class_code,
-                    COALESCE(u.class_code, 'Lớp chung') AS class_name,
-                    device.device_name,
-                    lab.lab_name,
-                    CASE WHEN bool_or(s.is_passed IS TRUE) THEN 'passed' ELSE 'assigned' END AS status,
-                    min(s.finished_at) FILTER (WHERE s.is_passed IS TRUE) AS completed_at,
-                    min(s.practice_attempt_no) FILTER (WHERE s.is_passed IS TRUE) AS first_pass_attempt_no
-                  FROM users u
-                  CROSS JOIN lab_catalog lab
-                  JOIN device_catalog device ON device.device_id = lab.device_id
-                  LEFT JOIN timer_sessions s ON (
-                      (
-                          s.user_id = u.user_id
-                          OR (s.user_id IS NULL AND LOWER(s.email) = LOWER(u.email))
-                      )
-                      AND (
-                          s.device_id = device.device_id
-                          OR (s.device_id IS NULL AND s.device = device.device_name)
-                      )
-                      AND (
-                          s.lab_id = lab.lab_id
-                          OR (s.lab_id IS NULL AND s.lab_name = lab.lab_name)
-                      )
-                      AND s.mode = 'Thực hành'
-                  )
-                 WHERE u.role = 'KTV'
-                   AND u.is_terminated = FALSE
-                   AND lab.is_active = TRUE
-                   AND device.is_active = TRUE
-                 GROUP BY u.email, u.class_code, device.device_name, lab.lab_name
-                 ORDER BY u.class_code, u.email, device.device_name, lab.lab_name
+                SELECT progress.email,
+                       progress.class_code,
+                       progress.class_name,
+                       progress.device_name,
+                       progress.lab_name,
+                       progress.assignment_status AS status,
+                       progress.completed_at,
+                       progress.first_pass_attempt_no
+                  FROM v_lab_assignment_progress progress
+                  JOIN users roster ON roster.user_id = progress.user_id
+                  JOIN training_classes training ON training.class_id = progress.class_id
+                 WHERE roster.is_terminated = FALSE
+                   AND training.is_mock = FALSE
+                 ORDER BY progress.class_code, progress.email,
+                          progress.device_name, progress.lab_name
                 SQL
                 )
                 ->fetchAll();
@@ -2447,6 +2634,10 @@ try {
         handle_dev($segments, $method);
     } elseif ($resource === 'roster') {
         handle_roster($segments, $method);
+    } elseif ($resource === 'classes') {
+        handle_training_classes($segments, $method);
+    } elseif ($resource === 'learning') {
+        handle_learning($segments, $method);
     } elseif ($resource === 'reports') {
         handle_reports($segments, $method);
     } elseif ($resource === 'dashboard') {

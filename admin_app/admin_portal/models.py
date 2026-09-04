@@ -140,6 +140,85 @@ class FtcUser(models.Model):
         return f"{self.display_name or self.email} ({self.employee_id or '—'})"
 
 
+class TrainingClass(models.Model):
+    class_id = models.UUIDField(primary_key=True, default=uuid.uuid4, verbose_name='ID lớp')
+    class_code = models.CharField(max_length=50, unique=True, verbose_name='Mã lớp')
+    class_name = models.TextField(verbose_name='Tên lớp')
+    region_name = models.CharField(max_length=50, verbose_name='Khu vực lớp')
+    start_date = models.DateField(verbose_name='Hiệu lực từ')
+    end_date = models.DateField(blank=True, null=True, verbose_name='Hiệu lực đến')
+    capacity = models.IntegerField(blank=True, null=True, verbose_name='Sức chứa')
+    status = models.CharField(max_length=20, verbose_name='Trạng thái')
+    created_by = models.ForeignKey(
+        FtcUser, on_delete=models.SET_NULL, null=True, blank=True,
+        to_field='user_id', db_column='created_by', related_name='created_training_classes',
+        verbose_name='Người tạo',
+    )
+    description = models.TextField(blank=True, null=True, verbose_name='Mô tả')
+    is_mock = models.BooleanField(default=False, verbose_name='Dữ liệu Test')
+    created_at = models.DateTimeField(verbose_name='Ngày tạo')
+    updated_at = models.DateTimeField(verbose_name='Cập nhật')
+
+    class Meta:
+        managed = False
+        db_table = 'training_classes'
+        ordering = ['-start_date', '-class_code']
+        verbose_name = 'training_classes'
+        verbose_name_plural = 'training_classes'
+
+    def __str__(self):
+        return f"{self.class_code} - {self.class_name}"
+
+
+class ClassEnrollment(models.Model):
+    enrollment_id = models.BigAutoField(primary_key=True, verbose_name='ID xếp lớp')
+    training_class = models.ForeignKey(
+        TrainingClass, on_delete=models.PROTECT, to_field='class_id', db_column='class_id',
+        related_name='enrollments', verbose_name='Lớp',
+    )
+    user = models.ForeignKey(
+        FtcUser, on_delete=models.PROTECT, to_field='user_id', db_column='user_id',
+        related_name='class_enrollments', verbose_name='KTV',
+    )
+    status = models.CharField(max_length=20, verbose_name='Trạng thái')
+    valid_from = models.DateField(verbose_name='Hiệu lực từ')
+    valid_to = models.DateField(blank=True, null=True, verbose_name='Hiệu lực đến')
+    created_at = models.DateTimeField(verbose_name='Ngày tạo')
+    updated_at = models.DateTimeField(verbose_name='Cập nhật')
+
+    class Meta:
+        managed = False
+        db_table = 'class_enrollments'
+        ordering = ['-valid_from', '-enrollment_id']
+        verbose_name = 'class_enrollments'
+        verbose_name_plural = 'class_enrollments'
+
+
+class AssignmentImportLog(models.Model):
+    id = models.BigAutoField(primary_key=True, verbose_name='ID import')
+    batch_id = models.CharField(max_length=100, unique=True, verbose_name='Mã batch')
+    imported_by = models.ForeignKey(
+        FtcUser, on_delete=models.SET_NULL, null=True, blank=True,
+        to_field='user_id', db_column='imported_by', related_name='assignment_imports',
+        verbose_name='Người import',
+    )
+    file_name = models.TextField(blank=True, null=True, verbose_name='Tên file')
+    class_count = models.IntegerField(default=0, verbose_name='Số lớp')
+    member_count = models.IntegerField(default=0, verbose_name='Số thành viên')
+    device_count = models.IntegerField(default=0, verbose_name='Số thiết bị')
+    assignment_count = models.IntegerField(default=0, verbose_name='Bài giao mới')
+    error_count = models.IntegerField(default=0, verbose_name='Số lỗi')
+    error_details = models.JSONField(default=list, verbose_name='Chi tiết lỗi')
+    imported_at = models.DateTimeField(verbose_name='Thời điểm import')
+
+    class Meta:
+        managed = False
+        db_table = 'assignment_import_log'
+        ordering = ['-imported_at', '-id']
+        verbose_name = 'assignment_import_log'
+        verbose_name_plural = 'assignment_import_log'
+
+
 # ===========================================================
 # Timer Sessions (PK là bigint id)
 # ===========================================================

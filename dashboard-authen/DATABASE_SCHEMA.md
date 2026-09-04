@@ -48,6 +48,20 @@ erDiagram
 - `lab_assignments.region_id_snapshot`: khu vực lịch sử tại lúc giao bài; chỉ
   dùng khi cần báo cáo lịch sử cố định.
 
+## Quản lý lớp và giao bài
+
+Từ migration `033_training_class_assignment_management.sql`:
+
+- Mã lớp vận hành được sinh tuần tự theo dạng `FTC-000001` bằng PostgreSQL sequence.
+- Một KTV có thể có nhiều dòng `class_enrollments` đang hiệu lực ở các lớp khác nhau.
+- Thiết bị giao cho lớp được mở rộng thành các bài lab trong `class_lab_assignments`, sau đó
+  sinh `lab_assignments` cho từng thành viên.
+- Portal chỉ trả thiết bị/bài lab thuộc lớp đang hiệu lực qua `GET /api/index.php/learning/catalog`.
+- Import giao bài dùng ba sheet `Lop`, `ThanhVien`, `ThietBi`; kết quả được ghi audit tại
+  `assignment_import_log`.
+- Import có semantics cộng dồn/idempotent và không tự động xóa thành viên hoặc thiết bị vắng
+  khỏi workbook.
+
 ## Cách đọc đơn giản
 
 Migration `025_ktv_location_directory.sql` tạo view `v_ktv_directory`. Mỗi KTV

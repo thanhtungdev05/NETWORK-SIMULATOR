@@ -61,7 +61,7 @@ const state = {
     instructorClasses: [],
     instructorClassesLoaded: false,
     instructorActiveClassId: '',
-    instructorSelectedDevice: '',
+    instructorSelectedDevices: null,
     instructorSearchKtv: '',
     instructorCompletionFilter: 'all',
     instructorImportMembers: [],
@@ -71,7 +71,7 @@ const state = {
 
     // Class Matrix state
     classMatrixSelectedClass: '',
-    classMatrixSelectedDevice: '',
+    classMatrixSelectedDevices: null,
     classMatrixSearch: '',
 
     // Learner table filters & sort
@@ -129,6 +129,22 @@ const state = {
     rosterInitialized: false,
     rosterRequestSequence: 0,
     rosterHistoryRequestSequence: 0,
+
+    // Training class registration and assignment management
+    classTab: 'list',
+    classItems: [],
+    classCatalog: { members: [], devices: [] },
+    classSelectedMembers: new Set(),
+    classPendingMembers: new Map(),
+    classSelectedDevices: new Set(),
+    classMemberSearch: '',
+    classLoaded: false,
+    classCatalogLoaded: false,
+    classInitialized: false,
+    classMemberImportFile: null,
+    classMemberImportPreview: null,
+    classMemberImportBusy: false,
+    classFinalPreviewReady: false,
 };
 
 const els = {
@@ -2504,10 +2520,29 @@ function getHeaderFilterDropdown(wrapper) {
         || wrapper?.querySelector('.popover-dropdown');
 }
 
-function closeHeaderFilterPopover(wrapper, { restoreFocus = false } = {}) {
+function snapshotHeaderFilterDraft(wrapper) {
+    const dropdown = getHeaderFilterDropdown(wrapper);
+    if (!dropdown) return;
+    wrapper._headerFilterSnapshot = new Map(
+        [...dropdown.querySelectorAll('.popover-option input[type="checkbox"]')]
+            .map(checkbox => [checkbox, checkbox.checked])
+    );
+    wrapper._headerFilterDirty = false;
+}
+
+function restoreHeaderFilterDraft(wrapper) {
+    if (!wrapper?._headerFilterSnapshot || !wrapper._headerFilterDirty) return;
+    wrapper._headerFilterSnapshot.forEach((checked, checkbox) => {
+        if (checkbox.isConnected) checkbox.checked = checked;
+    });
+    wrapper._headerFilterDirty = false;
+}
+
+function closeHeaderFilterPopover(wrapper, { restoreFocus = false, discardDraft = true } = {}) {
     if (!wrapper) return;
     const trigger = wrapper.querySelector('.popover-trigger-btn, .select-popover-btn, .compact-trigger');
     const dropdown = getHeaderFilterDropdown(wrapper);
+    if (discardDraft) restoreHeaderFilterDraft(wrapper);
     wrapper.classList.remove('open');
     dropdown?.classList.remove('open');
     trigger?.setAttribute('aria-expanded', 'false');
@@ -2519,6 +2554,7 @@ function openHeaderFilterPopover(wrapper) {
     document.querySelectorAll('.header-filter-popover.open').forEach(openWrapper => {
         if (openWrapper !== wrapper) closeHeaderFilterPopover(openWrapper);
     });
+    snapshotHeaderFilterDraft(wrapper);
     wrapper.classList.add('open');
     positionHeaderFilterDropdown(wrapper, true);
     const dropdown = getHeaderFilterDropdown(wrapper);
@@ -2565,30 +2601,26 @@ function enhanceHeaderFilterPopovers(root = document) {
         }
         searchInput.setAttribute('aria-label', `Tìm trong ${dropdown.getAttribute('aria-label').toLocaleLowerCase('vi')}`);
 
-        searchInput.addEventListener('input', () => {
+        searchInput.addEventListener('input', event => {
+            event.stopImmediatePropagation();
             const keyword = searchInput.value.trim().toLocaleLowerCase('vi');
             dropdown.querySelectorAll('.popover-option').forEach(option => {
                 option.hidden = keyword && !option.textContent.toLocaleLowerCase('vi').includes(keyword);
             });
-        });
+        }, { capture: true });
+
+        dropdown.addEventListener('change', event => {
+            if (dropdown._committingFilterDraft || !event.target.matches('.popover-option input[type="checkbox"]')) return;
+            event.stopImmediatePropagation();
+            wrapper._headerFilterDirty = true;
+        }, { capture: true });
 
         const updateVisibleCheckboxes = (checked) => {
             const checkboxes = [...dropdown.querySelectorAll('.popover-option:not([hidden]) input[type="checkbox"]')];
-            suppressFilterRender = true;
-            deferredFilterCallback = null;
             checkboxes.forEach(checkbox => {
-                if (checkbox.checked === checked) return;
                 checkbox.checked = checked;
-                checkbox.dispatchEvent(new Event('change', { bubbles: true }));
             });
-            suppressFilterRender = false;
-            const callback = deferredFilterCallback;
-            deferredFilterCallback = null;
-            state.realtimePage = 1;
-            state.learnerTablePage = 1;
-            state.learnerDetailPage = 1;
-            if (callback) callback();
-            else renderAll();
+            wrapper._headerFilterDirty = true;
         };
 
         commandRow.querySelector('[data-filter-command="all"]')?.addEventListener('click', () => updateVisibleCheckboxes(true));
@@ -2602,20 +2634,44 @@ function enhanceHeaderFilterPopovers(root = document) {
         }
         footer.classList.add('header-filter-footer');
         footer.querySelectorAll('.popover-btn-clear').forEach(clearButton => {
-            clearButton.addEventListener('click', () => {
+            clearButton.addEventListener('click', event => {
+                event.preventDefault();
+                event.stopImmediatePropagation();
                 searchInput.value = '';
                 dropdown.querySelectorAll('.popover-option').forEach(option => { option.hidden = false; });
-            });
+                dropdown.querySelectorAll('.popover-option input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.checked = true;
+                });
+                wrapper._headerFilterDirty = true;
+            }, { capture: true });
         });
         const applyButton = document.createElement('button');
         applyButton.type = 'button';
         applyButton.className = 'header-filter-apply';
         applyButton.textContent = 'Áp dụng';
         applyButton.addEventListener('click', () => {
-            closeHeaderFilterPopover(wrapper, { restoreFocus: true });
+            const snapshot = wrapper._headerFilterSnapshot || new Map();
+            const changedCheckboxes = [...dropdown.querySelectorAll('.popover-option input[type="checkbox"]')]
+                .filter(checkbox => snapshot.get(checkbox) !== checkbox.checked);
+            suppressFilterRender = true;
+            deferredFilterCallback = null;
+            dropdown._committingFilterDraft = true;
+            try {
+                changedCheckboxes.forEach(checkbox => {
+                    checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+            } finally {
+                dropdown._committingFilterDraft = false;
+                suppressFilterRender = false;
+            }
+            const callback = deferredFilterCallback;
+            deferredFilterCallback = null;
+            snapshotHeaderFilterDraft(wrapper);
+            closeHeaderFilterPopover(wrapper, { restoreFocus: true, discardDraft: false });
             state.realtimePage = 1;
             state.learnerTablePage = 1;
             state.learnerDetailPage = 1;
+            if (callback) callback();
             renderAll();
         });
         footer.appendChild(applyButton);
@@ -3235,6 +3291,279 @@ function saveInstructorClasses() {
     // a competing roster in browser storage.
 }
 
+const searchableFilterSelectIds = [
+    'instructorClassSelect',
+    'instructorDeviceSelect',
+    'classMatrixClassSelect',
+    'classMatrixDeviceSelect'
+];
+
+const multiSelectFilterIds = new Set([
+    'instructorDeviceSelect',
+    'classMatrixDeviceSelect'
+]);
+
+function enhanceDashboardTables(root = document) {
+    const tables = root.matches?.('table') ? [root] : [...root.querySelectorAll?.('table') || []];
+    tables.forEach(table => {
+        if (table.dataset.unifiedTable === 'true') return;
+        table.dataset.unifiedTable = 'true';
+        table.classList.add('unified-data-table');
+
+        const existingScroll = table.closest(
+            '.unified-table-scroll, .detail-report-scroll, .instructor-progress-scroll, .roster-table-wrapper, .learner-history'
+        );
+        if (existingScroll) {
+            existingScroll.classList.add('unified-table-scroll');
+            return;
+        }
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'unified-table-scroll';
+        wrapper.tabIndex = 0;
+        wrapper.setAttribute('role', 'region');
+        wrapper.setAttribute('aria-label', table.getAttribute('aria-label') || 'Bảng dữ liệu có thể cuộn ngang');
+        table.before(wrapper);
+        wrapper.appendChild(table);
+    });
+}
+
+function enhanceSearchableFilterSelect(select) {
+    if (!select || select.dataset.searchableEnhanced === 'true') return;
+    select.dataset.searchableEnhanced = 'true';
+    select.classList.add('searchable-select-source');
+    const isMultiple = multiSelectFilterIds.has(select.id);
+
+    const wrapper = document.createElement('div');
+    wrapper.className = `searchable-select${isMultiple ? ' searchable-select-multiple' : ''}`;
+    wrapper.innerHTML = `
+        <button type="button" class="searchable-select-trigger" aria-haspopup="listbox" aria-expanded="false">
+            <span class="searchable-select-value"></span>
+            <span class="searchable-select-chevron" aria-hidden="true"></span>
+        </button>
+        <div class="searchable-select-popover" role="dialog" hidden>
+            ${isMultiple ? `
+                <div class="searchable-select-command-row">
+                    <button type="button" data-select-command="all">Chọn tất cả</button>
+                    <button type="button" data-select-command="none">Bỏ chọn</button>
+                </div>
+            ` : ''}
+            <label class="searchable-select-search-wrap">
+                <span class="sr-only">Tìm giá trị</span>
+                <input type="search" class="searchable-select-search" placeholder="Tìm giá trị..." autocomplete="off">
+            </label>
+            <div class="searchable-select-options" role="listbox"${isMultiple ? ' aria-multiselectable="true"' : ''}></div>
+            <div class="searchable-select-empty" hidden>Không tìm thấy giá trị phù hợp</div>
+            ${isMultiple ? `
+                <div class="searchable-select-footer">
+                    <button type="button" class="searchable-select-clear">Xóa lọc</button>
+                    <button type="button" class="searchable-select-apply">Áp dụng</button>
+                </div>
+            ` : ''}
+        </div>
+    `;
+    select.insertAdjacentElement('afterend', wrapper);
+
+    const trigger = wrapper.querySelector('.searchable-select-trigger');
+    const valueNode = wrapper.querySelector('.searchable-select-value');
+    const popover = wrapper.querySelector('.searchable-select-popover');
+    const search = wrapper.querySelector('.searchable-select-search');
+    const optionsNode = wrapper.querySelector('.searchable-select-options');
+    const emptyNode = wrapper.querySelector('.searchable-select-empty');
+    const label = select.getAttribute('aria-label') || 'Chọn giá trị';
+    let draftValues = new Set();
+    trigger.setAttribute('aria-label', label);
+
+    const close = ({ restoreFocus = false } = {}) => {
+        wrapper.classList.remove('open');
+        trigger.setAttribute('aria-expanded', 'false');
+        popover.hidden = true;
+        if (restoreFocus) trigger.focus();
+    };
+
+    const getAvailableOptions = () => [...select.options].filter(option => option.value && !option.disabled);
+
+    const renderMultipleOptions = () => {
+        const availableOptions = getAvailableOptions();
+        const validValues = new Set(availableOptions.map(option => option.value));
+        draftValues = new Set([...draftValues].filter(value => validValues.has(value)));
+        optionsNode.innerHTML = '';
+
+        const allLabel = select.options[0]?.textContent?.trim() || 'Tất cả giá trị';
+        const allOption = document.createElement('label');
+        allOption.className = 'searchable-select-option searchable-select-check-option searchable-select-all-option';
+        allOption.dataset.searchText = allLabel.toLocaleLowerCase('vi');
+        allOption.innerHTML = `<input type="checkbox"><span>${escapeHTML(allLabel)}</span>`;
+        const allCheckbox = allOption.querySelector('input');
+        allCheckbox.checked = availableOptions.length > 0 && draftValues.size === availableOptions.length;
+        allCheckbox.indeterminate = draftValues.size > 0 && draftValues.size < availableOptions.length;
+        allCheckbox.addEventListener('change', () => {
+            draftValues = allCheckbox.checked
+                ? new Set(availableOptions.map(option => option.value))
+                : new Set();
+            renderMultipleOptions();
+            search.dispatchEvent(new Event('input'));
+        });
+        optionsNode.appendChild(allOption);
+
+        availableOptions.forEach(option => {
+            const optionLabel = document.createElement('label');
+            optionLabel.className = 'searchable-select-option searchable-select-check-option';
+            optionLabel.dataset.value = option.value;
+            optionLabel.dataset.searchText = option.textContent.toLocaleLowerCase('vi');
+            optionLabel.innerHTML = `<input type="checkbox"><span>${escapeHTML(option.textContent)}</span>`;
+            const checkbox = optionLabel.querySelector('input');
+            checkbox.checked = draftValues.has(option.value);
+            checkbox.addEventListener('change', () => {
+                if (checkbox.checked) draftValues.add(option.value);
+                else draftValues.delete(option.value);
+                renderMultipleOptions();
+                search.dispatchEvent(new Event('input'));
+            });
+            optionsNode.appendChild(optionLabel);
+        });
+    };
+
+    const sync = () => {
+        trigger.disabled = select.disabled;
+        const availableOptions = getAvailableOptions();
+        if (isMultiple) {
+            const availableValues = new Set(availableOptions.map(option => option.value));
+            const appliedValues = Array.isArray(select._selectedValues)
+                ? select._selectedValues.filter(value => availableValues.has(value))
+                : availableOptions.map(option => option.value);
+            draftValues = new Set(appliedValues);
+            if (appliedValues.length === availableOptions.length && availableOptions.length) {
+                valueNode.textContent = select.options[0]?.textContent?.trim() || 'Tất cả giá trị';
+            } else if (appliedValues.length === 1) {
+                valueNode.textContent = availableOptions.find(option => option.value === appliedValues[0])?.textContent || label;
+            } else {
+                valueNode.textContent = `${appliedValues.length} thiết bị`;
+            }
+            renderMultipleOptions();
+            search.dispatchEvent(new Event('input'));
+            return;
+        }
+
+        const selected = select.options[select.selectedIndex];
+        valueNode.textContent = selected?.textContent?.trim() || label;
+        optionsNode.innerHTML = '';
+        [...select.options].forEach(option => {
+            const optionButton = document.createElement('button');
+            optionButton.type = 'button';
+            optionButton.className = 'searchable-select-option';
+            optionButton.dataset.value = option.value;
+            optionButton.textContent = option.textContent;
+            optionButton.disabled = option.disabled;
+            optionButton.setAttribute('role', 'option');
+            optionButton.setAttribute('aria-selected', String(option.selected));
+            if (option.selected) optionButton.classList.add('selected');
+            optionButton.addEventListener('click', () => {
+                select.value = option.value;
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+                sync();
+                close({ restoreFocus: true });
+            });
+            optionsNode.appendChild(optionButton);
+        });
+        search.dispatchEvent(new Event('input'));
+    };
+
+    const selectAllVisible = checked => {
+        const visibleValues = [...optionsNode.querySelectorAll('.searchable-select-check-option[data-value]:not([hidden])')]
+            .map(option => option.dataset.value);
+        visibleValues.forEach(value => {
+            if (checked) draftValues.add(value);
+            else draftValues.delete(value);
+        });
+        renderMultipleOptions();
+        search.dispatchEvent(new Event('input'));
+    };
+
+    wrapper.querySelector('[data-select-command="all"]')?.addEventListener('click', () => selectAllVisible(true));
+    wrapper.querySelector('[data-select-command="none"]')?.addEventListener('click', () => selectAllVisible(false));
+    wrapper.querySelector('.searchable-select-clear')?.addEventListener('click', () => {
+        draftValues = new Set(getAvailableOptions().map(option => option.value));
+        search.value = '';
+        renderMultipleOptions();
+        search.dispatchEvent(new Event('input'));
+    });
+    wrapper.querySelector('.searchable-select-apply')?.addEventListener('click', () => {
+        select._selectedValues = [...draftValues];
+        select.value = select._selectedValues[0] || '';
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        sync();
+        close({ restoreFocus: true });
+    });
+
+    trigger.addEventListener('click', event => {
+        event.stopPropagation();
+        const shouldOpen = !wrapper.classList.contains('open');
+        document.querySelectorAll('.searchable-select.open').forEach(openSelect => {
+            if (openSelect !== wrapper) {
+                openSelect.classList.remove('open');
+                openSelect.querySelector('.searchable-select-trigger')?.setAttribute('aria-expanded', 'false');
+                const openPopover = openSelect.querySelector('.searchable-select-popover');
+                if (openPopover) openPopover.hidden = true;
+            }
+        });
+        if (!shouldOpen) {
+            close();
+            return;
+        }
+        sync();
+        wrapper.classList.add('open');
+        trigger.setAttribute('aria-expanded', 'true');
+        popover.hidden = false;
+        search.value = '';
+        search.dispatchEvent(new Event('input'));
+        window.requestAnimationFrame(() => search.focus());
+    });
+
+    search.addEventListener('input', () => {
+        const keyword = search.value.trim().toLocaleLowerCase('vi');
+        let visibleCount = 0;
+        optionsNode.querySelectorAll('.searchable-select-option').forEach(option => {
+            const searchText = option.dataset.searchText || option.textContent.toLocaleLowerCase('vi');
+            const matches = !keyword || searchText.includes(keyword);
+            option.hidden = !matches;
+            if (matches) visibleCount += 1;
+        });
+        emptyNode.hidden = visibleCount !== 0;
+    });
+    popover.addEventListener('click', event => event.stopPropagation());
+    popover.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            close({ restoreFocus: true });
+        }
+    });
+    select.addEventListener('change', sync);
+    new MutationObserver(sync).observe(select, { childList: true, subtree: true, attributes: true });
+    sync();
+}
+
+function initUnifiedDashboardControls() {
+    enhanceDashboardTables();
+    searchableFilterSelectIds.forEach(id => enhanceSearchableFilterSelect(document.getElementById(id)));
+
+    const observer = new MutationObserver(mutations => {
+        mutations.forEach(mutation => mutation.addedNodes.forEach(node => {
+            if (node.nodeType === Node.ELEMENT_NODE) enhanceDashboardTables(node);
+        }));
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.searchable-select.open').forEach(wrapper => {
+            wrapper.classList.remove('open');
+            wrapper.querySelector('.searchable-select-trigger')?.setAttribute('aria-expanded', 'false');
+            const popover = wrapper.querySelector('.searchable-select-popover');
+            if (popover) popover.hidden = true;
+        });
+    });
+}
+
 function initializeInstructorClasses() {
     const databaseClasses = getDatabaseInstructorClasses();
     state.instructorClasses = technicianCatalogAuthoritative ? databaseClasses : [];
@@ -3394,12 +3723,14 @@ function renderInstructorClassProgress() {
     if (searchInput) searchInput.disabled = !selectedClass;
     if (completionFilter) completionFilter.disabled = !selectedClass;
     const allGroups = getInstructorDeviceGroups(selectedClass);
-    const selectedDeviceStillExists = !state.instructorSelectedDevice || allGroups.some(item => item.device === state.instructorSelectedDevice);
-    if (!selectedDeviceStillExists) state.instructorSelectedDevice = '';
+    const availableDevices = allGroups.map(item => item.device);
+    if (state.instructorSelectedDevices === null) state.instructorSelectedDevices = [...availableDevices];
+    state.instructorSelectedDevices = state.instructorSelectedDevices.filter(device => availableDevices.includes(device));
     deviceSelect.innerHTML = '<option value="">Tất cả thiết bị</option>' + allGroups
         .map(item => `<option value="${escapeHTML(item.device)}">${escapeHTML(item.device)}</option>`)
         .join('');
-    deviceSelect.value = state.instructorSelectedDevice;
+    deviceSelect._selectedValues = [...state.instructorSelectedDevices];
+    deviceSelect.value = state.instructorSelectedDevices[0] || '';
 
     const deleteButton = document.getElementById('instructorClassDelete');
     if (deleteButton) deleteButton.disabled = !state.instructorClasses.length || selectedClass?.source === 'database';
@@ -3420,9 +3751,7 @@ function renderInstructorClassProgress() {
         return;
     }
 
-    const selectedGroups = state.instructorSelectedDevice
-        ? allGroups.filter(item => item.device === state.instructorSelectedDevice)
-        : allGroups;
+    const selectedGroups = allGroups.filter(item => state.instructorSelectedDevices.includes(item.device));
     const allProgressRows = getInstructorClassProgress(selectedClass, selectedGroups);
     const progressRows = filterInstructorProgressRows(allProgressRows);
     const completed = progressRows.reduce((sum, item) => sum + item.completed, 0);
@@ -3607,7 +3936,7 @@ function initInstructorWorkspace() {
         renderInstructorClassProgress();
     });
     document.getElementById('instructorDeviceSelect')?.addEventListener('change', event => {
-        state.instructorSelectedDevice = event.target.value;
+        state.instructorSelectedDevices = [...(event.target._selectedValues || [])];
         renderInstructorClassProgress();
     });
     document.getElementById('instructorKtvSearch')?.addEventListener('input', event => {
@@ -3667,9 +3996,10 @@ function getClassMatrixData() {
     }
 
     const allGroups = getInstructorDeviceGroups(selectedClass);
-    const selectedGroups = state.classMatrixSelectedDevice
-        ? allGroups.filter(g => g.device === state.classMatrixSelectedDevice)
-        : allGroups;
+    const availableDevices = allGroups.map(group => group.device);
+    if (state.classMatrixSelectedDevices === null) state.classMatrixSelectedDevices = [...availableDevices];
+    state.classMatrixSelectedDevices = state.classMatrixSelectedDevices.filter(device => availableDevices.includes(device));
+    const selectedGroups = allGroups.filter(group => state.classMatrixSelectedDevices.includes(group.device));
 
     const columns = selectedGroups.flatMap((group, groupIndex) => (group.labs || []).map((lab, labIndex) => ({
         device: group.device,
@@ -3854,7 +4184,8 @@ function renderClassMatrixReport() {
         if (deviceSelect.innerHTML !== deviceOptionsHtml) {
             deviceSelect.innerHTML = deviceOptionsHtml;
         }
-        deviceSelect.value = state.classMatrixSelectedDevice || '';
+        deviceSelect._selectedValues = [...state.classMatrixSelectedDevices];
+        deviceSelect.value = state.classMatrixSelectedDevices[0] || '';
     }
 
     // Update KPI summary cards
@@ -4006,7 +4337,7 @@ function initClassMatrix() {
         renderClassMatrixReport();
     });
     document.getElementById('classMatrixDeviceSelect')?.addEventListener('change', (e) => {
-        state.classMatrixSelectedDevice = e.target.value;
+        state.classMatrixSelectedDevices = [...(e.target._selectedValues || [])];
         renderClassMatrixReport();
     });
     let searchDebounce;
@@ -4649,7 +4980,9 @@ function buildRegionReportDescriptor() {
 function buildClassMatrixReportDescriptor() {
     const data = getClassMatrixData();
     const classLabel = data.selectedClass?.name || (state.classMatrixSelectedClass === 'all' ? 'Tất cả lớp' : 'Chưa xếp lớp');
-    const deviceLabel = state.classMatrixSelectedDevice || 'Tất cả thiết bị';
+    const deviceLabel = data.selectedGroups.length === data.allGroups.length
+        ? 'Tất cả thiết bị'
+        : (data.selectedGroups.map(group => group.device).join(', ') || 'Không chọn thiết bị');
     const searchLabel = state.classMatrixSearch.trim() ? ` · Tìm kiếm: “${state.classMatrixSearch.trim()}”` : '';
     const scope = `${classLabel} · ${deviceLabel}${searchLabel}`;
     return {
@@ -5404,6 +5737,11 @@ const DASHBOARD_VIEWS = {
         title: 'Quản lý KTV',
         subtitle: 'Import, theo dõi và quản lý danh sách kỹ thuật viên'
     },
+    classes: {
+        eyebrow: 'Quản trị đào tạo',
+        title: 'Quản lý lớp học',
+        subtitle: 'Đăng ký lớp, chọn KTV và phân giao thiết bị thực hành'
+    },
 };
 
 let activeDashboardView = 'overview';
@@ -5455,7 +5793,10 @@ function switchDashboardView(viewName, { updateHistory = true, focusHeading = tr
     if (activeDashboardView === 'roster') {
         setDataSourceLabel('Hồ sơ KTV từ cơ sở dữ liệu');
         if (!state.rosterLoaded) loadRosterList();
-    } else if (activeDashboardView !== 'roster' && state.isAdmin) {
+    } else if (activeDashboardView === 'classes') {
+        setDataSourceLabel('Lớp học và bài giao từ cơ sở dữ liệu');
+        loadTrainingClasses();
+    } else if (state.isAdmin) {
         setDataSourceLabel(state.dashboardDataLoaded ? 'Dữ liệu vận hành đã đồng bộ' : 'Đang đồng bộ dữ liệu vận hành');
         if (!state.dashboardDataLoaded) {
             loadDashboardFromApi().then(() => {
@@ -5546,6 +5887,13 @@ function initSidebarNavigation() {
 
 function initDashboardExperience() {
     document.getElementById('refreshDashboardBtn')?.addEventListener('click', async () => {
+        if (activeDashboardView === 'classes') {
+            setRefreshButtonBusy(true);
+            const succeeded = await loadTrainingClasses();
+            setRefreshButtonBusy(false);
+            showToast(succeeded ? 'Danh sách lớp đã được cập nhật.' : 'Không thể làm mới danh sách lớp.', succeeded ? 'success' : 'error');
+            return;
+        }
         if (activeDashboardView === 'roster') {
             setRefreshButtonBusy(true);
             const succeeded = await loadRosterList();
@@ -5570,11 +5918,12 @@ function initDashboardExperience() {
     window.addEventListener('online', () => {
         setDashboardSyncState('syncing', 'Đã có kết nối, đang đồng bộ lại');
         if (activeDashboardView === 'roster') loadRosterList();
+        else if (activeDashboardView === 'classes') loadTrainingClasses();
         else if (state.dashboardDataLoaded) refreshDashboardData({ force: true });
         else if (state.isAdmin) loadDashboardFromApi();
     });
     document.addEventListener('visibilitychange', () => {
-        if (!document.hidden && state.dashboardDataLoaded && activeDashboardView !== 'roster') refreshDashboardData();
+        if (!document.hidden && state.dashboardDataLoaded && !['roster', 'classes'].includes(activeDashboardView)) refreshDashboardData();
     });
 }
 
@@ -6218,6 +6567,530 @@ async function submitRosterEdit(e) {
     }
 }
 
+/* ============================================================
+   Training classes and assignments — Admin
+   ============================================================ */
+
+function activateClassTab(tabName) {
+    state.classTab = tabName;
+    document.querySelectorAll('[data-class-tab]').forEach(button => {
+        const active = button.dataset.classTab === tabName;
+        button.classList.toggle('active', active);
+        button.setAttribute('aria-selected', String(active));
+        button.tabIndex = active ? 0 : -1;
+    });
+    const panels = {
+        list: document.getElementById('classListPanel'),
+        create: document.getElementById('classCreatePanel')
+    };
+    Object.entries(panels).forEach(([name, panel]) => {
+        if (panel) panel.hidden = name !== tabName;
+    });
+    if (tabName === 'list') loadTrainingClasses();
+    if (tabName === 'create') loadTrainingClassCatalog();
+}
+
+function classDateLabel(value) {
+    if (!value) return 'Không giới hạn';
+    const parts = String(value).slice(0, 10).split('-');
+    return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : value;
+}
+
+function classStatusLabel(status) {
+    return ({ planned: 'Sắp hiệu lực', active: 'Đang hiệu lực', completed: 'Đã kết thúc', archived: 'Đã lưu trữ' })[status] || status;
+}
+
+async function loadTrainingClasses() {
+    const body = document.getElementById('classTableBody');
+    if (body) body.innerHTML = '<tr><td colspan="6">Đang tải danh sách lớp...</td></tr>';
+    try {
+        const response = await fetch(`${API_BASE_URL}/classes`, { credentials: 'include' });
+        const json = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(json.error?.message || `HTTP ${response.status}`);
+        state.classItems = json.items || [];
+        state.classLoaded = true;
+        renderTrainingClasses();
+        return true;
+    } catch (error) {
+        console.error('Class list error:', error);
+        if (body) body.innerHTML = `<tr><td colspan="6">${escapeHTML(error.message || 'Không thể tải danh sách lớp.')}</td></tr>`;
+        return false;
+    }
+}
+
+function renderTrainingClasses() {
+    const body = document.getElementById('classTableBody');
+    const empty = document.getElementById('classListEmpty');
+    if (!body) return;
+    const items = state.classItems || [];
+    body.innerHTML = items.map(item => `
+        <tr>
+            <td><strong>${escapeHTML(item.class_code || '')}</strong></td>
+            <td>${escapeHTML(item.class_name || '')}</td>
+            <td>${escapeHTML(classDateLabel(item.start_date))} – ${escapeHTML(classDateLabel(item.end_date))}</td>
+            <td>${escapeHTML(classStatusLabel(item.status || ''))}</td>
+            <td>${Number(item.member_count || 0)}</td>
+            <td>${Number(item.device_count || 0)}</td>
+        </tr>
+    `).join('');
+    if (empty) empty.hidden = items.length > 0;
+}
+
+let classConfigModalReturnFocus = null;
+
+async function loadTrainingClassCatalog() {
+    if (state.classCatalogLoaded) {
+        return true;
+    }
+    try {
+        const response = await fetch(`${API_BASE_URL}/classes/catalog`, { credentials: 'include' });
+        const json = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(json.error?.message || `HTTP ${response.status}`);
+        state.classCatalog = json.data || { members: [], devices: [] };
+        state.classCatalogLoaded = true;
+        return true;
+    } catch (error) {
+        showToast(`Không thể tải danh mục tạo lớp: ${error.message}`, 'error');
+        return false;
+    }
+}
+
+function classDraftIsValid() {
+    const name = document.getElementById('className')?.value.trim() || '';
+    const validFrom = document.getElementById('classValidFrom')?.value || '';
+    return name.length > 0 && name.length <= 200 && validFrom !== '';
+}
+
+function updateTrainingClassSummary() {
+    const totalMembers = state.classSelectedMembers.size + state.classPendingMembers.size;
+    const totalDevices = state.classSelectedDevices.size;
+
+    const summaryMemberCount = document.getElementById('classSummaryMemberCount');
+    const summaryMemberSub = document.getElementById('classSummaryMemberSub');
+    const summaryDeviceCount = document.getElementById('classSummaryDeviceCount');
+    const summaryDeviceSub = document.getElementById('classSummaryDeviceSub');
+
+    if (summaryMemberCount) {
+        summaryMemberCount.textContent = `${totalMembers} KTV`;
+    }
+    if (summaryMemberSub) {
+        if (totalMembers === 0) {
+            summaryMemberSub.textContent = 'Chưa chọn KTV nào';
+        } else {
+            const parts = [];
+            if (state.classSelectedMembers.size > 0) parts.push(`${state.classSelectedMembers.size} KTV có sẵn`);
+            if (state.classPendingMembers.size > 0) parts.push(`${state.classPendingMembers.size} KTV mới từ file`);
+            summaryMemberSub.textContent = parts.join(' · ');
+        }
+    }
+
+    if (summaryDeviceCount) {
+        summaryDeviceCount.textContent = `${totalDevices} thiết bị`;
+    }
+    if (summaryDeviceSub) {
+        summaryDeviceSub.textContent = totalDevices === 0 ? 'Chưa chọn thiết bị nào' : `Đã chọn ${totalDevices} thiết bị đào tạo`;
+    }
+
+    const modalMemberCount = document.getElementById('classModalMemberCount');
+    const modalDeviceCount = document.getElementById('classModalDeviceCount');
+    if (modalMemberCount) modalMemberCount.textContent = String(totalMembers);
+    if (modalDeviceCount) modalDeviceCount.textContent = String(totalDevices);
+}
+
+async function openClassConfigModal() {
+    await loadTrainingClassCatalog();
+    renderClassModalMembers();
+    renderClassModalDevices();
+    updateTrainingClassSummary();
+
+    const modal = document.getElementById('classConfigModal');
+    if (!modal) return;
+    classConfigModalReturnFocus = document.activeElement;
+    modal.hidden = false;
+    modal.classList.add('visible');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('modal-open');
+
+    const searchInput = document.getElementById('classKtvSearchInput');
+    if (searchInput) {
+        searchInput.value = '';
+        const dropdown = document.getElementById('classKtvSearchDropdown');
+        if (dropdown) dropdown.hidden = true;
+        window.setTimeout(() => searchInput.focus(), 50);
+    }
+}
+
+function closeClassConfigModal() {
+    const modal = document.getElementById('classConfigModal');
+    if (!modal) return;
+    modal.hidden = true;
+    modal.classList.remove('visible');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('modal-open');
+    updateTrainingClassSummary();
+    if (classConfigModalReturnFocus instanceof HTMLElement) classConfigModalReturnFocus.focus();
+    classConfigModalReturnFocus = null;
+}
+
+function renderClassModalMembers() {
+    const listEl = document.getElementById('classSelectedMembersList');
+    const emptyEl = document.getElementById('classSelectedMembersEmpty');
+    if (!listEl) return;
+
+    const existingMembers = (state.classCatalog.members || []).filter(member =>
+        state.classSelectedMembers.has(String(member.user_id || ''))
+    );
+    const pendingMembers = [...state.classPendingMembers.values()];
+    const totalCount = existingMembers.length + pendingMembers.length;
+
+    if (emptyEl) emptyEl.hidden = totalCount > 0;
+
+    let html = '';
+
+    existingMembers.forEach(member => {
+        const id = String(member.user_id || '');
+        html += `
+            <div class="class-member-row">
+                <div class="class-member-row-info">
+                    <div class="class-member-row-name-wrap">
+                        <span class="class-member-row-name">${escapeHTML(member.display_name || member.email || 'KTV')}</span>
+                        <span class="badge-member badge-existing">Đã có</span>
+                    </div>
+                    <span class="class-member-row-sub">${escapeHTML(member.employee_id || '—')} · ${escapeHTML(member.email || '')}</span>
+                </div>
+                <button type="button" class="class-member-remove-btn" data-remove-existing-member="${escapeHTML(id)}" title="Xóa khỏi lớp" aria-label="Xóa ${escapeHTML(member.display_name || 'KTV')}">×</button>
+            </div>
+        `;
+    });
+
+    pendingMembers.forEach(member => {
+        const empId = String(member.employee_id || '');
+        html += `
+            <div class="class-member-row">
+                <div class="class-member-row-info">
+                    <div class="class-member-row-name-wrap">
+                        <span class="class-member-row-name">${escapeHTML(member.display_name || member.email || 'KTV mới')}</span>
+                        <span class="badge-member badge-pending">KTV mới (từ file)</span>
+                    </div>
+                    <span class="class-member-row-sub">${escapeHTML(member.employee_id || '—')} · ${escapeHTML(member.email || '')}</span>
+                </div>
+                <button type="button" class="class-member-remove-btn" data-remove-pending-member="${escapeHTML(empId)}" title="Xóa khỏi lớp" aria-label="Xóa ${escapeHTML(member.display_name || 'KTV mới')}">×</button>
+            </div>
+        `;
+    });
+
+    listEl.innerHTML = html;
+}
+
+function renderClassModalDevices() {
+    const listEl = document.getElementById('classModalDeviceList');
+    if (!listEl) return;
+
+    const devices = state.classCatalog.devices || [];
+    if (devices.length === 0) {
+        listEl.innerHTML = '<p class="class-selected-members-empty">Chưa có thiết bị nào trong danh mục.</p>';
+        return;
+    }
+
+    listEl.innerHTML = devices.map(device => {
+        const id = String(device.device_id || '');
+        const isChecked = state.classSelectedDevices.has(id);
+        return `
+            <label class="class-device-item">
+                <input type="checkbox" data-modal-device="${escapeHTML(id)}" ${isChecked ? 'checked' : ''}>
+                <div class="class-device-item-info">
+                    <strong>${escapeHTML(device.device_name || id)}</strong>
+                    <small>${escapeHTML(id)}${device.model ? ` · ${escapeHTML(device.model)}` : ''}</small>
+                </div>
+            </label>
+        `;
+    }).join('');
+}
+
+function handleKtvSearchInput(event) {
+    const query = (event.target.value || '').trim().toLowerCase();
+    const dropdown = document.getElementById('classKtvSearchDropdown');
+    if (!dropdown) return;
+
+    if (!query) {
+        dropdown.hidden = true;
+        dropdown.innerHTML = '';
+        return;
+    }
+
+    const allMembers = state.classCatalog.members || [];
+    const filtered = allMembers.filter(member => {
+        const id = String(member.user_id || '');
+        if (state.classSelectedMembers.has(id)) return false;
+        const empId = String(member.employee_id || '').toLowerCase();
+        const name = String(member.display_name || '').toLowerCase();
+        const email = String(member.email || '').toLowerCase();
+        return empId.includes(query) || name.includes(query) || email.includes(query);
+    });
+
+    const top5 = filtered.slice(0, 5);
+
+    if (top5.length === 0) {
+        dropdown.innerHTML = '<div class="class-ktv-dropdown-empty">Không tìm thấy KTV phù hợp.</div>';
+        dropdown.hidden = false;
+        return;
+    }
+
+    dropdown.innerHTML = top5.map(member => {
+        const id = String(member.user_id || '');
+        return `
+            <div class="class-ktv-dropdown-item" data-add-ktv-id="${escapeHTML(id)}" tabindex="0" role="button">
+                <div class="class-ktv-item-left">
+                    <span class="class-ktv-item-name">${escapeHTML(member.display_name || member.email || 'KTV')}</span>
+                    <span class="class-ktv-item-sub">${escapeHTML(member.employee_id || '—')} · ${escapeHTML(member.email || '')}</span>
+                </div>
+                <span class="class-ktv-item-add">+ Thêm</span>
+            </div>
+        `;
+    }).join('');
+
+    dropdown.hidden = false;
+}
+
+function addKtvToClass(userId) {
+    if (!userId) return;
+    state.classSelectedMembers.add(userId);
+    renderClassModalMembers();
+    updateTrainingClassSummary();
+
+    const searchInput = document.getElementById('classKtvSearchInput');
+    const dropdown = document.getElementById('classKtvSearchDropdown');
+    if (searchInput) {
+        searchInput.value = '';
+        searchInput.focus();
+    }
+    if (dropdown) {
+        dropdown.hidden = true;
+        dropdown.innerHTML = '';
+    }
+}
+
+async function previewClassMembers(file) {
+    if (!classDraftIsValid()) {
+        showToast('Nhập tên lớp và ngày hiệu lực hợp lệ trước khi chọn file KTV.', 'error');
+        return;
+    }
+    if (!file?.name?.toLowerCase().endsWith('.xlsx')) {
+        showToast('Vui lòng chọn file KTV định dạng .xlsx.', 'error');
+        return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+        showToast('File KTV không được vượt quá 8 MB.', 'error');
+        return;
+    }
+    state.classMemberImportFile = file;
+    state.classMemberImportBusy = true;
+    const info = document.getElementById('classMemberFileInfo');
+    if (info) { info.hidden = false; info.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB) — đang kiểm tra...`; }
+    const form = new FormData();
+    form.append('file', file);
+    form.append('class_name', document.getElementById('className')?.value.trim() || '');
+    form.append('valid_from', document.getElementById('classValidFrom')?.value || '');
+    try {
+        const response = await fetch(`${API_BASE_URL}/classes/members/preview`, { method: 'POST', credentials: 'include', body: form });
+        const json = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(json.error?.message || `HTTP ${response.status}`);
+        const data = json.data || {};
+        if (data.errors && data.errors.length > 0) {
+            const firstError = data.errors[0];
+            const msg = firstError ? `Dòng ${firstError.row || '?'}: ${firstError.message || 'Dữ liệu không hợp lệ'}` : 'File KTV có lỗi.';
+            showToast(`File KTV không hợp lệ: ${msg}`, 'error');
+            return;
+        }
+        (data.members || []).forEach(member => {
+            if (member.action === 'create') {
+                state.classPendingMembers.set(String(member.employee_id || ''), {
+                    employee_id: member.employee_id,
+                    display_name: member.display_name,
+                    email: member.email,
+                });
+            } else if (member.user_id) {
+                state.classSelectedMembers.add(String(member.user_id));
+            }
+        });
+        const total = (data.members || []).length;
+        if (info) info.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB) — Đã nạp ${total} KTV`;
+        showToast(`Đã đọc thành công ${total} KTV từ file. Hãy kiểm tra thành viên và chọn thiết bị.`, 'success');
+        await openClassConfigModal();
+    } catch (error) {
+        showToast(`Không thể đọc file KTV: ${error.message}`, 'error');
+    } finally {
+        state.classMemberImportBusy = false;
+        updateTrainingClassSummary();
+    }
+}
+
+async function submitTrainingClass(event) {
+    event.preventDefault();
+    const name = document.getElementById('className')?.value.trim() || '';
+    const validFrom = document.getElementById('classValidFrom')?.value || '';
+    const totalMembers = state.classSelectedMembers.size + state.classPendingMembers.size;
+    const totalDevices = state.classSelectedDevices.size;
+
+    if (!name || !validFrom) {
+        showToast('Vui lòng nhập tên lớp và ngày hiệu lực.', 'error');
+        return;
+    }
+    if (!totalMembers) {
+        showToast('Vui lòng thêm ít nhất một KTV vào lớp (qua tìm kiếm hoặc chọn file KTV).', 'error');
+        return;
+    }
+    if (!totalDevices) {
+        showToast('Vui lòng chọn ít nhất một thiết bị được giao cho lớp.', 'error');
+        return;
+    }
+
+    const button = document.getElementById('classCreateBtn');
+    if (button) { button.disabled = true; button.textContent = 'Đang tạo lớp...'; }
+    try {
+        const response = await fetch(`${API_BASE_URL}/classes`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                className: name,
+                validFrom,
+                validTo: null,
+                memberUserIds: [...state.classSelectedMembers],
+                memberImports: [...state.classPendingMembers.values()],
+                deviceIds: [...state.classSelectedDevices]
+            })
+        });
+        const json = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(json.error?.message || `HTTP ${response.status}`);
+        const code = json.item?.class_code || '';
+        showToast(`Đã tạo lớp ${code} và giao bài thành công.`, 'success');
+        document.getElementById('classCreateForm')?.reset();
+        state.classSelectedMembers.clear();
+        state.classPendingMembers.clear();
+        state.classSelectedDevices.clear();
+        const info = document.getElementById('classMemberFileInfo');
+        if (info) { info.hidden = true; info.textContent = ''; }
+        const fileInput = document.getElementById('classMemberFileInput');
+        if (fileInput) fileInput.value = '';
+        updateTrainingClassSummary();
+        state.classLoaded = false;
+        await loadTrainingClasses();
+        activateClassTab('list');
+    } catch (error) {
+        showToast(`Không thể tạo lớp: ${error.message}`, 'error');
+    } finally {
+        if (button) { button.disabled = false; button.textContent = 'Tạo lớp và giao bài'; }
+    }
+}
+
+function initTrainingClasses() {
+    if (state.classInitialized) return;
+    state.classInitialized = true;
+    document.querySelectorAll('[data-class-tab]').forEach(button => button.addEventListener('click', () => activateClassTab(button.dataset.classTab)));
+
+    document.getElementById('classOpenConfigModalBtn')?.addEventListener('click', () => {
+        openClassConfigModal();
+    });
+    document.getElementById('classSummaryEditBtn')?.addEventListener('click', () => {
+        openClassConfigModal();
+    });
+
+    document.getElementById('classConfigModalClose')?.addEventListener('click', closeClassConfigModal);
+    document.getElementById('classConfigModalCancelBtn')?.addEventListener('click', closeClassConfigModal);
+    document.getElementById('classConfigModalSaveBtn')?.addEventListener('click', closeClassConfigModal);
+
+    document.getElementById('classConfigModal')?.addEventListener('click', event => {
+        if (event.target === document.getElementById('classConfigModal')) {
+            closeClassConfigModal();
+        }
+    });
+
+    const ktvSearchInput = document.getElementById('classKtvSearchInput');
+    ktvSearchInput?.addEventListener('input', handleKtvSearchInput);
+
+    document.getElementById('classKtvSearchDropdown')?.addEventListener('click', event => {
+        const item = event.target.closest('[data-add-ktv-id]');
+        if (item) {
+            addKtvToClass(item.dataset.addKtvId);
+        }
+    });
+
+    document.addEventListener('click', event => {
+        const searchBox = event.target.closest('.class-ktv-search-box');
+        if (!searchBox) {
+            const dropdown = document.getElementById('classKtvSearchDropdown');
+            if (dropdown) dropdown.hidden = true;
+        }
+    });
+
+    document.getElementById('classSelectedMembersList')?.addEventListener('click', event => {
+        const removeExisting = event.target.closest('[data-remove-existing-member]');
+        if (removeExisting) {
+            const id = removeExisting.dataset.removeExistingMember;
+            state.classSelectedMembers.delete(id);
+            renderClassModalMembers();
+            updateTrainingClassSummary();
+            return;
+        }
+        const removePending = event.target.closest('[data-remove-pending-member]');
+        if (removePending) {
+            const empId = removePending.dataset.removePendingMember;
+            state.classPendingMembers.delete(empId);
+            renderClassModalMembers();
+            updateTrainingClassSummary();
+        }
+    });
+
+    document.getElementById('classModalClearMembersBtn')?.addEventListener('click', () => {
+        state.classSelectedMembers.clear();
+        state.classPendingMembers.clear();
+        renderClassModalMembers();
+        updateTrainingClassSummary();
+    });
+
+    document.getElementById('classModalDeviceList')?.addEventListener('change', event => {
+        const id = event.target?.dataset?.modalDevice;
+        if (!id) return;
+        if (event.target.checked) {
+            state.classSelectedDevices.add(id);
+        } else {
+            state.classSelectedDevices.delete(id);
+        }
+        updateTrainingClassSummary();
+    });
+
+    document.getElementById('classModalSelectAllDevicesBtn')?.addEventListener('click', () => {
+        (state.classCatalog.devices || []).forEach(d => {
+            if (d.device_id) state.classSelectedDevices.add(String(d.device_id));
+        });
+        renderClassModalDevices();
+        updateTrainingClassSummary();
+    });
+    document.getElementById('classModalDeselectAllDevicesBtn')?.addEventListener('click', () => {
+        state.classSelectedDevices.clear();
+        renderClassModalDevices();
+        updateTrainingClassSummary();
+    });
+
+    document.getElementById('classCreateForm')?.addEventListener('submit', submitTrainingClass);
+
+    const memberFileInput = document.getElementById('classMemberFileInput');
+    document.getElementById('classMemberFileBtn')?.addEventListener('click', () => {
+        if (!classDraftIsValid()) {
+            document.getElementById('classCreateForm')?.reportValidity();
+            showToast('Hãy nhập tên lớp và ngày hiệu lực trước khi chọn file KTV.', 'error');
+            return;
+        }
+        memberFileInput?.click();
+    });
+    memberFileInput?.addEventListener('change', () => {
+        if (memberFileInput.files?.[0]) previewClassMembers(memberFileInput.files[0]);
+    });
+
+    updateTrainingClassSummary();
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     initDashboardViewRouting();
     initSidebarNavigation();
@@ -6230,6 +7103,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initInstructorWorkspace();
     initClassMatrix();
     initRoster();
+    initTrainingClasses();
+    initUnifiedDashboardControls();
     initEvents();
     initSubModalEvents();
     loadInitialDashboardData();

@@ -101,6 +101,7 @@ const state = {
     detailSearchLab: '',
 
     detailReportExpandedRegions: new Set(['TDDT', 'TNMT']),
+    regionUsageYear: now.getFullYear(),
 
     filtersBound: false,
     popoversInitialized: false,
@@ -1847,6 +1848,220 @@ function renderDetailedReport(rows) {
             scrollContainer.scrollLeft += event.deltaY;
         }, { passive: false });
     }
+}
+
+const REGION_USAGE_COLORS = [
+    '#2f6fed', '#e43f86', '#12a594', '#8b5cf6', '#f59e0b', '#0ea5e9',
+    '#ef5da8', '#22a06b', '#6366f1', '#d97706', '#0891b2', '#c026d3'
+];
+
+function getRegionUsageYears() {
+    const years = new Set([now.getFullYear()]);
+    sessions.forEach(session => {
+        const date = parseDate(session.date);
+        if (date.getTime() > 0) years.add(date.getFullYear());
+    });
+    return [...years].sort((left, right) => right - left);
+}
+
+function isCompletedDeviceUsageSession(session) {
+    const isPractice = session?.mode === 'Thực hành' || session?.mode === 'practice';
+    return isPractice && (
+        session?.isPassed === true
+        || session?.status === 'Đạt'
+        || session?.status === 'Hoàn thành - Chưa chấm'
+        || session?.status === 'Hoàn thành'
+    );
+}
+
+function getRegionUsageSeries(year) {
+    const headcountByRegion = new Map();
+    technicianCatalog
+        .filter(technician => !technician.isTerminated && (technician.email || technician.employeeId))
+        .forEach(technician => {
+            const region = technician.dashboardRegion || 'Chưa phân vùng';
+            headcountByRegion.set(region, (headcountByRegion.get(region) || 0) + 1);
+        });
+
+    const completedDevicesByRegionMonth = new Map();
+    sessions.filter(isCompletedDeviceUsageSession).forEach(session => {
+        const date = parseDate(session.date);
+        if (date.getTime() <= 0 || date.getFullYear() !== year) return;
+        const region = getLearnerRegion(session.learner);
+        if (!headcountByRegion.has(region)) return;
+        const monthIndex = date.getMonth();
+        const bucketKey = `${region}\u001f${monthIndex}`;
+        if (!completedDevicesByRegionMonth.has(bucketKey)) completedDevicesByRegionMonth.set(bucketKey, new Set());
+        const learnerIdentity = String(session.learner || session.technicianId || '').trim().toLowerCase();
+        const deviceIdentity = String(session.deviceId || session.device || '').trim().toLowerCase();
+        if (learnerIdentity && deviceIdentity) {
+            completedDevicesByRegionMonth.get(bucketKey).add(`${learnerIdentity}\u001f${deviceIdentity}`);
+        }
+    });
+
+    const currentYear = now.getFullYear();
+    const observedMonthCount = year < currentYear ? 12 : (year === currentYear ? now.getMonth() + 1 : 0);
+    return [...headcountByRegion.entries()]
+        .sort(([left], [right]) => left.localeCompare(right, 'vi', { numeric: true, sensitivity: 'base' }))
+        .map(([region, headcount], colorIndex) => {
+            const months = Array.from({ length: 12 }, (_, monthIndex) => {
+                if (monthIndex >= observedMonthCount) return null;
+                const completedDevices = completedDevicesByRegionMonth.get(`${region}\u001f${monthIndex}`)?.size || 0;
+                return {
+                    month: monthIndex + 1,
+                    completedDevices,
+                    rate: headcount ? Math.round((completedDevices / headcount) * 1000) / 10 : 0
+                };
+            });
+            const observedMonths = months.filter(Boolean);
+            const completedDevices = observedMonths.reduce((sum, month) => sum + month.completedDevices, 0);
+            const averageRate = observedMonths.length && headcount
+                ? Math.round((completedDevices / (headcount * observedMonths.length)) * 1000) / 10
+                : 0;
+            return {
+                region,
+                headcount,
+                color: REGION_USAGE_COLORS[colorIndex % REGION_USAGE_COLORS.length],
+                months,
+                completedDevices,
+                averageRate
+            };
+        });
+}
+
+function renderRegionUsageChart() {
+    const container = document.getElementById('regionUsageChart');
+    const legend = document.getElementById('regionUsageLegend');
+    const insights = document.getElementById('regionUsageInsights');
+    const yearSelect = document.getElementById('regionUsageYear');
+    const tooltip = document.getElementById('regionUsageTooltip');
+    if (!container || !legend || !insights || !yearSelect || !tooltip) return;
+
+    const years = getRegionUsageYears();
+    if (!years.includes(state.regionUsageYear)) state.regionUsageYear = years[0] || now.getFullYear();
+    const yearOptions = years.map(year => `<option value="${year}">${year}</option>`).join('');
+    if (yearSelect.innerHTML !== yearOptions) yearSelect.innerHTML = yearOptions;
+    yearSelect.value = String(state.regionUsageYear);
+
+    const series = getRegionUsageSeries(state.regionUsageYear);
+    if (!series.length) {
+        container.innerHTML = '<div class="region-usage-empty">Chưa có danh mục nhân sự theo khu vực để tính tần suất sử dụng.</div>';
+        legend.innerHTML = '';
+        insights.innerHTML = '';
+        return;
+    }
+
+    const allObservedPoints = series.flatMap(item => item.months.filter(Boolean));
+    const peakRate = Math.max(0, ...allObservedPoints.map(point => point.rate));
+    const tickStep = peakRate <= 100 ? 25 : (peakRate <= 200 ? 50 : (peakRate <= 500 ? 100 : 200));
+    const yMax = Math.max(100, Math.ceil(peakRate / tickStep) * tickStep);
+    const width = 1080;
+    const height = 410;
+    const plot = { left: 68, right: 26, top: 26, bottom: 58 };
+    const plotWidth = width - plot.left - plot.right;
+    const plotHeight = height - plot.top - plot.bottom;
+    const xAt = monthIndex => plot.left + (plotWidth * monthIndex / 11);
+    const yAt = rate => plot.top + plotHeight - (Math.min(rate, yMax) / yMax * plotHeight);
+    const yTicks = Array.from({ length: 5 }, (_, index) => Math.round(yMax * index / 4));
+
+    const grid = yTicks.map(value => {
+        const y = yAt(value);
+        return `
+            <line x1="${plot.left}" y1="${y}" x2="${width - plot.right}" y2="${y}" class="region-usage-grid-line" />
+            <text x="${plot.left - 13}" y="${y + 4}" text-anchor="end" class="region-usage-axis-label">${value}%</text>
+        `;
+    }).join('');
+    const monthLabels = Array.from({ length: 12 }, (_, monthIndex) => `
+        <text x="${xAt(monthIndex)}" y="${height - 22}" text-anchor="middle" class="region-usage-month-label">Th ${monthIndex + 1}</text>
+    `).join('');
+    const lines = series.map((item, seriesIndex) => {
+        const points = item.months
+            .map((point, monthIndex) => point ? { ...point, x: xAt(monthIndex), y: yAt(point.rate) } : null)
+            .filter(Boolean);
+        const path = points.map((point, index) => `${index ? 'L' : 'M'} ${point.x.toFixed(1)} ${point.y.toFixed(1)}`).join(' ');
+        const circles = points.map(point => `
+            <circle class="region-usage-point" cx="${point.x}" cy="${point.y}" r="4.5" tabindex="0"
+                data-region="${escapeHTML(item.region)}" data-month="${point.month}" data-rate="${point.rate}"
+                data-completed="${point.completedDevices}" data-headcount="${item.headcount}" aria-label="${escapeHTML(`${item.region}, tháng ${point.month}: ${point.rate}%`)}">
+                <title>${escapeHTML(`${item.region} • Tháng ${point.month}: ${point.rate}% (${point.completedDevices} lượt / ${item.headcount} nhân sự)`)}</title>
+            </circle>
+        `).join('');
+        return `
+            <g class="region-usage-series" data-series-region="${escapeHTML(item.region)}" style="--series-color:${item.color}; --series-order:${seriesIndex}">
+                <path d="${path}" class="region-usage-line" />
+                ${circles}
+            </g>
+        `;
+    }).join('');
+
+    container.innerHTML = `
+        <svg class="region-usage-svg" viewBox="0 0 ${width} ${height}" role="img" aria-labelledby="regionUsageSvgTitle regionUsageSvgDesc">
+            <title id="regionUsageSvgTitle">Tần suất hoàn thành thiết bị theo khu vực năm ${state.regionUsageYear}</title>
+            <desc id="regionUsageSvgDesc">Biểu đồ đường gồm ${series.length} khu vực, trục ngang là 12 tháng và trục dọc là tỷ lệ phần trăm lượt KTV–thiết bị hợp lệ trên số nhân sự.</desc>
+            <text x="18" y="${plot.top + plotHeight / 2}" text-anchor="middle" class="region-usage-y-title" transform="rotate(-90 18 ${plot.top + plotHeight / 2})">Tỷ lệ sử dụng (%)</text>
+            ${grid}
+            ${monthLabels}
+            ${lines}
+        </svg>
+    `;
+
+    const ranked = [...series].sort((left, right) => right.averageRate - left.averageRate || left.region.localeCompare(right.region, 'vi'));
+    const highest = ranked[0];
+    const lowest = ranked[ranked.length - 1];
+    const totalCompletedDevices = series.reduce((sum, item) => sum + item.completedDevices, 0);
+    insights.innerHTML = `
+        <article><span>Sử dụng nhiều nhất</span><strong>${escapeHTML(highest.region)}</strong><small>${highest.averageRate}% bình quân/tháng</small></article>
+        <article><span>Sử dụng ít nhất</span><strong>${escapeHTML(lowest.region)}</strong><small>${lowest.averageRate}% bình quân/tháng</small></article>
+        <article><span>Lượt hoàn thành hợp lệ</span><strong>${formatNumber.format(totalCompletedDevices)}</strong><small>${series.length} khu vực trong năm ${state.regionUsageYear}</small></article>
+    `;
+    legend.innerHTML = series.map(item => `
+        <button type="button" class="region-usage-legend-item" data-legend-region="${escapeHTML(item.region)}">
+            <i style="--legend-color:${item.color}"></i>
+            <span>${escapeHTML(item.region)}</span>
+            <small>${item.headcount} nhân sự · ${item.averageRate}%</small>
+        </button>
+    `).join('');
+
+    const setSeriesFocus = region => {
+        container.querySelectorAll('.region-usage-series').forEach(group => {
+            group.classList.toggle('is-muted', Boolean(region) && group.dataset.seriesRegion !== region);
+            group.classList.toggle('is-focused', Boolean(region) && group.dataset.seriesRegion === region);
+        });
+    };
+    legend.querySelectorAll('[data-legend-region]').forEach(button => {
+        button.addEventListener('mouseenter', () => setSeriesFocus(button.dataset.legendRegion));
+        button.addEventListener('mouseleave', () => setSeriesFocus(''));
+        button.addEventListener('focus', () => setSeriesFocus(button.dataset.legendRegion));
+        button.addEventListener('blur', () => setSeriesFocus(''));
+    });
+
+    const showTooltip = (point, event) => {
+        tooltip.innerHTML = `<strong>${escapeHTML(point.dataset.region)} · Tháng ${point.dataset.month}</strong><span>${point.dataset.rate}%</span><small>${point.dataset.completed} lượt KTV–thiết bị / ${point.dataset.headcount} nhân sự</small>`;
+        tooltip.hidden = false;
+        const chartRect = container.getBoundingClientRect();
+        const pointRect = point.getBoundingClientRect();
+        const clientX = event?.clientX || (pointRect.left + pointRect.width / 2);
+        const clientY = event?.clientY || pointRect.top;
+        const left = Math.max(10, Math.min(chartRect.width - tooltip.offsetWidth - 10, clientX - chartRect.left + 12));
+        const top = Math.max(8, clientY - chartRect.top - tooltip.offsetHeight - 12);
+        tooltip.style.left = `${left}px`;
+        tooltip.style.top = `${top}px`;
+        setSeriesFocus(point.dataset.region);
+    };
+    container.querySelectorAll('.region-usage-point').forEach(point => {
+        point.addEventListener('mouseenter', event => showTooltip(point, event));
+        point.addEventListener('mousemove', event => showTooltip(point, event));
+        point.addEventListener('mouseleave', () => { tooltip.hidden = true; setSeriesFocus(''); });
+        point.addEventListener('focus', event => showTooltip(point, event));
+        point.addEventListener('blur', () => { tooltip.hidden = true; setSeriesFocus(''); });
+    });
+}
+
+function initRegionUsageChart() {
+    document.getElementById('regionUsageYear')?.addEventListener('change', event => {
+        state.regionUsageYear = Number(event.target.value) || now.getFullYear();
+        renderRegionUsageChart();
+    });
 }
 
 function getRangeLabel() {
@@ -4363,6 +4578,7 @@ function renderAll() {
 
     if (activeDashboardView === 'overview') {
         renderKpis();
+        renderRegionUsageChart();
         renderOverviewMonthlyTrend(sessions);
         updateRangeText(dateSessions);
     } else if (activeDashboardView === 'instructors') {
@@ -7102,6 +7318,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initReportExport();
     initInstructorWorkspace();
     initClassMatrix();
+    initRegionUsageChart();
     initRoster();
     initTrainingClasses();
     initUnifiedDashboardControls();

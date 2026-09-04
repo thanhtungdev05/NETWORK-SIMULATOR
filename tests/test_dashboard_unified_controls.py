@@ -59,8 +59,37 @@ class DashboardUnifiedControlsContractTests(unittest.TestCase):
         self.assertIn("dropdown._committingFilterDraft = true", self.javascript)
         self.assertIn("discardDraft: false", self.javascript)
 
+    def test_region_usage_line_chart_uses_completed_devices_per_headcount(self):
+        for element_id in (
+            "regionUsageChart",
+            "regionUsageYear",
+            "regionUsageInsights",
+            "regionUsageLegend",
+            "regionUsageTooltip",
+        ):
+            self.assertIn(f'id="{element_id}"', self.html)
+        self.assertIn("function getRegionUsageSeries", self.javascript)
+        self.assertIn("function isCompletedDeviceUsageSession", self.javascript)
+        self.assertIn("sessions.filter(isCompletedDeviceUsageSession)", self.javascript)
+        self.assertIn("Hoàn thành - Chưa chấm", self.javascript)
+        self.assertIn("completedDevicesByRegionMonth", self.javascript)
+        self.assertIn("completedDevices / headcount", self.javascript)
+        self.assertIn("renderRegionUsageChart();", self.javascript)
+        self.assertIn(".region-usage-line", self.css)
+        self.assertIn(".region-usage-tooltip", self.css)
+
+        overview_start = self.html.index('id="overview"')
+        kpi_grid = self.html.index('class="kpi-grid"', overview_start)
+        region_chart = self.html.index('id="regionUsageChart"', overview_start)
+        monthly_trend = self.html.index('id="overviewMonthlyTrend"', overview_start)
+        analytics_start = self.html.index('id="analytics"', overview_start)
+        self.assertLess(kpi_grid, region_chart)
+        self.assertLess(region_chart, monthly_trend)
+        self.assertLess(monthly_trend, analytics_start)
+        self.assertEqual(self.html.count('id="regionUsageChart"'), 1)
+
     def test_asset_version_prevents_stale_control_styles(self):
-        self.assertEqual(self.html.count("20260904-unified-controls-v3"), 2)
+        self.assertEqual(self.html.count("20260904-region-usage-v2"), 2)
 
 
 if __name__ == "__main__":

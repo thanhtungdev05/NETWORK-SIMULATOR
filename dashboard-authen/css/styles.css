@@ -4619,11 +4619,8 @@ tbody tr:hover,
 
 
 .dashboard-legacy-selector-terminator {
+    --dashboard-legacy-selector-group: 1;
 }
-
-@media (max-width: 760px) {
-}
-
 
 html,
 body {
@@ -6532,6 +6529,7 @@ th:nth-last-child(2) .header-filter-popover .popover-dropdown {
 
 
 .dashboard-legacy-selector-terminator {
+    --dashboard-legacy-selector-group: 1;
 }
 
 #analytics > .panel:nth-child(1) {
@@ -8919,6 +8917,7 @@ select:not(.searchable-select-source):focus-visible {
     overflow: hidden;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
+    line-clamp: 3;
 }
 
 .instructor-lab-cell {
@@ -9941,6 +9940,303 @@ select:not(.searchable-select-source):focus-visible {
 .legend-notstarted {
     background: #f1f5f9;
     border: 1px solid #cbd5e1;
+}
+
+/* Region usage frequency line chart */
+.region-usage-card {
+    padding: 22px;
+    border: 1px solid #dfe5ef;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 10px 28px rgba(31, 49, 80, 0.07);
+}
+
+.region-usage-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 28px;
+    margin-bottom: 18px;
+}
+
+.region-usage-header h3 {
+    margin: 4px 0 6px;
+    color: #17233b;
+    font-size: 20px;
+    line-height: 1.25;
+}
+
+.region-usage-header p {
+    max-width: 850px;
+    margin: 0;
+    color: #66738a;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.region-usage-year-field {
+    flex: 0 0 140px;
+}
+
+.region-usage-year-field > span {
+    display: block;
+    margin-bottom: 6px;
+    color: #6e7d95;
+    font-size: 11px;
+    font-weight: 750;
+    letter-spacing: 0.045em;
+    text-transform: uppercase;
+}
+
+.region-usage-year-field select {
+    width: 100%;
+}
+
+.region-usage-insights {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.region-usage-insights article {
+    min-width: 0;
+    padding: 13px 15px;
+    border: 1px solid #e3e8f1;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #fbfcff 0%, #f6f8fc 100%);
+}
+
+.region-usage-insights span,
+.region-usage-insights small {
+    display: block;
+    color: #71809a;
+    font-size: 11px;
+}
+
+.region-usage-insights strong {
+    display: block;
+    overflow: hidden;
+    margin: 3px 0 2px;
+    color: #21314e;
+    font-size: 17px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.region-usage-chart-wrap {
+    position: relative;
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border: 1px solid #e4e9f2;
+    border-radius: 14px;
+    background:
+        radial-gradient(circle at 88% 0%, rgba(47, 111, 237, 0.06), transparent 30%),
+        #fbfcff;
+    scrollbar-color: #aeb9ca #eef2f7;
+    scrollbar-width: thin;
+}
+
+.region-usage-chart {
+    position: relative;
+    min-width: 880px;
+}
+
+.region-usage-svg {
+    display: block;
+    width: 100%;
+    min-width: 880px;
+    height: auto;
+}
+
+.region-usage-grid-line {
+    stroke: #e5eaf2;
+    stroke-width: 1;
+    stroke-dasharray: 4 5;
+}
+
+.region-usage-axis-label,
+.region-usage-month-label,
+.region-usage-y-title {
+    fill: #71809a;
+    font-family: Inter, "Segoe UI", sans-serif;
+    font-size: 11px;
+    font-weight: 650;
+}
+
+.region-usage-y-title {
+    fill: #53627a;
+    font-size: 11.5px;
+    letter-spacing: 0.02em;
+}
+
+.region-usage-series {
+    color: var(--series-color);
+    opacity: 1;
+    transition: opacity 160ms ease;
+}
+
+.region-usage-series.is-muted {
+    opacity: 0.1;
+}
+
+.region-usage-line {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+}
+
+.region-usage-series.is-focused .region-usage-line {
+    stroke-width: 4;
+}
+
+.region-usage-point {
+    fill: #ffffff;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    vector-effect: non-scaling-stroke;
+    cursor: pointer;
+    transition: r 140ms ease, fill 140ms ease;
+}
+
+.region-usage-point:hover,
+.region-usage-point:focus-visible {
+    r: 7;
+    fill: currentColor;
+    outline: none;
+}
+
+.region-usage-tooltip {
+    position: absolute;
+    z-index: 8;
+    min-width: 205px;
+    padding: 10px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    color: #ffffff;
+    background: #18253d;
+    box-shadow: 0 14px 30px rgba(20, 32, 54, 0.24);
+    pointer-events: none;
+}
+
+.region-usage-tooltip strong,
+.region-usage-tooltip span,
+.region-usage-tooltip small {
+    display: block;
+}
+
+.region-usage-tooltip strong {
+    font-size: 12px;
+}
+
+.region-usage-tooltip span {
+    margin: 2px 0;
+    color: #8fb6ff;
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.region-usage-tooltip small {
+    color: #ccd6e7;
+    font-size: 11px;
+}
+
+.region-usage-legend {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 7px;
+    max-height: 156px;
+    margin-top: 13px;
+    padding-right: 5px;
+    overflow-y: auto;
+    scrollbar-color: #aeb9ca #eef2f7;
+    scrollbar-width: thin;
+}
+
+.region-usage-legend-item {
+    display: grid;
+    grid-template-columns: 12px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    min-height: 38px;
+    padding: 7px 9px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    color: #2e3d58;
+    background: #f8fafc;
+    font: inherit;
+    text-align: left;
+    cursor: default;
+}
+
+.region-usage-legend-item:hover,
+.region-usage-legend-item:focus-visible {
+    border-color: #cfdaea;
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(31, 49, 80, 0.08);
+    outline: none;
+}
+
+.region-usage-legend-item i {
+    width: 10px;
+    height: 10px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    background: var(--legend-color);
+    box-shadow: 0 0 0 1px var(--legend-color);
+}
+
+.region-usage-legend-item span {
+    overflow: hidden;
+    font-size: 12px;
+    font-weight: 750;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.region-usage-legend-item small {
+    color: #7c899d;
+    font-size: 10px;
+    white-space: nowrap;
+}
+
+.region-usage-note {
+    margin: 11px 0 0;
+    color: #7b879a;
+    font-size: 11px;
+}
+
+.region-usage-empty {
+    display: grid;
+    min-height: 280px;
+    place-items: center;
+    padding: 28px;
+    color: #71809a;
+    font-size: 13px;
+    text-align: center;
+}
+
+@media (max-width: 760px) {
+    .region-usage-card {
+        padding: 16px;
+    }
+
+    .region-usage-header {
+        display: grid;
+        gap: 14px;
+    }
+
+    .region-usage-year-field {
+        width: 150px;
+    }
+
+    .region-usage-insights {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (max-width: 900px) {

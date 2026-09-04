@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#f3f6fb">
     <meta name="color-scheme" content="light">
     <title>Dashboard giám sát thực hành KTV | FTC</title>
-    <link rel="stylesheet" href="css/styles.css?v=20260904-unified-controls-v3">
+    <link rel="stylesheet" href="css/styles.css?v=20260904-region-usage-v2">
     <link rel="stylesheet" href="css/dashboard-professional.css?v=20260903-class-v2">
 </head>
 
@@ -265,6 +265,27 @@
 
                         <div class="dashboard-data-notice" id="dashboardDataNotice" role="status" aria-live="polite"
                             hidden></div>
+
+                        <div class="region-usage-card" aria-labelledby="regionUsageTitle">
+                            <div class="region-usage-header">
+                                <div>
+                                    <span class="detail-report-eyebrow">Xu hướng sử dụng theo khu vực</span>
+                                    <h3 id="regionUsageTitle">Tần suất hoàn thành thiết bị theo tháng</h3>
+                                    <p>Mỗi lượt là một KTV hoàn thành tối thiểu một phiên Thực hành trên một thiết bị trong tháng. Tỷ lệ = lượt KTV–thiết bị hợp lệ / nhân sự khu vực × 100%.</p>
+                                </div>
+                                <label class="region-usage-year-field" for="regionUsageYear">
+                                    <span>Năm báo cáo</span>
+                                    <select id="regionUsageYear" aria-label="Chọn năm cho biểu đồ tần suất khu vực"></select>
+                                </label>
+                            </div>
+                            <div class="region-usage-insights" id="regionUsageInsights" aria-live="polite"></div>
+                            <div class="region-usage-chart-wrap" tabindex="0" aria-label="Biểu đồ đường tần suất sử dụng theo khu vực, có thể cuộn ngang">
+                                <div class="region-usage-chart" id="regionUsageChart"></div>
+                                <div class="region-usage-tooltip" id="regionUsageTooltip" role="tooltip" hidden></div>
+                            </div>
+                            <div class="region-usage-legend" id="regionUsageLegend" aria-label="Chú thích khu vực"></div>
+                            <p class="region-usage-note">Tỷ lệ có thể lớn hơn 100% khi bình quân một nhân sự hoàn thành nhiều hơn một thiết bị trong tháng.</p>
+                        </div>
 
                         <div class="detail-section-card ktv-monthly-card overview-monthly-card">
                             <div class="detail-section-header ktv-monthly-header">
@@ -1453,7 +1474,7 @@
 
     <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
 
-    <script src="js/app.js?v=20260904-unified-controls-v3"></script>
+    <script src="js/app.js?v=20260904-region-usage-v2"></script>
 </body>
 
 </html>

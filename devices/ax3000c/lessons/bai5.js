@@ -1,6 +1,6 @@
 /**
- * devices/ax3000c/lessons/bai3.js
- * Bài 3: Cấu hình đổi IP LAN trên AX3000C
+ * devices/ax3000c/lessons/bai5.js
+ * Bài 5: Cấu hình đổi IP LAN trên AX3000C
  */
 
 window.DEVICE_AX3000C_LESSONS = window.DEVICE_AX3000C_LESSONS || [];
@@ -18,12 +18,6 @@ window.DEVICE_AX3000C_LESSONS.push({
     '- DHCP end address: <span class="val">192.168.100.249</span>',
   ],
   practiceUrl: '/sim_ax3000c/#/network/lan',
-  clearFields: [
-    '.card .bd .row:nth-child(1) input',
-    '.card .bd .row:nth-child(2) input',
-    '.card .bd .row:nth-child(3) input',
-    '.card .bd .row:nth-child(4) input'
-  ],
   grading: {
     description: 'Kiểm tra IP LAN và dải DHCP Pool trên AX3000C',
     rules: [
@@ -98,13 +92,13 @@ window.DEVICE_AX3000C_LESSONS.push({
     },
     {
       selector: '.card .bd .row:nth-child(3) input, input[value="192.168.100.2"]',
-      text: 'Bước 3: đặt IP động đầu tiên ví dụ: 192.168.100.2',
+      text: 'Bước 3: Kiểm tra IP động đầu tiên đã tự nhảy thành 192.168.100.2',
       position: 'right',
       page: 'lan'
     },
     {
       selector: '.card .bd .row:nth-child(4) input, input[value="192.168.100.249"]',
-      text: 'Bước 4: đặt IP động sau cùng ví dụ: 192.168.100.249',
+      text: 'Bước 4: Kiểm tra IP động sau cùng đã tự nhảy thành 192.168.100.249',
       position: 'right',
       page: 'lan'
     },

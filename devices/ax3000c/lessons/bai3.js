@@ -1,4 +1,4 @@
-/**
+﻿/**
  * devices/ax3000c/lessons/bai3.js
  * Bài 3: Cấu hình WiFi IoT trên AX3000C
  */
@@ -85,7 +85,7 @@ var lessonObj = {
     {
       selector: '.tabs:has(.tab.active[data-t="guest"]) ~ .actions button.apply',
       text: 'Bước 4: Chọn Apply',
-      position: 'right',
+      position: 'bottom',
       page: 'wifi'
     }
   ]

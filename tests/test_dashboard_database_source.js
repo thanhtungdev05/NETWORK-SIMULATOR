@@ -27,6 +27,7 @@ assert.match(api, /JOIN lab_catalog active_lab[\s\S]*active_lab\.is_active = TRU
 assert.match(api, /JOIN device_catalog active_device[\s\S]*active_device\.is_active = TRUE/);
 assert.match(api, /JOIN eligible_dashboard_identities dashboard_identity/);
 assert.match(api, /AND NOT COALESCE\(timer\.is_mock, FALSE\)/);
+assert.match(api, /timer\.status IN \(\\'completed\\', \\'failed\\'\)/);
 assert.doesNotMatch(api, /if \(\$device !== '' && !isset\(\$deviceMap\[\$device\]\)\)/);
 assert.match(api, /dashboard_report_payload\(db\(\), \$_GET\)/);
 assert.doesNotMatch(api, /if \(\$action === 'report'\) \{\s*respond\(\['data' => null\]\)/);
@@ -38,6 +39,7 @@ assert.match(report, /device\.is_active = TRUE AND lab\.is_active = TRUE/);
 assert.doesNotMatch(report, /is_passed IS TRUE OR\s*\(is_passed IS NULL/);
 assert.match(report, /progress_scoped AS/);
 assert.match(report, /first_passed_at < months\.month \+ INTERVAL '1 month'/);
+assert.match(report, /timer\.status IN \('completed', 'failed'\)/);
 
 assert.match(dashboard, /let BASE_REGION_CATALOG = \[\];/);
 assert.match(dashboard, /fetchAndBuildRegionCatalog\(\)/);
@@ -69,7 +71,11 @@ assert.match(attemptMigration, /CREATE UNIQUE INDEX IF NOT EXISTS idx_timer_sess
 assert.match(trackingHandler, /tracking\/timer\/start reserves an immutable practice attempt number/);
 assert.match(trackingHandler, /pg_advisory_xact_lock/);
 assert.match(trackingHandler, /practice_attempt_no/);
+assert.match(dashboard, /filter\(item => item\.status === 'completed' \|\| item\.status === 'failed'\)/);
+assert.doesNotMatch(dashboard, /in_progress: '/);
 assert.match(dashboard, /item\?\.mode === 'Thực hành'[\s\S]*item\?\.isPassed === true/);
-assert.match(dashboard, /Hoàn thành - Chưa chấm/);
+assert.match(dashboard, /rawStatus: item\.status/);
+assert.match(dashboard, /if \(isPassed === true\) return 'Đạt'/);
+assert.doesNotMatch(dashboard, /function computeMetrics/);
 
 console.log('Dashboard database-source audit passed.');

@@ -75,6 +75,23 @@ class TrainingClassAssignmentContractTests(unittest.TestCase):
             ),
         )
 
+    def test_reports_only_include_submitted_sessions(self):
+        api = (ROOT / "api" / "index.php").read_text(encoding="utf-8")
+        report = (ROOT / "api" / "lib" / "dashboard_report.php").read_text(encoding="utf-8")
+        library = (ROOT / "api" / "lib" / "training_classes.php").read_text(encoding="utf-8")
+        personal_html = (ROOT / "personal-dashboard.html").read_text(encoding="utf-8")
+        personal_js = (ROOT / "assets" / "personal-dashboard.js").read_text(encoding="utf-8")
+
+        self.assertIn("timer.status IN (\\'completed\\', \\'failed\\')", api)
+        self.assertIn("timer.status IN ('completed', 'failed')", report)
+        self.assertIn("s.status IN ('completed', 'failed')", library)
+        self.assertNotIn('option value="in_progress"', personal_html)
+        self.assertNotIn('option value="abandoned"', personal_html)
+        self.assertIn("s.status === 'completed' || s.status === 'failed'", personal_js)
+        self.assertNotIn("<th>Trạng thái</th>", personal_html)
+        self.assertIn('option value="ungraded"', personal_html)
+        self.assertIn("Chưa có kết quả", personal_js)
+
     def test_learning_catalog_is_full_active_catalog_for_every_user(self):
         library = (ROOT / "api" / "lib" / "training_classes.php").read_text(encoding="utf-8")
         catalog = re.search(

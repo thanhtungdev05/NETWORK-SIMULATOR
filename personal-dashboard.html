@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/personal-dashboard.css">
+  <link rel="stylesheet" href="assets/personal-dashboard.css?v=20260904-result-clarity-v2">
 </head>
 
 <body>
@@ -219,7 +219,7 @@
             <div class="stat-item">
               <div class="stat-item-left">
                 <div class="stat-item-dot" style="background: #f59e0b;"></div>
-                <span>Đang thực hiện</span>
+                <span>Đã làm, chưa đạt</span>
               </div>
               <span class="stat-item-value" id="stat-in-progress-count">0</span>
             </div>
@@ -285,9 +285,9 @@
           <select class="filter-select" id="filter-result">
             <option value="all">Tất cả kết quả</option>
             <option value="passed">✓ Đạt yêu cầu</option>
-            <option value="failed">✖ Không đạt</option>
-            <option value="in_progress">⏳ Đang thực hiện</option>
-            <option value="abandoned">⚠️ Bỏ dở</option>
+            <option value="failed">✖ Chưa đạt</option>
+            <option value="ungraded">… Chưa có kết quả</option>
+            <option value="not_scored">— Không chấm</option>
           </select>
 
           <!-- Device filter -->
@@ -306,7 +306,6 @@
               <th>Thiết bị</th>
               <th>Bài thực hành</th>
               <th>Chế độ</th>
-              <th>Trạng thái</th>
               <th>Kết quả</th>
               <th>Điểm số</th>
               <th>Thời lượng</th>
@@ -331,7 +330,7 @@
 
   </main>
 
-  <script src="assets/personal-dashboard.js"></script>
+  <script src="assets/personal-dashboard.js?v=20260904-result-clarity-v2"></script>
 </body>
 
 </html>

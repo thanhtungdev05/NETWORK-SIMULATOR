@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#f3f6fb">
     <meta name="color-scheme" content="light">
     <title>Dashboard giám sát thực hành KTV | FTC</title>
-    <link rel="stylesheet" href="css/styles.css?v=20260904-region-freq-v3">
+    <link rel="stylesheet" href="css/styles.css?v=20260904-dashboard-clarity-v4">
     <link rel="stylesheet" href="css/dashboard-professional.css?v=20260903-class-v2">
 </head>
 
@@ -212,7 +212,12 @@
                             </div>
                         </div>
 
-                        <div class="kpi-grid">
+                        <section class="kpi-section-group activity-kpis" aria-labelledby="activityKpiGroupTitle">
+                            <div class="kpi-section-heading">
+                                <h3 id="activityKpiGroupTitle">Hoạt động trong kỳ</h3>
+                                <span>Các chỉ số phát sinh trong tháng báo cáo đang chọn.</span>
+                            </div>
+                            <div class="kpi-grid">
                             <div class="kpi-card" title="Tổng số phiên KTV tự thực hành bài lab độc lập trong kỳ báo cáo đã chọn">
                                 <div class="kpi-label">Lượt thực hành trong kỳ</div>
                                 <div class="kpi-value blue" id="kpiSessions">0</div>
@@ -231,6 +236,21 @@
                                 <div class="kpi-comparison" id="kpiLearnersComparison"></div>
                                 <div class="kpi-note" id="kpiLearnersContext">Đang tính dữ liệu so sánh</div>
                             </div>
+                            <div class="kpi-card" title="Thời lượng trung bình của một phiên thực hành đã nộp (tính trên các phiên có dữ liệu thời gian)">
+                                <div class="kpi-label">Thời gian làm trung bình</div>
+                                <div class="kpi-value blue" id="kpiAvgDuration">—</div>
+                                <div class="kpi-comparison" id="kpiAvgDurationComparison"></div>
+                                <div class="kpi-note" id="kpiAvgDurationContext">Đang tính dữ liệu so sánh</div>
+                            </div>
+                            </div>
+                        </section>
+
+                        <section class="kpi-section-group outcome-kpis" aria-labelledby="outcomeKpiGroupTitle">
+                            <div class="kpi-section-heading">
+                                <h3 id="outcomeKpiGroupTitle">Kết quả và tiến độ</h3>
+                                <span>Kết quả trong kỳ và tiến độ lũy kế tính đến cuối kỳ.</span>
+                            </div>
+                            <div class="kpi-grid">
                             <div class="kpi-card" title="Tổng số cặp KTV - Bài lab đã được chấm đạt tính đến cuối kỳ báo cáo">
                                 <div class="kpi-label">Lab đạt chuẩn lũy kế</div>
                                 <div class="kpi-value violet" id="kpiCompleted">0</div>
@@ -255,13 +275,8 @@
                                 <div class="kpi-comparison" id="kpiFirstTryRateComparison"></div>
                                 <div class="kpi-note" id="kpiFirstTryRateContext">Đang tính dữ liệu so sánh</div>
                             </div>
-                            <div class="kpi-card" title="Thời lượng trung bình của một phiên thực hành hoàn thành (tính trên các phiên có dữ liệu thời gian)">
-                                <div class="kpi-label">Thời gian làm trung bình</div>
-                                <div class="kpi-value blue" id="kpiAvgDuration">0m</div>
-                                <div class="kpi-comparison" id="kpiAvgDurationComparison"></div>
-                                <div class="kpi-note" id="kpiAvgDurationContext">Đang tính dữ liệu so sánh</div>
                             </div>
-                        </div>
+                        </section>
 
                         <div class="dashboard-data-notice" id="dashboardDataNotice" role="status" aria-live="polite"
                             hidden></div>
@@ -270,12 +285,13 @@
                             <div class="region-usage-header">
                                 <div>
                                     <span class="detail-report-eyebrow">Xu hướng sử dụng theo khu vực</span>
-                                    <h3 id="regionUsageTitle">Tần suất hoàn thành thiết bị theo tháng</h3>
-                                    <p>Tần suất sử dụng = Số phiên hợp lệ trong tháng / Số nhân sự có sử dụng trong tháng (1 phiên hợp lệ = KTV hoàn thành tối thiểu 1 thiết bị).</p>
+                                    <h3 id="regionUsageTitle">Tần suất sử dụng theo tháng</h3>
+                                    <p>Tần suất sử dụng = Số phiên thực hành hợp lệ trong tháng / Tổng số KTV đang công tác tại khu vực (1 phiên hợp lệ = phiên đã hoàn thành tối thiểu 1 thiết bị).</p>
                                 </div>
                                 <label class="region-usage-year-field" for="regionUsageYear">
                                     <span>Năm báo cáo</span>
                                     <select id="regionUsageYear" aria-label="Chọn năm cho biểu đồ tần suất khu vực"></select>
+                                    <small id="regionUsagePeriodNote" class="region-usage-period-note" aria-live="polite"></small>
                                 </label>
                             </div>
                             <div class="region-usage-insights" id="regionUsageInsights" aria-live="polite"></div>
@@ -284,7 +300,7 @@
                                 <div class="region-usage-tooltip" id="regionUsageTooltip" role="tooltip" hidden></div>
                             </div>
                             <div class="region-usage-legend" id="regionUsageLegend" aria-label="Chú thích khu vực"></div>
-                            <p class="region-usage-note">Tần suất thể hiện số lượng thiết bị hoàn thành trung bình trên mỗi KTV có hoạt động trong tháng.</p>
+                            <p class="region-usage-note">Đường biểu đồ thể hiện lượt sử dụng trung bình trên toàn bộ KTV đang công tác; tooltip hiển thị thêm tỷ lệ KTV tham gia.</p>
                         </div>
 
                         <div class="detail-section-card ktv-monthly-card overview-monthly-card">
@@ -340,8 +356,8 @@
                                     <p>Đối chiếu từng bài lab của từng thiết bị với từng KTV; màu ô thể hiện trạng thái thực hiện.</p>
                                     <div class="detail-report-legend instructor-progress-legend"
                                         aria-label="Chú thích màu trạng thái bài lab">
-                                        <span><i class="legend-high"></i> Hoàn thành</span>
-                                        <span><i class="legend-low"></i> Đang thực hiện</span>
+                                        <span><i class="legend-high"></i> Đã đạt</span>
+                                        <span><i class="legend-low"></i> Chưa đạt</span>
                                         <span><i class="legend-unassigned"></i> Chưa phân công</span>
                                     </div>
                                 </div>
@@ -382,8 +398,8 @@
                                     <span>Trạng thái hoàn thành</span>
                                     <select id="instructorCompletionFilter">
                                         <option value="all">Tất cả trạng thái</option>
-                                        <option value="completed">Hoàn thành 100%</option>
-                                        <option value="in_progress">Đang thực hiện (1–99%)</option>
+                                        <option value="completed">Đã đạt 100%</option>
+                                        <option value="in_progress">Chưa hoàn thành (1–99%)</option>
                                         <option value="not_started">Chưa làm (0%)</option>
                                         <option value="unassigned">Chưa phân công</option>
                                     </select>
@@ -493,22 +509,17 @@
                                             </th>
                                             <th style="width: 12%;">
                                                 <div class="popover-filter-wrapper" id="realtimeStatusPopoverWrapper">
-                                                    <button class="popover-trigger-btn" type="button">Trạng
-                                                        thái</button>
+                                                    <button class="popover-trigger-btn" type="button">Kết quả</button>
                                                     <div class="popover-dropdown" id="realtimeStatusDropdown">
                                                         <div class="popover-options" id="realtimeStatusOptions">
                                                             <label class="popover-option"><input type="checkbox"
-                                                                    value="Đạt" checked> Đạt chuẩn</label>
+                                                                    value="Đạt" checked> Đạt</label>
                                                             <label class="popover-option"><input type="checkbox"
-                                                                    value="Hoàn thành - Chưa chấm" checked> Hoàn thành - Chưa chấm</label>
+                                                                    value="Chưa đạt" checked> Chưa đạt</label>
                                                             <label class="popover-option"><input type="checkbox"
-                                                                    value="Hoàn thành" checked> Hoàn thành hướng dẫn</label>
+                                                                    value="Chưa có kết quả" checked> Chưa có kết quả</label>
                                                             <label class="popover-option"><input type="checkbox"
-                                                                    value="Đang làm" checked> Đang làm</label>
-                                                            <label class="popover-option"><input type="checkbox"
-                                                                    value="Không đạt" checked> Không đạt</label>
-                                                            <label class="popover-option"><input type="checkbox"
-                                                                    value="Đã dừng" checked> Đã dừng</label>
+                                                                    value="Không chấm" checked> Không chấm</label>
                                                         </div>
                                                         <div class="popover-footer">
                                                             <button type="button" class="popover-btn-clear"
@@ -681,12 +692,12 @@
                                 <div class="detail-report-table-header">
                                     <div>
                                         <h3 id="classMatrixTableTitle">Ma trận thực hành theo Kỹ thuật viên</h3>
-                                        <span>Mỗi ô thể hiện kết quả bài lab của KTV; màu ô phản ánh trạng thái (Xanh: Hoàn thành, Vàng/Đỏ: Đang thực hiện, Xám: Chưa làm, “—” là Chưa phân công).</span>
+                                        <span>Mỗi ô thể hiện mức độ hoàn thành bài lab của KTV; “—” là chưa phân công.</span>
                                     </div>
                                     <div class="detail-report-legend" aria-label="Chú thích màu trạng thái">
-                                        <span><i class="legend-high"></i> Hoàn thành (Từ 80%)</span>
-                                        <span><i class="legend-medium"></i> Đang thực hiện (50–79%)</span>
-                                        <span><i class="legend-low"></i> Đang thực hiện (Dưới 50%)</span>
+                                        <span><i class="legend-high"></i> Tiến độ cao (Từ 80%)</span>
+                                        <span><i class="legend-medium"></i> Tiến độ trung bình (50–79%)</span>
+                                        <span><i class="legend-low"></i> Tiến độ thấp (Dưới 50%)</span>
                                         <span><i class="legend-notstarted"></i> Chưa làm</span>
                                         <span><i class="legend-unassigned"></i> Chưa phân công</span>
                                     </div>
@@ -928,7 +939,7 @@
                                     placeholder="Tìm tên, email, mã NV, khu vực, chi nhánh..." autocomplete="off">
                             </label>
                             <select id="rosterStatusFilter" class="roster-select" aria-label="Lọc trạng thái KTV">
-                                <option value="active">Đang làm</option>
+                                <option value="active">Đang công tác</option>
                                 <option value="terminated">Đã nghỉ</option>
                                 <option value="all">Tất cả</option>
                             </select>
@@ -1073,7 +1084,7 @@
                                     <div class="roster-form-row">
                                         <label for="rosterEditTerminated">Nghỉ việc</label>
                                         <select id="rosterEditTerminated">
-                                            <option value="0">Đang làm</option>
+                                            <option value="0">Đang công tác</option>
                                             <option value="1">Đã nghỉ việc</option>
                                         </select>
                                     </div>
@@ -1247,23 +1258,17 @@
                             </th>
                             <th style="width: 14%;">
                                 <div class="popover-filter-wrapper" id="detailStatusPopoverWrapper">
-                                    <button class="popover-trigger-btn" type="button">Trạng thái</button>
+                                    <button class="popover-trigger-btn" type="button">Kết quả</button>
                                     <div class="popover-dropdown" id="detailStatusDropdown">
                                         <div class="popover-options" id="detailStatusOptions">
-                                            <label class="popover-option"><input type="checkbox" value="Đạt"
-                                                    checked> Đạt chuẩn</label>
                                             <label class="popover-option"><input type="checkbox"
-                                                    value="Hoàn thành - Chưa chấm" checked> Hoàn thành - Chưa chấm</label>
-                                            <label class="popover-option"><input type="checkbox" value="Hoàn thành"
-                                                    checked> Hoàn thành hướng dẫn</label>
-                                            <label class="popover-option"><input type="checkbox" value="Đang làm"
-                                                    checked> Đang làm</label>
-                                            <label class="popover-option"><input type="checkbox" value="Không đạt"
-                                                    checked> Không đạt</label>
-                                            <label class="popover-option"><input type="checkbox" value="Đã dừng"
-                                                    checked> Đã dừng</label>
-                                            <label class="popover-option"><input type="checkbox" value="Chưa thực hiện"
-                                                    checked> Chưa thực hiện</label>
+                                                    value="Đạt" checked> Đạt</label>
+                                            <label class="popover-option"><input type="checkbox" value="Chưa đạt"
+                                                    checked> Chưa đạt</label>
+                                            <label class="popover-option"><input type="checkbox" value="Chưa có kết quả"
+                                                    checked> Chưa có kết quả</label>
+                                            <label class="popover-option"><input type="checkbox" value="Không chấm"
+                                                    checked> Không chấm</label>
                                         </div>
                                         <div class="popover-footer">
                                             <button type="button" class="popover-btn-clear" id="detailStatusClear">Xóa
@@ -1306,11 +1311,11 @@
                         <strong class="mini-kpi-val blue" id="subModalTotalLabs">0</strong>
                     </div>
                     <div class="mini-kpi green-bg" id="kpiCompletedBox">
-                        <span class="mini-kpi-label">Đã hoàn thành</span>
+                        <span class="mini-kpi-label">Đã đạt</span>
                         <strong class="mini-kpi-val green" id="subModalCompletedCount">0</strong>
                     </div>
                     <div class="mini-kpi amber-bg" id="kpiUncompletedBox">
-                        <span class="mini-kpi-label">Đang thực hiện</span>
+                        <span class="mini-kpi-label">Đã làm, chưa đạt</span>
                         <strong class="mini-kpi-val amber" id="subModalUncompletedCount">0</strong>
                     </div>
                     <div class="mini-kpi gray-bg" id="kpiUnattemptedBox">
@@ -1322,9 +1327,9 @@
                 <div class="sub-modal-filter-bar" role="group" aria-label="Lọc bài lab theo trạng thái">
                     <button type="button" class="sub-filter-btn active" data-sub-filter="all" aria-pressed="true">Tất cả bài lab (<span
                             id="cntAll">0</span>)</button>
-                    <button type="button" class="sub-filter-btn" data-sub-filter="done" aria-pressed="false">Đã hoàn thành (<span
+                    <button type="button" class="sub-filter-btn" data-sub-filter="done" aria-pressed="false">Đã đạt (<span
                             id="cntDone">0</span>)</button>
-                    <button type="button" class="sub-filter-btn" data-sub-filter="pending" aria-pressed="false">Đang thực hiện (<span
+                    <button type="button" class="sub-filter-btn" data-sub-filter="pending" aria-pressed="false">Đã làm, chưa đạt (<span
                             id="cntPending">0</span>)</button>
                     <button type="button" class="sub-filter-btn" data-sub-filter="not_started" aria-pressed="false">Chưa làm (<span
                             id="cntNotStarted">0</span>)</button>
@@ -1474,7 +1479,7 @@
 
     <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
 
-    <script src="js/app.js?v=20260904-region-freq-v3"></script>
+    <script src="js/app.js?v=20260904-dashboard-clarity-v4"></script>
 </body>
 
 </html>

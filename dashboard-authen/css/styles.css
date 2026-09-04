@@ -4124,33 +4124,33 @@ body {
     grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-#overview .kpi-card:nth-child(-n + 4) {
+#overview .activity-kpis .kpi-card {
     border-color: rgba(255, 255, 255, 0.4);
     color: #ffffff;
     box-shadow: 0 10px 22px rgba(95, 57, 130, 0.16);
 }
 
-#overview .kpi-card:nth-child(1) {
+#overview .activity-kpis .kpi-card:nth-child(1) {
     background: linear-gradient(135deg, #e84286, #c83b8d);
 }
 
-#overview .kpi-card:nth-child(2) {
+#overview .activity-kpis .kpi-card:nth-child(2) {
     background: linear-gradient(135deg, #9a4db6, #6654c9);
 }
 
-#overview .kpi-card:nth-child(3) {
+#overview .activity-kpis .kpi-card:nth-child(3) {
     background: linear-gradient(135deg, #34afd7, #367ecb);
 }
 
-#overview .kpi-card:nth-child(4) {
+#overview .activity-kpis .kpi-card:nth-child(4) {
     background: linear-gradient(135deg, #f5b028, #f17835);
 }
 
-#overview .kpi-card:nth-child(-n + 4)::before {
+#overview .activity-kpis .kpi-card::before {
     display: none;
 }
 
-#overview .kpi-card:nth-child(-n + 4)::after {
+#overview .activity-kpis .kpi-card::after {
     right: -22px;
     bottom: -30px;
     width: 102px;
@@ -4160,25 +4160,22 @@ body {
     box-shadow: 0 0 0 18px rgba(255, 255, 255, 0.035);
 }
 
-#overview .kpi-card:nth-child(-n + 4) .kpi-value {
+#overview .activity-kpis .kpi-card .kpi-value {
     color: #ffffff;
 }
 
-#overview .kpi-card:nth-child(-n + 4) .kpi-label,
-#overview .kpi-card:nth-child(-n + 4) .kpi-note,
-#overview .kpi-card:nth-child(-n + 4) .kpi-comparison-label {
+#overview .activity-kpis .kpi-card .kpi-label,
+#overview .activity-kpis .kpi-card .kpi-note,
+#overview .activity-kpis .kpi-card .kpi-comparison-label {
     color: rgba(255, 255, 255, 0.82);
 }
 
-#overview .kpi-card:nth-child(-n + 4) .kpi-delta {
+#overview .activity-kpis .kpi-card .kpi-delta {
     color: #ffffff;
     background: rgba(255, 255, 255, 0.18);
 }
 
-#overview .kpi-card:nth-child(5),
-#overview .kpi-card:nth-child(6),
-#overview .kpi-card:nth-child(7),
-#overview .kpi-card:nth-child(8) {
+#overview .outcome-kpis .kpi-card {
     grid-column: span 1;
     background: #ffffff;
     box-shadow: var(--lector-shadow);
@@ -4620,6 +4617,30 @@ tbody tr:hover,
 
 .dashboard-legacy-selector-terminator {
     --dashboard-legacy-selector-group: 1;
+}
+
+#overview .kpi-section-group {
+    margin-top: 18px;
+}
+
+#overview .kpi-section-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 18px;
+    margin: 0 2px 10px;
+}
+
+#overview .kpi-section-heading h3 {
+    margin: 0;
+    color: #17233b;
+    font-size: 16px;
+}
+
+#overview .kpi-section-heading span {
+    color: #6f7e94;
+    font-size: 12px;
+    text-align: right;
 }
 
 html,
@@ -9992,6 +10013,24 @@ select:not(.searchable-select-source):focus-visible {
     width: 100%;
 }
 
+.region-usage-period-note {
+    display: block;
+    margin-top: 6px;
+    color: #a15c12;
+    font-size: 11px;
+    line-height: 1.35;
+}
+
+.region-usage-month-label.is-selected {
+    fill: #2459c4;
+    font-weight: 800;
+}
+
+.region-usage-point.is-selected-month {
+    stroke-width: 3;
+    filter: drop-shadow(0 0 4px rgba(47, 111, 237, 0.34));
+}
+
 .region-usage-insights {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -10257,6 +10296,40 @@ select:not(.searchable-select-source):focus-visible {
     .class-matrix-search-field,
     .class-matrix-search-field input {
         width: 100%;
+    }
+}
+
+/* Final KPI grouping overrides: activity is visually distinct from cumulative outcomes. */
+#overview .activity-kpis .kpi-card {
+    border-color: rgba(255, 255, 255, 0.4);
+    color: #ffffff;
+    box-shadow: 0 10px 22px rgba(95, 57, 130, 0.16);
+}
+
+#overview .activity-kpis .kpi-card:nth-child(1) { background: linear-gradient(135deg, #e84286, #c83b8d); }
+#overview .activity-kpis .kpi-card:nth-child(2) { background: linear-gradient(135deg, #9a4db6, #6654c9); }
+#overview .activity-kpis .kpi-card:nth-child(3) { background: linear-gradient(135deg, #34afd7, #367ecb); }
+#overview .activity-kpis .kpi-card:nth-child(4) { background: linear-gradient(135deg, #f5b028, #f17835); }
+
+#overview .activity-kpis .kpi-card::before { display: none; }
+#overview .activity-kpis .kpi-card .kpi-value { color: #ffffff; }
+#overview .activity-kpis .kpi-card .kpi-label,
+#overview .activity-kpis .kpi-card .kpi-note,
+#overview .activity-kpis .kpi-card .kpi-comparison-label { color: rgba(255, 255, 255, 0.84); }
+
+#overview .outcome-kpis .kpi-card {
+    background: linear-gradient(145deg, #ffffff 58%, var(--card-accent-soft) 150%);
+    box-shadow: var(--lector-shadow);
+}
+
+@media (max-width: 720px) {
+    #overview .kpi-section-heading {
+        display: grid;
+        gap: 4px;
+    }
+
+    #overview .kpi-section-heading span {
+        text-align: left;
     }
 }
 

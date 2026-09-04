@@ -78,6 +78,7 @@ resolved_sessions AS (
             ELSE 'employee:' || COALESCE(timer.technician_id, '')
         END
      WHERE NOT COALESCE(timer.is_mock, FALSE)
+       AND timer.status IN ('completed', 'failed')
 ),
 numbered_sessions AS (
     SELECT session.*

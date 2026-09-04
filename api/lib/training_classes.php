@@ -1182,9 +1182,12 @@ function training_class_personal_dashboard_payload(PDO $pdo, array $user): array
                s.last_action
           FROM timer_sessions s
           LEFT JOIN device_catalog d ON d.device_id = s.device_id
-         WHERE s.user_id = CAST(:user_id AS uuid)
+         WHERE (
+               s.user_id = CAST(:user_id AS uuid)
             OR (NULLIF(:email, '') IS NOT NULL AND LOWER(s.email) = LOWER(:email))
             OR (NULLIF(:employee_id, '') IS NOT NULL AND s.technician_id = :employee_id)
+         )
+           AND s.status IN ('completed', 'failed')
          ORDER BY s.finished_at DESC NULLS LAST, s.id DESC
          LIMIT 500
         SQL

@@ -59,21 +59,27 @@ class DashboardUnifiedControlsContractTests(unittest.TestCase):
         self.assertIn("dropdown._committingFilterDraft = true", self.javascript)
         self.assertIn("discardDraft: false", self.javascript)
 
-    def test_region_usage_line_chart_uses_completed_devices_per_headcount(self):
+    def test_region_usage_line_chart_uses_valid_sessions_per_total_headcount(self):
         for element_id in (
             "regionUsageChart",
             "regionUsageYear",
             "regionUsageInsights",
             "regionUsageLegend",
             "regionUsageTooltip",
+            "regionUsagePeriodNote",
         ):
             self.assertIn(f'id="{element_id}"', self.html)
         self.assertIn("function getRegionUsageSeries", self.javascript)
         self.assertIn("function isCompletedDeviceUsageSession", self.javascript)
-        self.assertIn("sessions.filter(isCompletedDeviceUsageSession)", self.javascript)
-        self.assertIn("Hoàn thành - Chưa chấm", self.javascript)
-        self.assertIn("completedDevicesByRegionMonth", self.javascript)
-        self.assertIn("completedDevices / headcount", self.javascript)
+        self.assertIn("sessions.forEach(session =>", self.javascript)
+        self.assertIn("session.rawStatus === 'completed'", self.javascript)
+        self.assertIn("validSessionsByRegionMonth", self.javascript)
+        self.assertIn("participatingLearnersByRegionMonth", self.javascript)
+        self.assertIn("validSessions / headcount", self.javascript)
+        self.assertIn("participatingLearners / headcount", self.javascript)
+        self.assertIn(".filter(item => item.headcount > 0)", self.javascript)
+        self.assertIn("Tần suất (lượt/KTV)", self.javascript)
+        self.assertIn("is-selected-month", self.javascript)
         self.assertIn("renderRegionUsageChart();", self.javascript)
         self.assertIn(".region-usage-line", self.css)
         self.assertIn(".region-usage-tooltip", self.css)
@@ -88,8 +94,34 @@ class DashboardUnifiedControlsContractTests(unittest.TestCase):
         self.assertLess(monthly_trend, analytics_start)
         self.assertEqual(self.html.count('id="regionUsageChart"'), 1)
 
+    def test_session_status_filters_only_offer_submitted_outcomes(self):
+        for container_id, clear_id in (
+            ("realtimeStatusOptions", "realtimeStatusClear"),
+            ("detailStatusOptions", "detailStatusClear"),
+        ):
+            start = self.html.index(f'id="{container_id}"')
+            end = self.html.index(f'id="{clear_id}"', start)
+            options = self.html[start:end]
+            self.assertIn('value="Đạt"', options)
+            self.assertIn('value="Chưa đạt"', options)
+            self.assertIn('value="Chưa có kết quả"', options)
+            self.assertIn('value="Không chấm"', options)
+            self.assertNotIn('value="Đang làm"', options)
+            self.assertNotIn('value="Đã dừng"', options)
+
+    def test_kpis_are_grouped_and_never_use_local_fallback_formulas(self):
+        self.assertIn('id="activityKpiGroupTitle"', self.html)
+        self.assertIn('id="outcomeKpiGroupTitle"', self.html)
+        self.assertIn("dashboardReportStatus: 'loading'", self.javascript)
+        self.assertIn("Không có dữ liệu báo cáo tổng hợp cho kỳ đã chọn", self.javascript)
+        self.assertNotIn("function computeMetrics", self.javascript)
+
+    def test_report_year_follows_the_selected_month(self):
+        self.assertIn("state.regionUsageYear = bounds.year", self.javascript)
+        self.assertIn("Khác kỳ báo cáo đang chọn", self.javascript)
+
     def test_asset_version_prevents_stale_control_styles(self):
-        self.assertEqual(self.html.count("20260904-region-usage-v2"), 2)
+        self.assertEqual(self.html.count("20260904-dashboard-clarity-v4"), 2)
 
 
 if __name__ == "__main__":

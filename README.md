@@ -1,88 +1,57 @@
-# 🚀 Hệ Thống Giả Lập Thiết Bị Mạng FPT (FTC Virtual Devices)
+# FPT Codex Tooling Kit
 
-Hệ thống giả lập giao diện quản trị web (Web Admin Interface) dành cho các dòng thiết bị modem/router mạng FPT Telecom. Dự án phục vụ mục đích thực hành, đào tạo, demo, quản trị nhân sự và tự động chấm điểm kỹ năng cấu hình thiết bị của Kỹ thuật viên (KTV).
+Target stack:
+- PHP 8.2+ custom REST API + PDO PostgreSQL
+- Django 5.2 Admin only
+- Python 3.12 stdlib dispatcher / reverse proxy
+- PostgreSQL / Neon
+- Vanilla HTML/CSS/JavaScript
+- FPT IAM / Keycloak-compatible OAuth2
+- Custom SQL migrations
+- PhpSpreadsheet
+- Docker/Gunicorn/PHP CLI runtime
 
----
+Explicitly excluded:
+- crawler
+- emulator
+- device selector automation
+- Shadow DOM device tooling
 
-## 📋 Yêu Cầu Hệ Thống (Prerequisites)
+## Install
 
-Bạn có thể chọn **1 trong 2 cách** để chạy dự án:
+Extract this ZIP, then from PowerShell:
 
-### Cách 1: Chạy bằng Docker (Khuyên dùng)
-- **Docker** & **Docker Compose** (Cài qua [Docker Desktop](https://www.docker.com/products/docker-desktop/)).
-- Không cần cài đặt riêng Python hay PHP — Docker sẽ tự động đóng gói và cấu hình môi trường hoàn chỉnh.
-
-### Cách 2: Chạy trực tiếp trên máy (Native)
-- **Python 3.10+**
-- **PHP-CLI 8.1+** (hỗ trợ `php-pgsql`, `php-mbstring`, `php-curl`).
-- Cài đặt thư viện Python: `pip install -r requirements.txt`
-
----
-
-## 📥 1. Clone Dự Án & Cấu Hình
-
-1. **Clone repository về máy:**
-   ```bash
-   git clone <URL_REPOSITORY_CUA_BAN>
-   cd tracking
-   ```
-
-2. **Cấu hình biến môi trường:**
-   Tạo file `.env` từ file mẫu `.env.example`:
-   ```bash
-   cp .env.example .env
-   ```
-   Sau đó cập nhật thông tin trong file `.env`:
-   ```env
-   # Kết nối PostgreSQL (Neon Database)
-   DATABASE_URL=postgresql://<user>:<password>@<host>/<database>?sslmode=require
-   
-   # Cấu hình Django Admin Panel
-   DJANGO_SETTINGS_MODULE=admin_site.settings
-   DJANGO_SECRET_KEY=your-secret-key-here
-   DJANGO_DEBUG=1
-   DJANGO_SUPERUSER_USERNAME=admin
-   DJANGO_SUPERUSER_EMAIL=admin@example.com
-   DJANGO_SUPERUSER_PASSWORD=YourPasswordHere!
-   ```
-
----
-
-## ⚡ 2. Hướng Dẫn Khởi Chạy Local (Quick Start)
-
-### 🔹 Cách 1: Khởi chạy bằng Docker Compose (Khuyên dùng)
-Mở Terminal / PowerShell tại thư mục dự án và chạy:
-
-```bash
-docker compose up --build
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass
+.\setup_fpt_codex_tooling.ps1 -ProjectRoot "D:\FPT INTERN\VirtualDevices\FTC-VirtualDevices"
 ```
 
-> **Cơ chế hoạt động**:
-> - Tự động build môi trường Linux chứa Python 3.12, PHP-CLI, Composer và Django.
-> - Tự động chạy migrations PostgreSQL (Neon) cho cả PHP và Django.
-> - Tự động tạo tài khoản Superuser Admin (nếu chưa có).
-> - Khởi động Master Dispatcher và ánh xạ **cổng duy nhất `8080`** ra máy tính của bạn.
+The installer is conservative:
+- existing files are preserved where possible;
+- legacy generic skills are not deleted automatically;
+- the new exact-stack skills are installed alongside them;
+- an AGENTS.md stack-specific block is appended once;
+- a single multi-stack check script is added.
 
----
+After setup, restart Antigravity and ask Codex:
 
-### 🔹 Cách 2: Khởi chạy trực tiếp (Native Python)
-Nếu không dùng Docker, bạn có thể chạy trực tiếp bằng lệnh:
-
-```bash
-# 1. Cài đặt dependencies (chỉ cần chạy lần đầu)
-pip install -r requirements.txt
-
-# 2. Khởi chạy Master Dispatcher
-python run_all.py
+```text
+Read AGENTS.md and list the exact project-local skills available for this repository.
+Do not modify anything.
 ```
 
-> **Cơ chế hoạt động**: `run_all.py` tự động đọc file `.env`, tự bật PHP API (nội bộ 8082), tự bật Django Admin (nội bộ 8083) và gom toàn bộ điều hướng về **cổng duy nhất `8080`**.
+Then run:
 
----
+```powershell
+.\scripts\check.ps1
+```
 
-## 🌐 3. Cấu Trúc Điều Hướng (Single-Port 8080)
+## Recommended MCP profile
 
-Toàn bộ hệ thống đều được truy cập qua **1 cổng duy nhất `8080`**:
+`fpt_web_tools`:
+- Context7
+- GitHub Official
+- Playwright
 
 | Dịch vụ | Đường dẫn truy cập | Mô tả |
 | :--- | :--- | :--- |

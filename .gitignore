@@ -28,7 +28,7 @@ sim_state.json
 *.xlsx
 !templates/Mau_Import_KTV.xlsx
 *.pptx
-
+tests/
 # PHP runtime
 php_api.log
 

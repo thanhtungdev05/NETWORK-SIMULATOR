@@ -2395,6 +2395,7 @@ function handle_dashboard(array $segments, string $method): void
                      OR (timer.technician_id IS NOT NULL AND timer.technician_id != \'\')
                  )
                    AND NOT COALESCE(timer.is_mock, FALSE)
+                   AND timer.status IN (\'completed\', \'failed\')
                    AND NOT (
                      timer.user_id IS NULL
                      AND (

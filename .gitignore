@@ -18,6 +18,10 @@ venv/
 env/
 env_*/
 ENV/
+.ruff_cache/
+.mypy_cache/
+coverage.xml
+temp/
 
 # ── Dependencies & Runtime Scratch ────────────────────────────
 vendor/

@@ -49,7 +49,7 @@ const state = {
     realtimeSelectedKtvs: new Set(),
     realtimeSelectedModes: new Set(['Thực hành', 'Hướng dẫn']),
     realtimeSelectedDevices: new Set(),
-    realtimeSelectedStatuses: new Set(['Đạt', 'Hoàn thành', 'Hoàn thành - Chưa chấm', 'Đang làm', 'Không đạt', 'Đã dừng']),
+    realtimeSelectedStatuses: new Set(['Đạt', 'Chưa đạt', 'Chưa có kết quả', 'Không chấm']),
     realtimeSearchKtv: '',
     realtimeSearchDevice: '',
     realtimeSearchLab: '',
@@ -94,7 +94,7 @@ const state = {
     detailSelectedModes: new Set(['Thực hành', 'Hướng dẫn']),
     detailSelectedDevices: new Set(),
     detailDevicesTouched: false,
-    detailSelectedStatuses: new Set(['Đạt', 'Hoàn thành', 'Hoàn thành - Chưa chấm', 'Đang làm', 'Không đạt', 'Đã dừng', 'Chưa thực hiện']),
+    detailSelectedStatuses: new Set(['Đạt', 'Chưa đạt', 'Chưa có kết quả', 'Không chấm']),
     detailSearchDevice: '',
     detailSelectedLabs: new Set(),
     detailLabsTouched: false,
@@ -107,6 +107,7 @@ const state = {
     popoversInitialized: false,
     dataSourceLabel: 'Đang đồng bộ dữ liệu vận hành',
     dashboardDataLoaded: false,
+    dashboardReportStatus: 'loading',
     lastSuccessfulRefreshAt: null,
 
     // Roster (Quản lý KTV) — Admin
@@ -320,9 +321,9 @@ function trapDialogFocus(event, container) {
 
 function getStatusClass(status) {
     if (status === 'Đạt' || status === 'Hoàn thành') return 'status-done';
-    if (status === 'Hoàn thành - Chưa chấm') return 'status-ungraded';
-    if (status === 'Đang làm') return 'status-running';
-    if (status === 'Không đạt' || status === 'Đã dừng') return 'status-risk';
+    if (status === 'Chưa đạt') return 'status-risk';
+    if (status === 'Chưa có kết quả') return 'status-running';
+    if (status === 'Không chấm') return 'status-ungraded';
     return 'status-notstarted';
 }
 
@@ -503,56 +504,6 @@ function mapReportMetrics(metric) {
 
 function renderKpis() {
     const periods = getKpiComparisonPeriods();
-    const practiceOnly = item => item.mode === 'Thực hành';
-    const periodMetrics = rows => {
-        const all = computeMetrics(rows);
-        const practiceRows = rows.filter(practiceOnly);
-        const practice = computeMetrics(practiceRows);
-        const gradedRows = practiceRows.filter(item => item.isPassed === true || item.isPassed === false);
-        const passedRows = gradedRows.filter(item => item.isPassed === true);
-        const activityCompletedRows = practiceRows.filter(item => item.status === 'Đạt' || item.status === 'Hoàn thành - Chưa chấm');
-        const ungradedCompletedRows = practiceRows.filter(item => item.status === 'Hoàn thành - Chưa chấm');
-        const durationRows = practiceRows.filter(item => Number(item.duration) > 0);
-        const durationCoverage = practiceRows.length
-            ? Math.round((durationRows.length / practiceRows.length) * 1000) / 10
-            : null;
-        const durationReliable = durationRows.length >= MIN_DURATION_SAMPLE_COUNT
-            && durationCoverage !== null
-            && durationCoverage >= MIN_DURATION_COVERAGE_RATE;
-        return {
-            assigned: 0,
-            graded: gradedRows.length,
-            activityCompleted: activityCompletedRows.length,
-            ungradedCompleted: ungradedCompletedRows.length,
-            totalSessions: practice.totalSessions,
-            guideSessions: rows.filter(item => item.mode === 'Hướng dẫn').length,
-            learners: all.learners,
-            completed: practice.completed,
-            rate: practice.rate,
-            passRate: gradedRows.length ? Math.round((passedRows.length / gradedRows.length) * 1000) / 10 : null,
-            firstTryRate: practice.firstTryRate,
-            avgDuration: durationReliable
-                ? Math.round(durationRows.reduce((sum, item) => sum + Number(item.duration), 0) / durationRows.length)
-                : null,
-            durationKnown: durationRows.length,
-            durationAttempts: practiceRows.length,
-            durationCoverage,
-            durationReliable
-        };
-    };
-    const currentRows = filterSessionsByDate(periods.currentStart, periods.currentEnd);
-    const previousRows = filterSessionsByDate(periods.previousStart, periods.previousEnd);
-    const authoritativeSummary = dashboardReport?.summary;
-    const currentMetrics = authoritativeSummary
-        ? mapReportMetrics(authoritativeSummary.current)
-        : periodMetrics(currentRows);
-    const previousMetrics = authoritativeSummary
-        ? mapReportMetrics(authoritativeSummary.previous)
-        : periodMetrics(previousRows);
-    const lifetimeMetrics = authoritativeSummary?.lifetime
-        ? mapReportMetrics(authoritativeSummary.lifetime)
-        : periodMetrics(sessions);
-
     const definitions = [
         { key: 'totalSessions', valueId: 'kpiSessions', comparisonId: 'kpiSessionsComparison', contextId: 'kpiSessionsContext', type: 'count', unit: 'phiên' },
         { key: 'guideSessions', valueId: 'kpiGuideSessions', comparisonId: 'kpiGuideSessionsComparison', contextId: 'kpiGuideSessionsContext', type: 'count', unit: 'lượt' },
@@ -563,6 +514,30 @@ function renderKpis() {
         { key: 'firstTryRate', valueId: 'kpiFirstTryRate', comparisonId: 'kpiFirstTryRateComparison', contextId: 'kpiFirstTryRateContext', type: 'rate', unit: '%' },
         { key: 'avgDuration', valueId: 'kpiAvgDuration', comparisonId: 'kpiAvgDurationComparison', contextId: 'kpiAvgDurationContext', type: 'duration', unit: 'giây', lowerIsBetter: true }
     ];
+
+    const reportPeriod = dashboardReport?.meta?.period;
+    const reportMatchesPeriod = reportPeriod?.from === periods.currentStart
+        && reportPeriod?.to === periods.currentEnd;
+    const authoritativeSummary = reportMatchesPeriod ? dashboardReport?.summary : null;
+    if (!authoritativeSummary) {
+        const message = state.dashboardReportStatus === 'loading'
+            ? 'Đang tải dữ liệu báo cáo tổng hợp'
+            : 'Không có dữ liệu báo cáo tổng hợp cho kỳ đã chọn';
+        definitions.forEach(definition => {
+            const valueElement = document.getElementById(definition.valueId);
+            const comparisonElement = document.getElementById(definition.comparisonId);
+            const contextElement = document.getElementById(definition.contextId);
+            if (valueElement) valueElement.textContent = '—';
+            if (comparisonElement) comparisonElement.replaceChildren();
+            if (contextElement) contextElement.textContent = message;
+        });
+        renderDashboardDataNotice(null);
+        return;
+    }
+
+    const currentMetrics = mapReportMetrics(authoritativeSummary.current);
+    const previousMetrics = mapReportMetrics(authoritativeSummary.previous);
+    const lifetimeMetrics = mapReportMetrics(authoritativeSummary.lifetime);
 
     const formatMetric = (value, definition) => {
         if (value === null || value === undefined) return '—';
@@ -616,16 +591,18 @@ function renderKpis() {
         }
 
         if (contextElement) {
-            const hasCurrentData = authoritativeSummary
-                ? Number(authoritativeSummary.current?.assigned_count || authoritativeSummary.current?.practice_attempts) > 0
-                : currentRows.length > 0;
-            const noDataLabel = hasCurrentData ? '' : ' • Chưa có dữ liệu';
             if (definition.key === 'avgDuration' && !currentMetrics.durationReliable) {
                 const known = formatNumber.format(currentMetrics.durationKnown || 0);
                 const attempts = formatNumber.format(currentMetrics.durationAttempts || 0);
                 contextElement.textContent = `${periods.currentLabel} • ${known}/${attempts} lượt có thời lượng • Chưa đủ mẫu tin cậy`;
+            } else if (definition.key === 'completed' || definition.key === 'rate') {
+                contextElement.textContent = `${periods.currentLabel} • ${formatNumber.format(currentMetrics.completed)}/${formatNumber.format(currentMetrics.assigned)} cặp KTV–Lab đã đạt`;
+            } else if (definition.key === 'passRate') {
+                contextElement.textContent = `${periods.currentLabel} • ${formatNumber.format(currentMetrics.graded)} lượt đã có kết quả chấm`;
+            } else if (definition.key === 'firstTryRate') {
+                contextElement.textContent = `${periods.currentLabel} • ${formatNumber.format(currentMetrics.completed)} cặp KTV–Lab đã đạt làm mẫu`;
             } else {
-                contextElement.textContent = `${periods.currentLabel}${noDataLabel} • Lũy kế ${formatMetric(lifetimeValue, definition)}${definition.type === 'count' ? ` ${definition.unit}` : ''}`;
+                contextElement.textContent = `${periods.currentLabel} • Lũy kế ${formatMetric(lifetimeValue, definition)}${definition.type === 'count' ? ` ${definition.unit}` : ''}`;
             }
         }
     });
@@ -638,10 +615,15 @@ function renderDashboardDataNotice(currentMetrics) {
     if (!notice) return;
 
     const messages = [];
-    const unassignedRegions = (dashboardReport?.matrix?.rows || []).filter(row => {
+    if (state.dashboardReportStatus === 'stale') {
+        messages.push('Báo cáo tổng hợp chưa cập nhật được; hệ thống đang giữ bản dữ liệu thành công gần nhất.');
+    } else if (state.dashboardReportStatus === 'unavailable') {
+        messages.push('Không tải được báo cáo tổng hợp; các KPI được để trống thay vì tính bằng công thức dự phòng khác nghiệp vụ.');
+    }
+    const unassignedRegions = currentMetrics ? (dashboardReport?.matrix?.rows || []).filter(row => {
         const region = row?.region || {};
         return !region.region_id || String(region.code || region.region_code || '').toUpperCase() === 'UNASSIGNED';
-    });
+    }) : [];
     const unassignedAssignments = unassignedRegions.reduce(
         (sum, row) => sum + Number(row?.total?.assigned_count || row?.total?.eligible || 0),
         0
@@ -649,7 +631,7 @@ function renderDashboardDataNotice(currentMetrics) {
     if (unassignedAssignments > 0) {
         messages.push(`${formatNumber.format(unassignedAssignments)} lượt KTV–lab chưa có khu vực nên đang được gom vào “Chưa xác định”.`);
     }
-    if (currentMetrics.ungradedCompleted > 0) {
+    if (currentMetrics && currentMetrics.ungradedCompleted > 0) {
         messages.push(`${formatNumber.format(currentMetrics.ungradedCompleted)} lượt thực hành đã hoàn thành thao tác nhưng chưa có kết quả chấm; các lượt này chưa được tính là đạt chuẩn.`);
     }
 
@@ -663,7 +645,9 @@ function renderDashboardDataNotice(currentMetrics) {
     icon.textContent = '!';
     const content = document.createElement('div');
     const title = document.createElement('strong');
-    title.textContent = 'Cần hoàn thiện dữ liệu trước khi dùng báo cáo chính thức';
+    title.textContent = state.dashboardReportStatus === 'ready'
+        ? 'Cần hoàn thiện dữ liệu trước khi dùng báo cáo chính thức'
+        : 'Trạng thái dữ liệu báo cáo';
     const list = document.createElement('ul');
     messages.forEach(message => {
         const item = document.createElement('li');
@@ -881,34 +865,24 @@ function renderOverviewMonthlyTrend(rows) {
 
     container.classList.remove('is-empty');
 
-    const validDates = rows
-        .map(item => parseDate(item.date))
-        .filter(date => !Number.isNaN(date.getTime()) && date.getTime() > 0);
-    if (!validDates.length) {
-        container.classList.add('is-empty');
-        container.innerHTML = '<div class="empty">Không có dữ liệu theo tháng.</div>';
-        if (summary) summary.innerHTML = '';
-        return;
-    }
-
-    const latestDataDate = new Date(Math.max(...validDates.map(date => date.getTime())));
-    const selectedDate = state.startDate ? parseDate(state.startDate) : latestDataDate;
+    const selectedDate = state.startDate ? parseDate(state.startDate) : now;
     const selectedKey = `${selectedDate.getFullYear()}-${selectedDate.getMonth()}`;
     const reportYear = selectedDate.getFullYear();
     const today = new Date();
+    const reportYearFromMeta = dashboardReport?.meta?.period?.from
+        ? parseDate(dashboardReport.meta.period.from).getFullYear()
+        : null;
+    if (!Array.isArray(dashboardReport?.monthly) || reportYearFromMeta !== reportYear) {
+        container.classList.add('is-empty');
+        container.innerHTML = `<div class="empty">${state.dashboardReportStatus === 'loading' ? 'Đang tải xu hướng hoạt động...' : 'Không tải được dữ liệu xu hướng cho năm đã chọn.'}</div>`;
+        if (summary) summary.innerHTML = '';
+        return;
+    }
     const monthlyReport = new Map((dashboardReport?.monthly || []).map(item => [item.month, item]));
     const periods = Array.from({ length: 12 }, (_, index) => {
         const date = new Date(reportYear, index, 1);
-        const monthRows = rows.filter(item => {
-            const itemDate = parseDate(item.date);
-            return !Number.isNaN(itemDate.getTime())
-                && itemDate.getFullYear() === date.getFullYear()
-                && itemDate.getMonth() === date.getMonth();
-        });
         const reportMonth = monthlyReport.get(`${reportYear}-${String(index + 1).padStart(2, '0')}`);
-        const fallbackMetrics = computeMetrics(monthRows.filter(item => item.mode === 'Thực hành'));
-        const metrics = dashboardReport
-            ? (reportMonth ? {
+        const metrics = reportMonth ? {
                 totalSessions: Number(reportMonth.practice_attempts) || 0,
                 learners: Number(reportMonth.participating_technicians) || 0,
                 completed: Number(reportMonth.completed_count) || 0,
@@ -916,8 +890,7 @@ function renderOverviewMonthlyTrend(rows) {
                 passRate: reportMonth.pass_rate === null ? null : Number(reportMonth.pass_rate),
                 firstTryRate: reportMonth.first_try_rate === null ? null : Number(reportMonth.first_try_rate),
                 avgDuration: reportMonth.avg_duration_sec === null ? null : Number(reportMonth.avg_duration_sec)
-            } : { totalSessions: 0, learners: 0, completed: 0, rate: null, passRate: null, firstTryRate: null, avgDuration: null })
-            : fallbackMetrics;
+            } : { totalSessions: 0, learners: 0, completed: 0, rate: null, passRate: null, firstTryRate: null, avgDuration: null };
         return {
             date,
             key: `${date.getFullYear()}-${date.getMonth()}`,
@@ -1638,7 +1611,7 @@ function resetLearnerDetailFilters() {
     state.detailDevicesTouched = false;
     state.detailSelectedLabs = new Set();
     state.detailLabsTouched = false;
-    state.detailSelectedStatuses = new Set(['Đạt', 'Hoàn thành', 'Hoàn thành - Chưa chấm', 'Đang làm', 'Không đạt', 'Đã dừng', 'Chưa thực hiện']);
+    state.detailSelectedStatuses = new Set(['Đạt', 'Chưa đạt', 'Chưa có kết quả', 'Không chấm']);
     state.detailSearchDevice = '';
     state.detailSearchLab = '';
     state.learnerDetailPage = 1;
@@ -1866,12 +1839,10 @@ function getRegionUsageYears() {
 
 function isCompletedDeviceUsageSession(session) {
     const isPractice = session?.mode === 'Thực hành' || session?.mode === 'practice';
-    return isPractice && (
-        session?.isPassed === true
-        || session?.status === 'Đạt'
-        || session?.status === 'Hoàn thành - Chưa chấm'
-        || session?.status === 'Hoàn thành'
-    );
+    const completed = session?.rawStatus
+        ? session.rawStatus === 'completed'
+        : session?.status === 'Đạt' || session?.status === 'Chưa có kết quả';
+    return isPractice && completed;
 }
 
 function getRegionUsageSeries(year) {
@@ -1883,8 +1854,8 @@ function getRegionUsageSeries(year) {
             headcountByRegion.set(region, (headcountByRegion.get(region) || 0) + 1);
         });
 
-    const completedDevicesByRegionMonth = new Map();
-    const activeLearnersByRegionMonth = new Map();
+    const validSessionsByRegionMonth = new Map();
+    const participatingLearnersByRegionMonth = new Map();
 
     sessions.forEach(session => {
         const date = parseDate(session.date);
@@ -1898,17 +1869,10 @@ function getRegionUsageSeries(year) {
         const learnerIdentity = String(session.learner || session.technicianId || '').trim().toLowerCase();
         if (!learnerIdentity) return;
 
-        // Đếm nhân sự có sử dụng trong tháng
-        if (!activeLearnersByRegionMonth.has(bucketKey)) activeLearnersByRegionMonth.set(bucketKey, new Set());
-        activeLearnersByRegionMonth.get(bucketKey).add(learnerIdentity);
-
-        // Đếm phiên hợp lệ: KTV hoàn thành tối thiểu 1 thiết bị trong tháng
         if (isCompletedDeviceUsageSession(session)) {
-            const deviceIdentity = String(session.deviceId || session.device || '').trim().toLowerCase();
-            if (deviceIdentity) {
-                if (!completedDevicesByRegionMonth.has(bucketKey)) completedDevicesByRegionMonth.set(bucketKey, new Set());
-                completedDevicesByRegionMonth.get(bucketKey).add(`${learnerIdentity}\u001f${deviceIdentity}`);
-            }
+            validSessionsByRegionMonth.set(bucketKey, (validSessionsByRegionMonth.get(bucketKey) || 0) + 1);
+            if (!participatingLearnersByRegionMonth.has(bucketKey)) participatingLearnersByRegionMonth.set(bucketKey, new Set());
+            participatingLearnersByRegionMonth.get(bucketKey).add(learnerIdentity);
         }
     });
 
@@ -1920,31 +1884,34 @@ function getRegionUsageSeries(year) {
             const months = Array.from({ length: 12 }, (_, monthIndex) => {
                 if (monthIndex >= observedMonthCount) return null;
                 const bucketKey = `${region}\u001f${monthIndex}`;
-                const completedDevices = completedDevicesByRegionMonth.get(bucketKey)?.size || 0;
-                const activeLearners = activeLearnersByRegionMonth.get(bucketKey)?.size || 0;
+                const validSessions = validSessionsByRegionMonth.get(bucketKey) || 0;
+                const participatingLearners = participatingLearnersByRegionMonth.get(bucketKey)?.size || 0;
                 return {
                     month: monthIndex + 1,
-                    completedDevices,
-                    activeLearners,
-                    rate: activeLearners > 0 ? Math.round((completedDevices / activeLearners) * 10) / 10 : 0
+                    validSessions,
+                    participatingLearners,
+                    headcount,
+                    rate: headcount > 0 ? Math.round((validSessions / headcount) * 10) / 10 : 0,
+                    participationRate: headcount > 0
+                        ? Math.round((participatingLearners / headcount) * 1000) / 10
+                        : 0
                 };
             });
             const observedMonths = months.filter(Boolean);
-            const completedDevices = observedMonths.reduce((sum, month) => sum + month.completedDevices, 0);
-            const totalActiveLearners = observedMonths.reduce((sum, month) => sum + month.activeLearners, 0);
-            const averageRate = totalActiveLearners > 0
-                ? Math.round((completedDevices / totalActiveLearners) * 10) / 10
+            const validSessions = observedMonths.reduce((sum, month) => sum + month.validSessions, 0);
+            const averageRate = headcount > 0 && observedMonths.length > 0
+                ? Math.round((validSessions / (headcount * observedMonths.length)) * 10) / 10
                 : 0;
             return {
                 region,
                 headcount,
                 color: REGION_USAGE_COLORS[colorIndex % REGION_USAGE_COLORS.length],
                 months,
-                completedDevices,
-                totalActiveLearners,
+                validSessions,
                 averageRate
             };
-        });
+        })
+        .filter(item => item.headcount > 0);
 }
 
 function renderRegionUsageChart() {
@@ -1953,6 +1920,7 @@ function renderRegionUsageChart() {
     const insights = document.getElementById('regionUsageInsights');
     const yearSelect = document.getElementById('regionUsageYear');
     const tooltip = document.getElementById('regionUsageTooltip');
+    const periodNote = document.getElementById('regionUsagePeriodNote');
     if (!container || !legend || !insights || !yearSelect || !tooltip) return;
 
     const years = getRegionUsageYears();
@@ -1960,6 +1928,12 @@ function renderRegionUsageChart() {
     const yearOptions = years.map(year => `<option value="${year}">${year}</option>`).join('');
     if (yearSelect.innerHTML !== yearOptions) yearSelect.innerHTML = yearOptions;
     yearSelect.value = String(state.regionUsageYear);
+    const selectedReportYear = state.startDate ? parseDate(state.startDate).getFullYear() : state.regionUsageYear;
+    if (periodNote) {
+        periodNote.textContent = selectedReportYear !== state.regionUsageYear
+            ? `Khác kỳ báo cáo đang chọn (${selectedReportYear}).`
+            : '';
+    }
 
     const series = getRegionUsageSeries(state.regionUsageYear);
     if (!series.length) {
@@ -1995,6 +1969,9 @@ function renderRegionUsageChart() {
     const plotHeight = height - plot.top - plot.bottom;
     const xAt = monthIndex => plot.left + (plotWidth * monthIndex / 11);
     const yAt = rate => plot.top + plotHeight - (Math.min(rate, yMax) / yMax * plotHeight);
+    const selectedMonthIndex = selectedReportYear === state.regionUsageYear && state.startDate
+        ? parseDate(state.startDate).getMonth()
+        : -1;
 
     const grid = yTicks.map(value => {
         const y = yAt(value);
@@ -2004,7 +1981,7 @@ function renderRegionUsageChart() {
         `;
     }).join('');
     const monthLabels = Array.from({ length: 12 }, (_, monthIndex) => `
-        <text x="${xAt(monthIndex)}" y="${height - 22}" text-anchor="middle" class="region-usage-month-label">Th ${monthIndex + 1}</text>
+        <text x="${xAt(monthIndex)}" y="${height - 22}" text-anchor="middle" class="region-usage-month-label ${monthIndex === selectedMonthIndex ? 'is-selected' : ''}">Th ${monthIndex + 1}</text>
     `).join('');
     const lines = series.map((item, seriesIndex) => {
         const points = item.months
@@ -2012,11 +1989,12 @@ function renderRegionUsageChart() {
             .filter(Boolean);
         const path = points.map((point, index) => `${index ? 'L' : 'M'} ${point.x.toFixed(1)} ${point.y.toFixed(1)}`).join(' ');
         const circles = points.map(point => `
-            <circle class="region-usage-point" cx="${point.x}" cy="${point.y}" r="4.5" tabindex="0"
+            <circle class="region-usage-point ${point.month - 1 === selectedMonthIndex ? 'is-selected-month' : ''}" cx="${point.x}" cy="${point.y}" r="${point.month - 1 === selectedMonthIndex ? '6' : '4.5'}" tabindex="0"
                 data-region="${escapeHTML(item.region)}" data-month="${point.month}" data-rate="${point.rate.toFixed(1)}"
-                data-completed="${point.completedDevices}" data-active="${point.activeLearners}" data-headcount="${item.headcount}"
-                aria-label="${escapeHTML(`${item.region}, tháng ${point.month}: ${point.rate.toFixed(1)} lượt/người`)}">
-                <title>${escapeHTML(`${item.region} • Tháng ${point.month}: ${point.rate.toFixed(1)} lượt/người (${point.completedDevices} phiên hợp lệ / ${point.activeLearners} người sử dụng)`)}</title>
+                data-sessions="${point.validSessions}" data-participants="${point.participatingLearners}"
+                data-participation-rate="${point.participationRate.toFixed(1)}" data-headcount="${item.headcount}"
+                aria-label="${escapeHTML(`${item.region}, tháng ${point.month}: ${point.rate.toFixed(1)} lượt/KTV, ${point.participationRate.toFixed(1)}% KTV tham gia`)}">
+                <title>${escapeHTML(`${item.region} • Tháng ${point.month}: ${point.rate.toFixed(1)} lượt/KTV (${point.validSessions} phiên hợp lệ / ${item.headcount} KTV, ${point.participationRate.toFixed(1)}% tham gia)`)}</title>
             </circle>
         `).join('');
         return `
@@ -2029,29 +2007,31 @@ function renderRegionUsageChart() {
 
     container.innerHTML = `
         <svg class="region-usage-svg" viewBox="0 0 ${width} ${height}" role="img" aria-labelledby="regionUsageSvgTitle regionUsageSvgDesc">
-            <title id="regionUsageSvgTitle">Tần suất hoàn thành thiết bị theo khu vực năm ${state.regionUsageYear}</title>
-            <desc id="regionUsageSvgDesc">Biểu đồ đường gồm ${series.length} khu vực, trục ngang là 12 tháng và trục dọc là tần suất hoàn thành thiết bị (lượt/người).</desc>
-            <text x="18" y="${plot.top + plotHeight / 2}" text-anchor="middle" class="region-usage-y-title" transform="rotate(-90 18 ${plot.top + plotHeight / 2})">Tần suất (lượt/người)</text>
+            <title id="regionUsageSvgTitle">Tần suất sử dụng theo khu vực năm ${state.regionUsageYear}</title>
+            <desc id="regionUsageSvgDesc">Biểu đồ đường gồm ${series.length} khu vực, trục ngang là 12 tháng và trục dọc là số phiên thực hành hợp lệ trung bình trên mỗi KTV đang công tác.</desc>
+            <text x="18" y="${plot.top + plotHeight / 2}" text-anchor="middle" class="region-usage-y-title" transform="rotate(-90 18 ${plot.top + plotHeight / 2})">Tần suất (lượt/KTV)</text>
             ${grid}
             ${monthLabels}
             ${lines}
         </svg>
     `;
 
-    const ranked = [...series].sort((left, right) => right.averageRate - left.averageRate || left.region.localeCompare(right.region, 'vi'));
+    const ranked = series
+        .filter(item => item.headcount > 0)
+        .sort((left, right) => right.averageRate - left.averageRate || left.region.localeCompare(right.region, 'vi'));
     const highest = ranked[0];
     const lowest = ranked[ranked.length - 1];
-    const totalCompletedDevices = series.reduce((sum, item) => sum + item.completedDevices, 0);
+    const totalValidSessions = series.reduce((sum, item) => sum + item.validSessions, 0);
     insights.innerHTML = `
-        <article><span>Sử dụng nhiều nhất</span><strong>${escapeHTML(highest.region)}</strong><small>${highest.averageRate.toFixed(1)} lượt/người/tháng</small></article>
-        <article><span>Sử dụng ít nhất</span><strong>${escapeHTML(lowest.region)}</strong><small>${lowest.averageRate.toFixed(1)} lượt/người/tháng</small></article>
-        <article><span>Tổng phiên hợp lệ</span><strong>${formatNumber.format(totalCompletedDevices)}</strong><small>${series.length} khu vực trong năm ${state.regionUsageYear}</small></article>
+        <article><span>Sử dụng nhiều nhất</span><strong>${highest ? escapeHTML(highest.region) : '—'}</strong><small>${highest ? `${highest.averageRate.toFixed(1)} lượt/KTV/tháng` : 'Chưa có khu vực hợp lệ'}</small></article>
+        <article><span>Sử dụng ít nhất</span><strong>${lowest ? escapeHTML(lowest.region) : '—'}</strong><small>${lowest ? `${lowest.averageRate.toFixed(1)} lượt/KTV/tháng` : 'Chưa có khu vực hợp lệ'}</small></article>
+        <article><span>Tổng phiên hợp lệ</span><strong>${formatNumber.format(totalValidSessions)}</strong><small>${ranked.length} khu vực có nhân sự trong năm ${state.regionUsageYear}</small></article>
     `;
     legend.innerHTML = series.map(item => `
         <button type="button" class="region-usage-legend-item" data-legend-region="${escapeHTML(item.region)}">
             <i style="--legend-color:${item.color}"></i>
             <span>${escapeHTML(item.region)}</span>
-            <small>${item.averageRate.toFixed(1)} lượt/người/tháng</small>
+            <small>${item.headcount > 0 ? `${item.averageRate.toFixed(1)} lượt/KTV/tháng` : 'Chưa có nhân sự'}</small>
         </button>
     `).join('');
 
@@ -2069,7 +2049,7 @@ function renderRegionUsageChart() {
     });
 
     const showTooltip = (point, event) => {
-        tooltip.innerHTML = `<strong>${escapeHTML(point.dataset.region)} · Tháng ${point.dataset.month}</strong><span>${point.dataset.rate} lượt/người</span><small>${point.dataset.completed} phiên hợp lệ / ${point.dataset.active} người sử dụng</small>`;
+        tooltip.innerHTML = `<strong>${escapeHTML(point.dataset.region)} · Tháng ${point.dataset.month}</strong><span>${point.dataset.rate} lượt/KTV</span><small>${point.dataset.sessions} phiên hợp lệ / ${point.dataset.headcount} KTV · ${point.dataset.participationRate}% tham gia (${point.dataset.participants} KTV)</small>`;
         tooltip.hidden = false;
         const chartRect = container.getBoundingClientRect();
         const pointRect = point.getBoundingClientRect();
@@ -2117,22 +2097,17 @@ function updateRangeText(rows) {
 
 function statusToVietnamese(status) {
     const map = {
-        completed: 'Hoàn thành',
-        in_progress: 'Đang làm',
-        stuck: 'Đang làm',
-        abandoned: 'Đã dừng',
-        failed: 'Không đạt',
-        not_started: 'Chưa thực hiện'
+        completed: 'Chưa có kết quả',
+        failed: 'Chưa đạt'
     };
-    return map[status] || status || 'Chưa thực hiện';
+    return map[status] || status || '';
 }
 
 function getSessionDisplayStatus(rawStatus, mode, isPassed) {
-    if (mode === 'Thực hành' || mode === 'practice') {
-        if (isPassed === true) return 'Đạt';
-        if (isPassed === false) return 'Không đạt';
-        if (rawStatus === 'completed' || rawStatus === 'Hoàn thành') return 'Hoàn thành - Chưa chấm';
-    }
+    if (mode === 'Hướng dẫn' || mode === 'guide') return 'Không chấm';
+    if (isPassed === true) return 'Đạt';
+    if (rawStatus === 'failed' || isPassed === false) return 'Chưa đạt';
+    if (rawStatus === 'completed' || rawStatus === 'Hoàn thành') return 'Chưa có kết quả';
     return statusToVietnamese(rawStatus);
 }
 
@@ -2242,7 +2217,9 @@ function normalizeActionText(item) {
 }
 
 function mapApiSessions(apiSessions = []) {
-    return apiSessions.map(item => {
+    return apiSessions
+        .filter(item => item.status === 'completed' || item.status === 'failed')
+        .map(item => {
         const learner = item.technician?.email || item.email || item.technician?.full_name || item.full_name || item.technician_id || 'Unknown';
         const technician = technicianByIdentity.get(String(item.technician_id || '').trim().toLowerCase())
             || technicianByIdentity.get(String(item.email || '').trim().toLowerCase());
@@ -2269,6 +2246,7 @@ function mapApiSessions(apiSessions = []) {
             lab: item.lab?.lab_name || item.lab_name || item.lab_id || 'N/A',
             skill: item.skill?.skill_name || item.skill?.skill_id || item.lab?.lab_name || item.lab_name || 'N/A',
             mode: item.mode || 'Thực hành',
+            rawStatus: item.status,
             status: getSessionDisplayStatus(item.status, item.mode || 'Thực hành', isPassed),
             duration: item.duration_sec === null || item.duration_sec === undefined
                 ? null
@@ -2283,7 +2261,7 @@ function mapApiSessions(apiSessions = []) {
                 : Number(item.practice_attempt_no),
             lastAction: normalizeActionText(item)
         };
-    });
+        });
 }
 
 function buildDeviceCatalog(devices = [], labs = []) {
@@ -2385,13 +2363,19 @@ async function fetchDashboardVersion() {
 
 async function reloadDashboardReport() {
     const requestSequence = ++dashboardReportRequestSequence;
+    state.dashboardReportStatus = 'loading';
+    renderAll();
     try {
         const report = await fetchDashboardReport();
         if (requestSequence !== dashboardReportRequestSequence) return;
         dashboardReport = report;
+        state.dashboardReportStatus = 'ready';
         renderAll();
     } catch (error) {
         console.warn('Không tải được báo cáo assignment theo kỳ.', error);
+        if (requestSequence !== dashboardReportRequestSequence) return;
+        state.dashboardReportStatus = dashboardReport ? 'stale' : 'unavailable';
+        renderAll();
     }
 }
 
@@ -2444,6 +2428,7 @@ async function fetchDashboardData(versionHint = '') {
     const [payload, [reportResult, versionResult]] = await Promise.all([response.json(), optionalRequests]);
     const data = payload.data || {};
     const report = reportResult.status === 'fulfilled' ? reportResult.value : dashboardReport;
+    const reportStatus = reportResult.status === 'fulfilled' ? 'ready' : (report ? 'stale' : 'unavailable');
     const version = versionResult.status === 'fulfilled' ? String(versionResult.value || '') : String(versionHint || lastDashboardVersion || '');
     if (reportResult.status === 'rejected') console.warn('Không đồng bộ được báo cáo tổng hợp; giữ dữ liệu gần nhất.', reportResult.reason);
     if (versionResult.status === 'rejected') console.warn('Không đọc được phiên bản dữ liệu dashboard.', versionResult.reason);
@@ -2463,6 +2448,7 @@ async function fetchDashboardData(versionHint = '') {
         assignments: normalizeTrainingAssignments(data.assignments || []),
         assignmentsRequested,
         report,
+        reportStatus,
         version,
         raw: { ...data, report_meta: report?.meta || null }
     };
@@ -2477,6 +2463,7 @@ function applyDashboardData(data) {
         state.assignmentsLoaded = true;
     }
     if (data.report !== undefined) dashboardReport = data.report;
+    state.dashboardReportStatus = data.reportStatus || (dashboardReport ? 'ready' : 'unavailable');
     technicianCatalogAuthoritative = Boolean(data.techniciansAuthoritative);
     state.dashboardDataLoaded = true;
     normalizeSessionDeviceNames();
@@ -2593,10 +2580,13 @@ async function refreshDashboardData({ force = false, announce = false } = {}) {
             return false;
         }
         const data = await fetchDashboardData(version);
+        const previousReportStatus = state.dashboardReportStatus;
+        state.dashboardReportStatus = data.reportStatus || (data.report ? 'ready' : 'unavailable');
         const signature = buildDashboardSignature(data.raw);
         if (!force && signature === lastDashboardSignature) {
             state.lastSuccessfulRefreshAt = new Date();
             setDashboardSyncState('ready');
+            if (previousReportStatus !== state.dashboardReportStatus) renderAll();
             return false;
         }
         lastDashboardSignature = signature;
@@ -2670,6 +2660,7 @@ async function loadDashboardFromApi() {
                 technicianCatalog = [];
                 trainingAssignments = [];
                 dashboardReport = null;
+                state.dashboardReportStatus = 'unavailable';
                 technicianCatalogAuthoritative = false;
                 rebuildTechnicianIndex();
                 rebuildLearnerNameMap();
@@ -3113,7 +3104,7 @@ function initPopovers() {
     });
     document.getElementById('realtimeStatusClear')?.addEventListener('click', (e) => {
         e.stopPropagation();
-        state.realtimeSelectedStatuses = new Set(['Đạt', 'Hoàn thành', 'Hoàn thành - Chưa chấm', 'Đang làm', 'Không đạt', 'Đã dừng']);
+        state.realtimeSelectedStatuses = new Set(['Đạt', 'Chưa đạt', 'Chưa có kết quả', 'Không chấm']);
         document.querySelectorAll('#realtimeStatusOptions input[type="checkbox"]').forEach(chk => chk.checked = true);
         renderAll();
     });
@@ -3287,7 +3278,7 @@ function initPopovers() {
     });
     document.getElementById('detailStatusClear')?.addEventListener('click', (e) => {
         e.stopPropagation();
-        state.detailSelectedStatuses = new Set(['Đạt', 'Hoàn thành', 'Hoàn thành - Chưa chấm', 'Đang làm', 'Không đạt', 'Đã dừng', 'Chưa thực hiện']);
+        state.detailSelectedStatuses = new Set(['Đạt', 'Chưa đạt', 'Chưa có kết quả', 'Không chấm']);
         document.querySelectorAll('#detailStatusOptions input[type="checkbox"]').forEach(chk => chk.checked = true);
         renderAll();
     });
@@ -4025,7 +4016,7 @@ function renderInstructorClassProgress() {
         <span class="instructor-summary-chip"><strong>${progressRows.length}${filtersActive ? `/${allProgressRows.length}` : ''}</strong> KTV hiển thị</span>
         <span class="instructor-summary-chip"><strong>${selectedGroups.length}</strong> thiết bị</span>
         <span class="instructor-summary-chip"><strong>${columns.length}</strong> bài lab</span>
-        <span class="instructor-summary-chip"><strong>${completed}/${total}</strong> bài hoàn thành</span>
+        <span class="instructor-summary-chip"><strong>${completed}/${total}</strong> bài đã đạt</span>
         <span class="instructor-summary-chip"><strong>${rate === null ? '—' : `${rate}%`}</strong> tiến độ lớp</span>
     `;
 
@@ -4039,7 +4030,7 @@ function renderInstructorClassProgress() {
                     <span>${group.labs.length} bài lab</span>
                 </th>
             `).join('')}
-            <th class="instructor-progress-total" rowspan="2" scope="col">Hoàn thành</th>
+            <th class="instructor-progress-total" rowspan="2" scope="col">Đã đạt</th>
             <th class="instructor-progress-rate" rowspan="2" scope="col">Tỷ lệ</th>
         </tr>
         <tr class="instructor-progress-lab-row">
@@ -4053,7 +4044,7 @@ function renderInstructorClassProgress() {
             <td class="instructor-progress-index">${index + 1}</td>
             <th class="instructor-progress-email" scope="row" title="${escapeHTML(row.learner)}">${renderInstructorLearner(row.learner)}</th>
             ${row.deviceResults.flatMap(item => item.labResults.map(lab => `
-                <td class="instructor-progress-lab instructor-lab-cell ${getInstructorLabCellClass(lab.completed, lab.assigned !== false)}" title="${escapeHTML(`${item.device} • ${lab.lab}: ${lab.assigned === false ? 'Chưa giao' : (lab.completed ? 'Hoàn thành' : 'Chưa hoàn thành')}`)}">
+                <td class="instructor-progress-lab instructor-lab-cell ${getInstructorLabCellClass(lab.completed, lab.assigned !== false)}" title="${escapeHTML(`${item.device} • ${lab.lab}: ${lab.assigned === false ? 'Chưa phân công' : (lab.completed ? 'Đã đạt' : 'Chưa đạt')}`)}">
                     ${lab.assigned === false ? '—' : (lab.completed ? '✓' : '○')}
                 </td>
             `)).join('')}
@@ -4481,7 +4472,7 @@ function renderClassMatrixReport() {
                     <span>${(group.labs || []).length} bài lab</span>
                 </th>
             `).join('')}
-            <th class="ktv-total-head" scope="col" rowspan="2">Hoàn thành</th>
+            <th class="ktv-total-head" scope="col" rowspan="2">Đã đạt</th>
             <th class="ktv-rate-head" scope="col" rowspan="2">Tỷ lệ</th>
         </tr>
         <tr class="report-lab-header-row">
@@ -4519,14 +4510,14 @@ function renderClassMatrixReport() {
                         const passNote = cell.firstPassAttemptNo === 1 
                             ? 'Đạt ngay lần thực hành 1' 
                             : (cell.firstPassAttemptNo > 1 ? `Đạt ở lần thực hành thứ ${cell.firstPassAttemptNo}` : 'Đã đạt chuẩn');
-                        const tooltip = `${row.name} • ${cell.device} • ${cell.lab}: Đã hoàn thành (${passNote}) • Tổng ${cell.attempts} lượt thực hành`;
+                        const tooltip = `${row.name} • ${cell.device} • ${cell.lab}: Đã đạt (${passNote}) • Tổng ${cell.attempts} lượt thực hành`;
                         return `<td class="report-metric-cell report-cell-high" title="${escapeHTML(tooltip)}"><strong>1/1</strong><span>100% HT</span></td>`;
                     }
                     if (cell.attempts > 0) {
-                        const tooltip = `${row.name} • ${cell.device} • ${cell.lab}: Đang thực hiện • Đã làm ${cell.attempts} lượt thực hành`;
+                        const tooltip = `${row.name} • ${cell.device} • ${cell.lab}: Chưa đạt • Đã làm ${cell.attempts} lượt thực hành`;
                         return `<td class="report-metric-cell report-cell-low" title="${escapeHTML(tooltip)}"><strong>0/1</strong><span>0% HT</span></td>`;
                     }
-                    const tooltip = `${row.name} • ${cell.device} • ${cell.lab}: Chưa thực hiện`;
+                    const tooltip = `${row.name} • ${cell.device} • ${cell.lab}: Chưa làm`;
                     return `<td class="report-metric-cell report-cell-zero" title="${escapeHTML(tooltip)}"><strong>0/1</strong><span>Chưa làm</span></td>`;
                 }).join('')}
                 <td class="ktv-total-cell ${rateClass}">
@@ -4788,6 +4779,8 @@ function initDateRangePicker() {
             state.tempStartDate = bounds.start;
             state.tempEndDate = bounds.end;
             state.calendarMonth = new Date(bounds.year, bounds.monthIndex, 1);
+            state.regionUsageYear = bounds.year;
+            state.dashboardReportStatus = 'loading';
             state.learnerTablePage = 1;
             state.learnerDetailPage = 1;
             state.realtimePage = 1;
@@ -4921,6 +4914,8 @@ function initDateRangePicker() {
         e.stopPropagation();
         state.startDate = state.tempStartDate;
         state.endDate = state.tempEndDate || state.tempStartDate;
+        if (state.startDate) state.regionUsageYear = parseDate(state.startDate).getFullYear();
+        state.dashboardReportStatus = 'loading';
         state.learnerTablePage = 1;
         state.learnerDetailPage = 1;
         state.realtimePage = 1;
@@ -4938,6 +4933,8 @@ function initDateRangePicker() {
         state.tempEndDate = fmtDate(last);
         state.startDate = fmtDate(first);
         state.endDate = fmtDate(last);
+        state.regionUsageYear = nowClear.getFullYear();
+        state.dashboardReportStatus = 'loading';
         state.learnerTablePage = 1;
         state.learnerDetailPage = 1;
         state.realtimePage = 1;
@@ -5098,13 +5095,13 @@ function buildActivityReportDescriptor() {
         headers: [
             'STT', 'Ngày', 'Giờ', 'Mã phiên', 'Mã NV', 'Họ và tên', 'Email', 'Vị trí',
             'Khu vực/CNx', 'Chi nhánh', 'Đơn vị', 'Lớp', 'Thiết bị', 'Bài lab', 'Kỹ năng',
-            'Chế độ', 'Trạng thái', 'Kết quả', 'Hoàn thành lần đầu', 'Thời lượng (giây)',
+            'Chế độ', 'Kết quả', 'Hoàn thành lần đầu', 'Thời lượng (giây)',
             'Thời lượng', 'Hành động cuối'
         ],
         columnTypes: [
             'integer', 'date', 'time', 'text', 'text', 'text', 'text', 'text',
             'text', 'text', 'text', 'text', 'text', 'text', 'text', 'text',
-            'text', 'text', 'text', 'integer', 'text', 'text'
+            'text', 'text', 'integer', 'text', 'text'
         ],
         rows: orderedRows.map((row, index) => {
             const technician = technicianByIdentity.get(String(row.learner || '').trim().toLowerCase())
@@ -5127,8 +5124,7 @@ function buildActivityReportDescriptor() {
                 row.lab || '',
                 row.skill || '',
                 row.mode || '',
-                row.status || '',
-                row.isPassed === true ? 'Đạt' : (row.isPassed === false ? 'Không đạt' : ''),
+                row.status || 'Chưa có kết quả',
                 row.firstTry === true ? 'Có' : (row.firstTry === false ? 'Không' : ''),
                 row.duration ?? '',
                 row.duration === null || row.duration === undefined ? '' : formatDuration(row.duration),
@@ -5247,12 +5243,12 @@ function buildClassMatrixReportDescriptor() {
             ['Thiết bị', deviceLabel],
             ['Tiến độ tổng', `${data.totalCompletedAll}/${data.totalAssignedAll} (${data.overallRate}%)`],
             ['Tổng lượt thực hành', data.totalSessions],
-            ['Quy ước trạng thái', 'Hoàn thành · Đang thực hiện · Chưa thực hiện · Ngoài phạm vi']
+            ['Quy ước trạng thái', 'Đã đạt · Chưa đạt · Chưa làm · Chưa phân công']
         ],
         headers: [
             'STT', 'Mã NV', 'Họ và tên', 'Email', 'Khu vực/CNx', 'Lớp học',
             ...data.columns.map(column => `${column.device} - ${column.lab}`),
-            'Bài hoàn thành', 'Bài trong phạm vi', 'Tỷ lệ hoàn thành (%)', 'Lượt thực hành'
+            'Bài đã đạt', 'Bài trong phạm vi', 'Tỷ lệ hoàn thành (%)', 'Lượt thực hành'
         ],
         columnTypes: [
             'integer', 'text', 'text', 'text', 'text', 'text',
@@ -5267,10 +5263,10 @@ function buildClassMatrixReportDescriptor() {
             row.region || '',
             row.className || row.classCode || classLabel,
             ...row.cells.map(cell => {
-                if (!cell.assigned) return 'Ngoài phạm vi';
-                if (cell.completed) return cell.attempts ? `Hoàn thành · ${cell.attempts} lượt` : 'Hoàn thành';
-                if (cell.attempts > 0) return `Đang thực hiện · ${cell.attempts} lượt`;
-                return 'Chưa thực hiện';
+                if (!cell.assigned) return 'Chưa phân công';
+                if (cell.completed) return cell.attempts ? `Đã đạt · ${cell.attempts} lượt` : 'Đã đạt';
+                if (cell.attempts > 0) return `Chưa đạt · ${cell.attempts} lượt`;
+                return 'Chưa làm';
             }),
             row.completed,
             row.assigned,
@@ -5281,8 +5277,8 @@ function buildClassMatrixReportDescriptor() {
 }
 
 function getRosterExportScope() {
-    const statusLabels = { active: 'Đang làm', terminated: 'Đã nghỉ', all: 'Tất cả trạng thái' };
-    const status = statusLabels[state.rosterStatusFilter] || 'Đang làm';
+    const statusLabels = { active: 'Đang công tác', terminated: 'Đã nghỉ', all: 'Tất cả trạng thái' };
+    const status = statusLabels[state.rosterStatusFilter] || 'Đang công tác';
     const keyword = state.rosterSearch.trim();
     return keyword ? `${status} · Tìm kiếm: “${keyword}”` : status;
 }
@@ -5643,9 +5639,9 @@ function openDeviceSubModal(deviceName, rows) {
         }
         const latest = [...entry.sessions].sort((a, b) => parseDate(b.date) - parseDate(a.date))[0];
         const isDone = entry.sessions.some(isSuccessfulSession);
-        const hasUngradedCompletion = entry.sessions.some(session => session.status === 'Hoàn thành - Chưa chấm');
+        const hasUngradedCompletion = entry.sessions.some(session => session.status === 'Chưa có kết quả');
         const statusCategory = isDone ? 'done' : 'pending';
-        const statusLabel = isDone ? 'Đạt' : (hasUngradedCompletion ? 'Hoàn thành - Chưa chấm' : 'Đang thực hiện');
+        const statusLabel = isDone ? 'Đã đạt' : (hasUngradedCompletion ? 'Chưa có kết quả' : 'Chưa đạt');
         const badgeClass = getStatusClass(statusLabel);
         const lastDateTimeStr = formatDateTime(latest.date, latest.time);
         const lastDuration = formatDuration(latest.duration);
@@ -5754,7 +5750,7 @@ function renderSubModalLabList(filter) {
                         <span class="status-pill status-notstarted">Chưa làm</span>
                     </div>
                     <div class="sub-modal-item-grid2x2">
-                        <div class="sub-modal-cell">Gần nhất: <strong>Chưa thực hiện</strong></div>
+                        <div class="sub-modal-cell">Gần nhất: <strong>Chưa làm</strong></div>
                         <div class="sub-modal-cell">Kết quả: <strong>Chưa có phiên làm bài</strong></div>
                         <div class="sub-modal-cell">Lượt Thực hành: <strong>0 lần</strong></div>
                         <div class="sub-modal-cell">Lượt Hướng dẫn: <strong>0 lần</strong></div>
@@ -5765,7 +5761,7 @@ function renderSubModalLabList(filter) {
         if (item.statusCategory === 'done') {
             const passDetail = item.firstPassAttemptNo === 1 
                 ? 'Đạt ngay lần thực hành 1' 
-                : (item.firstPassAttemptNo > 1 ? `Đạt ở lần thực hành thứ ${item.firstPassAttemptNo}` : 'Đã hoàn thành');
+                : (item.firstPassAttemptNo > 1 ? `Đạt ở lần thực hành thứ ${item.firstPassAttemptNo}` : 'Đã đạt');
             return `
                 <div class="sub-modal-item">
                     <div class="sub-modal-item-top">
@@ -5789,7 +5785,7 @@ function renderSubModalLabList(filter) {
                 </div>
                 <div class="sub-modal-item-grid2x2">
                     <div class="sub-modal-cell">Gần nhất: <strong>${escapeHTML(item.lastDateTimeStr)}</strong> (${item.lastDuration})</div>
-                    <div class="sub-modal-cell">Kết quả: <strong>${item.hasUngradedCompletion ? 'Hoàn thành thao tác, chưa có kết quả chấm' : `Đang luyện tập (${item.practiceCount} lượt)`}</strong></div>
+                    <div class="sub-modal-cell">Kết quả: <strong>${item.hasUngradedCompletion ? 'Đã nộp, chưa có kết quả chấm' : `Chưa đạt sau ${item.practiceCount} lượt thực hành`}</strong></div>
                     <div class="sub-modal-cell">Lượt Thực hành: <strong>${item.practiceCount} lần</strong></div>
                     <div class="sub-modal-cell">Lượt Hướng dẫn: <strong>${item.guideCount} lần</strong></div>
                 </div>
@@ -5928,31 +5924,6 @@ function filterSessionsByDate(startStr, endStr) {
 
         return true;
     });
-}
-
-function computeMetrics(rows) {
-    const totalSessions = rows.length;
-    const completed = rows.filter(isSuccessfulSession).length;
-    const learners = new Set(rows.map(item => item.learner)).size;
-    const rate = totalSessions ? Math.round((completed / totalSessions) * 1000) / 10 : 0;
-
-    const evaluatedCompletions = rows.filter(item => isSuccessfulSession(item) && item.firstTry !== null);
-    const firstTryCount = evaluatedCompletions.filter(item => item.firstTry).length;
-    const firstTryRate = evaluatedCompletions.length ? Math.round((firstTryCount / evaluatedCompletions.length) * 100) : null;
-
-    const durationRows = rows.filter(item => Number(item.duration) > 0);
-    const totalDuration = durationRows.reduce((sum, item) => sum + Number(item.duration), 0);
-    const avgDuration = durationRows.length ? Math.round(totalDuration / durationRows.length) : null;
-
-    return {
-        totalSessions,
-        learners,
-        completed,
-        rate,
-        firstTryRate,
-        evaluatedFirstTry: evaluatedCompletions.length,
-        avgDuration
-    };
 }
 
 const DASHBOARD_VIEWS = {
@@ -6314,7 +6285,17 @@ async function loadRosterList() {
         params.set('page', String(state.rosterPage));
         if (state.rosterSearch) params.set('search', state.rosterSearch);
         const resp = await fetch(`${API_BASE_URL}/roster/list?${params}`);
-        if (!resp.ok) throw new Error('Failed to load roster');
+        if (!resp.ok) {
+            let detail = '';
+            try {
+                const body = await resp.json();
+                detail = body?.error?.message || body?.message || resp.statusText || '';
+            } catch (_e) { /* ignore */ }
+            const err = new Error(`Failed to load roster: HTTP ${resp.status}`);
+            err.status = resp.status;
+            err.serverMessage = detail;
+            throw err;
+        }
         const json = await resp.json();
         if (requestSequence !== state.rosterRequestSequence) return false;
         const data = json.data || {};
@@ -6331,8 +6312,12 @@ async function loadRosterList() {
     } catch (err) {
         if (requestSequence !== state.rosterRequestSequence) return false;
         console.error('loadRosterList error:', err);
+        const status = err?.status;
+        const hint = status === 401 || status === 403
+            ? 'Bạn không có quyền xem danh sách KTV.'
+            : (status === 500 ? 'Máy chủ báo lỗi khi xử lý yêu cầu.' : 'Vui lòng kiểm tra kết nối và thử lại.');
         if (tbody) {
-            tbody.innerHTML = '<tr><td colspan="9"><div class="table-state is-error"><strong>Không tải được danh sách KTV</strong><span>Vui lòng kiểm tra kết nối và thử lại.</span><button type="button" class="button secondary" data-roster-retry>Thử lại</button></div></td></tr>';
+            tbody.innerHTML = `<tr><td colspan="9"><div class="table-state is-error"><strong>Không tải được danh sách KTV</strong><span>${escapeHTML(hint)}${status ? ` (HTTP ${status})` : ''}</span><button type="button" class="button secondary" data-roster-retry>Thử lại</button></div></td></tr>`;
         }
         if (activeDashboardView === 'roster') setDashboardSyncState(navigator.onLine ? 'stale' : 'offline', 'Không thể tải hồ sơ KTV');
         return false;
@@ -6386,7 +6371,7 @@ function renderRosterTableBody() {
     }
     tbody.innerHTML = state.rosterItems.map(item => {
         const terminated = item.is_terminated || item.isTerminated;
-        const badge = terminated ? '<span class="badge-terminated">Đã nghỉ</span>' : '<span class="badge-active">Đang làm</span>';
+        const badge = terminated ? '<span class="badge-terminated">Đã nghỉ</span>' : '<span class="badge-active">Đang công tác</span>';
         const rawEmployeeId = item.employee_id || item.employeeId || '';
         const eid = escapeHTML(rawEmployeeId);
         const employeeCell = eid || '<span title="Có thể bổ sung qua lần import hồ sơ nhân sự sau">Chưa cập nhật</span>';

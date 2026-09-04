@@ -634,7 +634,7 @@
         } else if (lab.status === 'in_progress') {
           iconClass = 'in_progress';
           iconSymbol = '⏳';
-          statusTitle = 'Đang làm';
+          statusTitle = 'Chưa đạt';
         }
 
         const attemptInfo = lab.first_pass_attempt_no
@@ -695,7 +695,9 @@
 
   function applySessionFilters() {
     if (!_dashboardData) return;
-    const allSessions = _dashboardData.sessions || [];
+    const allSessions = (_dashboardData.sessions || []).filter(s =>
+      s.status === 'completed' || s.status === 'failed'
+    );
 
     const search = (elFilterSearch ? elFilterSearch.value.trim().toLowerCase() : '');
     const mode = (elFilterMode ? elFilterMode.value : 'all');
@@ -711,9 +713,9 @@
 
       if (result !== 'all') {
         if (result === 'passed' && s.is_passed !== true) return false;
-        if (result === 'failed' && (s.is_passed !== false || s.status === 'in_progress')) return false;
-        if (result === 'in_progress' && s.status !== 'in_progress') return false;
-        if (result === 'abandoned' && s.status !== 'abandoned') return false;
+        if (result === 'failed' && s.status !== 'failed') return false;
+        if (result === 'ungraded' && !((s.mode !== 'Hướng dẫn' && s.session_type !== 'guide') && s.status === 'completed' && s.is_passed == null)) return false;
+        if (result === 'not_scored' && !(s.mode === 'Hướng dẫn' || s.session_type === 'guide')) return false;
       }
 
       if (deviceId !== 'all') {
@@ -745,7 +747,7 @@
     if (_filteredSessions.length === 0) {
       elSessionsBody.innerHTML = `
         <tr>
-          <td colspan="7" style="text-align: center; padding: 36px 16px; color: var(--text-muted);">
+          <td colspan="8" style="text-align: center; padding: 36px 16px; color: var(--text-muted);">
             <div style="font-size: 24px; margin-bottom: 8px;">🔍</div>
             <div>Không tìm thấy phiên thực hành nào phù hợp với bộ lọc.</div>
           </td>
@@ -771,24 +773,14 @@
         ? '<span class="badge-pill mode-guide">💡 Hướng dẫn</span>'
         : '<span class="badge-pill mode-practice">⚡ Thực hành</span>';
 
-      // Status Badge
-      let statusBadge = '';
-      if (s.status === 'in_progress') {
-        statusBadge = '<span class="badge-pill status-in_progress">Đang thực hiện</span>';
-      } else if (s.status === 'abandoned') {
-        statusBadge = '<span class="badge-pill status-abandoned">Bỏ dở</span>';
-      } else if (s.status === 'failed') {
-        statusBadge = '<span class="badge-pill status-failed">Không đạt</span>';
-      } else {
-        statusBadge = '<span class="badge-pill status-completed">Hoàn thành</span>';
-      }
-
       // Result Badge
-      let resultBadge = '<span style="color: var(--text-muted);">-</span>';
+      let resultBadge = isGuide
+        ? '<span class="badge-pill result-ungraded">Không chấm</span>'
+        : '<span class="badge-pill result-ungraded">Chưa có kết quả</span>';
       if (s.is_passed === true) {
         resultBadge = '<span class="badge-pill result-passed">Đạt</span>';
       } else if (s.is_passed === false) {
-        resultBadge = '<span class="badge-pill result-failed">Không đạt</span>';
+        resultBadge = '<span class="badge-pill result-failed">Chưa đạt</span>';
       }
 
       // Score
@@ -810,7 +802,6 @@
         <td><strong>${escapeHTML(s.device_name || s.device_id || '—')}</strong></td>
         <td>${escapeHTML(s.lab_name || s.lab_id || '—')}</td>
         <td>${modeBadge}</td>
-        <td>${statusBadge}</td>
         <td>${resultBadge}</td>
         <td>${scoreHtml}</td>
         <td style="font-family: monospace; font-size: 12.5px;">${durStr}</td>

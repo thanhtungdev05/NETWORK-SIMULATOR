@@ -8,7 +8,7 @@ window.DEVICE_AC1000F_LESSONS = window.DEVICE_AC1000F_LESSONS || [];
 var idx = window.DEVICE_AC1000F_LESSONS.findIndex(function(l) { return l.id === 'LAB_AC1000F_05'; });
 var lesson = {
   id: 'LAB_AC1000F_05',
-  title: 'Bài 5 - Cấu hình DHCP',
+  title: 'Cấu hình DHCP',
   subtitle: 'Cấu hình DHCP',
   instructions: [
     '<b>Yêu cầu:</b> Thực hiện thay đổi cấu hình DHCP trên thiết bị theo các thông số:',

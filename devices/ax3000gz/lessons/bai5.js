@@ -7,7 +7,7 @@ window.DEVICE_AX3000GZ_LESSONS = window.DEVICE_AX3000GZ_LESSONS || [];
 
 window.DEVICE_AX3000GZ_LESSONS.push({
   id: 'LAB_AX3000GZ_05',
-  title: 'Bài 5 - Cấu hình DHCP',
+  title: 'Cấu hình DHCP',
   subtitle: 'Cấu hình DHCP',
   instructions: [
     '<b>Yêu cầu:</b> Thực hiện thay đổi cấu hình DHCP trên thiết bị theo các thông số:',

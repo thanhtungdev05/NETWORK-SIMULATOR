@@ -8,8 +8,8 @@ window.DEVICE_AX3000GZ_LESSONS = window.DEVICE_AX3000GZ_LESSONS || [];
 var idx = window.DEVICE_AX3000GZ_LESSONS.findIndex(function (l) { return l.id === 'LAB_AX3000GZ_03'; });
 var lessonObj = {
   id: 'LAB_AX3000GZ_03',
-  title: 'Bài 3 - Cấu hình Wi-Fi IoT',
-  subtitle: 'Cấu hình Wi-Fi IoT',
+  title: 'Cấu hình wifi IoT',
+  subtitle: 'Cấu hình wifi IoT',
   instructions: [
     '<b>Yêu cầu:</b>',
     'Thực hiện cấu hình một mạng Wi-Fi riêng biệt dành riêng cho các thiết bị IoT (Smart Home, Camera, v.v.). Cấu hình các thông số mạng Wi-Fi IoT trên băng tần 2.4G theo đúng yêu cầu dưới đây:',

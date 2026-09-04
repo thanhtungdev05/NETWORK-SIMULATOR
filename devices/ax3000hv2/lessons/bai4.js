@@ -7,7 +7,7 @@ window.DEVICE_AX3000HV2_LESSONS = window.DEVICE_AX3000HV2_LESSONS || [];
 
 var lessonObj = {
   id: 'LAB_AX3000HV2_04',
-  title: 'Bài 4 - Cấu hình DNS',
+  title: 'Cấu hình DNS',
   subtitle: 'Cấu hình DNS',
   instructions: [
     '<b>Yêu cầu:</b>',

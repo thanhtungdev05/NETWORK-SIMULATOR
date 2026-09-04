@@ -7,8 +7,8 @@ window.DEVICE_AX3000HV2_LESSONS = window.DEVICE_AX3000HV2_LESSONS || [];
 
 var lessonObj = {
   id: 'LAB_AX3000HV2_03',
-  title: 'Bài 3 - Cấu hình Wi-Fi IoT',
-  subtitle: 'Cấu hình Wi-Fi IoT',
+  title: 'Cấu hình wifi IoT',
+  subtitle: 'Cấu hình wifi IoT',
   instructions: [
     '<b>Yêu cầu:</b>',
     'Thực hiện cấu hình mạng Wi-Fi IoT theo các thông số dưới đây:',

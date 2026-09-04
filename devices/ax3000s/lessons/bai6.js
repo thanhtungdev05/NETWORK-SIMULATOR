@@ -7,7 +7,7 @@ window.DEVICE_AX3000S_LESSONS = window.DEVICE_AX3000S_LESSONS || [];
 
 const lessonObj6 = {
   id: 'LAB_AX3000S_06',
-  title: 'Bài 6 - Cấu hình Port Forwarding',
+  title: 'Cấu hình Port Forwarding',
   subtitle: 'Cấu hình Port Forwarding',
   instructions: [
     '<b>Yêu cầu:</b>',

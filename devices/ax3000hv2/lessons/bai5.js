@@ -7,7 +7,7 @@ window.DEVICE_AX3000HV2_LESSONS = window.DEVICE_AX3000HV2_LESSONS || [];
 
 var lessonObj = {
   id: 'LAB_AX3000HV2_05',
-  title: 'Bài 5 - Cấu hình DHCP',
+  title: 'Cấu hình DHCP',
   subtitle: 'Cấu hình DHCP',
   instructions: [
     '<b>Yêu cầu:</b>',

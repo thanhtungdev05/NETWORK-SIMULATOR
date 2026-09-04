@@ -8,7 +8,7 @@ window.DEVICE_AX3000GZ_LESSONS = window.DEVICE_AX3000GZ_LESSONS || [];
 var idx = window.DEVICE_AX3000GZ_LESSONS.findIndex(function (l) { return l.id === 'LAB_AX3000GZ_06'; });
 var lessonObj = {
   id: 'LAB_AX3000GZ_06',
-  title: 'Bài 6 - Cấu hình Port Forwarding',
+  title: 'Cấu hình Port Forwarding',
   subtitle: 'Cấu hình Port Forwarding',
   instructions: [
     '<b>Yêu cầu:</b>',

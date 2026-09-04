@@ -24,10 +24,8 @@ window.DEVICE_AX3000GZ = {
 if (!window.TOOLTIPS_AX3000GZ) window.TOOLTIPS_AX3000GZ = {};
 if (window.DEVICE_AX3000GZ_LESSONS) {
   window.DEVICE_AX3000GZ_LESSONS.forEach(lesson => {
-    if (lesson.guidePopups && lesson.guidePopups.length > 0) {
+    if (lesson.guidePopups) {
       window.TOOLTIPS_AX3000GZ[lesson.id] = lesson.guidePopups;
-    } else if (window.TOOLTIPS_AX3000GZ[lesson.id]) {
-      lesson.guidePopups = window.TOOLTIPS_AX3000GZ[lesson.id];
     }
   });
 }

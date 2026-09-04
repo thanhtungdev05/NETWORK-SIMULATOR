@@ -8,7 +8,7 @@ window.DEVICE_AC1000F_LESSONS = window.DEVICE_AC1000F_LESSONS || [];
 var idx = window.DEVICE_AC1000F_LESSONS.findIndex(function(l) { return l.id === 'LAB_AC1000F_04'; });
 var lesson = {
   id: 'LAB_AC1000F_04',
-  title: 'Bài 4 - Cấu hình DNS',
+  title: 'Cấu hình DNS',
   subtitle: 'Cấu hình DNS',
   instructions: [
     '<b>Yêu cầu:</b> Thiết lập thông số DNS thủ công (Manually) trên cổng LAN:',

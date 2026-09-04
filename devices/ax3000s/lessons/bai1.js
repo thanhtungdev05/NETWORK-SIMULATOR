@@ -7,7 +7,7 @@ window.DEVICE_AX3000S_LESSONS = window.DEVICE_AX3000S_LESSONS || [];
 
 window.DEVICE_AX3000S_LESSONS.push({
   id: 'LAB_AX3000S_01',
-  title: 'Bài 1 - Cấu hình PPPoE',
+  title: 'Cấu hình PPPoE',
   subtitle: 'Cấu hình PPPoE',
   instructions: [
     '<b>Yêu cầu:</b>',

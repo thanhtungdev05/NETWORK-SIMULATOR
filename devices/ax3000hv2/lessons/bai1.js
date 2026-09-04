@@ -7,7 +7,7 @@ window.DEVICE_AX3000HV2_LESSONS = window.DEVICE_AX3000HV2_LESSONS || [];
 
 var lessonObj = {
   id: 'LAB_AX3000HV2_01',
-  title: 'Bài 1 - Cấu hình PPPoE',
+  title: 'Cấu hình PPPoE',
   subtitle: 'Cấu hình PPPoE',
   instructions: [
     '<b>Yêu cầu:</b>',

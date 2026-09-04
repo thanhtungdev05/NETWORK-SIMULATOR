@@ -7,7 +7,7 @@ window.DEVICE_AX3000HV2_LESSONS = window.DEVICE_AX3000HV2_LESSONS || [];
 
 var lessonObj = {
   id: 'LAB_AX3000HV2_06',
-  title: 'Bài 6 - Cấu hình Port Forwarding',
+  title: 'Cấu hình Port Forwarding',
   subtitle: 'Cấu hình Port Forwarding',
   instructions: [
     '<b>Yêu cầu:</b>',

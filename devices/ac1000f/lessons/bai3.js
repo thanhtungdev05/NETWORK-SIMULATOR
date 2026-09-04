@@ -8,8 +8,8 @@
 
   window.DEVICE_AC1000F_LESSONS.push({
     id: 'LAB_AC1000F_03',
-    title: 'Bài 3 - Cấu hình Wi-Fi IoT',
-    subtitle: 'Cấu hình Wi-Fi IoT',
+    title: 'Cấu hình wifi IoT',
+    subtitle: 'Cấu hình wifi IoT',
     instructions: [
       '<b>Yêu cầu:</b>',
       'Cấu hình mạng dành cho các thiết bị IoT trên băng tần <b>2.4G</b> theo thông số:',

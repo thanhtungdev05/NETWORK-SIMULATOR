@@ -6,8 +6,8 @@
 window.DEVICE_AX3000C_LESSONS = window.DEVICE_AX3000C_LESSONS || [];
 
 window.DEVICE_AX3000C_LESSONS.push({
-  id: 'LAB_AX3000CV2_06',
-  title: 'Bài 6 - Cấu hình Port Forwarding',
+  id: 'LAB_AX3000C_06',
+  title: 'Cấu hình Port Forwarding',
   subtitle: 'Cấu hình Port Forwarding',
   instructions: [
     '<b>Yêu cầu:</b>',

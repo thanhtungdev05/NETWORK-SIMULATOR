@@ -23,10 +23,8 @@ window.DEVICE_AC1000HI = {
 if (!window.TOOLTIPS_AC1000HI) window.TOOLTIPS_AC1000HI = {};
 if (window.DEVICE_AC1000HI_LESSONS) {
   window.DEVICE_AC1000HI_LESSONS.forEach(lesson => {
-    if (lesson.guidePopups && lesson.guidePopups.length > 0) {
+    if (lesson.guidePopups) {
       window.TOOLTIPS_AC1000HI[lesson.id] = lesson.guidePopups;
-    } else if (window.TOOLTIPS_AC1000HI[lesson.id]) {
-      lesson.guidePopups = window.TOOLTIPS_AC1000HI[lesson.id];
     }
   });
 }

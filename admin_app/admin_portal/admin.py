@@ -16,6 +16,39 @@ from .models import (
 )
 
 
+PRACTICE_MODE_VALUES = ('Thực hành', 'practice')
+GUIDE_MODE_VALUES = ('Hướng dẫn', 'guide')
+KNOWN_MODE_VALUES = PRACTICE_MODE_VALUES + GUIDE_MODE_VALUES
+
+
+def build_session_mode_query(mode_type):
+    """Prefer a recognized mode and only use session_type for legacy rows."""
+    mode_values = {
+        'practice': PRACTICE_MODE_VALUES,
+        'guide': GUIDE_MODE_VALUES,
+    }.get(mode_type)
+    if mode_values is None:
+        return None
+
+    missing_or_unknown_mode = (
+        Q(mode__isnull=True)
+        | ~Q(mode__in=KNOWN_MODE_VALUES)
+    )
+    return (
+        Q(mode__in=mode_values)
+        | (missing_or_unknown_mode & Q(session_type=mode_type))
+    )
+
+
+def resolve_session_mode(mode, session_type):
+    """Return the display mode using the same precedence as the list filter."""
+    if mode in GUIDE_MODE_VALUES:
+        return 'guide'
+    if mode in PRACTICE_MODE_VALUES:
+        return 'practice'
+    return 'guide' if session_type == 'guide' else 'practice'
+
+
 # ===========================================================
 # Custom Admin Site
 # ===========================================================
@@ -271,11 +304,8 @@ class ModeFilter(admin.SimpleListFilter):
         ]
 
     def queryset(self, request, queryset):
-        if self.value() == 'practice':
-            return queryset.filter(Q(mode='Thực hành') | Q(mode='practice') | Q(session_type='practice'))
-        if self.value() == 'guide':
-            return queryset.filter(Q(mode='Hướng dẫn') | Q(mode='guide') | Q(session_type='guide'))
-        return queryset
+        mode_query = build_session_mode_query(self.value())
+        return queryset.filter(mode_query) if mode_query is not None else queryset
 
 
 @admin.register(TimerSession)
@@ -327,7 +357,7 @@ class TimerSessionAdmin(admin.ModelAdmin):
     show_full_result_count = True
 
     def mode_badge(self, obj):
-        if obj.mode == 'Hướng dẫn' or obj.session_type == 'guide':
+        if resolve_session_mode(obj.mode, obj.session_type) == 'guide':
             return format_html(
                 '<span style="background:#0284c7;color:#fff;padding:2px 8px;'
                 'border-radius:4px;font-size:12px;font-weight:500;">Hướng dẫn</span>'

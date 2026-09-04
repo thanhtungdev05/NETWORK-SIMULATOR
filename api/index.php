@@ -1451,7 +1451,7 @@ function roster_stats(PDO $pdo): array
 {
     $params = [];
     $where = roster_base_where($params, false);
-    $whereSql = implode(' AND ', $where);
+    $whereSql = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
 
     $summary = $pdo
         ->prepare(
@@ -1460,7 +1460,7 @@ function roster_stats(PDO $pdo): array
                 COUNT(*) FILTER (WHERE is_terminated = FALSE) AS active,
                 COUNT(*) FILTER (WHERE is_terminated = TRUE) AS terminated
                FROM v_ktv_directory ktv
-              WHERE $whereSql"
+              $whereSql"
         );
     $summary->execute($params);
     $summary = $summary->fetch() ?: ['total' => 0, 'active' => 0, 'terminated' => 0];
@@ -1472,7 +1472,7 @@ function roster_stats(PDO $pdo): array
                     COUNT(*) FILTER (WHERE is_terminated = FALSE) AS active,
                     COUNT(*) FILTER (WHERE is_terminated = TRUE) AS terminated
                FROM v_ktv_directory ktv
-              WHERE $whereSql
+              $whereSql
               GROUP BY COALESCE(NULLIF(ktv.region_name, ''), 'Chưa phân vùng')
               ORDER BY region"
         );
@@ -1637,9 +1637,9 @@ function handle_roster_list(): void
 
     $params = [];
     $where = roster_base_where($params, true);
-    $whereSql = implode(' AND ', $where);
+    $whereSql = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
 
-    $countStmt = $pdo->prepare("SELECT COUNT(*) FROM v_ktv_directory ktv WHERE $whereSql");
+    $countStmt = $pdo->prepare("SELECT COUNT(*) FROM v_ktv_directory ktv $whereSql");
     $countStmt->execute($params);
     $total = (int)$countStmt->fetchColumn();
 
@@ -1647,7 +1647,7 @@ function handle_roster_list(): void
 
     $sql = "SELECT ktv.*
               FROM v_ktv_directory ktv
-             WHERE $whereSql
+             $whereSql
              ORDER BY $sortSql
              LIMIT :limit OFFSET :offset";
     $stmt = $pdo->prepare($sql);
@@ -1947,11 +1947,11 @@ function build_roster_report_input(array $input = []): array
     $pdo = db();
     $params = [];
     $where = roster_base_where($params, true, $filters);
-    $whereSql = implode(' AND ', $where);
+    $whereSql = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
     $stmt = $pdo->prepare(
         "SELECT ktv.*
            FROM v_ktv_directory ktv
-          WHERE $whereSql
+          $whereSql
           ORDER BY ktv.region_name NULLS LAST, ktv.branch_name NULLS LAST, ktv.display_name NULLS LAST, ktv.email"
     );
     $stmt->execute($params);
@@ -1961,7 +1961,7 @@ function build_roster_report_input(array $input = []): array
     $statusLabel = match ($status) {
         'terminated' => 'Đã nghỉ',
         'all' => 'Tất cả trạng thái',
-        default => 'Đang làm',
+        default => 'Đang công tác',
     };
     $search = trim((string)($filters['search'] ?? ''));
     $dataRows = [];
@@ -1975,7 +1975,7 @@ function build_roster_report_input(array $input = []): array
             $row['dashboard_region'] ?? $row['region_name'] ?? '',
             $row['branch_name'] ?? '',
             $row['class_code'] ?? '',
-            database_boolean($row['is_terminated'] ?? false) ? 'Đã nghỉ' : 'Đang làm',
+            database_boolean($row['is_terminated'] ?? false) ? 'Đã nghỉ' : 'Đang công tác',
         ];
     }
 

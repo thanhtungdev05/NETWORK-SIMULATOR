@@ -48,6 +48,32 @@ class TrainingClassAssignmentContractTests(unittest.TestCase):
         self.assertNotIn("tracking/not-assigned", tracking)
         self.assertGreaterEqual(tracking.count("lab.is_active = TRUE"), 2)
         self.assertGreaterEqual(tracking.count("device.is_active = TRUE"), 2)
+        self.assertIn("if ((string)$existingTimer['status'] === 'in_progress')", tracking)
+        self.assertRegex(tracking, re.compile(r"UPDATE timer_sessions.*?status = :status", re.S))
+
+    def test_dashboard_includes_every_active_ktv_role(self):
+        api = (ROOT / "api" / "index.php").read_text(encoding="utf-8")
+        report = (ROOT / "api" / "lib" / "dashboard_report.php").read_text(encoding="utf-8")
+        timer_scope = re.search(r"\$timerSql = 'WITH eligible_dashboard_ktv AS \(.*?\$timerParams", api, re.S)
+        technician_scope = re.search(r"SELECT directory\.\*,.*?->fetchAll\(\);", api, re.S)
+        self.assertIsNotNone(timer_scope)
+        self.assertIsNotNone(technician_scope)
+        for scope in (timer_scope.group(0), technician_scope.group(0), report):
+            self.assertNotIn("job_title =", scope)
+            self.assertNotIn("employee_source LIKE", scope)
+        self.assertIn("FROM v_ktv_directory", report)
+        self.assertIn("WHERE is_terminated = FALSE", report)
+
+    def test_result_modal_waits_for_tracking_save(self):
+        portal = (ROOT / "app.js").read_text(encoding="utf-8")
+        self.assertIn("if (trackingSaveInFlight) return;", portal)
+        self.assertRegex(
+            portal,
+            re.compile(
+                r"const savePromise = sendTrackingTimer.*?Promise\.resolve\(savePromise\)\.finally.*?showGradingModal",
+                re.S,
+            ),
+        )
 
     def test_learning_catalog_is_full_active_catalog_for_every_user(self):
         library = (ROOT / "api" / "lib" / "training_classes.php").read_text(encoding="utf-8")

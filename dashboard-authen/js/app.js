@@ -1884,18 +1884,31 @@ function getRegionUsageSeries(year) {
         });
 
     const completedDevicesByRegionMonth = new Map();
-    sessions.filter(isCompletedDeviceUsageSession).forEach(session => {
+    const activeLearnersByRegionMonth = new Map();
+
+    sessions.forEach(session => {
         const date = parseDate(session.date);
         if (date.getTime() <= 0 || date.getFullYear() !== year) return;
         const region = getLearnerRegion(session.learner);
-        if (!headcountByRegion.has(region)) return;
+        if (!headcountByRegion.has(region)) {
+            headcountByRegion.set(region, 0);
+        }
         const monthIndex = date.getMonth();
         const bucketKey = `${region}\u001f${monthIndex}`;
-        if (!completedDevicesByRegionMonth.has(bucketKey)) completedDevicesByRegionMonth.set(bucketKey, new Set());
         const learnerIdentity = String(session.learner || session.technicianId || '').trim().toLowerCase();
-        const deviceIdentity = String(session.deviceId || session.device || '').trim().toLowerCase();
-        if (learnerIdentity && deviceIdentity) {
-            completedDevicesByRegionMonth.get(bucketKey).add(`${learnerIdentity}\u001f${deviceIdentity}`);
+        if (!learnerIdentity) return;
+
+        // Đếm nhân sự có sử dụng trong tháng
+        if (!activeLearnersByRegionMonth.has(bucketKey)) activeLearnersByRegionMonth.set(bucketKey, new Set());
+        activeLearnersByRegionMonth.get(bucketKey).add(learnerIdentity);
+
+        // Đếm phiên hợp lệ: KTV hoàn thành tối thiểu 1 thiết bị trong tháng
+        if (isCompletedDeviceUsageSession(session)) {
+            const deviceIdentity = String(session.deviceId || session.device || '').trim().toLowerCase();
+            if (deviceIdentity) {
+                if (!completedDevicesByRegionMonth.has(bucketKey)) completedDevicesByRegionMonth.set(bucketKey, new Set());
+                completedDevicesByRegionMonth.get(bucketKey).add(`${learnerIdentity}\u001f${deviceIdentity}`);
+            }
         }
     });
 
@@ -1906,17 +1919,21 @@ function getRegionUsageSeries(year) {
         .map(([region, headcount], colorIndex) => {
             const months = Array.from({ length: 12 }, (_, monthIndex) => {
                 if (monthIndex >= observedMonthCount) return null;
-                const completedDevices = completedDevicesByRegionMonth.get(`${region}\u001f${monthIndex}`)?.size || 0;
+                const bucketKey = `${region}\u001f${monthIndex}`;
+                const completedDevices = completedDevicesByRegionMonth.get(bucketKey)?.size || 0;
+                const activeLearners = activeLearnersByRegionMonth.get(bucketKey)?.size || 0;
                 return {
                     month: monthIndex + 1,
                     completedDevices,
-                    rate: headcount ? Math.round((completedDevices / headcount) * 1000) / 10 : 0
+                    activeLearners,
+                    rate: activeLearners > 0 ? Math.round((completedDevices / activeLearners) * 10) / 10 : 0
                 };
             });
             const observedMonths = months.filter(Boolean);
             const completedDevices = observedMonths.reduce((sum, month) => sum + month.completedDevices, 0);
-            const averageRate = observedMonths.length && headcount
-                ? Math.round((completedDevices / (headcount * observedMonths.length)) * 1000) / 10
+            const totalActiveLearners = observedMonths.reduce((sum, month) => sum + month.activeLearners, 0);
+            const averageRate = totalActiveLearners > 0
+                ? Math.round((completedDevices / totalActiveLearners) * 10) / 10
                 : 0;
             return {
                 region,
@@ -1924,6 +1941,7 @@ function getRegionUsageSeries(year) {
                 color: REGION_USAGE_COLORS[colorIndex % REGION_USAGE_COLORS.length],
                 months,
                 completedDevices,
+                totalActiveLearners,
                 averageRate
             };
         });
@@ -1953,8 +1971,23 @@ function renderRegionUsageChart() {
 
     const allObservedPoints = series.flatMap(item => item.months.filter(Boolean));
     const peakRate = Math.max(0, ...allObservedPoints.map(point => point.rate));
-    const tickStep = peakRate <= 100 ? 25 : (peakRate <= 200 ? 50 : (peakRate <= 500 ? 100 : 200));
-    const yMax = Math.max(100, Math.ceil(peakRate / tickStep) * tickStep);
+
+    let yMax = 2.0;
+    let yTicks = [0.0, 0.5, 1.0, 1.5, 2.0];
+    if (peakRate > 10.0) {
+        yMax = Math.ceil(peakRate / 4) * 4;
+        yTicks = Array.from({ length: 5 }, (_, index) => Math.round((yMax * index / 4) * 10) / 10);
+    } else if (peakRate > 6.0) {
+        yMax = 10.0;
+        yTicks = [0.0, 2.5, 5.0, 7.5, 10.0];
+    } else if (peakRate > 4.0) {
+        yMax = 6.0;
+        yTicks = [0.0, 1.5, 3.0, 4.5, 6.0];
+    } else if (peakRate > 2.0) {
+        yMax = 4.0;
+        yTicks = [0.0, 1.0, 2.0, 3.0, 4.0];
+    }
+
     const width = 1080;
     const height = 410;
     const plot = { left: 68, right: 26, top: 26, bottom: 58 };
@@ -1962,13 +1995,12 @@ function renderRegionUsageChart() {
     const plotHeight = height - plot.top - plot.bottom;
     const xAt = monthIndex => plot.left + (plotWidth * monthIndex / 11);
     const yAt = rate => plot.top + plotHeight - (Math.min(rate, yMax) / yMax * plotHeight);
-    const yTicks = Array.from({ length: 5 }, (_, index) => Math.round(yMax * index / 4));
 
     const grid = yTicks.map(value => {
         const y = yAt(value);
         return `
             <line x1="${plot.left}" y1="${y}" x2="${width - plot.right}" y2="${y}" class="region-usage-grid-line" />
-            <text x="${plot.left - 13}" y="${y + 4}" text-anchor="end" class="region-usage-axis-label">${value}%</text>
+            <text x="${plot.left - 13}" y="${y + 4}" text-anchor="end" class="region-usage-axis-label">${value.toFixed(1)}</text>
         `;
     }).join('');
     const monthLabels = Array.from({ length: 12 }, (_, monthIndex) => `
@@ -1981,9 +2013,10 @@ function renderRegionUsageChart() {
         const path = points.map((point, index) => `${index ? 'L' : 'M'} ${point.x.toFixed(1)} ${point.y.toFixed(1)}`).join(' ');
         const circles = points.map(point => `
             <circle class="region-usage-point" cx="${point.x}" cy="${point.y}" r="4.5" tabindex="0"
-                data-region="${escapeHTML(item.region)}" data-month="${point.month}" data-rate="${point.rate}"
-                data-completed="${point.completedDevices}" data-headcount="${item.headcount}" aria-label="${escapeHTML(`${item.region}, tháng ${point.month}: ${point.rate}%`)}">
-                <title>${escapeHTML(`${item.region} • Tháng ${point.month}: ${point.rate}% (${point.completedDevices} lượt / ${item.headcount} nhân sự)`)}</title>
+                data-region="${escapeHTML(item.region)}" data-month="${point.month}" data-rate="${point.rate.toFixed(1)}"
+                data-completed="${point.completedDevices}" data-active="${point.activeLearners}" data-headcount="${item.headcount}"
+                aria-label="${escapeHTML(`${item.region}, tháng ${point.month}: ${point.rate.toFixed(1)} lượt/người`)}">
+                <title>${escapeHTML(`${item.region} • Tháng ${point.month}: ${point.rate.toFixed(1)} lượt/người (${point.completedDevices} phiên hợp lệ / ${point.activeLearners} người sử dụng)`)}</title>
             </circle>
         `).join('');
         return `
@@ -1997,8 +2030,8 @@ function renderRegionUsageChart() {
     container.innerHTML = `
         <svg class="region-usage-svg" viewBox="0 0 ${width} ${height}" role="img" aria-labelledby="regionUsageSvgTitle regionUsageSvgDesc">
             <title id="regionUsageSvgTitle">Tần suất hoàn thành thiết bị theo khu vực năm ${state.regionUsageYear}</title>
-            <desc id="regionUsageSvgDesc">Biểu đồ đường gồm ${series.length} khu vực, trục ngang là 12 tháng và trục dọc là tỷ lệ phần trăm lượt KTV–thiết bị hợp lệ trên số nhân sự.</desc>
-            <text x="18" y="${plot.top + plotHeight / 2}" text-anchor="middle" class="region-usage-y-title" transform="rotate(-90 18 ${plot.top + plotHeight / 2})">Tỷ lệ sử dụng (%)</text>
+            <desc id="regionUsageSvgDesc">Biểu đồ đường gồm ${series.length} khu vực, trục ngang là 12 tháng và trục dọc là tần suất hoàn thành thiết bị (lượt/người).</desc>
+            <text x="18" y="${plot.top + plotHeight / 2}" text-anchor="middle" class="region-usage-y-title" transform="rotate(-90 18 ${plot.top + plotHeight / 2})">Tần suất (lượt/người)</text>
             ${grid}
             ${monthLabels}
             ${lines}
@@ -2010,15 +2043,15 @@ function renderRegionUsageChart() {
     const lowest = ranked[ranked.length - 1];
     const totalCompletedDevices = series.reduce((sum, item) => sum + item.completedDevices, 0);
     insights.innerHTML = `
-        <article><span>Sử dụng nhiều nhất</span><strong>${escapeHTML(highest.region)}</strong><small>${highest.averageRate}% bình quân/tháng</small></article>
-        <article><span>Sử dụng ít nhất</span><strong>${escapeHTML(lowest.region)}</strong><small>${lowest.averageRate}% bình quân/tháng</small></article>
-        <article><span>Lượt hoàn thành hợp lệ</span><strong>${formatNumber.format(totalCompletedDevices)}</strong><small>${series.length} khu vực trong năm ${state.regionUsageYear}</small></article>
+        <article><span>Sử dụng nhiều nhất</span><strong>${escapeHTML(highest.region)}</strong><small>${highest.averageRate.toFixed(1)} lượt/người/tháng</small></article>
+        <article><span>Sử dụng ít nhất</span><strong>${escapeHTML(lowest.region)}</strong><small>${lowest.averageRate.toFixed(1)} lượt/người/tháng</small></article>
+        <article><span>Tổng phiên hợp lệ</span><strong>${formatNumber.format(totalCompletedDevices)}</strong><small>${series.length} khu vực trong năm ${state.regionUsageYear}</small></article>
     `;
     legend.innerHTML = series.map(item => `
         <button type="button" class="region-usage-legend-item" data-legend-region="${escapeHTML(item.region)}">
             <i style="--legend-color:${item.color}"></i>
             <span>${escapeHTML(item.region)}</span>
-            <small>${item.headcount} nhân sự · ${item.averageRate}%</small>
+            <small>${item.averageRate.toFixed(1)} lượt/người/tháng</small>
         </button>
     `).join('');
 
@@ -2036,7 +2069,7 @@ function renderRegionUsageChart() {
     });
 
     const showTooltip = (point, event) => {
-        tooltip.innerHTML = `<strong>${escapeHTML(point.dataset.region)} · Tháng ${point.dataset.month}</strong><span>${point.dataset.rate}%</span><small>${point.dataset.completed} lượt KTV–thiết bị / ${point.dataset.headcount} nhân sự</small>`;
+        tooltip.innerHTML = `<strong>${escapeHTML(point.dataset.region)} · Tháng ${point.dataset.month}</strong><span>${point.dataset.rate} lượt/người</span><small>${point.dataset.completed} phiên hợp lệ / ${point.dataset.active} người sử dụng</small>`;
         tooltip.hidden = false;
         const chartRect = container.getBoundingClientRect();
         const pointRect = point.getBoundingClientRect();

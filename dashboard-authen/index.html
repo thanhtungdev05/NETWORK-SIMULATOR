@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#f3f6fb">
     <meta name="color-scheme" content="light">
     <title>Dashboard giám sát thực hành KTV | FTC</title>
-    <link rel="stylesheet" href="css/styles.css?v=20260904-region-usage-v2">
+    <link rel="stylesheet" href="css/styles.css?v=20260904-region-freq-v3">
     <link rel="stylesheet" href="css/dashboard-professional.css?v=20260903-class-v2">
 </head>
 
@@ -271,7 +271,7 @@
                                 <div>
                                     <span class="detail-report-eyebrow">Xu hướng sử dụng theo khu vực</span>
                                     <h3 id="regionUsageTitle">Tần suất hoàn thành thiết bị theo tháng</h3>
-                                    <p>Mỗi lượt là một KTV hoàn thành tối thiểu một phiên Thực hành trên một thiết bị trong tháng. Tỷ lệ = lượt KTV–thiết bị hợp lệ / nhân sự khu vực × 100%.</p>
+                                    <p>Tần suất sử dụng = Số phiên hợp lệ trong tháng / Số nhân sự có sử dụng trong tháng (1 phiên hợp lệ = KTV hoàn thành tối thiểu 1 thiết bị).</p>
                                 </div>
                                 <label class="region-usage-year-field" for="regionUsageYear">
                                     <span>Năm báo cáo</span>
@@ -284,7 +284,7 @@
                                 <div class="region-usage-tooltip" id="regionUsageTooltip" role="tooltip" hidden></div>
                             </div>
                             <div class="region-usage-legend" id="regionUsageLegend" aria-label="Chú thích khu vực"></div>
-                            <p class="region-usage-note">Tỷ lệ có thể lớn hơn 100% khi bình quân một nhân sự hoàn thành nhiều hơn một thiết bị trong tháng.</p>
+                            <p class="region-usage-note">Tần suất thể hiện số lượng thiết bị hoàn thành trung bình trên mỗi KTV có hoạt động trong tháng.</p>
                         </div>
 
                         <div class="detail-section-card ktv-monthly-card overview-monthly-card">
@@ -1474,7 +1474,7 @@
 
     <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
 
-    <script src="js/app.js?v=20260904-region-usage-v2"></script>
+    <script src="js/app.js?v=20260904-region-freq-v3"></script>
 </body>
 
 </html>

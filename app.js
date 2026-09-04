@@ -85,9 +85,16 @@
   let currentIframeUrl = '';
   let trackingSaveInFlight = false;
 
+  function normalizeDeviceId(id) {
+    if (!id) return '';
+    const clean = String(id).trim().replace(/^DEV_/i, '').toLowerCase();
+    if (clean === 'ax3000cv2') return 'ax3000c';
+    return clean;
+  }
+
   function databaseDeviceToPortalId(device) {
-    const normalized = String(device.device_id || '').replace(/^DEV_/i, '').toLowerCase();
-    return normalized === 'ax3000cv2' ? 'ax3000c' : normalized;
+    const rawId = typeof device === 'string' ? device : (device.device_id || device.id || '');
+    return normalizeDeviceId(rawId);
   }
 
   function populateDeviceDropdown(devices) {
@@ -111,26 +118,28 @@
         const catalogDevices = Array.isArray(data.devices) ? data.devices : [];
         _catalogDeviceIds = new Set(catalogDevices.map(databaseDeviceToPortalId));
         _catalogLabIds = new Set(catalogDevices.flatMap(function (device) {
-          return Array.isArray(device.labs) ? device.labs.map(function (lab) { return String(lab.lab_id || ''); }) : [];
+          return Array.isArray(device.labs) ? device.labs.map(function (lab) { return String(lab.lab_id || '').trim().toLowerCase(); }) : [];
         }));
-        const visibleDevices = DEVICES.filter(function (device) { return _catalogDeviceIds.has(device.id); });
+        const visibleDevices = DEVICES.filter(function (device) {
+          return !_catalogDeviceIds || _catalogDeviceIds.has(normalizeDeviceId(device.id));
+        });
         populateDeviceDropdown(visibleDevices);
         const urlParams = new URLSearchParams(window.location.search);
         const reqDevice = urlParams.get('device');
         const reqLab = urlParams.get('lab');
+        const reqMode = urlParams.get('mode');
         let initialDev = null;
         if (reqDevice) {
-          const normReq = reqDevice.replace(/^DEV_/i, '').toLowerCase();
+          const normReq = normalizeDeviceId(reqDevice);
           initialDev = visibleDevices.find(function (d) {
-            const did = d.id.toLowerCase();
-            return did === normReq || did === (normReq === 'ax3000cv2' ? 'ax3000c' : normReq);
+            return normalizeDeviceId(d.id) === normReq;
           });
         }
         if (!initialDev && visibleDevices.length > 0) {
           initialDev = visibleDevices[0];
         }
         if (initialDev) {
-          selectDevice(initialDev.id, reqLab);
+          selectDevice(initialDev.id, reqLab, reqMode);
         } else {
           currentDeviceId = null;
           navList.innerHTML = '<div class="empty-state"><p>Chưa có thiết bị luyện tập đang hoạt động.</p></div>';
@@ -660,26 +669,40 @@
   }
 
   // ── Device Selection ─────────────────────────────────────────────
-  function selectDevice(deviceId, targetLabId = null) {
-    if (_catalogDeviceIds && !_catalogDeviceIds.has(deviceId)) return;
-    currentDeviceId = deviceId;
-    currentLessonId = null;
+  function selectDevice(deviceId, targetLabId = null, autoMode = null) {
+    const normDevId = normalizeDeviceId(deviceId);
+    if (_catalogDeviceIds && !_catalogDeviceIds.has(normDevId)) return;
 
-    const device = DEVICES.find(d => d.id === deviceId);
+    const device = DEVICES.find(d => normalizeDeviceId(d.id) === normDevId);
     if (!device) return;
 
+    currentDeviceId = device.id;
+    currentLessonId = null;
+
     // Sync dropdown
-    deviceSelect.value = deviceId;
+    deviceSelect.value = device.id;
 
     // Render nav list
     renderNavList(device);
 
     // Automatically select requested or first lesson if available
-    const allAllowedLessons = device.categories?.flatMap(category => category.lessons || [])
-      .filter(lesson => !_catalogLabIds || _catalogLabIds.has(lesson.id)) || [];
+    const allAllowedLessons = (device.categories?.flatMap(category => category.lessons || []) || [])
+      .filter(lesson => {
+        if (!_catalogLabIds) return true;
+        const normLab = String(lesson.id || '').trim().toLowerCase();
+        return _catalogLabIds.has(normLab);
+      });
+
     let chosenLesson = null;
     if (targetLabId) {
-      chosenLesson = allAllowedLessons.find(l => l.id === targetLabId || l.id.endsWith(targetLabId) || targetLabId.endsWith(l.id));
+      const normTarget = String(targetLabId).trim().toLowerCase();
+      chosenLesson = allAllowedLessons.find(l => {
+        const lid = String(l.id || '').trim().toLowerCase();
+        return lid === normTarget
+          || lid.replace(/^lab_/i, '') === normTarget.replace(/^lab_/i, '')
+          || lid.endsWith(normTarget)
+          || normTarget.endsWith(lid);
+      });
     }
     if (!chosenLesson && allAllowedLessons.length > 0) {
       chosenLesson = allAllowedLessons[0];
@@ -687,6 +710,14 @@
     if (chosenLesson) {
       const lessonItem = navList.querySelector(`[data-lesson-id="${chosenLesson.id}"]`) || navList.querySelector('.nav-item');
       selectLesson(device, chosenLesson, lessonItem);
+      if (lessonItem && typeof lessonItem.scrollIntoView === 'function') {
+        lessonItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+      if (autoMode === 'practice' && btnPrac) {
+        setTimeout(() => btnPrac.click(), 100);
+      } else if (autoMode === 'guide' && btnGuide) {
+        setTimeout(() => btnGuide.click(), 100);
+      }
     } else {
       showHero();
       setBreadcrumb([device.name]);
@@ -707,7 +738,11 @@
     }
 
     device.categories.forEach(cat => {
-      const lessons = (cat.lessons || []).filter(lesson => !_catalogLabIds || _catalogLabIds.has(lesson.id));
+      const lessons = (cat.lessons || []).filter(lesson => {
+        if (!_catalogLabIds) return true;
+        const normLab = String(lesson.id || '').trim().toLowerCase();
+        return _catalogLabIds.has(normLab);
+      });
       if (!lessons.length) return;
       // Category title
       const catTitle = document.createElement('div');

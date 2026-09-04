@@ -66,8 +66,16 @@
   const elFilterResult = document.getElementById('filter-result');
   const elFilterDevice = document.getElementById('filter-device');
 
-  // Trend Chart
+  // Trend & Frequency Chart Elements & State
   const elTrendChartContainer = document.getElementById('trend-chart-container');
+  const elTrendChartTitle = document.getElementById('trend-chart-title');
+  const elTrendChartIcon = document.getElementById('trend-chart-icon');
+  const elBtnChartScore = document.getElementById('btn-chart-score');
+  const elBtnChartFrequency = document.getElementById('btn-chart-frequency');
+  const elChartMonthSelect = document.getElementById('chart-month-select');
+
+  let _chartMode = 'score'; // 'score' | 'frequency'
+  let _selectedMonth = ''; // 'YYYY-MM'
 
   function init() {
     setupEventListeners();
@@ -98,6 +106,47 @@
         }
       });
     }
+
+    if (elBtnChartScore) {
+      elBtnChartScore.addEventListener('click', () => {
+        if (_chartMode === 'score') return;
+        _chartMode = 'score';
+        elBtnChartScore.classList.add('active');
+        elBtnChartFrequency?.classList.remove('active');
+        if (elChartMonthSelect) elChartMonthSelect.style.display = 'none';
+        if (elTrendChartTitle) elTrendChartTitle.textContent = 'Xu hướng điểm số & hoạt động';
+        if (elTrendChartIcon) {
+          elTrendChartIcon.innerHTML = '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>';
+        }
+        renderActiveChart();
+      });
+    }
+
+    if (elBtnChartFrequency) {
+      elBtnChartFrequency.addEventListener('click', () => {
+        if (_chartMode === 'frequency') return;
+        _chartMode = 'frequency';
+        elBtnChartFrequency.classList.add('active');
+        elBtnChartScore?.classList.remove('active');
+        if (elChartMonthSelect) elChartMonthSelect.style.display = 'inline-block';
+        if (elTrendChartTitle) elTrendChartTitle.textContent = 'Tần suất thực hiện theo ngày';
+        if (elTrendChartIcon) {
+          elTrendChartIcon.innerHTML = '<rect x="3" y="12" width="4" height="8" rx="1"></rect><rect x="10" y="8" width="4" height="12" rx="1"></rect><rect x="17" y="4" width="4" height="16" rx="1"></rect>';
+        }
+        renderActiveChart();
+      });
+    }
+
+    if (elChartMonthSelect) {
+      elChartMonthSelect.addEventListener('change', (e) => {
+        _selectedMonth = e.target.value;
+        renderActiveChart();
+      });
+    }
+
+    window.addEventListener('resize', debounce(() => {
+      renderActiveChart();
+    }, 200));
 
     const btnLogout = document.getElementById('btn-logout');
     if (btnLogout) {
@@ -211,8 +260,8 @@
     // 3. Donut Progress
     renderDonutProgress(completionPct, stats);
 
-    // 4. Trend Chart
-    renderTrendChart(trend);
+    // 4. Trend or Frequency Chart
+    renderActiveChart();
 
     // 5. Device progress grid
     renderDeviceProgress(devices);
@@ -239,6 +288,200 @@
     if (elStatPassedCount) elStatPassedCount.textContent = `${stats.passed_labs || 0} bài`;
     if (elStatInProgressCount) elStatInProgressCount.textContent = `${stats.in_progress_labs || 0} bài`;
     if (elStatUnstartedCount) elStatUnstartedCount.textContent = `${stats.unstarted_labs || 0} bài`;
+  }
+
+  function getAvailableMonths(sessions) {
+    const monthsSet = new Set();
+    const now = new Date();
+    monthsSet.add(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
+
+    (sessions || []).forEach(s => {
+      const timeStr = s.finished_at || s.started_at;
+      if (timeStr) {
+        const d = new Date(timeStr.replace(' ', 'T'));
+        if (!isNaN(d.getTime())) {
+          monthsSet.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+        }
+      }
+    });
+
+    return Array.from(monthsSet).sort().reverse();
+  }
+
+  function renderActiveChart() {
+    if (!_dashboardData) return;
+    if (_chartMode === 'frequency') {
+      renderMonthlyFrequencyChart(_selectedMonth);
+    } else {
+      renderTrendChart(_dashboardData.trend);
+    }
+  }
+
+  function renderMonthlyFrequencyChart(selectedMonthStr) {
+    if (!elTrendChartContainer) return;
+    elTrendChartContainer.innerHTML = '';
+
+    const sessions = _dashboardData?.sessions || [];
+    const availableMonths = getAvailableMonths(sessions);
+    if (!selectedMonthStr || !availableMonths.includes(selectedMonthStr)) {
+      selectedMonthStr = availableMonths[0] || `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+    }
+    _selectedMonth = selectedMonthStr;
+
+    // Update month dropdown options if needed
+    if (elChartMonthSelect) {
+      const optionsHtml = availableMonths.map(m => {
+        const [y, mon] = m.split('-');
+        return `<option value="${m}" ${m === _selectedMonth ? 'selected' : ''}>Tháng ${mon}/${y}</option>`;
+      }).join('');
+      if (elChartMonthSelect.innerHTML !== optionsHtml) {
+        elChartMonthSelect.innerHTML = optionsHtml;
+      }
+      elChartMonthSelect.value = _selectedMonth;
+    }
+
+    const [year, month] = _selectedMonth.split('-').map(Number);
+    const totalDays = new Date(year, month, 0).getDate(); // 28 - 31
+
+    // Initialize daily slots
+    const daysData = Array.from({ length: totalDays }, (_, i) => ({
+      day: i + 1,
+      dateStr: `${year}-${String(month).padStart(2, '0')}-${String(i + 1).padStart(2, '0')}`,
+      total: 0,
+      practice: 0,
+      guide: 0,
+      passed: 0,
+      scores: [],
+      duration_sec: 0
+    }));
+
+    // Aggregate sessions for this month
+    sessions.forEach(sess => {
+      const timeStr = sess.finished_at || sess.started_at;
+      if (!timeStr) return;
+      const dateObj = new Date(timeStr.replace(' ', 'T'));
+      if (isNaN(dateObj.getTime())) return;
+      if (dateObj.getFullYear() === year && (dateObj.getMonth() + 1) === month) {
+        const d = dateObj.getDate();
+        if (d >= 1 && d <= totalDays) {
+          const item = daysData[d - 1];
+          item.total++;
+          const isPractice = sess.mode === 'Thực hành' || sess.mode === 'practice' || sess.session_type === 'practice';
+          if (isPractice) {
+            item.practice++;
+            if (sess.is_passed === true || sess.status === 'Đạt' || sess.status === 'Hoàn thành') {
+              item.passed++;
+            }
+            if (sess.score != null) item.scores.push(Number(sess.score));
+          } else {
+            item.guide++;
+          }
+          item.duration_sec += (sess.duration_sec || 0);
+        }
+      }
+    });
+
+    const totalMonthSessions = daysData.reduce((sum, d) => sum + d.total, 0);
+    const totalMonthPractice = daysData.reduce((sum, d) => sum + d.practice, 0);
+    const totalMonthGuide = daysData.reduce((sum, d) => sum + d.guide, 0);
+    const totalMonthPassed = daysData.reduce((sum, d) => sum + d.passed, 0);
+
+    const width = elTrendChartContainer.clientWidth || 680;
+    const height = 220;
+    const padding = { top: 25, right: 25, bottom: 35, left: 42 };
+    const chartW = width - padding.left - padding.right;
+    const chartH = height - padding.top - padding.bottom;
+
+    const peakSessions = Math.max(0, ...daysData.map(d => d.total));
+    const tickStep = peakSessions <= 4 ? 1 : (peakSessions <= 8 ? 2 : (peakSessions <= 16 ? 4 : Math.ceil(peakSessions / 4)));
+    const yMax = Math.max(4, Math.ceil(peakSessions / tickStep) * tickStep);
+    const yAt = val => padding.top + chartH - (val / yMax * chartH);
+
+    // Y Grid lines
+    let gridSvg = '';
+    const yTicksCount = Math.round(yMax / tickStep);
+    for (let i = 0; i <= yTicksCount; i++) {
+      const val = i * tickStep;
+      const y = yAt(val);
+      gridSvg += `
+        <line x1="${padding.left}" y1="${y}" x2="${width - padding.right}" y2="${y}" stroke="#e2e8f0" stroke-dasharray="3,3" stroke-width="1" />
+        <text x="${padding.left - 8}" y="${y + 4}" font-size="11" font-weight="600" fill="#94a3b8" text-anchor="end">${val}</text>
+      `;
+    }
+
+    // Y Axis Title
+    const yTitleSvg = `
+      <text x="14" y="${padding.top + chartH / 2}" font-size="10.5" font-weight="700" fill="#64748b" text-anchor="middle" transform="rotate(-90 14 ${padding.top + chartH / 2})">Lượt / ngày</text>
+    `;
+
+    // Columns / Bars
+    const colStep = chartW / totalDays;
+    const barW = Math.max(6, Math.min(15, colStep * 0.68));
+
+    let barsSvg = '';
+    let xLabelsSvg = '';
+
+    daysData.forEach((d, idx) => {
+      const x = padding.left + (idx + 0.5) * colStep;
+      
+      // X labels on days: 1, 5, 10, 15, 20, 25, totalDays
+      const isLabeled = d.day === 1 || d.day % 5 === 0 || d.day === totalDays;
+      if (isLabeled) {
+        xLabelsSvg += `
+          <text x="${x}" y="${height - 10}" font-size="11" font-weight="600" fill="#64748b" text-anchor="middle">${d.day}</text>
+        `;
+      }
+
+      if (d.total > 0) {
+        const barH = (d.total / yMax) * chartH;
+        const barY = padding.top + chartH - barH;
+        const tooltip = `Ngày ${d.day}/${String(month).padStart(2, '0')}/${year}: ${d.total} lượt (${d.practice} thực hành, ${d.guide} hướng dẫn)${d.passed > 0 ? ` • ${d.passed} bài đạt` : ''}`;
+        
+        barsSvg += `
+          <g class="chart-freq-group" tabindex="0">
+            <title>${escapeHTML(tooltip)}</title>
+            <rect x="${x - barW / 2}" y="${barY}" width="${barW}" height="${barH}" rx="3" fill="url(#freqBarGrad)" class="chart-freq-bar" />
+            <circle cx="${x}" cy="${barY}" r="3.5" fill="#4f46e5" stroke="#ffffff" stroke-width="1.5" />
+            <text x="${x}" y="${barY - 6}" font-size="10.5" font-weight="700" fill="#4338ca" text-anchor="middle">${d.total}</text>
+          </g>
+        `;
+      } else {
+        barsSvg += `
+          <circle cx="${x}" cy="${padding.top + chartH}" r="1.5" fill="#cbd5e1" opacity="0.6">
+            <title>Ngày ${d.day}/${String(month).padStart(2, '0')}: 0 lượt</title>
+          </circle>
+        `;
+      }
+    });
+
+    const summaryHtml = `
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; flex-wrap: wrap; gap: 8px;">
+        <div class="chart-summary-chip">
+          <span>📊 Tổng tháng ${String(month).padStart(2, '0')}/${year}:</span>
+          <strong>${totalMonthSessions} lượt thực hiện</strong>
+          <span>(${totalMonthPractice} thực hành, ${totalMonthGuide} hướng dẫn • ${totalMonthPassed} bài đạt)</span>
+        </div>
+        <div style="font-size: 11.5px; color: var(--text-muted);">
+          Trục ngang: ngày 1 đến ${totalDays} trong tháng ${String(month).padStart(2, '0')}/${year}
+        </div>
+      </div>
+    `;
+
+    elTrendChartContainer.innerHTML = `
+      <svg class="chart-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="freqBarGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#4f46e5" />
+            <stop offset="100%" stop-color="#818cf8" stop-opacity="0.8" />
+          </linearGradient>
+        </defs>
+        ${gridSvg}
+        ${yTitleSvg}
+        ${barsSvg}
+        ${xLabelsSvg}
+      </svg>
+      ${summaryHtml}
+    `;
   }
 
   function renderTrendChart(trend) {

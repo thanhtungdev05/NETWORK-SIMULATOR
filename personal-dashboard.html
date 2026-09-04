@@ -161,16 +161,26 @@
     <!-- ── MAIN 2-COLUMN SECTION: CHART + AUDIT / BREAKDOWN ── -->
     <div class="dashboard-main-grid">
       
-      <!-- Left Column: Trend Chart -->
+      <!-- Left Column: Trend & Frequency Chart -->
       <div class="content-card">
         <div class="card-title-row">
           <div class="card-title">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--primary);">
+            <svg id="trend-chart-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--primary);">
               <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
             </svg>
-            <span>Xu hướng điểm số & hoạt động</span>
+            <span id="trend-chart-title">Xu hướng điểm số & hoạt động</span>
           </div>
-          <span class="card-title-badge">14 ngày gần nhất</span>
+          <div class="chart-header-actions">
+            <div class="chart-toggle-group" id="chart-toggle-group">
+              <button type="button" class="chart-toggle-btn active" id="btn-chart-score" data-mode="score" title="Xu hướng điểm số 14 ngày gần nhất">
+                <span>14 ngày gần nhất</span>
+              </button>
+              <button type="button" class="chart-toggle-btn" id="btn-chart-frequency" data-mode="frequency" title="Tần suất thực hiện theo ngày trong tháng">
+                <span>Tần suất tháng T</span>
+              </button>
+            </div>
+            <select id="chart-month-select" class="chart-month-select" style="display: none;" aria-label="Chọn tháng xem tần suất"></select>
+          </div>
         </div>
         <div class="chart-container" id="trend-chart-container">
           <!-- Populated by JS -->

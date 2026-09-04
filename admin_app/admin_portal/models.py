@@ -276,6 +276,7 @@ class TimerSession(models.Model):
             ('completed', 'Hoàn thành'),
             ('failed', 'Không đạt'),
             ('abandoned', 'Bỏ dở'),
+            ('in_progress', 'Đang thực hiện'),
         ],
         default='completed',
         verbose_name='Trạng thái',

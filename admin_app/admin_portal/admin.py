@@ -5,6 +5,7 @@ Bao gồm bộ lọc, tìm kiếm, xem chi tiết và xuất CSV.
 """
 import csv
 from django.contrib import admin
+from django.db.models import Q
 from django.http import HttpResponse
 from django.utils.html import format_html
 
@@ -259,15 +260,33 @@ class MockDataFilter(admin.SimpleListFilter):
         return queryset
 
 
+class ModeFilter(admin.SimpleListFilter):
+    title = 'Chế độ bài học'
+    parameter_name = 'mode_type'
+
+    def lookups(self, request, model_admin):
+        return [
+            ('practice', 'Thực hành'),
+            ('guide', 'Hướng dẫn'),
+        ]
+
+    def queryset(self, request, queryset):
+        if self.value() == 'practice':
+            return queryset.filter(Q(mode='Thực hành') | Q(mode='practice') | Q(session_type='practice'))
+        if self.value() == 'guide':
+            return queryset.filter(Q(mode='Hướng dẫn') | Q(mode='guide') | Q(session_type='guide'))
+        return queryset
+
+
 @admin.register(TimerSession)
 class TimerSessionAdmin(admin.ModelAdmin):
     list_display = [
-        'id', 'name', 'technician_id', 'lab_name', 'device',
+        'id', 'name', 'technician_id', 'lab_name', 'device', 'mode_badge',
         'status_badge', 'passed_badge', 'score', 'duration_display',
         'finished_at', 'data_type_badge',
     ]
     list_filter = [
-        'status', PassedFilter, MockDataFilter, 'mode', 'session_type',
+        'status', PassedFilter, MockDataFilter, ModeFilter,
         'device',
     ]
     search_fields = [
@@ -307,16 +326,31 @@ class TimerSessionAdmin(admin.ModelAdmin):
     list_per_page = 50
     show_full_result_count = True
 
+    def mode_badge(self, obj):
+        if obj.mode == 'Hướng dẫn' or obj.session_type == 'guide':
+            return format_html(
+                '<span style="background:#0284c7;color:#fff;padding:2px 8px;'
+                'border-radius:4px;font-size:12px;font-weight:500;">Hướng dẫn</span>'
+            )
+        return format_html(
+            '<span style="background:#6366f1;color:#fff;padding:2px 8px;'
+            'border-radius:4px;font-size:12px;font-weight:500;">Thực hành</span>'
+        )
+    mode_badge.short_description = 'Chế độ'
+    mode_badge.admin_order_field = 'mode'
+
     def status_badge(self, obj):
         colors = {
             'completed': '#059669',
             'failed': '#dc2626',
             'abandoned': '#d97706',
+            'in_progress': '#64748b',
         }
         labels = {
             'completed': 'Hoàn thành',
             'failed': 'Không đạt',
             'abandoned': 'Bỏ dở',
+            'in_progress': 'Đang thực hiện',
         }
         color = colors.get(obj.status, '#6b7280')
         label = labels.get(obj.status, obj.status)

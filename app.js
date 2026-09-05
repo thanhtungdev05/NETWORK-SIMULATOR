@@ -92,6 +92,13 @@
     return clean;
   }
 
+  function normalizeLabId(id) {
+    if (!id) return '';
+    let clean = String(id).trim().toLowerCase();
+    clean = clean.replace(/^lab_ax3000c_(\d+)/i, 'lab_ax3000cv2_$1');
+    return clean;
+  }
+
   function databaseDeviceToPortalId(device) {
     const rawId = typeof device === 'string' ? device : (device.device_id || device.id || '');
     return normalizeDeviceId(rawId);
@@ -118,7 +125,7 @@
         const catalogDevices = Array.isArray(data.devices) ? data.devices : [];
         _catalogDeviceIds = new Set(catalogDevices.map(databaseDeviceToPortalId));
         _catalogLabIds = new Set(catalogDevices.flatMap(function (device) {
-          return Array.isArray(device.labs) ? device.labs.map(function (lab) { return String(lab.lab_id || '').trim().toLowerCase(); }) : [];
+          return Array.isArray(device.labs) ? device.labs.map(function (lab) { return normalizeLabId(lab.lab_id); }) : [];
         }));
         const visibleDevices = DEVICES.filter(function (device) {
           return !_catalogDeviceIds || _catalogDeviceIds.has(normalizeDeviceId(device.id));
@@ -689,15 +696,15 @@
     const allAllowedLessons = (device.categories?.flatMap(category => category.lessons || []) || [])
       .filter(lesson => {
         if (!_catalogLabIds) return true;
-        const normLab = String(lesson.id || '').trim().toLowerCase();
+        const normLab = normalizeLabId(lesson.id);
         return _catalogLabIds.has(normLab);
       });
 
     let chosenLesson = null;
     if (targetLabId) {
-      const normTarget = String(targetLabId).trim().toLowerCase();
+      const normTarget = normalizeLabId(targetLabId);
       chosenLesson = allAllowedLessons.find(l => {
-        const lid = String(l.id || '').trim().toLowerCase();
+        const lid = normalizeLabId(l.id);
         return lid === normTarget
           || lid.replace(/^lab_/i, '') === normTarget.replace(/^lab_/i, '')
           || lid.endsWith(normTarget)
@@ -740,7 +747,7 @@
     device.categories.forEach(cat => {
       const lessons = (cat.lessons || []).filter(lesson => {
         if (!_catalogLabIds) return true;
-        const normLab = String(lesson.id || '').trim().toLowerCase();
+        const normLab = normalizeLabId(lesson.id);
         return _catalogLabIds.has(normLab);
       });
       if (!lessons.length) return;

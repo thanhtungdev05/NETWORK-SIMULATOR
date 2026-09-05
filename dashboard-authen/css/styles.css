@@ -3918,59 +3918,28 @@ body {
 
 #overview .kpi-card {
     border-radius: 14px;
-    box-shadow: var(--template-shadow);
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    padding: 18px 20px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 6px 16px rgba(15, 23, 42, 0.03);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 140px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-#overview .kpi-card:nth-child(-n + 3) {
-    border-color: rgba(255, 255, 255, 0.45);
-    color: #ffffff;
-    box-shadow: 0 10px 22px rgba(62, 85, 179, 0.17);
+#overview .kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+    border-color: #cbd5e1;
 }
 
-#overview .kpi-card:nth-child(1) {
-    background: linear-gradient(135deg, #5c63d9 0%, #477ce7 100%);
-}
-
-#overview .kpi-card:nth-child(2) {
-    background: linear-gradient(135deg, #5377e3 0%, #3faee0 100%);
-}
-
-#overview .kpi-card:nth-child(3) {
-    background: linear-gradient(135deg, #42aeda 0%, #35c9c4 100%);
-}
-
-#overview .kpi-card:nth-child(-n + 3)::before {
+#overview .kpi-card::before,
+#overview .kpi-card::after {
     display: none;
-}
-
-#overview .kpi-card:nth-child(-n + 3)::after {
-    right: -25px;
-    bottom: -29px;
-    width: 100px;
-    height: 100px;
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    background: rgba(255, 255, 255, 0.08);
-    box-shadow: 0 0 0 18px rgba(255, 255, 255, 0.045);
-}
-
-#overview .kpi-card:nth-child(-n + 3) .kpi-value {
-    color: #ffffff;
-}
-
-#overview .kpi-card:nth-child(-n + 3) .kpi-label,
-#overview .kpi-card:nth-child(-n + 3) .kpi-note,
-#overview .kpi-card:nth-child(-n + 3) .kpi-comparison-label {
-    color: rgba(255, 255, 255, 0.79);
-}
-
-#overview .kpi-card:nth-child(-n + 3) .kpi-delta {
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.17);
-    backdrop-filter: blur(4px);
-}
-
-#overview .kpi-card:nth-child(n + 4) {
-    background: linear-gradient(145deg, #ffffff 58%, var(--card-accent-soft) 148%);
 }
 
 
@@ -4124,61 +4093,145 @@ body {
     grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-#overview .activity-kpis .kpi-card {
-    border-color: rgba(255, 255, 255, 0.4);
-    color: #ffffff;
-    box-shadow: 0 10px 22px rgba(95, 57, 130, 0.16);
+/* Base typography & elements for ALL KPI cards */
+#overview .kpi-card .kpi-label {
+    color: #475569;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    line-height: 1.35;
+    margin-bottom: 2px;
 }
 
+#overview .kpi-card .kpi-value {
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 6px 0 8px 0;
+    letter-spacing: -0.02em;
+}
+
+#overview .kpi-card .kpi-comparison {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-wrap: wrap;
+    margin-top: auto;
+}
+
+#overview .kpi-card .kpi-comparison-label {
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+#overview .kpi-card .kpi-delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2.5px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+#overview .kpi-card .kpi-comparison.positive .kpi-delta {
+    color: #15803d;
+    background: #ecfdf5;
+    border: 1px solid #bbf7d0;
+}
+
+#overview .kpi-card .kpi-comparison.negative .kpi-delta {
+    color: #b91c1c;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+}
+
+#overview .kpi-card .kpi-comparison.neutral .kpi-delta {
+    color: #475569;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+}
+
+#overview .kpi-card .kpi-note {
+    color: #64748b;
+    font-size: 12px;
+    line-height: 1.4;
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px dashed #f1f5f9;
+}
+
+/* Specific theme styling for Activity KPIs (Row 1) */
 #overview .activity-kpis .kpi-card:nth-child(1) {
-    background: linear-gradient(135deg, #e84286, #c83b8d);
+    border-top: 3.5px solid #2563eb;
+    background: linear-gradient(180deg, #f8faff 0%, #ffffff 50%);
+}
+#overview .activity-kpis .kpi-card:nth-child(1) .kpi-value {
+    color: #1d4ed8;
 }
 
 #overview .activity-kpis .kpi-card:nth-child(2) {
-    background: linear-gradient(135deg, #9a4db6, #6654c9);
+    border-top: 3.5px solid #7c3aed;
+    background: linear-gradient(180deg, #faf7ff 0%, #ffffff 50%);
+}
+#overview .activity-kpis .kpi-card:nth-child(2) .kpi-value {
+    color: #6d28d9;
 }
 
 #overview .activity-kpis .kpi-card:nth-child(3) {
-    background: linear-gradient(135deg, #34afd7, #367ecb);
+    border-top: 3.5px solid #0284c7;
+    background: linear-gradient(180deg, #f0f9ff 0%, #ffffff 50%);
+}
+#overview .activity-kpis .kpi-card:nth-child(3) .kpi-value {
+    color: #0369a1;
 }
 
 #overview .activity-kpis .kpi-card:nth-child(4) {
-    background: linear-gradient(135deg, #f5b028, #f17835);
+    border-top: 3.5px solid #d97706;
+    background: linear-gradient(180deg, #fffdf5 0%, #ffffff 50%);
+}
+#overview .activity-kpis .kpi-card:nth-child(4) .kpi-value {
+    color: #b45309;
 }
 
-#overview .activity-kpis .kpi-card::before {
-    display: none;
-}
-
-#overview .activity-kpis .kpi-card::after {
-    right: -22px;
-    bottom: -30px;
-    width: 102px;
-    height: 102px;
-    border: 1px solid rgba(255, 255, 255, 0.17);
-    background: rgba(255, 255, 255, 0.075);
-    box-shadow: 0 0 0 18px rgba(255, 255, 255, 0.035);
-}
-
-#overview .activity-kpis .kpi-card .kpi-value {
-    color: #ffffff;
-}
-
-#overview .activity-kpis .kpi-card .kpi-label,
-#overview .activity-kpis .kpi-card .kpi-note,
-#overview .activity-kpis .kpi-card .kpi-comparison-label {
-    color: rgba(255, 255, 255, 0.82);
-}
-
-#overview .activity-kpis .kpi-card .kpi-delta {
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.18);
-}
-
+/* Specific theme styling for Outcome KPIs (Row 2) */
 #overview .outcome-kpis .kpi-card {
     grid-column: span 1;
-    background: #ffffff;
-    box-shadow: var(--lector-shadow);
+}
+
+#overview .outcome-kpis .kpi-card:nth-child(1) {
+    border-top: 3.5px solid #6366f1;
+    background: linear-gradient(180deg, #f8f8ff 0%, #ffffff 50%);
+}
+#overview .outcome-kpis .kpi-card:nth-child(1) .kpi-value {
+    color: #4338ca;
+}
+
+#overview .outcome-kpis .kpi-card:nth-child(2) {
+    border-top: 3.5px solid #0d9488;
+    background: linear-gradient(180deg, #f0fdfa 0%, #ffffff 50%);
+}
+#overview .outcome-kpis .kpi-card:nth-child(2) .kpi-value {
+    color: #0f766e;
+}
+
+#overview .outcome-kpis .kpi-card:nth-child(3) {
+    border-top: 3.5px solid #7c3aed;
+    background: linear-gradient(180deg, #faf7ff 0%, #ffffff 50%);
+}
+#overview .outcome-kpis .kpi-card:nth-child(3) .kpi-value {
+    color: #6d28d9;
+}
+
+#overview .outcome-kpis .kpi-card:nth-child(4) {
+    border-top: 3.5px solid #16a34a;
+    background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 50%);
+}
+#overview .outcome-kpis .kpi-card:nth-child(4) .kpi-value {
+    color: #15803d;
 }
 
 @media (max-width: 900px) {
@@ -10297,29 +10350,6 @@ select:not(.searchable-select-source):focus-visible {
     .class-matrix-search-field input {
         width: 100%;
     }
-}
-
-/* Final KPI grouping overrides: activity is visually distinct from cumulative outcomes. */
-#overview .activity-kpis .kpi-card {
-    border-color: rgba(255, 255, 255, 0.4);
-    color: #ffffff;
-    box-shadow: 0 10px 22px rgba(95, 57, 130, 0.16);
-}
-
-#overview .activity-kpis .kpi-card:nth-child(1) { background: linear-gradient(135deg, #e84286, #c83b8d); }
-#overview .activity-kpis .kpi-card:nth-child(2) { background: linear-gradient(135deg, #9a4db6, #6654c9); }
-#overview .activity-kpis .kpi-card:nth-child(3) { background: linear-gradient(135deg, #34afd7, #367ecb); }
-#overview .activity-kpis .kpi-card:nth-child(4) { background: linear-gradient(135deg, #f5b028, #f17835); }
-
-#overview .activity-kpis .kpi-card::before { display: none; }
-#overview .activity-kpis .kpi-card .kpi-value { color: #ffffff; }
-#overview .activity-kpis .kpi-card .kpi-label,
-#overview .activity-kpis .kpi-card .kpi-note,
-#overview .activity-kpis .kpi-card .kpi-comparison-label { color: rgba(255, 255, 255, 0.84); }
-
-#overview .outcome-kpis .kpi-card {
-    background: linear-gradient(145deg, #ffffff 58%, var(--card-accent-soft) 150%);
-    box-shadow: var(--lector-shadow);
 }
 
 @media (max-width: 720px) {

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * devices/ax3000c/lessons/bai1.js
  * Bài 1: Cấu hình PPPoE trên AX3000C
  */
@@ -6,7 +6,7 @@
 window.DEVICE_AX3000C_LESSONS = window.DEVICE_AX3000C_LESSONS || [];
 
 window.DEVICE_AX3000C_LESSONS.push({
-  id: 'LAB_AX3000C_01',
+  id: 'LAB_AX3000CV2_01',
   title: 'Cấu hình PPPoE',
   subtitle: 'Cấu hình PPPoE',
   instructions: [

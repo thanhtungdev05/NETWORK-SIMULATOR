@@ -352,7 +352,7 @@
                   let el = e.target;
                   while(el && el !== doc) {
                     if ((el.tagName === 'INPUT' || el.tagName === 'BUTTON') && 
-                        (el.type === 'submit' || (el.value || el.textContent || '').toLowerCase().includes('save') || (el.value || el.textContent || '').toLowerCase().includes('apply') || el.name === 'AddBtn')) {
+                        (el.type === 'submit' || (el.value || el.textContent || '').toLowerCase().includes('save') || (el.value || el.textContent || '').toLowerCase().includes('apply') || el.name === 'AddBtn' || (currentLessonId === 'ONT_be6500c-bai6' && (el.value || el.textContent || '').trim().toLowerCase() === 'add'))) {
                       window._hasClickedSaveInGuide = true;
                       if (currentDeviceId === 'ax3000s') {
                         doc._ftcIsSaved = true;
@@ -1804,14 +1804,14 @@
       } catch (e) { }
 
       if (target) {
-        const modalOverlay = doc.getElementById('modal_overlay') || doc.querySelector('.modal-overlay, .modal_overlay, #modal-overlay');
-        const isModalOpen = modalOverlay && (
-          modalOverlay.classList.contains('active') || 
-          modalOverlay.classList.contains('show') || 
-          modalOverlay.style.display === 'flex' || 
-          modalOverlay.style.display === 'block'
-        );
-        if (isModalOpen && !modalOverlay.contains(target)) {
+        const openModal = Array.from(doc.querySelectorAll('.MuiDialog-root, .MuiModal-root, #modal_overlay, .modal-overlay, .modal_overlay, #modal-overlay')).find(m => {
+          if (!m) return false;
+          if (m.classList.contains('MuiDialog-root') || m.classList.contains('MuiModal-root')) {
+            return m.style.display !== 'none' && (m.offsetWidth > 0 || m.offsetHeight > 0 || (m.getClientRects && m.getClientRects().length > 0));
+          }
+          return m.classList.contains('active') || m.classList.contains('show') || m.style.display === 'flex' || m.style.display === 'block';
+        });
+        if (openModal && !openModal.contains(target)) {
           target = null;
         }
       }

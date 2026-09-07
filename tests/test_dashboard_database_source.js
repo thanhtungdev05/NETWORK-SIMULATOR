@@ -8,6 +8,7 @@ const root = path.resolve(__dirname, '..');
 const api = fs.readFileSync(path.join(root, 'api/index.php'), 'utf8');
 const report = fs.readFileSync(path.join(root, 'api/lib/dashboard_report.php'), 'utf8');
 const dashboard = fs.readFileSync(path.join(root, 'dashboard-authen/js/app.js'), 'utf8');
+const dashboardHtml = fs.readFileSync(path.join(root, 'dashboard-authen/index.html'), 'utf8');
 const dashboardStyles = fs.readFileSync(path.join(root, 'dashboard-authen/css/dashboard-professional.css'), 'utf8');
 const migration = fs.readFileSync(
   path.join(root, 'api/migrations/030_enforce_approved_dashboard_catalog.sql'),
@@ -30,18 +31,34 @@ assert.match(api, /AND NOT COALESCE\(timer\.is_mock, FALSE\)/);
 assert.match(api, /timer\.status IN \(\\'completed\\', \\'failed\\'\)/);
 assert.doesNotMatch(api, /if \(\$device !== '' && !isset\(\$deviceMap\[\$device\]\)\)/);
 assert.match(api, /dashboard_report_payload\(db\(\), \$_GET\)/);
+assert.match(api, /'assignments_available' => \$includeAssignments \? \$assignmentsAvailable : null/);
 assert.doesNotMatch(api, /if \(\$action === 'report'\) \{\s*respond\(\['data' => null\]\)/);
 
 assert.match(report, /'source' => 'database'/);
-assert.match(report, /CROSS JOIN active_labs/);
+assert.match(report, /FROM lab_assignments assignment/);
+assert.match(report, /JOIN class_enrollments enrollment/);
+assert.match(report, /SELECT \(SELECT COUNT\(\*\) FROM cohort_pairs\) AS assigned_count/);
+assert.doesNotMatch(report, /CROSS JOIN active_labs/);
 assert.match(report, /practice_attempt_no/);
 assert.match(report, /device\.is_active = TRUE AND lab\.is_active = TRUE/);
 assert.doesNotMatch(report, /is_passed IS TRUE OR\s*\(is_passed IS NULL/);
 assert.match(report, /progress_scoped AS/);
-assert.match(report, /first_passed_at < months\.month \+ INTERVAL '1 month'/);
+assert.match(report, /month_cohort AS/);
+assert.match(report, /session\.occurred_at < cohort\.cutoff/);
+assert.match(report, /LEAST\(month \+ INTERVAL '1 month', CURRENT_DATE \+ INTERVAL '1 day'\) AS cutoff/);
+assert.match(report, /COALESCE\(assignment\.due_at::date, 'infinity'::date\)/);
+assert.match(report, /COALESCE\(class_assignment\.due_at::date, 'infinity'::date\)/);
+assert.match(report, /LEFT JOIN regions assignment_region ON assignment_region\.region_id = assignment\.region_id_snapshot/);
+assert.match(report, /class_assignment\.status IN \('assigned', 'active', 'closed'\)/);
+assert.match(report, /'region_fallback_pairs' => max\(0, \$grandTotal\['assigned_count'\] - \$regionSnapshotPairCount\)/);
+assert.match(report, /pair_progress AS/);
+assert.match(report, /SELECT DISTINCT ON \(person_id, lab_id\)/);
+assert.match(report, /progress\.completed IS TRUE/);
+assert.match(report, /completion_metrics.*Cumulative passed KTV-lab assignments through the period end/);
 assert.match(report, /timer\.status IN \('completed', 'failed'\)/);
 
 assert.match(dashboard, /let BASE_REGION_CATALOG = \[\];/);
+assert.match(dashboard, /endDate: fmtDate\(now\)/);
 assert.match(dashboard, /fetchAndBuildRegionCatalog\(\)/);
 assert.match(dashboard, /group\.toLocaleLowerCase\('vi'\) !== label\.toLocaleLowerCase\('vi'\)/);
 assert.match(dashboard, /function getCanonicalLabList\(\)/);
@@ -77,5 +94,17 @@ assert.match(dashboard, /item\?\.mode === 'Thực hành'[\s\S]*item\?\.isPassed 
 assert.match(dashboard, /rawStatus: item\.status/);
 assert.match(dashboard, /if \(isPassed === true\) return 'Đạt'/);
 assert.doesNotMatch(dashboard, /function computeMetrics/);
+assert.match(dashboard, /allParams\.set\('include_assignments', assignmentsRequested \? '1' : '0'\)/);
+assert.match(dashboard, /\['instructors', 'class_matrix', 'analytics'\]\.includes\(activeDashboardView\)/);
+assert.match(dashboard, /data\.assignments_available === true/);
+assert.match(dashboard, /assignmentsRequested && data\.assignments_available !== true/);
+assert.doesNotMatch(dashboard, /trainingAssignments\.length === 0 \? true/);
+assert.match(dashboard, /const isCompleted = isAssigned && Boolean\(assign\?\.completed\)/);
+assert.match(dashboard, /allLearnersCount: allClassLearners\.length/);
+assert.match(dashboard, /assignmentClassCodes: Array\.isArray\(item\.assignment_class_codes\)/);
+assert.match(dashboard, /!s\.assignmentClassCodes\.includes\(String\(selectedClass\.code\)\)/);
+assert.match(dashboard, /state\.classMatrixSelectedClass === 'all' && !s\.assignmentClassCodes\.length/);
+assert.match(dashboard, /regionQuality\.region_fallback_pairs/);
+assert.match(dashboardHtml, /id="detailReportDataQuality"/);
 
 console.log('Dashboard database-source audit passed.');

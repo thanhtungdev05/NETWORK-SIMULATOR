@@ -20,8 +20,8 @@ function class_import_workbook(bool $formula = false): string
     $classSheet = $book->getActiveSheet();
     $classSheet->setTitle('Lop');
     $classSheet->fromArray([
-        ['Mã lớp', 'Tên lớp', 'Hiệu lực từ', 'Hiệu lực đến'],
-        ['FTC-000001', $formula ? '=CONCAT("Lop"," 1")' : 'Lớp KTV Hà Nội', '01/09/2026', '30/09/2026'],
+        ['Mã lớp', 'Tên lớp', 'Hiệu lực từ'],
+        ['FTC-000001', $formula ? '=CONCAT("Lop"," 1")' : 'Lớp KTV Hà Nội', '01/09/2026'],
     ]);
     $memberSheet = $book->createSheet();
     $memberSheet->setTitle('ThanhVien');

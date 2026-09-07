@@ -65,7 +65,9 @@ function tracking_timer_response(array $timer): array
 }
 
 /**
- * Mirror a live timer submission into the normalized assignment/attempt model.
+ * Mirror a live timer submission into every effective assignment for the same
+ * KTV-lab pair. Progress is a person-lab outcome; overlapping active classes
+ * must not leave one assignment passed and another stale.
  * A raw timer without an active assignment remains auditable, but is not
  * counted as assigned progress in the normalized dashboard report.
  */
@@ -80,27 +82,54 @@ function sync_tracking_attempt(PDO $pdo, int $timerId, array $timer, ?string $us
           FROM class_enrollments enrollment
           JOIN training_classes training ON training.class_id = enrollment.class_id
           JOIN lab_assignments assignment ON assignment.enrollment_id = enrollment.enrollment_id
+          LEFT JOIN class_lab_assignments class_assignment
+            ON class_assignment.class_lab_assignment_id = assignment.class_lab_assignment_id
           JOIN curriculum_labs curriculum_lab
             ON curriculum_lab.curriculum_lab_id = assignment.curriculum_lab_id
          WHERE enrollment.user_id = CAST(:user_id AS uuid)
            AND curriculum_lab.lab_id = :lab_id
-           AND enrollment.status = 'active'
-           AND enrollment.valid_from <= CURRENT_DATE
-           AND (enrollment.valid_to IS NULL OR enrollment.valid_to >= CURRENT_DATE)
-           AND training.start_date <= CURRENT_DATE
-           AND (training.end_date IS NULL OR training.end_date >= CURRENT_DATE)
-           AND assignment.status IN ('assigned', 'in_progress', 'passed')
-           AND assignment.assigned_at <= NOW()
-           AND (assignment.due_at IS NULL OR assignment.due_at >= NOW())
-         ORDER BY assignment.status = 'passed', training.start_date DESC, assignment.created_at DESC
-         LIMIT 1
-         FOR UPDATE OF assignment
+            AND enrollment.status = 'active'
+            AND enrollment.is_mock = FALSE
+            AND enrollment.valid_from <= CURRENT_DATE
+            AND (enrollment.valid_to IS NULL OR enrollment.valid_to >= CURRENT_DATE)
+            AND training.start_date <= CURRENT_DATE
+            AND training.status IN ('planned', 'active')
+            AND training.is_mock = FALSE
+            AND assignment.status IN ('assigned', 'in_progress', 'passed')
+            AND assignment.assigned_at <= NOW()
+            AND (assignment.due_at IS NULL OR assignment.due_at >= NOW())
+            AND (
+                class_assignment.class_lab_assignment_id IS NULL
+                OR (
+                    class_assignment.status IN ('assigned', 'active')
+                    AND class_assignment.assigned_at <= NOW()
+                    AND (class_assignment.due_at IS NULL OR class_assignment.due_at >= NOW())
+                )
+            )
+          ORDER BY training.start_date DESC, assignment.created_at DESC
+          FOR UPDATE OF assignment
         SQL
     );
     $lookup->execute(['user_id' => $userId, 'lab_id' => $timer['lab_id']]);
-    $assignment = $lookup->fetch();
-    if (!$assignment) {
+    $assignments = $lookup->fetchAll();
+    if (!$assignments) {
         return false;
+    }
+    $linkAssignment = $pdo->prepare(
+        <<<'SQL'
+        INSERT INTO timer_session_assignment_links (
+            timer_session_id, assignment_id, link_source, linked_at
+        ) VALUES (
+            :timer_session_id, CAST(:assignment_id AS uuid), 'live_sync', NOW()
+        )
+        ON CONFLICT (timer_session_id, assignment_id) DO NOTHING
+        SQL
+    );
+    foreach ($assignments as $assignment) {
+        $linkAssignment->execute([
+            'timer_session_id' => $timerId,
+            'assignment_id' => $assignment['assignment_id'],
+        ]);
     }
     $passed = ($timer['is_passed'] ?? null) === true;
     $attemptNo = isset($timer['practice_attempt_no']) ? (int)$timer['practice_attempt_no'] : null;
@@ -112,19 +141,35 @@ function sync_tracking_attempt(PDO $pdo, int $timerId, array $timer, ?string $us
                    first_pass_attempt_no = COALESCE(first_pass_attempt_no, :attempt_no),
                    first_try_evidence = 'derived_complete',
                    completed_at = COALESCE(completed_at, CAST(:completed_at AS timestamptz)),
-                   passed_at = COALESCE(passed_at, CAST(:completed_at AS timestamptz)),
+                    passed_at = COALESCE(passed_at, completed_at, CAST(:completed_at AS timestamptz)),
                    updated_at = NOW()
              WHERE assignment_id = CAST(:assignment_id AS uuid)
             SQL
         );
-        $update->execute([
-            'attempt_no' => $attemptNo,
-            'completed_at' => $timer['finished_at'],
-            'assignment_id' => $assignment['assignment_id'],
-        ]);
-    } elseif (($timer['status'] ?? '') === 'failed' && $assignment['status'] === 'assigned') {
-        $update = $pdo->prepare("UPDATE lab_assignments SET status = 'in_progress', updated_at = NOW() WHERE assignment_id = CAST(:assignment_id AS uuid)");
-        $update->execute(['assignment_id' => $assignment['assignment_id']]);
+        foreach ($assignments as $assignment) {
+            $update->execute([
+                'attempt_no' => $attemptNo,
+                'completed_at' => $timer['finished_at'],
+                'assignment_id' => $assignment['assignment_id'],
+            ]);
+        }
+    } elseif (($timer['status'] ?? '') === 'failed') {
+        $update = $pdo->prepare(
+            "UPDATE lab_assignments
+                SET status = 'in_progress', updated_at = NOW()
+              WHERE assignment_id = CAST(:assignment_id AS uuid)
+                AND (
+                    status <> 'passed'
+                    OR first_pass_attempt_no IS NULL
+                    OR completed_at IS NULL
+                    OR passed_at IS NULL
+                    OR first_try_evidence IS DISTINCT FROM 'derived_complete'
+                )
+                AND status = 'assigned'"
+        );
+        foreach ($assignments as $assignment) {
+            $update->execute(['assignment_id' => $assignment['assignment_id']]);
+        }
     }
     return true;
 }

@@ -1377,6 +1377,12 @@ function roster_parse_bool_query(string $key): bool
 
 function roster_item_response(array $row): array
 {
+    $sourceClassCode = $row['class_code'] ?? null;
+    if (!empty($row['assigned_class_code'])) {
+        $row['source_class_code'] = $sourceClassCode;
+        $row['class_code'] = $row['assigned_class_code'];
+        $row['class_name'] = $row['assigned_class_name'] ?? $row['assigned_class_code'];
+    }
     $item = user_response($row) ?? [];
     $item['employeeSource'] = $row['employee_source'] ?? null;
     $item['employee_source'] = $row['employee_source'] ?? null;
@@ -1389,6 +1395,24 @@ function roster_item_response(array $row): array
     $item['sourceDashboardRegion'] = $row['source_dashboard_region'] ?? null;
     $item['source_dashboard_region'] = $row['source_dashboard_region'] ?? null;
     return $item;
+}
+
+function roster_assigned_class_join_sql(): string
+{
+    return <<<'SQL'
+LEFT JOIN LATERAL (
+    SELECT STRING_AGG(DISTINCT training.class_code, ', ' ORDER BY training.class_code) AS assigned_class_code,
+           STRING_AGG(DISTINCT training.class_name, ', ' ORDER BY training.class_name) AS assigned_class_name
+      FROM class_enrollments enrollment
+      JOIN training_classes training ON training.class_id = enrollment.class_id
+     WHERE enrollment.user_id = ktv.user_id
+        AND enrollment.status = 'active'
+        AND enrollment.is_mock = FALSE
+        AND (enrollment.valid_to IS NULL OR enrollment.valid_to >= CURRENT_DATE)
+        AND training.status IN ('planned', 'active')
+        AND training.is_mock = FALSE
+ ) assigned_class ON TRUE
+SQL;
 }
 
 function roster_base_where(array &$params, bool $includeFilters = true, ?array $filters = null): array
@@ -1428,7 +1452,7 @@ function roster_base_where(array &$params, bool $includeFilters = true, ?array $
             ktv.employee_id ILIKE :search_eid
             OR ktv.email ILIKE :search_email
             OR ktv.display_name ILIKE :search_name
-            OR ktv.class_code ILIKE :search_class
+            OR COALESCE(assigned_class.assigned_class_code, ktv.class_code) ILIKE :search_class
             OR ktv.unit_code ILIKE :search_unit
             OR ktv.unit_name ILIKE :search_unitname
             OR ktv.region_name ILIKE :search_region
@@ -1638,15 +1662,17 @@ function handle_roster_list(): void
     $params = [];
     $where = roster_base_where($params, true);
     $whereSql = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
+    $classJoinSql = roster_assigned_class_join_sql();
 
-    $countStmt = $pdo->prepare("SELECT COUNT(*) FROM v_ktv_directory ktv $whereSql");
+    $countStmt = $pdo->prepare("SELECT COUNT(*) FROM v_ktv_directory ktv $classJoinSql $whereSql");
     $countStmt->execute($params);
     $total = (int)$countStmt->fetchColumn();
 
-    $sortSql = 'ktv.is_terminated ASC, ktv.region_name NULLS LAST, ktv.branch_name NULLS LAST, ktv.class_code NULLS LAST, ktv.display_name NULLS LAST, ktv.email';
+    $sortSql = 'ktv.is_terminated ASC, ktv.region_name NULLS LAST, ktv.branch_name NULLS LAST, COALESCE(assigned_class.assigned_class_code, ktv.class_code) NULLS LAST, ktv.display_name NULLS LAST, ktv.email';
 
-    $sql = "SELECT ktv.*
+    $sql = "SELECT ktv.*, assigned_class.assigned_class_code, assigned_class.assigned_class_name
               FROM v_ktv_directory ktv
+              $classJoinSql
              $whereSql
              ORDER BY $sortSql
              LIMIT :limit OFFSET :offset";
@@ -2122,8 +2148,7 @@ function handle_training_class_member_preview(): void
         fail(400, 'bad-request', 'Tên lớp là bắt buộc và không được vượt quá 200 ký tự.');
     }
     $validFrom = training_class_date($_POST['valid_from'] ?? $_POST['validFrom'] ?? null, 'validFrom');
-    $validTo = training_class_date($_POST['valid_to'] ?? $_POST['validTo'] ?? null, 'validTo', false);
-    training_class_assert_dates($validFrom, $validTo);
+    training_class_assert_dates($validFrom);
     $file = training_class_uploaded_file();
     try {
         $parsed = parse_training_class_members_xlsx($file['path']);
@@ -2244,6 +2269,24 @@ function handle_training_classes(array $segments, string $method): void
     if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iD', $action) && $method === 'GET') {
         respond(['item'=>training_class_detail(db(), $action)]);
     }
+    if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iD', $action) && $method === 'PATCH') {
+        $pdo = db();
+        $pdo->beginTransaction();
+        try {
+            $class = training_class_update(
+                $pdo,
+                $action,
+                json_body_with_limit(env_int('CLASS_API_MAX_BODY_BYTES', 1048576, 65536, 4194304))
+            );
+            $pdo->commit();
+            respond(['item' => $class]);
+        } catch (Throwable $exception) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $exception;
+        }
+    }
     fail(404, 'not-found', 'Training class endpoint not found.');
 }
 
@@ -2296,13 +2339,22 @@ function handle_dashboard(array $segments, string $method): void
                                     ), 'epoch'::timestamptz),
                                    COALESCE((SELECT MAX(updated_at) FROM regions), 'epoch'::timestamptz),
                                    COALESCE((SELECT MAX(updated_at) FROM device_catalog), 'epoch'::timestamptz),
-                                   COALESCE((SELECT MAX(updated_at) FROM lab_catalog), 'epoch'::timestamptz)
+                                   COALESCE((SELECT MAX(updated_at) FROM lab_catalog), 'epoch'::timestamptz),
+                                   COALESCE((SELECT MAX(updated_at) FROM training_classes), 'epoch'::timestamptz),
+                                   COALESCE((SELECT MAX(updated_at) FROM class_enrollments), 'epoch'::timestamptz),
+                                    COALESCE((SELECT MAX(updated_at) FROM class_lab_assignments), 'epoch'::timestamptz),
+                                    COALESCE((SELECT MAX(updated_at) FROM lab_assignments), 'epoch'::timestamptz),
+                                    COALESCE((SELECT MAX(linked_at) FROM timer_session_assignment_links), 'epoch'::timestamptz)
                                ),
                                'YYYYMMDDHH24MISS.US'
                            ),
                            ':', (SELECT COUNT(*) FROM users),
                            ':', (SELECT COUNT(*) FROM timer_sessions),
-                           ':', (SELECT COUNT(*) FROM regions)
+                           ':', (SELECT COUNT(*) FROM regions),
+                           ':', (SELECT COUNT(*) FROM training_classes),
+                           ':', (SELECT COUNT(*) FROM class_enrollments),
+                           ':', (SELECT COUNT(*) FROM lab_assignments),
+                           ':', (SELECT COUNT(*) FROM timer_session_assignment_links)
                        )
                 SQL
             )->fetchColumn();
@@ -2375,7 +2427,8 @@ function handle_dashboard(array $segments, string $method): void
                     timer.status,
                     timer.completed_first_try,
                     timer.last_action,
-                    timer.practice_attempt_no
+                    timer.practice_attempt_no,
+                    COALESCE(attribution.class_codes, \'[]\'::jsonb) AS assignment_class_codes
                  FROM timer_sessions timer
                  JOIN lab_catalog active_lab
                    ON active_lab.lab_id = timer.lab_id
@@ -2383,12 +2436,19 @@ function handle_dashboard(array $segments, string $method): void
                  JOIN device_catalog active_device
                    ON active_device.device_id = active_lab.device_id
                   AND active_device.is_active = TRUE
-                 JOIN eligible_dashboard_identities dashboard_identity
+                  JOIN eligible_dashboard_identities dashboard_identity
                    ON dashboard_identity.identity_key = CASE
                        WHEN timer.user_id IS NOT NULL THEN \'user:\' || timer.user_id::text
                        WHEN NULLIF(timer.email, \'\') IS NOT NULL THEN \'email:\' || LOWER(timer.email)
-                       ELSE \'employee:\' || COALESCE(timer.technician_id, \'\')
-                   END
+                        ELSE \'employee:\' || COALESCE(timer.technician_id, \'\')
+                    END
+                  LEFT JOIN LATERAL (
+                      SELECT TO_JSONB(ARRAY_AGG(DISTINCT training.class_code ORDER BY training.class_code)) AS class_codes
+                        FROM timer_session_assignment_links link
+                        JOIN lab_assignments assignment ON assignment.assignment_id = link.assignment_id
+                        JOIN training_classes training ON training.class_id = assignment.class_id_snapshot
+                       WHERE link.timer_session_id = timer.id
+                  ) attribution ON TRUE
                  WHERE (
                      timer.user_id IS NOT NULL
                      OR (timer.email IS NOT NULL AND timer.email != \'\')
@@ -2445,16 +2505,28 @@ function handle_dashboard(array $segments, string $method): void
 
         $technicianRows = $pdo
             ->query(
-                'SELECT directory.*,
-                        active_class.class_code AS active_class_code,
-                        active_class.class_name AS active_class_name
+                <<<'SQL'
+                SELECT directory.*,
+                        assigned_class.class_code AS active_class_code,
+                        assigned_class.class_name AS active_class_name
                    FROM v_ktv_directory directory
-                   LEFT JOIN v_current_training_class active_class
-                     ON active_class.user_id = directory.user_id
+                   LEFT JOIN LATERAL (
+                       SELECT STRING_AGG(DISTINCT training.class_code, ', ' ORDER BY training.class_code) AS class_code,
+                              STRING_AGG(DISTINCT training.class_name, ', ' ORDER BY training.class_name) AS class_name
+                         FROM class_enrollments enrollment
+                         JOIN training_classes training ON training.class_id = enrollment.class_id
+                        WHERE enrollment.user_id = directory.user_id
+                          AND enrollment.status = 'active'
+                          AND enrollment.is_mock = FALSE
+                          AND (enrollment.valid_to IS NULL OR enrollment.valid_to >= CURRENT_DATE)
+                          AND training.status IN ('planned', 'active')
+                          AND training.is_mock = FALSE
+                   ) assigned_class ON TRUE
                   WHERE directory.is_terminated = FALSE
-                  ORDER BY active_class.class_code NULLS LAST,
+                  ORDER BY assigned_class.class_code NULLS LAST,
                            directory.class_code NULLS LAST,
-                           directory.display_name NULLS LAST, directory.email'
+                           directory.display_name NULLS LAST, directory.email
+                SQL
             )
             ->fetchAll();
 
@@ -2520,6 +2592,11 @@ function handle_dashboard(array $segments, string $method): void
         $labKey = (string)($row['lab_id'] ?? '');
         $catalogDeviceId = (string)($labMap[$labKey]['device_id'] ?? '');
         $device = (string)($deviceById[$catalogDeviceId]['device_name'] ?? ($row['device_name'] ?? ''));
+        $decodedClassCodes = json_decode((string)($row['assignment_class_codes'] ?? '[]'), true);
+        $assignmentClassCodes = array_values(array_filter(
+            is_array($decodedClassCodes) ? $decodedClassCodes : [],
+            static fn(mixed $value): bool => is_string($value) && $value !== ''
+        ));
         $sessions[] = [
             'session_id' => (string)$row['session_id'],
             'technician_id' => (string)($roster['employee_id'] ?? ($row['technician_id'] ?? '')),
@@ -2536,11 +2613,13 @@ function handle_dashboard(array $segments, string $method): void
             'completed_first_try' => database_nullable_boolean($row['completed_first_try'] ?? null),
             'practice_attempt_no' => $row['practice_attempt_no'] !== null ? (int)$row['practice_attempt_no'] : null,
             'last_action' => (string)($row['last_action'] ?? ''),
+            'assignment_class_codes' => $assignmentClassCodes,
         ];
 
     }
 
     $assignments = [];
+    $assignmentsAvailable = true;
     $includeAssignments = !array_key_exists('include_assignments', $_GET)
         || filter_var($_GET['include_assignments'], FILTER_VALIDATE_BOOLEAN);
     if ($includeAssignments) {
@@ -2559,8 +2638,16 @@ function handle_dashboard(array $segments, string $method): void
                   FROM v_lab_assignment_progress progress
                   JOIN users roster ON roster.user_id = progress.user_id
                   JOIN training_classes training ON training.class_id = progress.class_id
+                  JOIN lab_assignments assignment ON assignment.assignment_id = progress.assignment_id
+                  LEFT JOIN class_lab_assignments class_assignment
+                    ON class_assignment.class_lab_assignment_id = assignment.class_lab_assignment_id
                  WHERE roster.is_terminated = FALSE
                    AND training.is_mock = FALSE
+                   AND progress.assignment_status <> 'waived'
+                   AND (
+                       class_assignment.class_lab_assignment_id IS NULL
+                       OR class_assignment.status IN ('assigned', 'active', 'closed')
+                   )
                  ORDER BY progress.class_code, progress.email,
                           progress.device_name, progress.lab_name
                 SQL
@@ -2581,6 +2668,7 @@ function handle_dashboard(array $segments, string $method): void
                 ];
             }
         } catch (Throwable $e) {
+            $assignmentsAvailable = false;
             report_exception($e, 'dashboard-assignments');
         }
     }
@@ -2612,6 +2700,7 @@ function handle_dashboard(array $segments, string $method): void
         'labs' => array_values($labMap),
         'technicians' => $dashboardTechnicians,
         'assignments' => $assignments,
+        'assignments_available' => $includeAssignments ? $assignmentsAvailable : null,
     ]]);
 }
 

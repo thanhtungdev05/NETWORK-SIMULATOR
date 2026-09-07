@@ -621,6 +621,17 @@ body {
     margin-block: 18px;
 }
 
+.detail-report-quality-note {
+    margin: 14px 0 0;
+    padding: 10px 12px;
+    color: #92400e;
+    border: 1px solid #f6d38b;
+    border-radius: 10px;
+    background: #fffbeb;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
 .detail-report-stat {
     min-height: 92px;
     border: 1px solid var(--ui-border);

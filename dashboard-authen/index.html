@@ -7,8 +7,8 @@
     <meta name="theme-color" content="#f3f6fb">
     <meta name="color-scheme" content="light">
     <title>Dashboard giám sát thực hành KTV | FTC</title>
-    <link rel="stylesheet" href="css/styles.css?v=20260904-dashboard-clarity-v4">
-    <link rel="stylesheet" href="css/dashboard-professional.css?v=20260903-class-v2">
+    <link rel="stylesheet" href="css/styles.css?v=20260907-class-edit-v7">
+    <link rel="stylesheet" href="css/dashboard-professional.css?v=20260907-class-edit-v7">
 </head>
 
 <body>
@@ -307,7 +307,7 @@
                             <div class="detail-section-header ktv-monthly-header">
                                 <div>
                                     <h4>Xu hướng hoạt động theo tháng</h4>
-                                    <span>Lượt thực hành trong từng tháng và tiến độ hoàn thành lũy kế đến cuối tháng</span>
+                                    <span>Lượt thực hành trong từng tháng và tiến độ hoàn thành lũy kế đến ngày chốt; tháng hiện tại chốt đến hôm nay</span>
                                 </div>
                                 <div class="ktv-monthly-summary" id="overviewMonthlySummary"></div>
                             </div>
@@ -565,7 +565,7 @@
                                 <div>
                                     <span class="detail-report-eyebrow">Báo cáo quản lý đào tạo</span>
                                     <h2>Tiến độ thực hành theo Khu vực / Chi nhánh</h2>
-                                    <p>Bảng tổng hợp tỷ lệ KTV hoàn thành từng bài lab trên tổng số KTV được giao của mỗi đơn vị.</p>
+                                    <p>Lượt thực hành được tính trong kỳ; tiến độ hoàn thành và số KTV được giao được chốt lũy kế tại ngày cuối kỳ.</p>
                                 </div>
                                 <div class="detail-report-period">
                                     <span>Kỳ báo cáo</span>
@@ -573,6 +573,8 @@
                                     <small>Dữ liệu cập nhật theo bộ lọc thời gian</small>
                                 </div>
                             </div>
+
+                            <p id="detailReportDataQuality" class="detail-report-quality-note" role="status" hidden></p>
 
                             <div class="detail-report-summary" aria-label="Tóm tắt báo cáo chi tiết">
                                 <div class="detail-report-stat report-stat-blue">
@@ -597,7 +599,7 @@
                                 <div class="detail-report-table-header">
                                     <div>
                                         <h3>Ma trận hoàn thành theo Khu vực / Chi nhánh</h3>
-                                        <span>Mỗi ô hiển thị KTV hoàn thành / KTV được giao. “—” là chưa phân công bài lab này.</span>
+                                        <span>Mỗi ô hiển thị KTV đã hoàn thành lũy kế / KTV còn được giao tại cuối kỳ. “—” là chưa phân công bài lab này.</span>
                                     </div>
                                     <div class="detail-report-legend" aria-label="Chú thích màu tỷ lệ hoàn thành">
                                         <span><i class="legend-high"></i> Từ 80% trở lên</span>
@@ -840,7 +842,7 @@
                     <div class="roster-panel" id="classListPanel" role="tabpanel">
                         <div class="roster-table-wrapper" tabindex="0" aria-label="Danh sách lớp học">
                             <table class="roster-table">
-                                <thead><tr><th>Mã lớp</th><th>Tên lớp</th><th>Hiệu lực</th><th>Trạng thái</th><th>KTV</th><th>Thiết bị</th></tr></thead>
+                                <thead><tr><th>Mã lớp</th><th>Tên lớp</th><th>Hiệu lực từ</th><th>Trạng thái</th><th>KTV</th><th>Thiết bị</th><th><span class="sr-only">Thao tác</span></th></tr></thead>
                                 <tbody id="classTableBody"></tbody>
                             </table>
                         </div>
@@ -849,6 +851,7 @@
 
                     <div class="roster-panel" id="classCreatePanel" role="tabpanel" hidden>
                         <form id="classCreateForm" class="class-create-form" autocomplete="off">
+                            <h3 id="classFormTitle">Đăng ký lớp mới</h3>
                             <div class="class-form-grid">
                                 <label class="roster-form-row">Tên lớp
                                     <input type="text" id="className" maxlength="200" required placeholder="Đặt tên cho lớp mới (Ví dụ: BDG01, HNI01, ...)">
@@ -905,6 +908,7 @@
 
                             <div class="roster-form-actions">
                                 <button type="submit" class="button primary" id="classCreateBtn">Tạo lớp và giao bài</button>
+                                <button type="button" class="button secondary" id="classEditCancelBtn" hidden>Hủy chỉnh sửa</button>
                                 <span id="classCreateResult" role="status" aria-live="polite"></span>
                             </div>
                         </form>
@@ -1479,7 +1483,7 @@
 
     <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
 
-    <script src="js/app.js?v=20260904-dashboard-clarity-v4"></script>
+    <script src="js/app.js?v=20260907-class-edit-v7"></script>
 </body>
 
 </html>

@@ -121,7 +121,7 @@ class DashboardUnifiedControlsContractTests(unittest.TestCase):
         self.assertIn("Khác kỳ báo cáo đang chọn", self.javascript)
 
     def test_asset_version_prevents_stale_control_styles(self):
-        self.assertEqual(self.html.count("20260904-dashboard-clarity-v4"), 2)
+        self.assertEqual(self.html.count("20260907-class-edit-v7"), 3)
 
 
 if __name__ == "__main__":

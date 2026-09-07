@@ -116,7 +116,10 @@ class FtcUser(models.Model):
         related_name='users',
         verbose_name='Khu vực/chi nhánh hiện tại',
     )
-    class_code = models.CharField(max_length=50, blank=True, null=True, verbose_name='Mã lớp')
+    class_code = models.CharField(
+        max_length=50, blank=True, null=True,
+        verbose_name='Mã lớp nguồn (legacy, không dùng cho báo cáo)',
+    )
     training_start_date = models.DateField(blank=True, null=True, verbose_name='Bắt đầu đào tạo')
     training_end_date = models.DateField(blank=True, null=True, verbose_name='Kết thúc đào tạo')
     is_terminated = models.BooleanField(default=False, verbose_name='Đã nghỉ việc')
@@ -140,15 +143,84 @@ class FtcUser(models.Model):
         return f"{self.display_name or self.email} ({self.employee_id or '—'})"
 
 
+class Curriculum(models.Model):
+    curriculum_id = models.UUIDField(primary_key=True, default=uuid.uuid4, verbose_name='ID chương trình')
+    curriculum_code = models.CharField(max_length=80, verbose_name='Mã chương trình')
+    version = models.CharField(max_length=30, verbose_name='Phiên bản')
+    curriculum_name = models.TextField(verbose_name='Tên chương trình')
+    description = models.TextField(blank=True, null=True, verbose_name='Mô tả')
+    status = models.CharField(max_length=20, verbose_name='Trạng thái')
+    is_default = models.BooleanField(default=False, verbose_name='Mặc định')
+    effective_from = models.DateField(blank=True, null=True, verbose_name='Hiệu lực từ')
+    effective_to = models.DateField(blank=True, null=True, verbose_name='Hiệu lực đến')
+    created_at = models.DateTimeField(verbose_name='Ngày tạo')
+    updated_at = models.DateTimeField(verbose_name='Cập nhật')
+
+    class Meta:
+        managed = False
+        db_table = 'curricula'
+        ordering = ['curriculum_code', '-version']
+        verbose_name = 'Chương trình đào tạo'
+        verbose_name_plural = 'Chương trình đào tạo'
+
+    def __str__(self):
+        return f"{self.curriculum_code} v{self.version}"
+
+
+class CurriculumLab(models.Model):
+    curriculum_lab_id = models.UUIDField(primary_key=True, default=uuid.uuid4, verbose_name='ID bài trong chương trình')
+    curriculum = models.ForeignKey(
+        Curriculum, on_delete=models.PROTECT, to_field='curriculum_id', db_column='curriculum_id',
+        related_name='curriculum_labs', verbose_name='Chương trình',
+    )
+    lab = models.ForeignKey(
+        LabCatalog, on_delete=models.PROTECT, to_field='lab_id', db_column='lab_id',
+        related_name='curriculum_entries', verbose_name='Bài lab',
+    )
+    required_mode = models.CharField(max_length=20, verbose_name='Chế độ yêu cầu')
+    is_required = models.BooleanField(default=True, verbose_name='Bắt buộc')
+    sort_order = models.IntegerField(default=0, verbose_name='Thứ tự')
+    available_offset_days = models.IntegerField(default=0, verbose_name='Mở sau (ngày)')
+    due_offset_days = models.IntegerField(blank=True, null=True, verbose_name='Hạn sau (ngày)')
+    passing_score = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True, verbose_name='Điểm đạt')
+    max_attempts = models.IntegerField(blank=True, null=True, verbose_name='Số lần tối đa')
+    created_at = models.DateTimeField(verbose_name='Ngày tạo')
+    updated_at = models.DateTimeField(verbose_name='Cập nhật')
+
+    class Meta:
+        managed = False
+        db_table = 'curriculum_labs'
+        ordering = ['curriculum_id', 'sort_order', 'lab_id']
+        verbose_name = 'Bài lab trong chương trình'
+        verbose_name_plural = 'Bài lab trong chương trình'
+
+    def __str__(self):
+        return f"{self.curriculum} · {self.lab}"
+
+
 class TrainingClass(models.Model):
     class_id = models.UUIDField(primary_key=True, default=uuid.uuid4, verbose_name='ID lớp')
     class_code = models.CharField(max_length=50, unique=True, verbose_name='Mã lớp')
     class_name = models.TextField(verbose_name='Tên lớp')
     region_name = models.CharField(max_length=50, verbose_name='Khu vực lớp')
+    region = models.ForeignKey(
+        'Region', on_delete=models.PROTECT, null=True, blank=True,
+        to_field='region_id', db_column='region_id', related_name='training_classes',
+        verbose_name='Khu vực chuẩn',
+    )
+    curriculum = models.ForeignKey(
+        Curriculum, on_delete=models.PROTECT, null=True, blank=True,
+        to_field='curriculum_id', db_column='curriculum_id', related_name='training_classes',
+        verbose_name='Chương trình',
+    )
     start_date = models.DateField(verbose_name='Hiệu lực từ')
-    end_date = models.DateField(blank=True, null=True, verbose_name='Hiệu lực đến')
     capacity = models.IntegerField(blank=True, null=True, verbose_name='Sức chứa')
     status = models.CharField(max_length=20, verbose_name='Trạng thái')
+    instructor = models.ForeignKey(
+        FtcUser, on_delete=models.SET_NULL, null=True, blank=True,
+        to_field='user_id', db_column='instructor_user_id', related_name='instructed_training_classes',
+        verbose_name='Giảng viên',
+    )
     created_by = models.ForeignKey(
         FtcUser, on_delete=models.SET_NULL, null=True, blank=True,
         to_field='user_id', db_column='created_by', related_name='created_training_classes',
@@ -156,6 +228,7 @@ class TrainingClass(models.Model):
     )
     description = models.TextField(blank=True, null=True, verbose_name='Mô tả')
     is_mock = models.BooleanField(default=False, verbose_name='Dữ liệu Test')
+    seed_batch = models.CharField(max_length=100, blank=True, null=True, verbose_name='Batch seed')
     created_at = models.DateTimeField(verbose_name='Ngày tạo')
     updated_at = models.DateTimeField(verbose_name='Cập nhật')
 
@@ -181,8 +254,11 @@ class ClassEnrollment(models.Model):
         related_name='class_enrollments', verbose_name='KTV',
     )
     status = models.CharField(max_length=20, verbose_name='Trạng thái')
+    source_class_code = models.CharField(max_length=50, blank=True, null=True, verbose_name='Mã lớp nguồn')
     valid_from = models.DateField(verbose_name='Hiệu lực từ')
     valid_to = models.DateField(blank=True, null=True, verbose_name='Hiệu lực đến')
+    is_mock = models.BooleanField(default=False, verbose_name='Dữ liệu Test')
+    seed_batch = models.CharField(max_length=100, blank=True, null=True, verbose_name='Nguồn tạo')
     created_at = models.DateTimeField(verbose_name='Ngày tạo')
     updated_at = models.DateTimeField(verbose_name='Cập nhật')
 
@@ -192,6 +268,85 @@ class ClassEnrollment(models.Model):
         ordering = ['-valid_from', '-enrollment_id']
         verbose_name = 'class_enrollments'
         verbose_name_plural = 'class_enrollments'
+
+    def __str__(self):
+        return f"{self.training_class.class_code} · {self.user}"
+
+
+class ClassLabAssignment(models.Model):
+    class_lab_assignment_id = models.UUIDField(primary_key=True, default=uuid.uuid4, verbose_name='ID giao bài lớp')
+    training_class = models.ForeignKey(
+        TrainingClass, on_delete=models.PROTECT, to_field='class_id', db_column='class_id',
+        related_name='class_lab_assignments', verbose_name='Lớp',
+    )
+    curriculum_lab = models.ForeignKey(
+        CurriculumLab, on_delete=models.PROTECT, to_field='curriculum_lab_id', db_column='curriculum_lab_id',
+        related_name='class_assignments', verbose_name='Bài lab',
+    )
+    assigned_at = models.DateTimeField(verbose_name='Giao lúc')
+    due_at = models.DateTimeField(blank=True, null=True, verbose_name='Hạn hoàn thành')
+    status = models.CharField(max_length=20, verbose_name='Trạng thái')
+    assignment_source = models.CharField(max_length=30, verbose_name='Nguồn giao')
+    is_inferred = models.BooleanField(default=False, verbose_name='Suy diễn')
+    created_at = models.DateTimeField(verbose_name='Ngày tạo')
+    updated_at = models.DateTimeField(verbose_name='Cập nhật')
+
+    class Meta:
+        managed = False
+        db_table = 'class_lab_assignments'
+        ordering = ['training_class_id', 'curriculum_lab__sort_order']
+        verbose_name = 'Bài giao cho lớp'
+        verbose_name_plural = 'Bài giao cho lớp'
+
+    def __str__(self):
+        return f"{self.training_class.class_code} · {self.curriculum_lab.lab.lab_name}"
+
+
+class LabAssignment(models.Model):
+    assignment_id = models.UUIDField(primary_key=True, default=uuid.uuid4, verbose_name='ID phân công')
+    enrollment = models.ForeignKey(
+        ClassEnrollment, on_delete=models.PROTECT, to_field='enrollment_id', db_column='enrollment_id',
+        related_name='lab_assignments', verbose_name='Xếp lớp',
+    )
+    class_lab_assignment = models.ForeignKey(
+        ClassLabAssignment, on_delete=models.PROTECT, null=True, blank=True,
+        to_field='class_lab_assignment_id', db_column='class_lab_assignment_id',
+        related_name='member_assignments', verbose_name='Bài giao cấp lớp',
+    )
+    curriculum_lab = models.ForeignKey(
+        CurriculumLab, on_delete=models.PROTECT, to_field='curriculum_lab_id', db_column='curriculum_lab_id',
+        related_name='member_assignments', verbose_name='Bài lab',
+    )
+    assigned_at = models.DateTimeField(verbose_name='Giao lúc')
+    due_at = models.DateTimeField(blank=True, null=True, verbose_name='Hạn hoàn thành')
+    status = models.CharField(max_length=20, verbose_name='Trạng thái')
+    first_pass_attempt_no = models.IntegerField(blank=True, null=True, verbose_name='Lần đạt đầu tiên')
+    first_try_evidence = models.CharField(max_length=24, verbose_name='Chứng cứ lần đầu')
+    completed_at = models.DateTimeField(blank=True, null=True, verbose_name='Hoàn thành lúc')
+    passed_at = models.DateTimeField(blank=True, null=True, verbose_name='Đạt lúc')
+    region_snapshot = models.ForeignKey(
+        'Region', on_delete=models.PROTECT, null=True, blank=True,
+        to_field='region_id', db_column='region_id_snapshot', related_name='lab_assignment_snapshots',
+        verbose_name='Khu vực lúc giao',
+    )
+    class_snapshot = models.ForeignKey(
+        TrainingClass, on_delete=models.PROTECT, to_field='class_id', db_column='class_id_snapshot',
+        related_name='member_lab_assignments', verbose_name='Lớp lúc giao',
+    )
+    assignment_source = models.CharField(max_length=30, verbose_name='Nguồn giao')
+    is_inferred = models.BooleanField(default=False, verbose_name='Suy diễn')
+    created_at = models.DateTimeField(verbose_name='Ngày tạo')
+    updated_at = models.DateTimeField(verbose_name='Cập nhật')
+
+    class Meta:
+        managed = False
+        db_table = 'lab_assignments'
+        ordering = ['-assigned_at', 'assignment_id']
+        verbose_name = 'Bài giao cho KTV'
+        verbose_name_plural = 'Bài giao cho KTV'
+
+    def __str__(self):
+        return f"{self.enrollment.user} · {self.curriculum_lab.lab.lab_name}"
 
 
 class AssignmentImportLog(models.Model):
@@ -301,6 +456,30 @@ class TimerSession(models.Model):
 
     def __str__(self):
         return f"Session #{self.id} - {self.name or self.email} ({self.lab_name})"
+
+
+class TimerSessionAssignmentLink(models.Model):
+    pk = models.CompositePrimaryKey('timer_session', 'assignment')
+    timer_session = models.ForeignKey(
+        TimerSession, on_delete=models.CASCADE, to_field='id', db_column='timer_session_id',
+        related_name='assignment_links', verbose_name='Phiên thực hành',
+    )
+    assignment = models.ForeignKey(
+        LabAssignment, on_delete=models.PROTECT, to_field='assignment_id', db_column='assignment_id',
+        related_name='timer_session_links', verbose_name='Phân công',
+    )
+    link_source = models.CharField(max_length=30, verbose_name='Nguồn liên kết')
+    linked_at = models.DateTimeField(verbose_name='Liên kết lúc')
+
+    class Meta:
+        managed = False
+        db_table = 'timer_session_assignment_links'
+        ordering = ['-linked_at', 'timer_session_id', 'assignment_id']
+        verbose_name = 'Liên kết phiên–phân công'
+        verbose_name_plural = 'Liên kết phiên–phân công'
+
+    def __str__(self):
+        return f"Session #{self.timer_session_id} · {self.assignment_id}"
 
 
 # ===========================================================

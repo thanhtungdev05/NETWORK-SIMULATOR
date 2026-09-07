@@ -22,7 +22,6 @@ const LEARNER_HISTORY_PAGE_SIZE = 6;
 
 const now = new Date();
 const currentMonthFirst = new Date(now.getFullYear(), now.getMonth(), 1);
-const currentMonthLast = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 const fmtDate = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
 const state = {
@@ -30,7 +29,7 @@ const state = {
     isAdmin: false,
     canExportReports: false,
     startDate: fmtDate(currentMonthFirst),
-    endDate: fmtDate(currentMonthLast),
+    endDate: fmtDate(now),
     tempStartDate: '',
     tempEndDate: '',
     calendarMonth: new Date(now.getFullYear(), now.getMonth(), 1),
@@ -140,6 +139,8 @@ const state = {
     classPendingMembers: new Map(),
     classSelectedDevices: new Set(),
     classMemberSearch: '',
+    classEditingId: '',
+    classEditingUpdatedAt: '',
     classLoaded: false,
     classCatalogLoaded: false,
     classInitialized: false,
@@ -596,11 +597,11 @@ function renderKpis() {
                 const attempts = formatNumber.format(currentMetrics.durationAttempts || 0);
                 contextElement.textContent = `${periods.currentLabel} • ${known}/${attempts} lượt có thời lượng • Chưa đủ mẫu tin cậy`;
             } else if (definition.key === 'completed' || definition.key === 'rate') {
-                contextElement.textContent = `${periods.currentLabel} • ${formatNumber.format(currentMetrics.completed)}/${formatNumber.format(currentMetrics.assigned)} cặp KTV–Lab đã đạt`;
+                contextElement.textContent = `${periods.currentLabel} • Lũy kế đến cuối kỳ: ${formatNumber.format(currentMetrics.completed)}/${formatNumber.format(currentMetrics.assigned)} cặp KTV–Lab đã đạt`;
             } else if (definition.key === 'passRate') {
                 contextElement.textContent = `${periods.currentLabel} • ${formatNumber.format(currentMetrics.graded)} lượt đã có kết quả chấm`;
             } else if (definition.key === 'firstTryRate') {
-                contextElement.textContent = `${periods.currentLabel} • ${formatNumber.format(currentMetrics.completed)} cặp KTV–Lab đã đạt làm mẫu`;
+                contextElement.textContent = `${periods.currentLabel} • ${formatNumber.format(currentMetrics.completed)} cặp KTV–Lab đã đạt lũy kế làm mẫu`;
             } else {
                 contextElement.textContent = `${periods.currentLabel} • Lũy kế ${formatMetric(lifetimeValue, definition)}${definition.type === 'count' ? ` ${definition.unit}` : ''}`;
             }
@@ -1539,6 +1540,15 @@ function buildAuthoritativeRegionRows(reportRows = [], columns = []) {
 function renderAuthoritativeDetailedReport(reportMatrix) {
     if (!els.detailReportHead || !els.detailReportBody || !els.detailReportFoot) return;
     const groups = reportMatrix.device_groups || [];
+    const qualityNote = document.getElementById('detailReportDataQuality');
+    const regionQuality = dashboardReport?.meta?.data_quality || reportMatrix.data_quality || {};
+    const fallbackPairs = Number(regionQuality.region_fallback_pairs) || 0;
+    if (qualityNote) {
+        qualityNote.hidden = fallbackPairs === 0;
+        qualityNote.textContent = fallbackPairs
+            ? `${formatNumber.format(fallbackPairs)} cặp KTV–Lab thiếu snapshot khu vực; báo cáo đang dùng vùng hiện tại của KTV cho các cặp này.`
+            : '';
+    }
     const columns = groups.flatMap((group, groupIndex) => (group.labs || []).map((lab, labIndex) => ({
         device: group.device?.name || group.device?.device_name || group.device_name || '',
         deviceId: group.device?.device_id || group.device_id || '',
@@ -1706,6 +1716,8 @@ function renderDetailedReport(rows) {
         renderAuthoritativeDetailedReport(dashboardReport.matrix);
         return;
     }
+    const qualityNote = document.getElementById('detailReportDataQuality');
+    if (qualityNote) qualityNote.hidden = true;
 
     const groups = getDetailReportDeviceGroups(rows);
     const columns = groups.flatMap((group, groupIndex) => group.labs.map((lab, labIndex) => ({
@@ -2237,6 +2249,9 @@ function mapApiSessions(apiSessions = []) {
             learner,
             region: normalizeRegionName(technician?.regionName || item.region_name || item.region || item.technician?.region, learner),
             classCode: technician?.classCode || item.class_code || '',
+            assignmentClassCodes: Array.isArray(item.assignment_class_codes)
+                ? [...new Set(item.assignment_class_codes.map(String).filter(Boolean))]
+                : [],
             jobTitle: technician?.jobTitle || item.job_title || '',
             unitCode: technician?.unitCode || item.unit_code || '',
             unitName: technician?.unitName || item.unit_name || '',
@@ -2403,17 +2418,18 @@ function buildDashboardSignature(data) {
         completedCount,
         knownFirstTryCount,
         firstTryCount,
+        data.data_version || '',
         data.report_meta?.data_version || ''
     ].join('|');
 }
 
 async function fetchDashboardData(versionHint = '') {
     const allParams = new URLSearchParams();
-    // The current curriculum assigns every active catalog lab to every active KTV.
-    // Sending the expanded KTV x lab matrix duplicates data already represented by
-    // technicianCatalog + deviceCatalog and can add tens of thousands of rows.
-    const assignmentsRequested = false;
-    allParams.set('include_assignments', '0');
+    // Expanded assignment rows are required only by class-level views. Once
+    // loaded, refresh them together with the rest of the dashboard data.
+    const assignmentsRequested = state.assignmentsLoaded
+        || ['instructors', 'class_matrix', 'analytics'].includes(activeDashboardView);
+    allParams.set('include_assignments', assignmentsRequested ? '1' : '0');
     const reportRequest = fetch(`${API_BASE_URL}/dashboard/report?${dashboardReportQuery()}`).then(async response => {
         if (!response.ok) throw new Error(`API báo cáo trả về HTTP ${response.status}`);
         return (await response.json()).data || null;
@@ -2427,6 +2443,9 @@ async function fetchDashboardData(versionHint = '') {
     if (!response.ok) throw new Error(`API dữ liệu chi tiết trả về HTTP ${response.status}`);
     const [payload, [reportResult, versionResult]] = await Promise.all([response.json(), optionalRequests]);
     const data = payload.data || {};
+    if (assignmentsRequested && data.assignments_available !== true) {
+        throw new Error('Dữ liệu phân lớp hiện không khả dụng.');
+    }
     const report = reportResult.status === 'fulfilled' ? reportResult.value : dashboardReport;
     const reportStatus = reportResult.status === 'fulfilled' ? 'ready' : (report ? 'stale' : 'unavailable');
     const version = versionResult.status === 'fulfilled' ? String(versionResult.value || '') : String(versionHint || lastDashboardVersion || '');
@@ -2447,10 +2466,11 @@ async function fetchDashboardData(versionHint = '') {
         techniciansAuthoritative,
         assignments: normalizeTrainingAssignments(data.assignments || []),
         assignmentsRequested,
+        assignmentsAvailable: data.assignments_available === true,
         report,
         reportStatus,
         version,
-        raw: { ...data, report_meta: report?.meta || null }
+        raw: { ...data, data_version: version, report_meta: report?.meta || null }
     };
 }
 
@@ -2458,7 +2478,7 @@ function applyDashboardData(data) {
     sessions = data.sessions;
     deviceCatalog = data.deviceCatalog;
     technicianCatalog = data.technicians || [];
-    if (data.assignmentsRequested) {
+    if (data.assignmentsRequested && data.assignmentsAvailable) {
         trainingAssignments = data.assignments || [];
         state.assignmentsLoaded = true;
     }
@@ -3412,6 +3432,19 @@ function getInstructorLearners() {
 
 function getDatabaseInstructorClasses() {
     const classes = new Map();
+    if (state.assignmentsLoaded) {
+        trainingAssignments.forEach(item => {
+            if (!item.classCode || !item.learner) return;
+            if (!classes.has(item.classCode)) {
+                classes.set(item.classCode, {
+                    code: item.classCode,
+                    name: item.className || item.classCode,
+                    members: []
+                });
+            }
+            classes.get(item.classCode).members.push(item.learner);
+        });
+    } else {
     technicianCatalog
         .filter(item => !item.isTerminated && item.email)
         .forEach(item => {
@@ -3426,6 +3459,7 @@ function getDatabaseInstructorClasses() {
             }
             classes.get(key).members.push(item.email);
         });
+    }
     return [...classes.entries()]
         .sort(([, left], [, right]) => left.name.localeCompare(right.name, 'vi'))
         .map(([key, item]) => ({
@@ -3501,10 +3535,10 @@ function getInstructorDeviceGroups(selectedClass = null) {
         return groupMap.get(name);
     };
 
-    if (trainingAssignments.length && selectedClass) {
-        const members = new Set(selectedClass.members || []);
+    if (state.assignmentsLoaded) {
+        const members = new Set(selectedClass?.members || []);
         trainingAssignments
-            .filter(item => item.classCode === selectedClass.code && members.has(item.learner))
+            .filter(item => !selectedClass || (item.classCode === selectedClass.code && members.has(item.learner)))
             .forEach(item => {
                 const group = ensureGroup(item.device);
                 if (item.lab && !group.labs.includes(item.lab)) group.labs.push(item.lab);
@@ -3805,7 +3839,7 @@ function initUnifiedDashboardControls() {
 
 function initializeInstructorClasses() {
     const databaseClasses = getDatabaseInstructorClasses();
-    state.instructorClasses = technicianCatalogAuthoritative ? databaseClasses : [];
+    state.instructorClasses = (state.assignmentsLoaded || technicianCatalogAuthoritative) ? databaseClasses : [];
     state.instructorClassesLoaded = true;
 
     if (!state.instructorClasses.some(item => item.id === state.instructorActiveClassId)) {
@@ -3814,7 +3848,7 @@ function initializeInstructorClasses() {
 }
 
 function getInstructorClassProgress(selectedClass, selectedGroups) {
-    if (trainingAssignments.length) {
+    if (state.assignmentsLoaded) {
         const selectedMembers = new Set(selectedClass?.members || []);
         const assignmentByLearnerLab = new Map();
         trainingAssignments
@@ -4215,6 +4249,9 @@ function getClassMatrixData() {
     if (!classes.length) {
         classes = getDatabaseInstructorClasses();
     }
+    const allClassLearners = state.assignmentsLoaded
+        ? [...new Set(classes.flatMap(item => item.members || []))]
+        : getInstructorLearners();
 
     if (!state.classMatrixSelectedClass && classes.length) {
         state.classMatrixSelectedClass = classes[0].id;
@@ -4223,7 +4260,7 @@ function getClassMatrixData() {
     let selectedClass = classes.find(c => c.id === state.classMatrixSelectedClass) || null;
     let learners = [];
     if (state.classMatrixSelectedClass === 'all') {
-        learners = getInstructorLearners();
+        learners = allClassLearners;
     } else if (selectedClass) {
         learners = selectedClass.members || [];
     } else if (classes.length) {
@@ -4271,10 +4308,14 @@ function getClassMatrixData() {
 
     // Build assignment map if trainingAssignments exists
     const assignmentMap = new Map();
-    if (trainingAssignments.length) {
+    const assignmentByLearnerLab = new Map();
+    if (state.assignmentsLoaded) {
         trainingAssignments.forEach(a => {
             const key = `${String(a.classCode || '')}\u001f${String(a.learner || '').toLowerCase()}\u001f${a.device}\u001f${a.lab}`;
             assignmentMap.set(key, a);
+            const globalKey = `${String(a.learner || '').toLowerCase()}\u001f${a.device}\u001f${a.lab}`;
+            const existing = assignmentByLearnerLab.get(globalKey);
+            if (!existing || (!existing.completed && a.completed)) assignmentByLearnerLab.set(globalKey, a);
         });
     }
 
@@ -4282,8 +4323,12 @@ function getClassMatrixData() {
     const sessionsByCell = new Map();
     sessions.forEach(s => {
         if (s.mode === 'Hướng dẫn') return;
-        const sessionClassCode = String(s.classCode || technicianByIdentity.get(String(s.learner || '').toLowerCase())?.classCode || '');
-        if (state.classMatrixSelectedClass !== 'all' && selectedClass?.code && sessionClassCode && sessionClassCode !== String(selectedClass.code)) return;
+        if (state.assignmentsLoaded && state.classMatrixSelectedClass === 'all' && !s.assignmentClassCodes.length) return;
+        if (
+            state.classMatrixSelectedClass !== 'all'
+            && selectedClass?.code
+            && !s.assignmentClassCodes.includes(String(selectedClass.code))
+        ) return;
         const learnerKey = String(s.learner || '').toLowerCase();
         const cellKey = `${learnerKey}\u001f${s.device}\u001f${s.lab}`;
         if (!sessionsByCell.has(cellKey)) sessionsByCell.set(cellKey, []);
@@ -4304,13 +4349,15 @@ function getClassMatrixData() {
 
         const cells = columns.map(col => {
             const colKey = `${col.device}\u001f${col.lab}`;
-            const learnerClassCode = String(l.classCode || selectedClass?.code || '');
-            const assignKey = `${learnerClassCode}\u001f${l.email.toLowerCase()}\u001f${col.device}\u001f${col.lab}`;
-            const assign = assignmentMap.get(assignKey);
+            const globalAssignKey = `${l.email.toLowerCase()}\u001f${col.device}\u001f${col.lab}`;
+            const classAssignKey = `${String(selectedClass?.code || '')}\u001f${globalAssignKey}`;
+            const assign = state.classMatrixSelectedClass === 'all'
+                ? assignmentByLearnerLab.get(globalAssignKey)
+                : assignmentMap.get(classAssignKey);
             const labSessions = sessionsByCell.get(`${learnerKey}\u001f${col.device}\u001f${col.lab}`) || [];
             const practiceSessions = labSessions.filter(session => session.mode === 'Thực hành');
-            const isAssigned = trainingAssignments.length === 0 ? true : Boolean(assign);
-            const isCompleted = isAssigned && (Boolean(assign?.completed) || labSessions.some(isSuccessfulSession));
+            const isAssigned = Boolean(assign);
+            const isCompleted = isAssigned && Boolean(assign?.completed);
             const attempts = practiceSessions.length;
             const attempted = attempts > 0;
 
@@ -4383,6 +4430,7 @@ function getClassMatrixData() {
         rows,
         filteredCount: rows.length,
         totalKtv: mappedLearners.length,
+        allLearnersCount: allClassLearners.length,
         totalSessions: totalClassAttempts,
         totalAssignedAll,
         totalCompletedAll,
@@ -4406,7 +4454,7 @@ function renderClassMatrixReport() {
     // Populate class select
     if (classSelect) {
         const optionsHtml = [
-            `<option value="all">Tất cả lớp (${getInstructorLearners().length} KTV)</option>`,
+            `<option value="all">Tất cả lớp (${data.allLearnersCount} KTV)</option>`,
             ...data.classes.map(c => `<option value="${escapeHTML(c.id)}">${escapeHTML(c.name)} · ${c.members.length} KTV</option>`)
         ].join('');
         if (classSelect.innerHTML !== optionsHtml) {
@@ -5303,9 +5351,14 @@ function getReportExportPreview(type) {
 
 async function ensureTrainingAssignmentsLoaded({ force = false } = {}) {
     if (state.assignmentsLoaded && !force) return trainingAssignments;
-    // Empty assignments intentionally activates the catalog-based calculation:
-    // every active lab is assigned and completion is derived from session data.
-    trainingAssignments = [];
+    const response = await fetch(`${API_BASE_URL}/dashboard/all?include_assignments=1`);
+    if (!response.ok) throw new Error(`API tiến độ lớp trả về HTTP ${response.status}`);
+    const payload = await response.json();
+    const data = payload.data || {};
+    if (data.assignments_available !== true) {
+        throw new Error('Dữ liệu phân lớp hiện không khả dụng.');
+    }
+    trainingAssignments = normalizeTrainingAssignments(data.assignments || []);
     state.assignmentsLoaded = true;
     initializeInstructorClasses();
     if (['instructors', 'class_matrix', 'analytics'].includes(activeDashboardView)) renderAll();
@@ -6836,7 +6889,7 @@ function classStatusLabel(status) {
 
 async function loadTrainingClasses() {
     const body = document.getElementById('classTableBody');
-    if (body) body.innerHTML = '<tr><td colspan="6">Đang tải danh sách lớp...</td></tr>';
+    if (body) body.innerHTML = '<tr><td colspan="7">Đang tải danh sách lớp...</td></tr>';
     try {
         const response = await fetch(`${API_BASE_URL}/classes`, { credentials: 'include' });
         const json = await response.json().catch(() => ({}));
@@ -6847,7 +6900,7 @@ async function loadTrainingClasses() {
         return true;
     } catch (error) {
         console.error('Class list error:', error);
-        if (body) body.innerHTML = `<tr><td colspan="6">${escapeHTML(error.message || 'Không thể tải danh sách lớp.')}</td></tr>`;
+        if (body) body.innerHTML = `<tr><td colspan="7">${escapeHTML(error.message || 'Không thể tải danh sách lớp.')}</td></tr>`;
         return false;
     }
 }
@@ -6861,13 +6914,87 @@ function renderTrainingClasses() {
         <tr>
             <td><strong>${escapeHTML(item.class_code || '')}</strong></td>
             <td>${escapeHTML(item.class_name || '')}</td>
-            <td>${escapeHTML(classDateLabel(item.start_date))} – ${escapeHTML(classDateLabel(item.end_date))}</td>
+            <td>${escapeHTML(classDateLabel(item.start_date))}</td>
             <td>${escapeHTML(classStatusLabel(item.status || ''))}</td>
             <td>${Number(item.member_count || 0)}</td>
             <td>${Number(item.device_count || 0)}</td>
+            <td><button type="button" class="button secondary class-edit-btn" data-edit-class-id="${escapeHTML(item.class_id || '')}" aria-label="Chỉnh sửa lớp ${escapeHTML(item.class_code || '')}">Sửa</button></td>
         </tr>
     `).join('');
     if (empty) empty.hidden = items.length > 0;
+}
+
+function resetTrainingClassForm() {
+    state.classEditingId = '';
+    state.classEditingUpdatedAt = '';
+    state.classSelectedMembers.clear();
+    state.classPendingMembers.clear();
+    state.classSelectedDevices.clear();
+    document.getElementById('classCreateForm')?.reset();
+    const from = document.getElementById('classValidFrom');
+    if (from) { from.disabled = false; from.removeAttribute('title'); }
+    const title = document.getElementById('classFormTitle');
+    const submit = document.getElementById('classCreateBtn');
+    const cancel = document.getElementById('classEditCancelBtn');
+    const tab = document.querySelector('[data-class-tab="create"]');
+    if (title) title.textContent = 'Đăng ký lớp mới';
+    if (submit) submit.textContent = 'Tạo lớp và giao bài';
+    if (cancel) cancel.hidden = true;
+    if (tab) tab.textContent = 'Đăng ký lớp mới';
+    const info = document.getElementById('classMemberFileInfo');
+    if (info) { info.hidden = true; info.textContent = ''; }
+    const fileInput = document.getElementById('classMemberFileInput');
+    if (fileInput) fileInput.value = '';
+    updateTrainingClassSummary();
+}
+
+async function openTrainingClassEditor(classId) {
+    if (!classId) return;
+    const [catalogLoaded, response] = await Promise.all([
+        loadTrainingClassCatalog(),
+        fetch(`${API_BASE_URL}/classes/${encodeURIComponent(classId)}`, { credentials: 'include' })
+    ]);
+    const json = await response.json().catch(() => ({}));
+    if (!catalogLoaded || !response.ok) {
+        throw new Error(json.error?.message || `Không thể tải lớp (HTTP ${response.status})`);
+    }
+    const item = json.item || {};
+    state.classEditingId = String(item.class_id || classId);
+    state.classEditingUpdatedAt = String(item.updated_at || '');
+    state.classPendingMembers.clear();
+    const availableMemberIds = new Set(
+        (state.classCatalog.members || []).map(member => String(member.user_id || '')).filter(Boolean)
+    );
+    state.classSelectedMembers = new Set(
+        (item.members || [])
+            .map(member => String(member.user_id || ''))
+            .filter(userId => userId && availableMemberIds.has(userId))
+    );
+    const unavailableMemberCount = Math.max(0, (item.members || []).length - state.classSelectedMembers.size);
+    state.classSelectedDevices = new Set((item.devices || []).map(device => String(device.device_id || '')).filter(Boolean));
+    const name = document.getElementById('className');
+    const from = document.getElementById('classValidFrom');
+    if (name) name.value = item.class_name || '';
+    if (from) from.value = String(item.start_date || '').slice(0, 10);
+    if (from) {
+        from.disabled = String(item.start_date || '').slice(0, 10) <= toDateKey(new Date());
+        if (from.disabled) from.title = 'Không thể đổi ngày bắt đầu sau khi lớp đã có hiệu lực.';
+        else from.removeAttribute('title');
+    }
+    const title = document.getElementById('classFormTitle');
+    const submit = document.getElementById('classCreateBtn');
+    const cancel = document.getElementById('classEditCancelBtn');
+    const tab = document.querySelector('[data-class-tab="create"]');
+    if (title) title.textContent = `Chỉnh sửa lớp ${item.class_code || ''}`;
+    if (submit) submit.textContent = 'Lưu thay đổi';
+    if (cancel) cancel.hidden = false;
+    if (tab) tab.textContent = 'Chỉnh sửa lớp';
+    updateTrainingClassSummary();
+    activateClassTab('create');
+    if (unavailableMemberCount) {
+        showToast(`${unavailableMemberCount} KTV đã ngừng hoạt động không được đưa vào danh sách chỉnh sửa.`, 'info');
+    }
+    window.setTimeout(() => name?.focus(), 0);
 }
 
 let classConfigModalReturnFocus = null;
@@ -7163,6 +7290,7 @@ async function submitTrainingClass(event) {
     event.preventDefault();
     const name = document.getElementById('className')?.value.trim() || '';
     const validFrom = document.getElementById('classValidFrom')?.value || '';
+    const editing = Boolean(state.classEditingId);
     const totalMembers = state.classSelectedMembers.size + state.classPendingMembers.size;
     const totalDevices = state.classSelectedDevices.size;
 
@@ -7178,50 +7306,67 @@ async function submitTrainingClass(event) {
         showToast('Vui lòng chọn ít nhất một thiết bị được giao cho lớp.', 'error');
         return;
     }
-
     const button = document.getElementById('classCreateBtn');
-    if (button) { button.disabled = true; button.textContent = 'Đang tạo lớp...'; }
+    if (button) { button.disabled = true; button.textContent = editing ? 'Đang lưu...' : 'Đang tạo lớp...'; }
     try {
-        const response = await fetch(`${API_BASE_URL}/classes`, {
-            method: 'POST',
+        const endpoint = editing
+            ? `${API_BASE_URL}/classes/${encodeURIComponent(state.classEditingId)}`
+            : `${API_BASE_URL}/classes`;
+        const response = await fetch(endpoint, {
+            method: editing ? 'PATCH' : 'POST',
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 className: name,
                 validFrom,
-                validTo: null,
                 memberUserIds: [...state.classSelectedMembers],
                 memberImports: [...state.classPendingMembers.values()],
-                deviceIds: [...state.classSelectedDevices]
+                deviceIds: [...state.classSelectedDevices],
+                ...(editing ? { expectedUpdatedAt: state.classEditingUpdatedAt } : {})
             })
         });
         const json = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(json.error?.message || `HTTP ${response.status}`);
         const code = json.item?.class_code || '';
-        showToast(`Đã tạo lớp ${code} và giao bài thành công.`, 'success');
-        document.getElementById('classCreateForm')?.reset();
-        state.classSelectedMembers.clear();
-        state.classPendingMembers.clear();
-        state.classSelectedDevices.clear();
-        const info = document.getElementById('classMemberFileInfo');
-        if (info) { info.hidden = true; info.textContent = ''; }
-        const fileInput = document.getElementById('classMemberFileInput');
-        if (fileInput) fileInput.value = '';
-        updateTrainingClassSummary();
+        showToast(editing ? `Đã cập nhật lớp ${code}.` : `Đã tạo lớp ${code} và giao bài thành công.`, 'success');
+        resetTrainingClassForm();
         state.classLoaded = false;
         await loadTrainingClasses();
+        await Promise.allSettled([
+            loadRosterList(),
+            refreshDashboardData({ force: true })
+        ]);
         activateClassTab('list');
     } catch (error) {
-        showToast(`Không thể tạo lớp: ${error.message}`, 'error');
+        showToast(`${editing ? 'Không thể cập nhật lớp' : 'Không thể tạo lớp'}: ${error.message}`, 'error');
     } finally {
-        if (button) { button.disabled = false; button.textContent = 'Tạo lớp và giao bài'; }
+        if (button) {
+            button.disabled = false;
+            button.textContent = state.classEditingId ? 'Lưu thay đổi' : 'Tạo lớp và giao bài';
+        }
     }
 }
 
 function initTrainingClasses() {
     if (state.classInitialized) return;
     state.classInitialized = true;
-    document.querySelectorAll('[data-class-tab]').forEach(button => button.addEventListener('click', () => activateClassTab(button.dataset.classTab)));
+    document.querySelectorAll('[data-class-tab]').forEach(button => button.addEventListener('click', () => {
+        if (button.dataset.classTab === 'create' && state.classTab !== 'create') resetTrainingClassForm();
+        activateClassTab(button.dataset.classTab);
+    }));
+
+    document.getElementById('classTableBody')?.addEventListener('click', event => {
+        const button = event.target.closest('[data-edit-class-id]');
+        if (!button) return;
+        openTrainingClassEditor(button.dataset.editClassId).catch(error => {
+            showToast(`Không thể mở lớp để chỉnh sửa: ${error.message}`, 'error');
+        });
+    });
+
+    document.getElementById('classEditCancelBtn')?.addEventListener('click', () => {
+        resetTrainingClassForm();
+        activateClassTab('list');
+    });
 
     document.getElementById('classOpenConfigModalBtn')?.addEventListener('click', () => {
         openClassConfigModal();

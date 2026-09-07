@@ -51,7 +51,39 @@ class TrainingClassAssignmentContractTests(unittest.TestCase):
         self.assertIn("if ((string)$existingTimer['status'] === 'in_progress')", tracking)
         self.assertRegex(tracking, re.compile(r"UPDATE timer_sessions.*?status = :status", re.S))
 
-    def test_dashboard_includes_every_active_ktv_role(self):
+    def test_tracking_updates_every_overlapping_effective_assignment(self):
+        tracking = (ROOT / "api" / "lib" / "tracking_handler.php").read_text(encoding="utf-8")
+        sync = re.search(
+            r"function sync_tracking_attempt\(.*?\n}\n\nfunction reserve_tracking_timer_start",
+            tracking,
+            re.S,
+        )
+        self.assertIsNotNone(sync)
+        self.assertIn("$assignments = $lookup->fetchAll()", sync.group(0))
+        self.assertIn("foreach ($assignments as $assignment)", sync.group(0))
+        self.assertNotIn("LIMIT 1", sync.group(0))
+        self.assertIn("FOR UPDATE OF assignment", sync.group(0))
+        self.assertIn("enrollment.is_mock = FALSE", sync.group(0))
+        self.assertIn("training.status IN ('planned', 'active')", sync.group(0))
+        self.assertIn("class_assignment.status IN ('assigned', 'active')", sync.group(0))
+        self.assertIn("class_assignment.assigned_at <= NOW()", sync.group(0))
+        self.assertIn("first_try_evidence IS DISTINCT FROM 'derived_complete'", sync.group(0))
+
+    def test_timer_sessions_link_to_every_effective_assignment(self):
+        migration = (ROOT / "api" / "migrations" / "034_link_timer_sessions_to_assignments.sql").read_text(encoding="utf-8")
+        tracking = (ROOT / "api" / "lib" / "tracking_handler.php").read_text(encoding="utf-8")
+        api = (ROOT / "api" / "index.php").read_text(encoding="utf-8")
+
+        self.assertIn("CREATE TABLE IF NOT EXISTS timer_session_assignment_links", migration)
+        self.assertIn("PRIMARY KEY (timer_session_id, assignment_id)", migration)
+        self.assertIn("ON CONFLICT (timer_session_id, assignment_id) DO NOTHING", migration)
+        self.assertIn("'historical_effective'", migration)
+        self.assertIn("INSERT INTO timer_session_assignment_links", tracking)
+        self.assertIn("'live_sync'", tracking)
+        self.assertIn("timer_session_assignment_links link", api)
+        self.assertIn("assignment_class_codes", api)
+
+    def test_dashboard_counts_only_explicit_assignment_pairs(self):
         api = (ROOT / "api" / "index.php").read_text(encoding="utf-8")
         report = (ROOT / "api" / "lib" / "dashboard_report.php").read_text(encoding="utf-8")
         timer_scope = re.search(r"\$timerSql = 'WITH eligible_dashboard_ktv AS \(.*?\$timerParams", api, re.S)
@@ -61,8 +93,59 @@ class TrainingClassAssignmentContractTests(unittest.TestCase):
         for scope in (timer_scope.group(0), technician_scope.group(0), report):
             self.assertNotIn("job_title =", scope)
             self.assertNotIn("employee_source LIKE", scope)
-        self.assertIn("FROM v_ktv_directory", report)
-        self.assertIn("WHERE is_terminated = FALSE", report)
+        self.assertIn("JOIN v_ktv_directory roster", report)
+        self.assertIn("FROM lab_assignments assignment", report)
+        self.assertIn("JOIN class_enrollments enrollment", report)
+        self.assertIn("SELECT (SELECT COUNT(*) FROM cohort_pairs) AS assigned_count", report)
+        self.assertNotIn("(SELECT COUNT(*) FROM eligible) * (SELECT COUNT(*) FROM active_labs)", report)
+        self.assertIn("'cohort' => 'assigned_as_of_period_end'", report)
+
+    def test_new_assignments_snapshot_class_or_current_user_region(self):
+        library = (ROOT / "api" / "lib" / "training_classes.php").read_text(encoding="utf-8")
+        self.assertGreaterEqual(
+            library.count("COALESCE(training.region_id, roster.region_id)"),
+            2,
+        )
+
+    def test_class_creation_refreshes_roster_report_and_dashboard_version(self):
+        api = (ROOT / "api" / "index.php").read_text(encoding="utf-8")
+        dashboard = (ROOT / "dashboard-authen" / "js" / "app.js").read_text(encoding="utf-8")
+
+        self.assertIn("function roster_assigned_class_join_sql", api)
+        self.assertIn("STRING_AGG(DISTINCT training.class_code", api)
+        self.assertIn("assigned_class.assigned_class_code", api)
+        for table in ("training_classes", "class_enrollments", "class_lab_assignments", "lab_assignments"):
+            self.assertIn(f"SELECT MAX(updated_at) FROM {table}", api)
+        self.assertIn("SELECT MAX(linked_at) FROM timer_session_assignment_links", api)
+        self.assertIn("data_version: version", dashboard)
+        self.assertRegex(
+            dashboard,
+            re.compile(r"loadTrainingClasses\(\).*?loadRosterList\(\).*?refreshDashboardData\(\{ force: true \}\)", re.S),
+        )
+
+    def test_existing_classes_can_be_edited_without_deleting_history(self):
+        api = (ROOT / "api" / "index.php").read_text(encoding="utf-8")
+        library = (ROOT / "api" / "lib" / "training_classes.php").read_text(encoding="utf-8")
+        html = (ROOT / "dashboard-authen" / "index.html").read_text(encoding="utf-8")
+        dashboard = (ROOT / "dashboard-authen" / "js" / "app.js").read_text(encoding="utf-8")
+
+        self.assertIn("function training_class_update", library)
+        self.assertIn("FOR UPDATE", library)
+        self.assertIn("expectedUpdatedAt", dashboard)
+        self.assertIn("'class-conflict'", library)
+        self.assertIn("status = 'withdrawn'", library)
+        self.assertIn("THEN 'cancelled' ELSE 'closed'", library)
+        self.assertIn("THEN 'waived' ELSE", library)
+        self.assertIn("GREATEST(assignment.assigned_at", library)
+        self.assertIn("individual.status <> 'passed'", library)
+        self.assertNotIn("DELETE FROM class_enrollments", library)
+        self.assertNotIn("DELETE FROM class_lab_assignments", library)
+        self.assertRegex(api, re.compile(r"\$method === 'PATCH'.*?training_class_update", re.S))
+        self.assertIn('data-edit-class-id=', dashboard)
+        self.assertNotIn('id="classValidTo"', html)
+        self.assertIn('id="classEditCancelBtn"', html)
+        self.assertNotIn("'validTo'", library)
+        self.assertNotIn('end_date', library)
 
     def test_result_modal_waits_for_tracking_save(self):
         portal = (ROOT / "app.js").read_text(encoding="utf-8")

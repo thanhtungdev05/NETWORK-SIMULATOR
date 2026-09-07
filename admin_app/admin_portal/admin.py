@@ -5,14 +5,17 @@ Bao gồm bộ lọc, tìm kiếm, xem chi tiết và xuất CSV.
 """
 import csv
 from django.contrib import admin
-from django.db.models import Q
+from django.contrib.postgres.aggregates import StringAgg
+from django.db.models import Count, Q
 from django.http import HttpResponse
+from django.utils import timezone
 from django.utils.html import format_html
 
 from .models import (
-    DeviceCatalog, LabCatalog, Role, FtcUser, TimerSession,
+    DeviceCatalog, LabCatalog, Role, FtcUser, TimerSession, TimerSessionAssignmentLink,
     Region, LoginLog, RosterImportLog, SchemaMigration,
-    TrainingClass, ClassEnrollment, AssignmentImportLog,
+    Curriculum, CurriculumLab, TrainingClass, ClassEnrollment,
+    ClassLabAssignment, LabAssignment, AssignmentImportLog,
 )
 
 
@@ -171,19 +174,21 @@ class TerminationFilter(admin.SimpleListFilter):
 class FtcUserAdmin(admin.ModelAdmin):
     list_display = [
         'display_name', 'employee_id', 'email', 'role',
-        'unit_name', 'region_badge', 'branch_badge', 'class_code',
+        'unit_name', 'region_badge', 'branch_badge', 'assigned_classes_badge',
         'employment_status_badge', 'last_login_at',
     ]
     list_filter = ['role', TerminationFilter, 'region']
     search_fields = ['email', 'display_name', 'employee_id',
                      'unit_code', 'unit_name', 'class_code',
+                     'class_enrollments__training_class__class_code',
+                     'class_enrollments__training_class__class_name',
                      'region__region_code', 'region__region_name',
                      'region__branch_name']
     list_select_related = ['role', 'region']
     readonly_fields = [
         'user_id', 'last_login_at', 'created_at', 'updated_at',
         'employee_source', 'employee_seed_batch', 'employee_synced_at',
-        'region_code', 'dashboard_region',
+        'region_code', 'dashboard_region', 'class_code',
     ]
     fieldsets = [
         ('Thông tin cơ bản', {
@@ -209,6 +214,43 @@ class FtcUserAdmin(admin.ModelAdmin):
     list_per_page = 50
     show_full_result_count = True
     date_hierarchy = 'created_at'
+
+    def get_queryset(self, request):
+        today = timezone.localdate()
+        assignment_filter = (
+            Q(class_enrollments__status='active')
+            & Q(class_enrollments__is_mock=False)
+            & Q(class_enrollments__valid_from__lte=today)
+            & (Q(class_enrollments__valid_to__isnull=True) | Q(class_enrollments__valid_to__gte=today))
+            & Q(class_enrollments__training_class__status__in=('planned', 'active'))
+            & Q(class_enrollments__training_class__is_mock=False)
+& Q(class_enrollments__training_class__start_date__lte=today)
+        )
+        return super().get_queryset(request).annotate(
+            assigned_class_codes=StringAgg(
+                'class_enrollments__training_class__class_code',
+                delimiter=', ',
+                distinct=True,
+                filter=assignment_filter,
+            )
+        )
+
+    @admin.display(description='Lớp được phân', ordering='assigned_class_codes')
+    def assigned_classes_badge(self, obj):
+        if obj.assigned_class_codes:
+            return format_html(
+                '<span style="background:#1d4ed8;color:#fff;padding:2px 8px;'
+                'border-radius:4px;font-size:12px;font-weight:500;">{}</span>',
+                obj.assigned_class_codes,
+            )
+        if obj.class_code:
+            return format_html(
+                '<span title="Mã lớp nguồn cũ; không dùng làm mẫu số báo cáo" '
+                'style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:4px;font-size:12px;">'
+                '{} (nguồn)</span>',
+                obj.class_code,
+            )
+        return '-'
 
     def save_model(self, request, obj, form, change):
         # region_id is canonical; keep legacy import/display columns synchronized
@@ -253,6 +295,43 @@ class FtcUserAdmin(admin.ModelAdmin):
 # ===========================================================
 # TimerSession Admin
 # ===========================================================
+
+class TimerSessionAssignmentLinkInline(admin.TabularInline):
+    model = TimerSessionAssignmentLink
+    fk_name = 'timer_session'
+    fields = ['assignment', 'link_source', 'linked_at']
+    readonly_fields = fields
+    extra = 0
+    can_delete = False
+    show_change_link = False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+class SessionAssignmentAttributionFilter(admin.SimpleListFilter):
+    title = 'Quy thuộc phân lớp'
+    parameter_name = 'assignment_attribution'
+
+    def lookups(self, request, model_admin):
+        return [
+            ('linked', 'Đã quy lớp'),
+            ('unlinked', 'Chưa quy lớp'),
+        ]
+
+    def queryset(self, request, queryset):
+        if self.value() == 'linked':
+            return queryset.filter(assignment_links__isnull=False).distinct()
+        if self.value() == 'unlinked':
+            return queryset.filter(assignment_links__isnull=True)
+        return queryset
+
 
 class PassedFilter(admin.SimpleListFilter):
     title = 'Kết quả bài thi'
@@ -313,15 +392,17 @@ class TimerSessionAdmin(admin.ModelAdmin):
     list_display = [
         'id', 'name', 'technician_id', 'lab_name', 'device', 'mode_badge',
         'status_badge', 'passed_badge', 'score', 'duration_display',
-        'finished_at', 'data_type_badge',
+        'assignment_classes_badge', 'finished_at', 'data_type_badge',
     ]
     list_filter = [
         'status', PassedFilter, MockDataFilter, ModeFilter,
-        'device',
+        SessionAssignmentAttributionFilter,
+        'assignment_links__assignment__class_snapshot', 'device',
     ]
     search_fields = [
         'technician_id', 'name', 'email', 'lab_id', 'lab_name',
         'device__device_id', 'device__device_name', 'device_name_snapshot',
+        'assignment_links__assignment__class_snapshot__class_code',
     ]
     readonly_fields = [
         'id', 'user', 'created_at', 'started_at', 'finished_at',
@@ -355,6 +436,38 @@ class TimerSessionAdmin(admin.ModelAdmin):
     list_select_related = ['user', 'device']
     list_per_page = 50
     show_full_result_count = True
+    inlines = [TimerSessionAssignmentLinkInline]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(
+            linked_class_codes=StringAgg(
+                'assignment_links__assignment__class_snapshot__class_code',
+                delimiter=', ',
+                distinct=True,
+            )
+        )
+
+    @admin.display(description='Lớp quy thuộc', ordering='linked_class_codes')
+    def assignment_classes_badge(self, obj):
+        if obj.linked_class_codes:
+            return format_html(
+                '<span style="background:#1d4ed8;color:#fff;padding:2px 8px;'
+                'border-radius:4px;font-size:12px;">{}</span>',
+                obj.linked_class_codes,
+            )
+        return format_html(
+            '<span title="Không có assignment hiệu lực tại thời điểm phiên" '
+            'style="color:#92400e;font-size:11px;">Chưa quy lớp</span>'
+        )
 
     def mode_badge(self, obj):
         if resolve_session_mode(obj.mode, obj.session_type) == 'guide':
@@ -499,20 +612,213 @@ class ReadOnlyAuditAdmin(admin.ModelAdmin):
         return False
 
 
+class ReadOnlyInline(admin.TabularInline):
+    extra = 0
+    can_delete = False
+    show_change_link = True
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+class ClassEnrollmentInline(ReadOnlyInline):
+    model = ClassEnrollment
+    fields = ['user', 'status', 'valid_from', 'valid_to', 'source_class_code', 'is_mock']
+    readonly_fields = fields
+    ordering = ['-valid_from', 'user__display_name']
+
+
+class ClassLabAssignmentInline(ReadOnlyInline):
+    model = ClassLabAssignment
+    fields = ['curriculum_lab', 'assigned_at', 'due_at', 'status', 'assignment_source']
+    readonly_fields = fields
+    ordering = ['curriculum_lab__sort_order']
+
+
+class AssignmentTimerSessionLinkInline(ReadOnlyInline):
+    model = TimerSessionAssignmentLink
+    fk_name = 'assignment'
+    fields = ['timer_session', 'link_source', 'linked_at']
+    readonly_fields = fields
+    ordering = ['-linked_at']
+
+
+@admin.register(Curriculum)
+class CurriculumAdmin(ReadOnlyAuditAdmin):
+    list_display = ['curriculum_code', 'version', 'curriculum_name', 'status', 'is_default', 'effective_from', 'effective_to']
+    list_filter = ['status', 'is_default']
+    search_fields = ['curriculum_code', 'version', 'curriculum_name']
+    ordering = ['curriculum_code', '-version']
+
+
+@admin.register(CurriculumLab)
+class CurriculumLabAdmin(ReadOnlyAuditAdmin):
+    list_display = ['curriculum', 'lab', 'required_mode', 'is_required', 'sort_order', 'passing_score', 'max_attempts']
+    list_filter = ['curriculum', 'required_mode', 'is_required', 'lab__device']
+    search_fields = ['curriculum__curriculum_code', 'curriculum__curriculum_name', 'lab__lab_id', 'lab__lab_name']
+    list_select_related = ['curriculum', 'lab', 'lab__device']
+    ordering = ['curriculum_id', 'sort_order', 'lab_id']
+
+
 @admin.register(TrainingClass)
 class TrainingClassAdmin(ReadOnlyAuditAdmin):
-    list_display = ['class_code', 'class_name', 'start_date', 'end_date', 'status', 'created_by']
-    list_filter = ['status', 'start_date']
-    search_fields = ['class_code', 'class_name']
-    list_select_related = ['created_by']
+    list_display = [
+'class_code', 'class_name', 'start_date', 'status',
+        'active_member_count', 'assigned_lab_count', 'created_by',
+    ]
+    list_filter = ['status', 'is_mock', 'start_date', 'region', 'curriculum']
+    search_fields = ['class_code', 'class_name', 'enrollments__user__employee_id', 'enrollments__user__email']
+    list_select_related = ['created_by', 'instructor', 'region', 'curriculum']
+    inlines = [ClassEnrollmentInline, ClassLabAssignmentInline]
+
+    def get_queryset(self, request):
+        today = timezone.localdate()
+        now = timezone.now()
+        return super().get_queryset(request).annotate(
+            active_members=Count(
+                'enrollments',
+                filter=(
+                    Q(enrollments__status='active', enrollments__is_mock=False)
+                    & Q(enrollments__valid_from__lte=today)
+                    & (Q(enrollments__valid_to__isnull=True) | Q(enrollments__valid_to__gte=today))
+                    & Q(status__in=('planned', 'active'))
+& Q(start_date__lte=today)
+                ),
+                distinct=True,
+            ),
+            assigned_labs=Count(
+                'class_lab_assignments',
+                filter=(
+                    Q(class_lab_assignments__status__in=('assigned', 'active'))
+                    & Q(class_lab_assignments__assigned_at__lte=now)
+                    & (
+                        Q(class_lab_assignments__due_at__isnull=True)
+| Q(class_lab_assignments__due_at__gte=now)
+                    )
+                    & Q(status__in=('planned', 'active'))
+                    & Q(start_date__lte=today)
+                ),
+                distinct=True,
+            ),
+        )
+
+    @admin.display(description='Thành viên hiệu lực', ordering='active_members')
+    def active_member_count(self, obj):
+        return obj.active_members
+
+    @admin.display(description='Bài đang hiệu lực', ordering='assigned_labs')
+    def assigned_lab_count(self, obj):
+        return obj.assigned_labs
 
 
 @admin.register(ClassEnrollment)
 class ClassEnrollmentAdmin(ReadOnlyAuditAdmin):
-    list_display = ['training_class', 'user', 'valid_from', 'valid_to', 'status']
-    list_filter = ['status', 'valid_from']
-    search_fields = ['training_class__class_code', 'user__employee_id', 'user__email']
+    list_display = ['training_class', 'user', 'valid_from', 'valid_to', 'status', 'assignment_count', 'passed_count', 'seed_batch']
+    list_filter = ['status', 'is_mock', 'valid_from', 'training_class']
+    search_fields = ['training_class__class_code', 'user__employee_id', 'user__email', 'source_class_code', 'seed_batch']
     list_select_related = ['training_class', 'user']
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(
+            assignments=Count(
+                'lab_assignments',
+                filter=~Q(lab_assignments__status='waived'),
+                distinct=True,
+            ),
+            passed_assignments=Count(
+                'lab_assignments',
+                filter=Q(lab_assignments__status='passed'),
+                distinct=True,
+            ),
+        )
+
+    @admin.display(description='Tổng bài giao', ordering='assignments')
+    def assignment_count(self, obj):
+        return obj.assignments
+
+    @admin.display(description='Đã đạt', ordering='passed_assignments')
+    def passed_count(self, obj):
+        return obj.passed_assignments
+
+
+@admin.register(ClassLabAssignment)
+class ClassLabAssignmentAdmin(ReadOnlyAuditAdmin):
+    list_display = ['training_class', 'lab_name', 'device_name', 'assigned_at', 'due_at', 'status', 'assignment_source']
+    list_filter = ['status', 'assignment_source', 'training_class', 'curriculum_lab__lab__device']
+    search_fields = ['training_class__class_code', 'curriculum_lab__lab__lab_id', 'curriculum_lab__lab__lab_name']
+    list_select_related = ['training_class', 'curriculum_lab', 'curriculum_lab__lab', 'curriculum_lab__lab__device']
+
+    @admin.display(description='Bài lab', ordering='curriculum_lab__lab__lab_name')
+    def lab_name(self, obj):
+        return obj.curriculum_lab.lab.lab_name
+
+    @admin.display(description='Thiết bị', ordering='curriculum_lab__lab__device__device_name')
+    def device_name(self, obj):
+        return obj.curriculum_lab.lab.device.device_name
+
+
+@admin.register(LabAssignment)
+class LabAssignmentAdmin(ReadOnlyAuditAdmin):
+    list_display = [
+        'technician', 'training_class', 'lab_name', 'device_name', 'reporting_region', 'status',
+        'assigned_at', 'due_at', 'first_pass_attempt_no', 'assignment_source',
+    ]
+    list_filter = [
+        'status', 'assignment_source', 'is_inferred', 'class_snapshot',
+        ('region_snapshot', admin.EmptyFieldListFilter),
+        'curriculum_lab__lab__device',
+    ]
+    search_fields = [
+        'enrollment__user__employee_id', 'enrollment__user__email',
+        'enrollment__user__display_name', 'class_snapshot__class_code',
+        'region_snapshot__region_code', 'region_snapshot__region_name',
+        'enrollment__user__region__region_code', 'enrollment__user__region__region_name',
+        'curriculum_lab__lab__lab_id', 'curriculum_lab__lab__lab_name',
+    ]
+    list_select_related = [
+        'enrollment', 'enrollment__user', 'enrollment__user__region',
+        'class_snapshot', 'region_snapshot', 'curriculum_lab',
+        'curriculum_lab__lab', 'curriculum_lab__lab__device',
+    ]
+    date_hierarchy = 'assigned_at'
+    ordering = ['-assigned_at', 'assignment_id']
+    list_per_page = 100
+    inlines = [AssignmentTimerSessionLinkInline]
+
+    @admin.display(description='KTV', ordering='enrollment__user__display_name')
+    def technician(self, obj):
+        return obj.enrollment.user
+
+    @admin.display(description='Lớp', ordering='class_snapshot__class_code')
+    def training_class(self, obj):
+        return obj.class_snapshot
+
+    @admin.display(description='Vùng báo cáo', ordering='region_snapshot__region_code')
+    def reporting_region(self, obj):
+        region = obj.region_snapshot or obj.enrollment.user.region
+        if not region:
+            return '-'
+        if obj.region_snapshot_id:
+            return region
+        return format_html(
+            '{} <span title="Phân công thiếu snapshot; báo cáo đang dùng vùng hiện tại của KTV" '
+            'style="color:#92400e;font-size:11px;">(vùng hiện tại)</span>',
+            region,
+        )
+
+    @admin.display(description='Bài lab', ordering='curriculum_lab__lab__lab_name')
+    def lab_name(self, obj):
+        return obj.curriculum_lab.lab.lab_name
+
+    @admin.display(description='Thiết bị', ordering='curriculum_lab__lab__device__device_name')
+    def device_name(self, obj):
+        return obj.curriculum_lab.lab.device.device_name
 
 
 @admin.register(AssignmentImportLog)

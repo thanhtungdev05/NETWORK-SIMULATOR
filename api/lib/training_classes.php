@@ -45,15 +45,12 @@ function training_class_array(array $input, string $key, int $maximum = 5000): a
     return array_keys($result);
 }
 
-function training_class_status_for_dates(string $startDate, ?string $endDate): string
+function training_class_status_for_dates(string $startDate): string
 {
     $timezone = new DateTimeZone(normalize_app_timezone(env_value('APP_TIMEZONE')));
     $today = (new DateTimeImmutable('today', $timezone))->format('Y-m-d');
     if ($startDate > $today) {
         return 'planned';
-    }
-    if ($endDate !== null && $endDate < $today) {
-        return 'completed';
     }
     return 'active';
 }
@@ -83,11 +80,8 @@ function training_class_next_code(PDO $pdo): string
     return sprintf('FTC-%06d', $number);
 }
 
-function training_class_assert_dates(string $startDate, ?string $endDate): void
+function training_class_assert_dates(string $startDate): void
 {
-    if ($endDate !== null && $endDate < $startDate) {
-        fail(400, 'bad-request', 'validTo cannot be earlier than validFrom.');
-    }
 }
 
 function training_class_actor_user_id(PDO $pdo, array $actor): ?string
@@ -242,7 +236,6 @@ function training_class_add_members(
     string $classId,
     array $users,
     string $validFrom,
-    ?string $validTo,
     string $source = 'manual'
 ): int {
     $upsert = $pdo->prepare(
@@ -252,12 +245,12 @@ function training_class_add_members(
             is_mock, seed_batch, created_at, updated_at
         )
         SELECT :class_id, :user_id, class_code, 'active', CAST(:valid_from AS date),
-               CAST(:valid_to AS date), FALSE, :source, NOW(), NOW()
+               NULL, FALSE, :source, NOW(), NOW()
           FROM training_classes
          WHERE class_id = CAST(:class_id AS uuid)
         ON CONFLICT (class_id, user_id, valid_from) DO UPDATE SET
             status = 'active',
-            valid_to = EXCLUDED.valid_to,
+            valid_to = NULL,
             updated_at = NOW()
         RETURNING enrollment_id
         SQL
@@ -269,12 +262,14 @@ function training_class_add_members(
             assigned_at, due_at, status, region_id_snapshot, class_id_snapshot,
             assignment_source, is_inferred, created_at, updated_at
         )
-        SELECT :enrollment_id, class_assignment.class_lab_assignment_id,
+        SELECT enrollment.enrollment_id, class_assignment.class_lab_assignment_id,
                class_assignment.curriculum_lab_id, class_assignment.assigned_at,
-               class_assignment.due_at, 'assigned', training.region_id,
-               training.class_id, :source, FALSE, NOW(), NOW()
-          FROM class_lab_assignments class_assignment
-          JOIN training_classes training ON training.class_id = class_assignment.class_id
+                class_assignment.due_at, 'assigned', COALESCE(training.region_id, roster.region_id),
+                training.class_id, :source, FALSE, NOW(), NOW()
+           FROM class_lab_assignments class_assignment
+           JOIN training_classes training ON training.class_id = class_assignment.class_id
+           JOIN class_enrollments enrollment ON enrollment.enrollment_id = :enrollment_id
+           JOIN users roster ON roster.user_id = enrollment.user_id
          WHERE class_assignment.class_id = CAST(:class_id AS uuid)
            AND class_assignment.status IN ('assigned', 'active')
         ON CONFLICT (enrollment_id, curriculum_lab_id) DO NOTHING
@@ -286,7 +281,6 @@ function training_class_add_members(
             'class_id' => $classId,
             'user_id' => $user['user_id'],
             'valid_from' => $validFrom,
-            'valid_to' => $validTo,
             'source' => $source,
         ]);
         $enrollmentId = $upsert->fetchColumn();
@@ -309,7 +303,6 @@ function training_class_add_devices(
     string $curriculumId,
     array $devices,
     string $startDate,
-    ?string $endDate,
     string $source = 'manual',
     ?int &$newAssignments = null
 ): int {
@@ -321,8 +314,7 @@ function training_class_add_devices(
         )
         SELECT CAST(:class_id AS uuid), curriculum_lab.curriculum_lab_id,
                CAST(:start_date AS date)::timestamp,
-               CASE WHEN CAST(:end_date AS date) IS NULL THEN NULL
-                    ELSE CAST(:end_date AS date)::timestamp + INTERVAL '1 day' - INTERVAL '1 second' END,
+               NULL,
                'active', :source, FALSE, NOW(), NOW()
           FROM curriculum_labs curriculum_lab
           JOIN lab_catalog lab ON lab.lab_id = curriculum_lab.lab_id
@@ -347,10 +339,11 @@ function training_class_add_devices(
         )
         SELECT enrollment.enrollment_id, class_assignment.class_lab_assignment_id,
                class_assignment.curriculum_lab_id, class_assignment.assigned_at,
-               class_assignment.due_at, 'assigned', training.region_id,
-               training.class_id, :assignment_source, FALSE, NOW(), NOW()
-          FROM class_enrollments enrollment
-          JOIN training_classes training ON training.class_id = enrollment.class_id
+                class_assignment.due_at, 'assigned', COALESCE(training.region_id, roster.region_id),
+                training.class_id, :assignment_source, FALSE, NOW(), NOW()
+           FROM class_enrollments enrollment
+           JOIN training_classes training ON training.class_id = enrollment.class_id
+           JOIN users roster ON roster.user_id = enrollment.user_id
           JOIN class_lab_assignments class_assignment ON class_assignment.class_id = training.class_id
           JOIN curriculum_labs curriculum_lab
             ON curriculum_lab.curriculum_lab_id = class_assignment.curriculum_lab_id
@@ -369,7 +362,6 @@ function training_class_add_devices(
             'class_id' => $classId,
             'curriculum_id' => $curriculumId,
             'start_date' => $startDate,
-            'end_date' => $endDate,
             'source' => $source,
             'device_id' => $device['device_id'],
         ]);
@@ -394,8 +386,7 @@ function training_class_create(PDO $pdo, array $input, array $actor): array
         fail(400, 'bad-request', 'className is required.');
     }
     $validFrom = training_class_date($input['validFrom'] ?? $input['start_date'] ?? null, 'validFrom');
-    $validTo = training_class_date($input['validTo'] ?? $input['end_date'] ?? null, 'validTo', false);
-    training_class_assert_dates($validFrom, $validTo);
+    training_class_assert_dates($validFrom);
     $memberIds = training_class_array($input, 'memberUserIds');
     $memberImportRows = training_class_member_import_rows($input);
     $deviceIds = training_class_array($input, 'deviceIds');
@@ -416,7 +407,7 @@ function training_class_create(PDO $pdo, array $input, array $actor): array
     $devices = training_class_fetch_devices($pdo, $deviceIds);
     $curriculumId = training_class_default_curriculum_id($pdo);
     $classCode = training_class_next_code($pdo);
-    $status = training_class_status_for_dates($validFrom, $validTo);
+    $status = training_class_status_for_dates($validFrom);
     $regionId = null;
     $regionNames = [];
     foreach ($users as $user) {
@@ -438,11 +429,11 @@ function training_class_create(PDO $pdo, array $input, array $actor): array
         <<<'SQL'
         INSERT INTO training_classes (
             class_code, class_name, region_name, region_id, curriculum_id,
-            start_date, end_date, capacity, status, created_by,
+            start_date, capacity, status, created_by,
             is_mock, created_at, updated_at
         ) VALUES (
             :class_code, :class_name, :region_name, CAST(:region_id AS uuid),
-            CAST(:curriculum_id AS uuid), CAST(:start_date AS date), CAST(:end_date AS date),
+            CAST(:curriculum_id AS uuid), CAST(:start_date AS date),
             :capacity, :status, CAST(:created_by AS uuid), FALSE, NOW(), NOW()
         )
         RETURNING class_id
@@ -455,14 +446,240 @@ function training_class_create(PDO $pdo, array $input, array $actor): array
         'region_id' => $regionId,
         'curriculum_id' => $curriculumId,
         'start_date' => $validFrom,
-        'end_date' => $validTo,
         'capacity' => count($users),
         'status' => $status,
         'created_by' => training_class_actor_user_id($pdo, $actor),
     ]);
     $classId = (string)$insert->fetchColumn();
-    training_class_add_members($pdo, $classId, $users, $validFrom, $validTo);
-    training_class_add_devices($pdo, $classId, $curriculumId, $devices, $validFrom, $validTo);
+    training_class_add_members($pdo, $classId, $users, $validFrom);
+    training_class_add_devices($pdo, $classId, $curriculumId, $devices, $validFrom);
+    return training_class_detail($pdo, $classId);
+}
+
+function training_class_update(PDO $pdo, string $classId, array $input): array
+{
+    $name = optional_text($input, 'className', 200) ?? optional_text($input, 'class_name', 200);
+    if ($name === null) {
+        fail(400, 'bad-request', 'className is required.');
+    }
+    $validFrom = training_class_date($input['validFrom'] ?? $input['start_date'] ?? null, 'validFrom');
+    $expectedUpdatedAt = optional_text($input, 'expectedUpdatedAt', 80)
+        ?? optional_text($input, 'expected_updated_at', 80);
+    if ($expectedUpdatedAt === null) {
+        fail(400, 'bad-request', 'expectedUpdatedAt is required when editing a class.');
+    }
+    try {
+        new DateTimeImmutable($expectedUpdatedAt);
+    } catch (Throwable) {
+        fail(400, 'bad-request', 'expectedUpdatedAt is invalid.');
+    }
+
+    $memberIds = training_class_array($input, 'memberUserIds');
+    $memberImportRows = training_class_member_import_rows($input);
+    $deviceIds = training_class_array($input, 'deviceIds');
+    if (!$memberIds && !$memberImportRows) {
+        fail(400, 'bad-request', 'Select at least one class member.');
+    }
+    if (!$deviceIds) {
+        fail(400, 'bad-request', 'Select at least one assigned device.');
+    }
+    $users = array_merge(
+        training_class_fetch_users($pdo, $memberIds),
+        training_class_materialize_imported_users($pdo, $memberImportRows)
+    );
+    $usersById = [];
+    foreach ($users as $user) {
+        $usersById[(string)$user['user_id']] = $user;
+    }
+    $users = array_values($usersById);
+    $devices = training_class_fetch_devices($pdo, $deviceIds);
+
+    $lock = $pdo->prepare(
+        'SELECT class_id, class_code, curriculum_id, start_date, updated_at
+           FROM training_classes
+          WHERE class_id = CAST(:class_id AS uuid)
+          FOR UPDATE'
+    );
+    $lock->execute(['class_id' => $classId]);
+    $current = $lock->fetch();
+    if (!$current) {
+        fail(404, 'class-not-found', 'Training class was not found.');
+    }
+    training_class_assert_dates($validFrom);
+    $sameVersion = $pdo->prepare(
+        'SELECT CAST(:expected_updated_at AS timestamptz) = CAST(:actual_updated_at AS timestamptz)'
+    );
+    $sameVersion->execute([
+        'expected_updated_at' => $expectedUpdatedAt,
+        'actual_updated_at' => $current['updated_at'],
+    ]);
+    if (!$sameVersion->fetchColumn()) {
+        fail(409, 'class-conflict', 'Lớp đã được cập nhật sau khi bạn mở. Hãy tải lại trước khi lưu.');
+    }
+    $timezone = new DateTimeZone(normalize_app_timezone(env_value('APP_TIMEZONE')));
+    $today = (new DateTimeImmutable('today', $timezone))->format('Y-m-d');
+    if ((string)$current['start_date'] <= $today && (string)$current['start_date'] !== $validFrom) {
+        fail(422, 'class-start-locked', 'Không thể đổi ngày bắt đầu sau khi lớp đã có hiệu lực.');
+    }
+    $curriculumId = (string)($current['curriculum_id'] ?: training_class_default_curriculum_id($pdo));
+
+    $regionIds = [];
+    foreach ($users as $user) {
+        if (!empty($user['region_id'])) {
+            $regionIds[(string)$user['region_id']] = true;
+        }
+    }
+    $regionId = count($regionIds) === 1 ? array_key_first($regionIds) : null;
+    $regionName = 'Toàn quốc';
+    if ($regionId !== null) {
+        $regionLookup = $pdo->prepare('SELECT region_name FROM regions WHERE region_id = CAST(:region_id AS uuid)');
+        $regionLookup->execute(['region_id' => $regionId]);
+        $regionName = (string)($regionLookup->fetchColumn() ?: $regionName);
+    }
+
+    $updateClass = $pdo->prepare(
+        'UPDATE training_classes
+            SET class_name = :class_name,
+                region_name = :region_name,
+                region_id = CAST(:region_id AS uuid),
+                curriculum_id = CAST(:curriculum_id AS uuid),
+                start_date = CAST(:start_date AS date),
+                capacity = :capacity,
+                status = :status,
+                updated_at = NOW()
+          WHERE class_id = CAST(:class_id AS uuid)'
+    );
+    $updateClass->execute([
+        'class_name' => $name,
+        'region_name' => $regionName,
+        'region_id' => $regionId,
+        'curriculum_id' => $curriculumId,
+        'start_date' => $validFrom,
+        'capacity' => count($users),
+        'status' => training_class_status_for_dates($validFrom),
+        'class_id' => $classId,
+    ]);
+
+    $enrollmentQuery = $pdo->prepare(
+        "SELECT enrollment_id, user_id, valid_from
+           FROM class_enrollments
+          WHERE class_id = CAST(:class_id AS uuid) AND status = 'active'
+          FOR UPDATE"
+    );
+    $enrollmentQuery->execute(['class_id' => $classId]);
+    $activeEnrollments = [];
+    foreach ($enrollmentQuery->fetchAll() as $enrollment) {
+        $activeEnrollments[(string)$enrollment['user_id']] = $enrollment;
+    }
+    $selectedUserIds = array_fill_keys(array_keys($usersById), true);
+    $retainEnrollment = $pdo->prepare(
+        "UPDATE class_enrollments
+            SET valid_from = CAST(:valid_from AS date), valid_to = NULL, updated_at = NOW()
+          WHERE enrollment_id = :enrollment_id AND status = 'active'"
+    );
+    $withdrawEnrollment = $pdo->prepare(
+        "UPDATE class_enrollments
+            SET status = 'withdrawn',
+                valid_to = CASE WHEN valid_from > CURRENT_DATE THEN valid_from
+                                ELSE LEAST(COALESCE(valid_to, CURRENT_DATE), CURRENT_DATE) END,
+                updated_at = NOW()
+          WHERE enrollment_id = :enrollment_id AND status = 'active'"
+    );
+    $closeMemberAssignments = $pdo->prepare(
+        "UPDATE lab_assignments
+            SET status = CASE WHEN assigned_at > NOW() THEN 'waived' ELSE status END,
+                due_at = GREATEST(assigned_at, LEAST(COALESCE(due_at, NOW()), NOW())),
+                updated_at = NOW()
+          WHERE enrollment_id = :enrollment_id AND status IN ('assigned', 'in_progress')"
+    );
+    $newUsers = [];
+    foreach ($activeEnrollments as $userId => $enrollment) {
+        if (isset($selectedUserIds[$userId])) {
+            $retainEnrollment->execute([
+                'valid_from' => $validFrom,
+                'enrollment_id' => $enrollment['enrollment_id'],
+            ]);
+            continue;
+        }
+        $withdrawEnrollment->execute(['enrollment_id' => $enrollment['enrollment_id']]);
+        $closeMemberAssignments->execute(['enrollment_id' => $enrollment['enrollment_id']]);
+    }
+    foreach ($users as $user) {
+        if (!isset($activeEnrollments[(string)$user['user_id']])) {
+            $newUsers[] = $user;
+        }
+    }
+    if ($newUsers) {
+        training_class_add_members($pdo, $classId, $newUsers, $validFrom, 'manual');
+    }
+
+    $activeDeviceQuery = $pdo->prepare(
+        "SELECT DISTINCT lab.device_id
+           FROM class_lab_assignments assignment
+           JOIN curriculum_labs curriculum_lab ON curriculum_lab.curriculum_lab_id = assignment.curriculum_lab_id
+           JOIN lab_catalog lab ON lab.lab_id = curriculum_lab.lab_id
+          WHERE assignment.class_id = CAST(:class_id AS uuid)
+            AND assignment.status IN ('assigned', 'active')"
+    );
+    $activeDeviceQuery->execute(['class_id' => $classId]);
+    $selectedDeviceIds = array_fill_keys(array_map(static fn(array $device): string => (string)$device['device_id'], $devices), true);
+    $closeClassDevice = $pdo->prepare(
+        "UPDATE class_lab_assignments assignment
+            SET status = CASE WHEN assignment.assigned_at > NOW() THEN 'cancelled' ELSE 'closed' END,
+                due_at = GREATEST(assignment.assigned_at, LEAST(COALESCE(assignment.due_at, NOW()), NOW())),
+                updated_at = NOW()
+           FROM curriculum_labs curriculum_lab
+           JOIN lab_catalog lab ON lab.lab_id = curriculum_lab.lab_id
+          WHERE assignment.curriculum_lab_id = curriculum_lab.curriculum_lab_id
+            AND assignment.class_id = CAST(:class_id AS uuid)
+            AND lab.device_id = :device_id
+            AND assignment.status IN ('assigned', 'active')"
+    );
+    $closeIndividualDevice = $pdo->prepare(
+        "UPDATE lab_assignments individual
+            SET status = CASE WHEN individual.assigned_at > NOW() THEN 'waived' ELSE individual.status END,
+                due_at = GREATEST(individual.assigned_at, LEAST(COALESCE(individual.due_at, NOW()), NOW())),
+                updated_at = NOW()
+           FROM curriculum_labs curriculum_lab
+           JOIN lab_catalog lab ON lab.lab_id = curriculum_lab.lab_id
+          WHERE individual.curriculum_lab_id = curriculum_lab.curriculum_lab_id
+            AND individual.class_id_snapshot = CAST(:class_id AS uuid)
+            AND lab.device_id = :device_id
+            AND individual.status IN ('assigned', 'in_progress')"
+    );
+    foreach ($activeDeviceQuery->fetchAll(PDO::FETCH_COLUMN) as $deviceId) {
+        if (isset($selectedDeviceIds[(string)$deviceId])) {
+            continue;
+        }
+        $params = ['class_id' => $classId, 'device_id' => $deviceId];
+        $closeClassDevice->execute($params);
+        $closeIndividualDevice->execute($params);
+    }
+
+    training_class_add_devices($pdo, $classId, $curriculumId, $devices, $validFrom, 'manual');
+    $syncIndividualAssignments = $pdo->prepare(
+        "UPDATE lab_assignments individual
+            SET class_lab_assignment_id = class_assignment.class_lab_assignment_id,
+                assigned_at = class_assignment.assigned_at,
+                due_at = class_assignment.due_at,
+                status = CASE WHEN individual.status = 'waived' THEN 'assigned' ELSE individual.status END,
+                updated_at = NOW()
+           FROM class_lab_assignments class_assignment
+           JOIN curriculum_labs curriculum_lab ON curriculum_lab.curriculum_lab_id = class_assignment.curriculum_lab_id
+           JOIN lab_catalog lab ON lab.lab_id = curriculum_lab.lab_id
+           JOIN class_enrollments enrollment ON enrollment.class_id = class_assignment.class_id
+          WHERE individual.enrollment_id = enrollment.enrollment_id
+            AND individual.curriculum_lab_id = class_assignment.curriculum_lab_id
+            AND class_assignment.class_id = CAST(:class_id AS uuid)
+            AND enrollment.status = 'active'
+            AND class_assignment.status IN ('assigned', 'active')
+            AND lab.device_id = :device_id
+            AND individual.status <> 'passed'"
+    );
+    foreach (array_keys($selectedDeviceIds) as $deviceId) {
+        $syncIndividualAssignments->execute(['class_id' => $classId, 'device_id' => $deviceId]);
+    }
+
     return training_class_detail($pdo, $classId);
 }
 
@@ -471,7 +688,7 @@ function training_class_detail(PDO $pdo, string $classId): array
     $stmt = $pdo->prepare(
         <<<'SQL'
         SELECT training.class_id, training.class_code, training.class_name,
-               training.start_date, training.end_date, training.status,
+               training.start_date, training.status,
                training.region_name, training.created_at, training.updated_at
           FROM training_classes training
          WHERE training.class_id = CAST(:class_id AS uuid)
@@ -490,6 +707,7 @@ function training_class_detail(PDO $pdo, string $classId): array
           FROM class_enrollments enrollment
           JOIN users ON users.user_id = enrollment.user_id
          WHERE enrollment.class_id = CAST(:class_id AS uuid)
+           AND enrollment.status = 'active'
          ORDER BY users.display_name NULLS LAST, users.employee_id
         SQL
     );
@@ -519,7 +737,7 @@ function training_class_list(PDO $pdo): array
     return $pdo->query(
         <<<'SQL'
         SELECT training.class_id, training.class_code, training.class_name,
-               training.start_date, training.end_date, training.status,
+               training.start_date, training.status,
                training.region_name,
                COUNT(DISTINCT enrollment.enrollment_id) FILTER (
                    WHERE enrollment.status = 'active'
@@ -701,7 +919,6 @@ function parse_training_class_xlsx(string $path): array
         'class_code' => ['Mã lớp', 'MaLop'],
         'class_name' => ['Tên lớp', 'TenLop'],
         'valid_from' => ['Hiệu lực từ', 'HieuLucTu'],
-        'valid_to' => ['Hiệu lực đến', 'HieuLucDen'],
     ], $errors);
     $members = training_class_sheet_rows($sheetMap['thanhvien'], [
         'class_code' => ['Mã lớp', 'MaLop'],
@@ -860,8 +1077,8 @@ function stream_training_class_import_template(): never
     $classSheet = $workbook->getActiveSheet();
     $classSheet->setTitle('Lop');
     $classSheet->fromArray([
-        ['Mã lớp', 'Tên lớp', 'Hiệu lực từ', 'Hiệu lực đến'],
-        ['FTC-000001', 'Lớp KTV tháng 09/2026', '01/09/2026', '30/09/2026'],
+        ['Mã lớp', 'Tên lớp', 'Hiệu lực từ'],
+        ['FTC-000001', 'Lớp KTV tháng 09/2026', '01/09/2026'],
     ]);
     $memberSheet = $workbook->createSheet();
     $memberSheet->setTitle('ThanhVien');
@@ -910,9 +1127,7 @@ function validate_training_class_import(PDO $pdo, array $parsed): array
         $code = strtoupper(trim((string)($row['class_code'] ?? '')));
         $name = trim((string)($row['class_name'] ?? ''));
         $from = training_class_import_date($row['valid_from'] ?? null);
-        $toRaw = $row['valid_to'] ?? null;
-        $to = ($toRaw === null || trim((string)$toRaw) === '') ? null : training_class_import_date($toRaw);
-        if ($code === '' || $name === '' || $from === null || (($toRaw !== null && trim((string)$toRaw) !== '') && $to === null) || ($to !== null && $to < $from)) {
+        if ($code === '' || $name === '' || $from === null) {
             $errors[] = ['sheet'=>$row['source_sheet'], 'row'=>$row['source_row'], 'message'=>'Thông tin lớp hoặc thời gian hiệu lực không hợp lệ.'];
             continue;
         }
@@ -932,7 +1147,7 @@ function validate_training_class_import(PDO $pdo, array $parsed): array
         if ($curriculumId === '') {
             $curriculumId = training_class_default_curriculum_id($pdo);
         }
-        $classes[$code] = ['class_id'=>(string)$existing['class_id'], 'curriculum_id'=>$curriculumId, 'class_code'=>$code, 'class_name'=>$name, 'valid_from'=>$from, 'valid_to'=>$to];
+        $classes[$code] = ['class_id'=>(string)$existing['class_id'], 'curriculum_id'=>$curriculumId, 'class_code'=>$code, 'class_name'=>$name, 'valid_from'=>$from];
     }
     $members = [];
     $memberKeys = [];
@@ -1005,21 +1220,21 @@ function apply_training_class_import(PDO $pdo, array $validated, string $batchId
         return ['batch_id'=>$batchId, 'duplicate'=>true] + $row;
     }
     $assignmentCount = 0;
-    $update = $pdo->prepare("UPDATE training_classes SET class_name=:class_name, curriculum_id=COALESCE(curriculum_id, CAST(:curriculum_id AS uuid)), start_date=CAST(:valid_from AS date), end_date=CAST(:valid_to AS date), status=:status, updated_at=NOW() WHERE class_id=CAST(:class_id AS uuid)");
-    $updateEnrollments = $pdo->prepare("UPDATE class_enrollments SET valid_to=CAST(:valid_to AS date), updated_at=NOW() WHERE class_id=CAST(:class_id AS uuid) AND status='active'");
-    $updateClassAssignments = $pdo->prepare("UPDATE class_lab_assignments SET assigned_at=CAST(:valid_from AS date)::timestamp, due_at=CASE WHEN CAST(:valid_to AS date) IS NULL THEN NULL ELSE CAST(:valid_to AS date)::timestamp + INTERVAL '1 day' - INTERVAL '1 second' END, updated_at=NOW() WHERE class_id=CAST(:class_id AS uuid) AND status IN ('assigned','active')");
-    $updateIndividualAssignments = $pdo->prepare("UPDATE lab_assignments SET assigned_at=CAST(:valid_from AS date)::timestamp, due_at=CASE WHEN CAST(:valid_to AS date) IS NULL THEN NULL ELSE CAST(:valid_to AS date)::timestamp + INTERVAL '1 day' - INTERVAL '1 second' END, updated_at=NOW() WHERE class_id_snapshot=CAST(:class_id AS uuid) AND status IN ('assigned','in_progress')");
+    $update = $pdo->prepare("UPDATE training_classes SET class_name=:class_name, curriculum_id=COALESCE(curriculum_id, CAST(:curriculum_id AS uuid)), start_date=CAST(:valid_from AS date), status=:status, updated_at=NOW() WHERE class_id=CAST(:class_id AS uuid)");
+    $updateEnrollments = $pdo->prepare("UPDATE class_enrollments SET valid_to=NULL, updated_at=NOW() WHERE class_id=CAST(:class_id AS uuid) AND status='active'");
+    $updateClassAssignments = $pdo->prepare("UPDATE class_lab_assignments SET assigned_at=CAST(:valid_from AS date)::timestamp, due_at=NULL, updated_at=NOW() WHERE class_id=CAST(:class_id AS uuid) AND status IN ('assigned','active')");
+    $updateIndividualAssignments = $pdo->prepare("UPDATE lab_assignments SET assigned_at=CAST(:valid_from AS date)::timestamp, due_at=NULL, updated_at=NOW() WHERE class_id_snapshot=CAST(:class_id AS uuid) AND status IN ('assigned','in_progress')");
     foreach ($validated['classes'] as $class) {
-        $dateParams = ['valid_from'=>$class['valid_from'], 'valid_to'=>$class['valid_to'], 'class_id'=>$class['class_id']];
-        $update->execute(['class_name'=>$class['class_name'], 'curriculum_id'=>$class['curriculum_id'], 'status'=>training_class_status_for_dates($class['valid_from'], $class['valid_to'])] + $dateParams);
-        $updateEnrollments->execute(['valid_to'=>$class['valid_to'], 'class_id'=>$class['class_id']]);
+        $dateParams = ['valid_from'=>$class['valid_from'], 'class_id'=>$class['class_id']];
+        $update->execute(['class_name'=>$class['class_name'], 'curriculum_id'=>$class['curriculum_id'], 'status'=>training_class_status_for_dates($class['valid_from'])] + $dateParams);
+        $updateEnrollments->execute(['class_id'=>$class['class_id']]);
         $updateClassAssignments->execute($dateParams);
         $updateIndividualAssignments->execute($dateParams);
         $classMembers = array_values(array_map(static fn(array $item): array => $item['user'], array_filter($validated['members'], static fn(array $item): bool => $item['class_code'] === $class['class_code'])));
         $classDevices = array_values(array_map(static fn(array $item): array => $item['device'], array_filter($validated['devices'], static fn(array $item): bool => $item['class_code'] === $class['class_code'])));
-        training_class_add_members($pdo, $class['class_id'], $classMembers, $class['valid_from'], $class['valid_to'], 'import');
+        training_class_add_members($pdo, $class['class_id'], $classMembers, $class['valid_from'], 'import');
         $createdForClass = 0;
-        training_class_add_devices($pdo, $class['class_id'], $class['curriculum_id'], $classDevices, $class['valid_from'], $class['valid_to'], 'import', $createdForClass);
+        training_class_add_devices($pdo, $class['class_id'], $class['curriculum_id'], $classDevices, $class['valid_from'], 'import', $createdForClass);
         $assignmentCount += $createdForClass;
     }
     $result = ['batch_id'=>$batchId, 'duplicate'=>false, 'class_count'=>count($validated['classes']), 'member_count'=>count($validated['members']), 'device_count'=>count($validated['devices']), 'assignment_count'=>$assignmentCount, 'error_count'=>0];
@@ -1050,7 +1265,7 @@ function training_class_personal_dashboard_payload(PDO $pdo, array $user): array
     $enrollmentsQuery = $pdo->prepare(
         <<<'SQL'
         SELECT e.enrollment_id, e.status AS enrollment_status, e.valid_from, e.valid_to,
-               c.class_id, c.class_code, c.class_name, c.start_date, c.end_date, c.status AS class_status
+               c.class_id, c.class_code, c.class_name, c.start_date, c.status AS class_status
           FROM class_enrollments e
           JOIN training_classes c ON c.class_id = e.class_id
          WHERE e.user_id = CAST(:user_id AS uuid)
@@ -1059,7 +1274,6 @@ function training_class_personal_dashboard_payload(PDO $pdo, array $user): array
            AND (e.valid_to IS NULL OR e.valid_to >= CURRENT_DATE)
            AND c.status IN ('planned', 'active')
            AND c.start_date <= CURRENT_DATE
-           AND (c.end_date IS NULL OR c.end_date >= CURRENT_DATE)
          ORDER BY c.start_date DESC
         SQL
     );

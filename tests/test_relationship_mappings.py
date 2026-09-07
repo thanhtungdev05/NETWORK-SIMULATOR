@@ -17,16 +17,30 @@ django.setup()
 
 from django.db import models
 
-from admin_portal.admin import FtcUserAdmin, TimerSessionAdmin
+from admin_portal.admin import (
+    ClassLabAssignmentAdmin,
+    FtcUserAdmin,
+    LabAssignmentAdmin,
+    ReadOnlyAuditAdmin,
+    TimerSessionAdmin,
+    TrainingClassAdmin,
+)
 from admin_portal.models import (
+    ClassEnrollment,
+    ClassLabAssignment,
+    Curriculum,
+    CurriculumLab,
     DeviceCatalog,
     FtcUser,
     LabCatalog,
+    LabAssignment,
     LoginLog,
     Region,
     Role,
     RosterImportLog,
     TimerSession,
+    TimerSessionAssignmentLink,
+    TrainingClass,
 )
 
 
@@ -78,6 +92,87 @@ class AdminRelationshipMappingTests(unittest.TestCase):
                 'region_id',
                 models.PROTECT,
                 'users',
+            ),
+            (
+                CurriculumLab,
+                'curriculum',
+                Curriculum,
+                'curriculum_id',
+                'curriculum_id',
+                models.PROTECT,
+                'curriculum_labs',
+            ),
+            (
+                CurriculumLab,
+                'lab',
+                LabCatalog,
+                'lab_id',
+                'lab_id',
+                models.PROTECT,
+                'curriculum_entries',
+            ),
+            (
+                ClassEnrollment,
+                'training_class',
+                TrainingClass,
+                'class_id',
+                'class_id',
+                models.PROTECT,
+                'enrollments',
+            ),
+            (
+                ClassEnrollment,
+                'user',
+                FtcUser,
+                'user_id',
+                'user_id',
+                models.PROTECT,
+                'class_enrollments',
+            ),
+            (
+                ClassLabAssignment,
+                'curriculum_lab',
+                CurriculumLab,
+                'curriculum_lab_id',
+                'curriculum_lab_id',
+                models.PROTECT,
+                'class_assignments',
+            ),
+            (
+                LabAssignment,
+                'enrollment',
+                ClassEnrollment,
+                'enrollment_id',
+                'enrollment_id',
+                models.PROTECT,
+                'lab_assignments',
+            ),
+            (
+                LabAssignment,
+                'class_snapshot',
+                TrainingClass,
+                'class_id_snapshot',
+                'class_id',
+                models.PROTECT,
+                'member_lab_assignments',
+            ),
+            (
+                TimerSessionAssignmentLink,
+                'timer_session',
+                TimerSession,
+                'timer_session_id',
+                'id',
+                models.CASCADE,
+                'assignment_links',
+            ),
+            (
+                TimerSessionAssignmentLink,
+                'assignment',
+                LabAssignment,
+                'assignment_id',
+                'assignment_id',
+                models.PROTECT,
+                'timer_session_links',
             ),
             (
                 TimerSession,
@@ -163,6 +258,28 @@ class AdminRelationshipMappingTests(unittest.TestCase):
     def test_admin_preloads_relations_used_in_lists(self):
         self.assertEqual(FtcUserAdmin.list_select_related, ['role', 'region'])
         self.assertEqual(TimerSessionAdmin.list_select_related, ['user', 'device'])
+        self.assertIn('curriculum_lab__lab__device', ClassLabAssignmentAdmin.list_select_related)
+        self.assertIn('enrollment__user', LabAssignmentAdmin.list_select_related)
+        self.assertIn('enrollment__user__region', LabAssignmentAdmin.list_select_related)
+
+    def test_timer_sessions_are_immutable_in_admin(self):
+        self.assertFalse(TimerSessionAdmin.has_add_permission(None, None))
+        self.assertFalse(TimerSessionAdmin.has_change_permission(None, None))
+        self.assertFalse(TimerSessionAdmin.has_delete_permission(None, None))
+
+    def test_assignment_admin_is_read_only_and_exposes_class_hierarchy(self):
+        self.assertTrue(issubclass(ClassLabAssignmentAdmin, ReadOnlyAuditAdmin))
+        self.assertTrue(issubclass(LabAssignmentAdmin, ReadOnlyAuditAdmin))
+        self.assertIn('active_member_count', TrainingClassAdmin.list_display)
+        self.assertIn('assigned_lab_count', TrainingClassAdmin.list_display)
+        self.assertIn('assigned_classes_badge', FtcUserAdmin.list_display)
+
+        for model in (
+            Curriculum, CurriculumLab, TrainingClass, ClassEnrollment,
+            ClassLabAssignment, LabAssignment, TimerSessionAssignmentLink,
+        ):
+            with self.subTest(model=model.__name__):
+                self.assertFalse(model._meta.managed)
 
 
 class DashboardAssignmentSourceTests(unittest.TestCase):

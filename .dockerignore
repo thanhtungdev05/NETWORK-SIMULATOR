@@ -32,6 +32,7 @@ sim_be12000/reference/source/
 # File tài liệu
 *.docx
 *.xlsx
+!templates/Mau_Import_KTV.xlsx
 *.pptx
 
 # Script cào dữ liệu & dev tools

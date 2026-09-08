@@ -7,23 +7,39 @@ let trainingAssignments = [];
 let dashboardReport = null;
 let technicianByIdentity = new Map();
 let technicianCatalogAuthoritative = false;
+let instructorSearchTimer = null;
+let reportExportReturnFocus = null;
+let reportExportBusy = false;
+let activeToastTimer = null;
+let rosterEditReturnFocus = null;
+let dashboardLoadRequest = null;
+let deviceSubModalReturnFocus = null;
+let learnerDetailReturnIdentity = '';
 
 const formatNumber = new Intl.NumberFormat('vi-VN');
 const LEARNER_TABLE_PAGE_SIZE = 4;
 const LEARNER_HISTORY_PAGE_SIZE = 6;
 
+const now = new Date();
+const currentMonthFirst = new Date(now.getFullYear(), now.getMonth(), 1);
+const fmtDate = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
 const state = {
-    startDate: '',
-    endDate: '',
+    currentUser: null,
+    isAdmin: false,
+    canExportReports: false,
+    startDate: fmtDate(currentMonthFirst),
+    endDate: fmtDate(now),
     tempStartDate: '',
     tempEndDate: '',
-    calendarMonth: new Date(2026, 6, 1),
+    calendarMonth: new Date(now.getFullYear(), now.getMonth(), 1),
 
     hourlyStartDate: '',
     hourlyEndDate: '',
     hourlyTempStartDate: '',
     hourlyTempEndDate: '',
-    hourlyCalendarMonth: new Date(2026, 6, 1),
+    hourlyCalendarMonth: new Date(now.getFullYear(), now.getMonth(), 1),
+    hourlyCalendarFocusDate: fmtDate(now),
 
     selectedLearner: '',
 
@@ -32,7 +48,7 @@ const state = {
     realtimeSelectedKtvs: new Set(),
     realtimeSelectedModes: new Set(['Thực hành', 'Hướng dẫn']),
     realtimeSelectedDevices: new Set(),
-    realtimeSelectedStatuses: new Set(['Hoàn thành', 'Đang làm', 'Không đạt', 'Đã dừng']),
+    realtimeSelectedStatuses: new Set(['Đạt', 'Chưa đạt', 'Chưa có kết quả', 'Không chấm']),
     realtimeSearchKtv: '',
     realtimeSearchDevice: '',
     realtimeSearchLab: '',
@@ -44,10 +60,18 @@ const state = {
     instructorClasses: [],
     instructorClassesLoaded: false,
     instructorActiveClassId: '',
-    instructorSelectedDevice: '',
+    instructorSelectedDevices: null,
+    instructorSearchKtv: '',
+    instructorCompletionFilter: 'all',
     instructorImportMembers: [],
     instructorImportFileName: '',
     instructorWorkspaceBound: false,
+    assignmentsLoaded: false,
+
+    // Class Matrix state
+    classMatrixSelectedClass: '',
+    classMatrixSelectedDevices: null,
+    classMatrixSearch: '',
 
     // Learner table filters & sort
     learnerSelectedKtvs: new Set(),
@@ -68,37 +92,67 @@ const state = {
     detailSortKey: 'time',
     detailSelectedModes: new Set(['Thực hành', 'Hướng dẫn']),
     detailSelectedDevices: new Set(),
-    detailSelectedStatuses: new Set(['Hoàn thành', 'Đang làm', 'Không đạt', 'Đã dừng', 'Chưa thực hiện']),
+    detailDevicesTouched: false,
+    detailSelectedStatuses: new Set(['Đạt', 'Chưa đạt', 'Chưa có kết quả', 'Không chấm']),
     detailSearchDevice: '',
     detailSelectedLabs: new Set(),
     detailLabsTouched: false,
     detailSearchLab: '',
 
-    // Lab detail filter & sort
-    labSelectedDevices: new Set(),
-    labSearchDevice: '',
-    labSort: 'attempts_desc',
-    analyticsLabsExpanded: false,
-
-    // Device detail filter & sort
-    deviceSelectedDevices: new Set(),
-    deviceSearchDevice: '',
-    deviceSort: 'sessions_desc',
     detailReportExpandedRegions: new Set(['TDDT', 'TNMT']),
+    regionUsageYear: now.getFullYear(),
 
     filtersBound: false,
     popoversInitialized: false,
-    dataSourceLabel: 'Đang tải dữ liệu từ timer_sessions'
+    dataSourceLabel: 'Đang đồng bộ dữ liệu vận hành',
+    dashboardDataLoaded: false,
+    dashboardReportStatus: 'loading',
+    lastSuccessfulRefreshAt: null,
+
+    // Roster (Quản lý KTV) — Admin
+    rosterTab: 'list',
+    rosterItems: [],
+    rosterRegions: [],
+    rosterRegionsLoaded: false,
+    rosterStats: null,
+    rosterPage: 1,
+    rosterTotal: 0,
+    rosterSearch: '',
+    rosterStatusFilter: 'active',
+    rosterHistoryItems: [],
+    rosterPreviewData: null,
+    rosterImportFile: null,
+    rosterImportBatchId: '',
+    rosterImportBusy: false,
+    rosterLoaded: false,
+    rosterHistoryLoaded: false,
+    rosterEditEmployeeId: '',
+    rosterInitialized: false,
+    rosterRequestSequence: 0,
+    rosterHistoryRequestSequence: 0,
+
+    // Training class registration and assignment management
+    classTab: 'list',
+    classItems: [],
+    classCatalog: { members: [], devices: [] },
+    classSelectedMembers: new Set(),
+    classPendingMembers: new Map(),
+    classSelectedDevices: new Set(),
+    classMemberSearch: '',
+    classEditingId: '',
+    classEditingUpdatedAt: '',
+    classLoaded: false,
+    classCatalogLoaded: false,
+    classInitialized: false,
+    classMemberImportFile: null,
+    classMemberImportPreview: null,
+    classMemberImportBusy: false,
+    classFinalPreviewReady: false,
 };
 
 const els = {
-    activeRangeText: document.getElementById('activeRangeText'),
-    kpiRangeLabel: document.getElementById('kpiRangeLabel'),
     sessionsBody: document.getElementById('sessionsBody'),
     learnerTableMeta: document.getElementById('learnerTableMeta'),
-    labBars: document.getElementById('labBars'),
-    deviceGrid: document.getElementById('deviceGrid'),
-    regionBars: document.getElementById('regionBars'),
     detailReportHead: document.getElementById('detailReportHead'),
     detailReportBody: document.getElementById('detailReportBody'),
     detailReportFoot: document.getElementById('detailReportFoot'),
@@ -192,22 +246,85 @@ function escapeHTML(value) {
     }[char]));
 }
 
-function fillSelect(id, values, defaultLabel) {
-    const select = document.getElementById(id);
-    if (!select) return;
-    const currentValue = select.value;
-    select.innerHTML = `<option value="">${defaultLabel}</option>` + values
-        .map(value => `<option value="${escapeHTML(value)}">${escapeHTML(value)}</option>`)
-        .join('');
-    if ([...select.options].some(option => option.value === currentValue)) {
-        select.value = currentValue;
+function safeStorageGet(key) {
+    try {
+        return window.localStorage.getItem(key);
+    } catch (error) {
+        return null;
+    }
+}
+
+function safeStorageSet(key, value) {
+    try {
+        window.localStorage.setItem(key, value);
+    } catch (error) {
+        // Storage có thể bị vô hiệu hóa bởi chính sách trình duyệt; giao diện vẫn hoạt động bình thường.
+    }
+}
+
+function showToast(message, type = 'info', duration = 4200) {
+    const region = document.getElementById('toastRegion');
+    if (!region || !message) return;
+    window.clearTimeout(activeToastTimer);
+    region.setAttribute('aria-live', type === 'error' ? 'assertive' : 'polite');
+
+    const toast = document.createElement('div');
+    toast.className = `dashboard-toast is-${type}`;
+    toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+    const icon = document.createElement('span');
+    icon.className = 'dashboard-toast-icon';
+    icon.setAttribute('aria-hidden', 'true');
+    icon.textContent = type === 'success' ? '✓' : (type === 'error' ? '!' : 'i');
+    const copy = document.createElement('span');
+    copy.className = 'dashboard-toast-copy';
+    copy.textContent = message;
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'dashboard-toast-close';
+    close.setAttribute('aria-label', 'Đóng thông báo');
+    close.textContent = '×';
+    close.addEventListener('click', () => toast.remove());
+    toast.append(icon, copy, close);
+    region.replaceChildren(toast);
+
+    requestAnimationFrame(() => toast.classList.add('is-visible'));
+    activeToastTimer = window.setTimeout(() => {
+        toast.classList.remove('is-visible');
+        window.setTimeout(() => toast.remove(), 180);
+    }, duration);
+}
+
+function getFocusableElements(container) {
+    if (!container) return [];
+    return [...container.querySelectorAll(
+        'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )].filter(element => !element.hidden && element.offsetParent !== null);
+}
+
+function trapDialogFocus(event, container) {
+    if (event.key !== 'Tab' || !container) return;
+    const focusable = getFocusableElements(container);
+    if (!focusable.length) {
+        event.preventDefault();
+        container.focus();
+        return;
+    }
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
     }
 }
 
 function getStatusClass(status) {
-    if (status === 'Hoàn thành') return 'status-done';
-    if (status === 'Đang làm') return 'status-running';
-    if (status === 'Không đạt' || status === 'Đã dừng') return 'status-risk';
+    if (status === 'Đạt' || status === 'Hoàn thành') return 'status-done';
+    if (status === 'Chưa đạt') return 'status-risk';
+    if (status === 'Chưa có kết quả') return 'status-running';
+    if (status === 'Không chấm') return 'status-ungraded';
     return 'status-notstarted';
 }
 
@@ -267,9 +384,11 @@ function sortRows(rows, sortState) {
 function renderSortMarks() {
     document.querySelectorAll('.sort-button').forEach(button => {
         const table = button.dataset.table;
+        const header = button.closest('th');
         if (table === 'realtime') {
             const mark = button.querySelector('.sort-mark');
             if (mark) mark.textContent = state.realtimeTimeSortDir === 'asc' ? '↑' : '↓';
+            if (header) header.setAttribute('aria-sort', state.realtimeTimeSortDir === 'asc' ? 'ascending' : 'descending');
             return;
         }
         const sortState = state.sessionsSort;
@@ -278,13 +397,22 @@ function renderSortMarks() {
             const isActive = sortState.key === button.dataset.key;
             mark.textContent = isActive ? (sortState.direction === 'asc' ? '↑' : '↓') : '↕';
             button.classList.toggle('is-sorted', isActive);
+            if (header) header.setAttribute('aria-sort', isActive ? (sortState.direction === 'asc' ? 'ascending' : 'descending') : 'none');
         }
     });
 
     const timeMark = document.querySelector('#detailTimeSort .sort-mark');
     if (timeMark) timeMark.textContent = state.detailSortKey === 'time' ? (state.detailTimeSortDir === 'asc' ? '↑' : '↓') : '↕';
+    document.getElementById('detailTimeSort')?.closest('th')?.setAttribute(
+        'aria-sort',
+        state.detailSortKey === 'time' ? (state.detailTimeSortDir === 'asc' ? 'ascending' : 'descending') : 'none'
+    );
     const durMark = document.querySelector('#detailDurationSort .sort-mark');
     if (durMark) durMark.textContent = state.detailSortKey === 'duration' ? (state.detailDurationSortDir === 'asc' ? '↑' : '↓') : '↕';
+    document.getElementById('detailDurationSort')?.closest('th')?.setAttribute(
+        'aria-sort',
+        state.detailSortKey === 'duration' ? (state.detailDurationSortDir === 'asc' ? 'ascending' : 'descending') : 'none'
+    );
 }
 
 function getKpiComparisonPeriods() {
@@ -334,54 +462,83 @@ function getKpiComparisonPeriods() {
     };
 }
 
-function renderKpis() {
-    const periods = getKpiComparisonPeriods();
-    const practiceOnly = item => item.mode === 'Thực hành';
-    const periodMetrics = rows => {
-        const all = computeMetrics(rows);
-        const practice = computeMetrics(rows.filter(practiceOnly));
-        return {
-            totalSessions: all.totalSessions,
-            learners: all.learners,
-            completed: practice.completed,
-            rate: practice.rate,
-            firstTryRate: practice.firstTryRate,
-            avgDuration: all.avgDuration
-        };
-    };
-    const currentRows = filterSessionsByDate(periods.currentStart, periods.currentEnd);
-    const previousRows = filterSessionsByDate(periods.previousStart, periods.previousEnd);
-    const mapReportMetrics = metric => ({
-        totalSessions: Number(metric?.practice_attempts) || 0,
+const MIN_DURATION_SAMPLE_COUNT = 30;
+const MIN_DURATION_COVERAGE_RATE = 10;
+
+function mapReportMetrics(metric) {
+    const practiceAttempts = Number(metric?.practice_attempts) || 0;
+    const durationKnown = Number(metric?.duration_known_count) || 0;
+    const durationCoverage = metric?.duration_coverage_rate === null || metric?.duration_coverage_rate === undefined
+        ? (practiceAttempts ? Math.round((durationKnown / practiceAttempts) * 1000) / 10 : null)
+        : Number(metric.duration_coverage_rate);
+    const durationReliable = durationKnown >= MIN_DURATION_SAMPLE_COUNT
+        && durationCoverage !== null
+        && durationCoverage >= MIN_DURATION_COVERAGE_RATE;
+
+    return {
+        assigned: Number(metric?.assigned_count) || 0,
+        graded: Number(metric?.graded_count) || 0,
+        activityCompleted: Number(metric?.activity_completed_count) || 0,
+        ungradedCompleted: Number(metric?.ungraded_completed_count) || 0,
+        totalSessions: practiceAttempts,
+        guideSessions: Number(metric?.guide_attempts) || 0,
         learners: Number(metric?.participating_technicians) || 0,
-        completed: Number(metric?.passed_count) || 0,
+        completed: Number(metric?.completed_count) || 0,
         rate: metric?.completion_rate === null || metric?.completion_rate === undefined
             ? null
             : Number(metric.completion_rate),
+        passRate: metric?.pass_rate === null || metric?.pass_rate === undefined
+            ? null
+            : Number(metric.pass_rate),
         firstTryRate: metric?.first_try_rate === null || metric?.first_try_rate === undefined
             ? null
             : Number(metric.first_try_rate),
-        avgDuration: Number(metric?.avg_duration_sec) || 0
-    });
-    const authoritativeSummary = dashboardReport?.summary;
-    const currentMetrics = authoritativeSummary
-        ? mapReportMetrics(authoritativeSummary.current)
-        : periodMetrics(currentRows);
-    const previousMetrics = authoritativeSummary
-        ? mapReportMetrics(authoritativeSummary.previous)
-        : periodMetrics(previousRows);
-    const lifetimeMetrics = authoritativeSummary?.lifetime
-        ? mapReportMetrics(authoritativeSummary.lifetime)
-        : periodMetrics(sessions);
+        avgDuration: durationReliable && metric?.avg_duration_sec !== null && metric?.avg_duration_sec !== undefined
+            ? Number(metric.avg_duration_sec)
+            : null,
+        durationKnown,
+        durationAttempts: practiceAttempts,
+        durationCoverage,
+        durationReliable
+    };
+}
 
+function renderKpis() {
+    const periods = getKpiComparisonPeriods();
     const definitions = [
         { key: 'totalSessions', valueId: 'kpiSessions', comparisonId: 'kpiSessionsComparison', contextId: 'kpiSessionsContext', type: 'count', unit: 'phiên' },
+        { key: 'guideSessions', valueId: 'kpiGuideSessions', comparisonId: 'kpiGuideSessionsComparison', contextId: 'kpiGuideSessionsContext', type: 'count', unit: 'lượt' },
         { key: 'learners', valueId: 'kpiLearners', comparisonId: 'kpiLearnersComparison', contextId: 'kpiLearnersContext', type: 'count', unit: 'KTV' },
         { key: 'completed', valueId: 'kpiCompleted', comparisonId: 'kpiCompletedComparison', contextId: 'kpiCompletedContext', type: 'count', unit: 'bài' },
         { key: 'rate', valueId: 'kpiCompletionRate', comparisonId: 'kpiCompletionRateComparison', contextId: 'kpiCompletionRateContext', type: 'rate', unit: '%' },
+        { key: 'passRate', valueId: 'kpiPassRate', comparisonId: 'kpiPassRateComparison', contextId: 'kpiPassRateContext', type: 'rate', unit: '%' },
         { key: 'firstTryRate', valueId: 'kpiFirstTryRate', comparisonId: 'kpiFirstTryRateComparison', contextId: 'kpiFirstTryRateContext', type: 'rate', unit: '%' },
         { key: 'avgDuration', valueId: 'kpiAvgDuration', comparisonId: 'kpiAvgDurationComparison', contextId: 'kpiAvgDurationContext', type: 'duration', unit: 'giây', lowerIsBetter: true }
     ];
+
+    const reportPeriod = dashboardReport?.meta?.period;
+    const reportMatchesPeriod = reportPeriod?.from === periods.currentStart
+        && reportPeriod?.to === periods.currentEnd;
+    const authoritativeSummary = reportMatchesPeriod ? dashboardReport?.summary : null;
+    if (!authoritativeSummary) {
+        const message = state.dashboardReportStatus === 'loading'
+            ? 'Đang tải dữ liệu báo cáo tổng hợp'
+            : 'Không có dữ liệu báo cáo tổng hợp cho kỳ đã chọn';
+        definitions.forEach(definition => {
+            const valueElement = document.getElementById(definition.valueId);
+            const comparisonElement = document.getElementById(definition.comparisonId);
+            const contextElement = document.getElementById(definition.contextId);
+            if (valueElement) valueElement.textContent = '—';
+            if (comparisonElement) comparisonElement.replaceChildren();
+            if (contextElement) contextElement.textContent = message;
+        });
+        renderDashboardDataNotice(null);
+        return;
+    }
+
+    const currentMetrics = mapReportMetrics(authoritativeSummary.current);
+    const previousMetrics = mapReportMetrics(authoritativeSummary.previous);
+    const lifetimeMetrics = mapReportMetrics(authoritativeSummary.lifetime);
 
     const formatMetric = (value, definition) => {
         if (value === null || value === undefined) return '—';
@@ -435,13 +592,71 @@ function renderKpis() {
         }
 
         if (contextElement) {
-            const hasCurrentData = authoritativeSummary
-                ? Number(authoritativeSummary.current?.assigned_count || authoritativeSummary.current?.practice_attempts) > 0
-                : currentRows.length > 0;
-            const noDataLabel = hasCurrentData ? '' : ' • Chưa có dữ liệu';
-            contextElement.textContent = `${periods.currentLabel}${noDataLabel} • Lũy kế ${formatMetric(lifetimeValue, definition)}${definition.type === 'count' ? ` ${definition.unit}` : ''}`;
+            if (definition.key === 'avgDuration' && !currentMetrics.durationReliable) {
+                const known = formatNumber.format(currentMetrics.durationKnown || 0);
+                const attempts = formatNumber.format(currentMetrics.durationAttempts || 0);
+                contextElement.textContent = `${periods.currentLabel} • ${known}/${attempts} lượt có thời lượng • Chưa đủ mẫu tin cậy`;
+            } else if (definition.key === 'completed' || definition.key === 'rate') {
+                contextElement.textContent = `${periods.currentLabel} • Lũy kế đến cuối kỳ: ${formatNumber.format(currentMetrics.completed)}/${formatNumber.format(currentMetrics.assigned)} cặp KTV–Lab đã đạt`;
+            } else if (definition.key === 'passRate') {
+                contextElement.textContent = `${periods.currentLabel} • ${formatNumber.format(currentMetrics.graded)} lượt đã có kết quả chấm`;
+            } else if (definition.key === 'firstTryRate') {
+                contextElement.textContent = `${periods.currentLabel} • ${formatNumber.format(currentMetrics.completed)} cặp KTV–Lab đã đạt lũy kế làm mẫu`;
+            } else {
+                contextElement.textContent = `${periods.currentLabel} • Lũy kế ${formatMetric(lifetimeValue, definition)}${definition.type === 'count' ? ` ${definition.unit}` : ''}`;
+            }
         }
     });
+
+    renderDashboardDataNotice(currentMetrics);
+}
+
+function renderDashboardDataNotice(currentMetrics) {
+    const notice = document.getElementById('dashboardDataNotice');
+    if (!notice) return;
+
+    const messages = [];
+    if (state.dashboardReportStatus === 'stale') {
+        messages.push('Báo cáo tổng hợp chưa cập nhật được; hệ thống đang giữ bản dữ liệu thành công gần nhất.');
+    } else if (state.dashboardReportStatus === 'unavailable') {
+        messages.push('Không tải được báo cáo tổng hợp; các KPI được để trống thay vì tính bằng công thức dự phòng khác nghiệp vụ.');
+    }
+    const unassignedRegions = currentMetrics ? (dashboardReport?.matrix?.rows || []).filter(row => {
+        const region = row?.region || {};
+        return !region.region_id || String(region.code || region.region_code || '').toUpperCase() === 'UNASSIGNED';
+    }) : [];
+    const unassignedAssignments = unassignedRegions.reduce(
+        (sum, row) => sum + Number(row?.total?.assigned_count || row?.total?.eligible || 0),
+        0
+    );
+    if (unassignedAssignments > 0) {
+        messages.push(`${formatNumber.format(unassignedAssignments)} lượt KTV–lab chưa có khu vực nên đang được gom vào “Chưa xác định”.`);
+    }
+    if (currentMetrics && currentMetrics.ungradedCompleted > 0) {
+        messages.push(`${formatNumber.format(currentMetrics.ungradedCompleted)} lượt thực hành đã hoàn thành thao tác nhưng chưa có kết quả chấm; các lượt này chưa được tính là đạt chuẩn.`);
+    }
+
+    notice.hidden = messages.length === 0;
+    notice.replaceChildren();
+    if (!messages.length) return;
+
+    const icon = document.createElement('span');
+    icon.className = 'dashboard-data-notice-icon';
+    icon.setAttribute('aria-hidden', 'true');
+    icon.textContent = '!';
+    const content = document.createElement('div');
+    const title = document.createElement('strong');
+    title.textContent = state.dashboardReportStatus === 'ready'
+        ? 'Cần hoàn thiện dữ liệu trước khi dùng báo cáo chính thức'
+        : 'Trạng thái dữ liệu báo cáo';
+    const list = document.createElement('ul');
+    messages.forEach(message => {
+        const item = document.createElement('li');
+        item.textContent = message;
+        list.appendChild(item);
+    });
+    content.append(title, list);
+    notice.append(icon, content);
 }
 
 function buildLearnerSummaries(rows) {
@@ -465,7 +680,7 @@ function buildLearnerSummaries(rows) {
 
     return [...map.values()].map(item => {
         const latest = getLatestSession(item.rows);
-        const completed = item.rows.filter(row => row.status === 'Hoàn thành').length;
+        const completed = item.rows.filter(isSuccessfulSession).length;
         const modesArray = [...item.modes];
         const primaryMode = modesArray.length === 1 ? modesArray[0] : (latest?.mode || 'Thực hành');
         return {
@@ -484,7 +699,7 @@ function buildLearnerSummaries(rows) {
             lastDateTimeMs: latest ? sessionTimestampMs(latest) : 0,
             lastDateTimeFormatted: formatDateTime(latest?.date, latest?.time),
             lastAction: latest?.lastAction || 'N/A',
-            latestDuration: latest?.duration || 0,
+            latestDuration: latest?.duration ?? null,
             completion: item.rows.length ? Math.round((completed / item.rows.length) * 100) : 0
         };
     });
@@ -520,9 +735,9 @@ function renderSessions(rows) {
     state.learnerTablePage = pageData.currentPage;
     if (els.sessionsBody) {
         els.sessionsBody.innerHTML = pageData.rows.map(item => `
-            <tr class="clickable-row ${state.selectedLearner === item.learner ? 'active' : ''}" data-learner="${escapeHTML(item.learner)}" title="Bấm để xem chi tiết KTV">
+            <tr class="clickable-row ${state.selectedLearner === item.learner ? 'active' : ''}">
                 <td>
-                    <div class="learner-link" title="${escapeHTML(item.learner)}">${escapeHTML(getLearnerName(item.learner))}</div>
+                    <button type="button" class="learner-link" data-open-learner data-learner="${escapeHTML(item.learner)}" title="Mở chi tiết ${escapeHTML(item.learner)}">${escapeHTML(getLearnerName(item.learner))}</button>
                     <div class="item-sub">${item.completion}% hoàn thành</div>
                 </td>
                 <td>${escapeHTML(item.learner)}</td>
@@ -536,13 +751,15 @@ function renderSessions(rows) {
                 </td>
             </tr>
         `).join('');
-        els.sessionsBody.querySelectorAll('[data-learner]').forEach(row => {
-            row.addEventListener('click', () => {
-                const nextLearner = row.getAttribute('data-learner');
-                if (state.selectedLearner !== nextLearner) state.learnerDetailPage = 1;
+        els.sessionsBody.querySelectorAll('[data-open-learner]').forEach(button => {
+            const openLearner = () => {
+                const nextLearner = button.getAttribute('data-learner');
+                if (state.selectedLearner !== nextLearner) resetLearnerDetailFilters();
+                learnerDetailReturnIdentity = nextLearner;
                 state.selectedLearner = nextLearner;
                 renderAll();
-            });
+            };
+            button.addEventListener('click', openLearner);
         });
     }
     renderLearnerTableMeta(pageData);
@@ -587,19 +804,30 @@ function renderLearnerTableMeta(pageData) {
     });
 }
 
-function renderLearnerHistoryMeta(pageData) {
+function renderLearnerHistoryMeta(pageData, totalHistoryRows = pageData.totalRows) {
     if (!els.learnerHistoryMeta) return;
-    if (!pageData.totalRows) {
+    if (!totalHistoryRows) {
         els.learnerHistoryMeta.innerHTML = '';
         return;
     }
-    els.learnerHistoryMeta.innerHTML = `
-        <span>Hiển thị ${pageData.start + 1}-${pageData.end} / ${pageData.totalRows} phiên</span>
+
+    const isFiltered = pageData.totalRows !== totalHistoryRows;
+    const rangeText = pageData.totalRows
+        ? `Dòng ${pageData.start + 1}-${pageData.end}`
+        : '';
+    const summaryText = isFiltered
+        ? `Đang hiển thị ${pageData.totalRows}/${totalHistoryRows} phiên theo bộ lọc${rangeText ? ` • ${rangeText}` : ''}`
+        : `Hiển thị ${pageData.start + 1}-${pageData.end} / ${pageData.totalRows} phiên`;
+    const pagination = pageData.totalRows ? `
         <span class="table-page-controls">
             <button type="button" class="table-page-btn" data-learner-page="prev" ${pageData.currentPage <= 1 ? 'disabled' : ''}>Trước</button>
             <span>Trang ${pageData.currentPage}/${pageData.totalPages}</span>
             <button type="button" class="table-page-btn" data-learner-page="next" ${pageData.currentPage >= pageData.totalPages ? 'disabled' : ''}>Sau</button>
         </span>
+    ` : '';
+    els.learnerHistoryMeta.innerHTML = `
+        <span>${summaryText}</span>
+        ${pagination}
     `;
     els.learnerHistoryMeta.querySelectorAll('[data-learner-page]').forEach(button => {
         button.addEventListener('click', (event) => {
@@ -612,11 +840,23 @@ function renderLearnerHistoryMeta(pageData) {
 }
 
 function hideLearnerDetail() {
+    const returnIdentity = state.selectedLearner || learnerDetailReturnIdentity;
     state.selectedLearner = '';
     state.learnerDetailPage = 1;
     document.body.classList.remove('detail-open');
     els.learnerDetailCard?.classList.remove('visible');
     els.learnerDetailCard?.setAttribute('aria-hidden', 'true');
+    state.currentLearnerRows = null;
+    document.getElementById('learnerDeviceDonut')?.replaceChildren();
+    document.getElementById('learnerDeviceLegend')?.replaceChildren();
+    learnerDetailReturnIdentity = '';
+    if (returnIdentity) {
+        window.requestAnimationFrame(() => {
+            [...(els.sessionsBody?.querySelectorAll('[data-open-learner]') || [])]
+                .find(button => button.dataset.learner === returnIdentity)
+                ?.focus({ preventScroll: true });
+        });
+    }
 }
 
 function renderOverviewMonthlyTrend(rows) {
@@ -626,48 +866,38 @@ function renderOverviewMonthlyTrend(rows) {
 
     container.classList.remove('is-empty');
 
-    const validDates = rows
-        .map(item => parseDate(item.date))
-        .filter(date => !Number.isNaN(date.getTime()) && date.getTime() > 0);
-    if (!validDates.length) {
-        container.classList.add('is-empty');
-        container.innerHTML = '<div class="empty">Không có dữ liệu theo tháng.</div>';
-        if (summary) summary.innerHTML = '';
-        return;
-    }
-
-    const latestDataDate = new Date(Math.max(...validDates.map(date => date.getTime())));
-    const selectedDate = state.startDate ? parseDate(state.startDate) : latestDataDate;
+    const selectedDate = state.startDate ? parseDate(state.startDate) : now;
     const selectedKey = `${selectedDate.getFullYear()}-${selectedDate.getMonth()}`;
     const reportYear = selectedDate.getFullYear();
     const today = new Date();
+    const reportYearFromMeta = dashboardReport?.meta?.period?.from
+        ? parseDate(dashboardReport.meta.period.from).getFullYear()
+        : null;
+    if (!Array.isArray(dashboardReport?.monthly) || reportYearFromMeta !== reportYear) {
+        container.classList.add('is-empty');
+        container.innerHTML = `<div class="empty">${state.dashboardReportStatus === 'loading' ? 'Đang tải xu hướng hoạt động...' : 'Không tải được dữ liệu xu hướng cho năm đã chọn.'}</div>`;
+        if (summary) summary.innerHTML = '';
+        return;
+    }
     const monthlyReport = new Map((dashboardReport?.monthly || []).map(item => [item.month, item]));
     const periods = Array.from({ length: 12 }, (_, index) => {
         const date = new Date(reportYear, index, 1);
-        const monthRows = rows.filter(item => {
-            const itemDate = parseDate(item.date);
-            return !Number.isNaN(itemDate.getTime())
-                && itemDate.getFullYear() === date.getFullYear()
-                && itemDate.getMonth() === date.getMonth();
-        });
         const reportMonth = monthlyReport.get(`${reportYear}-${String(index + 1).padStart(2, '0')}`);
-        const fallbackMetrics = computeMetrics(monthRows.filter(item => item.mode === 'Thực hành'));
-        const metrics = dashboardReport
-            ? (reportMonth ? {
+        const metrics = reportMonth ? {
                 totalSessions: Number(reportMonth.practice_attempts) || 0,
                 learners: Number(reportMonth.participating_technicians) || 0,
-                completed: Number(reportMonth.passed_count) || 0,
+                completed: Number(reportMonth.completed_count) || 0,
                 rate: reportMonth.completion_rate === null ? null : Number(reportMonth.completion_rate),
+                passRate: reportMonth.pass_rate === null ? null : Number(reportMonth.pass_rate),
                 firstTryRate: reportMonth.first_try_rate === null ? null : Number(reportMonth.first_try_rate),
-                avgDuration: Number(reportMonth.avg_duration_sec) || 0
-            } : { totalSessions: 0, learners: 0, completed: 0, rate: null, firstTryRate: null, avgDuration: 0 })
-            : fallbackMetrics;
+                avgDuration: reportMonth.avg_duration_sec === null ? null : Number(reportMonth.avg_duration_sec)
+            } : { totalSessions: 0, learners: 0, completed: 0, rate: null, passRate: null, firstTryRate: null, avgDuration: null };
         return {
             date,
             key: `${date.getFullYear()}-${date.getMonth()}`,
             label: `${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`,
             shortLabel: `T${String(date.getMonth() + 1).padStart(2, '0')}`,
-            isFuture: date > new Date(today.getFullYear(), today.getMonth(), 1),
+            isFuture: Boolean(reportMonth?.is_future) || date > new Date(today.getFullYear(), today.getMonth(), 1),
             ...metrics
         };
     });
@@ -684,7 +914,7 @@ function renderOverviewMonthlyTrend(rows) {
         const height = period.totalSessions ? Math.max(12, Math.round((period.totalSessions / maxSessions) * 100)) : 0;
         const isSelected = period.key === selectedKey;
         return `
-            <div class="ktv-month-column ${isSelected ? 'selected' : ''} ${period.isFuture ? 'future' : ''}" title="${period.label}: ${period.totalSessions} lượt Thực hành, ${period.completed} assignment đạt">
+            <div class="ktv-month-column ${isSelected ? 'selected' : ''} ${period.isFuture ? 'future' : ''}" title="${period.label}: ${period.totalSessions} lượt thực hành, ${period.completed} bài hoàn thành lũy kế">
                 <strong>${period.totalSessions}</strong>
                 <div class="ktv-month-bar-track">
                     <div class="ktv-month-bar" style="height: ${height}%;"></div>
@@ -720,6 +950,7 @@ function renderLearnerDetail(rows) {
         return;
     }
 
+    const wasVisible = els.learnerDetailCard?.classList.contains('visible');
     const allLearnerRows = rows.filter(item => item.learner === state.selectedLearner);
 
     if (!allLearnerRows.length) {
@@ -766,13 +997,13 @@ function renderLearnerDetail(rows) {
     const uniqueDevices = new Set(allLearnerRows.map(item => item.device));
     const latest = getLatestSession(allLearnerRows);
 
-    const totalCatalogDevices = deviceCatalog.length || 5;
-    const totalCatalogLabs = deviceCatalog.reduce((sum, d) => sum + (d.labs ? d.labs.length : 0), 0) || 17;
+    const totalCatalogDevices = deviceCatalog.length;
+    const totalCatalogLabs = deviceCatalog.reduce((sum, d) => sum + (d.labs ? d.labs.length : 0), 0);
     const guideSessionsCount = allLearnerRows.filter(item => item.mode === 'Hướng dẫn').length;
     const practiceSessionsCount = allLearnerRows.filter(item => item.mode === 'Thực hành').length;
 
     if (els.learnerDetailTitle) els.learnerDetailTitle.textContent = getLearnerName(state.selectedLearner);
-    if (els.learnerDetailSubtitle) els.learnerDetailSubtitle.textContent = `${allLearnerRows[0]?.region || getLearnerRegion(state.selectedLearner)} • ${state.selectedLearner} • ${allLearnerRows.length} phiên thực hành trong toàn bộ lịch sử.`;
+    if (els.learnerDetailSubtitle) els.learnerDetailSubtitle.textContent = `${allLearnerRows[0]?.region || getLearnerRegion(state.selectedLearner)} • ${state.selectedLearner} • ${allLearnerRows.length} phiên hoạt động trong toàn bộ lịch sử.`;
     if (els.detailTotalSessions) els.detailTotalSessions.textContent = allLearnerRows.length;
     if (els.detailTotalSessionsSub) {
         els.detailTotalSessionsSub.innerHTML = `
@@ -785,6 +1016,20 @@ function renderLearnerDetail(rows) {
     if (els.detailLastTime) els.detailLastTime.textContent = latest ? formatDateTime(latest.date, latest.time) : 'N/A';
     renderDeviceDonutChart(allLearnerRows);
     renderHourlyBarChart(allLearnerRows);
+
+    // Đánh số thứ tự lượt thực hành theo trình tự thời gian cho từng bài lab
+    const attemptCounters = new Map();
+    const sortedChronological = [...allLearnerRows].sort((a, b) => {
+        return (a.startedAtMs || 0) - (b.startedAtMs || 0)
+            || String(a.sessionId || '').localeCompare(String(b.sessionId || ''));
+    });
+    sortedChronological.forEach(s => {
+        if (s.mode !== 'Thực hành') return;
+        const key = `${s.device}\u001f${s.lab}`;
+        const count = (attemptCounters.get(key) || 0) + 1;
+        attemptCounters.set(key, count);
+        s._attemptNumber = Number(s.practiceAttemptNo) || count;
+    });
 
     const pageData = getPageSlice(filteredHistory, state.learnerDetailPage, LEARNER_HISTORY_PAGE_SIZE);
     state.learnerDetailPage = pageData.currentPage;
@@ -799,17 +1044,21 @@ function renderLearnerDetail(rows) {
                     </td>
                     <td><span class="mode-pill ${item.mode === 'Hướng dẫn' ? 'mode-guide' : 'mode-practice'}">${escapeHTML(item.mode || 'Thực hành')}</span></td>
                     <td>${escapeHTML(item.device)}</td>
-                    <td>${escapeHTML(item.lab)}</td>
+                    <td>
+                        <div>${escapeHTML(item.lab)}</div>
+                        <div style="font-size: 11px; color: var(--muted); margin-top: 2px;">${item.mode === 'Thực hành' ? `Lần thực hành ${item._attemptNumber || item.practiceAttemptNo || 1}` : 'Lượt hướng dẫn'}</div>
+                    </td>
                     <td><span class="status-pill ${getStatusClass(item.status)}">${escapeHTML(item.status)}</span></td>
                     <td>${formatDuration(item.duration)}</td>
                 </tr>
             `).join('');
         }
     }
-    renderLearnerHistoryMeta(pageData);
+    renderLearnerHistoryMeta(pageData, allLearnerRows.length);
     els.learnerDetailCard?.classList.add('visible');
     els.learnerDetailCard?.setAttribute('aria-hidden', 'false');
     document.body.classList.add('detail-open');
+    if (!wasVisible) window.requestAnimationFrame(() => els.learnerDetailClose?.focus());
 }
 
 function sameDay(a, b) {
@@ -828,7 +1077,8 @@ function renderHourlyCalendar() {
         monthSelect.innerHTML = Array.from({ length: 12 }, (_, index) => `<option value="${index}">Tháng ${index + 1}</option>`).join('');
     }
     if (yearSelect && !yearSelect.children.length) {
-        yearSelect.innerHTML = [2025, 2026, 2027].map(year => `<option value="${year}">${year}</option>`).join('');
+        const y = new Date().getFullYear();
+        yearSelect.innerHTML = [y - 1, y, y + 1].map(year => `<option value="${year}">${year}</option>`).join('');
     }
 
     const month = state.hourlyCalendarMonth.getMonth();
@@ -842,6 +1092,8 @@ function renderHourlyCalendar() {
     const firstOfMonth = new Date(year, month, 1);
     const mondayOffset = (firstOfMonth.getDay() + 6) % 7;
     const gridStart = new Date(year, month, 1 - mondayOffset);
+    const todayKey = fmtDate(new Date());
+    const focusKey = state.hourlyCalendarFocusDate || todayKey;
     const days = [];
     for (let i = 0; i < 42; i += 1) {
         const day = new Date(gridStart);
@@ -851,8 +1103,10 @@ function renderHourlyCalendar() {
         const selectedEnd = state.hourlyTempEndDate ? parseDate(state.hourlyTempEndDate) : null;
         const inRange = selectedStart && selectedEnd && day >= selectedStart && day <= selectedEnd;
         const isSelected = sameDay(day, selectedStart) || sameDay(day, selectedEnd);
+        const fullDateLabel = day.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
         days.push(`
-            <button type="button" class="date-day ${day.getMonth() !== month ? 'outside' : ''} ${inRange ? 'in-range' : ''} ${isSelected ? 'selected' : ''}" data-hourly-date="${key}">
+            <button type="button" role="gridcell" class="date-day ${day.getMonth() !== month ? 'outside' : ''} ${inRange ? 'in-range' : ''} ${isSelected ? 'selected' : ''}" data-hourly-date="${key}"
+                tabindex="${key === focusKey ? '0' : '-1'}" aria-label="${escapeHTML(fullDateLabel)}" aria-selected="${isSelected ? 'true' : 'false'}" ${key === todayKey ? 'aria-current="date"' : ''}>
                 ${day.getDate()}
             </button>
         `);
@@ -871,7 +1125,29 @@ function renderHourlyCalendar() {
             } else {
                 state.hourlyTempEndDate = selected;
             }
+            state.hourlyCalendarFocusDate = selected;
             renderHourlyCalendar();
+            document.querySelector(`[data-hourly-date="${selected}"]`)?.focus();
+        });
+        button.addEventListener('keydown', event => {
+            const offsets = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 };
+            let nextDate = parseDate(button.dataset.hourlyDate);
+            if (Object.hasOwn(offsets, event.key)) {
+                nextDate.setDate(nextDate.getDate() + offsets[event.key]);
+            } else if (event.key === 'PageUp' || event.key === 'PageDown') {
+                nextDate.setMonth(nextDate.getMonth() + (event.key === 'PageUp' ? -1 : 1));
+            } else if (event.key === 'Home' || event.key === 'End') {
+                const weekday = (nextDate.getDay() + 6) % 7;
+                nextDate.setDate(nextDate.getDate() + (event.key === 'Home' ? -weekday : 6 - weekday));
+            } else {
+                return;
+            }
+            event.preventDefault();
+            const nextKey = fmtDate(nextDate);
+            state.hourlyCalendarFocusDate = nextKey;
+            state.hourlyCalendarMonth = new Date(nextDate.getFullYear(), nextDate.getMonth(), 1);
+            renderHourlyCalendar();
+            document.querySelector(`[data-hourly-date="${nextKey}"]`)?.focus();
         });
     });
 }
@@ -887,37 +1163,66 @@ function initHourlyDatePicker() {
     const applyBtn = document.getElementById('hourlyApplyDate');
     const clearBtn = document.getElementById('hourlyClearDate');
 
+    const closeHourlyPanel = ({ restoreFocus = false } = {}) => {
+        picker?.classList.remove('open');
+        trigger?.setAttribute('aria-expanded', 'false');
+        if (restoreFocus) trigger?.focus();
+    };
+
     renderHourlyCalendar();
 
     trigger?.addEventListener('click', (e) => {
         e.stopPropagation();
         state.hourlyTempStartDate = state.hourlyStartDate;
         state.hourlyTempEndDate = state.hourlyEndDate;
+        state.hourlyCalendarFocusDate = state.hourlyStartDate || fmtDate(new Date());
         renderHourlyCalendar();
-        picker?.classList.toggle('open');
+        const willOpen = !picker?.classList.contains('open');
+        picker?.classList.toggle('open', willOpen);
+        trigger.setAttribute('aria-expanded', String(willOpen));
+        if (willOpen) {
+            window.requestAnimationFrame(() => {
+                const focusDay = document.querySelector(`[data-hourly-date="${state.hourlyCalendarFocusDate}"]`);
+                if (focusDay) focusDay.focus();
+                else panel?.focus();
+            });
+        }
     });
 
     panel?.addEventListener('click', (e) => e.stopPropagation());
+    panel?.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            event.stopPropagation();
+            closeHourlyPanel({ restoreFocus: true });
+            return;
+        }
+        trapDialogFocus(event, panel);
+    });
 
     prevMonth?.addEventListener('click', (e) => {
         e.stopPropagation();
         state.hourlyCalendarMonth.setMonth(state.hourlyCalendarMonth.getMonth() - 1);
+        state.hourlyCalendarFocusDate = fmtDate(state.hourlyCalendarMonth);
         renderHourlyCalendar();
     });
 
     nextMonth?.addEventListener('click', (e) => {
         e.stopPropagation();
         state.hourlyCalendarMonth.setMonth(state.hourlyCalendarMonth.getMonth() + 1);
+        state.hourlyCalendarFocusDate = fmtDate(state.hourlyCalendarMonth);
         renderHourlyCalendar();
     });
 
     monthSelect?.addEventListener('change', (e) => {
         state.hourlyCalendarMonth.setMonth(parseInt(e.target.value, 10));
+        state.hourlyCalendarFocusDate = fmtDate(state.hourlyCalendarMonth);
         renderHourlyCalendar();
     });
 
     yearSelect?.addEventListener('change', (e) => {
         state.hourlyCalendarMonth.setFullYear(parseInt(e.target.value, 10));
+        state.hourlyCalendarFocusDate = fmtDate(state.hourlyCalendarMonth);
         renderHourlyCalendar();
     });
 
@@ -925,7 +1230,7 @@ function initHourlyDatePicker() {
         e.stopPropagation();
         state.hourlyStartDate = state.hourlyTempStartDate;
         state.hourlyEndDate = state.hourlyTempEndDate;
-        picker?.classList.remove('open');
+        closeHourlyPanel({ restoreFocus: true });
         if (state.currentLearnerRows) {
             renderHourlyBarChart(state.currentLearnerRows);
         }
@@ -938,14 +1243,14 @@ function initHourlyDatePicker() {
         state.hourlyTempStartDate = '';
         state.hourlyTempEndDate = '';
         renderHourlyCalendar();
-        picker?.classList.remove('open');
+        closeHourlyPanel({ restoreFocus: true });
         if (state.currentLearnerRows) {
             renderHourlyBarChart(state.currentLearnerRows);
         }
     });
 
     document.addEventListener('click', () => {
-        picker?.classList.remove('open');
+        closeHourlyPanel();
     });
 }
 
@@ -1049,132 +1354,67 @@ function aggregateBy(rows, key) {
     const map = new Map();
     rows.forEach(item => {
         if (!map.has(item[key])) {
-            map.set(item[key], { name: item[key], sessions: 0, completed: 0, duration: 0 });
+            map.set(item[key], { name: item[key], sessions: 0, completed: 0, duration: 0, durationCount: 0 });
         }
         const row = map.get(item[key]);
         row.sessions += 1;
-        row.completed += item.status === 'Hoàn thành' ? 1 : 0;
-        row.duration += item.duration || 0;
+        row.completed += isSuccessfulSession(item) ? 1 : 0;
+        if (Number(item.duration) > 0) {
+            row.duration += Number(item.duration);
+            row.durationCount += 1;
+        }
     });
     return [...map.values()].map(item => ({
         ...item,
         completion: item.sessions ? Math.round((item.completed / item.sessions) * 100) : 0,
-        avgDuration: item.sessions ? Math.round(item.duration / item.sessions) : 0
+        avgDuration: item.durationCount ? Math.round(item.duration / item.durationCount) : null
     }));
 }
 
-function renderLabs(rows) {
-    if (!els.labBars) return;
+let BASE_REGION_CATALOG = [];
 
-    let filteredRows = rows.filter(item => state.labSelectedDevices.has(item.device));
+let REGION_CATALOG = [];
+let REGION_FILTER_OPTIONS = [];
 
-    const sortSelect = document.getElementById('labSortSelect');
-    const sort = sortSelect ? sortSelect.value : 'attempts_desc';
-    const labs = aggregateBy(filteredRows, 'lab').sort((a, b) => {
-        if (sort === 'completion_asc') return a.completion - b.completion;
-        if (sort === 'duration_desc') return b.avgDuration - a.avgDuration;
-        return b.sessions - a.sessions; // attempts_desc
-    });
-
-    const maxSessions = Math.max(...labs.map(item => item.sessions), 1);
-    if (!labs.length) {
-        els.labBars.innerHTML = '<div class="empty">Không có dữ liệu lab.</div>';
-        return;
+async function fetchAndBuildRegionCatalog() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/roster/regions`);
+        if (!response.ok) return;
+        const payload = await response.json();
+        const items = payload.data?.items || [];
+        const groupMap = new Map();
+        items.forEach(item => {
+            const group = String(item.dashboard_group || '').trim();
+            const regionCode = String(item.region_code || item.regionCode || '').trim();
+            const regionName = String(item.region_name || item.regionName || '').trim();
+            const label = regionName || regionCode;
+            if (!group && !label) return;
+            if (group && group.toLocaleLowerCase('vi') !== label.toLocaleLowerCase('vi')) {
+                if (!groupMap.has(group)) groupMap.set(group, new Set());
+                if (label) groupMap.get(group).add(label);
+            } else if (label) {
+                if (!groupMap.has(label)) groupMap.set(label, new Set());
+            }
+        });
+        const catalog = [];
+        groupMap.forEach((children, code) => {
+            if (children.size > 0) {
+                catalog.push({ code, children: [...children].sort((a, b) => a.localeCompare(b, 'vi')) });
+            } else {
+                catalog.push({ code });
+            }
+        });
+        catalog.sort((a, b) => a.code.localeCompare(b.code, 'vi'));
+        BASE_REGION_CATALOG = catalog;
+        REGION_CATALOG = BASE_REGION_CATALOG.map(region => ({
+            ...region,
+            children: region.children ? [...region.children] : undefined
+        }));
+        REGION_FILTER_OPTIONS = REGION_CATALOG.flatMap(region => region.children || [region.code]);
+    } catch (error) {
+        console.warn('Không tải được vùng từ database.', error);
     }
-    const visibleLabs = state.analyticsLabsExpanded ? labs : labs.slice(0, 8);
-    const labRows = visibleLabs.map(item => {
-        const width = item.sessions ? Math.max(10, Math.round((item.sessions / maxSessions) * 100)) : 0;
-        return `
-            <div class="bar-row">
-                <div style="font-weight: 600;">${escapeHTML(item.name)}</div>
-                <div class="bar-track"><div class="bar-fill" style="width: ${width}%; background: var(--blue);"></div></div>
-                <div style="font-weight: 700;">${item.sessions} lần làm</div>
-            </div>
-        `;
-    }).join('');
-
-    const expandControl = labs.length > 8
-        ? `<button class="analytics-expand-btn" id="analyticsLabsToggle" type="button">
-                ${state.analyticsLabsExpanded ? 'Thu gọn danh sách' : `Xem tất cả ${labs.length} bài lab`}
-           </button>`
-        : '';
-
-    els.labBars.innerHTML = `${labRows}${expandControl}`;
-    document.getElementById('analyticsLabsToggle')?.addEventListener('click', () => {
-        state.analyticsLabsExpanded = !state.analyticsLabsExpanded;
-        renderLabs(rows);
-    });
 }
-
-function aggregateDevices(rows) {
-    const map = new Map();
-    rows.forEach(item => {
-        if (!map.has(item.device)) {
-            map.set(item.device, { name: item.device, sessions: 0, completed: 0, duration: 0, labsSet: new Set() });
-        }
-        const row = map.get(item.device);
-        row.sessions += 1;
-        row.completed += item.status === 'Hoàn thành' ? 1 : 0;
-        row.duration += item.duration || 0;
-        if (item.lab) row.labsSet.add(item.lab);
-    });
-    return [...map.values()].map(item => {
-        const catalogItem = deviceCatalog.find(d => d.device === item.name || d.device_name === item.name || d.model === item.name);
-        const labsCount = catalogItem?.totalLabs || catalogItem?.labs?.length || item.labsSet.size;
-        return {
-            ...item,
-            labsCount,
-            completion: item.sessions ? Math.round((item.completed / item.sessions) * 100) : 0,
-            avgDuration: item.sessions ? Math.round(item.duration / item.sessions) : 0
-        };
-    });
-}
-
-function renderDevices(rows) {
-    if (!els.deviceGrid) return;
-
-    let filteredRows = rows.filter(item => state.deviceSelectedDevices.has(item.device));
-
-    const sortSelect = document.getElementById('deviceSortSelect');
-    const sort = sortSelect ? sortSelect.value : 'sessions_desc';
-    const devices = aggregateDevices(filteredRows).sort((a, b) => {
-        if (sort === 'completion_asc') return a.completion - b.completion;
-        if (sort === 'duration_desc') return b.avgDuration - a.avgDuration;
-        return b.sessions - a.sessions;
-    });
-    if (!devices.length) {
-        els.deviceGrid.innerHTML = '<div class="empty">Không có dữ liệu thiết bị.</div>';
-        return;
-    }
-    els.deviceGrid.innerHTML = devices.map(item => `
-        <div class="device-box">
-            <div class="device-name">${escapeHTML(item.name)}</div>
-            <div class="device-metrics">
-                <div class="metric-small"><strong>${item.sessions}</strong><span>Lượt làm</span></div>
-                <div class="metric-small"><strong>${item.labsCount}</strong><span>Số bài lab</span></div>
-                <div class="metric-small"><strong>${item.completion}%</strong><span>Hoàn thành</span></div>
-                <div class="metric-small"><strong>${formatDurationCompact(item.avgDuration)}</strong><span>Thời gian TB</span></div>
-            </div>
-        </div>
-    `).join('');
-}
-
-const BASE_REGION_CATALOG = [
-    { code: 'DNB' },
-    { code: 'HCM' },
-    { code: 'TDDT', children: ['TDDT - TIN', 'TDDT - PNC'] },
-    { code: 'TNB' },
-    { code: 'TNMT', children: ['TNMT - TIN', 'TNMT - PNC'] },
-    { code: 'DBB' },
-    { code: 'HNI' },
-    { code: 'TBB' }
-];
-
-let REGION_CATALOG = BASE_REGION_CATALOG.map(region => ({
-    ...region,
-    children: region.children ? [...region.children] : undefined
-}));
-let REGION_FILTER_OPTIONS = REGION_CATALOG.flatMap(region => region.children || [region.code]);
 
 function getLearnerRegion(learner) {
     const key = String(learner || '').trim().toLowerCase();
@@ -1186,72 +1426,6 @@ function normalizeRegionName(region, learner) {
     if (!value) return getLearnerRegion(learner);
     const directMatch = REGION_FILTER_OPTIONS.find(option => option.toLowerCase() === value.toLowerCase());
     return directMatch || value;
-}
-
-function aggregateRegions(rows) {
-    const map = new Map();
-    rows.forEach(item => {
-        const region = item.region || getLearnerRegion(item.learner);
-        if (!map.has(region)) {
-            map.set(region, { name: region, sessions: 0, completed: 0, duration: 0 });
-        }
-        const row = map.get(region);
-        row.sessions += 1;
-        row.completed += item.status === 'Hoàn thành' ? 1 : 0;
-        row.duration += item.duration || 0;
-    });
-    return [...map.values()].map(item => ({
-        ...item,
-        completion: item.sessions ? Math.round((item.completed / item.sessions) * 100) : 0,
-        avgDuration: item.sessions ? Math.round(item.duration / item.sessions) : 0
-    }));
-}
-
-function renderRegions(rows) {
-    if (!els.regionBars) return;
-    const regionMap = new Map(aggregateRegions(rows).map(region => [region.name, region]));
-    const emptyRegion = name => ({ name, sessions: 0, completed: 0, duration: 0, completion: 0, avgDuration: 0 });
-    const combineRegions = (name, childNames) => {
-        const children = childNames.map(child => regionMap.get(child) || emptyRegion(child));
-        const sessions = children.reduce((sum, child) => sum + child.sessions, 0);
-        const completed = children.reduce((sum, child) => sum + child.completed, 0);
-        const duration = children.reduce((sum, child) => sum + child.duration, 0);
-        return {
-            name,
-            sessions,
-            completed,
-            duration,
-            completion: sessions ? Math.round((completed / sessions) * 100) : 0,
-            avgDuration: sessions ? Math.round(duration / sessions) : 0,
-            isParent: true
-        };
-    };
-    const regions = REGION_CATALOG.flatMap(region => {
-        if (!region.children) return [{ ...(regionMap.get(region.code) || emptyRegion(region.code)) }];
-        return [
-            combineRegions(region.code, region.children),
-            ...region.children.map(child => ({ ...(regionMap.get(child) || emptyRegion(child)), isChild: true }))
-        ];
-    });
-
-    const maxSessions = Math.max(...regions.map(item => item.sessions), 1);
-    if (!regions.length) {
-        els.regionBars.innerHTML = '<div class="empty">Không có dữ liệu vùng.</div>';
-        return;
-    }
-    els.regionBars.innerHTML = regions.map(item => {
-        const width = Math.max(10, Math.round((item.sessions / maxSessions) * 100));
-        return `
-            <div class="bar-row region-tree-row ${item.isParent ? 'region-parent' : ''} ${item.isChild ? 'region-child' : ''}">
-                <div class="region-tree-name" title="${escapeHTML(item.name)}">
-                    ${item.isParent ? '<span class="region-tree-toggle">▼</span>' : (item.isChild ? '<span class="region-tree-bullet">•</span>' : '')}
-                    <span>${escapeHTML(item.name)}</span>
-                </div>
-                <div class="bar-track"><div class="bar-fill" style="width: ${width}%; background: var(--blue);"></div></div>
-                <div style="font-weight: 700;">${item.sessions} lần làm</div>
-            </div>
-        `;
-    }).join('');
 }
 
 function getDetailReportDeviceGroups(rows) {
@@ -1287,9 +1461,94 @@ function detailReportCellKey(region, device, lab) {
     return `${region}\u001f${device}\u001f${lab}`;
 }
 
+function aggregateAuthoritativeMetrics(metrics = []) {
+    const result = { assigned_count: 0, attempted_count: 0, completed_count: 0, attempt_count: 0 };
+    metrics.forEach(metric => {
+        Object.keys(result).forEach(key => { result[key] += Number(metric?.[key]) || 0; });
+    });
+    result.completion_rate = result.assigned_count
+        ? Math.round((result.completed_count / result.assigned_count) * 1000) / 10
+        : null;
+    return result;
+}
+
+function aggregateAuthoritativeRows(rows = [], columns = []) {
+    return {
+        cells: Object.fromEntries(columns.map(column => [
+            column.labId,
+            aggregateAuthoritativeMetrics(rows.map(row => row.cells?.[column.labId]))
+        ])),
+        total: aggregateAuthoritativeMetrics(rows.map(row => row.total))
+    };
+}
+
+function buildAuthoritativeRegionRows(reportRows = [], columns = []) {
+    const remaining = new Set(reportRows);
+    const normalized = value => String(value || '').trim().toLocaleLowerCase('vi');
+    const matchesRegion = (row, values) => {
+        const region = row.region || {};
+        const candidates = [region.name, region.region_name, region.code, region.region_code].map(normalized);
+        return values.some(value => candidates.includes(normalized(value)));
+    };
+    const result = [];
+
+    REGION_CATALOG.forEach(region => {
+        const children = region.children || [];
+        if (children.length) {
+            const matched = reportRows.filter(row => {
+                const group = normalized(row.region?.dashboard_group);
+                return group === normalized(region.code) || matchesRegion(row, children);
+            });
+            if (!matched.length) return;
+            matched.forEach(row => remaining.delete(row));
+            const aggregate = aggregateAuthoritativeRows(matched, columns);
+            result.push({
+                region: { code: region.code, name: region.code },
+                ...aggregate,
+                isParent: true,
+                isExpanded: state.detailReportExpandedRegions.has(region.code)
+            });
+            if (state.detailReportExpandedRegions.has(region.code)) {
+                children.forEach(child => {
+                    const childRows = matched.filter(row => matchesRegion(row, [child]));
+                    if (!childRows.length) return;
+                    result.push({
+                        region: { ...(childRows[0].region || {}), name: child },
+                        ...aggregateAuthoritativeRows(childRows, columns),
+                        isChild: true
+                    });
+                });
+            }
+            return;
+        }
+
+        const matched = reportRows.filter(row => matchesRegion(row, [region.code]));
+        if (!matched.length) return;
+        matched.forEach(row => remaining.delete(row));
+        result.push({
+            region: matched[0].region || { code: region.code, name: region.code },
+            ...aggregateAuthoritativeRows(matched, columns)
+        });
+    });
+
+    [...remaining]
+        .sort((a, b) => String(a.region?.name || '').localeCompare(String(b.region?.name || ''), 'vi'))
+        .forEach(row => result.push(row));
+    return result;
+}
+
 function renderAuthoritativeDetailedReport(reportMatrix) {
     if (!els.detailReportHead || !els.detailReportBody || !els.detailReportFoot) return;
     const groups = reportMatrix.device_groups || [];
+    const qualityNote = document.getElementById('detailReportDataQuality');
+    const regionQuality = dashboardReport?.meta?.data_quality || reportMatrix.data_quality || {};
+    const fallbackPairs = Number(regionQuality.region_fallback_pairs) || 0;
+    if (qualityNote) {
+        qualityNote.hidden = fallbackPairs === 0;
+        qualityNote.textContent = fallbackPairs
+            ? `${formatNumber.format(fallbackPairs)} cặp KTV–Lab thiếu snapshot khu vực; báo cáo đang dùng vùng hiện tại của KTV cho các cặp này.`
+            : '';
+    }
     const columns = groups.flatMap((group, groupIndex) => (group.labs || []).map((lab, labIndex) => ({
         device: group.device?.name || group.device?.device_name || group.device_name || '',
         deviceId: group.device?.device_id || group.device_id || '',
@@ -1301,7 +1560,7 @@ function renderAuthoritativeDetailedReport(reportMatrix) {
     })));
     const metricCell = (cell = {}, extraClass = '') => {
         const assigned = Number(cell.assigned_count) || 0;
-        const passed = Number(cell.passed_count) || 0;
+        const completed = Number(cell.completed_count) || 0;
         const rate = cell.completion_rate === null || cell.completion_rate === undefined
             ? null
             : Number(cell.completion_rate);
@@ -1311,21 +1570,28 @@ function renderAuthoritativeDetailedReport(reportMatrix) {
         const cssClass = rate >= 80 ? 'report-cell-high' : (rate >= 50 ? 'report-cell-medium' : 'report-cell-low');
         const attempted = Number(cell.attempted_count) || 0;
         const attempts = Number(cell.attempt_count) || 0;
-        return `<td class="report-metric-cell ${cssClass} ${extraClass}" title="${escapeHTML(`${passed}/${assigned} KTV đạt • ${attempted} KTV đã làm • ${attempts} lần làm`)}"><strong>${passed}/${assigned}</strong><span>${rate}% HT</span></td>`;
+        return `<td class="report-metric-cell ${cssClass} ${extraClass}" title="${escapeHTML(`${completed}/${assigned} KTV hoàn thành • ${attempted} KTV đã thực hành • ${attempts} lượt thực hành`)}"><strong>${completed}/${assigned}</strong><span>${rate}% HT</span></td>`;
     };
     els.detailReportHead.innerHTML = `
         <tr class="report-device-header-row">
-            <th class="report-region-head" rowspan="2"><strong>Khu vực/CNx</strong></th>
-            ${groups.map((group, index) => `<th class="report-device-group report-device-tone-${index % 5}" colspan="${(group.labs || []).length}">${escapeHTML(group.device?.name || group.device_name || '')}<span>${(group.labs || []).length} bài lab</span></th>`).join('')}
-            <th class="report-summary-head" rowspan="2">Tổng</th>
+            <th class="report-region-head" rowspan="2" scope="col"><strong>Khu vực/CNx</strong></th>
+            ${groups.map((group, index) => `<th class="report-device-group report-device-tone-${index % 5}" colspan="${(group.labs || []).length}" scope="colgroup">${escapeHTML(group.device?.name || group.device_name || '')}<span>${(group.labs || []).length} bài lab</span></th>`).join('')}
+            <th class="report-summary-head" rowspan="2" scope="col">Tổng</th>
         </tr>
-        <tr class="report-lab-header-row">${columns.map(column => `<th class="report-lab-head report-device-tone-${column.groupIndex % 5} ${column.isFirst ? 'group-start' : ''} ${column.isLast ? 'group-end' : ''}" title="${escapeHTML(`${column.device} • ${column.lab}`)}">${escapeHTML(column.lab)}</th>`).join('')}</tr>`;
-    els.detailReportBody.innerHTML = (reportMatrix.rows || []).map(row => {
+        <tr class="report-lab-header-row">${columns.map(column => `<th class="report-lab-head report-device-tone-${column.groupIndex % 5} ${column.isFirst ? 'group-start' : ''} ${column.isLast ? 'group-end' : ''}" scope="col" title="${escapeHTML(`${column.device} • ${column.lab}`)}">${escapeHTML(column.lab)}</th>`).join('')}</tr>`;
+    const visibleRows = buildAuthoritativeRegionRows(reportMatrix.rows || [], columns);
+    els.detailReportBody.innerHTML = visibleRows.map(row => {
         const region = row.region || {};
-        return `<tr><th class="report-region-cell"><div class="report-region-label"><span class="report-region-spacer"></span>${escapeHTML(region.name || region.region_name || region.code || region.region_code || '')}</div></th>${columns.map(column => metricCell(row.cells?.[column.labId], column.isFirst ? 'group-start' : '')).join('')}${metricCell(row.total, 'report-row-total')}</tr>`;
-    }).join('');
+        const regionName = region.name || region.region_name || region.code || region.region_code || '';
+        const locationLabel = regionName;
+        const rowClass = row.isParent ? 'report-region-parent' : (row.isChild ? 'report-region-child' : '');
+        const regionLabel = row.isParent
+            ? `<button type="button" class="report-region-toggle" data-report-region-toggle="${escapeHTML(regionName)}" aria-expanded="${row.isExpanded}"><span>${row.isExpanded ? '▾' : '▸'}</span>${escapeHTML(regionName)}</button>`
+            : `<div class="report-region-label">${row.isChild ? '<span class="report-region-bullet">•</span>' : '<span class="report-region-spacer"></span>'}${escapeHTML(locationLabel)}</div>`;
+        return `<tr class="${rowClass}"><th class="report-region-cell" scope="row">${regionLabel}</th>${columns.map(column => metricCell(row.cells?.[column.labId], column.isFirst ? 'group-start' : '')).join('')}${metricCell(row.total, 'report-row-total')}</tr>`;
+    }).join('') || `<tr><td colspan="${columns.length + 2}" class="empty">Không có assignment phù hợp với kỳ báo cáo.</td></tr>`;
     const grand = reportMatrix.grand_total || {};
-    els.detailReportFoot.innerHTML = `<tr><th class="report-region-cell report-grand-label">Tổng hệ thống</th>${columns.map(column => metricCell(grand.cells?.[column.labId], column.isFirst ? 'group-start' : '')).join('')}${metricCell(grand.total || grand, 'report-row-total report-grand-total')}</tr>`;
+    els.detailReportFoot.innerHTML = `<tr><th class="report-region-cell report-grand-label" scope="row">Tổng hệ thống</th>${columns.map(column => metricCell(grand.cells?.[column.labId], column.isFirst ? 'group-start' : '')).join('')}${metricCell(grand.total || grand, 'report-row-total report-grand-total')}</tr>`;
     const summaryValues = {
         detailReportPeriod: dashboardReport?.meta?.period?.label || getRangeLabel(),
         detailReportSessions: formatNumber.format(Number(grand.total?.attempt_count || grand.attempt_count) || 0),
@@ -1339,6 +1605,33 @@ function renderAuthoritativeDetailedReport(reportMatrix) {
         const element = document.getElementById(id);
         if (element) element.textContent = value;
     });
+    els.detailReportBody.querySelectorAll('[data-report-region-toggle]').forEach(button => {
+        button.addEventListener('click', () => {
+            const region = button.dataset.reportRegionToggle;
+            if (state.detailReportExpandedRegions.has(region)) state.detailReportExpandedRegions.delete(region);
+            else state.detailReportExpandedRegions.add(region);
+            renderAuthoritativeDetailedReport(reportMatrix);
+        });
+    });
+}
+
+function resetLearnerDetailFilters() {
+    state.detailSelectedModes = new Set(['Thực hành', 'Hướng dẫn']);
+    state.detailSelectedDevices = new Set();
+    state.detailDevicesTouched = false;
+    state.detailSelectedLabs = new Set();
+    state.detailLabsTouched = false;
+    state.detailSelectedStatuses = new Set(['Đạt', 'Chưa đạt', 'Chưa có kết quả', 'Không chấm']);
+    state.detailSearchDevice = '';
+    state.detailSearchLab = '';
+    state.learnerDetailPage = 1;
+
+    document.querySelectorAll('#detailModeOptions input[type="checkbox"], #detailStatusOptions input[type="checkbox"]')
+        .forEach(checkbox => { checkbox.checked = true; });
+    ['detailDeviceSearch', 'detailLabSearch'].forEach(id => {
+        const input = document.getElementById(id);
+        if (input) input.value = '';
+    });
 }
 
 function buildDetailReportIndex(rows) {
@@ -1350,7 +1643,7 @@ function buildDetailReportIndex(rows) {
         const cell = index.get(key);
         cell.attempts += 1;
         cell.learners.add(item.learner);
-        if (item.status === 'Hoàn thành') cell.completedLearners.add(item.learner);
+        if (isSuccessfulSession(item)) cell.completedLearners.add(item.learner);
         cell.duration += Number(item.duration) || 0;
     });
     return index;
@@ -1423,6 +1716,8 @@ function renderDetailedReport(rows) {
         renderAuthoritativeDetailedReport(dashboardReport.matrix);
         return;
     }
+    const qualityNote = document.getElementById('detailReportDataQuality');
+    if (qualityNote) qualityNote.hidden = true;
 
     const groups = getDetailReportDeviceGroups(rows);
     const columns = groups.flatMap((group, groupIndex) => group.labs.map((lab, labIndex) => ({
@@ -1504,7 +1799,7 @@ function renderDetailedReport(rows) {
     const activeRegions = new Set(rows.map(item => item.region || getLearnerRegion(item.learner)));
     const activeLabs = new Set(rows.map(item => `${item.device}\u001f${item.lab}`));
     const completedPairs = new Set(rows
-        .filter(item => item.status === 'Hoàn thành')
+        .filter(isSuccessfulSession)
         .map(item => `${item.learner}\u001f${item.device}\u001f${item.lab}`)).size;
     const eligiblePairs = technicianCatalog.filter(item => !item.isTerminated && item.email).length * columns.length;
     const completionRate = eligiblePairs ? Math.round((completedPairs / eligiblePairs) * 100) : 0;
@@ -1540,6 +1835,260 @@ function renderDetailedReport(rows) {
     }
 }
 
+const REGION_USAGE_COLORS = [
+    '#2f6fed', '#e43f86', '#12a594', '#8b5cf6', '#f59e0b', '#0ea5e9',
+    '#ef5da8', '#22a06b', '#6366f1', '#d97706', '#0891b2', '#c026d3'
+];
+
+function getRegionUsageYears() {
+    const years = new Set([now.getFullYear()]);
+    sessions.forEach(session => {
+        const date = parseDate(session.date);
+        if (date.getTime() > 0) years.add(date.getFullYear());
+    });
+    return [...years].sort((left, right) => right - left);
+}
+
+function isCompletedDeviceUsageSession(session) {
+    const isPractice = session?.mode === 'Thực hành' || session?.mode === 'practice';
+    const completed = session?.rawStatus
+        ? session.rawStatus === 'completed'
+        : session?.status === 'Đạt' || session?.status === 'Chưa có kết quả';
+    return isPractice && completed;
+}
+
+function getRegionUsageSeries(year) {
+    const headcountByRegion = new Map();
+    technicianCatalog
+        .filter(technician => !technician.isTerminated && (technician.email || technician.employeeId))
+        .forEach(technician => {
+            const region = technician.dashboardRegion || 'Chưa phân vùng';
+            headcountByRegion.set(region, (headcountByRegion.get(region) || 0) + 1);
+        });
+
+    const validSessionsByRegionMonth = new Map();
+    const participatingLearnersByRegionMonth = new Map();
+
+    sessions.forEach(session => {
+        const date = parseDate(session.date);
+        if (date.getTime() <= 0 || date.getFullYear() !== year) return;
+        const region = getLearnerRegion(session.learner);
+        if (!headcountByRegion.has(region)) {
+            headcountByRegion.set(region, 0);
+        }
+        const monthIndex = date.getMonth();
+        const bucketKey = `${region}\u001f${monthIndex}`;
+        const learnerIdentity = String(session.learner || session.technicianId || '').trim().toLowerCase();
+        if (!learnerIdentity) return;
+
+        if (isCompletedDeviceUsageSession(session)) {
+            validSessionsByRegionMonth.set(bucketKey, (validSessionsByRegionMonth.get(bucketKey) || 0) + 1);
+            if (!participatingLearnersByRegionMonth.has(bucketKey)) participatingLearnersByRegionMonth.set(bucketKey, new Set());
+            participatingLearnersByRegionMonth.get(bucketKey).add(learnerIdentity);
+        }
+    });
+
+    const currentYear = now.getFullYear();
+    const observedMonthCount = year < currentYear ? 12 : (year === currentYear ? now.getMonth() + 1 : 0);
+    return [...headcountByRegion.entries()]
+        .sort(([left], [right]) => left.localeCompare(right, 'vi', { numeric: true, sensitivity: 'base' }))
+        .map(([region, headcount], colorIndex) => {
+            const months = Array.from({ length: 12 }, (_, monthIndex) => {
+                if (monthIndex >= observedMonthCount) return null;
+                const bucketKey = `${region}\u001f${monthIndex}`;
+                const validSessions = validSessionsByRegionMonth.get(bucketKey) || 0;
+                const participatingLearners = participatingLearnersByRegionMonth.get(bucketKey)?.size || 0;
+                return {
+                    month: monthIndex + 1,
+                    validSessions,
+                    participatingLearners,
+                    headcount,
+                    rate: headcount > 0 ? Math.round((validSessions / headcount) * 10) / 10 : 0,
+                    participationRate: headcount > 0
+                        ? Math.round((participatingLearners / headcount) * 1000) / 10
+                        : 0
+                };
+            });
+            const observedMonths = months.filter(Boolean);
+            const validSessions = observedMonths.reduce((sum, month) => sum + month.validSessions, 0);
+            const averageRate = headcount > 0 && observedMonths.length > 0
+                ? Math.round((validSessions / (headcount * observedMonths.length)) * 10) / 10
+                : 0;
+            return {
+                region,
+                headcount,
+                color: REGION_USAGE_COLORS[colorIndex % REGION_USAGE_COLORS.length],
+                months,
+                validSessions,
+                averageRate
+            };
+        })
+        .filter(item => item.headcount > 0);
+}
+
+function renderRegionUsageChart() {
+    const container = document.getElementById('regionUsageChart');
+    const legend = document.getElementById('regionUsageLegend');
+    const insights = document.getElementById('regionUsageInsights');
+    const yearSelect = document.getElementById('regionUsageYear');
+    const tooltip = document.getElementById('regionUsageTooltip');
+    const periodNote = document.getElementById('regionUsagePeriodNote');
+    if (!container || !legend || !insights || !yearSelect || !tooltip) return;
+
+    const years = getRegionUsageYears();
+    if (!years.includes(state.regionUsageYear)) state.regionUsageYear = years[0] || now.getFullYear();
+    const yearOptions = years.map(year => `<option value="${year}">${year}</option>`).join('');
+    if (yearSelect.innerHTML !== yearOptions) yearSelect.innerHTML = yearOptions;
+    yearSelect.value = String(state.regionUsageYear);
+    const selectedReportYear = state.startDate ? parseDate(state.startDate).getFullYear() : state.regionUsageYear;
+    if (periodNote) {
+        periodNote.textContent = selectedReportYear !== state.regionUsageYear
+            ? `Khác kỳ báo cáo đang chọn (${selectedReportYear}).`
+            : '';
+    }
+
+    const series = getRegionUsageSeries(state.regionUsageYear);
+    if (!series.length) {
+        container.innerHTML = '<div class="region-usage-empty">Chưa có danh mục nhân sự theo khu vực để tính tần suất sử dụng.</div>';
+        legend.innerHTML = '';
+        insights.innerHTML = '';
+        return;
+    }
+
+    const allObservedPoints = series.flatMap(item => item.months.filter(Boolean));
+    const peakRate = Math.max(0, ...allObservedPoints.map(point => point.rate));
+
+    let yMax = 2.0;
+    let yTicks = [0.0, 0.5, 1.0, 1.5, 2.0];
+    if (peakRate > 10.0) {
+        yMax = Math.ceil(peakRate / 4) * 4;
+        yTicks = Array.from({ length: 5 }, (_, index) => Math.round((yMax * index / 4) * 10) / 10);
+    } else if (peakRate > 6.0) {
+        yMax = 10.0;
+        yTicks = [0.0, 2.5, 5.0, 7.5, 10.0];
+    } else if (peakRate > 4.0) {
+        yMax = 6.0;
+        yTicks = [0.0, 1.5, 3.0, 4.5, 6.0];
+    } else if (peakRate > 2.0) {
+        yMax = 4.0;
+        yTicks = [0.0, 1.0, 2.0, 3.0, 4.0];
+    }
+
+    const width = 1080;
+    const height = 410;
+    const plot = { left: 68, right: 26, top: 26, bottom: 58 };
+    const plotWidth = width - plot.left - plot.right;
+    const plotHeight = height - plot.top - plot.bottom;
+    const xAt = monthIndex => plot.left + (plotWidth * monthIndex / 11);
+    const yAt = rate => plot.top + plotHeight - (Math.min(rate, yMax) / yMax * plotHeight);
+    const selectedMonthIndex = selectedReportYear === state.regionUsageYear && state.startDate
+        ? parseDate(state.startDate).getMonth()
+        : -1;
+
+    const grid = yTicks.map(value => {
+        const y = yAt(value);
+        return `
+            <line x1="${plot.left}" y1="${y}" x2="${width - plot.right}" y2="${y}" class="region-usage-grid-line" />
+            <text x="${plot.left - 13}" y="${y + 4}" text-anchor="end" class="region-usage-axis-label">${value.toFixed(1)}</text>
+        `;
+    }).join('');
+    const monthLabels = Array.from({ length: 12 }, (_, monthIndex) => `
+        <text x="${xAt(monthIndex)}" y="${height - 22}" text-anchor="middle" class="region-usage-month-label ${monthIndex === selectedMonthIndex ? 'is-selected' : ''}">Th ${monthIndex + 1}</text>
+    `).join('');
+    const lines = series.map((item, seriesIndex) => {
+        const points = item.months
+            .map((point, monthIndex) => point ? { ...point, x: xAt(monthIndex), y: yAt(point.rate) } : null)
+            .filter(Boolean);
+        const path = points.map((point, index) => `${index ? 'L' : 'M'} ${point.x.toFixed(1)} ${point.y.toFixed(1)}`).join(' ');
+        const circles = points.map(point => `
+            <circle class="region-usage-point ${point.month - 1 === selectedMonthIndex ? 'is-selected-month' : ''}" cx="${point.x}" cy="${point.y}" r="${point.month - 1 === selectedMonthIndex ? '6' : '4.5'}" tabindex="0"
+                data-region="${escapeHTML(item.region)}" data-month="${point.month}" data-rate="${point.rate.toFixed(1)}"
+                data-sessions="${point.validSessions}" data-participants="${point.participatingLearners}"
+                data-participation-rate="${point.participationRate.toFixed(1)}" data-headcount="${item.headcount}"
+                aria-label="${escapeHTML(`${item.region}, tháng ${point.month}: ${point.rate.toFixed(1)} lượt/KTV, ${point.participationRate.toFixed(1)}% KTV tham gia`)}">
+                <title>${escapeHTML(`${item.region} • Tháng ${point.month}: ${point.rate.toFixed(1)} lượt/KTV (${point.validSessions} phiên hợp lệ / ${item.headcount} KTV, ${point.participationRate.toFixed(1)}% tham gia)`)}</title>
+            </circle>
+        `).join('');
+        return `
+            <g class="region-usage-series" data-series-region="${escapeHTML(item.region)}" style="--series-color:${item.color}; --series-order:${seriesIndex}">
+                <path d="${path}" class="region-usage-line" />
+                ${circles}
+            </g>
+        `;
+    }).join('');
+
+    container.innerHTML = `
+        <svg class="region-usage-svg" viewBox="0 0 ${width} ${height}" role="img" aria-labelledby="regionUsageSvgTitle regionUsageSvgDesc">
+            <title id="regionUsageSvgTitle">Tần suất sử dụng theo khu vực năm ${state.regionUsageYear}</title>
+            <desc id="regionUsageSvgDesc">Biểu đồ đường gồm ${series.length} khu vực, trục ngang là 12 tháng và trục dọc là số phiên thực hành hợp lệ trung bình trên mỗi KTV đang công tác.</desc>
+            <text x="18" y="${plot.top + plotHeight / 2}" text-anchor="middle" class="region-usage-y-title" transform="rotate(-90 18 ${plot.top + plotHeight / 2})">Tần suất (lượt/KTV)</text>
+            ${grid}
+            ${monthLabels}
+            ${lines}
+        </svg>
+    `;
+
+    const ranked = series
+        .filter(item => item.headcount > 0)
+        .sort((left, right) => right.averageRate - left.averageRate || left.region.localeCompare(right.region, 'vi'));
+    const highest = ranked[0];
+    const lowest = ranked[ranked.length - 1];
+    const totalValidSessions = series.reduce((sum, item) => sum + item.validSessions, 0);
+    insights.innerHTML = `
+        <article><span>Sử dụng nhiều nhất</span><strong>${highest ? escapeHTML(highest.region) : '—'}</strong><small>${highest ? `${highest.averageRate.toFixed(1)} lượt/KTV/tháng` : 'Chưa có khu vực hợp lệ'}</small></article>
+        <article><span>Sử dụng ít nhất</span><strong>${lowest ? escapeHTML(lowest.region) : '—'}</strong><small>${lowest ? `${lowest.averageRate.toFixed(1)} lượt/KTV/tháng` : 'Chưa có khu vực hợp lệ'}</small></article>
+        <article><span>Tổng phiên hợp lệ</span><strong>${formatNumber.format(totalValidSessions)}</strong><small>${ranked.length} khu vực có nhân sự trong năm ${state.regionUsageYear}</small></article>
+    `;
+    legend.innerHTML = series.map(item => `
+        <button type="button" class="region-usage-legend-item" data-legend-region="${escapeHTML(item.region)}">
+            <i style="--legend-color:${item.color}"></i>
+            <span>${escapeHTML(item.region)}</span>
+            <small>${item.headcount > 0 ? `${item.averageRate.toFixed(1)} lượt/KTV/tháng` : 'Chưa có nhân sự'}</small>
+        </button>
+    `).join('');
+
+    const setSeriesFocus = region => {
+        container.querySelectorAll('.region-usage-series').forEach(group => {
+            group.classList.toggle('is-muted', Boolean(region) && group.dataset.seriesRegion !== region);
+            group.classList.toggle('is-focused', Boolean(region) && group.dataset.seriesRegion === region);
+        });
+    };
+    legend.querySelectorAll('[data-legend-region]').forEach(button => {
+        button.addEventListener('mouseenter', () => setSeriesFocus(button.dataset.legendRegion));
+        button.addEventListener('mouseleave', () => setSeriesFocus(''));
+        button.addEventListener('focus', () => setSeriesFocus(button.dataset.legendRegion));
+        button.addEventListener('blur', () => setSeriesFocus(''));
+    });
+
+    const showTooltip = (point, event) => {
+        tooltip.innerHTML = `<strong>${escapeHTML(point.dataset.region)} · Tháng ${point.dataset.month}</strong><span>${point.dataset.rate} lượt/KTV</span><small>${point.dataset.sessions} phiên hợp lệ / ${point.dataset.headcount} KTV · ${point.dataset.participationRate}% tham gia (${point.dataset.participants} KTV)</small>`;
+        tooltip.hidden = false;
+        const chartRect = container.getBoundingClientRect();
+        const pointRect = point.getBoundingClientRect();
+        const clientX = event?.clientX || (pointRect.left + pointRect.width / 2);
+        const clientY = event?.clientY || pointRect.top;
+        const left = Math.max(10, Math.min(chartRect.width - tooltip.offsetWidth - 10, clientX - chartRect.left + 12));
+        const top = Math.max(8, clientY - chartRect.top - tooltip.offsetHeight - 12);
+        tooltip.style.left = `${left}px`;
+        tooltip.style.top = `${top}px`;
+        setSeriesFocus(point.dataset.region);
+    };
+    container.querySelectorAll('.region-usage-point').forEach(point => {
+        point.addEventListener('mouseenter', event => showTooltip(point, event));
+        point.addEventListener('mousemove', event => showTooltip(point, event));
+        point.addEventListener('mouseleave', () => { tooltip.hidden = true; setSeriesFocus(''); });
+        point.addEventListener('focus', event => showTooltip(point, event));
+        point.addEventListener('blur', () => { tooltip.hidden = true; setSeriesFocus(''); });
+    });
+}
+
+function initRegionUsageChart() {
+    document.getElementById('regionUsageYear')?.addEventListener('change', event => {
+        state.regionUsageYear = Number(event.target.value) || now.getFullYear();
+        renderRegionUsageChart();
+    });
+}
+
 function getRangeLabel() {
     if (isFullCalendarMonth(state.startDate, state.endDate)) {
         const date = parseDate(state.startDate);
@@ -1556,19 +2105,22 @@ function updateRangeText(rows) {
     const label = getRangeLabel();
     const dateRangeText = document.getElementById('dateRangeText');
     if (dateRangeText) dateRangeText.textContent = label;
-    if (els.kpiRangeLabel) els.kpiRangeLabel.textContent = label;
 }
 
 function statusToVietnamese(status) {
     const map = {
-        completed: 'Hoàn thành',
-        in_progress: 'Đang làm',
-        stuck: 'Đang làm',
-        abandoned: 'Đã dừng',
-        failed: 'Không đạt',
-        not_started: 'Chưa thực hiện'
+        completed: 'Chưa có kết quả',
+        failed: 'Chưa đạt'
     };
-    return map[status] || status || 'Chưa thực hiện';
+    return map[status] || status || '';
+}
+
+function getSessionDisplayStatus(rawStatus, mode, isPassed) {
+    if (mode === 'Hướng dẫn' || mode === 'guide') return 'Không chấm';
+    if (isPassed === true) return 'Đạt';
+    if (rawStatus === 'failed' || isPassed === false) return 'Chưa đạt';
+    if (rawStatus === 'completed' || rawStatus === 'Hoàn thành') return 'Chưa có kết quả';
+    return statusToVietnamese(rawStatus);
 }
 
 function dateOnly(value) {
@@ -1589,33 +2141,12 @@ function timeOnly(value) {
 }
 
 function formatDuration(seconds) {
+    if (seconds === null || seconds === undefined || seconds === '') return '—';
     const total = Math.max(0, Math.round(Number(seconds) || 0));
     if (total < 60) return `${total} giây`;
     const minutes = Math.floor(total / 60);
     const rem = total % 60;
     return rem ? `${minutes} phút ${rem} giây` : `${minutes} phút`;
-}
-
-function formatDurationCompact(seconds) {
-    const total = Math.max(0, Math.round(Number(seconds) || 0));
-    if (total < 60) return `${total}s`;
-    const minutes = Math.floor(total / 60);
-    const rem = total % 60;
-    return rem ? `${minutes}m${rem}s` : `${minutes}m`;
-}
-
-function formatMetricValue(unit, key, value) {
-    if (unit === '%') return `${value}%`;
-    if (key === 'avgDuration') return formatDuration(value);
-    return formatNumber.format(value) + (unit ? ` ${unit}` : '');
-}
-
-function formatMetricDelta(unit, key, value) {
-    const sign = value > 0 ? '+' : (value < 0 ? '-' : '');
-    const abs = Math.abs(Math.round(value * 10) / 10);
-    if (unit === '%') return `${sign}${abs}%`;
-    if (key === 'avgDuration') return `${sign}${formatDuration(abs)}`;
-    return `${sign}${abs}${unit ? ` ${unit}` : ''}`;
 }
 
 let learnerNameMap = new Map();
@@ -1628,41 +2159,32 @@ function normalizeTechnicianCatalog(apiTechnicians = []) {
         displayName: item.display_name || item.displayName || item.email || 'KTV chưa xác định',
         jobTitle: item.job_title || item.jobTitle || '',
         classCode: item.class_code || item.classCode || '',
+        className: item.class_name || item.className || item.class_code || item.classCode || '',
         unitCode: item.unit_code || item.unitCode || '',
         unitName: item.unit_name || item.unitName || '',
+        regionId: item.region_id || item.regionId || '',
         regionCode: item.region_code || item.regionCode || '',
-        branchCode: item.branch_code || item.branchCode || '',
-        dashboardRegion: item.dashboard_region || item.dashboardRegion || '',
+        regionName: item.region_name || item.regionName || item.dashboard_region || item.dashboardRegion || 'Chưa phân vùng',
+        branchName: item.branch_name || item.branchName || '',
+        dashboardRegion: item.dashboard_region || item.dashboardRegion || item.region_name || item.regionName || 'Chưa phân vùng',
+        locationAssigned: Boolean(item.location_assigned ?? item.locationAssigned ?? item.region_id ?? item.regionId),
         isTerminated: Boolean(item.is_terminated ?? item.isTerminated)
     }));
 }
 
 function normalizeTrainingAssignments(apiAssignments = []) {
     return apiAssignments.map(item => ({
-        assignmentId: item.assignment_id || item.assignmentId || '',
-        employeeId: item.employee_id || item.employeeId || '',
         learner: String(item.email || item.learner || '').trim().toLowerCase(),
-        displayName: item.display_name || item.displayName || item.email || '',
-        classId: item.class_id || item.classId || '',
         classCode: item.class_code || item.classCode || '',
-        regionId: item.region_id || item.regionId || '',
-        region: normalizeRegionName(item.region_name || item.regionName || item.region_code || '', item.email),
-        deviceId: item.device_id || item.deviceId || '',
+        className: item.class_name || item.className || item.class_code || item.classCode || '',
         device: item.device_name || item.deviceName || item.device || 'N/A',
-        labId: item.lab_id || item.labId || '',
         lab: item.lab_name || item.labName || item.lab || 'N/A',
-        assignedDate: dateOnly(item.assigned_at || item.assignedAt),
-        dueDate: dateOnly(item.due_at || item.dueAt),
         status: item.status || 'assigned',
-        passed: item.status === 'passed' || Boolean(item.passed),
+        completed: item.status === 'passed' || Boolean(item.passed),
         completedAt: item.completed_at || item.completedAt || null,
-        firstPassAttemptNo: item.first_pass_attempt_no === null || item.first_pass_attempt_no === undefined
+        firstPassAttemptNo: item.first_pass_attempt_no == null
             ? null
-            : Number(item.first_pass_attempt_no),
-        firstTryEvaluated: Boolean(item.first_try_evaluated ?? item.firstTryEvaluated),
-        attemptCount: Number(item.attempt_count || item.attemptCount) || 0,
-        attempted: Number(item.attempt_count || item.attemptCount) > 0,
-        avgDuration: Number(item.avg_duration_sec || item.avgDurationSec) || 0
+            : Number(item.first_pass_attempt_no)
     }));
 }
 
@@ -1707,36 +2229,54 @@ function normalizeActionText(item) {
 }
 
 function mapApiSessions(apiSessions = []) {
-    return apiSessions.map(item => {
+    return apiSessions
+        .filter(item => item.status === 'completed' || item.status === 'failed')
+        .map(item => {
         const learner = item.technician?.email || item.email || item.technician?.full_name || item.full_name || item.technician_id || 'Unknown';
         const technician = technicianByIdentity.get(String(item.technician_id || '').trim().toLowerCase())
             || technicianByIdentity.get(String(item.email || '').trim().toLowerCase());
+        const isPassed = item.is_passed === null || item.is_passed === undefined
+            ? null
+            : item.is_passed === true || item.is_passed === 1
+                || ['1', 't', 'true', 'yes'].includes(String(item.is_passed).trim().toLowerCase());
         return {
             sessionId: item.session_id,
             technicianId: item.technician_id || item.technician?.technician_id,
             technicianName: technician?.displayName || item.technician?.full_name || item.full_name || '',
             date: dateOnly(item.started_at),
             time: timeOnly(item.started_at),
+            startedAtMs: item.started_at ? new Date(item.started_at).getTime() : 0,
             learner,
-            region: normalizeRegionName(technician?.dashboardRegion || item.region_name || item.region || item.technician?.region, learner),
+            region: normalizeRegionName(technician?.regionName || item.region_name || item.region || item.technician?.region, learner),
             classCode: technician?.classCode || item.class_code || '',
+            assignmentClassCodes: Array.isArray(item.assignment_class_codes)
+                ? [...new Set(item.assignment_class_codes.map(String).filter(Boolean))]
+                : [],
             jobTitle: technician?.jobTitle || item.job_title || '',
             unitCode: technician?.unitCode || item.unit_code || '',
             unitName: technician?.unitName || item.unit_name || '',
-            branchCode: technician?.branchCode || item.branch_code || '',
+            branchName: technician?.branchName || item.branch_name || '',
+            deviceId: item.device_id || item.device?.device_id || null,
             device: item.device?.device_name || item.device_name || item.device_id || 'N/A',
             lab: item.lab?.lab_name || item.lab_name || item.lab_id || 'N/A',
             skill: item.skill?.skill_name || item.skill?.skill_id || item.lab?.lab_name || item.lab_name || 'N/A',
             mode: item.mode || 'Thực hành',
-            status: statusToVietnamese(item.status),
-            duration: Number(item.duration_sec) || 0,
+            rawStatus: item.status,
+            status: getSessionDisplayStatus(item.status, item.mode || 'Thực hành', isPassed),
+            duration: item.duration_sec === null || item.duration_sec === undefined
+                ? null
+                : Number(item.duration_sec),
+            isPassed,
             firstTry: item.completed_first_try === null || item.completed_first_try === undefined
                 ? null
                 : item.completed_first_try === true || item.completed_first_try === 1
                     || ['1', 't', 'true', 'yes'].includes(String(item.completed_first_try).trim().toLowerCase()),
+            practiceAttemptNo: item.practice_attempt_no === null || item.practice_attempt_no === undefined
+                ? null
+                : Number(item.practice_attempt_no),
             lastAction: normalizeActionText(item)
         };
-    });
+        });
 }
 
 function buildDeviceCatalog(devices = [], labs = []) {
@@ -1762,16 +2302,52 @@ function setDataSourceLabel(text) {
     if (el) el.textContent = text;
 }
 
-function setDashboardLoading(visible) {
+function formatDashboardSyncDetail(date = new Date()) {
+    return `Cập nhật lúc ${date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+}
+
+function setDashboardSyncState(status = 'ready', detail = '') {
+    const sync = document.getElementById('dashboardSyncStatus');
+    const title = document.getElementById('dashboardSyncTitle');
+    const detailEl = document.getElementById('dashboardSyncDetail');
+    const sidebarDot = document.getElementById('sidebarStatusDot');
+    const titles = {
+        syncing: 'Đang đồng bộ',
+        ready: 'Dữ liệu mới nhất',
+        stale: 'Đang dùng dữ liệu gần nhất',
+        offline: 'Mất kết nối'
+    };
+    if (sync) sync.className = `dashboard-sync-status is-${status}`;
+    if (title) title.textContent = titles[status] || titles.ready;
+    if (detailEl) detailEl.textContent = detail || (state.lastSuccessfulRefreshAt
+        ? formatDashboardSyncDetail(state.lastSuccessfulRefreshAt)
+        : 'Chưa có dữ liệu đồng bộ');
+    if (sidebarDot) sidebarDot.className = `sidebar-status-dot is-${status}`;
+}
+
+function setRefreshButtonBusy(busy) {
+    const button = document.getElementById('refreshDashboardBtn');
+    if (!button) return;
+    button.disabled = busy;
+    button.classList.toggle('is-busy', busy);
+    button.setAttribute('aria-label', busy ? 'Đang làm mới dữ liệu dashboard' : 'Làm mới dữ liệu dashboard');
+}
+
+function setDashboardLoading(visible, message = '') {
     const el = document.getElementById('dashboardLoading');
-    if (!el) return;
-    el.hidden = !visible;
-    el.setAttribute('aria-hidden', String(!visible));
+    if (el) {
+        el.hidden = !visible;
+        el.setAttribute('aria-hidden', String(!visible));
+        const copy = el.querySelector('.dashboard-loading-text');
+        if (copy && message) copy.textContent = message;
+    }
+    document.getElementById('appPage')?.setAttribute('aria-busy', String(visible));
 }
 
 let dashboardPollTimer = null;
 let dashboardRefreshInFlight = false;
 let lastDashboardSignature = '';
+let lastDashboardVersion = '';
 let dashboardReportRequestSequence = 0;
 const DASHBOARD_POLL_INTERVAL_MS = 30000;
 
@@ -1782,7 +2358,7 @@ function dashboardReportQuery() {
         to: periods.currentEnd,
         compare_from: periods.previousStart,
         compare_to: periods.previousEnd,
-        cohort: 'due_in_period'
+        cohort: 'assigned_as_of_period_end'
     });
 }
 
@@ -1793,15 +2369,28 @@ async function fetchDashboardReport(query = dashboardReportQuery()) {
     return payload.data || null;
 }
 
+async function fetchDashboardVersion() {
+    const response = await fetch(`${API_BASE_URL}/dashboard/version`);
+    if (!response.ok) throw new Error(`API phiên bản dashboard trả về HTTP ${response.status}`);
+    const payload = await response.json();
+    return String(payload.data?.data_version || '');
+}
+
 async function reloadDashboardReport() {
     const requestSequence = ++dashboardReportRequestSequence;
+    state.dashboardReportStatus = 'loading';
+    renderAll();
     try {
         const report = await fetchDashboardReport();
         if (requestSequence !== dashboardReportRequestSequence) return;
         dashboardReport = report;
+        state.dashboardReportStatus = 'ready';
         renderAll();
     } catch (error) {
         console.warn('Không tải được báo cáo assignment theo kỳ.', error);
+        if (requestSequence !== dashboardReportRequestSequence) return;
+        state.dashboardReportStatus = dashboardReport ? 'stale' : 'unavailable';
+        renderAll();
     }
 }
 
@@ -1820,29 +2409,49 @@ function buildDashboardSignature(data) {
     return [
         list.length,
         first?.session_id || '',
-        first?.finished_at || '',
+        first?.started_at || '',
         last?.session_id || '',
-        last?.finished_at || '',
+        last?.started_at || '',
         (data.devices || []).length,
         technicians.length,
         latestTechnicianUpdate,
         completedCount,
         knownFirstTryCount,
         firstTryCount,
+        data.data_version || '',
         data.report_meta?.data_version || ''
     ].join('|');
 }
 
-async function fetchDashboardData() {
-    const [response, reportResponse] = await Promise.all([
-        fetch(`${API_BASE_URL}/dashboard/all`),
-        fetch(`${API_BASE_URL}/dashboard/report?${dashboardReportQuery()}`)
-    ]);
+async function fetchDashboardData(versionHint = '') {
+    const allParams = new URLSearchParams();
+    // Expanded assignment rows are required only by class-level views. Once
+    // loaded, refresh them together with the rest of the dashboard data.
+    const assignmentsRequested = state.assignmentsLoaded
+        || ['instructors', 'class_matrix', 'analytics'].includes(activeDashboardView);
+    allParams.set('include_assignments', assignmentsRequested ? '1' : '0');
+    const reportRequest = fetch(`${API_BASE_URL}/dashboard/report?${dashboardReportQuery()}`).then(async response => {
+        if (!response.ok) throw new Error(`API báo cáo trả về HTTP ${response.status}`);
+        return (await response.json()).data || null;
+    });
+    const versionRequest = versionHint
+        ? Promise.resolve(versionHint)
+        : fetchDashboardVersion();
+    const regionCatalogPromise = fetchAndBuildRegionCatalog();
+    const optionalRequests = Promise.allSettled([reportRequest, versionRequest]);
+    const response = await fetch(`${API_BASE_URL}/dashboard/all?${allParams}`);
     if (!response.ok) throw new Error(`API dữ liệu chi tiết trả về HTTP ${response.status}`);
-    if (!reportResponse.ok) throw new Error(`API báo cáo trả về HTTP ${reportResponse.status}`);
-    const [payload, reportPayload] = await Promise.all([response.json(), reportResponse.json()]);
+    const [payload, [reportResult, versionResult]] = await Promise.all([response.json(), optionalRequests]);
     const data = payload.data || {};
-    const report = reportPayload.data || null;
+    if (assignmentsRequested && data.assignments_available !== true) {
+        throw new Error('Dữ liệu phân lớp hiện không khả dụng.');
+    }
+    const report = reportResult.status === 'fulfilled' ? reportResult.value : dashboardReport;
+    const reportStatus = reportResult.status === 'fulfilled' ? 'ready' : (report ? 'stale' : 'unavailable');
+    const version = versionResult.status === 'fulfilled' ? String(versionResult.value || '') : String(versionHint || lastDashboardVersion || '');
+    if (reportResult.status === 'rejected') console.warn('Không đồng bộ được báo cáo tổng hợp; giữ dữ liệu gần nhất.', reportResult.reason);
+    if (versionResult.status === 'rejected') console.warn('Không đọc được phiên bản dữ liệu dashboard.', versionResult.reason);
+    await regionCatalogPromise;
     const techniciansAuthoritative = Array.isArray(data.technicians);
     const technicians = normalizeTechnicianCatalog(techniciansAuthoritative ? data.technicians : []);
     technicianCatalog = technicians;
@@ -1856,8 +2465,12 @@ async function fetchDashboardData() {
         technicians,
         techniciansAuthoritative,
         assignments: normalizeTrainingAssignments(data.assignments || []),
+        assignmentsRequested,
+        assignmentsAvailable: data.assignments_available === true,
         report,
-        raw: { ...data, report_meta: report?.meta || null }
+        reportStatus,
+        version,
+        raw: { ...data, data_version: version, report_meta: report?.meta || null }
     };
 }
 
@@ -1865,24 +2478,73 @@ function applyDashboardData(data) {
     sessions = data.sessions;
     deviceCatalog = data.deviceCatalog;
     technicianCatalog = data.technicians || [];
-    trainingAssignments = data.assignments || [];
-    dashboardReport = data.report || null;
+    if (data.assignmentsRequested && data.assignmentsAvailable) {
+        trainingAssignments = data.assignments || [];
+        state.assignmentsLoaded = true;
+    }
+    if (data.report !== undefined) dashboardReport = data.report;
+    state.dashboardReportStatus = data.reportStatus || (dashboardReport ? 'ready' : 'unavailable');
     technicianCatalogAuthoritative = Boolean(data.techniciansAuthoritative);
+    state.dashboardDataLoaded = true;
+    normalizeSessionDeviceNames();
     rebuildTechnicianIndex();
     rebuildLearnerNameMap();
 }
 
+function normalizeSessionDeviceNames() {
+    if (!deviceCatalog.length || !sessions.length) return;
+    const deviceIdToName = new Map();
+    deviceCatalog.forEach(d => {
+        if (d.device_id) deviceIdToName.set(String(d.device_id).toLowerCase(), d.device || d.device_name);
+    });
+    const fallbackMap = new Map();
+    const canonicalNames = deviceCatalog.map(d => d.device || d.device_name).filter(Boolean);
+    canonicalNames.forEach(name => { fallbackMap.set(name.toLowerCase(), name); });
+    const junkPatterns = ['hệ thống lab', 'router mikrotik', 'internet hub', 'ont'];
+    sessions.forEach(s => {
+        if (s.deviceId) {
+            const canonical = deviceIdToName.get(String(s.deviceId).toLowerCase());
+            if (canonical) { s.device = canonical; return; }
+        }
+        const lower = (s.device || '').toLowerCase().trim();
+        if (!lower || lower === 'n/a' || junkPatterns.some(p => lower.includes(p))) {
+            const matched = canonicalNames.find(c => lower.includes(c.toLowerCase()));
+            if (matched) { s.device = matched; return; }
+        }
+        const directMatch = fallbackMap.get(lower);
+        if (directMatch) s.device = directMatch;
+    });
+}
+
+function getCanonicalDeviceList() {
+    if (deviceCatalog.length) {
+        return deviceCatalog.map(d => d.device || d.device_name).filter(Boolean).sort();
+    }
+    return [...new Set(sessions.map(item => item.device))].sort();
+}
+
+function isSuccessfulSession(item) {
+    return (item?.mode === 'Thực hành' || item?.mode === 'practice') && item?.isPassed === true;
+}
+
+function getCanonicalLabList() {
+    if (deviceCatalog.length) {
+        return [...new Set(deviceCatalog.flatMap(device => device.labs || []).filter(Boolean))]
+            .sort((a, b) => a.localeCompare(b, 'vi'));
+    }
+    return [...new Set(sessions.map(item => item.lab).filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b, 'vi'));
+}
+
 function mergeUntouchedFilterSets(allKtvs, allDevices, allLabs, allRegions) {
-    if (!state.realtimeKtvsTouched) state.realtimeSelectedKtvs = new Set([...state.realtimeSelectedKtvs, ...allKtvs]);
-    if (!state.learnerKtvsTouched) state.learnerSelectedKtvs = new Set([...state.learnerSelectedKtvs, ...allKtvs]);
-    if (!state.learnerEmailsTouched) state.learnerSelectedEmails = new Set([...state.learnerSelectedEmails, ...allKtvs]);
-    if (!state.learnerRegionsTouched) state.learnerSelectedRegions = new Set([...state.learnerSelectedRegions, ...allRegions]);
-    if (!state.learnerDevicesTouched) state.learnerSelectedDevices = new Set([...state.learnerSelectedDevices, ...allDevices]);
-    if (!state.learnerLabsTouched) state.learnerSelectedLabs = new Set([...state.learnerSelectedLabs, ...allLabs]);
-    if (!state.realtimeDevicesTouched) state.realtimeSelectedDevices = new Set([...state.realtimeSelectedDevices, ...allDevices]);
-    if (!state.realtimeLabsTouched) state.realtimeSelectedLabs = new Set([...state.realtimeSelectedLabs, ...allLabs]);
-    if (!state.labDevicesTouched) state.labSelectedDevices = new Set([...state.labSelectedDevices, ...allDevices]);
-    if (!state.deviceDevicesTouched) state.deviceSelectedDevices = new Set([...state.deviceSelectedDevices, ...allDevices]);
+    if (!state.realtimeKtvsTouched) state.realtimeSelectedKtvs = new Set(allKtvs);
+    if (!state.learnerKtvsTouched) state.learnerSelectedKtvs = new Set(allKtvs);
+    if (!state.learnerEmailsTouched) state.learnerSelectedEmails = new Set(allKtvs);
+    if (!state.learnerRegionsTouched) state.learnerSelectedRegions = new Set(allRegions);
+    if (!state.learnerDevicesTouched) state.learnerSelectedDevices = new Set(allDevices);
+    if (!state.learnerLabsTouched) state.learnerSelectedLabs = new Set(allLabs);
+    if (!state.realtimeDevicesTouched) state.realtimeSelectedDevices = new Set(allDevices);
+    if (!state.realtimeLabsTouched) state.realtimeSelectedLabs = new Set(allLabs);
 }
 
 function mergeDefaultClassLearners() {
@@ -1899,9 +2561,16 @@ function mergeDefaultClassLearners() {
 
 function refreshFilterOptionLists() {
     const allKtvs = [...new Set(sessions.map(item => item.learner))].sort();
-    const allDevices = [...new Set(sessions.map(item => item.device))].sort();
-    const allLabs = [...new Set(sessions.map(item => item.lab))].sort((a, b) => a.localeCompare(b, 'vi'));
+    const allDevices = getCanonicalDeviceList();
+    const allLabs = getCanonicalLabList();
     const allRegions = [...new Set(sessions.map(item => item.region))].sort((a, b) => a.localeCompare(b, 'vi'));
+    const universes = state.popoverUniverses;
+    if (universes) {
+        universes.allKtvs.splice(0, universes.allKtvs.length, ...allKtvs);
+        universes.allDevices.splice(0, universes.allDevices.length, ...allDevices);
+        universes.allLabs.splice(0, universes.allLabs.length, ...allLabs);
+        universes.allRegions.splice(0, universes.allRegions.length, ...allRegions);
+    }
     populatePopoverOptions('realtimeKtvOptions', allKtvs, state.realtimeSelectedKtvs, () => { state.realtimeKtvsTouched = true; }, state.realtimeSearchKtv, getLearnerName);
     populatePopoverOptions('realtimeDeviceOptions', allDevices, state.realtimeSelectedDevices, () => { state.realtimeDevicesTouched = true; }, state.realtimeSearchDevice);
     populatePopoverOptions('realtimeLabOptions', allLabs, state.realtimeSelectedLabs, () => { state.realtimeLabsTouched = true; }, state.realtimeSearchLab);
@@ -1910,31 +2579,61 @@ function refreshFilterOptionLists() {
     populatePopoverOptions('learnerRegionOptions', allRegions, state.learnerSelectedRegions, () => { state.learnerRegionsTouched = true; });
     populatePopoverOptions('learnerDeviceOptions', allDevices, state.learnerSelectedDevices, () => { state.learnerDevicesTouched = true; });
     populatePopoverOptions('learnerLabOptions', allLabs, state.learnerSelectedLabs, () => { state.learnerLabsTouched = true; });
-    populatePopoverOptions('labDeviceOptions', allDevices, state.labSelectedDevices, () => { state.labDevicesTouched = true; }, state.labSearchDevice);
-    populatePopoverOptions('deviceOptions', allDevices, state.deviceSelectedDevices, () => { state.deviceDevicesTouched = true; }, state.deviceSearchDevice);
 }
 
-async function refreshDashboardData() {
-    if (dashboardRefreshInFlight || document.hidden) return;
+async function refreshDashboardData({ force = false, announce = false } = {}) {
+    if (activeDashboardView === 'roster' && !force) return false;
+    if (dashboardRefreshInFlight || (document.hidden && !force)) return false;
     dashboardRefreshInFlight = true;
+    setRefreshButtonBusy(true);
+    setDashboardSyncState('syncing', 'Đang kiểm tra dữ liệu mới nhất');
     try {
-        const data = await fetchDashboardData();
+        let version = '';
+        try {
+            version = await fetchDashboardVersion();
+        } catch (error) {
+            console.warn('Không đọc được phiên bản dashboard; tiếp tục đồng bộ dữ liệu chính.', error);
+        }
+        if (!force && version !== '' && version === lastDashboardVersion) {
+            state.lastSuccessfulRefreshAt = new Date();
+            setDashboardSyncState('ready');
+            return false;
+        }
+        const data = await fetchDashboardData(version);
+        const previousReportStatus = state.dashboardReportStatus;
+        state.dashboardReportStatus = data.reportStatus || (data.report ? 'ready' : 'unavailable');
         const signature = buildDashboardSignature(data.raw);
-        if (signature === lastDashboardSignature) return;
+        if (!force && signature === lastDashboardSignature) {
+            state.lastSuccessfulRefreshAt = new Date();
+            setDashboardSyncState('ready');
+            if (previousReportStatus !== state.dashboardReportStatus) renderAll();
+            return false;
+        }
         lastDashboardSignature = signature;
+        lastDashboardVersion = data.version || version;
         applyDashboardData(data);
         const allKtvs = [...new Set(sessions.map(item => item.learner))].sort();
-        const allDevices = [...new Set(sessions.map(item => item.device))].sort();
-        const allLabs = [...new Set(sessions.map(item => item.lab))].sort((a, b) => a.localeCompare(b, 'vi'));
+        const allDevices = getCanonicalDeviceList();
+        const allLabs = getCanonicalLabList();
         const allRegions = [...new Set(sessions.map(item => item.region))].sort((a, b) => a.localeCompare(b, 'vi'));
         mergeUntouchedFilterSets(allKtvs, allDevices, allLabs, allRegions);
         refreshFilterOptionLists();
         mergeDefaultClassLearners();
         renderAll();
+        state.lastSuccessfulRefreshAt = new Date();
+        setDashboardSyncState('ready');
+        if (announce) showToast('Dashboard đã được cập nhật với dữ liệu mới nhất.', 'success');
+        return true;
     } catch (error) {
-        console.warn('Poll dữ liệu timer_sessions thất bại (giữ dữ liệu cũ).', error);
+        console.warn('Đồng bộ dashboard thất bại; giữ dữ liệu gần nhất.', error);
+        setDashboardSyncState(navigator.onLine ? 'stale' : 'offline', state.lastSuccessfulRefreshAt
+            ? formatDashboardSyncDetail(state.lastSuccessfulRefreshAt)
+            : 'Không thể kết nối tới máy chủ');
+        if (announce) showToast('Không thể làm mới dữ liệu. Dashboard vẫn giữ bản gần nhất.', 'error');
+        return false;
     } finally {
         dashboardRefreshInFlight = false;
+        setRefreshButtonBusy(false);
     }
 }
 
@@ -1944,40 +2643,61 @@ function startDashboardPolling() {
 }
 
 async function loadDashboardFromApi() {
-    setDashboardLoading(true);
-    try {
-        setDataSourceLabel('Đang tải dữ liệu từ timer_sessions');
-        renderAll();
+    if (dashboardLoadRequest) return dashboardLoadRequest;
+    dashboardLoadRequest = (async () => {
+        setDashboardLoading(!state.dashboardDataLoaded, 'Đang đồng bộ dữ liệu dashboard...');
+        setDashboardSyncState('syncing', 'Đang tải dữ liệu vận hành');
+        try {
+            setDataSourceLabel('Đang đồng bộ dữ liệu vận hành');
+            renderAll();
 
-        const data = await fetchDashboardData();
-        lastDashboardSignature = buildDashboardSignature(data.raw);
-        applyDashboardData(data);
+            const data = await fetchDashboardData();
+            lastDashboardSignature = buildDashboardSignature(data.raw);
+            lastDashboardVersion = data.version || '';
+            applyDashboardData(data);
 
-        state.selectedLearner = '';
-        state.learnerTablePage = 1;
-        state.learnerDetailPage = 1;
-        setDataSourceLabel('Dữ liệu thực từ timer_sessions');
-        initFilters();
-        initPopovers();
-        renderAll();
-    } catch (error) {
-        console.warn('Không kết nối được dữ liệu timer_sessions.', error);
-        sessions = [];
-        deviceCatalog = [];
-        technicianCatalog = [];
-        trainingAssignments = [];
-        dashboardReport = null;
-        technicianCatalogAuthoritative = false;
-        rebuildTechnicianIndex();
-        rebuildLearnerNameMap();
-        setDataSourceLabel('Không tải được dữ liệu timer_sessions');
-        initFilters();
-        initPopovers();
-        renderAll();
-    } finally {
-        setDashboardLoading(false);
-        startDashboardPolling();
-    }
+            state.selectedLearner = '';
+            state.learnerTablePage = 1;
+            state.learnerDetailPage = 1;
+            state.lastSuccessfulRefreshAt = new Date();
+            setDataSourceLabel('Dữ liệu vận hành đã đồng bộ');
+            setDashboardSyncState('ready');
+            mergeUntouchedFilterSets(
+                [...new Set(sessions.map(item => item.learner))].sort(),
+                getCanonicalDeviceList(),
+                getCanonicalLabList(),
+                [...new Set(sessions.map(item => item.region))].sort((a, b) => a.localeCompare(b, 'vi'))
+            );
+            initFilters();
+            initPopovers();
+            renderAll();
+            return true;
+        } catch (error) {
+            console.warn('Không kết nối được dữ liệu dashboard.', error);
+            if (!state.dashboardDataLoaded) {
+                sessions = [];
+                deviceCatalog = [];
+                technicianCatalog = [];
+                trainingAssignments = [];
+                dashboardReport = null;
+                state.dashboardReportStatus = 'unavailable';
+                technicianCatalogAuthoritative = false;
+                rebuildTechnicianIndex();
+                rebuildLearnerNameMap();
+            }
+            setDataSourceLabel('Không thể đồng bộ dữ liệu');
+            setDashboardSyncState(navigator.onLine ? 'stale' : 'offline', 'Không thể kết nối tới máy chủ');
+            initFilters();
+            initPopovers();
+            renderAll();
+            return false;
+        } finally {
+            setDashboardLoading(false);
+            dashboardLoadRequest = null;
+            startDashboardPolling();
+        }
+    })();
+    return dashboardLoadRequest;
 }
 
 async function guardDashboardAdmin() {
@@ -1985,16 +2705,53 @@ async function guardDashboardAdmin() {
     try {
         response = await fetch(`${API_BASE_URL}/auth/session`);
     } catch (error) {
-        return;
+        console.warn('Không thể xác minh phiên quản trị.', error);
+        setDataSourceLabel('Không thể xác minh phiên quản trị');
+        setDashboardLoading(false);
+        return false;
     }
-    const isAdmin = response.ok && (await response.json().catch(() => null))?.user?.role === 'admin';
+    const user = response.ok ? (await response.json().catch(() => null))?.user : null;
+    const role = String(user?.role || '').toUpperCase();
+    const isAdmin = Boolean(user && (user.isAdmin ?? user.is_admin ?? user.permissions?.admin ?? ['ADMIN', 'DEV'].includes(role)));
     if (!isAdmin) {
         window.location.replace(`${window.location.origin}/`);
+        return false;
     }
+    state.currentUser = user;
+    state.isAdmin = true;
+    state.canExportReports = Boolean(
+        user.canExportReports
+        ?? user.can_export_reports
+        ?? user.permissions?.exportReports
+        ?? user.permissions?.export_reports
+        ?? role === 'DEV'
+    );
+    applyReportExportPermission();
+    return true;
+}
+
+function applyReportExportPermission() {
+    const button = document.getElementById('exportBtn');
+    if (!button) return;
+    button.hidden = !state.canExportReports;
+    button.disabled = !state.canExportReports;
+    button.setAttribute('aria-hidden', state.canExportReports ? 'false' : 'true');
+}
+
+function ensureReportExportAllowed() {
+    if (state.canExportReports) return true;
+    showToast('Chỉ tài khoản có role DEV mới được xuất báo cáo.', 'error');
+    return false;
 }
 
 async function loadInitialDashboardData() {
-    await guardDashboardAdmin();
+    if (!(await guardDashboardAdmin())) return;
+    if (activeDashboardView === 'roster') {
+        setDataSourceLabel('Hồ sơ KTV từ cơ sở dữ liệu');
+        await loadRosterList();
+        setDashboardLoading(false);
+        return;
+    }
     await loadDashboardFromApi();
 
     const requestedLearner = new URLSearchParams(window.location.search).get('learner');
@@ -2004,32 +2761,71 @@ async function loadInitialDashboardData() {
         renderAll();
     }
 
-    initializeInlineComparison();
 }
 
 function initFilters() {
-    fillSelect('deviceFilter', [...new Set(sessions.map(item => item.device))].sort(), 'Tất cả thiết bị');
-    fillSelect('labDeviceFilter', [...new Set(sessions.map(item => item.device))].sort(), 'Tất cả thiết bị');
-
     if (state.filtersBound) return;
     state.filtersBound = true;
 
-    document.getElementById('deviceFilter')?.addEventListener('change', (e) => {
-        state.deviceFilter = e.target.value;
-        renderAll();
-    });
-
-    document.getElementById('labDeviceFilter')?.addEventListener('change', (e) => {
-        state.labDeviceFilter = e.target.value;
-        renderAll();
-    });
 }
 
 let suppressFilterRender = false;
 let deferredFilterCallback = null;
+let headerFilterSequence = 0;
+
+function getHeaderFilterDropdown(wrapper) {
+    return wrapper?._floatingDropdown
+        || wrapper?._headerFilterDropdown
+        || wrapper?.querySelector('.popover-dropdown');
+}
+
+function snapshotHeaderFilterDraft(wrapper) {
+    const dropdown = getHeaderFilterDropdown(wrapper);
+    if (!dropdown) return;
+    wrapper._headerFilterSnapshot = new Map(
+        [...dropdown.querySelectorAll('.popover-option input[type="checkbox"]')]
+            .map(checkbox => [checkbox, checkbox.checked])
+    );
+    wrapper._headerFilterDirty = false;
+}
+
+function restoreHeaderFilterDraft(wrapper) {
+    if (!wrapper?._headerFilterSnapshot || !wrapper._headerFilterDirty) return;
+    wrapper._headerFilterSnapshot.forEach((checked, checkbox) => {
+        if (checkbox.isConnected) checkbox.checked = checked;
+    });
+    wrapper._headerFilterDirty = false;
+}
+
+function closeHeaderFilterPopover(wrapper, { restoreFocus = false, discardDraft = true } = {}) {
+    if (!wrapper) return;
+    const trigger = wrapper.querySelector('.popover-trigger-btn, .select-popover-btn, .compact-trigger');
+    const dropdown = getHeaderFilterDropdown(wrapper);
+    if (discardDraft) restoreHeaderFilterDraft(wrapper);
+    wrapper.classList.remove('open');
+    dropdown?.classList.remove('open');
+    trigger?.setAttribute('aria-expanded', 'false');
+    if (restoreFocus) trigger?.focus();
+}
+
+function openHeaderFilterPopover(wrapper) {
+    if (!wrapper) return;
+    document.querySelectorAll('.header-filter-popover.open').forEach(openWrapper => {
+        if (openWrapper !== wrapper) closeHeaderFilterPopover(openWrapper);
+    });
+    snapshotHeaderFilterDraft(wrapper);
+    wrapper.classList.add('open');
+    positionHeaderFilterDropdown(wrapper, true);
+    const dropdown = getHeaderFilterDropdown(wrapper);
+    window.requestAnimationFrame(() => {
+        const target = dropdown?.querySelector('.header-filter-search, input:not([disabled]), button:not([disabled])');
+        target?.focus();
+    });
+}
 
 function enhanceHeaderFilterPopovers(root = document) {
     root.querySelectorAll('thead .popover-filter-wrapper').forEach(wrapper => {
+        if (wrapper.closest('#rosterListPanel')) return;
         const trigger = wrapper.querySelector('.popover-trigger-btn');
         const dropdown = wrapper.querySelector('.popover-dropdown');
         if (!trigger || !dropdown || dropdown.dataset.headerFilterEnhanced === 'true') return;
@@ -2038,8 +2834,13 @@ function enhanceHeaderFilterPopovers(root = document) {
         dropdown.classList.add('header-filter-menu');
         wrapper.classList.add('header-filter-popover');
         wrapper._headerFilterDropdown = dropdown;
+        if (!dropdown.id) dropdown.id = `headerFilterMenu${++headerFilterSequence}`;
+        dropdown.setAttribute('role', 'dialog');
+        dropdown.setAttribute('aria-modal', 'false');
+        dropdown.setAttribute('aria-label', `Bộ lọc ${trigger.textContent.trim() || 'bảng dữ liệu'}`);
         trigger.setAttribute('aria-haspopup', 'dialog');
         trigger.setAttribute('aria-expanded', 'false');
+        trigger.setAttribute('aria-controls', dropdown.id);
 
         const commandRow = document.createElement('div');
         commandRow.className = 'header-filter-command-row';
@@ -2057,31 +2858,28 @@ function enhanceHeaderFilterPopovers(root = document) {
             searchInput.placeholder = 'Tìm giá trị...';
             commandRow.insertAdjacentElement('afterend', searchInput);
         }
+        searchInput.setAttribute('aria-label', `Tìm trong ${dropdown.getAttribute('aria-label').toLocaleLowerCase('vi')}`);
 
-        searchInput.addEventListener('input', () => {
+        searchInput.addEventListener('input', event => {
+            event.stopImmediatePropagation();
             const keyword = searchInput.value.trim().toLocaleLowerCase('vi');
             dropdown.querySelectorAll('.popover-option').forEach(option => {
                 option.hidden = keyword && !option.textContent.toLocaleLowerCase('vi').includes(keyword);
             });
-        });
+        }, { capture: true });
+
+        dropdown.addEventListener('change', event => {
+            if (dropdown._committingFilterDraft || !event.target.matches('.popover-option input[type="checkbox"]')) return;
+            event.stopImmediatePropagation();
+            wrapper._headerFilterDirty = true;
+        }, { capture: true });
 
         const updateVisibleCheckboxes = (checked) => {
             const checkboxes = [...dropdown.querySelectorAll('.popover-option:not([hidden]) input[type="checkbox"]')];
-            suppressFilterRender = true;
-            deferredFilterCallback = null;
             checkboxes.forEach(checkbox => {
-                if (checkbox.checked === checked) return;
                 checkbox.checked = checked;
-                checkbox.dispatchEvent(new Event('change', { bubbles: true }));
             });
-            suppressFilterRender = false;
-            const callback = deferredFilterCallback;
-            deferredFilterCallback = null;
-            state.realtimePage = 1;
-            state.learnerTablePage = 1;
-            state.learnerDetailPage = 1;
-            if (callback) callback();
-            else renderAll();
+            wrapper._headerFilterDirty = true;
         };
 
         commandRow.querySelector('[data-filter-command="all"]')?.addEventListener('click', () => updateVisibleCheckboxes(true));
@@ -2095,25 +2893,56 @@ function enhanceHeaderFilterPopovers(root = document) {
         }
         footer.classList.add('header-filter-footer');
         footer.querySelectorAll('.popover-btn-clear').forEach(clearButton => {
-            clearButton.addEventListener('click', () => {
+            clearButton.addEventListener('click', event => {
+                event.preventDefault();
+                event.stopImmediatePropagation();
                 searchInput.value = '';
                 dropdown.querySelectorAll('.popover-option').forEach(option => { option.hidden = false; });
-            });
+                dropdown.querySelectorAll('.popover-option input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.checked = true;
+                });
+                wrapper._headerFilterDirty = true;
+            }, { capture: true });
         });
         const applyButton = document.createElement('button');
         applyButton.type = 'button';
         applyButton.className = 'header-filter-apply';
         applyButton.textContent = 'Áp dụng';
         applyButton.addEventListener('click', () => {
-            wrapper.classList.remove('open');
-            dropdown.classList.remove('open');
-            trigger.setAttribute('aria-expanded', 'false');
+            const snapshot = wrapper._headerFilterSnapshot || new Map();
+            const changedCheckboxes = [...dropdown.querySelectorAll('.popover-option input[type="checkbox"]')]
+                .filter(checkbox => snapshot.get(checkbox) !== checkbox.checked);
+            suppressFilterRender = true;
+            deferredFilterCallback = null;
+            dropdown._committingFilterDraft = true;
+            try {
+                changedCheckboxes.forEach(checkbox => {
+                    checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+            } finally {
+                dropdown._committingFilterDraft = false;
+                suppressFilterRender = false;
+            }
+            const callback = deferredFilterCallback;
+            deferredFilterCallback = null;
+            snapshotHeaderFilterDraft(wrapper);
+            closeHeaderFilterPopover(wrapper, { restoreFocus: true, discardDraft: false });
             state.realtimePage = 1;
             state.learnerTablePage = 1;
             state.learnerDetailPage = 1;
+            if (callback) callback();
             renderAll();
         });
         footer.appendChild(applyButton);
+        dropdown.addEventListener('keydown', event => {
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                event.stopPropagation();
+                closeHeaderFilterPopover(wrapper, { restoreFocus: true });
+                return;
+            }
+            trapDialogFocus(event, dropdown);
+        });
     });
 }
 
@@ -2176,10 +3005,19 @@ window.addEventListener('scroll', (event) => {
 }, true);
 
 function initPopovers() {
+    if (state.popoversInitialized) {
+        refreshFilterOptionLists();
+        return;
+    }
+    state.popoversInitialized = true;
     const allKtvs = [...new Set(sessions.map(item => item.learner))].sort();
-    const allDevices = [...new Set(sessions.map(item => item.device))].sort();
-    const allLabs = [...new Set(sessions.map(item => item.lab))].sort((a, b) => a.localeCompare(b, 'vi'));
+    const allDevices = getCanonicalDeviceList();
+    const allLabs = getCanonicalLabList();
     const allRegions = [...new Set(sessions.map(item => item.region))].sort((a, b) => a.localeCompare(b, 'vi'));
+    state.popoverUniverses = { allKtvs, allDevices, allLabs, allRegions };
+    let learnerSearchTimer = null;
+    let detailDeviceSearchTimer = null;
+    let detailLabSearchTimer = null;
 
     // Fill sets with all items by default on initial load
     if (state.realtimeSelectedKtvs.size === 0 && !state.realtimeKtvsTouched) {
@@ -2206,13 +3044,6 @@ function initPopovers() {
     if (state.realtimeSelectedDevices.size === 0 && !state.realtimeDevicesTouched) {
         state.realtimeSelectedDevices = new Set(allDevices);
     }
-    if (state.labSelectedDevices.size === 0 && !state.labDevicesTouched) {
-        state.labSelectedDevices = new Set(allDevices);
-    }
-    if (state.deviceSelectedDevices.size === 0 && !state.deviceDevicesTouched) {
-        state.deviceSelectedDevices = new Set(allDevices);
-    }
-
     // 1. Realtime KTV Popover
     populatePopoverOptions('realtimeKtvOptions', allKtvs, state.realtimeSelectedKtvs, () => { state.realtimeKtvsTouched = true; }, state.realtimeSearchKtv, getLearnerName);
     document.getElementById('realtimeKtvSearch')?.addEventListener('input', (e) => {
@@ -2293,7 +3124,7 @@ function initPopovers() {
     });
     document.getElementById('realtimeStatusClear')?.addEventListener('click', (e) => {
         e.stopPropagation();
-        state.realtimeSelectedStatuses = new Set(['Hoàn thành', 'Đang làm', 'Không đạt', 'Đã dừng']);
+        state.realtimeSelectedStatuses = new Set(['Đạt', 'Chưa đạt', 'Chưa có kết quả', 'Không chấm']);
         document.querySelectorAll('#realtimeStatusOptions input[type="checkbox"]').forEach(chk => chk.checked = true);
         renderAll();
     });
@@ -2322,7 +3153,8 @@ function initPopovers() {
     document.getElementById('learnerKtvSearch')?.addEventListener('input', (e) => {
         state.learnerSearchKtv = e.target.value;
         state.learnerTablePage = 1;
-        renderAll();
+        window.clearTimeout(learnerSearchTimer);
+        learnerSearchTimer = window.setTimeout(renderAll, 180);
     });
     const repopulateLearnerFilters = () => {
         populatePopoverOptions('learnerKtvOptions', allKtvs, state.learnerSelectedKtvs, () => { state.learnerKtvsTouched = true; }, undefined, getLearnerName);
@@ -2423,7 +3255,8 @@ function initPopovers() {
     // 7. Learner Detail Device Search
     document.getElementById('detailDeviceSearch')?.addEventListener('input', (e) => {
         state.detailSearchDevice = e.target.value;
-        renderAll();
+        window.clearTimeout(detailDeviceSearchTimer);
+        detailDeviceSearchTimer = window.setTimeout(renderAll, 180);
     });
     document.getElementById('detailDeviceClear')?.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -2438,7 +3271,8 @@ function initPopovers() {
     // 8. Learner Detail Lab Search
     document.getElementById('detailLabSearch')?.addEventListener('input', (e) => {
         state.detailSearchLab = e.target.value;
-        renderAll();
+        window.clearTimeout(detailLabSearchTimer);
+        detailLabSearchTimer = window.setTimeout(renderAll, 180);
     });
     document.getElementById('detailLabClear')?.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -2464,42 +3298,8 @@ function initPopovers() {
     });
     document.getElementById('detailStatusClear')?.addEventListener('click', (e) => {
         e.stopPropagation();
-        state.detailSelectedStatuses = new Set(['Hoàn thành', 'Đang làm', 'Không đạt', 'Đã dừng', 'Chưa thực hiện']);
+        state.detailSelectedStatuses = new Set(['Đạt', 'Chưa đạt', 'Chưa có kết quả', 'Không chấm']);
         document.querySelectorAll('#detailStatusOptions input[type="checkbox"]').forEach(chk => chk.checked = true);
-        renderAll();
-    });
-
-    // 10. Lab Device Popover
-    populatePopoverOptions('labDeviceOptions', allDevices, state.labSelectedDevices, () => { state.labDevicesTouched = true; }, state.labSearchDevice);
-    document.getElementById('labDeviceSearch')?.addEventListener('input', (e) => {
-        state.labSearchDevice = e.target.value;
-        populatePopoverOptions('labDeviceOptions', allDevices, state.labSelectedDevices, () => { state.labDevicesTouched = true; }, state.labSearchDevice);
-    });
-    document.getElementById('labDeviceClear')?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        state.labSelectedDevices = new Set(allDevices);
-        state.labDevicesTouched = false;
-        state.labSearchDevice = '';
-        const input = document.getElementById('labDeviceSearch');
-        if (input) input.value = '';
-        populatePopoverOptions('labDeviceOptions', allDevices, state.labSelectedDevices, () => { state.labDevicesTouched = true; });
-        renderAll();
-    });
-
-    // 11. Device Section Popover
-    populatePopoverOptions('deviceOptions', allDevices, state.deviceSelectedDevices, () => { state.deviceDevicesTouched = true; }, state.deviceSearchDevice);
-    document.getElementById('deviceSearch')?.addEventListener('input', (e) => {
-        state.deviceSearchDevice = e.target.value;
-        populatePopoverOptions('deviceOptions', allDevices, state.deviceSelectedDevices, () => { state.deviceDevicesTouched = true; }, state.deviceSearchDevice);
-    });
-    document.getElementById('deviceClear')?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        state.deviceSelectedDevices = new Set(allDevices);
-        state.deviceDevicesTouched = false;
-        state.deviceSearchDevice = '';
-        const input = document.getElementById('deviceSearch');
-        if (input) input.value = '';
-        populatePopoverOptions('deviceOptions', allDevices, state.deviceSelectedDevices, () => { state.deviceDevicesTouched = true; });
         renderAll();
     });
 
@@ -2510,14 +3310,20 @@ function initPopovers() {
             e.stopPropagation();
             const isOpen = wrapper.classList.contains('open');
             document.querySelectorAll('.popover-filter-wrapper').forEach(w => {
-                w.classList.remove('open');
-                w.querySelector('.popover-trigger-btn')?.setAttribute('aria-expanded', 'false');
-                positionHeaderFilterDropdown(w, false);
+                if (w.classList.contains('header-filter-popover')) closeHeaderFilterPopover(w);
+                else {
+                    w.classList.remove('open');
+                    w.querySelector('.popover-trigger-btn')?.setAttribute('aria-expanded', 'false');
+                    positionHeaderFilterDropdown(w, false);
+                }
             });
             if (!isOpen) {
-                wrapper.classList.add('open');
-                btn.setAttribute('aria-expanded', 'true');
-                positionHeaderFilterDropdown(wrapper, true);
+                if (wrapper.classList.contains('header-filter-popover')) openHeaderFilterPopover(wrapper);
+                else {
+                    wrapper.classList.add('open');
+                    btn.setAttribute('aria-expanded', 'true');
+                    positionHeaderFilterDropdown(wrapper, true);
+                }
             }
         });
         wrapper.querySelector('.popover-dropdown')?.addEventListener('click', (e) => {
@@ -2527,9 +3333,12 @@ function initPopovers() {
 
     document.addEventListener('click', () => {
         document.querySelectorAll('.popover-filter-wrapper').forEach(w => {
-            w.classList.remove('open');
-            w.querySelector('.popover-trigger-btn')?.setAttribute('aria-expanded', 'false');
-            positionHeaderFilterDropdown(w, false);
+            if (w.classList.contains('header-filter-popover')) closeHeaderFilterPopover(w);
+            else {
+                w.classList.remove('open');
+                w.querySelector('.popover-trigger-btn')?.setAttribute('aria-expanded', 'false');
+                positionHeaderFilterDropdown(w, false);
+            }
         });
     });
 
@@ -2612,7 +3421,6 @@ function parseTimeMs(timeStr) {
     return (parts[0] * 3600 + parts[1] * 60) * 1000;
 }
 
-const INSTRUCTOR_CLASSES_STORAGE_KEY = 'ftc-instructor-classes-v1';
 
 function getInstructorLearners() {
     const rosterLearners = technicianCatalog
@@ -2624,24 +3432,97 @@ function getInstructorLearners() {
 
 function getDatabaseInstructorClasses() {
     const classes = new Map();
+    if (state.assignmentsLoaded) {
+        trainingAssignments.forEach(item => {
+            if (!item.classCode || !item.learner) return;
+            if (!classes.has(item.classCode)) {
+                classes.set(item.classCode, {
+                    code: item.classCode,
+                    name: item.className || item.classCode,
+                    members: []
+                });
+            }
+            classes.get(item.classCode).members.push(item.learner);
+        });
+    } else {
     technicianCatalog
         .filter(item => !item.isTerminated && item.email)
         .forEach(item => {
-            const className = item.classCode || 'Chưa xếp lớp';
-            if (!classes.has(className)) classes.set(className, []);
-            classes.get(className).push(item.email);
+            const classCode = item.classCode || '';
+            const key = classCode || '__unassigned__';
+            if (!classes.has(key)) {
+                classes.set(key, {
+                    code: classCode,
+                    name: item.className || classCode || 'Chưa xếp lớp',
+                    members: []
+                });
+            }
+            classes.get(key).members.push(item.email);
         });
+    }
     return [...classes.entries()]
-        .sort(([left], [right]) => left.localeCompare(right, 'vi'))
-        .map(([name, members]) => ({
-            id: `db-class-${name}`,
-            name,
-            members: [...new Set(members)].sort((a, b) => a.localeCompare(b, 'vi')),
+        .sort(([, left], [, right]) => left.name.localeCompare(right.name, 'vi'))
+        .map(([key, item]) => ({
+            id: `db-class-${key}`,
+            code: item.code,
+            name: item.name,
+            members: [...new Set(item.members)].sort((a, b) => a.localeCompare(b, 'vi')),
             source: 'database'
         }));
 }
 
-function getInstructorDeviceGroups() {
+function normalizeInstructorSearchText(value) {
+    return String(value || '')
+        .trim()
+        .toLocaleLowerCase('vi')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/đ/g, 'd');
+}
+
+function getInstructorLabNumber(label) {
+    const match = String(label || '').match(/(?:^|\s)bài\s*0*(\d+)/i);
+    return match ? Number(match[1]) : Number.POSITIVE_INFINITY;
+}
+
+function compareInstructorLabels(left, right) {
+    const leftNumber = getInstructorLabNumber(left);
+    const rightNumber = getInstructorLabNumber(right);
+    if (leftNumber !== rightNumber) return leftNumber - rightNumber;
+    return String(left || '').localeCompare(String(right || ''), 'vi', { numeric: true, sensitivity: 'base' });
+}
+
+function sortInstructorDeviceGroups(groups) {
+    const deviceOrder = new Map();
+    const labOrderByDevice = new Map();
+    deviceCatalog.forEach((item, deviceIndex) => {
+        const deviceName = item.device || item.device_name || item.model || '';
+        if (!deviceName || deviceOrder.has(deviceName)) return;
+        deviceOrder.set(deviceName, deviceIndex);
+        labOrderByDevice.set(deviceName, new Map((item.labs || []).map((lab, labIndex) => [lab, labIndex])));
+    });
+
+    const rank = (map, key) => map?.has(key) ? map.get(key) : Number.POSITIVE_INFINITY;
+    return groups
+        .map(group => {
+            const labOrder = labOrderByDevice.get(group.device);
+            const labs = [...group.labs].sort((left, right) => {
+                const leftRank = rank(labOrder, left);
+                const rightRank = rank(labOrder, right);
+                if (leftRank !== rightRank) return leftRank - rightRank;
+                return compareInstructorLabels(left, right);
+            });
+            return { ...group, labs };
+        })
+        .sort((left, right) => {
+            const leftRank = rank(deviceOrder, left.device);
+            const rightRank = rank(deviceOrder, right.device);
+            if (leftRank !== rightRank) return leftRank - rightRank;
+            return left.device.localeCompare(right.device, 'vi', { numeric: true, sensitivity: 'base' });
+        });
+}
+
+function getInstructorDeviceGroups(selectedClass = null) {
     const groups = [];
     const groupMap = new Map();
     const ensureGroup = (deviceName) => {
@@ -2654,6 +3535,17 @@ function getInstructorDeviceGroups() {
         return groupMap.get(name);
     };
 
+    if (state.assignmentsLoaded) {
+        const members = new Set(selectedClass?.members || []);
+        trainingAssignments
+            .filter(item => !selectedClass || (item.classCode === selectedClass.code && members.has(item.learner)))
+            .forEach(item => {
+                const group = ensureGroup(item.device);
+                if (item.lab && !group.labs.includes(item.lab)) group.labs.push(item.lab);
+            });
+        return sortInstructorDeviceGroups(groups.filter(group => group.labs.length));
+    }
+
     deviceCatalog.forEach(item => {
         const group = ensureGroup(item.device || item.device_name || item.model);
         (item.labs || []).forEach(lab => {
@@ -2664,69 +3556,291 @@ function getInstructorDeviceGroups() {
         const group = ensureGroup(item.device);
         if (item.lab && !group.labs.includes(item.lab)) group.labs.push(item.lab);
     });
-    return groups.filter(group => group.labs.length);
+    return sortInstructorDeviceGroups(groups.filter(group => group.labs.length));
 }
 
 function saveInstructorClasses() {
-    try {
-        localStorage.setItem(INSTRUCTOR_CLASSES_STORAGE_KEY, JSON.stringify(state.instructorClasses));
-    } catch (error) {
-        console.warn('Không thể lưu danh sách lớp trên trình duyệt.', error);
-    }
+    // Class membership is authoritative in the employee database. Never persist
+    // a competing roster in browser storage.
+}
+
+const searchableFilterSelectIds = [
+    'instructorClassSelect',
+    'instructorDeviceSelect',
+    'classMatrixClassSelect',
+    'classMatrixDeviceSelect'
+];
+
+const multiSelectFilterIds = new Set([
+    'instructorDeviceSelect',
+    'classMatrixDeviceSelect'
+]);
+
+function enhanceDashboardTables(root = document) {
+    const tables = root.matches?.('table') ? [root] : [...root.querySelectorAll?.('table') || []];
+    tables.forEach(table => {
+        if (table.dataset.unifiedTable === 'true') return;
+        table.dataset.unifiedTable = 'true';
+        table.classList.add('unified-data-table');
+
+        const existingScroll = table.closest(
+            '.unified-table-scroll, .detail-report-scroll, .instructor-progress-scroll, .roster-table-wrapper, .learner-history'
+        );
+        if (existingScroll) {
+            existingScroll.classList.add('unified-table-scroll');
+            return;
+        }
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'unified-table-scroll';
+        wrapper.tabIndex = 0;
+        wrapper.setAttribute('role', 'region');
+        wrapper.setAttribute('aria-label', table.getAttribute('aria-label') || 'Bảng dữ liệu có thể cuộn ngang');
+        table.before(wrapper);
+        wrapper.appendChild(table);
+    });
+}
+
+function enhanceSearchableFilterSelect(select) {
+    if (!select || select.dataset.searchableEnhanced === 'true') return;
+    select.dataset.searchableEnhanced = 'true';
+    select.classList.add('searchable-select-source');
+    const isMultiple = multiSelectFilterIds.has(select.id);
+
+    const wrapper = document.createElement('div');
+    wrapper.className = `searchable-select${isMultiple ? ' searchable-select-multiple' : ''}`;
+    wrapper.innerHTML = `
+        <button type="button" class="searchable-select-trigger" aria-haspopup="listbox" aria-expanded="false">
+            <span class="searchable-select-value"></span>
+            <span class="searchable-select-chevron" aria-hidden="true"></span>
+        </button>
+        <div class="searchable-select-popover" role="dialog" hidden>
+            ${isMultiple ? `
+                <div class="searchable-select-command-row">
+                    <button type="button" data-select-command="all">Chọn tất cả</button>
+                    <button type="button" data-select-command="none">Bỏ chọn</button>
+                </div>
+            ` : ''}
+            <label class="searchable-select-search-wrap">
+                <span class="sr-only">Tìm giá trị</span>
+                <input type="search" class="searchable-select-search" placeholder="Tìm giá trị..." autocomplete="off">
+            </label>
+            <div class="searchable-select-options" role="listbox"${isMultiple ? ' aria-multiselectable="true"' : ''}></div>
+            <div class="searchable-select-empty" hidden>Không tìm thấy giá trị phù hợp</div>
+            ${isMultiple ? `
+                <div class="searchable-select-footer">
+                    <button type="button" class="searchable-select-clear">Xóa lọc</button>
+                    <button type="button" class="searchable-select-apply">Áp dụng</button>
+                </div>
+            ` : ''}
+        </div>
+    `;
+    select.insertAdjacentElement('afterend', wrapper);
+
+    const trigger = wrapper.querySelector('.searchable-select-trigger');
+    const valueNode = wrapper.querySelector('.searchable-select-value');
+    const popover = wrapper.querySelector('.searchable-select-popover');
+    const search = wrapper.querySelector('.searchable-select-search');
+    const optionsNode = wrapper.querySelector('.searchable-select-options');
+    const emptyNode = wrapper.querySelector('.searchable-select-empty');
+    const label = select.getAttribute('aria-label') || 'Chọn giá trị';
+    let draftValues = new Set();
+    trigger.setAttribute('aria-label', label);
+
+    const close = ({ restoreFocus = false } = {}) => {
+        wrapper.classList.remove('open');
+        trigger.setAttribute('aria-expanded', 'false');
+        popover.hidden = true;
+        if (restoreFocus) trigger.focus();
+    };
+
+    const getAvailableOptions = () => [...select.options].filter(option => option.value && !option.disabled);
+
+    const renderMultipleOptions = () => {
+        const availableOptions = getAvailableOptions();
+        const validValues = new Set(availableOptions.map(option => option.value));
+        draftValues = new Set([...draftValues].filter(value => validValues.has(value)));
+        optionsNode.innerHTML = '';
+
+        const allLabel = select.options[0]?.textContent?.trim() || 'Tất cả giá trị';
+        const allOption = document.createElement('label');
+        allOption.className = 'searchable-select-option searchable-select-check-option searchable-select-all-option';
+        allOption.dataset.searchText = allLabel.toLocaleLowerCase('vi');
+        allOption.innerHTML = `<input type="checkbox"><span>${escapeHTML(allLabel)}</span>`;
+        const allCheckbox = allOption.querySelector('input');
+        allCheckbox.checked = availableOptions.length > 0 && draftValues.size === availableOptions.length;
+        allCheckbox.indeterminate = draftValues.size > 0 && draftValues.size < availableOptions.length;
+        allCheckbox.addEventListener('change', () => {
+            draftValues = allCheckbox.checked
+                ? new Set(availableOptions.map(option => option.value))
+                : new Set();
+            renderMultipleOptions();
+            search.dispatchEvent(new Event('input'));
+        });
+        optionsNode.appendChild(allOption);
+
+        availableOptions.forEach(option => {
+            const optionLabel = document.createElement('label');
+            optionLabel.className = 'searchable-select-option searchable-select-check-option';
+            optionLabel.dataset.value = option.value;
+            optionLabel.dataset.searchText = option.textContent.toLocaleLowerCase('vi');
+            optionLabel.innerHTML = `<input type="checkbox"><span>${escapeHTML(option.textContent)}</span>`;
+            const checkbox = optionLabel.querySelector('input');
+            checkbox.checked = draftValues.has(option.value);
+            checkbox.addEventListener('change', () => {
+                if (checkbox.checked) draftValues.add(option.value);
+                else draftValues.delete(option.value);
+                renderMultipleOptions();
+                search.dispatchEvent(new Event('input'));
+            });
+            optionsNode.appendChild(optionLabel);
+        });
+    };
+
+    const sync = () => {
+        trigger.disabled = select.disabled;
+        const availableOptions = getAvailableOptions();
+        if (isMultiple) {
+            const availableValues = new Set(availableOptions.map(option => option.value));
+            const appliedValues = Array.isArray(select._selectedValues)
+                ? select._selectedValues.filter(value => availableValues.has(value))
+                : availableOptions.map(option => option.value);
+            draftValues = new Set(appliedValues);
+            if (appliedValues.length === availableOptions.length && availableOptions.length) {
+                valueNode.textContent = select.options[0]?.textContent?.trim() || 'Tất cả giá trị';
+            } else if (appliedValues.length === 1) {
+                valueNode.textContent = availableOptions.find(option => option.value === appliedValues[0])?.textContent || label;
+            } else {
+                valueNode.textContent = `${appliedValues.length} thiết bị`;
+            }
+            renderMultipleOptions();
+            search.dispatchEvent(new Event('input'));
+            return;
+        }
+
+        const selected = select.options[select.selectedIndex];
+        valueNode.textContent = selected?.textContent?.trim() || label;
+        optionsNode.innerHTML = '';
+        [...select.options].forEach(option => {
+            const optionButton = document.createElement('button');
+            optionButton.type = 'button';
+            optionButton.className = 'searchable-select-option';
+            optionButton.dataset.value = option.value;
+            optionButton.textContent = option.textContent;
+            optionButton.disabled = option.disabled;
+            optionButton.setAttribute('role', 'option');
+            optionButton.setAttribute('aria-selected', String(option.selected));
+            if (option.selected) optionButton.classList.add('selected');
+            optionButton.addEventListener('click', () => {
+                select.value = option.value;
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+                sync();
+                close({ restoreFocus: true });
+            });
+            optionsNode.appendChild(optionButton);
+        });
+        search.dispatchEvent(new Event('input'));
+    };
+
+    const selectAllVisible = checked => {
+        const visibleValues = [...optionsNode.querySelectorAll('.searchable-select-check-option[data-value]:not([hidden])')]
+            .map(option => option.dataset.value);
+        visibleValues.forEach(value => {
+            if (checked) draftValues.add(value);
+            else draftValues.delete(value);
+        });
+        renderMultipleOptions();
+        search.dispatchEvent(new Event('input'));
+    };
+
+    wrapper.querySelector('[data-select-command="all"]')?.addEventListener('click', () => selectAllVisible(true));
+    wrapper.querySelector('[data-select-command="none"]')?.addEventListener('click', () => selectAllVisible(false));
+    wrapper.querySelector('.searchable-select-clear')?.addEventListener('click', () => {
+        draftValues = new Set(getAvailableOptions().map(option => option.value));
+        search.value = '';
+        renderMultipleOptions();
+        search.dispatchEvent(new Event('input'));
+    });
+    wrapper.querySelector('.searchable-select-apply')?.addEventListener('click', () => {
+        select._selectedValues = [...draftValues];
+        select.value = select._selectedValues[0] || '';
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        sync();
+        close({ restoreFocus: true });
+    });
+
+    trigger.addEventListener('click', event => {
+        event.stopPropagation();
+        const shouldOpen = !wrapper.classList.contains('open');
+        document.querySelectorAll('.searchable-select.open').forEach(openSelect => {
+            if (openSelect !== wrapper) {
+                openSelect.classList.remove('open');
+                openSelect.querySelector('.searchable-select-trigger')?.setAttribute('aria-expanded', 'false');
+                const openPopover = openSelect.querySelector('.searchable-select-popover');
+                if (openPopover) openPopover.hidden = true;
+            }
+        });
+        if (!shouldOpen) {
+            close();
+            return;
+        }
+        sync();
+        wrapper.classList.add('open');
+        trigger.setAttribute('aria-expanded', 'true');
+        popover.hidden = false;
+        search.value = '';
+        search.dispatchEvent(new Event('input'));
+        window.requestAnimationFrame(() => search.focus());
+    });
+
+    search.addEventListener('input', () => {
+        const keyword = search.value.trim().toLocaleLowerCase('vi');
+        let visibleCount = 0;
+        optionsNode.querySelectorAll('.searchable-select-option').forEach(option => {
+            const searchText = option.dataset.searchText || option.textContent.toLocaleLowerCase('vi');
+            const matches = !keyword || searchText.includes(keyword);
+            option.hidden = !matches;
+            if (matches) visibleCount += 1;
+        });
+        emptyNode.hidden = visibleCount !== 0;
+    });
+    popover.addEventListener('click', event => event.stopPropagation());
+    popover.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            close({ restoreFocus: true });
+        }
+    });
+    select.addEventListener('change', sync);
+    new MutationObserver(sync).observe(select, { childList: true, subtree: true, attributes: true });
+    sync();
+}
+
+function initUnifiedDashboardControls() {
+    enhanceDashboardTables();
+    searchableFilterSelectIds.forEach(id => enhanceSearchableFilterSelect(document.getElementById(id)));
+
+    const observer = new MutationObserver(mutations => {
+        mutations.forEach(mutation => mutation.addedNodes.forEach(node => {
+            if (node.nodeType === Node.ELEMENT_NODE) enhanceDashboardTables(node);
+        }));
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.searchable-select.open').forEach(wrapper => {
+            wrapper.classList.remove('open');
+            wrapper.querySelector('.searchable-select-trigger')?.setAttribute('aria-expanded', 'false');
+            const popover = wrapper.querySelector('.searchable-select-popover');
+            if (popover) popover.hidden = true;
+        });
+    });
 }
 
 function initializeInstructorClasses() {
     const databaseClasses = getDatabaseInstructorClasses();
-    if (technicianCatalogAuthoritative) {
-        state.instructorClasses = databaseClasses;
-        state.instructorClassesLoaded = true;
-        if (!state.instructorClasses.some(item => item.id === state.instructorActiveClassId)) {
-            state.instructorActiveClassId = state.instructorClasses[0]?.id || '';
-        }
-        return;
-    }
-    if (!state.instructorClassesLoaded) {
-        try {
-            const stored = JSON.parse(localStorage.getItem(INSTRUCTOR_CLASSES_STORAGE_KEY) || '[]');
-            if (Array.isArray(stored)) {
-                state.instructorClasses = stored
-                    .filter(item => item && item.id && item.name && Array.isArray(item.members))
-                    .map(item => ({
-                        id: String(item.id),
-                        name: String(item.name),
-                        members: [...new Set(item.members.map(String).filter(Boolean))]
-                    }));
-            }
-        } catch (error) {
-            state.instructorClasses = [];
-        }
-        state.instructorClassesLoaded = true;
-    }
-
-    const learners = getInstructorLearners();
-    if (!state.instructorClasses.length && !learners.length) {
-        state.instructorActiveClassId = '';
-        return;
-    }
-
-    if (!state.instructorClasses.length && learners.length) {
-        const reportDate = state.startDate ? parseDate(state.startDate) : new Date();
-        state.instructorClasses = [{
-            id: 'class-default',
-            name: `Lớp KTV ${String(reportDate.getMonth() + 1).padStart(2, '0')}/${reportDate.getFullYear()}`,
-            members: learners
-        }];
-        saveInstructorClasses();
-    } else {
-        const defaultClass = state.instructorClasses.find(item => item.id === 'class-default');
-        if (defaultClass && learners.length) {
-            const merged = [...new Set([...(defaultClass.members || []), ...learners])].sort((a, b) => a.localeCompare(b, 'vi'));
-            if (merged.length !== (defaultClass.members || []).length) {
-                defaultClass.members = merged;
-                saveInstructorClasses();
-            }
-        }
-    }
+    state.instructorClasses = (state.assignmentsLoaded || technicianCatalogAuthoritative) ? databaseClasses : [];
+    state.instructorClassesLoaded = true;
 
     if (!state.instructorClasses.some(item => item.id === state.instructorActiveClassId)) {
         state.instructorActiveClassId = state.instructorClasses[0]?.id || '';
@@ -2734,17 +3848,17 @@ function initializeInstructorClasses() {
 }
 
 function getInstructorClassProgress(selectedClass, selectedGroups) {
-    if (trainingAssignments.length) {
+    if (state.assignmentsLoaded) {
         const selectedMembers = new Set(selectedClass?.members || []);
         const assignmentByLearnerLab = new Map();
         trainingAssignments
-            .filter(item => selectedMembers.has(item.learner))
+            .filter(item => item.classCode === selectedClass?.code && selectedMembers.has(item.learner))
             .forEach(item => assignmentByLearnerLab.set(`${item.learner}\u001f${item.device}\u001f${item.lab}`, item));
         return (selectedClass?.members || []).map(learner => {
             const deviceResults = selectedGroups.map(group => {
                 const labResults = group.labs.map(lab => {
                     const assignment = assignmentByLearnerLab.get(`${learner}\u001f${group.device}\u001f${lab}`);
-                    return { lab, assigned: Boolean(assignment), completed: Boolean(assignment?.passed) };
+                    return { lab, assigned: Boolean(assignment), completed: Boolean(assignment?.completed) };
                 });
                 const assignedResults = labResults.filter(item => item.assigned);
                 const completed = assignedResults.filter(item => item.completed).length;
@@ -2756,7 +3870,6 @@ function getInstructorClassProgress(selectedClass, selectedGroups) {
             return { learner, deviceResults, completed, total, rate: total ? Math.round((completed / total) * 100) : null };
         });
     }
-    const completedStatus = statusToVietnamese('completed');
     const rowsByLearner = new Map();
     sessions.forEach(item => {
         if (item.mode === 'Hướng dẫn') return;
@@ -2769,7 +3882,7 @@ function getInstructorClassProgress(selectedClass, selectedGroups) {
         const deviceResults = selectedGroups.map(group => {
             const completedLabs = new Set(
                 learnerSessions
-                    .filter(item => item.device === group.device && item.status === completedStatus)
+                    .filter(item => item.device === group.device && isSuccessfulSession(item))
                     .map(item => item.lab)
             );
             const labResults = group.labs.map(lab => ({ lab, completed: completedLabs.has(lab) }));
@@ -2790,8 +3903,8 @@ function getInstructorClassProgress(selectedClass, selectedGroups) {
 }
 
 function getInstructorLabCellClass(completed, assigned = true) {
-    if (!assigned) return 'instructor-progress-zero';
-    return completed ? 'instructor-progress-complete' : 'instructor-progress-zero';
+    if (!assigned) return 'instructor-progress-unassigned';
+    return completed ? 'instructor-progress-complete' : 'instructor-progress-pending';
 }
 
 function getInstructorRateClass(rate) {
@@ -2800,15 +3913,73 @@ function getInstructorRateClass(rate) {
     return 'instructor-rate-low';
 }
 
+function getInstructorCompletionStatus(row) {
+    if (!row.total || row.rate === null) return 'unassigned';
+    if (row.completed >= row.total) return 'completed';
+    if (row.completed > 0) return 'in_progress';
+    return 'not_started';
+}
+
+function filterInstructorProgressRows(rows) {
+    const search = normalizeInstructorSearchText(state.instructorSearchKtv);
+    return rows
+        .filter(row => {
+            const technician = technicianByIdentity.get(String(row.learner || '').trim().toLowerCase());
+            const searchable = normalizeInstructorSearchText([
+                getLearnerName(row.learner),
+                row.learner,
+                technician?.employeeId
+            ].filter(Boolean).join(' '));
+            const matchesSearch = !search || searchable.includes(search);
+            const status = getInstructorCompletionStatus(row);
+            const matchesStatus = state.instructorCompletionFilter === 'all' || status === state.instructorCompletionFilter;
+            return matchesSearch && matchesStatus;
+        })
+        .sort((left, right) => {
+            const byName = getLearnerName(left.learner).localeCompare(getLearnerName(right.learner), 'vi', { numeric: true, sensitivity: 'base' });
+            return byName || left.learner.localeCompare(right.learner, 'vi', { numeric: true, sensitivity: 'base' });
+        });
+}
+
+function renderInstructorLabHeader(label) {
+    const text = String(label || '');
+    const match = text.match(/^(Bài\s*\d+)\s*[:.\-–]?\s*(.*)$/i);
+    if (!match) return `<span class="instructor-lab-name">${escapeHTML(text)}</span>`;
+    return `
+        <span class="instructor-lab-order">${escapeHTML(match[1])}</span>
+        ${match[2] ? `<span class="instructor-lab-name">${escapeHTML(match[2])}</span>` : ''}
+    `;
+}
+
+function renderInstructorLearner(learner) {
+    const name = getLearnerName(learner);
+    const technician = technicianByIdentity.get(String(learner || '').trim().toLowerCase());
+    const showEmail = normalizeInstructorSearchText(name) !== normalizeInstructorSearchText(learner);
+    return `
+        <span class="instructor-progress-learner-name">${escapeHTML(name)}</span>
+        ${showEmail ? `<span class="instructor-progress-learner-email">${escapeHTML(learner)}</span>` : ''}
+        ${technician?.employeeId ? `<span class="instructor-progress-learner-id">Mã NV: ${escapeHTML(technician.employeeId)}</span>` : ''}
+    `;
+}
+
 function renderInstructorClassProgress() {
     const classSelect = document.getElementById('instructorClassSelect');
     const deviceSelect = document.getElementById('instructorDeviceSelect');
     const head = document.getElementById('instructorProgressHead');
     const body = document.getElementById('instructorProgressBody');
+    const foot = document.getElementById('instructorProgressFoot');
     const summary = document.getElementById('instructorProgressSummary');
     const scroll = document.getElementById('instructorProgressScroll');
+    const scrollHint = document.getElementById('instructorProgressScrollHint');
     const empty = document.getElementById('instructorProgressEmpty');
-    if (!classSelect || !deviceSelect || !head || !body || !summary || !scroll || !empty) return;
+    const searchInput = document.getElementById('instructorKtvSearch');
+    const completionFilter = document.getElementById('instructorCompletionFilter');
+    const filterReset = document.getElementById('instructorProgressFilterReset');
+    const filterMeta = document.getElementById('instructorProgressFilterMeta');
+    if (!classSelect || !deviceSelect || !head || !body || !foot || !summary || !scroll || !empty) return;
+
+    if (searchInput && searchInput.value !== state.instructorSearchKtv) searchInput.value = state.instructorSearchKtv;
+    if (completionFilter) completionFilter.value = state.instructorCompletionFilter;
 
     initializeInstructorClasses();
     if (state.instructorActiveClassId && !state.instructorClasses.some(item => item.id === state.instructorActiveClassId)) {
@@ -2821,25 +3992,31 @@ function renderInstructorClassProgress() {
     classSelect.value = state.instructorActiveClassId;
     classSelect.disabled = !state.instructorClasses.length;
 
-    const allGroups = getInstructorDeviceGroups();
-    const selectedDeviceStillExists = !state.instructorSelectedDevice || allGroups.some(item => item.device === state.instructorSelectedDevice);
-    if (!selectedDeviceStillExists) state.instructorSelectedDevice = '';
+    const selectedClass = state.instructorClasses.find(item => item.id === state.instructorActiveClassId);
+    if (searchInput) searchInput.disabled = !selectedClass;
+    if (completionFilter) completionFilter.disabled = !selectedClass;
+    const allGroups = getInstructorDeviceGroups(selectedClass);
+    const availableDevices = allGroups.map(item => item.device);
+    if (state.instructorSelectedDevices === null) state.instructorSelectedDevices = [...availableDevices];
+    state.instructorSelectedDevices = state.instructorSelectedDevices.filter(device => availableDevices.includes(device));
     deviceSelect.innerHTML = '<option value="">Tất cả thiết bị</option>' + allGroups
         .map(item => `<option value="${escapeHTML(item.device)}">${escapeHTML(item.device)}</option>`)
         .join('');
-    deviceSelect.value = state.instructorSelectedDevice;
+    deviceSelect._selectedValues = [...state.instructorSelectedDevices];
+    deviceSelect.value = state.instructorSelectedDevices[0] || '';
 
-    const selectedClass = state.instructorClasses.find(item => item.id === state.instructorActiveClassId);
     const deleteButton = document.getElementById('instructorClassDelete');
-    const exportButton = document.getElementById('instructorClassExport');
     if (deleteButton) deleteButton.disabled = !state.instructorClasses.length || selectedClass?.source === 'database';
-    if (exportButton) exportButton.disabled = !state.instructorClasses.length;
 
     if (!selectedClass) {
         head.innerHTML = '';
         body.innerHTML = '';
+        foot.innerHTML = '';
         summary.innerHTML = '';
+        if (filterMeta) filterMeta.textContent = '';
+        if (filterReset) filterReset.hidden = true;
         scroll.hidden = true;
+        if (scrollHint) scrollHint.hidden = true;
         empty.hidden = false;
         empty.textContent = technicianCatalogAuthoritative
             ? 'Chưa có lớp học trong hồ sơ nhân viên trên cơ sở dữ liệu.'
@@ -2847,13 +4024,12 @@ function renderInstructorClassProgress() {
         return;
     }
 
-    const selectedGroups = state.instructorSelectedDevice
-        ? allGroups.filter(item => item.device === state.instructorSelectedDevice)
-        : allGroups;
-    const progressRows = getInstructorClassProgress(selectedClass, selectedGroups);
+    const selectedGroups = allGroups.filter(item => state.instructorSelectedDevices.includes(item.device));
+    const allProgressRows = getInstructorClassProgress(selectedClass, selectedGroups);
+    const progressRows = filterInstructorProgressRows(allProgressRows);
     const completed = progressRows.reduce((sum, item) => sum + item.completed, 0);
     const total = progressRows.reduce((sum, item) => sum + item.total, 0);
-    const rate = total ? Math.round((completed / total) * 100) : 0;
+    const rate = total ? Math.round((completed / total) * 100) : null;
 
     const columns = selectedGroups.flatMap((group, groupIndex) => group.labs.map((lab, labIndex) => ({
         device: group.device,
@@ -2862,12 +4038,20 @@ function renderInstructorClassProgress() {
         isFirst: labIndex === 0
     })));
 
+    const filtersActive = Boolean(state.instructorSearchKtv.trim()) || state.instructorCompletionFilter !== 'all';
+    if (filterReset) filterReset.hidden = !filtersActive;
+    if (filterMeta) {
+        filterMeta.textContent = filtersActive
+            ? `Đang hiển thị ${progressRows.length}/${allProgressRows.length} KTV`
+            : `${allProgressRows.length} KTV trong lớp`;
+    }
+
     summary.innerHTML = `
-        <span class="instructor-summary-chip"><strong>${progressRows.length}</strong> KTV</span>
+        <span class="instructor-summary-chip"><strong>${progressRows.length}${filtersActive ? `/${allProgressRows.length}` : ''}</strong> KTV hiển thị</span>
         <span class="instructor-summary-chip"><strong>${selectedGroups.length}</strong> thiết bị</span>
         <span class="instructor-summary-chip"><strong>${columns.length}</strong> bài lab</span>
-        <span class="instructor-summary-chip"><strong>${completed}/${total}</strong> bài hoàn thành</span>
-        <span class="instructor-summary-chip"><strong>${rate}%</strong> tiến độ lớp</span>
+        <span class="instructor-summary-chip"><strong>${completed}/${total}</strong> bài đã đạt</span>
+        <span class="instructor-summary-chip"><strong>${rate === null ? '—' : `${rate}%`}</strong> tiến độ lớp</span>
     `;
 
     head.innerHTML = `
@@ -2880,30 +4064,65 @@ function renderInstructorClassProgress() {
                     <span>${group.labs.length} bài lab</span>
                 </th>
             `).join('')}
-            <th class="instructor-progress-total" rowspan="2" scope="col">Hoàn thành</th>
+            <th class="instructor-progress-total" rowspan="2" scope="col">Đã đạt</th>
             <th class="instructor-progress-rate" rowspan="2" scope="col">Tỷ lệ</th>
         </tr>
         <tr class="instructor-progress-lab-row">
             ${columns.map(column => `
-                <th class="instructor-progress-lab instructor-progress-lab-tone-${column.groupIndex % 5} ${column.isFirst ? 'group-start' : ''}" scope="col" title="${escapeHTML(`${column.device} • ${column.lab}`)}">${escapeHTML(column.lab)}</th>
+                <th class="instructor-progress-lab instructor-progress-lab-tone-${column.groupIndex % 5} ${column.isFirst ? 'group-start' : ''}" scope="col" title="${escapeHTML(`${column.device} • ${column.lab}`)}">${renderInstructorLabHeader(column.lab)}</th>
             `).join('')}
         </tr>
     `;
-    body.innerHTML = progressRows.map((row, index) => `
+    body.innerHTML = progressRows.length ? progressRows.map((row, index) => `
         <tr>
             <td class="instructor-progress-index">${index + 1}</td>
-            <th class="instructor-progress-email" scope="row" title="${escapeHTML(row.learner)}">${escapeHTML(getLearnerName(row.learner))}</th>
+            <th class="instructor-progress-email" scope="row" title="${escapeHTML(row.learner)}">${renderInstructorLearner(row.learner)}</th>
             ${row.deviceResults.flatMap(item => item.labResults.map(lab => `
-                <td class="instructor-progress-lab instructor-lab-cell ${getInstructorLabCellClass(lab.completed, lab.assigned !== false)}" title="${escapeHTML(`${item.device} • ${lab.lab}: ${lab.assigned === false ? 'Chưa giao' : (lab.completed ? 'Hoàn thành' : 'Chưa hoàn thành')}`)}">
-                    ${lab.assigned === false ? '—' : (lab.completed ? '✓' : '')}
+                <td class="instructor-progress-lab instructor-lab-cell ${getInstructorLabCellClass(lab.completed, lab.assigned !== false)}" title="${escapeHTML(`${item.device} • ${lab.lab}: ${lab.assigned === false ? 'Chưa phân công' : (lab.completed ? 'Đã đạt' : 'Chưa đạt')}`)}">
+                    ${lab.assigned === false ? '—' : (lab.completed ? '✓' : '○')}
                 </td>
             `)).join('')}
             <td class="instructor-progress-total">${row.completed}/${row.total}</td>
             <td class="instructor-progress-rate ${getInstructorRateClass(row.rate || 0)}">${row.rate === null ? '—' : `${row.rate}%`}</td>
         </tr>
-    `).join('');
+    `).join('') : `
+        <tr>
+            <td class="instructor-progress-filter-empty" colspan="${columns.length + 4}">
+                Không có KTV phù hợp với tìm kiếm hoặc trạng thái đã chọn.
+            </td>
+        </tr>
+    `;
+
+    if (progressRows.length) {
+        const columnTotals = columns.map((column, columnIndex) => progressRows.reduce((result, row) => {
+            const lab = row.deviceResults.flatMap(item => item.labResults)[columnIndex];
+            if (lab && lab.assigned !== false) result.assigned++;
+            if (lab?.completed) result.completed++;
+            return result;
+        }, { assigned: 0, completed: 0 }));
+        foot.innerHTML = `
+            <tr>
+                <th class="instructor-progress-index instructor-progress-grand-index" scope="row">Σ</th>
+                <th class="instructor-progress-email instructor-progress-grand-label" scope="row">Tổng ${progressRows.length} KTV</th>
+                ${columnTotals.map((item, index) => {
+                    const columnRate = item.assigned ? Math.round((item.completed / item.assigned) * 100) : null;
+                    return `
+                        <td class="instructor-progress-lab instructor-progress-column-total ${columns[index].isFirst ? 'group-start' : ''}" title="${escapeHTML(`${columns[index].device} • ${columns[index].lab}: ${item.completed}/${item.assigned} KTV hoàn thành`)}">
+                            <strong>${item.assigned ? `${item.completed}/${item.assigned}` : '—'}</strong>
+                            ${columnRate === null ? '' : `<small>${columnRate}%</small>`}
+                        </td>
+                    `;
+                }).join('')}
+                <td class="instructor-progress-total">${completed}/${total}</td>
+                <td class="instructor-progress-rate ${getInstructorRateClass(rate || 0)}">${rate === null ? '—' : `${rate}%`}</td>
+            </tr>
+        `;
+    } else {
+        foot.innerHTML = '';
+    }
 
     scroll.hidden = false;
+    if (scrollHint) scrollHint.hidden = false;
     empty.hidden = true;
 }
 
@@ -2972,29 +4191,6 @@ async function handleInstructorClassFile(file) {
     }
 }
 
-function exportInstructorClassCsv() {
-    const selectedClass = state.instructorClasses.find(item => item.id === state.instructorActiveClassId);
-    if (!selectedClass) return;
-    const groups = getInstructorDeviceGroups().filter(item => !state.instructorSelectedDevice || item.device === state.instructorSelectedDevice);
-    const progressRows = getInstructorClassProgress(selectedClass, groups);
-    const escapeCsv = value => `"${String(value ?? '').replace(/"/g, '""')}"`;
-    const header = ['STT', 'KTV', ...groups.flatMap(group => group.labs.map(lab => `${group.device} - ${lab}`)), 'Hoàn thành', 'Tỷ lệ'];
-    const csvRows = progressRows.map((row, index) => [
-        index + 1,
-        row.learner,
-        ...row.deviceResults.flatMap(item => item.labResults.map(lab => (lab.completed ? '1' : '0'))),
-        `${row.completed}/${row.total}`,
-        `${row.rate}%`
-    ]);
-    const blob = new Blob([`\uFEFF${[header, ...csvRows].map(row => row.map(escapeCsv).join(',')).join('\n')}`], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${selectedClass.name.replace(/[^a-zA-Z0-9_-]+/g, '_') || 'lop_ktv'}_tien_do.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
-}
-
 function initInstructorWorkspace() {
     if (state.instructorWorkspaceBound) return;
     state.instructorWorkspaceBound = true;
@@ -3013,8 +4209,23 @@ function initInstructorWorkspace() {
         renderInstructorClassProgress();
     });
     document.getElementById('instructorDeviceSelect')?.addEventListener('change', event => {
-        state.instructorSelectedDevice = event.target.value;
+        state.instructorSelectedDevices = [...(event.target._selectedValues || [])];
         renderInstructorClassProgress();
+    });
+    document.getElementById('instructorKtvSearch')?.addEventListener('input', event => {
+        state.instructorSearchKtv = event.target.value;
+        window.clearTimeout(instructorSearchTimer);
+        instructorSearchTimer = window.setTimeout(renderInstructorClassProgress, 160);
+    });
+    document.getElementById('instructorCompletionFilter')?.addEventListener('change', event => {
+        state.instructorCompletionFilter = event.target.value;
+        renderInstructorClassProgress();
+    });
+    document.getElementById('instructorProgressFilterReset')?.addEventListener('click', () => {
+        state.instructorSearchKtv = '';
+        state.instructorCompletionFilter = 'all';
+        renderInstructorClassProgress();
+        document.getElementById('instructorKtvSearch')?.focus();
     });
     document.getElementById('instructorClassDelete')?.addEventListener('click', () => {
         const selectedClass = state.instructorClasses.find(item => item.id === state.instructorActiveClassId);
@@ -3025,29 +4236,445 @@ function initInstructorWorkspace() {
         setInstructorFeedback(`Đã xóa lớp “${selectedClass.name}”.`, 'success');
         renderInstructorClassProgress();
     });
-    document.getElementById('instructorClassExport')?.addEventListener('click', exportInstructorClassCsv);
+}
+
+/* ============================================================
+   Báo cáo Ma trận Thực hành KTV theo Lớp học
+   ============================================================ */
+
+function getClassMatrixData() {
+    initializeInstructorClasses();
+
+    let classes = state.instructorClasses || [];
+    if (!classes.length) {
+        classes = getDatabaseInstructorClasses();
+    }
+    const allClassLearners = state.assignmentsLoaded
+        ? [...new Set(classes.flatMap(item => item.members || []))]
+        : getInstructorLearners();
+
+    if (!state.classMatrixSelectedClass && classes.length) {
+        state.classMatrixSelectedClass = classes[0].id;
+    }
+
+    let selectedClass = classes.find(c => c.id === state.classMatrixSelectedClass) || null;
+    let learners = [];
+    if (state.classMatrixSelectedClass === 'all') {
+        learners = allClassLearners;
+    } else if (selectedClass) {
+        learners = selectedClass.members || [];
+    } else if (classes.length) {
+        selectedClass = classes[0];
+        state.classMatrixSelectedClass = selectedClass.id;
+        learners = selectedClass.members || [];
+    } else {
+        learners = getInstructorLearners();
+    }
+
+    const allGroups = getInstructorDeviceGroups(selectedClass);
+    const availableDevices = allGroups.map(group => group.device);
+    if (state.classMatrixSelectedDevices === null) state.classMatrixSelectedDevices = [...availableDevices];
+    state.classMatrixSelectedDevices = state.classMatrixSelectedDevices.filter(device => availableDevices.includes(device));
+    const selectedGroups = allGroups.filter(group => state.classMatrixSelectedDevices.includes(group.device));
+
+    const columns = selectedGroups.flatMap((group, groupIndex) => (group.labs || []).map((lab, labIndex) => ({
+        device: group.device,
+        lab,
+        groupIndex,
+        isFirst: labIndex === 0,
+        isLast: labIndex === group.labs.length - 1
+    })));
+
+    // Filter learners by search
+    const search = (state.classMatrixSearch || '').trim().toLowerCase();
+    const mappedLearners = learners.map(email => {
+        const tech = technicianByIdentity.get(String(email).toLowerCase());
+        const name = tech?.displayName || getLearnerName(email) || email;
+        const code = tech?.employeeId || '';
+        const region = tech?.dashboardRegion || getLearnerRegion(email) || '';
+        const classCode = tech?.classCode || selectedClass?.code || '';
+        const className = tech?.className || selectedClass?.name || '';
+        return { email, tech, name, code, region, classCode, className };
+    });
+
+    const filteredLearners = search
+        ? mappedLearners.filter(l =>
+            l.name.toLowerCase().includes(search) ||
+            l.email.toLowerCase().includes(search) ||
+            l.code.toLowerCase().includes(search) ||
+            l.region.toLowerCase().includes(search)
+        )
+        : mappedLearners;
+
+    // Build assignment map if trainingAssignments exists
+    const assignmentMap = new Map();
+    const assignmentByLearnerLab = new Map();
+    if (state.assignmentsLoaded) {
+        trainingAssignments.forEach(a => {
+            const key = `${String(a.classCode || '')}\u001f${String(a.learner || '').toLowerCase()}\u001f${a.device}\u001f${a.lab}`;
+            assignmentMap.set(key, a);
+            const globalKey = `${String(a.learner || '').toLowerCase()}\u001f${a.device}\u001f${a.lab}`;
+            const existing = assignmentByLearnerLab.get(globalKey);
+            if (!existing || (!existing.completed && a.completed)) assignmentByLearnerLab.set(globalKey, a);
+        });
+    }
+
+    // Index sessions once so every learner/lab cell is an O(1) lookup.
+    const sessionsByCell = new Map();
+    sessions.forEach(s => {
+        if (s.mode === 'Hướng dẫn') return;
+        if (state.assignmentsLoaded && state.classMatrixSelectedClass === 'all' && !s.assignmentClassCodes.length) return;
+        if (
+            state.classMatrixSelectedClass !== 'all'
+            && selectedClass?.code
+            && !s.assignmentClassCodes.includes(String(selectedClass.code))
+        ) return;
+        const learnerKey = String(s.learner || '').toLowerCase();
+        const cellKey = `${learnerKey}\u001f${s.device}\u001f${s.lab}`;
+        if (!sessionsByCell.has(cellKey)) sessionsByCell.set(cellKey, []);
+        sessionsByCell.get(cellKey).push(s);
+    });
+
+    let totalClassAttempts = 0;
+    const labStats = new Map(); // colKey -> { assigned, completed, attempted, attempts }
+    columns.forEach(col => {
+        labStats.set(`${col.device}\u001f${col.lab}`, { assigned: 0, completed: 0, attempted: 0, attempts: 0 });
+    });
+
+    const rows = filteredLearners.map(l => {
+        const learnerKey = l.email.toLowerCase();
+        let ktvCompleted = 0;
+        let ktvAssigned = 0;
+        let ktvAttempts = 0;
+
+        const cells = columns.map(col => {
+            const colKey = `${col.device}\u001f${col.lab}`;
+            const globalAssignKey = `${l.email.toLowerCase()}\u001f${col.device}\u001f${col.lab}`;
+            const classAssignKey = `${String(selectedClass?.code || '')}\u001f${globalAssignKey}`;
+            const assign = state.classMatrixSelectedClass === 'all'
+                ? assignmentByLearnerLab.get(globalAssignKey)
+                : assignmentMap.get(classAssignKey);
+            const labSessions = sessionsByCell.get(`${learnerKey}\u001f${col.device}\u001f${col.lab}`) || [];
+            const practiceSessions = labSessions.filter(session => session.mode === 'Thực hành');
+            const isAssigned = Boolean(assign);
+            const isCompleted = isAssigned && Boolean(assign?.completed);
+            const attempts = practiceSessions.length;
+            const attempted = attempts > 0;
+
+            // Xác định số thứ tự lần thực hành đạt chuẩn hoàn thành
+            const sortedLabSessions = [...labSessions].sort((a, b) => {
+                const timeA = parseDate(a.date).getTime() + (a.time ? parseTimeMs(a.time) : 0);
+                const timeB = parseDate(b.date).getTime() + (b.time ? parseTimeMs(b.time) : 0);
+                return timeA - timeB;
+            });
+            const sortedPracticeSessions = sortedLabSessions.filter(s => s.mode === 'Thực hành');
+            const passIndex = sortedPracticeSessions.findIndex(isSuccessfulSession);
+            const firstPassSession = passIndex !== -1 ? sortedPracticeSessions[passIndex] : null;
+            const firstPassAttemptNo = firstPassSession
+                ? (Number(firstPassSession.practiceAttemptNo) || passIndex + 1)
+                : (Number(assign?.firstPassAttemptNo) || null);
+
+            if (isAssigned) {
+                ktvAssigned += 1;
+                const stat = labStats.get(colKey);
+                if (stat) stat.assigned += 1;
+            }
+            if (isCompleted) {
+                ktvCompleted += 1;
+                const stat = labStats.get(colKey);
+                if (stat) stat.completed += 1;
+            }
+            if (attempted) {
+                const stat = labStats.get(colKey);
+                if (stat) {
+                    stat.attempted += 1;
+                    stat.attempts += attempts;
+                }
+            }
+            ktvAttempts += attempts;
+            totalClassAttempts += attempts;
+
+            return {
+                device: col.device,
+                lab: col.lab,
+                assigned: isAssigned,
+                completed: isCompleted,
+                attempts,
+                firstPassAttemptNo,
+                lastSession: labSessions[labSessions.length - 1] || null
+            };
+        });
+
+        const rate = ktvAssigned > 0 ? Math.round((ktvCompleted / ktvAssigned) * 100) : null;
+
+        return {
+            ...l,
+            cells,
+            completed: ktvCompleted,
+            assigned: ktvAssigned,
+            attempts: ktvAttempts,
+            rate
+        };
+    });
+
+    const totalAssignedAll = rows.reduce((s, r) => s + r.assigned, 0);
+    const totalCompletedAll = rows.reduce((s, r) => s + r.completed, 0);
+    const overallRate = totalAssignedAll > 0 ? Math.round((totalCompletedAll / totalAssignedAll) * 100) : 0;
+
+    return {
+        classes,
+        selectedClass,
+        allGroups,
+        selectedGroups,
+        columns,
+        rows,
+        filteredCount: rows.length,
+        totalKtv: mappedLearners.length,
+        allLearnersCount: allClassLearners.length,
+        totalSessions: totalClassAttempts,
+        totalAssignedAll,
+        totalCompletedAll,
+        overallRate,
+        labStats
+    };
+}
+
+function renderClassMatrixReport() {
+    const classSelect = document.getElementById('classMatrixClassSelect');
+    const deviceSelect = document.getElementById('classMatrixDeviceSelect');
+    const head = document.getElementById('classMatrixHead');
+    const body = document.getElementById('classMatrixBody');
+    const foot = document.getElementById('classMatrixFoot');
+    const emptyEl = document.getElementById('classMatrixEmpty');
+    const scrollEl = document.getElementById('classMatrixScroll');
+    if (!head || !body || !foot) return;
+
+    const data = getClassMatrixData();
+
+    // Populate class select
+    if (classSelect) {
+        const optionsHtml = [
+            `<option value="all">Tất cả lớp (${data.allLearnersCount} KTV)</option>`,
+            ...data.classes.map(c => `<option value="${escapeHTML(c.id)}">${escapeHTML(c.name)} · ${c.members.length} KTV</option>`)
+        ].join('');
+        if (classSelect.innerHTML !== optionsHtml) {
+            classSelect.innerHTML = optionsHtml;
+        }
+        classSelect.value = state.classMatrixSelectedClass || 'all';
+    }
+
+    // Populate device select
+    if (deviceSelect) {
+        const deviceOptionsHtml = '<option value="">Tất cả thiết bị</option>' + data.allGroups
+            .map(g => `<option value="${escapeHTML(g.device)}">${escapeHTML(g.device)}</option>`)
+            .join('');
+        if (deviceSelect.innerHTML !== deviceOptionsHtml) {
+            deviceSelect.innerHTML = deviceOptionsHtml;
+        }
+        deviceSelect._selectedValues = [...state.classMatrixSelectedDevices];
+        deviceSelect.value = state.classMatrixSelectedDevices[0] || '';
+    }
+
+    // Update KPI summary cards
+    const setEl = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+    };
+    setEl('classMatrixTotalSessions', formatNumber.format(data.totalSessions));
+    setEl('classMatrixTotalKtvs', formatNumber.format(data.rows.length));
+    setEl('classMatrixTotalLabs', formatNumber.format(data.columns.length));
+    setEl('classMatrixCompletionRate', `${data.overallRate}%`);
+
+    // Title
+    const titleEl = document.getElementById('classMatrixTableTitle');
+    if (titleEl) {
+        const className = data.selectedClass?.name || 'Tất cả lớp học';
+        titleEl.textContent = `Ma trận thực hành KTV — ${className}`;
+    }
+
+    if (!data.rows.length) {
+        head.innerHTML = '';
+        body.innerHTML = '';
+        foot.innerHTML = '';
+        if (scrollEl) scrollEl.hidden = true;
+        if (emptyEl) {
+            emptyEl.hidden = false;
+            emptyEl.textContent = state.classMatrixSearch
+                ? `Không tìm thấy KTV nào phù hợp với từ khóa "${state.classMatrixSearch}".`
+                : 'Chưa có KTV trong lớp này.';
+        }
+        return;
+    }
+
+    if (scrollEl) scrollEl.hidden = false;
+    if (emptyEl) emptyEl.hidden = true;
+
+    // Render thead
+    head.innerHTML = `
+        <tr class="report-device-header-row">
+            <th class="ktv-stt-head" scope="col" rowspan="2">STT</th>
+            <th class="ktv-info-head" scope="col" rowspan="2">Kỹ thuật viên</th>
+            ${data.selectedGroups.map((group, index) => `
+                <th class="report-device-group report-device-tone-${index % 5}" scope="colgroup" colspan="${(group.labs || []).length}">
+                    ${escapeHTML(group.device)}
+                    <span>${(group.labs || []).length} bài lab</span>
+                </th>
+            `).join('')}
+            <th class="ktv-total-head" scope="col" rowspan="2">Đã đạt</th>
+            <th class="ktv-rate-head" scope="col" rowspan="2">Tỷ lệ</th>
+        </tr>
+        <tr class="report-lab-header-row">
+            ${data.columns.map(col => `
+                <th class="report-lab-head report-device-tone-${col.groupIndex % 5} ${col.isFirst ? 'group-start' : ''} ${col.isLast ? 'group-end' : ''}" scope="col" title="${escapeHTML(`${col.device} • ${col.lab}`)}">
+                    ${escapeHTML(col.lab)}
+                </th>
+            `).join('')}
+        </tr>
+    `;
+
+    // Render tbody
+    body.innerHTML = data.rows.map((row, index) => {
+        const rateClass = row.rate === null ? 'report-cell-zero' : (row.rate >= 80 ? 'report-cell-high' : (row.rate >= 50 ? 'report-cell-medium' : 'report-cell-low'));
+        return `
+            <tr>
+                <td class="ktv-stt-cell">${index + 1}</td>
+                <th class="ktv-info-cell" scope="row" title="${escapeHTML(`${row.name} (${row.email})`)}">
+                    <div class="ktv-info-wrap">
+                        <div class="ktv-info-top">
+                            <span class="ktv-info-name">${escapeHTML(row.name)}</span>
+                            ${row.region ? `<span class="ktv-info-badge">${escapeHTML(row.region)}</span>` : ''}
+                        </div>
+                        <div class="ktv-info-meta">
+                            ${row.code ? `<span class="ktv-info-code">${escapeHTML(row.code)}</span> • ` : ''}
+                            <span>${escapeHTML(row.email)}</span>
+                        </div>
+                    </div>
+                </th>
+                ${row.cells.map(cell => {
+                    if (!cell.assigned) {
+                        return `<td class="report-metric-cell report-cell-zero" title="${escapeHTML(`${row.name} • ${cell.device} • ${cell.lab}: Chưa phân công`)}"><strong>—</strong><span>Chưa giao</span></td>`;
+                    }
+                    if (cell.completed) {
+                        const passNote = cell.firstPassAttemptNo === 1 
+                            ? 'Đạt ngay lần thực hành 1' 
+                            : (cell.firstPassAttemptNo > 1 ? `Đạt ở lần thực hành thứ ${cell.firstPassAttemptNo}` : 'Đã đạt chuẩn');
+                        const tooltip = `${row.name} • ${cell.device} • ${cell.lab}: Đã đạt (${passNote}) • Tổng ${cell.attempts} lượt thực hành`;
+                        return `<td class="report-metric-cell report-cell-high" title="${escapeHTML(tooltip)}"><strong>1/1</strong><span>100% HT</span></td>`;
+                    }
+                    if (cell.attempts > 0) {
+                        const tooltip = `${row.name} • ${cell.device} • ${cell.lab}: Chưa đạt • Đã làm ${cell.attempts} lượt thực hành`;
+                        return `<td class="report-metric-cell report-cell-low" title="${escapeHTML(tooltip)}"><strong>0/1</strong><span>0% HT</span></td>`;
+                    }
+                    const tooltip = `${row.name} • ${cell.device} • ${cell.lab}: Chưa làm`;
+                    return `<td class="report-metric-cell report-cell-zero" title="${escapeHTML(tooltip)}"><strong>0/1</strong><span>Chưa làm</span></td>`;
+                }).join('')}
+                <td class="ktv-total-cell ${rateClass}">
+                    <strong>${row.completed}/${row.assigned}</strong>
+                </td>
+                <td class="ktv-rate-cell ${rateClass}">
+                    ${row.rate === null ? '—' : `${row.rate}%`}
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    // Render tfoot
+    foot.innerHTML = `
+        <tr>
+            <th class="ktv-footer-label" scope="row" colspan="2">Tổng lớp (${data.rows.length} KTV)</th>
+            ${data.columns.map(col => {
+                const colKey = `${col.device}\u001f${col.lab}`;
+                const stat = data.labStats.get(colKey) || { assigned: 0, completed: 0, attempts: 0 };
+                const rate = stat.assigned > 0 ? Math.round((stat.completed / stat.assigned) * 100) : null;
+                const cellClass = rate === null ? 'report-cell-zero' : (rate >= 80 ? 'report-cell-high' : (rate >= 50 ? 'report-cell-medium' : 'report-cell-low'));
+                const tooltip = `${stat.completed}/${stat.assigned} KTV hoàn thành • ${stat.attempts} lượt thực hành`;
+                if (!stat.assigned) {
+                    return `<td class="report-metric-cell report-cell-zero ${col.isFirst ? 'group-start' : ''}" title="Chưa giao trong lớp này"><strong>—</strong><span>Chưa giao</span></td>`;
+                }
+                return `
+                    <td class="report-metric-cell ${cellClass} ${col.isFirst ? 'group-start' : ''}" title="${escapeHTML(tooltip)}">
+                        <strong>${stat.completed}/${stat.assigned}</strong>
+                        <span>${rate}% HT</span>
+                    </td>
+                `;
+            }).join('')}
+            <td class="ktv-footer-total report-row-total">
+                <strong>${data.totalCompletedAll}/${data.totalAssignedAll}</strong>
+            </td>
+            <td class="ktv-footer-rate report-grand-total">
+                <strong>${data.overallRate}%</strong>
+            </td>
+        </tr>
+    `;
+
+    // Bind horizontal wheel scroll
+    if (scrollEl && scrollEl.dataset.wheelBound !== 'true') {
+        scrollEl.dataset.wheelBound = 'true';
+        scrollEl.addEventListener('wheel', (event) => {
+            if (!event.shiftKey || Math.abs(event.deltaY) < Math.abs(event.deltaX)) return;
+            event.preventDefault();
+            scrollEl.scrollLeft += event.deltaY;
+        }, { passive: false });
+    }
+}
+
+function initClassMatrix() {
+    document.getElementById('classMatrixClassSelect')?.addEventListener('change', (e) => {
+        state.classMatrixSelectedClass = e.target.value;
+        renderClassMatrixReport();
+    });
+    document.getElementById('classMatrixDeviceSelect')?.addEventListener('change', (e) => {
+        state.classMatrixSelectedDevices = [...(e.target._selectedValues || [])];
+        renderClassMatrixReport();
+    });
+    let searchDebounce;
+    document.getElementById('classMatrixSearchInput')?.addEventListener('input', (e) => {
+        clearTimeout(searchDebounce);
+        searchDebounce = setTimeout(() => {
+            state.classMatrixSearch = e.target.value;
+            renderClassMatrixReport();
+        }, 200);
+    });
+    // Matrix view toggle buttons (tab switch between Region matrix & KTV Class matrix)
+    document.querySelectorAll('[data-matrix-tab-target]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const target = btn.dataset.matrixTabTarget;
+            switchDashboardView(target);
+        });
+    });
 }
 
 function renderAll() {
     const dateSessions = getDateFilteredSessions();
 
-    renderKpis();
-    renderOverviewMonthlyTrend(sessions);
-    renderInstructorClassProgress();
-    renderRealtimeSubmissions(dateSessions);
-    renderSessions(sessions);
-    renderLearnerDetail(sessions);
-    renderDetailedReport(dateSessions.filter(item => item.mode === 'Thực hành'));
+    if (activeDashboardView === 'overview') {
+        renderKpis();
+        renderRegionUsageChart();
+        renderOverviewMonthlyTrend(sessions);
+        updateRangeText(dateSessions);
+    } else if (activeDashboardView === 'instructors') {
+        renderInstructorClassProgress();
+        renderRealtimeSubmissions(dateSessions);
+        updateRangeText(dateSessions);
+    } else if (activeDashboardView === 'analytics') {
+        renderDetailedReport(dateSessions.filter(item => item.mode === 'Thực hành'));
+    } else if (activeDashboardView === 'class_matrix') {
+        renderClassMatrixReport();
+    } else if (activeDashboardView === 'technicians') {
+        renderSessions(sessions);
+        renderLearnerDetail(sessions);
+        updatePopoverTriggerLabels();
+        updateRangeText(dateSessions);
+    }
     renderSortMarks();
-    updatePopoverTriggerLabels();
-    updateRangeText(dateSessions);
     enhanceHeaderFilterPopovers();
 }
 
 function updatePopoverTriggerLabels() {
     const allKtvs = [...new Set(sessions.map(item => item.learner))].sort();
-    const allDevices = [...new Set(sessions.map(item => item.device))].sort();
-    const allLabs = [...new Set(sessions.map(item => item.lab))].sort((a, b) => a.localeCompare(b, 'vi'));
+    const allDevices = getCanonicalDeviceList();
+    const allLabs = getCanonicalLabList();
     const allRegions = [...new Set(sessions.map(item => item.region))].sort((a, b) => a.localeCompare(b, 'vi'));
     const learnerReset = document.getElementById('learnerFilterReset');
     const selectedLearners = state.learnerSelectedKtvs.size;
@@ -3063,18 +4690,6 @@ function updatePopoverTriggerLabels() {
     document.getElementById('learnerLabPopoverWrapper')?.classList.toggle('has-filter', labFiltered);
     if (learnerReset) learnerReset.hidden = !ktvFiltered && !emailFiltered && !regionFiltered && !deviceFiltered && !labFiltered && !state.learnerSearchKtv.trim();
 
-    const labLabel = document.getElementById('labDeviceTriggerLabel');
-    if (labLabel) {
-        if (state.labSelectedDevices.size === allDevices.length) labLabel.textContent = 'Tất cả thiết bị';
-        else if (state.labSelectedDevices.size === 0) labLabel.textContent = 'Chưa chọn thiết bị';
-        else labLabel.textContent = `${state.labSelectedDevices.size} thiết bị`;
-    }
-    const devLabel = document.getElementById('deviceTriggerLabel');
-    if (devLabel) {
-        if (state.deviceSelectedDevices.size === allDevices.length) devLabel.textContent = 'Tất cả thiết bị';
-        else if (state.deviceSelectedDevices.size === 0) devLabel.textContent = 'Chưa chọn thiết bị';
-        else devLabel.textContent = `${state.deviceSelectedDevices.size} thiết bị`;
-    }
 }
 
 function initSort() {
@@ -3111,8 +4726,6 @@ function initSort() {
             renderAll();
         });
     });
-    document.getElementById('labSortSelect')?.addEventListener('change', renderAll);
-    document.getElementById('deviceSortSelect')?.addEventListener('change', renderAll);
 }
 
 function populateCalendarSelects() {
@@ -3122,7 +4735,8 @@ function populateCalendarSelects() {
         monthSelect.innerHTML = Array.from({ length: 12 }, (_, index) => `<option value="${index}">Tháng ${index + 1}</option>`).join('');
     }
     if (yearSelect) {
-        yearSelect.innerHTML = [2025, 2026, 2027].map(year => `<option value="${year}">${year}</option>`).join('');
+        const y = new Date().getFullYear();
+        yearSelect.innerHTML = [y - 1, y, y + 1].map(year => `<option value="${year}">${year}</option>`).join('');
     }
 }
 
@@ -3213,6 +4827,8 @@ function initDateRangePicker() {
             state.tempStartDate = bounds.start;
             state.tempEndDate = bounds.end;
             state.calendarMonth = new Date(bounds.year, bounds.monthIndex, 1);
+            state.regionUsageYear = bounds.year;
+            state.dashboardReportStatus = 'loading';
             state.learnerTablePage = 1;
             state.learnerDetailPage = 1;
             state.realtimePage = 1;
@@ -3221,6 +4837,7 @@ function initDateRangePicker() {
             if (closePanel) {
                 panel?.classList.remove('open');
                 trigger?.setAttribute('aria-expanded', 'false');
+                trigger?.focus();
             }
             renderMonthGrid(year);
             renderAll();
@@ -3234,7 +4851,7 @@ function initDateRangePicker() {
                 const isFuture = year > today.getFullYear()
                     || (year === today.getFullYear() && monthIndex > today.getMonth());
                 const isSelected = selectedBounds?.year === year && selectedBounds?.monthIndex === monthIndex;
-                return `<button type="button" class="overview-month-option ${isSelected ? 'selected' : ''}" data-report-month="${monthIndex}" ${isFuture ? 'disabled' : ''}>Th ${monthIndex + 1}</button>`;
+                return `<button type="button" class="overview-month-option ${isSelected ? 'selected' : ''}" data-report-month="${monthIndex}" aria-label="Tháng ${monthIndex + 1} năm ${year}" aria-pressed="${isSelected ? 'true' : 'false'}" ${isFuture ? 'disabled' : ''}>Th ${monthIndex + 1}</button>`;
             }).join('');
             monthGrid.querySelectorAll('[data-report-month]').forEach(button => {
                 button.addEventListener('click', () => {
@@ -3259,18 +4876,36 @@ function initDateRangePicker() {
             if (willOpen) {
                 positionMonthPanel();
                 renderMonthGrid(Number(yearSelect?.value) || today.getFullYear());
+                window.requestAnimationFrame(() => {
+                    const selectedMonth = monthGrid?.querySelector('[aria-pressed="true"]');
+                    if (selectedMonth) selectedMonth.focus();
+                    else yearSelect?.focus();
+                });
             }
         });
         panel?.addEventListener('click', event => event.stopPropagation());
+        panel?.addEventListener('keydown', event => {
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                event.stopPropagation();
+                panel.classList.remove('open');
+                trigger?.setAttribute('aria-expanded', 'false');
+                trigger?.focus();
+                return;
+            }
+            trapDialogFocus(event, panel);
+        });
         currentMonthButton?.addEventListener('click', () => applySelectedMonth(today.getFullYear(), today.getMonth()));
         document.addEventListener('click', () => {
             panel?.classList.remove('open');
             trigger?.setAttribute('aria-expanded', 'false');
         });
         document.addEventListener('keydown', event => {
-            if (event.key === 'Escape') {
+            if (event.key === 'Escape' && panel?.classList.contains('open')) {
+                event.preventDefault();
                 panel?.classList.remove('open');
                 trigger?.setAttribute('aria-expanded', 'false');
+                trigger?.focus();
             }
         });
         window.addEventListener('resize', () => {
@@ -3327,6 +4962,8 @@ function initDateRangePicker() {
         e.stopPropagation();
         state.startDate = state.tempStartDate;
         state.endDate = state.tempEndDate || state.tempStartDate;
+        if (state.startDate) state.regionUsageYear = parseDate(state.startDate).getFullYear();
+        state.dashboardReportStatus = 'loading';
         state.learnerTablePage = 1;
         state.learnerDetailPage = 1;
         state.realtimePage = 1;
@@ -3337,10 +4974,15 @@ function initDateRangePicker() {
 
     document.getElementById('dateRangeClear')?.addEventListener('click', (e) => {
         e.stopPropagation();
-        state.tempStartDate = '';
-        state.tempEndDate = '';
-        state.startDate = '';
-        state.endDate = '';
+        const nowClear = new Date();
+        const first = new Date(nowClear.getFullYear(), nowClear.getMonth(), 1);
+        const last = new Date(nowClear.getFullYear(), nowClear.getMonth() + 1, 0);
+        state.tempStartDate = fmtDate(first);
+        state.tempEndDate = fmtDate(last);
+        state.startDate = fmtDate(first);
+        state.endDate = fmtDate(last);
+        state.regionUsageYear = nowClear.getFullYear();
+        state.dashboardReportStatus = 'loading';
         state.learnerTablePage = 1;
         state.learnerDetailPage = 1;
         state.realtimePage = 1;
@@ -3355,22 +4997,519 @@ function initDateRangePicker() {
     });
 }
 
-function initExport() {
-    document.getElementById('exportBtn')?.addEventListener('click', () => {
-        const rows = getDateFilteredSessions();
-        const header = ['date', 'learner', 'device', 'lab', 'skill', 'status', 'duration'];
-        const csv = [header.join(',')]
-            .concat(rows.map(row => header.map(key => `"${String(row[key]).replace(/"/g, '""')}"`).join(',')))
-            .join('\n');
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        const today = new Date();
-        const dateStamp = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-        link.download = `bao_cao_ktv_${dateStamp}.csv`;
-        link.click();
-        URL.revokeObjectURL(url);
+const REPORT_EXPORT_TEMPLATE_VERSION = 'FTC-XLSX-1.0';
+const REPORT_EXPORT_DEFAULT_BY_VIEW = {
+    overview: 'activity',
+    technicians: 'activity',
+    analytics: 'region',
+    instructors: 'class_matrix',
+    class_matrix: 'class_matrix',
+    roster: 'roster'
+};
+
+function getDefaultReportExportType() {
+    return REPORT_EXPORT_DEFAULT_BY_VIEW[activeDashboardView] || 'activity';
+}
+
+function normalizeReportFilenamePart(value, fallback = 'bao_cao') {
+    const normalized = String(value || '')
+        .replace(/đ/g, 'd')
+        .replace(/Đ/g, 'D')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '')
+        .replace(/_+/g, '_')
+        .slice(0, 72);
+    return normalized || fallback;
+}
+
+function buildReportFilename(prefix, scope = '') {
+    const timestamp = new Date();
+    const timePart = `${String(timestamp.getHours()).padStart(2, '0')}${String(timestamp.getMinutes()).padStart(2, '0')}`;
+    const safePrefix = normalizeReportFilenamePart(prefix, 'FTC_Bao_cao');
+    const safeScope = scope ? `_${normalizeReportFilenamePart(scope, '')}` : '';
+    return `${safePrefix}${safeScope}_${fmtDate(timestamp)}_${timePart}.xlsx`;
+}
+
+function triggerReportDownload(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+
+function buildReportExportPayload(type, descriptor) {
+    const base = {
+        type,
+        version: REPORT_EXPORT_TEMPLATE_VERSION,
+        filename: descriptor.filename,
+        period: descriptor.period,
+        scope: descriptor.scope
+    };
+    if (type === 'roster') {
+        return {
+            ...base,
+            filters: {
+                status: state.rosterStatusFilter || 'active',
+                search: state.rosterSearch.trim()
+            }
+        };
+    }
+    if (!Array.isArray(descriptor.rows) || !descriptor.rows.length) {
+        throw new Error('Không có dữ liệu phù hợp để xuất báo cáo.');
+    }
+    if (!Array.isArray(descriptor.headers) || !descriptor.headers.length) {
+        throw new Error('Báo cáo chưa có cột dữ liệu để xuất.');
+    }
+    return {
+        ...base,
+        metadata: descriptor.metadata || [],
+        headers: descriptor.headers,
+        columnTypes: descriptor.columnTypes || descriptor.headers.map(() => 'text'),
+        rows: descriptor.rows
+    };
+}
+
+async function downloadXlsxReport(type, descriptor) {
+    const response = await fetch(`${API_BASE_URL}/reports/export`, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+            'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(buildReportExportPayload(type, descriptor))
+    });
+    if (!response.ok) throw new Error(await getReportResponseError(response));
+
+    const blob = await response.blob();
+    if (!blob.size) throw new Error('Máy chủ trả về file Excel rỗng.');
+    const signature = new Uint8Array(await blob.slice(0, 4).arrayBuffer());
+    if (signature.length !== 4 || signature[0] !== 0x50 || signature[1] !== 0x4B
+        || signature[2] !== 0x03 || signature[3] !== 0x04) {
+        throw new Error('File tải về không phải là workbook Excel hợp lệ.');
+    }
+
+    const filename = getResponseDownloadFilename(response, descriptor.filename);
+    triggerReportDownload(blob, filename);
+    return filename;
+}
+
+function getTechnicianFilteredExportRows() {
+    let rows = [...sessions];
+    const applySetFilter = (set, touched, getValue) => {
+        if (!touched && !set.size) return;
+        rows = rows.filter(item => set.has(getValue(item)));
+    };
+    applySetFilter(state.learnerSelectedKtvs, state.learnerKtvsTouched, item => item.learner);
+    applySetFilter(state.learnerSelectedEmails, state.learnerEmailsTouched, item => item.learner);
+    applySetFilter(state.learnerSelectedRegions, state.learnerRegionsTouched, item => item.region);
+    applySetFilter(state.learnerSelectedDevices, state.learnerDevicesTouched, item => item.device);
+    applySetFilter(state.learnerSelectedLabs, state.learnerLabsTouched, item => item.lab);
+    const keyword = state.learnerSearchKtv.trim().toLocaleLowerCase('vi');
+    if (keyword) {
+        rows = rows.filter(item => `${getLearnerName(item.learner)} ${item.learner}`.toLocaleLowerCase('vi').includes(keyword));
+    }
+    return rows;
+}
+
+function buildActivityReportDescriptor() {
+    const sourceRows = activeDashboardView === 'technicians'
+        ? getTechnicianFilteredExportRows()
+        : getDateFilteredSessions();
+    const orderedRows = [...sourceRows].sort((left, right) => sessionTimestampMs(right) - sessionTimestampMs(left));
+    const period = activeDashboardView === 'technicians' ? 'Dữ liệu lũy kế' : getRangeLabel();
+    const scope = activeDashboardView === 'technicians'
+        ? 'Các bộ lọc đang áp dụng tại trang Thống kê kỹ thuật viên'
+        : 'Tất cả phiên hoạt động trong kỳ đã chọn';
+    return {
+        type: 'activity',
+        title: 'FTC - BÁO CÁO CHI TIẾT HOẠT ĐỘNG KTV',
+        period,
+        scope,
+        filename: buildReportFilename('FTC_Chi_tiet_hoat_dong_KTV'),
+        countLabel: `${formatNumber.format(orderedRows.length)} phiên hoạt động`,
+        available: orderedRows.length > 0,
+        metadata: [
+            ['Quy ước thời lượng', 'Giây và định dạng đọc nhanh'],
+            ['Thứ tự dữ liệu', 'Mới nhất đến cũ nhất']
+        ],
+        headers: [
+            'STT', 'Ngày', 'Giờ', 'Mã phiên', 'Mã NV', 'Họ và tên', 'Email', 'Vị trí',
+            'Khu vực/CNx', 'Chi nhánh', 'Đơn vị', 'Lớp', 'Thiết bị', 'Bài lab', 'Kỹ năng',
+            'Chế độ', 'Kết quả', 'Hoàn thành lần đầu', 'Thời lượng (giây)',
+            'Thời lượng', 'Hành động cuối'
+        ],
+        columnTypes: [
+            'integer', 'date', 'time', 'text', 'text', 'text', 'text', 'text',
+            'text', 'text', 'text', 'text', 'text', 'text', 'text', 'text',
+            'text', 'text', 'integer', 'text', 'text'
+        ],
+        rows: orderedRows.map((row, index) => {
+            const technician = technicianByIdentity.get(String(row.learner || '').trim().toLowerCase())
+                || technicianByIdentity.get(String(row.technicianId || '').trim().toLowerCase());
+            const email = technician?.email || (String(row.learner || '').includes('@') ? row.learner : '');
+            return [
+                index + 1,
+                row.date || '',
+                row.time || '',
+                row.sessionId || '',
+                technician?.employeeId || row.technicianId || '',
+                technician?.displayName || row.technicianName || getLearnerName(row.learner),
+                email,
+                technician?.jobTitle || row.jobTitle || '',
+                technician?.dashboardRegion || row.region || '',
+                technician?.branchName || row.branchName || '',
+                technician?.unitName || row.unitName || row.unitCode || '',
+                technician?.className || technician?.classCode || row.classCode || '',
+                row.device || '',
+                row.lab || '',
+                row.skill || '',
+                row.mode || '',
+                row.status || 'Chưa có kết quả',
+                row.firstTry === true ? 'Có' : (row.firstTry === false ? 'Không' : ''),
+                row.duration ?? '',
+                row.duration === null || row.duration === undefined ? '' : formatDuration(row.duration),
+                row.lastAction || ''
+            ];
+        })
+    };
+}
+
+function formatAuthoritativeRegionMetric(cell = {}) {
+    const assigned = Number(cell.assigned_count) || 0;
+    if (!assigned) return '—';
+    const completed = Number(cell.completed_count) || 0;
+    const attempts = Number(cell.attempt_count) || 0;
+    const rate = cell.completion_rate === null || cell.completion_rate === undefined
+        ? Math.round((completed / assigned) * 100)
+        : Number(cell.completion_rate);
+    return `${completed}/${assigned} (${rate}%) · ${attempts} lượt`;
+}
+
+function buildAuthoritativeRegionReportDescriptor(matrix) {
+    const groups = matrix.device_groups || [];
+    const columns = groups.flatMap(group => (group.labs || []).map(lab => ({
+        device: group.device?.name || group.device?.device_name || group.device_name || '',
+        lab: lab.name || lab.lab_name || '',
+        labId: lab.lab_id || ''
+    })));
+    const rows = (matrix.rows || []).map((row, index) => {
+        const region = row.region || {};
+        const regionName = region.name || region.region_name || region.code || region.region_code || '';
+        const location = regionName;
+        return [
+            index + 1,
+            location,
+            ...columns.map(column => formatAuthoritativeRegionMetric(row.cells?.[column.labId])),
+            formatAuthoritativeRegionMetric(row.total)
+        ];
+    });
+    return {
+        type: 'region',
+        title: 'FTC - BÁO CÁO TIẾN ĐỘ THỰC HÀNH THEO CHI NHÁNH',
+        period: dashboardReport?.meta?.period?.label || getRangeLabel(),
+        scope: 'Ma trận Khu vực/CNx theo thiết bị và bài lab',
+        filename: buildReportFilename('FTC_Tien_do_theo_chi_nhanh'),
+        countLabel: `${formatNumber.format(rows.length)} khu vực · ${formatNumber.format(columns.length)} bài lab`,
+        available: rows.length > 0 && columns.length > 0,
+        metadata: [['Quy ước ô dữ liệu', 'Hoàn thành/phạm vi (tỷ lệ) · lượt thực hành']],
+        headers: ['STT', 'Khu vực/CNx', ...columns.map(column => `${column.device} - ${column.lab}`), 'Tổng khu vực'],
+        columnTypes: ['integer', 'text', ...columns.map(() => 'text'), 'text'],
+        rows
+    };
+}
+
+function formatLocalRegionMetric(cell) {
+    if (!cell?.eligible) return '—';
+    if (!cell.attempts) return `0/${cell.eligible} (0%) · 0 lượt`;
+    return `${cell.completed}/${cell.eligible} (${cell.rate ?? 0}%) · ${cell.attempts} lượt`;
+}
+
+function buildRegionReportDescriptor() {
+    if (dashboardReport?.matrix) return buildAuthoritativeRegionReportDescriptor(dashboardReport.matrix);
+    const sourceRows = getDateFilteredSessions().filter(item => item.mode === 'Thực hành');
+    const groups = getDetailReportDeviceGroups(sourceRows);
+    const columns = groups.flatMap(group => group.labs.map(lab => ({ device: group.device, lab })));
+    const index = buildDetailReportIndex(sourceRows);
+    const regionNames = [...new Set([
+        ...REGION_FILTER_OPTIONS,
+        ...sourceRows.map(item => item.region).filter(Boolean)
+    ])];
+    const rows = regionNames.map((region, rowIndex) => {
+        const regionKeys = [region];
+        const total = getDetailReportTotal(index, regionKeys, columns);
+        return [
+            rowIndex + 1,
+            region,
+            ...columns.map(column => formatLocalRegionMetric(getDetailReportCell(index, regionKeys, column))),
+            formatLocalRegionMetric(total)
+        ];
+    });
+    return {
+        type: 'region',
+        title: 'FTC - BÁO CÁO TIẾN ĐỘ THỰC HÀNH THEO CHI NHÁNH',
+        period: getRangeLabel(),
+        scope: 'Ma trận Khu vực/CNx theo thiết bị và bài lab',
+        filename: buildReportFilename('FTC_Tien_do_theo_chi_nhanh'),
+        countLabel: `${formatNumber.format(rows.length)} khu vực · ${formatNumber.format(columns.length)} bài lab`,
+        available: rows.length > 0 && columns.length > 0,
+        metadata: [
+            ['Quy ước ô dữ liệu', 'Hoàn thành/phạm vi (tỷ lệ) · lượt thực hành'],
+            ['Nguồn phạm vi', 'Danh mục KTV đang hoạt động và danh mục bài lab']
+        ],
+        headers: ['STT', 'Khu vực/CNx', ...columns.map(column => `${column.device} - ${column.lab}`), 'Tổng khu vực'],
+        columnTypes: ['integer', 'text', ...columns.map(() => 'text'), 'text'],
+        rows
+    };
+}
+
+function buildClassMatrixReportDescriptor() {
+    const data = getClassMatrixData();
+    const classLabel = data.selectedClass?.name || (state.classMatrixSelectedClass === 'all' ? 'Tất cả lớp' : 'Chưa xếp lớp');
+    const deviceLabel = data.selectedGroups.length === data.allGroups.length
+        ? 'Tất cả thiết bị'
+        : (data.selectedGroups.map(group => group.device).join(', ') || 'Không chọn thiết bị');
+    const searchLabel = state.classMatrixSearch.trim() ? ` · Tìm kiếm: “${state.classMatrixSearch.trim()}”` : '';
+    const scope = `${classLabel} · ${deviceLabel}${searchLabel}`;
+    return {
+        type: 'class_matrix',
+        title: 'FTC - BÁO CÁO TIẾN ĐỘ KTV THEO LỚP',
+        period: 'Dữ liệu lũy kế',
+        scope,
+        filename: buildReportFilename('FTC_Tien_do_KTV_theo_lop', classLabel),
+        countLabel: `${formatNumber.format(data.rows.length)} KTV · ${formatNumber.format(data.columns.length)} bài lab`,
+        available: data.rows.length > 0 && data.columns.length > 0,
+        metadata: [
+            ['Lớp học', classLabel],
+            ['Thiết bị', deviceLabel],
+            ['Tiến độ tổng', `${data.totalCompletedAll}/${data.totalAssignedAll} (${data.overallRate}%)`],
+            ['Tổng lượt thực hành', data.totalSessions],
+            ['Quy ước trạng thái', 'Đã đạt · Chưa đạt · Chưa làm · Chưa phân công']
+        ],
+        headers: [
+            'STT', 'Mã NV', 'Họ và tên', 'Email', 'Khu vực/CNx', 'Lớp học',
+            ...data.columns.map(column => `${column.device} - ${column.lab}`),
+            'Bài đã đạt', 'Bài trong phạm vi', 'Tỷ lệ hoàn thành (%)', 'Lượt thực hành'
+        ],
+        columnTypes: [
+            'integer', 'text', 'text', 'text', 'text', 'text',
+            ...data.columns.map(() => 'text'),
+            'integer', 'integer', 'percent', 'integer'
+        ],
+        rows: data.rows.map((row, index) => [
+            index + 1,
+            row.code || '',
+            row.name || '',
+            row.email || '',
+            row.region || '',
+            row.className || row.classCode || classLabel,
+            ...row.cells.map(cell => {
+                if (!cell.assigned) return 'Chưa phân công';
+                if (cell.completed) return cell.attempts ? `Đã đạt · ${cell.attempts} lượt` : 'Đã đạt';
+                if (cell.attempts > 0) return `Chưa đạt · ${cell.attempts} lượt`;
+                return 'Chưa làm';
+            }),
+            row.completed,
+            row.assigned,
+            row.rate === null || row.rate === undefined ? '' : row.rate / 100,
+            row.attempts
+        ])
+    };
+}
+
+function getRosterExportScope() {
+    const statusLabels = { active: 'Đang công tác', terminated: 'Đã nghỉ', all: 'Tất cả trạng thái' };
+    const status = statusLabels[state.rosterStatusFilter] || 'Đang công tác';
+    const keyword = state.rosterSearch.trim();
+    return keyword ? `${status} · Tìm kiếm: “${keyword}”` : status;
+}
+
+function getRosterReportPreview() {
+    return {
+        type: 'roster',
+        period: 'Tại thời điểm xuất',
+        scope: getRosterExportScope(),
+        filename: buildReportFilename('FTC_Danh_sach_KTV'),
+        countLabel: state.rosterLoaded ? `${formatNumber.format(state.rosterTotal)} hồ sơ KTV` : 'Toàn bộ kết quả phù hợp',
+        available: true
+    };
+}
+
+function getReportExportPreview(type) {
+    if (type === 'region') return buildRegionReportDescriptor();
+    if (type === 'class_matrix') return buildClassMatrixReportDescriptor();
+    if (type === 'roster') return getRosterReportPreview();
+    return buildActivityReportDescriptor();
+}
+
+async function ensureTrainingAssignmentsLoaded({ force = false } = {}) {
+    if (state.assignmentsLoaded && !force) return trainingAssignments;
+    const response = await fetch(`${API_BASE_URL}/dashboard/all?include_assignments=1`);
+    if (!response.ok) throw new Error(`API tiến độ lớp trả về HTTP ${response.status}`);
+    const payload = await response.json();
+    const data = payload.data || {};
+    if (data.assignments_available !== true) {
+        throw new Error('Dữ liệu phân lớp hiện không khả dụng.');
+    }
+    trainingAssignments = normalizeTrainingAssignments(data.assignments || []);
+    state.assignmentsLoaded = true;
+    initializeInstructorClasses();
+    if (['instructors', 'class_matrix', 'analytics'].includes(activeDashboardView)) renderAll();
+    return trainingAssignments;
+}
+
+async function refreshAssignmentsForClassExport() {
+    return ensureTrainingAssignmentsLoaded({ force: true });
+}
+
+function getResponseDownloadFilename(response, fallback) {
+    const disposition = response.headers.get('Content-Disposition') || '';
+    const utf8Match = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+    if (utf8Match) {
+        try { return decodeURIComponent(utf8Match[1]); } catch (error) { /* use fallback below */ }
+    }
+    const plainMatch = disposition.match(/filename="?([^";]+)"?/i);
+    return plainMatch?.[1] || fallback;
+}
+
+async function getReportResponseError(response) {
+    const payload = await response.clone().json().catch(() => null);
+    return payload?.error?.message || payload?.message || `Yêu cầu xuất báo cáo thất bại (HTTP ${response.status}).`;
+}
+
+function getSelectedReportExportType() {
+    return document.querySelector('input[name="reportExportType"]:checked')?.value || getDefaultReportExportType();
+}
+
+function setReportExportStatus(message = '', type = 'info') {
+    const status = document.getElementById('reportExportStatus');
+    if (!status) return;
+    status.hidden = !message;
+    status.textContent = message;
+    status.classList.toggle('is-error', type === 'error');
+    status.classList.toggle('is-info', type === 'info');
+}
+
+function setReportExportBusy(busy) {
+    reportExportBusy = busy;
+    const download = document.getElementById('reportExportDownload');
+    const close = document.getElementById('reportExportClose');
+    const cancel = document.getElementById('reportExportCancel');
+    document.querySelectorAll('input[name="reportExportType"]').forEach(input => { input.disabled = busy; });
+    document.querySelectorAll('.report-export-option').forEach(option => option.classList.toggle('is-disabled', busy));
+    if (download) {
+        download.disabled = busy;
+        download.classList.toggle('is-busy', busy);
+        const label = download.querySelector('span');
+        if (label) label.textContent = busy ? 'Đang tạo file…' : 'Tải báo cáo';
+    }
+    if (close) close.disabled = busy;
+    if (cancel) cancel.disabled = busy;
+}
+
+function updateReportExportDialog() {
+    const type = getSelectedReportExportType();
+    document.querySelectorAll('.report-export-option').forEach(option => {
+        option.classList.toggle('is-selected', option.dataset.reportOption === type);
+    });
+    let preview;
+    try {
+        preview = getReportExportPreview(type);
+    } catch (error) {
+        preview = { period: '—', scope: 'Không thể đọc bộ lọc hiện tại', countLabel: 'Không có dữ liệu', filename: 'FTC_Bao_cao.xlsx', available: false };
+    }
+    const values = {
+        reportExportPeriod: preview.period,
+        reportExportScope: preview.scope,
+        reportExportCount: preview.countLabel,
+        reportExportFilename: preview.filename
+    };
+    Object.entries(values).forEach(([id, value]) => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = value || '—';
+    });
+    const download = document.getElementById('reportExportDownload');
+    if (download && !reportExportBusy) download.disabled = preview.available === false;
+}
+
+function openReportExportDialog() {
+    if (!ensureReportExportAllowed()) return;
+    const backdrop = document.getElementById('reportExportBackdrop');
+    if (!backdrop) return;
+    reportExportReturnFocus = document.activeElement;
+    const defaultType = getDefaultReportExportType();
+    const input = document.querySelector(`input[name="reportExportType"][value="${defaultType}"]`)
+        || document.querySelector('input[name="reportExportType"]');
+    if (input) input.checked = true;
+    setReportExportStatus();
+    setReportExportBusy(false);
+    updateReportExportDialog();
+    backdrop.hidden = false;
+    backdrop.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('report-export-open');
+    window.setTimeout(() => document.getElementById('reportExportClose')?.focus(), 0);
+}
+
+function closeReportExportDialog() {
+    if (reportExportBusy) return;
+    const backdrop = document.getElementById('reportExportBackdrop');
+    if (!backdrop || backdrop.hidden) return;
+    backdrop.hidden = true;
+    backdrop.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('report-export-open');
+    if (reportExportReturnFocus instanceof HTMLElement) reportExportReturnFocus.focus();
+    reportExportReturnFocus = null;
+}
+
+async function handleReportExportDownload() {
+    if (reportExportBusy || !ensureReportExportAllowed()) return;
+    const type = getSelectedReportExportType();
+    setReportExportBusy(true);
+    setReportExportStatus(type === 'class_matrix' ? 'Đang đồng bộ dữ liệu lớp mới nhất…' : 'Đang chuẩn bị file báo cáo…', 'info');
+    try {
+        if (type === 'class_matrix') await refreshAssignmentsForClassExport();
+        const descriptor = getReportExportPreview(type);
+        const filename = await downloadXlsxReport(type, descriptor);
+        setReportExportStatus(`Đã tạo “${filename}”. Trình duyệt đang tải file xuống.`, 'success');
+    } catch (error) {
+        console.error('Không thể xuất báo cáo.', error);
+        setReportExportStatus(error?.message || 'Không thể tạo báo cáo. Vui lòng thử lại.', 'error');
+    } finally {
+        setReportExportBusy(false);
+        updateReportExportDialog();
+    }
+}
+
+function initReportExport() {
+    document.getElementById('exportBtn')?.addEventListener('click', openReportExportDialog);
+    document.getElementById('reportExportClose')?.addEventListener('click', closeReportExportDialog);
+    document.getElementById('reportExportCancel')?.addEventListener('click', closeReportExportDialog);
+    document.getElementById('reportExportDownload')?.addEventListener('click', handleReportExportDownload);
+    document.querySelectorAll('input[name="reportExportType"]').forEach(input => {
+        input.addEventListener('change', () => {
+            setReportExportStatus();
+            updateReportExportDialog();
+        });
+    });
+    document.getElementById('reportExportBackdrop')?.addEventListener('click', event => {
+        if (event.target === event.currentTarget) closeReportExportDialog();
+    });
+    document.addEventListener('keydown', event => {
+        const backdrop = document.getElementById('reportExportBackdrop');
+        if (backdrop?.hidden) return;
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            closeReportExportDialog();
+            return;
+        }
+        trapDialogFocus(event, backdrop.querySelector('.report-export-dialog'));
     });
 }
 
@@ -3417,7 +5556,7 @@ function renderDeviceDonutChart(rows) {
     }).join('');
 
     donutContainer.innerHTML = `
-        <svg viewBox="0 0 160 160">
+        <svg viewBox="0 0 160 160" aria-hidden="true" focusable="false">
             ${svgPaths}
         </svg>
         <div class="donut-center-text">
@@ -3430,13 +5569,13 @@ function renderDeviceDonutChart(rows) {
         const color = DONUT_COLORS[index % DONUT_COLORS.length];
         const percent = Math.round((item.sessions / totalSessions) * 100);
         return `
-            <div class="legend-item" data-device="${escapeHTML(item.name)}" title="Click để xem chi tiết bài làm">
+            <button type="button" class="legend-item" data-device="${escapeHTML(item.name)}" title="Mở chi tiết bài làm">
                 <div class="legend-label-group">
                     <span class="legend-dot" style="background: ${color};"></span>
                     <span class="legend-name">${escapeHTML(item.name)}</span>
                 </div>
                 <span class="legend-val">${item.sessions} bài (${percent}%)</span>
-            </div>
+            </button>
         `;
     }).join('');
 
@@ -3482,6 +5621,7 @@ function openDeviceSubModal(deviceName, rows) {
     const subtitle = document.getElementById('subModalDeviceSubtitle');
     if (!modal) return;
 
+    deviceSubModalReturnFocus = document.activeElement;
     const catalogItem = deviceCatalog.find(d => d.device === deviceName || d.device_name === deviceName || d.model === deviceName);
     const assignedLabs = catalogItem?.labs || [];
     const deviceSessions = rows.filter(item => item.device === deviceName);
@@ -3522,6 +5662,19 @@ function openDeviceSubModal(deviceName, rows) {
             modeText = 'Chưa làm';
         }
 
+        // Tính thứ tự lượt thực hành đạt chuẩn hoàn thành
+        const sortedSessions = [...entry.sessions].sort((a, b) => {
+            const timeA = parseDate(a.date).getTime() + (a.time ? parseTimeMs(a.time) : 0);
+            const timeB = parseDate(b.date).getTime() + (b.time ? parseTimeMs(b.time) : 0);
+            return timeA - timeB;
+        });
+        const practiceSessions = sortedSessions.filter(s => s.mode === 'Thực hành');
+        const passIndex = practiceSessions.findIndex(isSuccessfulSession);
+        const firstPassSession = passIndex !== -1 ? practiceSessions[passIndex] : null;
+        const firstPassAttemptNo = firstPassSession
+            ? (Number(firstPassSession.practiceAttemptNo) || passIndex + 1)
+            : null;
+
         if (!totalCount) {
             return {
                 ...entry,
@@ -3531,15 +5684,17 @@ function openDeviceSubModal(deviceName, rows) {
                 totalCount: 0,
                 guideCount: 0,
                 practiceCount: 0,
+                firstPassAttemptNo: null,
                 modeText: 'Chưa làm',
                 lastDateTimeStr: 'N/A',
                 lastDuration: '0 giây'
             };
         }
         const latest = [...entry.sessions].sort((a, b) => parseDate(b.date) - parseDate(a.date))[0];
-        const isDone = entry.sessions.some(s => s.status === 'Hoàn thành');
+        const isDone = entry.sessions.some(isSuccessfulSession);
+        const hasUngradedCompletion = entry.sessions.some(session => session.status === 'Chưa có kết quả');
         const statusCategory = isDone ? 'done' : 'pending';
-        const statusLabel = isDone ? 'Hoàn thành' : 'Đang làm';
+        const statusLabel = isDone ? 'Đã đạt' : (hasUngradedCompletion ? 'Chưa có kết quả' : 'Chưa đạt');
         const badgeClass = getStatusClass(statusLabel);
         const lastDateTimeStr = formatDateTime(latest.date, latest.time);
         const lastDuration = formatDuration(latest.duration);
@@ -3553,6 +5708,8 @@ function openDeviceSubModal(deviceName, rows) {
             totalCount,
             guideCount,
             practiceCount,
+            firstPassAttemptNo,
+            hasUngradedCompletion,
             modeText,
             lastDateTimeStr,
             lastDuration
@@ -3594,13 +5751,29 @@ function openDeviceSubModal(deviceName, rows) {
     };
 
     document.querySelectorAll('.sub-filter-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.subFilter === 'all');
+        const isActive = btn.dataset.subFilter === 'all';
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-pressed', String(isActive));
     });
 
     renderSubModalLabList('all');
 
     modal.classList.add('visible');
     modal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('modal-open');
+    window.setTimeout(() => document.getElementById('subModalClose')?.focus(), 0);
+}
+
+function closeDeviceSubModal() {
+    const modal = document.getElementById('deviceSubModal');
+    if (!modal?.classList.contains('visible')) return;
+    modal.classList.remove('visible');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('modal-open');
+    currentSubModalData = { deviceName: '', allLabsList: [], activeFilter: 'all' };
+    document.getElementById('subModalLabList')?.replaceChildren();
+    if (deviceSubModalReturnFocus instanceof HTMLElement) deviceSubModalReturnFocus.focus();
+    deviceSubModalReturnFocus = null;
 }
 
 function renderSubModalLabList(filter) {
@@ -3630,10 +5803,29 @@ function renderSubModalLabList(filter) {
                         <span class="status-pill status-notstarted">Chưa làm</span>
                     </div>
                     <div class="sub-modal-item-grid2x2">
-                        <div class="sub-modal-cell">Gần nhất: <strong>Chưa thực hiện</strong></div>
-                        <div class="sub-modal-cell">Số lần Hướng dẫn: <strong>0 lần</strong></div>
-                        <div class="sub-modal-cell">Tổng số lần đã làm: <strong>0 lần</strong></div>
-                        <div class="sub-modal-cell">Số lần Thực hành: <strong>0 lần</strong></div>
+                        <div class="sub-modal-cell">Gần nhất: <strong>Chưa làm</strong></div>
+                        <div class="sub-modal-cell">Kết quả: <strong>Chưa có phiên làm bài</strong></div>
+                        <div class="sub-modal-cell">Lượt Thực hành: <strong>0 lần</strong></div>
+                        <div class="sub-modal-cell">Lượt Hướng dẫn: <strong>0 lần</strong></div>
+                    </div>
+                </div>
+            `;
+        }
+        if (item.statusCategory === 'done') {
+            const passDetail = item.firstPassAttemptNo === 1 
+                ? 'Đạt ngay lần thực hành 1' 
+                : (item.firstPassAttemptNo > 1 ? `Đạt ở lần thực hành thứ ${item.firstPassAttemptNo}` : 'Đã đạt');
+            return `
+                <div class="sub-modal-item">
+                    <div class="sub-modal-item-top">
+                        <div class="sub-modal-item-title">${escapeHTML(item.labName)}</div>
+                        <span class="status-pill ${item.badgeClass}">${escapeHTML(item.statusLabel)}</span>
+                    </div>
+                    <div class="sub-modal-item-grid2x2">
+                        <div class="sub-modal-cell">Gần nhất: <strong>${escapeHTML(item.lastDateTimeStr)}</strong> (${item.lastDuration})</div>
+                        <div class="sub-modal-cell">Kết quả: <strong>${passDetail}</strong></div>
+                        <div class="sub-modal-cell">Lượt Thực hành: <strong>${item.practiceCount} lần</strong></div>
+                        <div class="sub-modal-cell">Lượt Hướng dẫn: <strong>${item.guideCount} lần</strong></div>
                     </div>
                 </div>
             `;
@@ -3646,9 +5838,9 @@ function renderSubModalLabList(filter) {
                 </div>
                 <div class="sub-modal-item-grid2x2">
                     <div class="sub-modal-cell">Gần nhất: <strong>${escapeHTML(item.lastDateTimeStr)}</strong> (${item.lastDuration})</div>
-                    <div class="sub-modal-cell">Số lần Hướng dẫn: <strong>${item.guideCount} lần</strong></div>
-                    <div class="sub-modal-cell">Tổng số lần đã làm: <strong>${item.totalCount} lần</strong></div>
-                    <div class="sub-modal-cell">Số lần Thực hành: <strong>${item.practiceCount} lần</strong></div>
+                    <div class="sub-modal-cell">Kết quả: <strong>${item.hasUngradedCompletion ? 'Đã nộp, chưa có kết quả chấm' : `Chưa đạt sau ${item.practiceCount} lượt thực hành`}</strong></div>
+                    <div class="sub-modal-cell">Lượt Thực hành: <strong>${item.practiceCount} lần</strong></div>
+                    <div class="sub-modal-cell">Lượt Hướng dẫn: <strong>${item.guideCount} lần</strong></div>
                 </div>
             </div>
         `;
@@ -3659,31 +5851,35 @@ function initSubModalEvents() {
     const modal = document.getElementById('deviceSubModal');
     const closeBtn = document.getElementById('subModalClose');
     if (closeBtn) {
-        closeBtn.addEventListener('click', () => {
-            modal?.classList.remove('visible');
-            modal?.setAttribute('aria-hidden', 'true');
-        });
+        closeBtn.addEventListener('click', closeDeviceSubModal);
     }
 
     document.querySelectorAll('.sub-filter-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            document.querySelectorAll('.sub-filter-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.sub-filter-btn').forEach(b => {
+                b.classList.remove('active');
+                b.setAttribute('aria-pressed', 'false');
+            });
             btn.classList.add('active');
+            btn.setAttribute('aria-pressed', 'true');
             const filter = btn.dataset.subFilter;
             renderSubModalLabList(filter);
         });
     });
 
     document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && modal?.classList.contains('visible')) {
-            modal.classList.remove('visible');
-            modal.setAttribute('aria-hidden', 'true');
+        if (!modal?.classList.contains('visible')) return;
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            closeDeviceSubModal();
+            return;
         }
+        trapDialogFocus(event, modal.querySelector('.sub-modal-card'));
     });
     modal?.addEventListener('click', (event) => {
         if (event.target === modal) {
-            modal.classList.remove('visible');
-            modal.setAttribute('aria-hidden', 'true');
+            event.stopPropagation();
+            closeDeviceSubModal();
         }
     });
 }
@@ -3695,22 +5891,26 @@ function initEvents() {
     });
 
     document.addEventListener('keydown', (event) => {
-        if (event.key !== 'Escape' || !document.body.classList.contains('detail-open')) return;
-        hideLearnerDetail();
-        renderAll();
+        if (event.defaultPrevented || !document.body.classList.contains('detail-open')) return;
+        if (document.getElementById('deviceSubModal')?.classList.contains('visible')) return;
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            hideLearnerDetail();
+            renderAll();
+            return;
+        }
+        trapDialogFocus(event, els.learnerDetailCard);
     });
 
     document.addEventListener('click', (event) => {
         if (!document.body.classList.contains('detail-open')) return;
         const path = event.composedPath();
-        const insideCard = path.some(el => el.classList?.contains('learner-detail-card') || el.classList?.contains('sub-modal-card') || el.getAttribute?.('data-learner'));
+        const insideCard = path.some(el => el.classList?.contains('learner-detail-card') || el.classList?.contains('sub-modal-backdrop') || el.classList?.contains('sub-modal-card') || el.getAttribute?.('data-learner'));
         if (insideCard) return;
         hideLearnerDetail();
         renderAll();
     });
 }
-
-let currentCompareTableTab = 'overview';
 
 function populatePopoverOptions(containerId, values, selectedSet, onCheckChange, searchVal = '', labelFn = null) {
     const container = document.getElementById(containerId);
@@ -3747,7 +5947,7 @@ function populatePopoverOptions(containerId, values, selectedSet, onCheckChange,
                 if (suppressFilterRender) deferredFilterCallback = onCheckChange;
                 else onCheckChange();
             }
-            if (!containerId.startsWith('compare') && !suppressFilterRender) {
+            if (!suppressFilterRender) {
                 state.realtimePage = 1;
                 state.learnerTablePage = 1;
                 state.learnerDetailPage = 1;
@@ -3779,798 +5979,65 @@ function filterSessionsByDate(startStr, endStr) {
     });
 }
 
-function computeMetrics(rows) {
-    const totalSessions = rows.length;
-    const completed = rows.filter(item => item.status === 'Hoàn thành').length;
-    const learners = new Set(rows.map(item => item.learner)).size;
-    const rate = totalSessions ? Math.round((completed / totalSessions) * 1000) / 10 : 0;
-
-    const evaluatedCompletions = rows.filter(item => item.status === 'Hoàn thành' && item.firstTry !== null);
-    const firstTryCount = evaluatedCompletions.filter(item => item.firstTry).length;
-    const firstTryRate = evaluatedCompletions.length ? Math.round((firstTryCount / evaluatedCompletions.length) * 100) : 0;
-
-    const totalDuration = rows.reduce((sum, item) => sum + (item.duration || 0), 0);
-    const avgDuration = totalSessions ? Math.round(totalDuration / totalSessions) : 0;
-
-    return {
-        totalSessions,
-        learners,
-        completed,
-        rate,
-        firstTryRate,
-        evaluatedFirstTry: evaluatedCompletions.length,
-        avgDuration
-    };
-}
-
-function formatDateRangeLabel(startStr, endStr) {
-    if (!startStr && !endStr) return 'Toàn bộ thời gian';
-    if (startStr && endStr) return `${formatDate(startStr)} - ${formatDate(endStr)}`;
-    if (startStr) return `Từ ${formatDate(startStr)}`;
-    return `Đến ${formatDate(endStr)}`;
-}
-
-function formatDateShortRange(startStr, endStr) {
-    if (!startStr || !endStr) return '';
-    const dStart = parseDate(startStr);
-    const dEnd = parseDate(endStr);
-    const sDay = String(dStart.getDate()).padStart(2, '0');
-    const sMonth = String(dStart.getMonth() + 1).padStart(2, '0');
-    const eDay = String(dEnd.getDate()).padStart(2, '0');
-    const eMonth = String(dEnd.getMonth() + 1).padStart(2, '0');
-    return `${sDay}/${sMonth} - ${eDay}/${eMonth}`;
-}
-
-const ALL_METRIC_MAP = {
-    totalSessions: 'Tổng số phiên làm lab',
-    learners: 'Số KTV tham gia',
-    completed: 'Số lab đã hoàn thành',
-    rate: 'Tỷ lệ hoàn thành',
-    firstTryRate: 'Hoàn thành lần đầu',
-    avgDuration: 'Thời gian trung bình'
-};
-
-const compareState = {
-    sortKey: 'name',
-    sortDir: 'asc',
-    selectedMetrics: new Set(Object.keys(ALL_METRIC_MAP)),
-    searchMetric: '',
-    selectedRegions: new Set(),
-    searchRegion: '',
-    selectedKtvs: new Set(),
-    searchKtv: ''
-};
-
-function renderCompareCards(metricsA, metricsB, startA, endA) {
-    const cardsGrid = document.getElementById('compareCardsGrid');
-    if (!cardsGrid) return;
-
-    const shortA = formatDateShortRange(startA, endA);
-    const labelSubtextSuffix = shortA ? ` (Kỳ A: ${shortA})` : ' so với Kỳ A';
-
-    const cardsDef = [
-        {
-            key: 'totalSessions',
-            title: 'Tổng số phiên làm lab',
-            unit: 'phiên',
-            icon: `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>`,
-            isHigherBetter: true
-        },
-        {
-            key: 'learners',
-            title: 'Số KTV tham gia thực hành',
-            unit: 'người',
-            icon: `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>`,
-            isHigherBetter: true
-        },
-        {
-            key: 'completed',
-            title: 'Số bài lab đã hoàn thành',
-            unit: 'bài',
-            icon: `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
-            isHigherBetter: true
-        },
-        {
-            key: 'rate',
-            title: 'Tỷ lệ hoàn thành tổng thể',
-            unit: '%',
-            icon: `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>`,
-            isHigherBetter: true
-        },
-        {
-            key: 'firstTryRate',
-            title: 'Hoàn thành ngay lần đầu',
-            unit: '%',
-            icon: `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>`,
-            isHigherBetter: true
-        },
-        {
-            key: 'avgDuration',
-            title: 'Thời gian làm bài trung bình',
-            unit: 'giây',
-            icon: `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
-            isHigherBetter: false
-        }
-    ];
-
-    cardsGrid.innerHTML = cardsDef.map(card => {
-        const valA = metricsA[card.key];
-        const valB = metricsB[card.key];
-        const diff = Math.round((valB - valA) * 10) / 10;
-
-        let subtext = '';
-        let subClass = 'sub-neutral';
-
-        if (diff > 0) {
-            const isGood = card.isHigherBetter;
-            subClass = isGood ? 'sub-positive' : 'sub-negative';
-            subtext = `${formatMetricDelta(card.unit, card.key, diff)}${labelSubtextSuffix}`;
-        } else if (diff < 0) {
-            const isGood = !card.isHigherBetter;
-            subClass = isGood ? 'sub-positive' : 'sub-negative';
-            subtext = `${formatMetricDelta(card.unit, card.key, diff)}${labelSubtextSuffix}`;
-        } else {
-            subtext = `Bằng với Kỳ A${shortA ? ' (' + shortA + ')' : ''}`;
-        }
-
-        const valFormatted = formatMetricValue(card.unit, card.key, valB);
-
-        return `
-            <div class="compare-stat-card">
-                <div class="compare-card-top">
-                    <div class="compare-card-title">${card.title}</div>
-                    <div class="compare-card-icon">${card.icon}</div>
-                </div>
-                <div class="compare-card-value">${valFormatted}</div>
-                <div class="compare-card-subtext ${subClass}">${subtext}</div>
-                <div class="compare-card-watermark"></div>
-            </div>
-        `;
-    }).join('');
-}
-
-function renderCompareTable(rowsA, rowsB, metricsA, metricsB, startA, endA, startB, endB) {
-    const tableHead = document.getElementById('compareTableHead');
-    const tableBody = document.getElementById('compareTableBody');
-    const tableFoot = document.getElementById('compareTableFoot');
-    if (!tableHead || !tableBody) return;
-
-    const labelA = formatDateRangeLabel(startA, endA);
-    const labelB = formatDateRangeLabel(startB, endB);
-
-    if (currentCompareTableTab === 'overview') {
-        const allMetricEntries = Object.entries(ALL_METRIC_MAP);
-        if (compareState.selectedMetrics.size === 0) {
-            allMetricEntries.forEach(([k]) => compareState.selectedMetrics.add(k));
-        }
-
-        tableHead.innerHTML = `
-            <tr>
-                <th>
-                    <div class="popover-filter-wrapper" id="compareMetricPopoverWrapper">
-                        <button class="sort-button popover-trigger-btn" type="button" data-compare-key="label">
-                            Chỉ số <span class="sort-mark">${compareState.sortKey === 'label' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span>
-                        </button>
-                        <div class="popover-dropdown" id="compareMetricDropdown">
-                            <input type="text" class="popover-search" id="compareMetricSearch" value="${escapeHTML(compareState.searchMetric)}" placeholder="Tìm chỉ số...">
-                            <div class="popover-options" id="compareMetricOptions"></div>
-                            <div class="popover-footer">
-                                <button type="button" class="popover-btn-clear" id="compareMetricClear">Xóa lọc</button>
-                            </div>
-                        </div>
-                    </div>
-                </th>
-                <th><button class="sort-button" type="button" data-compare-key="valA">Kỳ A <span class="sort-mark">${compareState.sortKey === 'valA' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>
-                <th><button class="sort-button" type="button" data-compare-key="valB">Kỳ B <span class="sort-mark">${compareState.sortKey === 'valB' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>
-                <th><button class="sort-button" type="button" data-compare-key="diff">Chênh lệch <span class="sort-mark">${compareState.sortKey === 'diff' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>
-                <th><button class="sort-button" type="button" data-compare-key="pct">Tỷ lệ thay đổi <span class="sort-mark">${compareState.sortKey === 'pct' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>
-            </tr>
-        `;
-
-        populatePopoverOptions('compareMetricOptions', allMetricEntries.map(([k, v]) => v), new Set([...compareState.selectedMetrics].map(k => ALL_METRIC_MAP[k])), () => {
-            const selectedLabels = new Set();
-            document.querySelectorAll('#compareMetricOptions input:checked').forEach(cb => selectedLabels.add(cb.value));
-            compareState.selectedMetrics = new Set(allMetricEntries.filter(([k, v]) => selectedLabels.has(v)).map(([k]) => k));
-            renderCompareResults();
-        }, compareState.searchMetric);
-
-        let metricsDef = [
-            { key: 'totalSessions', label: 'Tổng số phiên làm lab', unit: 'phiên', isHigherBetter: true },
-            { key: 'learners', label: 'Số KTV tham gia', unit: 'người', isHigherBetter: true },
-            { key: 'completed', label: 'Số lab đã hoàn thành', unit: 'bài', isHigherBetter: true },
-            { key: 'rate', label: 'Tỷ lệ hoàn thành', unit: '%', isHigherBetter: true },
-            { key: 'firstTryRate', label: 'Hoàn thành lần đầu', unit: '%', isHigherBetter: true },
-            { key: 'avgDuration', label: 'Thời gian trung bình', unit: 'giây', isHigherBetter: false }
-        ]
-        .filter(m => compareState.selectedMetrics.has(m.key))
-        .map(m => {
-            const valA = metricsA[m.key];
-            const valB = metricsB[m.key];
-            const diff = Math.round((valB - valA) * 10) / 10;
-            const pct = valA > 0 ? Math.round(((valB - valA) / valA) * 100) : (valB > 0 ? 100 : 0);
-            return { ...m, valA, valB, diff, pct };
-        });
-
-        metricsDef.sort((a, b) => compareValues(a[compareState.sortKey || 'label'], b[compareState.sortKey || 'label'], compareState.sortDir));
-
-        tableBody.innerHTML = metricsDef.map(m => {
-            const valAFormatted = formatMetricValue(m.unit, m.key, m.valA);
-            const valBFormatted = formatMetricValue(m.unit, m.key, m.valB);
-
-            let diffText = formatMetricDelta(m.unit, m.key, m.diff);
-            if (m.diff !== 0 && m.unit !== '%' && m.key !== 'avgDuration' && m.unit) diffText += ` ${m.unit}`;
-
-            let pctText = m.pct > 0 ? `+${m.pct}%` : `${m.pct}%`;
-            if (m.diff === 0) {
-                diffText = '0';
-                pctText = '0%';
-            }
-
-            return `
-                <tr>
-                    <td><strong>${m.label}</strong></td>
-                    <td>${valAFormatted}</td>
-                    <td>${valBFormatted}</td>
-                    <td><strong style="color: ${m.diff > 0 ? '#16a34a' : (m.diff < 0 ? '#dc2626' : 'inherit')};">${diffText}</strong></td>
-                    <td><span class="compare-metric-delta ${m.pct > 0 ? (m.isHigherBetter ? 'delta-up' : 'delta-down') : (m.pct < 0 ? (m.isHigherBetter ? 'delta-down' : 'delta-up') : 'delta-neutral')}">${pctText}</span></td>
-                </tr>
-            `;
-        }).join('');
-
-        if (tableFoot) {
-            const totalDiff = rowsB.length - rowsA.length;
-            const totalPct = rowsA.length > 0 ? Math.round(((rowsB.length - rowsA.length) / rowsA.length) * 100) : (rowsB.length > 0 ? 100 : 0);
-
-            tableFoot.innerHTML = `
-                <tr>
-                    <td>Tổng (${metricsDef.length} chỉ số)</td>
-                    <td>${formatNumber.format(rowsA.length)} phiên</td>
-                    <td>${formatNumber.format(rowsB.length)} phiên</td>
-                    <td><strong style="color: ${totalDiff > 0 ? '#16a34a' : (totalDiff < 0 ? '#dc2626' : 'inherit')};">${totalDiff > 0 ? '+' : ''}${totalDiff} phiên</strong></td>
-                    <td><span class="compare-metric-delta ${totalPct > 0 ? 'delta-up' : (totalPct < 0 ? 'delta-down' : 'delta-neutral')}">${totalPct > 0 ? '+' : ''}${totalPct}%</span></td>
-                </tr>
-            `;
-        }
-    } else if (currentCompareTableTab === 'region') {
-        const allRegions = [...new Set(sessions.map(s => s.region || 'Chưa phân vùng'))].sort();
-        if (compareState.selectedRegions.size === 0) {
-            allRegions.forEach(r => compareState.selectedRegions.add(r));
-        }
-
-        tableHead.innerHTML = `
-            <tr>
-                <th>
-                    <div class="popover-filter-wrapper" id="compareRegionPopoverWrapper">
-                        <button class="sort-button popover-trigger-btn" type="button" data-compare-key="name">
-                            Vùng <span class="sort-mark">${compareState.sortKey === 'name' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span>
-                        </button>
-                        <div class="popover-dropdown" id="compareRegionDropdown">
-                            <input type="text" class="popover-search" id="compareRegionSearch" value="${escapeHTML(compareState.searchRegion)}" placeholder="Tìm vùng...">
-                            <div class="popover-options" id="compareRegionOptions"></div>
-                            <div class="popover-footer">
-                                <button type="button" class="popover-btn-clear" id="compareRegionClear">Xóa lọc</button>
-                            </div>
-                        </div>
-                    </div>
-                </th>
-                <th><button class="sort-button" type="button" data-compare-key="totA">Kỳ A <span class="sort-mark">${compareState.sortKey === 'totA' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>
-                <th><button class="sort-button" type="button" data-compare-key="totB">Kỳ B <span class="sort-mark">${compareState.sortKey === 'totB' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>
-                <th><button class="sort-button" type="button" data-compare-key="rateA">Tỷ lệ HT (A) <span class="sort-mark">${compareState.sortKey === 'rateA' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>
-                <th><button class="sort-button" type="button" data-compare-key="rateB">Tỷ lệ HT (B) <span class="sort-mark">${compareState.sortKey === 'rateB' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>
-                <th><button class="sort-button" type="button" data-compare-key="diff">Chênh lệch <span class="sort-mark">${compareState.sortKey === 'diff' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>
-                <th><button class="sort-button" type="button" data-compare-key="pct">Thay đổi (%) <span class="sort-mark">${compareState.sortKey === 'pct' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>
-            </tr>
-        `;
-
-        populatePopoverOptions('compareRegionOptions', allRegions, compareState.selectedRegions, () => {
-            renderCompareResults();
-        }, compareState.searchRegion);
-
-        const mapA = new Map();
-        rowsA.forEach(r => {
-            const reg = r.region || 'Chưa phân vùng';
-            if (!mapA.has(reg)) mapA.set(reg, { total: 0, completed: 0 });
-            const item = mapA.get(reg);
-            item.total++;
-            if (r.status === 'Hoàn thành') item.completed++;
-        });
-
-        const mapB = new Map();
-        rowsB.forEach(r => {
-            const reg = r.region || 'Chưa phân vùng';
-            if (!mapB.has(reg)) mapB.set(reg, { total: 0, completed: 0 });
-            const item = mapB.get(reg);
-            item.total++;
-            if (r.status === 'Hoàn thành') item.completed++;
-        });
-
-        let list = [...new Set([...mapA.keys(), ...mapB.keys()])]
-            .filter(reg => compareState.selectedRegions.has(reg))
-            .map(reg => {
-                const a = mapA.get(reg) || { total: 0, completed: 0 };
-                const b = mapB.get(reg) || { total: 0, completed: 0 };
-                const rateA = a.total ? Math.round((a.completed / a.total) * 100) : 0;
-                const rateB = b.total ? Math.round((b.completed / b.total) * 100) : 0;
-                const diff = b.total - a.total;
-                const pct = a.total > 0 ? Math.round(((b.total - a.total) / a.total) * 100) : (b.total > 0 ? 100 : 0);
-                return { name: reg, totA: a.total, compA: a.completed, totB: b.total, compB: b.completed, rateA, rateB, diff, pct };
-            });
-
-        list.sort((a, b) => compareValues(a[compareState.sortKey || 'name'], b[compareState.sortKey || 'name'], compareState.sortDir));
-
-        if (!list.length) {
-            tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; color: var(--muted);">Không có dữ liệu vùng phù hợp.</td></tr>';
-            if (tableFoot) tableFoot.innerHTML = '';
-            return;
-        }
-
-        tableBody.innerHTML = list.map(item => `
-            <tr>
-                <td><strong title="${escapeHTML(item.name)}">${escapeHTML(getLearnerName(item.name))}</strong></td>
-                <td>${item.totA} phiên (${item.compA} HT)</td>
-                <td>${item.totB} phiên (${item.compB} HT)</td>
-                <td>${item.rateA}%</td>
-                <td>${item.rateB}%</td>
-                <td><strong style="color: ${item.diff > 0 ? '#16a34a' : (item.diff < 0 ? '#dc2626' : 'inherit')};">${item.diff > 0 ? '+' : ''}${item.diff}</strong></td>
-                <td><span class="compare-metric-delta ${item.pct > 0 ? 'delta-up' : (item.pct < 0 ? 'delta-down' : 'delta-neutral')}">${item.pct > 0 ? '+' : ''}${item.pct}%</span></td>
-            </tr>
-        `).join('');
-
-        if (tableFoot) {
-            const sumTotA = list.reduce((s, i) => s + i.totA, 0);
-            const sumCompA = list.reduce((s, i) => s + i.compA, 0);
-            const sumTotB = list.reduce((s, i) => s + i.totB, 0);
-            const sumCompB = list.reduce((s, i) => s + i.compB, 0);
-
-            const avgRateA = sumTotA ? Math.round((sumCompA / sumTotA) * 100) : 0;
-            const avgRateB = sumTotB ? Math.round((sumCompB / sumTotB) * 100) : 0;
-            const sumDiff = sumTotB - sumTotA;
-            const sumPct = sumTotA > 0 ? Math.round(((sumTotB - sumTotA) / sumTotA) * 100) : (sumTotB > 0 ? 100 : 0);
-
-            tableFoot.innerHTML = `
-                <tr>
-                    <td>Tổng (${list.length} Vùng)</td>
-                    <td>${sumTotA} phiên (${sumCompA} HT)</td>
-                    <td>${sumTotB} phiên (${sumCompB} HT)</td>
-                    <td>${avgRateA}%</td>
-                    <td>${avgRateB}%</td>
-                    <td><strong style="color: ${sumDiff > 0 ? '#16a34a' : (sumDiff < 0 ? '#dc2626' : 'inherit')};">${sumDiff > 0 ? '+' : ''}${sumDiff}</strong></td>
-                    <td><span class="compare-metric-delta ${sumPct > 0 ? 'delta-up' : (sumPct < 0 ? 'delta-down' : 'delta-neutral')}">${sumPct > 0 ? '+' : ''}${sumPct}%</span></td>
-                </tr>
-            `;
-        }
-    } else if (currentCompareTableTab === 'learner') {
-        const allKtvs = [...new Set(sessions.map(s => s.learner || 'Unknown'))].sort();
-        if (compareState.selectedKtvs.size === 0) {
-            allKtvs.forEach(k => compareState.selectedKtvs.add(k));
-        }
-
-        tableHead.innerHTML = `
-            <tr>
-                <th>
-                    <div class="popover-filter-wrapper" id="compareKtvPopoverWrapper">
-                        <button class="sort-button popover-trigger-btn" type="button" data-compare-key="name">
-                            Technician (KTV) <span class="sort-mark">${compareState.sortKey === 'name' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span>
-                        </button>
-                        <div class="popover-dropdown" id="compareKtvDropdown">
-                            <input type="text" class="popover-search" id="compareKtvSearch" value="${escapeHTML(compareState.searchKtv)}" placeholder="Tìm KTV...">
-                            <div class="popover-options" id="compareKtvOptions"></div>
-                            <div class="popover-footer">
-                                <button type="button" class="popover-btn-clear" id="compareKtvClear">Xóa lọc</button>
-                            </div>
-                        </div>
-                    </div>
-                </th>
-                <th><button class="sort-button" type="button" data-compare-key="region">Vùng <span class="sort-mark">${compareState.sortKey === 'region' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>
-                <th><button class="sort-button" type="button" data-compare-key="totA">Kỳ A <span class="sort-mark">${compareState.sortKey === 'totA' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>
-                <th><button class="sort-button" type="button" data-compare-key="totB">Kỳ B <span class="sort-mark">${compareState.sortKey === 'totB' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>
-                <th><button class="sort-button" type="button" data-compare-key="compA">HT (A) <span class="sort-mark">${compareState.sortKey === 'compA' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>
-                <th><button class="sort-button" type="button" data-compare-key="compB">HT (B) <span class="sort-mark">${compareState.sortKey === 'compB' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>
-                <th><button class="sort-button" type="button" data-compare-key="diff">Chênh lệch <span class="sort-mark">${compareState.sortKey === 'diff' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>
-                <th><button class="sort-button" type="button" data-compare-key="pct">Thay đổi (%) <span class="sort-mark">${compareState.sortKey === 'pct' ? (compareState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>
-            </tr>
-        `;
-
-        populatePopoverOptions('compareKtvOptions', allKtvs, compareState.selectedKtvs, () => {
-            renderCompareResults();
-        }, compareState.searchKtv);
-
-        const mapA = new Map();
-        rowsA.forEach(r => {
-            const learner = r.learner || 'N/A';
-            if (!mapA.has(learner)) mapA.set(learner, { total: 0, completed: 0, region: r.region });
-            const item = mapA.get(learner);
-            item.total++;
-            if (r.status === 'Hoàn thành') item.completed++;
-        });
-
-        const mapB = new Map();
-        rowsB.forEach(r => {
-            const learner = r.learner || 'N/A';
-            if (!mapB.has(learner)) mapB.set(learner, { total: 0, completed: 0, region: r.region });
-            const item = mapB.get(learner);
-            item.total++;
-            if (r.status === 'Hoàn thành') item.completed++;
-        });
-
-        let list = [...new Set([...mapA.keys(), ...mapB.keys()])]
-            .filter(learner => compareState.selectedKtvs.has(learner))
-            .map(learner => {
-                const a = mapA.get(learner) || { total: 0, completed: 0, region: '' };
-                const b = mapB.get(learner) || { total: 0, completed: 0, region: '' };
-                const region = b.region || a.region || 'N/A';
-                const diff = b.total - a.total;
-                const pct = a.total > 0 ? Math.round(((b.total - a.total) / a.total) * 100) : (b.total > 0 ? 100 : 0);
-                return { name: learner, region, totA: a.total, compA: a.completed, totB: b.total, compB: b.completed, diff, pct };
-            });
-
-        list.sort((a, b) => compareValues(a[compareState.sortKey || 'name'], b[compareState.sortKey || 'name'], compareState.sortDir));
-
-        if (!list.length) {
-            tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center; color: var(--muted);">Không có dữ liệu KTV phù hợp.</td></tr>';
-            if (tableFoot) tableFoot.innerHTML = '';
-            return;
-        }
-
-        tableBody.innerHTML = list.map(item => `
-            <tr>
-                <td><strong title="${escapeHTML(item.name)}">${escapeHTML(getLearnerName(item.name))}</strong></td>
-                <td>${escapeHTML(item.region)}</td>
-                <td>${item.totA}</td>
-                <td>${item.totB}</td>
-                <td>${item.compA}</td>
-                <td>${item.compB}</td>
-                <td><strong style="color: ${item.diff > 0 ? '#16a34a' : (item.diff < 0 ? '#dc2626' : 'inherit')};">${item.diff > 0 ? '+' : ''}${item.diff}</strong></td>
-                <td><span class="compare-metric-delta ${item.pct > 0 ? 'delta-up' : (item.pct < 0 ? 'delta-down' : 'delta-neutral')}">${item.pct > 0 ? '+' : ''}${item.pct}%</span></td>
-            </tr>
-        `).join('');
-
-        if (tableFoot) {
-            const sumTotA = list.reduce((s, i) => s + i.totA, 0);
-            const sumCompA = list.reduce((s, i) => s + i.compA, 0);
-            const sumTotB = list.reduce((s, i) => s + i.totB, 0);
-            const sumCompB = list.reduce((s, i) => s + i.compB, 0);
-            const sumDiff = sumTotB - sumTotA;
-            const sumPct = sumTotA > 0 ? Math.round(((sumTotB - sumTotA) / sumTotA) * 100) : (sumTotB > 0 ? 100 : 0);
-
-            tableFoot.innerHTML = `
-                <tr>
-                    <td>Tổng (${list.length} KTV)</td>
-                    <td>-</td>
-                    <td>${sumTotA}</td>
-                    <td>${sumTotB}</td>
-                    <td>${sumCompA}</td>
-                    <td>${sumCompB}</td>
-                    <td><strong style="color: ${sumDiff > 0 ? '#16a34a' : (sumDiff < 0 ? '#dc2626' : 'inherit')};">${sumDiff > 0 ? '+' : ''}${sumDiff}</strong></td>
-                    <td><span class="compare-metric-delta ${sumPct > 0 ? 'delta-up' : (sumPct < 0 ? 'delta-down' : 'delta-neutral')}">${sumPct > 0 ? '+' : ''}${sumPct}%</span></td>
-                </tr>
-            `;
-        }
-    }
-
-    // Attach click listeners for sorting on table headers
-    tableHead.querySelectorAll('.sort-button[data-compare-key]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const key = btn.dataset.compareKey;
-            if (compareState.sortKey === key) {
-                compareState.sortDir = compareState.sortDir === 'asc' ? 'desc' : 'asc';
-            } else {
-                compareState.sortKey = key;
-                compareState.sortDir = ['totA', 'totB', 'compA', 'compB', 'diff', 'pct', 'valA', 'valB'].includes(key) ? 'desc' : 'asc';
-            }
-            renderCompareResults();
-        });
-    });
-
-    // Attach search & clear event listeners for compare popovers
-    document.getElementById('compareMetricSearch')?.addEventListener('input', (e) => {
-        compareState.searchMetric = e.target.value;
-        const allMetricEntries = Object.entries(ALL_METRIC_MAP);
-        populatePopoverOptions('compareMetricOptions', allMetricEntries.map(([k, v]) => v), new Set([...compareState.selectedMetrics].map(k => ALL_METRIC_MAP[k])), () => {
-            const selectedLabels = new Set();
-            document.querySelectorAll('#compareMetricOptions input:checked').forEach(cb => selectedLabels.add(cb.value));
-            compareState.selectedMetrics = new Set(allMetricEntries.filter(([k, v]) => selectedLabels.has(v)).map(([k]) => k));
-            renderCompareResults();
-        }, compareState.searchMetric);
-    });
-
-    document.getElementById('compareMetricClear')?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        compareState.searchMetric = '';
-        compareState.selectedMetrics = new Set(Object.keys(ALL_METRIC_MAP));
-        renderCompareResults();
-    });
-
-    document.getElementById('compareRegionSearch')?.addEventListener('input', (e) => {
-        compareState.searchRegion = e.target.value;
-        const allRegions = [...new Set(sessions.map(s => s.region || 'Chưa phân vùng'))].sort();
-        populatePopoverOptions('compareRegionOptions', allRegions, compareState.selectedRegions, () => {
-            renderCompareResults();
-        }, compareState.searchRegion);
-    });
-
-    document.getElementById('compareRegionClear')?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        compareState.searchRegion = '';
-        const allRegions = [...new Set(sessions.map(s => s.region || 'Chưa phân vùng'))].sort();
-        compareState.selectedRegions = new Set(allRegions);
-        renderCompareResults();
-    });
-
-    document.getElementById('compareKtvSearch')?.addEventListener('input', (e) => {
-        compareState.searchKtv = e.target.value;
-        const allKtvs = [...new Set(sessions.map(s => s.learner || 'Unknown'))].sort();
-        populatePopoverOptions('compareKtvOptions', allKtvs, compareState.selectedKtvs, () => {
-            renderCompareResults();
-        }, compareState.searchKtv);
-    });
-
-    document.getElementById('compareKtvClear')?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        compareState.searchKtv = '';
-        const allKtvs = [...new Set(sessions.map(s => s.learner || 'Unknown'))].sort();
-        compareState.selectedKtvs = new Set(allKtvs);
-        renderCompareResults();
-    });
-
-    // Re-bind click event for compare popover trigger buttons inside modal header
-    tableHead.querySelectorAll('.popover-filter-wrapper').forEach(wrapper => {
-        const btn = wrapper.querySelector('.popover-trigger-btn');
-        btn?.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const isOpen = wrapper.classList.contains('open');
-            document.querySelectorAll('.popover-filter-wrapper').forEach(w => w.classList.remove('open'));
-            if (!isOpen) wrapper.classList.add('open');
-        });
-        wrapper.querySelector('.popover-dropdown')?.addEventListener('click', (e) => {
-            e.stopPropagation();
-        });
-    });
-}
-
-function renderCompareResults() {
-    const startA = document.getElementById('compareStartA')?.value || '';
-    const endA = document.getElementById('compareEndA')?.value || '';
-    const startB = document.getElementById('compareStartB')?.value || '';
-    const endB = document.getElementById('compareEndB')?.value || '';
-
-    const rowsA = filterSessionsByDate(startA, endA).filter(item => item.mode === 'Thực hành');
-    const rowsB = filterSessionsByDate(startB, endB).filter(item => item.mode === 'Thực hành');
-
-    const metricsA = computeMetrics(rowsA);
-    const metricsB = computeMetrics(rowsB);
-
-    const labelA = formatDateRangeLabel(startA, endA);
-    const labelB = formatDateRangeLabel(startB, endB);
-
-    const dataNotice = document.getElementById('compareDataNotice');
-    if (dataNotice) {
-        const emptyPeriods = [];
-        if (!rowsA.length) emptyPeriods.push(`Kỳ A (${labelA})`);
-        if (!rowsB.length) emptyPeriods.push(`Kỳ B (${labelB})`);
-        dataNotice.hidden = emptyPeriods.length === 0;
-        dataNotice.textContent = emptyPeriods.length
-            ? `${emptyPeriods.join(' và ')} chưa có dữ liệu; các chỉ số tương ứng được hiển thị là 0.`
-            : '';
-    }
-
-    const legendContainer = document.getElementById('compareLegend');
-    if (legendContainer) {
-        legendContainer.innerHTML = `
-            <span class="legend-item"><span class="period-dot dot-a"></span> Kỳ A (${escapeHTML(labelA)})</span>
-            <span class="legend-item"><span class="period-dot dot-b"></span> Kỳ B (${escapeHTML(labelB)})</span>
-        `;
-    }
-
-    // 1. Render Section 1 Views (Cards & Bars)
-    renderCompareCards(metricsA, metricsB, startA, endA);
-
-    const metricsDef = [
-        { key: 'totalSessions', label: 'Tổng số phiên làm lab', unit: 'phiên', isHigherBetter: true },
-        { key: 'learners', label: 'Số KTV tham gia', unit: 'người', isHigherBetter: true },
-        { key: 'completed', label: 'Số lab đã hoàn thành', unit: 'bài', isHigherBetter: true },
-        { key: 'rate', label: 'Tỷ lệ hoàn thành', unit: '%', isHigherBetter: true },
-        { key: 'firstTryRate', label: 'Hoàn thành lần đầu', unit: '%', isHigherBetter: true },
-        { key: 'avgDuration', label: 'Thời gian trung bình', unit: 'giây', isHigherBetter: false }
-    ];
-
-    const barsGrid = document.getElementById('compareBarsGrid');
-    if (barsGrid) {
-        barsGrid.innerHTML = metricsDef.map(m => {
-            const valA = metricsA[m.key];
-            const valB = metricsB[m.key];
-            const maxVal = Math.max(valA, valB, 1);
-
-            const widthA = valA ? Math.max(8, Math.round((valA / maxVal) * 100)) : 0;
-            const widthB = valB ? Math.max(8, Math.round((valB / maxVal) * 100)) : 0;
-
-            const diff = Math.round((valB - valA) * 10) / 10;
-            let pct = valA > 0 ? Math.round(((valB - valA) / valA) * 100) : (valB > 0 ? 100 : 0);
-
-            let deltaHtml = '';
-            if (diff > 0) {
-                const isGood = m.isHigherBetter;
-                const cls = isGood ? 'delta-up' : 'delta-down';
-                const sign = '+';
-                deltaHtml = `<span class="compare-metric-delta ${cls}">↑ ${formatMetricDelta(m.unit, m.key, diff)} (${sign}${pct}%)</span>`;
-            } else if (diff < 0) {
-                const isGood = !m.isHigherBetter;
-                const cls = isGood ? 'delta-up' : 'delta-down';
-                deltaHtml = `<span class="compare-metric-delta ${cls}">↓ ${formatMetricDelta(m.unit, m.key, diff)} (${pct}%)</span>`;
-            } else {
-                deltaHtml = `<span class="compare-metric-delta delta-neutral">Không thay đổi</span>`;
-            }
-
-            const valAFormatted = formatMetricValue(m.unit, m.key, valA);
-            const valBFormatted = formatMetricValue(m.unit, m.key, valB);
-
-            return `
-                <div class="compare-metric-block">
-                    <div class="compare-metric-header">
-                        <span class="compare-metric-title">${m.label}</span>
-                        ${deltaHtml}
-                    </div>
-                    <div class="compare-bar-pair">
-                        <div class="compare-bar-row">
-                            <span class="compare-bar-label">Kỳ A</span>
-                            <div class="compare-bar-track">
-                                <div class="compare-bar-fill fill-a" style="width: ${widthA}%;">${valA > 0 ? valAFormatted : ''}</div>
-                            </div>
-                            <span class="compare-bar-val">${valAFormatted}</span>
-                        </div>
-                        <div class="compare-bar-row">
-                            <span class="compare-bar-label">Kỳ B</span>
-                            <div class="compare-bar-track">
-                                <div class="compare-bar-fill fill-b" style="width: ${widthB}%;">${valB > 0 ? valBFormatted : ''}</div>
-                            </div>
-                            <span class="compare-bar-val">${valBFormatted}</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-    }
-
-    // 2. Render Section 2 Detailed Table
-    renderCompareTable(rowsA, rowsB, metricsA, metricsB, startA, endA, startB, endB);
-}
-
-function setDefaultComparisonDates() {
-    const startAInput = document.getElementById('compareStartA');
-    const endAInput = document.getElementById('compareEndA');
-    const startBInput = document.getElementById('compareStartB');
-    const endBInput = document.getElementById('compareEndB');
-    if (!startAInput || !endAInput || !startBInput || !endBInput) return;
-
-    const today = new Date();
-    const currentYear = today.getFullYear();
-    const currentMonth = today.getMonth();
-
-    startAInput.value = toDateKey(new Date(currentYear, currentMonth - 1, 1));
-    endAInput.value = toDateKey(new Date(currentYear, currentMonth, 0));
-    startBInput.value = toDateKey(new Date(currentYear, currentMonth, 1));
-    endBInput.value = toDateKey(new Date(currentYear, currentMonth + 1, 0));
-}
-
-function initializeInlineComparison() {
-    const comparison = document.getElementById('compareModal');
-    if (activeDashboardView !== 'overview' || !comparison?.classList.contains('compare-inline')) return;
-
-    const hasDates = document.getElementById('compareStartA')?.value
-        && document.getElementById('compareEndA')?.value
-        && document.getElementById('compareStartB')?.value
-        && document.getElementById('compareEndB')?.value;
-    if (!hasDates) setDefaultComparisonDates();
-    renderCompareResults();
-}
-
-function initCompareModal() {
-    const compareBtn = document.getElementById('compareBtn');
-    const compareModal = document.getElementById('compareModal');
-    const compareModalClose = document.getElementById('compareModalClose');
-    const compareApplyBtn = document.getElementById('compareApplyBtn');
-    const compareResetBtn = document.getElementById('compareResetBtn');
-
-    const startAInput = document.getElementById('compareStartA');
-    const endAInput = document.getElementById('compareEndA');
-    const startBInput = document.getElementById('compareStartB');
-    const endBInput = document.getElementById('compareEndB');
-
-    // Bind Section 2 Table Tabs (Overview vs Region vs Learner)
-    document.querySelectorAll('.compare-table-tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.compare-table-tab-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-
-            currentCompareTableTab = btn.dataset.tableTab || 'overview';
-            renderCompareResults();
-        });
-    });
-
-    compareBtn?.addEventListener('click', () => {
-        if (!startAInput.value || !endAInput.value || !startBInput.value || !endBInput.value) {
-            setDefaultComparisonDates();
-        }
-        compareModal?.classList.add('visible');
-        compareModal?.setAttribute('aria-hidden', 'false');
-        renderCompareResults();
-    });
-
-    compareModalClose?.addEventListener('click', () => {
-        compareModal?.classList.remove('visible');
-        compareModal?.setAttribute('aria-hidden', 'true');
-    });
-
-    compareApplyBtn?.addEventListener('click', () => {
-        renderCompareResults();
-    });
-
-    compareResetBtn?.addEventListener('click', () => {
-        setDefaultComparisonDates();
-        renderCompareResults();
-    });
-
-    compareModal?.addEventListener('click', (e) => {
-        if (e.target === compareModal && !compareModal.classList.contains('compare-inline')) {
-            compareModal.classList.remove('visible');
-            compareModal.setAttribute('aria-hidden', 'true');
-        }
-    });
-
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && compareModal?.classList.contains('visible')) {
-            compareModal.classList.remove('visible');
-            compareModal.setAttribute('aria-hidden', 'true');
-        }
-    });
-}
-
 const DASHBOARD_VIEWS = {
     overview: {
-        eyebrow: 'Dashboard home',
+        eyebrow: 'Tổng quan vận hành',
         title: 'Dashboard giám sát thực hành KTV',
         subtitle: 'Theo dõi hoạt động, tiến độ và chất lượng thực hành'
     },
     instructors: {
-        eyebrow: 'Instructor workspace',
+        eyebrow: 'Không gian giảng viên',
         title: 'Không gian theo dõi dành cho giảng viên',
         subtitle: 'Theo dõi bài nộp và trạng thái thực hành của KTV'
     },
     analytics: {
         eyebrow: 'Báo cáo vận hành',
-        title: 'Báo cáo chi tiết',
+        title: 'Báo cáo chi nhánh',
         subtitle: 'Ma trận thiết bị và bài lab theo từng Khu vực/CNx'
     },
+    class_matrix: {
+        eyebrow: 'Báo cáo đào tạo',
+        title: 'Báo cáo KTV theo lớp',
+        subtitle: 'Ma trận tiến độ thực hành bài lab theo từng Kỹ thuật viên'
+    },
     technicians: {
-        eyebrow: 'Technician performance',
+        eyebrow: 'Hiệu suất kỹ thuật viên',
         title: 'Thống kê kỹ thuật viên',
         subtitle: 'Tra cứu lịch sử, thiết bị và kết quả thực hành theo KTV'
+    },
+    roster: {
+        eyebrow: 'Quản trị nhân sự',
+        title: 'Quản lý KTV',
+        subtitle: 'Import, theo dõi và quản lý danh sách kỹ thuật viên'
+    },
+    classes: {
+        eyebrow: 'Quản trị đào tạo',
+        title: 'Quản lý lớp học',
+        subtitle: 'Đăng ký lớp, chọn KTV và phân giao thiết bị thực hành'
     },
 };
 
 let activeDashboardView = 'overview';
 
-function initDashboardViewRouting() {
-    const requestedView = new URLSearchParams(window.location.search).get('view') || 'overview';
-    activeDashboardView = Object.hasOwn(DASHBOARD_VIEWS, requestedView) ? requestedView : 'overview';
+function switchDashboardView(viewName, { updateHistory = true, focusHeading = true } = {}) {
+    if (!Object.hasOwn(DASHBOARD_VIEWS, viewName)) return;
+    document.querySelectorAll('.header-filter-popover.open').forEach(wrapper => closeHeaderFilterPopover(wrapper));
+    activeDashboardView = viewName;
+    if (updateHistory) {
+        const url = new URL(window.location.href);
+        if (url.searchParams.get('view') !== viewName) {
+            url.searchParams.set('view', viewName);
+            window.history.pushState({}, '', url.toString());
+        }
+    }
 
     const masterContainer = document.querySelector('.dashboard-master-container');
-    const masterViews = new Set(['overview', 'instructors', 'analytics']);
+    const masterViews = new Set(['overview', 'instructors', 'analytics', 'class_matrix']);
     if (masterContainer) masterContainer.hidden = !masterViews.has(activeDashboardView);
 
     document.querySelectorAll('.dashboard-page-view').forEach(section => {
         section.hidden = section.dataset.pageView !== activeDashboardView;
     });
-
-    const comparisonWorkspace = document.getElementById('comparisonWorkspace');
-    const comparison = document.getElementById('compareModal');
-    if (comparisonWorkspace && comparison) {
-        comparisonWorkspace.appendChild(comparison);
-        comparison.classList.add('compare-inline');
-        comparison.classList.remove('visible');
-        comparison.setAttribute('aria-hidden', String(activeDashboardView !== 'overview'));
-    }
 
     const viewCopy = DASHBOARD_VIEWS[activeDashboardView];
     const eyebrow = document.getElementById('pageEyebrow');
@@ -4581,17 +6048,94 @@ function initDashboardViewRouting() {
     if (subtitle) subtitle.textContent = viewCopy.subtitle;
     document.title = `${viewCopy.title} | FTC`;
 
-    const comparePageLink = document.getElementById('comparePageLink');
-    if (comparePageLink) {
-        comparePageLink.href = '?view=overview#comparisonWorkspace';
-        comparePageLink.textContent = 'So sánh thời gian';
+    document.querySelectorAll('.sidebar-link[data-dashboard-view]').forEach(link => {
+        const isActive = link.dataset.dashboardView === activeDashboardView;
+        link.classList.toggle('active', isActive);
+        if (isActive) link.setAttribute('aria-current', 'page');
+        else link.removeAttribute('aria-current');
+    });
+
+    // Update matrix tab toggle buttons active state
+    document.querySelectorAll('[data-matrix-tab-target]').forEach(btn => {
+        const isActive = btn.dataset.matrixTabTarget === activeDashboardView;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-pressed', String(isActive));
+    });
+
+    renderAll();
+    if (activeDashboardView === 'roster') {
+        setDataSourceLabel('Hồ sơ KTV từ cơ sở dữ liệu');
+        if (!state.rosterLoaded) loadRosterList();
+    } else if (activeDashboardView === 'classes') {
+        setDataSourceLabel('Lớp học và bài giao từ cơ sở dữ liệu');
+        loadTrainingClasses();
+    } else if (state.isAdmin) {
+        setDataSourceLabel(state.dashboardDataLoaded ? 'Dữ liệu vận hành đã đồng bộ' : 'Đang đồng bộ dữ liệu vận hành');
+        if (!state.dashboardDataLoaded) {
+            loadDashboardFromApi().then(() => {
+                if (['instructors', 'class_matrix', 'analytics'].includes(activeDashboardView) && !state.assignmentsLoaded) {
+                    ensureTrainingAssignmentsLoaded().catch(error => {
+                        console.warn('Không đồng bộ được tiến độ lớp.', error);
+                        showToast('Chưa thể đồng bộ dữ liệu tiến độ lớp.', 'error');
+                    });
+                }
+            });
+        } else if (['instructors', 'class_matrix', 'analytics'].includes(activeDashboardView) && !state.assignmentsLoaded) {
+            ensureTrainingAssignmentsLoaded().catch(error => {
+                console.warn('Không đồng bộ được tiến độ lớp.', error);
+                showToast('Chưa thể đồng bộ dữ liệu tiến độ lớp.', 'error');
+            });
+        }
     }
+    if (focusHeading) window.requestAnimationFrame(() => document.getElementById('pageTitle')?.focus({ preventScroll: true }));
+}
+
+function initDashboardViewRouting() {
+    let requestedView = new URLSearchParams(window.location.search).get('view') || 'overview';
+    if (requestedView === 'instructors') requestedView = 'class_matrix';
+    activeDashboardView = Object.hasOwn(DASHBOARD_VIEWS, requestedView) ? requestedView : 'overview';
+
+    const masterContainer = document.querySelector('.dashboard-master-container');
+    const masterViews = new Set(['overview', 'analytics', 'class_matrix']);
+    if (masterContainer) masterContainer.hidden = !masterViews.has(activeDashboardView);
+
+    document.querySelectorAll('.dashboard-page-view').forEach(section => {
+        section.hidden = section.dataset.pageView !== activeDashboardView;
+    });
+
+    const viewCopy = DASHBOARD_VIEWS[activeDashboardView];
+    const eyebrow = document.getElementById('pageEyebrow');
+    const title = document.getElementById('pageTitle');
+    const subtitle = document.getElementById('pageSubtitle');
+    if (eyebrow) eyebrow.textContent = viewCopy.eyebrow;
+    if (title) title.textContent = viewCopy.title;
+    if (subtitle) subtitle.textContent = viewCopy.subtitle;
+    document.title = `${viewCopy.title} | FTC`;
 
     document.querySelectorAll('.sidebar-link[data-dashboard-view]').forEach(link => {
         const isActive = link.dataset.dashboardView === activeDashboardView;
         link.classList.toggle('active', isActive);
         if (isActive) link.setAttribute('aria-current', 'page');
         else link.removeAttribute('aria-current');
+
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const view = link.dataset.dashboardView;
+            if (view) switchDashboardView(view);
+        });
+    });
+
+    document.querySelectorAll('[data-matrix-tab-target]').forEach(btn => {
+        const isActive = btn.dataset.matrixTabTarget === activeDashboardView;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-pressed', String(isActive));
+    });
+
+    window.addEventListener('popstate', () => {
+        const currentView = new URLSearchParams(window.location.search).get('view') || 'overview';
+        if (Object.hasOwn(DASHBOARD_VIEWS, currentView) && currentView !== activeDashboardView) {
+            switchDashboardView(currentView, { updateHistory: false, focusHeading: true });
+        }
     });
 }
 
@@ -4599,24 +6143,1349 @@ function initSidebarNavigation() {
     const page = document.getElementById('appPage');
     const toggle = document.getElementById('sidebarToggle');
 
+    const prefersCollapsed = safeStorageGet('ftc-dashboard-sidebar-collapsed') === 'true';
+    if (prefersCollapsed && window.matchMedia('(min-width: 961px)').matches) {
+        page?.classList.add('sidebar-collapsed');
+        toggle?.setAttribute('aria-expanded', 'false');
+        toggle?.setAttribute('aria-label', 'Mở rộng thanh điều hướng');
+    }
+
     toggle?.addEventListener('click', () => {
         const collapsed = page?.classList.toggle('sidebar-collapsed') || false;
         toggle.setAttribute('aria-expanded', String(!collapsed));
         toggle.setAttribute('aria-label', collapsed ? 'Mở rộng thanh điều hướng' : 'Thu gọn thanh điều hướng');
+        safeStorageSet('ftc-dashboard-sidebar-collapsed', String(collapsed));
     });
+}
+
+function initDashboardExperience() {
+    document.getElementById('refreshDashboardBtn')?.addEventListener('click', async () => {
+        if (activeDashboardView === 'classes') {
+            setRefreshButtonBusy(true);
+            const succeeded = await loadTrainingClasses();
+            setRefreshButtonBusy(false);
+            showToast(succeeded ? 'Danh sách lớp đã được cập nhật.' : 'Không thể làm mới danh sách lớp.', succeeded ? 'success' : 'error');
+            return;
+        }
+        if (activeDashboardView === 'roster') {
+            setRefreshButtonBusy(true);
+            const succeeded = await loadRosterList();
+            if (state.rosterTab === 'history') await loadRosterHistory();
+            setRefreshButtonBusy(false);
+            showToast(succeeded ? 'Danh sách KTV đã được cập nhật.' : 'Không thể làm mới danh sách KTV.', succeeded ? 'success' : 'error');
+            return;
+        }
+        if (!state.dashboardDataLoaded) {
+            const succeeded = await loadDashboardFromApi();
+            showToast(succeeded ? 'Dashboard đã được cập nhật.' : 'Không thể tải dữ liệu dashboard.', succeeded ? 'success' : 'error');
+            return;
+        }
+        await refreshDashboardData({ force: true, announce: true });
+    });
+
+    window.addEventListener('offline', () => {
+        setDashboardSyncState('offline', state.lastSuccessfulRefreshAt
+            ? formatDashboardSyncDetail(state.lastSuccessfulRefreshAt)
+            : 'Thiết bị đang ngoại tuyến');
+    });
+    window.addEventListener('online', () => {
+        setDashboardSyncState('syncing', 'Đã có kết nối, đang đồng bộ lại');
+        if (activeDashboardView === 'roster') loadRosterList();
+        else if (activeDashboardView === 'classes') loadTrainingClasses();
+        else if (state.dashboardDataLoaded) refreshDashboardData({ force: true });
+        else if (state.isAdmin) loadDashboardFromApi();
+    });
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && state.dashboardDataLoaded && !['roster', 'classes'].includes(activeDashboardView)) refreshDashboardData();
+    });
+}
+
+/* ============================================================
+   Roster (Quản lý KTV) — Admin
+   ============================================================ */
+
+function activateRosterTab(tabName, { focus = false } = {}) {
+    state.rosterTab = tabName;
+    const tabs = [...document.querySelectorAll('[data-roster-tab]')];
+    tabs.forEach(tab => {
+        const isActive = tab.dataset.rosterTab === tabName;
+        tab.classList.toggle('active', isActive);
+        tab.setAttribute('aria-selected', String(isActive));
+        tab.tabIndex = isActive ? 0 : -1;
+        if (isActive && focus) tab.focus();
+    });
+    const panels = {
+        list: document.getElementById('rosterListPanel'),
+        import: document.getElementById('rosterImportPanel'),
+        history: document.getElementById('rosterHistoryPanel')
+    };
+    Object.entries(panels).forEach(([name, panel]) => {
+        if (panel) panel.hidden = name !== tabName;
+    });
+    if (tabName === 'list' && !state.rosterLoaded) loadRosterList();
+    if (tabName === 'history' && !state.rosterHistoryLoaded) loadRosterHistory();
+}
+
+function initRoster() {
+    if (state.rosterInitialized) return;
+    state.rosterInitialized = true;
+
+    document.querySelectorAll('[data-roster-tab]').forEach(btn => {
+        btn.addEventListener('click', () => activateRosterTab(btn.dataset.rosterTab));
+        btn.addEventListener('keydown', event => {
+            const tabs = [...document.querySelectorAll('[data-roster-tab]')];
+            const currentIndex = tabs.indexOf(btn);
+            let nextIndex = currentIndex;
+            if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % tabs.length;
+            else if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+            else if (event.key === 'Home') nextIndex = 0;
+            else if (event.key === 'End') nextIndex = tabs.length - 1;
+            else return;
+            event.preventDefault();
+            activateRosterTab(tabs[nextIndex].dataset.rosterTab, { focus: true });
+        });
+    });
+
+    const searchInput = document.getElementById('rosterSearchInput');
+    if (searchInput) {
+        let debounce;
+        searchInput.addEventListener('input', () => {
+            clearTimeout(debounce);
+            debounce = setTimeout(() => {
+                state.rosterSearch = searchInput.value;
+                state.rosterPage = 1;
+                loadRosterList();
+            }, 300);
+        });
+    }
+
+    document.getElementById('rosterStatusFilter')?.addEventListener('change', e => {
+        state.rosterStatusFilter = e.target.value;
+        state.rosterPage = 1;
+        loadRosterList();
+    });
+
+    const uploadZone = document.getElementById('rosterUploadZone');
+    const fileInput = document.getElementById('rosterFileInput');
+    if (uploadZone && fileInput) {
+        uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+        uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+        uploadZone.addEventListener('drop', e => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            const file = e.dataTransfer?.files?.[0];
+            if (file) handleRosterFile(file);
+        });
+        document.getElementById('rosterFileBtn')?.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files?.[0]) handleRosterFile(fileInput.files[0]);
+        });
+    }
+
+    document.getElementById('rosterConfirmImportBtn')?.addEventListener('click', confirmRosterImport);
+    document.getElementById('rosterCancelImportBtn')?.addEventListener('click', cancelRosterImport);
+
+    document.getElementById('rosterEditClose')?.addEventListener('click', closeRosterEdit);
+    document.getElementById('rosterEditCancelBtn')?.addEventListener('click', closeRosterEdit);
+    document.getElementById('rosterEditBackdrop')?.addEventListener('click', e => {
+        if (e.target === e.currentTarget) closeRosterEdit();
+    });
+    document.getElementById('rosterEditBackdrop')?.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            closeRosterEdit();
+            return;
+        }
+        trapDialogFocus(event, document.getElementById('rosterEditDialog'));
+    });
+    document.getElementById('rosterEditForm')?.addEventListener('submit', submitRosterEdit);
+    document.getElementById('rosterEditRegionId')?.addEventListener('change', updateRosterEditBranch);
+
+    document.getElementById('rosterTableBody')?.addEventListener('click', e => {
+        if (e.target.closest('[data-roster-retry]')) {
+            loadRosterList();
+            return;
+        }
+        const btn = e.target.closest('.roster-edit-btn');
+        if (btn?.dataset.employeeId) openRosterEdit(btn.dataset.employeeId);
+    });
+
+    document.getElementById('rosterPagination')?.addEventListener('click', e => {
+        const btn = e.target.closest('.roster-page-btn');
+        if (btn && !btn.disabled && btn.dataset.page) rosterGoPage(Number(btn.dataset.page));
+    });
+}
+
+function rosterFilterQuerystring() {
+    const params = new URLSearchParams();
+    params.set('status', state.rosterStatusFilter);
+    if (state.rosterSearch) params.set('search', state.rosterSearch);
+    return params.toString();
+}
+
+async function loadRosterList() {
+    const requestSequence = ++state.rosterRequestSequence;
+    state.rosterLoaded = false;
+    const tbody = document.getElementById('rosterTableBody');
+    if (tbody) {
+        tbody.setAttribute('aria-busy', 'true');
+        tbody.innerHTML = '<tr class="table-loading-row"><td colspan="9"><div class="table-state"><span class="table-state-spinner" aria-hidden="true"></span><span>Đang tải danh sách KTV…</span></div></td></tr>';
+    }
+    if (activeDashboardView === 'roster') setDashboardSyncState('syncing', 'Đang tải hồ sơ KTV');
+    try {
+        const params = new URLSearchParams();
+        params.set('status', state.rosterStatusFilter);
+        params.set('page', String(state.rosterPage));
+        if (state.rosterSearch) params.set('search', state.rosterSearch);
+        const resp = await fetch(`${API_BASE_URL}/roster/list?${params}`);
+        if (!resp.ok) {
+            let detail = '';
+            try {
+                const body = await resp.json();
+                detail = body?.error?.message || body?.message || resp.statusText || '';
+            } catch (_e) { /* ignore */ }
+            const err = new Error(`Failed to load roster: HTTP ${resp.status}`);
+            err.status = resp.status;
+            err.serverMessage = detail;
+            throw err;
+        }
+        const json = await resp.json();
+        if (requestSequence !== state.rosterRequestSequence) return false;
+        const data = json.data || {};
+        state.rosterItems = data.items || [];
+        state.rosterStats = data.stats || null;
+        state.rosterTotal = data.total || 0;
+        state.rosterLoaded = true;
+        renderRosterList();
+        if (activeDashboardView === 'roster') {
+            state.lastSuccessfulRefreshAt = new Date();
+            setDashboardSyncState('ready');
+        }
+        return true;
+    } catch (err) {
+        if (requestSequence !== state.rosterRequestSequence) return false;
+        console.error('loadRosterList error:', err);
+        const status = err?.status;
+        const hint = status === 401 || status === 403
+            ? 'Bạn không có quyền xem danh sách KTV.'
+            : (status === 500 ? 'Máy chủ báo lỗi khi xử lý yêu cầu.' : 'Vui lòng kiểm tra kết nối và thử lại.');
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="9"><div class="table-state is-error"><strong>Không tải được danh sách KTV</strong><span>${escapeHTML(hint)}${status ? ` (HTTP ${status})` : ''}</span><button type="button" class="button secondary" data-roster-retry>Thử lại</button></div></td></tr>`;
+        }
+        if (activeDashboardView === 'roster') setDashboardSyncState(navigator.onLine ? 'stale' : 'offline', 'Không thể tải hồ sơ KTV');
+        return false;
+    } finally {
+        if (requestSequence === state.rosterRequestSequence) tbody?.removeAttribute('aria-busy');
+    }
+}
+
+async function loadRosterRegions() {
+    if (state.rosterRegionsLoaded) return;
+    const resp = await fetch(`${API_BASE_URL}/roster/regions`);
+    if (!resp.ok) throw new Error('Không tải được danh mục khu vực.');
+    const json = await resp.json();
+    state.rosterRegions = json.data?.items || [];
+    state.rosterRegionsLoaded = true;
+}
+
+function renderRosterRegionOptions(selectedRegionId = '') {
+    const select = document.getElementById('rosterEditRegionId');
+    if (!select) return;
+    const options = state.rosterRegions.map(region => {
+        const id = region.region_id || region.regionId || '';
+        const name = region.region_name || region.regionName || region.region_code || region.regionCode || '';
+        const branch = region.branch_name || region.branchName || 'Chưa có chi nhánh';
+        const code = region.region_code || region.regionCode || '';
+        const label = `${name} · ${branch}${code ? ` (${code})` : ''}`;
+        return `<option value="${escapeHTML(id)}">${escapeHTML(label)}</option>`;
+    }).join('');
+    select.innerHTML = '<option value="">Chưa phân vùng</option>' + options;
+    select.value = selectedRegionId || '';
+}
+
+function updateRosterEditBranch() {
+    const regionId = document.getElementById('rosterEditRegionId')?.value || '';
+    const region = state.rosterRegions.find(item => (item.region_id || item.regionId) === regionId);
+    const branchInput = document.getElementById('rosterEditBranchName');
+    if (branchInput) branchInput.value = region?.branch_name || region?.branchName || '';
+}
+
+function renderRosterList() {
+    renderRosterTableBody();
+    renderRosterPagination();
+}
+
+function renderRosterTableBody() {
+    const tbody = document.getElementById('rosterTableBody');
+    if (!tbody) return;
+    if (!state.rosterItems.length) {
+        tbody.innerHTML = '<tr><td colspan="9"><div class="table-state"><strong>Không tìm thấy hồ sơ KTV</strong><span>Hãy thử thay đổi từ khóa hoặc bộ lọc trạng thái.</span></div></td></tr>';
+        return;
+    }
+    tbody.innerHTML = state.rosterItems.map(item => {
+        const terminated = item.is_terminated || item.isTerminated;
+        const badge = terminated ? '<span class="badge-terminated">Đã nghỉ</span>' : '<span class="badge-active">Đang công tác</span>';
+        const rawEmployeeId = item.employee_id || item.employeeId || '';
+        const eid = escapeHTML(rawEmployeeId);
+        const employeeCell = eid || '<span title="Có thể bổ sung qua lần import hồ sơ nhân sự sau">Chưa cập nhật</span>';
+        const region = escapeHTML(item.region_name || item.regionName || item.dashboard_region || item.dashboardRegion || 'Chưa phân vùng');
+        const branch = escapeHTML(item.branch_name || item.branchName || '—');
+        const editButton = rawEmployeeId
+            ? `<button type="button" class="button secondary roster-edit-btn" data-employee-id="${eid}" aria-label="Sửa hồ sơ ${escapeHTML(item.display_name || item.displayName || rawEmployeeId)}">Sửa</button>`
+            : '<button type="button" class="button secondary roster-edit-btn" title="Bổ sung mã nhân viên bằng chức năng import hồ sơ" disabled>Chờ MNV</button>';
+        return `<tr>
+            <td>${employeeCell}</td>
+            <td>${escapeHTML(item.display_name || item.displayName || '')}</td>
+            <td>${escapeHTML(item.email || '')}</td>
+            <td>${escapeHTML(item.job_title || item.jobTitle || '')}</td>
+            <td>${region}</td>
+            <td>${branch}</td>
+            <td>${escapeHTML(item.class_code || item.classCode || '')}</td>
+            <td>${badge}</td>
+            <td>${editButton}</td>
+        </tr>`;
+    }).join('');
+}
+
+function renderRosterPagination() {
+    const el = document.getElementById('rosterPagination');
+    if (!el) return;
+    const totalPages = Math.max(1, Math.ceil(state.rosterTotal / 50));
+    el.innerHTML = `
+        <span>Trang ${state.rosterPage} / ${totalPages} — ${formatNumber.format(state.rosterTotal)} kết quả</span>
+        <div class="roster-pagination-btns">
+            <button type="button" class="roster-page-btn" data-page="${state.rosterPage - 1}" aria-label="Trang trước" ${state.rosterPage <= 1 ? 'disabled' : ''}>Trước</button>
+            <button type="button" class="roster-page-btn" data-page="${state.rosterPage + 1}" aria-label="Trang sau" ${state.rosterPage >= totalPages ? 'disabled' : ''}>Sau</button>
+        </div>
+    `;
+}
+
+function rosterGoPage(page) {
+    state.rosterPage = page;
+    loadRosterList();
+}
+
+/* --- Import --- */
+
+function handleRosterFile(file) {
+    if (!file.name.toLowerCase().endsWith('.xlsx')) {
+        showToast('Vui lòng chọn đúng file Excel định dạng .xlsx.', 'error');
+        return;
+    }
+    state.rosterImportFile = file;
+    state.rosterPreviewData = null;
+    const info = document.getElementById('rosterFileInfo');
+    if (info) {
+        info.hidden = false;
+        info.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+    }
+    document.getElementById('rosterPreview').hidden = true;
+    document.getElementById('rosterImportResult').hidden = true;
+    document.getElementById('rosterImportActions').hidden = false;
+    const importButton = document.getElementById('rosterConfirmImportBtn');
+    if (importButton) {
+        importButton.disabled = true;
+        importButton.textContent = 'Đang kiểm tra file...';
+    }
+    doRosterPreview(file);
+}
+
+async function doRosterPreview(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('dry_run', 'true');
+    try {
+        const resp = await fetch(`${API_BASE_URL}/roster/import`, { method: 'POST', body: formData });
+        const json = await resp.json().catch(() => ({}));
+        if (!resp.ok) throw new Error(json.error?.message || `Preview thất bại (HTTP ${resp.status})`);
+        if (state.rosterImportFile !== file) return;
+        const data = json.data || {};
+        state.rosterPreviewData = data;
+        renderRosterPreview(data);
+        const importButton = document.getElementById('rosterConfirmImportBtn');
+        if (importButton) {
+            const canImport = data.canImport !== false
+                && data.can_import !== false
+                && Number(data.totalRows || data.total_rows || 0) > 0
+                && Number(data.error_count || data.errorCount || 0) === 0;
+            importButton.disabled = !canImport;
+            importButton.textContent = canImport ? 'Import danh sách KTV' : 'File chưa hợp lệ';
+        }
+    } catch (err) {
+        if (state.rosterImportFile !== file) return;
+        state.rosterPreviewData = null;
+        console.error('Preview error:', err);
+        renderRosterPreviewFailure(err.message || String(err));
+        const importButton = document.getElementById('rosterConfirmImportBtn');
+        if (importButton) {
+            importButton.disabled = true;
+            importButton.textContent = 'Không thể import';
+        }
+    }
+}
+
+function renderRosterPreviewFailure(message) {
+    const container = document.getElementById('rosterPreview');
+    if (!container) return;
+    container.hidden = false;
+
+    document.getElementById('rosterPreviewStats')?.replaceChildren();
+    document.getElementById('rosterPreviewChanges')?.replaceChildren();
+    const errorsEl = document.getElementById('rosterPreviewErrors');
+    if (errorsEl) {
+        errorsEl.hidden = false;
+        errorsEl.classList.add('is-visible');
+        errorsEl.innerHTML = `<h4>Không thể đọc file</h4><p>${escapeHTML(message)}</p>`;
+    }
+}
+
+function renderRosterPreview(data) {
+    const container = document.getElementById('rosterPreview');
+    if (!container) return;
+    container.hidden = false;
+
+    const statsEl = document.getElementById('rosterPreviewStats');
+    if (statsEl) {
+        const isDelta = (data.importMode || data.import_mode) === 'delta';
+        const activeRows = Number(data.activeRows || data.active_rows || 0);
+        const terminationRows = Number(data.terminationRows || data.termination_rows || 0);
+        const modeLabel = isDelta
+            ? `Theo sheet: ${activeRows} Tân binh, ${terminationRows} Nghỉ việc`
+            : 'Đồng bộ toàn bộ danh sách';
+        statsEl.innerHTML = `
+            <span class="roster-preview-stat">${escapeHTML(modeLabel)}</span>
+            <span class="roster-preview-stat stat-insert">Thêm mới: ${data.inserted || 0}</span>
+            <span class="roster-preview-stat stat-update">Cập nhật: ${data.updated || 0}</span>
+            <span class="roster-preview-stat stat-terminate">Nghỉ việc: ${data.terminated || 0}</span>
+            <span class="roster-preview-stat stat-reactivate">Khôi phục: ${data.reactivated || 0}</span>
+            <span class="roster-preview-stat stat-error">Lỗi: ${data.error_count || data.errorCount || 0}</span>
+        `;
+    }
+
+    const errorsEl = document.getElementById('rosterPreviewErrors');
+    if (errorsEl) {
+        const errors = data.errors || [];
+        errorsEl.classList.toggle('is-visible', errors.length > 0);
+        if (errors.length) {
+            errorsEl.hidden = false;
+            errorsEl.innerHTML = `<h4>Lỗi (${errors.length})</h4><ul>${errors.map(e => {
+                const location = e.sheet
+                    ? `Sheet ${escapeHTML(e.sheet)}, dòng ${escapeHTML(e.row || '?')}`
+                    : `Dòng ${escapeHTML(e.row || '?')}`;
+                return `<li>${location}: ${escapeHTML(e.message || '')}</li>`;
+            }).join('')}</ul>`;
+        } else {
+            errorsEl.hidden = true;
+        }
+    }
+
+    const changesEl = document.getElementById('rosterPreviewChanges');
+    if (changesEl) {
+        let html = '';
+        const changes = data.changes || {};
+        [['inserted', 'Thêm mới', 'stat-insert'], ['updated', 'Cập nhật', 'stat-update'], ['terminated', 'Nghỉ việc', 'stat-terminate'], ['reactivated', 'Khôi phục', 'stat-reactivate']].forEach(([key, label, cls]) => {
+            const items = changes[key] || [];
+            if (!items.length) return;
+            html += `<div class="roster-change-group"><h4 class="roster-preview-stat ${cls}">${label} (${items.length})</h4><table><thead><tr><th>Mã NV</th><th>Tên</th><th>Email</th><th>Khu vực</th><th>Chi nhánh</th></tr></thead><tbody>${items.map(i => `<tr><td>${escapeHTML(i.employee_id || '')}</td><td>${escapeHTML(i.display_name || '')}</td><td>${escapeHTML(i.email || '')}</td><td>${escapeHTML(i.region || '')}</td><td>${escapeHTML(i.branch || '')}</td></tr>`).join('')}</tbody></table></div>`;
+        });
+        changesEl.innerHTML = html || '<p class="roster-preview-empty">Không có thay đổi nào.</p>';
+    }
+}
+
+async function confirmRosterImport() {
+    if (state.rosterImportBusy || !state.rosterImportFile) return;
+    const data = state.rosterPreviewData;
+    if (!data) {
+        showToast('Vui lòng đợi hệ thống kiểm tra file xong trước khi import.', 'info');
+        return;
+    }
+    if ((data.error_count || data.errorCount || 0) > 0) {
+        showToast('File còn lỗi dữ liệu. Vui lòng sửa các dòng được đánh dấu trước khi import.', 'error');
+        return;
+    }
+    if (data.canImport === false || data.can_import === false || Number(data.totalRows || data.total_rows || 0) <= 0) {
+        showToast('File không có dòng KTV hợp lệ để import.', 'error');
+        return;
+    }
+    const terminationCount = Number(data.terminated || 0);
+    if (terminationCount > 0) {
+        const explicitTermination = (data.terminationMode || data.termination_mode) === 'explicit';
+        const warning = explicitTermination
+            ? `${terminationCount} KTV trong sheet “Nghỉ việc” sẽ được đánh dấu Đã nghỉ.`
+            : `${terminationCount} KTV không còn trong danh sách đầy đủ sẽ được đánh dấu Đã nghỉ.`;
+        const confirmed = window.confirm(
+            `Cảnh báo: ${warning} Bạn có chắc muốn tiếp tục?`
+        );
+        if (!confirmed) return;
+    }
+    state.rosterImportBusy = true;
+    let importSucceeded = false;
+    const btn = document.getElementById('rosterConfirmImportBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Đang import...'; }
+
+    const formData = new FormData();
+    formData.append('file', state.rosterImportFile);
+    if (data.batch_id || data.batchId) formData.append('batch_id', data.batch_id || data.batchId);
+    if (terminationCount > 0) formData.append('confirm_termination', 'true');
+    try {
+        const resp = await fetch(`${API_BASE_URL}/roster/import`, { method: 'POST', body: formData });
+        const json = await resp.json();
+        if (!resp.ok) {
+            const errData = json.error || {};
+            showRosterResult(errData.message || 'Import thất bại.', false, errData.details);
+        } else {
+            const result = json.data || {};
+            importSucceeded = true;
+            const batchId = result.batch_id || result.batchId || '';
+            showRosterResult(
+                `Đã thêm ${result.inserted || 0}, cập nhật ${result.updated || 0}, đánh dấu nghỉ ${result.terminated || 0} và khôi phục ${result.reactivated || 0} KTV.${batchId ? ` Mã đợt: ${batchId}.` : ''}`,
+                true
+            );
+            state.rosterLoaded = false;
+            state.rosterHistoryLoaded = false;
+            await Promise.allSettled([loadRosterList(), loadRosterHistory(), refreshDashboardData()]);
+        }
+    } catch (err) {
+        showRosterResult('Lỗi khi import: ' + err.message, false);
+    } finally {
+        state.rosterImportBusy = false;
+        if (btn) {
+            btn.disabled = importSucceeded;
+            btn.textContent = importSucceeded ? 'Đã import' : 'Import danh sách KTV';
+        }
+        if (importSucceeded) {
+            state.rosterImportFile = null;
+            const fileInput = document.getElementById('rosterFileInput');
+            if (fileInput) fileInput.value = '';
+        }
+    }
+}
+
+function showRosterResult(message, success, details) {
+    const el = document.getElementById('rosterImportResult');
+    if (!el) return;
+    el.hidden = false;
+    el.className = 'roster-import-result ' + (success ? 'result-success' : 'result-error');
+    el.setAttribute('role', success ? 'status' : 'alert');
+    el.setAttribute('aria-live', success ? 'polite' : 'assertive');
+
+    const title = success ? 'Import thành công' : 'Import không thành công';
+    const icon = success ? '✓' : '!';
+    let html = `
+        <div class="roster-import-result-icon" aria-hidden="true">${icon}</div>
+        <div class="roster-import-result-content">
+            <h3>${title}</h3>
+            <p>${escapeHTML(message)}</p>
+    `;
+    if (details && details.length) {
+        html += '<ul class="roster-import-result-details">';
+        details.forEach(d => { html += `<li>${escapeHTML(d.message || d)}</li>`; });
+        html += '</ul>';
+    }
+    if (success) {
+        html += '<p class="roster-import-result-hint">Kiểm tra lại tại Danh sách KTV hoặc Lịch sử import.</p>';
+    }
+    html += '</div>';
+    el.innerHTML = html;
+
+    window.requestAnimationFrame(() => {
+        const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+        el.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
+        el.focus({ preventScroll: true });
+    });
+}
+
+function cancelRosterImport() {
+    state.rosterImportFile = null;
+    state.rosterPreviewData = null;
+    const info = document.getElementById('rosterFileInfo');
+    if (info) info.hidden = true;
+    document.getElementById('rosterPreview').hidden = true;
+    document.getElementById('rosterImportResult').hidden = true;
+    document.getElementById('rosterImportActions').hidden = true;
+    document.getElementById('rosterFileInput').value = '';
+    const importButton = document.getElementById('rosterConfirmImportBtn');
+    if (importButton) {
+        importButton.disabled = true;
+        importButton.textContent = 'Import danh sách KTV';
+    }
+}
+
+/* --- History --- */
+
+async function loadRosterHistory() {
+    const requestSequence = ++state.rosterHistoryRequestSequence;
+    const tbody = document.getElementById('rosterHistoryBody');
+    const emptyEl = document.getElementById('rosterHistoryEmpty');
+    tbody?.setAttribute('aria-busy', 'true');
+    if (emptyEl) {
+        emptyEl.hidden = false;
+        emptyEl.innerHTML = '<span class="table-state-spinner" aria-hidden="true"></span><span>Đang tải lịch sử import…</span>';
+    }
+    try {
+        const resp = await fetch(`${API_BASE_URL}/roster/history`);
+        if (!resp.ok) throw new Error('Failed to load history');
+        const json = await resp.json();
+        if (requestSequence !== state.rosterHistoryRequestSequence) return false;
+        state.rosterHistoryItems = (json.data || {}).items || [];
+        state.rosterHistoryLoaded = true;
+        renderRosterHistory();
+        return true;
+    } catch (err) {
+        if (requestSequence !== state.rosterHistoryRequestSequence) return false;
+        console.error('loadRosterHistory error:', err);
+        if (tbody) tbody.innerHTML = '';
+        if (emptyEl) {
+            emptyEl.hidden = false;
+            emptyEl.innerHTML = '<strong>Không tải được lịch sử import</strong><button type="button" class="button secondary" data-roster-history-retry>Thử lại</button>';
+            emptyEl.querySelector('[data-roster-history-retry]')?.addEventListener('click', loadRosterHistory, { once: true });
+        }
+        return false;
+    } finally {
+        if (requestSequence === state.rosterHistoryRequestSequence) tbody?.removeAttribute('aria-busy');
+    }
+}
+
+function renderRosterHistory() {
+    const tbody = document.getElementById('rosterHistoryBody');
+    const emptyEl = document.getElementById('rosterHistoryEmpty');
+    if (!tbody) return;
+    if (!state.rosterHistoryItems.length) {
+        tbody.innerHTML = '';
+        if (emptyEl) {
+            emptyEl.hidden = false;
+            emptyEl.textContent = 'Chưa có lịch sử import nào.';
+        }
+        return;
+    }
+    if (emptyEl) emptyEl.hidden = true;
+    tbody.innerHTML = state.rosterHistoryItems.map(item => {
+        const dt = item.importedAt || item.imported_at;
+        const dateStr = dt ? new Date(dt).toLocaleString('vi-VN') : '-';
+        return `<tr>
+            <td><code>${escapeHTML(item.batchId || item.batch_id || '')}</code></td>
+            <td>${escapeHTML(item.fileName || item.file_name || '')}</td>
+            <td>${escapeHTML(item.importedByName || item.imported_by_name || item.importedByEmail || '-')}</td>
+            <td>${formatNumber.format(Number(item.totalRows || item.total_rows || 0))}</td>
+            <td class="roster-value-success">${formatNumber.format(Number(item.inserted || 0))}</td>
+            <td class="roster-value-info">${formatNumber.format(Number(item.updated || 0))}</td>
+            <td class="roster-value-danger">${formatNumber.format(Number(item.terminated || 0))}</td>
+            <td class="roster-value-warning">${formatNumber.format(Number(item.reactivated || 0))}</td>
+            <td>${formatNumber.format(Number(item.errorCount || item.error_count || 0))}</td>
+            <td>${dateStr}</td>
+        </tr>`;
+    }).join('');
+}
+
+/* --- Edit KTV --- */
+
+async function openRosterEdit(employeeId) {
+    const item = state.rosterItems.find(i => (i.employee_id || i.employeeId) === employeeId);
+    if (!item) return;
+    try {
+        await loadRosterRegions();
+    } catch (err) {
+        showToast(err.message || 'Không tải được danh mục khu vực.', 'error');
+        return;
+    }
+    rosterEditReturnFocus = document.activeElement;
+    state.rosterEditEmployeeId = employeeId;
+    document.getElementById('rosterEditSubtitle').textContent = employeeId + ' — ' + (item.display_name || item.displayName || '');
+    document.getElementById('rosterEditEmployeeId').value = employeeId;
+    document.getElementById('rosterEditDisplayName').value = item.display_name || item.displayName || '';
+    document.getElementById('rosterEditEmail').value = item.email || '';
+    document.getElementById('rosterEditJobTitle').value = item.job_title || item.jobTitle || '';
+    renderRosterRegionOptions(item.region_id || item.regionId || '');
+    updateRosterEditBranch();
+    document.getElementById('rosterEditUnitCode').value = item.unit_code || item.unitCode || '';
+    document.getElementById('rosterEditUnitName').value = item.unit_name || item.unitName || '';
+    document.getElementById('rosterEditClassCode').value = item.class_code || item.classCode || '';
+    document.getElementById('rosterEditTerminated').value = (item.is_terminated || item.isTerminated) ? '1' : '0';
+    const backdrop = document.getElementById('rosterEditBackdrop');
+    if (backdrop) {
+        backdrop.hidden = false;
+        backdrop.classList.add('visible');
+        backdrop.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('modal-open');
+        window.setTimeout(() => document.getElementById('rosterEditDisplayName')?.focus(), 0);
+    }
+}
+
+function closeRosterEdit() {
+    const backdrop = document.getElementById('rosterEditBackdrop');
+    if (backdrop) { backdrop.hidden = true; backdrop.classList.remove('visible'); backdrop.setAttribute('aria-hidden', 'true'); }
+    document.body.classList.remove('modal-open');
+    state.rosterEditEmployeeId = '';
+    if (rosterEditReturnFocus instanceof HTMLElement) rosterEditReturnFocus.focus();
+    rosterEditReturnFocus = null;
+}
+
+async function submitRosterEdit(e) {
+    e.preventDefault();
+    const employeeId = state.rosterEditEmployeeId;
+    if (!employeeId) return;
+    const payload = {
+        display_name: document.getElementById('rosterEditDisplayName').value.trim(),
+        email: document.getElementById('rosterEditEmail').value.trim(),
+        job_title: document.getElementById('rosterEditJobTitle').value.trim() || null,
+        region_id: document.getElementById('rosterEditRegionId').value || null,
+        unit_code: document.getElementById('rosterEditUnitCode').value.trim() || null,
+        unit_name: document.getElementById('rosterEditUnitName').value.trim() || null,
+        class_code: document.getElementById('rosterEditClassCode').value.trim() || null,
+        is_terminated: document.getElementById('rosterEditTerminated').value === '1',
+    };
+    try {
+        const resp = await fetch(`${API_BASE_URL}/roster/${encodeURIComponent(employeeId)}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+        if (!resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            showToast(err.error?.message || 'Cập nhật hồ sơ thất bại.', 'error');
+            return;
+        }
+        closeRosterEdit();
+        state.rosterLoaded = false;
+        await loadRosterList();
+        showToast('Đã cập nhật hồ sơ KTV.', 'success');
+    } catch (err) {
+        showToast(`Không thể cập nhật hồ sơ: ${err.message}`, 'error');
+    }
+}
+
+/* ============================================================
+   Training classes and assignments — Admin
+   ============================================================ */
+
+function activateClassTab(tabName) {
+    state.classTab = tabName;
+    document.querySelectorAll('[data-class-tab]').forEach(button => {
+        const active = button.dataset.classTab === tabName;
+        button.classList.toggle('active', active);
+        button.setAttribute('aria-selected', String(active));
+        button.tabIndex = active ? 0 : -1;
+    });
+    const panels = {
+        list: document.getElementById('classListPanel'),
+        create: document.getElementById('classCreatePanel')
+    };
+    Object.entries(panels).forEach(([name, panel]) => {
+        if (panel) panel.hidden = name !== tabName;
+    });
+    if (tabName === 'list') loadTrainingClasses();
+    if (tabName === 'create') loadTrainingClassCatalog();
+}
+
+function classDateLabel(value) {
+    if (!value) return 'Không giới hạn';
+    const parts = String(value).slice(0, 10).split('-');
+    return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : value;
+}
+
+function classStatusLabel(status) {
+    return ({ planned: 'Sắp hiệu lực', active: 'Đang hiệu lực', completed: 'Đã kết thúc', archived: 'Đã lưu trữ' })[status] || status;
+}
+
+async function loadTrainingClasses() {
+    const body = document.getElementById('classTableBody');
+    if (body) body.innerHTML = '<tr><td colspan="7">Đang tải danh sách lớp...</td></tr>';
+    try {
+        const response = await fetch(`${API_BASE_URL}/classes`, { credentials: 'include' });
+        const json = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(json.error?.message || `HTTP ${response.status}`);
+        state.classItems = json.items || [];
+        state.classLoaded = true;
+        renderTrainingClasses();
+        return true;
+    } catch (error) {
+        console.error('Class list error:', error);
+        if (body) body.innerHTML = `<tr><td colspan="7">${escapeHTML(error.message || 'Không thể tải danh sách lớp.')}</td></tr>`;
+        return false;
+    }
+}
+
+function renderTrainingClasses() {
+    const body = document.getElementById('classTableBody');
+    const empty = document.getElementById('classListEmpty');
+    if (!body) return;
+    const items = state.classItems || [];
+    body.innerHTML = items.map(item => `
+        <tr>
+            <td><strong>${escapeHTML(item.class_code || '')}</strong></td>
+            <td>${escapeHTML(item.class_name || '')}</td>
+            <td>${escapeHTML(classDateLabel(item.start_date))}</td>
+            <td>${escapeHTML(classStatusLabel(item.status || ''))}</td>
+            <td>${Number(item.member_count || 0)}</td>
+            <td>${Number(item.device_count || 0)}</td>
+            <td><button type="button" class="button secondary class-edit-btn" data-edit-class-id="${escapeHTML(item.class_id || '')}" aria-label="Chỉnh sửa lớp ${escapeHTML(item.class_code || '')}">Sửa</button></td>
+        </tr>
+    `).join('');
+    if (empty) empty.hidden = items.length > 0;
+}
+
+function resetTrainingClassForm() {
+    state.classEditingId = '';
+    state.classEditingUpdatedAt = '';
+    state.classSelectedMembers.clear();
+    state.classPendingMembers.clear();
+    state.classSelectedDevices.clear();
+    document.getElementById('classCreateForm')?.reset();
+    const from = document.getElementById('classValidFrom');
+    if (from) { from.disabled = false; from.removeAttribute('title'); }
+    const title = document.getElementById('classFormTitle');
+    const submit = document.getElementById('classCreateBtn');
+    const cancel = document.getElementById('classEditCancelBtn');
+    const tab = document.querySelector('[data-class-tab="create"]');
+    if (title) title.textContent = 'Đăng ký lớp mới';
+    if (submit) submit.textContent = 'Tạo lớp và giao bài';
+    if (cancel) cancel.hidden = true;
+    if (tab) tab.textContent = 'Đăng ký lớp mới';
+    const info = document.getElementById('classMemberFileInfo');
+    if (info) { info.hidden = true; info.textContent = ''; }
+    const fileInput = document.getElementById('classMemberFileInput');
+    if (fileInput) fileInput.value = '';
+    updateTrainingClassSummary();
+}
+
+async function openTrainingClassEditor(classId) {
+    if (!classId) return;
+    const [catalogLoaded, response] = await Promise.all([
+        loadTrainingClassCatalog(),
+        fetch(`${API_BASE_URL}/classes/${encodeURIComponent(classId)}`, { credentials: 'include' })
+    ]);
+    const json = await response.json().catch(() => ({}));
+    if (!catalogLoaded || !response.ok) {
+        throw new Error(json.error?.message || `Không thể tải lớp (HTTP ${response.status})`);
+    }
+    const item = json.item || {};
+    state.classEditingId = String(item.class_id || classId);
+    state.classEditingUpdatedAt = String(item.updated_at || '');
+    state.classPendingMembers.clear();
+    const availableMemberIds = new Set(
+        (state.classCatalog.members || []).map(member => String(member.user_id || '')).filter(Boolean)
+    );
+    state.classSelectedMembers = new Set(
+        (item.members || [])
+            .map(member => String(member.user_id || ''))
+            .filter(userId => userId && availableMemberIds.has(userId))
+    );
+    const unavailableMemberCount = Math.max(0, (item.members || []).length - state.classSelectedMembers.size);
+    state.classSelectedDevices = new Set((item.devices || []).map(device => String(device.device_id || '')).filter(Boolean));
+    const name = document.getElementById('className');
+    const from = document.getElementById('classValidFrom');
+    if (name) name.value = item.class_name || '';
+    if (from) from.value = String(item.start_date || '').slice(0, 10);
+    if (from) {
+        from.disabled = String(item.start_date || '').slice(0, 10) <= toDateKey(new Date());
+        if (from.disabled) from.title = 'Không thể đổi ngày bắt đầu sau khi lớp đã có hiệu lực.';
+        else from.removeAttribute('title');
+    }
+    const title = document.getElementById('classFormTitle');
+    const submit = document.getElementById('classCreateBtn');
+    const cancel = document.getElementById('classEditCancelBtn');
+    const tab = document.querySelector('[data-class-tab="create"]');
+    if (title) title.textContent = `Chỉnh sửa lớp ${item.class_code || ''}`;
+    if (submit) submit.textContent = 'Lưu thay đổi';
+    if (cancel) cancel.hidden = false;
+    if (tab) tab.textContent = 'Chỉnh sửa lớp';
+    updateTrainingClassSummary();
+    activateClassTab('create');
+    if (unavailableMemberCount) {
+        showToast(`${unavailableMemberCount} KTV đã ngừng hoạt động không được đưa vào danh sách chỉnh sửa.`, 'info');
+    }
+    window.setTimeout(() => name?.focus(), 0);
+}
+
+let classConfigModalReturnFocus = null;
+
+async function loadTrainingClassCatalog() {
+    if (state.classCatalogLoaded) {
+        return true;
+    }
+    try {
+        const response = await fetch(`${API_BASE_URL}/classes/catalog`, { credentials: 'include' });
+        const json = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(json.error?.message || `HTTP ${response.status}`);
+        state.classCatalog = json.data || { members: [], devices: [] };
+        state.classCatalogLoaded = true;
+        return true;
+    } catch (error) {
+        showToast(`Không thể tải danh mục tạo lớp: ${error.message}`, 'error');
+        return false;
+    }
+}
+
+function classDraftIsValid() {
+    const name = document.getElementById('className')?.value.trim() || '';
+    const validFrom = document.getElementById('classValidFrom')?.value || '';
+    return name.length > 0 && name.length <= 200 && validFrom !== '';
+}
+
+function updateTrainingClassSummary() {
+    const totalMembers = state.classSelectedMembers.size + state.classPendingMembers.size;
+    const totalDevices = state.classSelectedDevices.size;
+
+    const summaryMemberCount = document.getElementById('classSummaryMemberCount');
+    const summaryMemberSub = document.getElementById('classSummaryMemberSub');
+    const summaryDeviceCount = document.getElementById('classSummaryDeviceCount');
+    const summaryDeviceSub = document.getElementById('classSummaryDeviceSub');
+
+    if (summaryMemberCount) {
+        summaryMemberCount.textContent = `${totalMembers} KTV`;
+    }
+    if (summaryMemberSub) {
+        if (totalMembers === 0) {
+            summaryMemberSub.textContent = 'Chưa chọn KTV nào';
+        } else {
+            const parts = [];
+            if (state.classSelectedMembers.size > 0) parts.push(`${state.classSelectedMembers.size} KTV có sẵn`);
+            if (state.classPendingMembers.size > 0) parts.push(`${state.classPendingMembers.size} KTV mới từ file`);
+            summaryMemberSub.textContent = parts.join(' · ');
+        }
+    }
+
+    if (summaryDeviceCount) {
+        summaryDeviceCount.textContent = `${totalDevices} thiết bị`;
+    }
+    if (summaryDeviceSub) {
+        summaryDeviceSub.textContent = totalDevices === 0 ? 'Chưa chọn thiết bị nào' : `Đã chọn ${totalDevices} thiết bị đào tạo`;
+    }
+
+    const modalMemberCount = document.getElementById('classModalMemberCount');
+    const modalDeviceCount = document.getElementById('classModalDeviceCount');
+    if (modalMemberCount) modalMemberCount.textContent = String(totalMembers);
+    if (modalDeviceCount) modalDeviceCount.textContent = String(totalDevices);
+}
+
+async function openClassConfigModal() {
+    await loadTrainingClassCatalog();
+    renderClassModalMembers();
+    renderClassModalDevices();
+    updateTrainingClassSummary();
+
+    const modal = document.getElementById('classConfigModal');
+    if (!modal) return;
+    classConfigModalReturnFocus = document.activeElement;
+    modal.hidden = false;
+    modal.classList.add('visible');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('modal-open');
+
+    const searchInput = document.getElementById('classKtvSearchInput');
+    if (searchInput) {
+        searchInput.value = '';
+        const dropdown = document.getElementById('classKtvSearchDropdown');
+        if (dropdown) dropdown.hidden = true;
+        window.setTimeout(() => searchInput.focus(), 50);
+    }
+}
+
+function closeClassConfigModal() {
+    const modal = document.getElementById('classConfigModal');
+    if (!modal) return;
+    modal.hidden = true;
+    modal.classList.remove('visible');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('modal-open');
+    updateTrainingClassSummary();
+    if (classConfigModalReturnFocus instanceof HTMLElement) classConfigModalReturnFocus.focus();
+    classConfigModalReturnFocus = null;
+}
+
+function renderClassModalMembers() {
+    const listEl = document.getElementById('classSelectedMembersList');
+    const emptyEl = document.getElementById('classSelectedMembersEmpty');
+    if (!listEl) return;
+
+    const existingMembers = (state.classCatalog.members || []).filter(member =>
+        state.classSelectedMembers.has(String(member.user_id || ''))
+    );
+    const pendingMembers = [...state.classPendingMembers.values()];
+    const totalCount = existingMembers.length + pendingMembers.length;
+
+    if (emptyEl) emptyEl.hidden = totalCount > 0;
+
+    let html = '';
+
+    existingMembers.forEach(member => {
+        const id = String(member.user_id || '');
+        html += `
+            <div class="class-member-row">
+                <div class="class-member-row-info">
+                    <div class="class-member-row-name-wrap">
+                        <span class="class-member-row-name">${escapeHTML(member.display_name || member.email || 'KTV')}</span>
+                        <span class="badge-member badge-existing">Đã có</span>
+                    </div>
+                    <span class="class-member-row-sub">${escapeHTML(member.employee_id || '—')} · ${escapeHTML(member.email || '')}</span>
+                </div>
+                <button type="button" class="class-member-remove-btn" data-remove-existing-member="${escapeHTML(id)}" title="Xóa khỏi lớp" aria-label="Xóa ${escapeHTML(member.display_name || 'KTV')}">×</button>
+            </div>
+        `;
+    });
+
+    pendingMembers.forEach(member => {
+        const empId = String(member.employee_id || '');
+        html += `
+            <div class="class-member-row">
+                <div class="class-member-row-info">
+                    <div class="class-member-row-name-wrap">
+                        <span class="class-member-row-name">${escapeHTML(member.display_name || member.email || 'KTV mới')}</span>
+                        <span class="badge-member badge-pending">KTV mới (từ file)</span>
+                    </div>
+                    <span class="class-member-row-sub">${escapeHTML(member.employee_id || '—')} · ${escapeHTML(member.email || '')}</span>
+                </div>
+                <button type="button" class="class-member-remove-btn" data-remove-pending-member="${escapeHTML(empId)}" title="Xóa khỏi lớp" aria-label="Xóa ${escapeHTML(member.display_name || 'KTV mới')}">×</button>
+            </div>
+        `;
+    });
+
+    listEl.innerHTML = html;
+}
+
+function renderClassModalDevices() {
+    const listEl = document.getElementById('classModalDeviceList');
+    if (!listEl) return;
+
+    const devices = state.classCatalog.devices || [];
+    if (devices.length === 0) {
+        listEl.innerHTML = '<p class="class-selected-members-empty">Chưa có thiết bị nào trong danh mục.</p>';
+        return;
+    }
+
+    listEl.innerHTML = devices.map(device => {
+        const id = String(device.device_id || '');
+        const isChecked = state.classSelectedDevices.has(id);
+        return `
+            <label class="class-device-item">
+                <input type="checkbox" data-modal-device="${escapeHTML(id)}" ${isChecked ? 'checked' : ''}>
+                <div class="class-device-item-info">
+                    <strong>${escapeHTML(device.device_name || id)}</strong>
+                    <small>${escapeHTML(id)}${device.model ? ` · ${escapeHTML(device.model)}` : ''}</small>
+                </div>
+            </label>
+        `;
+    }).join('');
+}
+
+function handleKtvSearchInput(event) {
+    const query = (event.target.value || '').trim().toLowerCase();
+    const dropdown = document.getElementById('classKtvSearchDropdown');
+    if (!dropdown) return;
+
+    if (!query) {
+        dropdown.hidden = true;
+        dropdown.innerHTML = '';
+        return;
+    }
+
+    const allMembers = state.classCatalog.members || [];
+    const filtered = allMembers.filter(member => {
+        const id = String(member.user_id || '');
+        if (state.classSelectedMembers.has(id)) return false;
+        const empId = String(member.employee_id || '').toLowerCase();
+        const name = String(member.display_name || '').toLowerCase();
+        const email = String(member.email || '').toLowerCase();
+        return empId.includes(query) || name.includes(query) || email.includes(query);
+    });
+
+    const top5 = filtered.slice(0, 5);
+
+    if (top5.length === 0) {
+        dropdown.innerHTML = '<div class="class-ktv-dropdown-empty">Không tìm thấy KTV phù hợp.</div>';
+        dropdown.hidden = false;
+        return;
+    }
+
+    dropdown.innerHTML = top5.map(member => {
+        const id = String(member.user_id || '');
+        return `
+            <div class="class-ktv-dropdown-item" data-add-ktv-id="${escapeHTML(id)}" tabindex="0" role="button">
+                <div class="class-ktv-item-left">
+                    <span class="class-ktv-item-name">${escapeHTML(member.display_name || member.email || 'KTV')}</span>
+                    <span class="class-ktv-item-sub">${escapeHTML(member.employee_id || '—')} · ${escapeHTML(member.email || '')}</span>
+                </div>
+                <span class="class-ktv-item-add">+ Thêm</span>
+            </div>
+        `;
+    }).join('');
+
+    dropdown.hidden = false;
+}
+
+function addKtvToClass(userId) {
+    if (!userId) return;
+    state.classSelectedMembers.add(userId);
+    renderClassModalMembers();
+    updateTrainingClassSummary();
+
+    const searchInput = document.getElementById('classKtvSearchInput');
+    const dropdown = document.getElementById('classKtvSearchDropdown');
+    if (searchInput) {
+        searchInput.value = '';
+        searchInput.focus();
+    }
+    if (dropdown) {
+        dropdown.hidden = true;
+        dropdown.innerHTML = '';
+    }
+}
+
+async function previewClassMembers(file) {
+    if (!classDraftIsValid()) {
+        showToast('Nhập tên lớp và ngày hiệu lực hợp lệ trước khi chọn file KTV.', 'error');
+        return;
+    }
+    if (!file?.name?.toLowerCase().endsWith('.xlsx')) {
+        showToast('Vui lòng chọn file KTV định dạng .xlsx.', 'error');
+        return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+        showToast('File KTV không được vượt quá 8 MB.', 'error');
+        return;
+    }
+    state.classMemberImportFile = file;
+    state.classMemberImportBusy = true;
+    const info = document.getElementById('classMemberFileInfo');
+    if (info) { info.hidden = false; info.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB) — đang kiểm tra...`; }
+    const form = new FormData();
+    form.append('file', file);
+    form.append('class_name', document.getElementById('className')?.value.trim() || '');
+    form.append('valid_from', document.getElementById('classValidFrom')?.value || '');
+    try {
+        const response = await fetch(`${API_BASE_URL}/classes/members/preview`, { method: 'POST', credentials: 'include', body: form });
+        const json = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(json.error?.message || `HTTP ${response.status}`);
+        const data = json.data || {};
+        if (data.errors && data.errors.length > 0) {
+            const firstError = data.errors[0];
+            const msg = firstError ? `Dòng ${firstError.row || '?'}: ${firstError.message || 'Dữ liệu không hợp lệ'}` : 'File KTV có lỗi.';
+            showToast(`File KTV không hợp lệ: ${msg}`, 'error');
+            return;
+        }
+        (data.members || []).forEach(member => {
+            if (member.action === 'create') {
+                state.classPendingMembers.set(String(member.employee_id || ''), {
+                    employee_id: member.employee_id,
+                    display_name: member.display_name,
+                    email: member.email,
+                });
+            } else if (member.user_id) {
+                state.classSelectedMembers.add(String(member.user_id));
+            }
+        });
+        const total = (data.members || []).length;
+        if (info) info.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB) — Đã nạp ${total} KTV`;
+        showToast(`Đã đọc thành công ${total} KTV từ file. Hãy kiểm tra thành viên và chọn thiết bị.`, 'success');
+        await openClassConfigModal();
+    } catch (error) {
+        showToast(`Không thể đọc file KTV: ${error.message}`, 'error');
+    } finally {
+        state.classMemberImportBusy = false;
+        updateTrainingClassSummary();
+    }
+}
+
+async function submitTrainingClass(event) {
+    event.preventDefault();
+    const name = document.getElementById('className')?.value.trim() || '';
+    const validFrom = document.getElementById('classValidFrom')?.value || '';
+    const editing = Boolean(state.classEditingId);
+    const totalMembers = state.classSelectedMembers.size + state.classPendingMembers.size;
+    const totalDevices = state.classSelectedDevices.size;
+
+    if (!name || !validFrom) {
+        showToast('Vui lòng nhập tên lớp và ngày hiệu lực.', 'error');
+        return;
+    }
+    if (!totalMembers) {
+        showToast('Vui lòng thêm ít nhất một KTV vào lớp (qua tìm kiếm hoặc chọn file KTV).', 'error');
+        return;
+    }
+    if (!totalDevices) {
+        showToast('Vui lòng chọn ít nhất một thiết bị được giao cho lớp.', 'error');
+        return;
+    }
+    const button = document.getElementById('classCreateBtn');
+    if (button) { button.disabled = true; button.textContent = editing ? 'Đang lưu...' : 'Đang tạo lớp...'; }
+    try {
+        const endpoint = editing
+            ? `${API_BASE_URL}/classes/${encodeURIComponent(state.classEditingId)}`
+            : `${API_BASE_URL}/classes`;
+        const response = await fetch(endpoint, {
+            method: editing ? 'PATCH' : 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                className: name,
+                validFrom,
+                memberUserIds: [...state.classSelectedMembers],
+                memberImports: [...state.classPendingMembers.values()],
+                deviceIds: [...state.classSelectedDevices],
+                ...(editing ? { expectedUpdatedAt: state.classEditingUpdatedAt } : {})
+            })
+        });
+        const json = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(json.error?.message || `HTTP ${response.status}`);
+        const code = json.item?.class_code || '';
+        showToast(editing ? `Đã cập nhật lớp ${code}.` : `Đã tạo lớp ${code} và giao bài thành công.`, 'success');
+        resetTrainingClassForm();
+        state.classLoaded = false;
+        await loadTrainingClasses();
+        await Promise.allSettled([
+            loadRosterList(),
+            refreshDashboardData({ force: true })
+        ]);
+        activateClassTab('list');
+    } catch (error) {
+        showToast(`${editing ? 'Không thể cập nhật lớp' : 'Không thể tạo lớp'}: ${error.message}`, 'error');
+    } finally {
+        if (button) {
+            button.disabled = false;
+            button.textContent = state.classEditingId ? 'Lưu thay đổi' : 'Tạo lớp và giao bài';
+        }
+    }
+}
+
+function initTrainingClasses() {
+    if (state.classInitialized) return;
+    state.classInitialized = true;
+    document.querySelectorAll('[data-class-tab]').forEach(button => button.addEventListener('click', () => {
+        if (button.dataset.classTab === 'create' && state.classTab !== 'create') resetTrainingClassForm();
+        activateClassTab(button.dataset.classTab);
+    }));
+
+    document.getElementById('classTableBody')?.addEventListener('click', event => {
+        const button = event.target.closest('[data-edit-class-id]');
+        if (!button) return;
+        openTrainingClassEditor(button.dataset.editClassId).catch(error => {
+            showToast(`Không thể mở lớp để chỉnh sửa: ${error.message}`, 'error');
+        });
+    });
+
+    document.getElementById('classEditCancelBtn')?.addEventListener('click', () => {
+        resetTrainingClassForm();
+        activateClassTab('list');
+    });
+
+    document.getElementById('classOpenConfigModalBtn')?.addEventListener('click', () => {
+        openClassConfigModal();
+    });
+    document.getElementById('classSummaryEditBtn')?.addEventListener('click', () => {
+        openClassConfigModal();
+    });
+
+    document.getElementById('classConfigModalClose')?.addEventListener('click', closeClassConfigModal);
+    document.getElementById('classConfigModalCancelBtn')?.addEventListener('click', closeClassConfigModal);
+    document.getElementById('classConfigModalSaveBtn')?.addEventListener('click', closeClassConfigModal);
+
+    document.getElementById('classConfigModal')?.addEventListener('click', event => {
+        if (event.target === document.getElementById('classConfigModal')) {
+            closeClassConfigModal();
+        }
+    });
+
+    const ktvSearchInput = document.getElementById('classKtvSearchInput');
+    ktvSearchInput?.addEventListener('input', handleKtvSearchInput);
+
+    document.getElementById('classKtvSearchDropdown')?.addEventListener('click', event => {
+        const item = event.target.closest('[data-add-ktv-id]');
+        if (item) {
+            addKtvToClass(item.dataset.addKtvId);
+        }
+    });
+
+    document.addEventListener('click', event => {
+        const searchBox = event.target.closest('.class-ktv-search-box');
+        if (!searchBox) {
+            const dropdown = document.getElementById('classKtvSearchDropdown');
+            if (dropdown) dropdown.hidden = true;
+        }
+    });
+
+    document.getElementById('classSelectedMembersList')?.addEventListener('click', event => {
+        const removeExisting = event.target.closest('[data-remove-existing-member]');
+        if (removeExisting) {
+            const id = removeExisting.dataset.removeExistingMember;
+            state.classSelectedMembers.delete(id);
+            renderClassModalMembers();
+            updateTrainingClassSummary();
+            return;
+        }
+        const removePending = event.target.closest('[data-remove-pending-member]');
+        if (removePending) {
+            const empId = removePending.dataset.removePendingMember;
+            state.classPendingMembers.delete(empId);
+            renderClassModalMembers();
+            updateTrainingClassSummary();
+        }
+    });
+
+    document.getElementById('classModalClearMembersBtn')?.addEventListener('click', () => {
+        state.classSelectedMembers.clear();
+        state.classPendingMembers.clear();
+        renderClassModalMembers();
+        updateTrainingClassSummary();
+    });
+
+    document.getElementById('classModalDeviceList')?.addEventListener('change', event => {
+        const id = event.target?.dataset?.modalDevice;
+        if (!id) return;
+        if (event.target.checked) {
+            state.classSelectedDevices.add(id);
+        } else {
+            state.classSelectedDevices.delete(id);
+        }
+        updateTrainingClassSummary();
+    });
+
+    document.getElementById('classModalSelectAllDevicesBtn')?.addEventListener('click', () => {
+        (state.classCatalog.devices || []).forEach(d => {
+            if (d.device_id) state.classSelectedDevices.add(String(d.device_id));
+        });
+        renderClassModalDevices();
+        updateTrainingClassSummary();
+    });
+    document.getElementById('classModalDeselectAllDevicesBtn')?.addEventListener('click', () => {
+        state.classSelectedDevices.clear();
+        renderClassModalDevices();
+        updateTrainingClassSummary();
+    });
+
+    document.getElementById('classCreateForm')?.addEventListener('submit', submitTrainingClass);
+
+    const memberFileInput = document.getElementById('classMemberFileInput');
+    document.getElementById('classMemberFileBtn')?.addEventListener('click', () => {
+        if (!classDraftIsValid()) {
+            document.getElementById('classCreateForm')?.reportValidity();
+            showToast('Hãy nhập tên lớp và ngày hiệu lực trước khi chọn file KTV.', 'error');
+            return;
+        }
+        memberFileInput?.click();
+    });
+    memberFileInput?.addEventListener('change', () => {
+        if (memberFileInput.files?.[0]) previewClassMembers(memberFileInput.files[0]);
+    });
+
+    updateTrainingClassSummary();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     initDashboardViewRouting();
     initSidebarNavigation();
+    initDashboardExperience();
     initFilters();
     initSort();
     initDateRangePicker();
     initHourlyDatePicker();
-    initExport();
+    initReportExport();
     initInstructorWorkspace();
+    initClassMatrix();
+    initRegionUsageChart();
+    initRoster();
+    initTrainingClasses();
+    initUnifiedDashboardControls();
     initEvents();
     initSubModalEvents();
-    initCompareModal();
     loadInitialDashboardData();
 });

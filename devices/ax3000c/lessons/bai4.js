@@ -1,4 +1,4 @@
-﻿/**
+/**
  * devices/ax3000c/lessons/bai4.js
  * Bài 4: Cấu hình DNS trên AX3000C
  */
@@ -6,7 +6,7 @@
 window.DEVICE_AX3000C_LESSONS = window.DEVICE_AX3000C_LESSONS || [];
 
 window.DEVICE_AX3000C_LESSONS.push({
-  id: 'LAB_AX3000C_04',
+  id: 'LAB_AX3000CV2_04',
   title: 'Cấu hình DNS',
   subtitle: 'Cấu hình DNS',
   instructions: [

@@ -2,590 +2,574 @@
 declare(strict_types=1);
 
 /**
- * Parse and validate an inclusive YYYY-MM-DD report boundary.
- *
- * @throws InvalidArgumentException when the value is missing or malformed.
+ * Database-backed dashboard reporting for the simplified production schema.
+ * Explicit class/lab assignments define the denominator; timer_sessions supplies
+ * attempts and outcomes. No browser-maintained business catalog is used.
  */
-function dashboard_report_date(mixed $value, string $field): DateTimeImmutable
-{
-    if (!is_string($value) || !preg_match('/^\d{4}-\d{2}-\d{2}$/D', $value)) {
-        throw new InvalidArgumentException("$field must use YYYY-MM-DD.");
-    }
 
-    $date = DateTimeImmutable::createFromFormat('!Y-m-d', $value);
+function dashboard_report_parse_date(?string $value, DateTimeImmutable $fallback): DateTimeImmutable
+{
+    $value = trim((string)$value);
+    if ($value === '') {
+        return $fallback;
+    }
+    $parsed = DateTimeImmutable::createFromFormat('!Y-m-d', $value);
     $errors = DateTimeImmutable::getLastErrors();
-    if (
-        !$date
-        || ($errors !== false && (($errors['warning_count'] ?? 0) > 0 || ($errors['error_count'] ?? 0) > 0))
-        || $date->format('Y-m-d') !== $value
-    ) {
-        throw new InvalidArgumentException("$field must be a valid calendar date using YYYY-MM-DD.");
+    if (!$parsed || ($errors !== false && ($errors['warning_count'] > 0 || $errors['error_count'] > 0))) {
+        throw new InvalidArgumentException('Invalid dashboard report date. Expected YYYY-MM-DD.');
     }
-
-    return $date;
+    return $parsed;
 }
 
-function dashboard_report_rate(int $numerator, int $denominator): ?float
+function dashboard_report_common_cte(): string
 {
-    return $denominator > 0 ? round(100 * $numerator / $denominator, 1) : null;
+    return <<<'SQL'
+WITH assignment_pairs AS (
+    SELECT DISTINCT
+           roster.user_id::text AS person_id,
+           roster.user_id,
+           roster.employee_id,
+           roster.email,
+           COALESCE(NULLIF(assignment_region.region_name, ''), NULLIF(roster.region_name, ''), NULLIF(roster.region_code, ''), NULLIF(roster.dashboard_region, ''), 'UNASSIGNED') AS region_name,
+           COALESCE(NULLIF(assignment_region.region_code, ''), NULLIF(roster.region_code, ''), 'UNASSIGNED') AS region_code,
+           COALESCE(assignment.region_id_snapshot, roster.region_id) AS region_id,
+           COALESCE(assignment_region.dashboard_group, roster.dashboard_group) AS dashboard_group,
+           COALESCE(assignment_region.branch_name, roster.branch_name) AS branch_name,
+           assignment.region_id_snapshot IS NOT NULL AS region_snapshot_present,
+           lab.lab_id,
+           lab.lab_name,
+           lab.sort_order AS lab_sort_order,
+           device.device_id,
+           device.device_name,
+           device.sort_order AS device_sort_order,
+           GREATEST(
+               assignment.assigned_at,
+               COALESCE(class_assignment.assigned_at, assignment.assigned_at),
+               enrollment.valid_from::timestamp,
+               training.start_date::timestamp
+           ) AS effective_from,
+NULLIF(
+                LEAST(
+                    COALESCE(enrollment.valid_to, 'infinity'::date),
+                    COALESCE(class_assignment.due_at::date, 'infinity'::date),
+                    COALESCE(assignment.due_at::date, 'infinity'::date)
+                ),
+                'infinity'::date
+            ) AS effective_to
+      FROM lab_assignments assignment
+      JOIN class_enrollments enrollment ON enrollment.enrollment_id = assignment.enrollment_id
+      JOIN training_classes training ON training.class_id = assignment.class_id_snapshot
+      LEFT JOIN class_lab_assignments class_assignment
+        ON class_assignment.class_lab_assignment_id = assignment.class_lab_assignment_id
+      JOIN v_ktv_directory roster ON roster.user_id = enrollment.user_id
+      LEFT JOIN regions assignment_region ON assignment_region.region_id = assignment.region_id_snapshot
+      JOIN curriculum_labs curriculum_lab ON curriculum_lab.curriculum_lab_id = assignment.curriculum_lab_id
+      JOIN lab_catalog lab ON lab.lab_id = curriculum_lab.lab_id
+      JOIN device_catalog device ON device.device_id = lab.device_id
+     WHERE roster.is_terminated = FALSE
+       AND enrollment.is_mock = FALSE
+       AND training.is_mock = FALSE
+       AND (
+           enrollment.status <> 'withdrawn'
+           OR enrollment.updated_at::date >= enrollment.valid_from
+       )
+       AND assignment.status <> 'waived'
+       AND (
+           class_assignment.class_lab_assignment_id IS NULL
+           OR class_assignment.status IN ('assigned', 'active', 'closed')
+       )
+       AND lab.is_active = TRUE
+       AND device.is_active = TRUE
+),
+eligible AS (
+    SELECT DISTINCT person_id, user_id, employee_id, email
+      FROM assignment_pairs
+),
+eligible_identities AS (
+    SELECT person_id, 'user:' || user_id::text AS identity_key FROM eligible WHERE user_id IS NOT NULL
+    UNION
+    SELECT person_id, 'email:' || LOWER(email) FROM eligible WHERE NULLIF(email, '') IS NOT NULL
+    UNION
+    SELECT person_id, 'employee:' || employee_id FROM eligible WHERE NULLIF(employee_id, '') IS NOT NULL
+),
+active_labs AS (
+    SELECT lab.lab_id,
+           lab.lab_name,
+           lab.sort_order AS lab_sort_order,
+           device.device_id,
+           device.device_name,
+           device.sort_order AS device_sort_order
+      FROM lab_catalog lab
+      JOIN device_catalog device ON device.device_id = lab.device_id
+     WHERE lab.is_active = TRUE
+       AND device.is_active = TRUE
+),
+resolved_sessions AS (
+    SELECT timer.id,
+           identity.person_id,
+           lab.lab_id,
+           lab.device_id,
+           COALESCE(timer.started_at, timer.finished_at, timer.created_at) AS occurred_at,
+           timer.mode,
+           timer.status,
+           timer.is_passed,
+           timer.completed_first_try,
+           timer.practice_attempt_no,
+           timer.duration_sec
+      FROM timer_sessions timer
+      JOIN active_labs lab ON lab.lab_id = timer.lab_id
+      JOIN eligible_identities identity
+        ON identity.identity_key = CASE
+            WHEN timer.user_id IS NOT NULL THEN 'user:' || timer.user_id::text
+            WHEN NULLIF(timer.email, '') IS NOT NULL THEN 'email:' || LOWER(timer.email)
+            ELSE 'employee:' || COALESCE(timer.technician_id, '')
+        END
+     WHERE NOT COALESCE(timer.is_mock, FALSE)
+       AND timer.status IN ('completed', 'failed')
+       AND EXISTS (
+           SELECT 1
+             FROM assignment_pairs assigned
+            WHERE assigned.person_id = identity.person_id
+              AND assigned.lab_id = lab.lab_id
+              AND COALESCE(timer.started_at, timer.finished_at, timer.created_at) >= assigned.effective_from
+              AND (
+                  assigned.effective_to IS NULL
+                  OR COALESCE(timer.started_at, timer.finished_at, timer.created_at)
+                     < assigned.effective_to::timestamp + INTERVAL '1 day'
+              )
+       )
+),
+numbered_sessions AS (
+    SELECT session.*
+      FROM resolved_sessions session
+)
+SQL;
 }
 
-function dashboard_report_cohort_condition(string $cohort, string $progressAlias, string $periodAlias): string
+function dashboard_report_metric(PDO $pdo, ?string $from, ?string $to): array
 {
-    return match ($cohort) {
-        'due_in_period' => "(
-            ($periodAlias.is_lifetime AND $progressAlias.due_at IS NOT NULL AND $progressAlias.due_at < $periodAlias.period_end)
-            OR
-            (NOT $periodAlias.is_lifetime
-                AND $progressAlias.due_at >= $periodAlias.period_start
-                AND $progressAlias.due_at < $periodAlias.period_end)
-        )",
-        'assigned_in_period' => "(
-            ($periodAlias.is_lifetime AND $progressAlias.assigned_at < $periodAlias.period_end)
-            OR
-            (NOT $periodAlias.is_lifetime
-                AND $progressAlias.assigned_at >= $periodAlias.period_start
-                AND $progressAlias.assigned_at < $periodAlias.period_end)
-        )",
-        'assigned_as_of_period_end' => "$progressAlias.assigned_at < $periodAlias.period_end",
-        default => throw new InvalidArgumentException('cohort must be due_in_period, assigned_in_period or assigned_as_of_period_end.'),
-    };
-}
-
-/**
- * @param array<int, array{key:string, from:string, to:string, is_lifetime:bool}> $periods
- * @return array{sql:string, params:array<string, mixed>}
- */
-function dashboard_report_period_values(array $periods): array
-{
-    $rows = [];
+    $where = [];
     $params = [];
-    foreach ($periods as $index => $period) {
-        $keyParameter = "period_key_$index";
-        $fromParameter = "period_from_$index";
-        $toParameter = "period_to_$index";
-        $rows[] = sprintf(
-            '(:%s, CAST(:%s AS date)::timestamptz, (CAST(:%s AS date) + 1)::timestamptz, %s)',
-            $keyParameter,
-            $fromParameter,
-            $toParameter,
-            $period['is_lifetime'] ? 'TRUE' : 'FALSE'
-        );
-        $params[$keyParameter] = $period['key'];
-        $params[$fromParameter] = $period['from'];
-        $params[$toParameter] = $period['to'];
+    if ($from !== null) {
+        $where[] = 'occurred_at >= CAST(:from_date AS date)';
+        $params['from_date'] = $from;
+    }
+    if ($to !== null) {
+        $where[] = "occurred_at < CAST(:to_date AS date) + INTERVAL '1 day'";
+        $params['to_date'] = $to;
+    }
+    $predicate = $where ? 'WHERE ' . implode(' AND ', $where) : '';
+    $progressWhere = '';
+    if ($to !== null) {
+        $progressWhere = "WHERE occurred_at < CAST(:progress_to_date AS date) + INTERVAL '1 day'";
+        $params['progress_to_date'] = $to;
+    }
+    $cohortPredicate = 'TRUE';
+    if ($to !== null) {
+        $cohortPredicate = "pair.effective_from < CAST(:cohort_to_date AS date) + INTERVAL '1 day'
+            AND (pair.effective_to IS NULL OR pair.effective_to >= CAST(:cohort_to_date AS date))";
+        $params['cohort_to_date'] = $to;
     }
 
-    return [
-        'sql' => implode(",\n", $rows),
-        'params' => $params,
-    ];
+    $sql = dashboard_report_common_cte() . ",\n" . <<<SQL
+cohort_pairs AS (
+    SELECT DISTINCT person_id, lab_id
+      FROM assignment_pairs pair
+     WHERE $cohortPredicate
+),
+activity_scoped AS (
+    SELECT session.*
+      FROM numbered_sessions session
+      JOIN cohort_pairs cohort
+        ON cohort.person_id = session.person_id AND cohort.lab_id = session.lab_id
+     $predicate
+),
+progress_scoped AS (
+    SELECT session.*
+      FROM numbered_sessions session
+      JOIN cohort_pairs cohort
+        ON cohort.person_id = session.person_id AND cohort.lab_id = session.lab_id
+     $progressWhere
+),
+pair_outcomes AS (
+    SELECT person_id,
+           lab_id,
+           MIN(practice_attempt_no) FILTER (
+                WHERE mode IN ('Thực hành', 'practice')
+                  AND is_passed IS TRUE
+           ) AS first_pass_attempt_no
+      FROM progress_scoped
+     GROUP BY person_id, lab_id
+)
+SELECT (SELECT COUNT(*) FROM cohort_pairs) AS assigned_count,
+       COUNT(*) FILTER (WHERE activity_scoped.mode IN ('Thực hành', 'practice')) AS practice_attempts,
+       COUNT(*) FILTER (WHERE activity_scoped.mode IN ('Hướng dẫn', 'guide')) AS guide_attempts,
+       COUNT(DISTINCT activity_scoped.person_id) AS participating_technicians,
+       COUNT(*) FILTER (
+           WHERE activity_scoped.mode IN ('Thực hành', 'practice')
+             AND activity_scoped.status IN ('completed', 'Hoàn thành')
+       ) AS activity_completed_count,
+       COUNT(*) FILTER (
+           WHERE activity_scoped.mode IN ('Thực hành', 'practice')
+             AND activity_scoped.status IN ('completed', 'Hoàn thành')
+             AND activity_scoped.is_passed IS NULL
+       ) AS ungraded_completed_count,
+       (SELECT COUNT(*) FROM pair_outcomes WHERE first_pass_attempt_no IS NOT NULL) AS completed_count,
+       COUNT(*) FILTER (
+            WHERE activity_scoped.mode IN ('Thực hành', 'practice') AND activity_scoped.is_passed IS NOT NULL
+       ) AS graded_count,
+       ROUND(100.0 * (SELECT COUNT(*) FROM pair_outcomes WHERE first_pass_attempt_no IS NOT NULL)
+           / NULLIF((SELECT COUNT(*) FROM cohort_pairs), 0), 2) AS completion_rate,
+       ROUND(100.0 * COUNT(*) FILTER (
+            WHERE activity_scoped.mode IN ('Thực hành', 'practice') AND activity_scoped.is_passed IS TRUE
+       ) / NULLIF(COUNT(*) FILTER (
+            WHERE activity_scoped.mode IN ('Thực hành', 'practice') AND activity_scoped.is_passed IS NOT NULL
+       ), 0), 2) AS pass_rate,
+       ROUND(100.0 * (SELECT COUNT(*) FROM pair_outcomes WHERE first_pass_attempt_no = 1)
+           / NULLIF((SELECT COUNT(*) FROM pair_outcomes WHERE first_pass_attempt_no IS NOT NULL), 0), 2) AS first_try_rate,
+       ROUND(AVG(activity_scoped.duration_sec) FILTER (
+            WHERE activity_scoped.mode IN ('Thực hành', 'practice') AND activity_scoped.duration_sec > 0
+       )) AS avg_duration_sec,
+       COUNT(*) FILTER (
+            WHERE activity_scoped.mode IN ('Thực hành', 'practice') AND activity_scoped.duration_sec > 0
+       ) AS duration_known_count,
+       ROUND(100.0 * COUNT(*) FILTER (
+            WHERE activity_scoped.mode IN ('Thực hành', 'practice') AND activity_scoped.duration_sec > 0
+       ) / NULLIF(COUNT(*) FILTER (
+            WHERE activity_scoped.mode IN ('Thực hành', 'practice')
+        ), 0), 2) AS duration_coverage_rate
+  FROM activity_scoped
+SQL;
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    return $stmt->fetch() ?: [];
 }
 
-/** @return array<string, int|float|null|string> */
-function dashboard_report_normalize_metric(array $row, string $cohort): array
+function dashboard_report_monthly(PDO $pdo, int $year): array
 {
-    $assigned = (int)($row['assigned_count'] ?? 0);
-    $passed = (int)($row['passed_count'] ?? 0);
-    $firstTryEvaluable = (int)($row['first_try_evaluable_count'] ?? 0);
-    $firstTryPass = (int)($row['first_try_pass_count'] ?? 0);
-
-    return [
-        'cohort_basis' => $cohort,
-        'assigned_count' => $assigned,
-        'assigned_technicians' => (int)($row['assigned_technicians'] ?? 0),
-        'passed_count' => $passed,
-        'completion_rate' => dashboard_report_rate($passed, $assigned),
-        'first_try_evaluable_count' => $firstTryEvaluable,
-        'first_try_pass_count' => $firstTryPass,
-        'first_try_unknown_count' => (int)($row['first_try_unknown_count'] ?? 0),
-        'first_try_rate' => dashboard_report_rate($firstTryPass, $firstTryEvaluable),
-        'practice_attempts' => (int)($row['practice_attempts'] ?? 0),
-        'participating_technicians' => (int)($row['participating_technicians'] ?? 0),
-        'avg_duration_sec' => (int)($row['avg_duration_sec'] ?? 0),
-        'inferred_assignment_count' => (int)($row['inferred_assignment_count'] ?? 0),
-    ];
+    $sql = dashboard_report_common_cte() . ",\n" . <<<'SQL'
+months AS (
+    SELECT month,
+           LEAST(month + INTERVAL '1 month', CURRENT_DATE + INTERVAL '1 day') AS cutoff
+      FROM generate_series(
+               CAST(:year_start AS date),
+               CAST(:year_start AS date) + INTERVAL '11 months',
+               INTERVAL '1 month'
+           ) AS generated(month)
+),
+month_cohort AS (
+    SELECT DISTINCT months.month, months.cutoff, pair.person_id, pair.lab_id
+      FROM months
+      JOIN assignment_pairs pair
+        ON pair.effective_from < months.cutoff
+       AND (pair.effective_to IS NULL OR pair.effective_to >= (months.cutoff - INTERVAL '1 day')::date)
+     WHERE months.month <= DATE_TRUNC('month', CURRENT_DATE)::date
+),
+scoped AS (
+    SELECT numbered.*,
+           DATE_TRUNC('month', occurred_at)::date AS month
+      FROM numbered_sessions numbered
+     WHERE occurred_at >= CAST(:year_start AS date)
+       AND occurred_at < CAST(:year_start AS date) + INTERVAL '1 year'
+),
+attempt_metrics AS (
+    SELECT scoped.month,
+           COUNT(*) FILTER (WHERE mode IN ('Thực hành', 'practice')) AS practice_attempts,
+           COUNT(*) FILTER (WHERE mode IN ('Hướng dẫn', 'guide')) AS guide_attempts,
+           COUNT(DISTINCT scoped.person_id) AS participating_technicians,
+           COUNT(*) FILTER (WHERE mode IN ('Thực hành', 'practice') AND is_passed IS NOT NULL) AS graded_count,
+           COUNT(*) FILTER (WHERE mode IN ('Thực hành', 'practice') AND is_passed IS TRUE) AS passed_count,
+           ROUND(AVG(duration_sec) FILTER (WHERE mode IN ('Thực hành', 'practice') AND duration_sec > 0)) AS avg_duration_sec,
+           COUNT(*) FILTER (WHERE mode IN ('Thực hành', 'practice') AND duration_sec > 0) AS duration_known_count
+      FROM scoped
+      JOIN month_cohort cohort
+        ON cohort.month = scoped.month
+       AND cohort.person_id = scoped.person_id
+       AND cohort.lab_id = scoped.lab_id
+     GROUP BY scoped.month
+),
+monthly_pair_outcomes AS (
+    SELECT cohort.month,
+           cohort.person_id,
+           cohort.lab_id,
+           MIN(session.practice_attempt_no) FILTER (
+               WHERE session.mode IN ('Thực hành', 'practice')
+                 AND session.is_passed IS TRUE
+           ) AS first_pass_attempt_no
+      FROM month_cohort cohort
+      LEFT JOIN numbered_sessions session
+        ON session.person_id = cohort.person_id
+       AND session.lab_id = cohort.lab_id
+       AND session.occurred_at < cohort.cutoff
+     GROUP BY cohort.month, cohort.person_id, cohort.lab_id
+),
+pair_metrics AS (
+    SELECT month,
+           COUNT(*) AS assigned_count,
+           COUNT(first_pass_attempt_no) AS completed_count,
+           COUNT(*) FILTER (WHERE first_pass_attempt_no = 1) AS first_try_count
+      FROM monthly_pair_outcomes
+     GROUP BY month
+)
+SELECT TO_CHAR(months.month, 'YYYY-MM') AS month,
+       COALESCE(attempt.practice_attempts, 0) AS practice_attempts,
+       COALESCE(attempt.guide_attempts, 0) AS guide_attempts,
+       COALESCE(attempt.participating_technicians, 0) AS participating_technicians,
+       COALESCE(pair.assigned_count, 0) AS assigned_count,
+       COALESCE(pair.completed_count, 0) AS completed_count,
+       COALESCE(attempt.graded_count, 0) AS graded_count,
+       ROUND(100.0 * COALESCE(pair.completed_count, 0)
+           / NULLIF(pair.assigned_count, 0), 2) AS completion_rate,
+       ROUND(100.0 * COALESCE(attempt.passed_count, 0) / NULLIF(attempt.graded_count, 0), 2) AS pass_rate,
+       ROUND(100.0 * COALESCE(pair.first_try_count, 0) / NULLIF(pair.completed_count, 0), 2) AS first_try_rate,
+       attempt.avg_duration_sec,
+       COALESCE(attempt.duration_known_count, 0) AS duration_known_count,
+       ((months.month + INTERVAL '1 month') > DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month') AS is_future
+  FROM months
+  LEFT JOIN attempt_metrics attempt ON attempt.month = months.month
+  LEFT JOIN pair_metrics pair ON pair.month = months.month
+ ORDER BY months.month
+SQL;
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute(['year_start' => sprintf('%04d-01-01', $year)]);
+    return $stmt->fetchAll();
 }
 
-/** @return array<string, int|float|null|string> */
-function dashboard_report_matrix_metric(int $assigned, int $passed, int $attempted, int $attempts): array
+function dashboard_report_matrix(PDO $pdo, string $from, string $to): array
 {
-    $state = 'not_assigned';
-    if ($assigned > 0 && $passed === 0) {
-        $state = 'assigned_none_passed';
-    } elseif ($assigned > 0 && $passed < $assigned) {
-        $state = 'partial';
-    } elseif ($assigned > 0) {
-        $state = 'complete';
-    }
+    $sql = dashboard_report_common_cte() . ",\n" . <<<'SQL'
+cohort_pairs AS (
+    SELECT DISTINCT ON (person_id, lab_id)
+           person_id, region_id, region_code, region_name,
+           dashboard_group, branch_name, region_snapshot_present, device_id, device_name,
+           device_sort_order, lab_id, lab_name, lab_sort_order
+      FROM assignment_pairs pair
+     WHERE pair.effective_from < CAST(:to_date AS date) + INTERVAL '1 day'
+       AND (pair.effective_to IS NULL OR pair.effective_to >= CAST(:to_date AS date))
+     ORDER BY person_id, lab_id, effective_from DESC, effective_to DESC NULLS FIRST, region_id NULLS LAST
+),
+activity_scoped AS (
+    SELECT *
+      FROM numbered_sessions
+     WHERE occurred_at >= CAST(:from_date AS date)
+       AND occurred_at < CAST(:to_date AS date) + INTERVAL '1 day'
+),
+progress_scoped AS (
+    SELECT *
+      FROM numbered_sessions
+     WHERE occurred_at < CAST(:to_date AS date) + INTERVAL '1 day'
+),
+pair_activity AS (
+    SELECT cohort.person_id,
+           cohort.lab_id,
+           COUNT(activity.id) FILTER (
+               WHERE activity.mode IN ('Thực hành', 'practice')
+           ) AS attempt_count
+      FROM cohort_pairs cohort
+      LEFT JOIN activity_scoped activity
+        ON activity.person_id = cohort.person_id
+       AND activity.lab_id = cohort.lab_id
+     GROUP BY cohort.person_id, cohort.lab_id
+),
+pair_progress AS (
+    SELECT cohort.person_id,
+           cohort.lab_id,
+           BOOL_OR(
+               progress.mode IN ('Thực hành', 'practice')
+               AND progress.is_passed IS TRUE
+           ) AS completed
+      FROM cohort_pairs cohort
+      LEFT JOIN progress_scoped progress
+        ON progress.person_id = cohort.person_id
+       AND progress.lab_id = cohort.lab_id
+     GROUP BY cohort.person_id, cohort.lab_id
+),
+matrix AS (
+    SELECT cohort.region_id,
+           cohort.region_code,
+           cohort.region_name,
+           cohort.dashboard_group,
+           cohort.branch_name,
+           cohort.device_id,
+           cohort.device_name,
+           cohort.device_sort_order,
+           cohort.lab_id,
+           cohort.lab_name,
+           cohort.lab_sort_order,
+           COUNT(DISTINCT cohort.person_id) AS assigned_count,
+           COUNT(DISTINCT cohort.person_id) FILTER (
+               WHERE cohort.region_snapshot_present IS TRUE
+           ) AS region_snapshot_count,
+           COUNT(DISTINCT cohort.person_id) FILTER (
+               WHERE activity.attempt_count > 0
+           ) AS attempted_count,
+            COUNT(DISTINCT cohort.person_id) FILTER (
+                WHERE progress.completed IS TRUE
+            ) AS completed_count,
+           COALESCE(SUM(activity.attempt_count), 0) AS attempt_count
+      FROM cohort_pairs cohort
+      JOIN pair_activity activity
+        ON activity.person_id = cohort.person_id
+       AND activity.lab_id = cohort.lab_id
+      JOIN pair_progress progress
+        ON progress.person_id = cohort.person_id
+       AND progress.lab_id = cohort.lab_id
+     GROUP BY cohort.region_id,
+              cohort.region_code,
+              cohort.region_name,
+              cohort.dashboard_group,
+              cohort.branch_name,
+              cohort.device_id,
+              cohort.device_name,
+              cohort.device_sort_order,
+              cohort.lab_id,
+              cohort.lab_name,
+              cohort.lab_sort_order
+)
+SELECT *,
+       ROUND(100.0 * completed_count / NULLIF(assigned_count, 0), 2) AS completion_rate
+  FROM matrix
+ ORDER BY COALESCE(dashboard_group, region_name), region_name,
+          device_sort_order, lab_sort_order, lab_id
+SQL;
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute(['from_date' => $from, 'to_date' => $to]);
+    $rows = $stmt->fetchAll();
 
-    return [
-        'assigned_count' => $assigned,
-        'passed_count' => $passed,
-        'attempted_count' => $attempted,
-        'attempt_count' => $attempts,
-        'completion_rate' => dashboard_report_rate($passed, $assigned),
-        'state' => $state,
-    ];
-}
-
-/**
- * Build the normalized assignment-based response consumed by GET
- * /dashboard/report. Query date parameters are inclusive calendar dates.
- *
- * Supported query keys: from, to, compare_from, compare_to, cohort and year.
- *
- * @throws InvalidArgumentException for invalid report parameters.
- */
-function build_dashboard_report(PDO $pdo, array $query): array
-{
-    $today = new DateTimeImmutable('today');
-    $defaultFrom = $today->modify('first day of this month');
-    $defaultTo = $today->modify('last day of this month');
-
-    $from = dashboard_report_date($query['from'] ?? $defaultFrom->format('Y-m-d'), 'from');
-    $to = dashboard_report_date($query['to'] ?? $defaultTo->format('Y-m-d'), 'to');
-    if ($from > $to) {
-        throw new InvalidArgumentException('from must be on or before to.');
-    }
-
-    $hasCompareFrom = array_key_exists('compare_from', $query) && $query['compare_from'] !== '';
-    $hasCompareTo = array_key_exists('compare_to', $query) && $query['compare_to'] !== '';
-    if ($hasCompareFrom !== $hasCompareTo) {
-        throw new InvalidArgumentException('compare_from and compare_to must be supplied together.');
-    }
-    if ($hasCompareFrom) {
-        $compareFrom = dashboard_report_date($query['compare_from'], 'compare_from');
-        $compareTo = dashboard_report_date($query['compare_to'], 'compare_to');
-    } else {
-        $inclusiveDays = (int)$from->diff($to)->format('%a');
-        $compareTo = $from->modify('-1 day');
-        $compareFrom = $compareTo->modify("-$inclusiveDays days");
-    }
-    if ($compareFrom > $compareTo) {
-        throw new InvalidArgumentException('compare_from must be on or before compare_to.');
-    }
-
-    $cohortValue = $query['cohort'] ?? 'due_in_period';
-    if (!is_string($cohortValue)) {
-        throw new InvalidArgumentException('cohort must be a string.');
-    }
-    $cohort = trim($cohortValue);
-    $allowedCohorts = ['due_in_period', 'assigned_in_period', 'assigned_as_of_period_end'];
-    if (!in_array($cohort, $allowedCohorts, true)) {
-        throw new InvalidArgumentException('cohort must be due_in_period, assigned_in_period or assigned_as_of_period_end.');
-    }
-
-    $yearValue = $query['year'] ?? $from->format('Y');
-    if (is_int($yearValue)) {
-        $reportYear = $yearValue;
-    } elseif (is_string($yearValue) && preg_match('/^\d{4}$/D', $yearValue)) {
-        $reportYear = (int)$yearValue;
-    } else {
-        throw new InvalidArgumentException('year must use YYYY.');
-    }
-    if ($reportYear < 2000 || $reportYear > 2100) {
-        throw new InvalidArgumentException('year must be between 2000 and 2100.');
-    }
-
-    $periods = [
-        [
-            'key' => 'current',
-            'from' => $from->format('Y-m-d'),
-            'to' => $to->format('Y-m-d'),
-            'is_lifetime' => false,
-        ],
-        [
-            'key' => 'previous',
-            'from' => $compareFrom->format('Y-m-d'),
-            'to' => $compareTo->format('Y-m-d'),
-            'is_lifetime' => false,
-        ],
-        [
-            'key' => 'lifetime',
-            'from' => '1900-01-01',
-            'to' => $to->format('Y-m-d'),
-            'is_lifetime' => true,
-        ],
-    ];
-    for ($month = 1; $month <= 12; $month++) {
-        $monthStart = new DateTimeImmutable(sprintf('%04d-%02d-01', $reportYear, $month));
-        $periods[] = [
-            'key' => $monthStart->format('Y-m'),
-            'from' => $monthStart->format('Y-m-d'),
-            'to' => $monthStart->modify('last day of this month')->format('Y-m-d'),
-            'is_lifetime' => false,
-        ];
-    }
-
-    $periodValues = dashboard_report_period_values($periods);
-    $cohortCondition = dashboard_report_cohort_condition($cohort, 'progress', 'period');
-    $metricSql = <<<SQL
-        WITH periods(period_key, period_start, period_end, is_lifetime) AS (
-            VALUES {$periodValues['sql']}
-        ), eligible AS (
-            SELECT period.period_key,
-                   period.period_start,
-                   period.period_end,
-                   progress.*
-              FROM periods period
-              JOIN v_lab_assignment_progress progress
-                ON $cohortCondition
-              JOIN curriculum_labs curriculum_lab
-                ON curriculum_lab.curriculum_lab_id = progress.curriculum_lab_id
-               AND curriculum_lab.required_mode IN ('practice', 'both')
-             WHERE progress.assignment_status <> 'waived'
-        ), attempt_stats AS (
-            SELECT eligible.period_key,
-                   eligible.assignment_id,
-                   COUNT(attempt.attempt_id) AS attempt_count,
-                   COUNT(attempt.duration_seconds) AS duration_count,
-                   COALESCE(SUM(attempt.duration_seconds), 0) AS duration_sum
-              FROM eligible
-              JOIN lab_attempts attempt
-                ON attempt.assignment_id = eligible.assignment_id
-               AND attempt.mode = 'practice'
-               AND attempt.started_at >= eligible.period_start
-               AND attempt.started_at < eligible.period_end
-             GROUP BY eligible.period_key, eligible.assignment_id
-        )
-        SELECT period.period_key,
-               COUNT(eligible.assignment_id) AS assigned_count,
-               COUNT(DISTINCT eligible.employee_code) AS assigned_technicians,
-               COUNT(eligible.assignment_id) FILTER (
-                   WHERE eligible.completed_at IS NOT NULL
-                     AND eligible.completed_at < period.period_end
-               ) AS passed_count,
-               COUNT(eligible.assignment_id) FILTER (
-                   WHERE eligible.completed_at IS NOT NULL
-                     AND eligible.completed_at < period.period_end
-                     AND eligible.first_try_success IS NOT NULL
-               ) AS first_try_evaluable_count,
-               COUNT(eligible.assignment_id) FILTER (
-                   WHERE eligible.completed_at IS NOT NULL
-                     AND eligible.completed_at < period.period_end
-                     AND eligible.first_try_success IS TRUE
-               ) AS first_try_pass_count,
-               COUNT(eligible.assignment_id) FILTER (
-                   WHERE eligible.completed_at IS NOT NULL
-                     AND eligible.completed_at < period.period_end
-                     AND eligible.first_try_success IS NULL
-               ) AS first_try_unknown_count,
-               COALESCE(SUM(attempt_stats.attempt_count), 0) AS practice_attempts,
-               COUNT(DISTINCT eligible.employee_code) FILTER (
-                   WHERE COALESCE(attempt_stats.attempt_count, 0) > 0
-               ) AS participating_technicians,
-               COALESCE(
-                   ROUND(
-                       SUM(attempt_stats.duration_sum)::numeric
-                       / NULLIF(SUM(attempt_stats.duration_count), 0)
-                   ),
-                   0
-               ) AS avg_duration_sec,
-               COUNT(eligible.assignment_id) FILTER (WHERE eligible.is_inferred) AS inferred_assignment_count
-          FROM periods period
-          LEFT JOIN eligible ON eligible.period_key = period.period_key
-          LEFT JOIN attempt_stats
-            ON attempt_stats.period_key = eligible.period_key
-           AND attempt_stats.assignment_id = eligible.assignment_id
-         GROUP BY period.period_key
-        SQL;
-    $metricStatement = $pdo->prepare($metricSql);
-    $metricStatement->execute($periodValues['params']);
-    $metricRows = [];
-    foreach ($metricStatement->fetchAll(PDO::FETCH_ASSOC) as $row) {
-        $metricRows[(string)$row['period_key']] = dashboard_report_normalize_metric($row, $cohort);
-    }
-
-    $emptyMetric = dashboard_report_normalize_metric([], $cohort);
-    $currentMetric = $metricRows['current'] ?? $emptyMetric;
-    $previousMetric = $metricRows['previous'] ?? $emptyMetric;
-    $lifetimeMetric = $metricRows['lifetime'] ?? $emptyMetric;
-    $monthly = [];
-    for ($month = 1; $month <= 12; $month++) {
-        $monthKey = sprintf('%04d-%02d', $reportYear, $month);
-        $monthly[] = ['month' => $monthKey] + ($metricRows[$monthKey] ?? $emptyMetric);
-    }
-
-    $catalogStatement = $pdo->query(
-        <<<'SQL'
-        SELECT device.device_id,
-               device.model,
-               device.device_name,
-               device.sort_order AS device_sort_order,
-               lab.lab_id,
-               lab.lab_name,
-               lab.sort_order AS lab_sort_order
-          FROM device_catalog device
-          JOIN lab_catalog lab ON lab.device_id = device.device_id
-         WHERE device.is_active = TRUE
-           AND lab.is_active = TRUE
-         ORDER BY device.sort_order, device.device_name, device.device_id,
-                  lab.sort_order, lab.lab_name, lab.lab_id
-        SQL
-    );
-    $deviceGroups = [];
-    $deviceGroupIndexes = [];
-    $labIds = [];
-    foreach ($catalogStatement->fetchAll(PDO::FETCH_ASSOC) as $row) {
+    $catalogRows = $pdo->query(
+        'SELECT device.device_id, device.device_name, device.sort_order AS device_sort_order,
+                lab.lab_id, lab.lab_name, lab.sort_order AS lab_sort_order
+           FROM device_catalog device
+           JOIN lab_catalog lab ON lab.device_id = device.device_id
+          WHERE device.is_active = TRUE AND lab.is_active = TRUE
+          ORDER BY device.sort_order, device.device_id, lab.sort_order, lab.lab_id'
+    )->fetchAll();
+    $groups = [];
+    foreach ($catalogRows as $row) {
         $deviceId = (string)$row['device_id'];
-        if (!array_key_exists($deviceId, $deviceGroupIndexes)) {
-            $deviceGroupIndexes[$deviceId] = count($deviceGroups);
-            $deviceGroups[] = [
-                'device' => [
-                    'device_id' => $deviceId,
-                    'model' => (string)($row['model'] ?? ''),
-                    'name' => (string)$row['device_name'],
-                    'device_name' => (string)$row['device_name'],
-                ],
+        if (!isset($groups[$deviceId])) {
+            $groups[$deviceId] = [
+                'device' => ['device_id' => $deviceId, 'name' => (string)$row['device_name']],
                 'labs' => [],
             ];
         }
-        $labId = (string)$row['lab_id'];
-        $labIds[$labId] = true;
-        $deviceGroups[$deviceGroupIndexes[$deviceId]]['labs'][] = [
-            'lab_id' => $labId,
+        $groups[$deviceId]['labs'][] = [
+            'lab_id' => (string)$row['lab_id'],
             'name' => (string)$row['lab_name'],
-            'lab_name' => (string)$row['lab_name'],
         ];
     }
-    $orderedLabIds = array_keys($labIds);
 
-    $matrixPeriodValues = dashboard_report_period_values([[
-        'key' => 'matrix',
-        'from' => $from->format('Y-m-d'),
-        'to' => $to->format('Y-m-d'),
-        'is_lifetime' => false,
-    ]]);
-    $matrixCohortCondition = dashboard_report_cohort_condition($cohort, 'progress', 'period');
-    $matrixSql = <<<SQL
-        WITH periods(period_key, period_start, period_end, is_lifetime) AS (
-            VALUES {$matrixPeriodValues['sql']}
-        ), eligible AS (
-            SELECT period.period_start,
-                   period.period_end,
-                   progress.*,
-                   COALESCE(progress.employee_code::text, 'assignment:' || progress.assignment_id::text) AS subject_key,
-                   progress.completed_at IS NOT NULL
-                       AND progress.completed_at < period.period_end AS passed_before_end
-              FROM periods period
-              JOIN v_lab_assignment_progress progress
-                ON $matrixCohortCondition
-              JOIN curriculum_labs curriculum_lab
-                ON curriculum_lab.curriculum_lab_id = progress.curriculum_lab_id
-               AND curriculum_lab.required_mode IN ('practice', 'both')
-             WHERE progress.assignment_status <> 'waived'
-        ), assignment_attempts AS (
-            SELECT eligible.assignment_id,
-                   COUNT(attempt.attempt_id) AS attempt_count
-              FROM eligible
-              LEFT JOIN lab_attempts attempt
-                ON attempt.assignment_id = eligible.assignment_id
-               AND attempt.mode = 'practice'
-               AND attempt.started_at >= eligible.period_start
-               AND attempt.started_at < eligible.period_end
-             GROUP BY eligible.assignment_id
-        ), region_subject_lab AS (
-            SELECT eligible.region_id,
-                   eligible.region_code,
-                   eligible.region_name,
-                   eligible.dashboard_group,
-                   eligible.device_id,
-                   eligible.lab_id,
-                   eligible.subject_key,
-                   BOOL_OR(eligible.passed_before_end) AS passed,
-                   SUM(COALESCE(assignment_attempts.attempt_count, 0)) AS attempt_count
-              FROM eligible
-              LEFT JOIN assignment_attempts
-                ON assignment_attempts.assignment_id = eligible.assignment_id
-             GROUP BY eligible.region_id,
-                      eligible.region_code,
-                      eligible.region_name,
-                      eligible.dashboard_group,
-                      eligible.device_id,
-                      eligible.lab_id,
-                      eligible.subject_key
-        ), system_subject_lab AS (
-            SELECT device_id,
-                   lab_id,
-                   subject_key,
-                   BOOL_OR(passed) AS passed,
-                   SUM(attempt_count) AS attempt_count
-              FROM region_subject_lab
-             GROUP BY device_id, lab_id, subject_key
-        ), region_cells AS (
-            SELECT 'region'::text AS scope,
-                   region_id,
-                   region_code,
-                   region_name,
-                   dashboard_group,
-                   device_id,
-                   lab_id,
-                   COUNT(*) AS assigned_count,
-                   COUNT(*) FILTER (WHERE passed) AS passed_count,
-                   COUNT(*) FILTER (WHERE attempt_count > 0) AS attempted_count,
-                   SUM(attempt_count) AS attempt_count
-              FROM region_subject_lab
-             GROUP BY region_id, region_code, region_name, dashboard_group, device_id, lab_id
-        ), system_cells AS (
-            SELECT 'grand'::text AS scope,
-                   NULL::uuid AS region_id,
-                   NULL::text AS region_code,
-                   NULL::text AS region_name,
-                   NULL::text AS dashboard_group,
-                   device_id,
-                   lab_id,
-                   COUNT(*) AS assigned_count,
-                   COUNT(*) FILTER (WHERE passed) AS passed_count,
-                   COUNT(*) FILTER (WHERE attempt_count > 0) AS attempted_count,
-                   SUM(attempt_count) AS attempt_count
-              FROM system_subject_lab
-             GROUP BY device_id, lab_id
-        )
-        SELECT * FROM region_cells
-        UNION ALL
-        SELECT * FROM system_cells
-        ORDER BY scope DESC, region_name NULLS LAST, region_code NULLS LAST, device_id, lab_id
-        SQL;
-    $matrixStatement = $pdo->prepare($matrixSql);
-    $matrixStatement->execute($matrixPeriodValues['params']);
-
-    $regions = [];
+    $regionRows = [];
     $grandCells = [];
-    foreach ($matrixStatement->fetchAll(PDO::FETCH_ASSOC) as $row) {
-        $labId = (string)$row['lab_id'];
-        if (($row['scope'] ?? '') === 'grand') {
-            $grandCells[$labId] = dashboard_report_matrix_metric(
-                (int)$row['assigned_count'],
-                (int)$row['passed_count'],
-                (int)$row['attempted_count'],
-                (int)$row['attempt_count']
-            );
-            continue;
-        }
-
-        $regionId = $row['region_id'] !== null ? (string)$row['region_id'] : '';
-        $regionKey = $regionId !== ''
-            ? $regionId
-            : 'unassigned:' . (string)($row['region_code'] ?? $row['region_name'] ?? 'unknown');
-        if (!isset($regions[$regionKey])) {
-            $regions[$regionKey] = [
+    $grandTotal = ['assigned_count' => 0, 'attempted_count' => 0, 'completed_count' => 0, 'attempt_count' => 0];
+    $regionSnapshotPairCount = 0;
+    foreach ($rows as $row) {
+        $regionKey = (string)($row['region_id'] ?? '') . '|' . (string)$row['region_name'];
+        if (!isset($regionRows[$regionKey])) {
+            $regionRows[$regionKey] = [
                 'region' => [
-                    'region_id' => $regionId !== '' ? $regionId : null,
-                    'code' => (string)($row['region_code'] ?? 'UNASSIGNED'),
-                    'region_code' => (string)($row['region_code'] ?? 'UNASSIGNED'),
-                    'name' => (string)($row['region_name'] ?? 'Chưa xác định'),
-                    'region_name' => (string)($row['region_name'] ?? 'Chưa xác định'),
+                    'region_id' => $row['region_id'] ?? null,
+                    'code' => (string)$row['region_code'],
+                    'name' => (string)$row['region_name'],
                     'dashboard_group' => $row['dashboard_group'] ?? null,
+                    'branch_name' => $row['branch_name'] ?? null,
                 ],
                 'cells' => [],
+                'total' => ['assigned_count' => 0, 'attempted_count' => 0, 'completed_count' => 0, 'attempt_count' => 0],
             ];
         }
-        $regions[$regionKey]['cells'][$labId] = dashboard_report_matrix_metric(
-            (int)$row['assigned_count'],
-            (int)$row['passed_count'],
-            (int)$row['attempted_count'],
-            (int)$row['attempt_count']
-        );
-    }
-
-    $emptyCell = dashboard_report_matrix_metric(0, 0, 0, 0);
-    $sumMetrics = static function (array $cells): array {
-        $assigned = 0;
-        $passed = 0;
-        $attempted = 0;
-        $attempts = 0;
-        foreach ($cells as $cell) {
-            $assigned += (int)($cell['assigned_count'] ?? 0);
-            $passed += (int)($cell['passed_count'] ?? 0);
-            $attempted += (int)($cell['attempted_count'] ?? 0);
-            $attempts += (int)($cell['attempt_count'] ?? 0);
-        }
-        return dashboard_report_matrix_metric($assigned, $passed, $attempted, $attempts);
-    };
-
-    foreach ($regions as &$region) {
-        foreach ($orderedLabIds as $labId) {
-            if (!isset($region['cells'][$labId])) {
-                $region['cells'][$labId] = $emptyCell;
-            }
-        }
-        $region['total'] = $sumMetrics($region['cells']);
-    }
-    unset($region);
-    uasort($regions, static function (array $left, array $right): int {
-        $leftRegion = $left['region'];
-        $rightRegion = $right['region'];
-        return strnatcasecmp(
-            (string)($leftRegion['name'] ?? $leftRegion['code'] ?? ''),
-            (string)($rightRegion['name'] ?? $rightRegion['code'] ?? '')
-        );
-    });
-    foreach ($orderedLabIds as $labId) {
-        if (!isset($grandCells[$labId])) {
-            $grandCells[$labId] = $emptyCell;
+        $cell = [
+            'assigned_count' => (int)$row['assigned_count'],
+            'attempted_count' => (int)$row['attempted_count'],
+            'completed_count' => (int)$row['completed_count'],
+            'attempt_count' => (int)$row['attempt_count'],
+            'completion_rate' => $row['completion_rate'] === null ? null : (float)$row['completion_rate'],
+        ];
+        $regionSnapshotPairCount += (int)($row['region_snapshot_count'] ?? 0);
+        $labId = (string)$row['lab_id'];
+        $regionRows[$regionKey]['cells'][$labId] = $cell;
+        foreach (['assigned_count', 'attempted_count', 'completed_count', 'attempt_count'] as $metric) {
+            $regionRows[$regionKey]['total'][$metric] += $cell[$metric];
+            $grandTotal[$metric] += $cell[$metric];
+            $grandCells[$labId][$metric] = ($grandCells[$labId][$metric] ?? 0) + $cell[$metric];
         }
     }
-    $grandTotal = $sumMetrics($grandCells);
-
-    $version = $pdo->query(
-        <<<'SQL'
-        SELECT CONCAT(
-                   TO_CHAR(
-                       GREATEST(
-                           COALESCE((SELECT MAX(updated_at) FROM lab_assignments), 'epoch'::timestamptz),
-                           COALESCE((SELECT MAX(updated_at) FROM lab_attempts), 'epoch'::timestamptz),
-                           COALESCE((SELECT MAX(updated_at) FROM training_classes), 'epoch'::timestamptz),
-                           COALESCE((SELECT MAX(updated_at) FROM device_catalog), 'epoch'::timestamptz),
-                           COALESCE((SELECT MAX(updated_at) FROM lab_catalog), 'epoch'::timestamptz)
-                       ),
-                       'YYYYMMDDHH24MISS.US'
-                   ),
-                   ':', (SELECT COUNT(*) FROM lab_assignments),
-                   ':', (SELECT COUNT(*) FROM lab_attempts)
-           ) AS data_version
-        SQL
-    )->fetchColumn();
-
-    $formatPeriodLabel = static fn(DateTimeImmutable $start, DateTimeImmutable $end): string =>
-        $start->format('d/m/Y') . ' - ' . $end->format('d/m/Y');
+    foreach ($regionRows as &$regionRow) {
+        $assigned = $regionRow['total']['assigned_count'];
+        $regionRow['total']['completion_rate'] = $assigned
+            ? round(100 * $regionRow['total']['completed_count'] / $assigned, 2)
+            : null;
+    }
+    unset($regionRow);
+    foreach ($grandCells as &$cell) {
+        $cell['completion_rate'] = $cell['assigned_count']
+            ? round(100 * $cell['completed_count'] / $cell['assigned_count'], 2)
+            : null;
+    }
+    unset($cell);
+    $grandTotal['completion_rate'] = $grandTotal['assigned_count']
+        ? round(100 * $grandTotal['completed_count'] / $grandTotal['assigned_count'], 2)
+        : null;
 
     return [
-        'schema_version' => '2.0',
-        'mode' => 'practice',
-        'cohort_basis' => $cohort,
+        'device_groups' => array_values($groups),
+        'rows' => array_values($regionRows),
+        'grand_total' => ['cells' => $grandCells, 'total' => $grandTotal],
+        'data_quality' => [
+            'region_snapshot_pairs' => $regionSnapshotPairCount,
+            'region_fallback_pairs' => max(0, $grandTotal['assigned_count'] - $regionSnapshotPairCount),
+            'region_snapshot_coverage_rate' => $grandTotal['assigned_count']
+                ? round(100 * $regionSnapshotPairCount / $grandTotal['assigned_count'], 2)
+                : null,
+        ],
+    ];
+}
+
+function dashboard_report_payload(PDO $pdo, array $query): array
+{
+    $cohort = trim((string)($query['cohort'] ?? 'assigned_as_of_period_end'));
+    if ($cohort !== 'assigned_as_of_period_end') {
+        throw new InvalidArgumentException('Unsupported dashboard report cohort.');
+    }
+    $today = new DateTimeImmutable('today');
+    $defaultStart = $today->modify('first day of this month');
+    $defaultEnd = $today;
+    $from = dashboard_report_parse_date($query['from'] ?? null, $defaultStart);
+    $to = dashboard_report_parse_date($query['to'] ?? null, $defaultEnd);
+    if ($to < $from) {
+        throw new InvalidArgumentException('Dashboard report end date must not be before start date.');
+    }
+    $previousEndDefault = $from->modify('-1 day');
+    $periodLength = (int)$from->diff($to)->format('%a');
+    $previousStartDefault = $previousEndDefault->modify('-' . $periodLength . ' days');
+    $compareFrom = dashboard_report_parse_date($query['compare_from'] ?? null, $previousStartDefault);
+    $compareTo = dashboard_report_parse_date($query['compare_to'] ?? null, $previousEndDefault);
+
+    $current = dashboard_report_metric($pdo, $from->format('Y-m-d'), $to->format('Y-m-d'));
+    $previous = dashboard_report_metric($pdo, $compareFrom->format('Y-m-d'), $compareTo->format('Y-m-d'));
+    $lifetime = dashboard_report_metric($pdo, null, null);
+    $monthly = dashboard_report_monthly($pdo, (int)$from->format('Y'));
+    $matrix = dashboard_report_matrix($pdo, $from->format('Y-m-d'), $to->format('Y-m-d'));
+
+    return [
         'meta' => [
-            'schema_version' => '2.0',
-            'data_version' => is_string($version) ? $version : '',
-            'mode' => 'practice',
-            'cohort_basis' => $cohort,
+            'source' => 'database',
+            'cohort' => 'assigned_as_of_period_end',
+            'metric_semantics' => [
+                'assigned_count' => 'KTV-lab assignments effective at the period end.',
+                'attempt_metrics' => 'Practice and guide attempts occurring inside the selected period.',
+                'completion_metrics' => 'Cumulative passed KTV-lab assignments through the period end.',
+            ],
+            'data_quality' => $matrix['data_quality'] ?? [],
             'period' => [
                 'from' => $from->format('Y-m-d'),
                 'to' => $to->format('Y-m-d'),
-                'label' => $formatPeriodLabel($from, $to),
+                'label' => $from->format('d/m/Y') . ' – ' . $to->format('d/m/Y'),
             ],
-            'comparison_period' => [
-                'from' => $compareFrom->format('Y-m-d'),
-                'to' => $compareTo->format('Y-m-d'),
-                'label' => $formatPeriodLabel($compareFrom, $compareTo),
-            ],
-            'report_year' => $reportYear,
-            'date_boundaries' => 'inclusive',
+            'generated_at' => (new DateTimeImmutable())->format(DATE_ATOM),
         ],
-        'summary' => [
-            'current' => $currentMetric,
-            'previous' => $previousMetric,
-            'lifetime' => $lifetimeMetric,
-        ],
+        'summary' => ['current' => $current, 'previous' => $previous, 'lifetime' => $lifetime],
         'monthly' => $monthly,
-        'matrix' => [
-            'cohort_basis' => $cohort,
-            'device_groups' => $deviceGroups,
-            'rows' => array_values($regions),
-            'grand_total' => [
-                'cells' => $grandCells,
-                'total' => $grandTotal,
-            ],
-        ],
+        'matrix' => $matrix,
     ];
 }

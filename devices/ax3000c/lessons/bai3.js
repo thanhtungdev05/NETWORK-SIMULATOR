@@ -1,4 +1,4 @@
-﻿/**
+/**
  * devices/ax3000c/lessons/bai3.js
  * Bài 3: Cấu hình WiFi IoT trên AX3000C
  */
@@ -6,9 +6,9 @@
 window.DEVICE_AX3000C_LESSONS = window.DEVICE_AX3000C_LESSONS || [];
 
 // Loại bỏ bài bị trùng nếu đang load lại (HMR/reload)
-var idx = window.DEVICE_AX3000C_LESSONS.findIndex(function (l) { return l.id === 'LAB_AX3000C_03'; });
+var idx = window.DEVICE_AX3000C_LESSONS.findIndex(function (l) { return l.id === 'LAB_AX3000CV2_03'; });
 var lessonObj = {
-  id: 'LAB_AX3000C_03',
+  id: 'LAB_AX3000CV2_03',
   title: 'Cấu hình wifi IoT',
   subtitle: 'Cấu hình wifi IoT',
   instructions: [

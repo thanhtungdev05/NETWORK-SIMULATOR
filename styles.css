@@ -1,4 +1,4 @@
-﻿/* ============================================================
+/* ============================================================
    styles.css â€” Network Simulator Portal
    Dark admin dashboard theme
    ============================================================ */
@@ -368,11 +368,10 @@ html, body {
   50%       { box-shadow: 0 0 0 5px rgba(0,200,83,0.10); }
 }
 
-/* Thao tÃ¡c Dropdown */
+/* Thao tác Dropdown */
 .action-dropdown {
   position: relative;
 }
-
 .action-btn {
   display: flex;
   align-items: center;
@@ -390,6 +389,18 @@ html, body {
   white-space: nowrap;
 }
 .action-btn:hover { background: #c62828; }
+
+.personal-dashboard-btn {
+  background: linear-gradient(135deg, #4f46e5, #4338ca) !important;
+  color: #fff !important;
+  text-decoration: none !important;
+  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25);
+}
+.personal-dashboard-btn:hover {
+  background: linear-gradient(135deg, #4338ca, #3730a3) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.35);
+}
 
 .action-dropdown-menu {
   display: none;
@@ -425,7 +436,7 @@ html, body {
 .action-menu-item:hover { background: #f5f7ff; }
 .action-menu-item .item-icon { font-size: 16px; }
 
-/* â”€â”€ CONTENT AREA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── CONTENT AREA ─────────────────────────────────────────── */
 #content {
   flex: 1;
   overflow-y: auto;
@@ -1008,6 +1019,74 @@ html, body {
   opacity: 0.9;
 }
 
+.gm-save-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 12px 0;
+  padding: 10px 12px;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  background: #eff6ff;
+  color: #1e40af;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.gm-save-status[hidden] {
+  display: none;
+}
+
+.gm-save-status.is-saving::before {
+  content: '';
+  flex: 0 0 14px;
+  width: 14px;
+  height: 14px;
+  border: 2px solid #93c5fd;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: gmSaveSpin 0.75s linear infinite;
+}
+
+.gm-save-status.is-success {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.gm-save-status.is-warning {
+  border-color: #fde68a;
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.gm-save-status.is-error {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.gm-save-retry {
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: 6px 12px;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.gm-save-retry:hover {
+  background: rgba(255, 255, 255, 0.55);
+}
+
+@keyframes gmSaveSpin {
+  to { transform: rotate(360deg); }
+}
+
 .gm-table-wrap {
   display: flex;
   flex-direction: column;
@@ -1125,6 +1204,12 @@ html, body {
 .btn-modal.btn-done:hover {
   background: #1e293b;
   transform: translateY(-1px);
+}
+
+.btn-modal:disabled {
+  cursor: wait;
+  opacity: 0.55;
+  transform: none;
 }
 
 /* iframe wrapper */
@@ -1326,4 +1411,3 @@ html, body {
 #sidebar.collapsed .user-profile-section {
   display: none;
 }
-

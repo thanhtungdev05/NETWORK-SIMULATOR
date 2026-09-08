@@ -1,4 +1,4 @@
-﻿/**
+/**
  * devices/ax3000c/lessons/bai2.js
  * Bài 2: Cấu hình WiFi trên AX3000C
  */
@@ -6,7 +6,7 @@
 window.DEVICE_AX3000C_LESSONS = window.DEVICE_AX3000C_LESSONS || [];
 
 window.DEVICE_AX3000C_LESSONS.push({
-  id: 'LAB_AX3000C_02',
+  id: 'LAB_AX3000CV2_02',
   title: 'Cấu hình wifi',
   subtitle: 'Cấu hình wifi',
   instructions: [

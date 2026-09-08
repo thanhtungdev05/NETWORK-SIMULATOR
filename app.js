@@ -16,6 +16,14 @@
   // Lưu thông tin phiên thực hành hiện tại để gửi Tracking API khi kết thúc
   let _trackingSession = null; // { device, lesson, mode, startedAt }
   let _currentUser = null;    // { technician_id, name, email } — lấy từ API auth/session
+  let _lastTrackingPayload = null; // Giữ nguyên payload/idempotency key khi retry lỗi mạng
+  let _catalogDeviceIds = null;
+  let _catalogLabIds = null;
+
+  function escapeHTML(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
 
   // ── Practice Timer State ────────────────────────────────────────
   let _practiceTimerInterval = null; // setInterval ID cho đồng hồ realtime
@@ -32,8 +40,6 @@
   const statusText = document.getElementById('status-text');
   const heroScreen = document.getElementById('hero-screen');
   const lessonScreen = document.getElementById('lesson-screen');
-  const actionBtn = document.getElementById('action-btn');
-  const actionMenu = document.getElementById('action-menu');
   const loadingOverlay = document.getElementById('loading-overlay');
 
   // Lesson card elements
@@ -73,34 +79,93 @@
   const gmStatusTitle = document.getElementById('gm-status-title');
   const gmStatusDesc = document.getElementById('gm-status-desc');
   const gmChecklistBody = document.getElementById('gm-checklist-body');
+  const gmSaveStatus = document.getElementById('gm-save-status');
 
   // Track current iframe URL
   let currentIframeUrl = '';
+  let trackingSaveInFlight = false;
 
-  // ── Init ─────────────────────────────────────────────────────────
-  function init() {
-    // Populate device dropdown
-    DEVICES.forEach(device => {
+  function normalizeDeviceId(id) {
+    if (!id) return '';
+    const clean = String(id).trim().replace(/^DEV_/i, '').toLowerCase();
+    if (clean === 'ax3000cv2') return 'ax3000c';
+    return clean;
+  }
+
+  function normalizeLabId(id) {
+    if (!id) return '';
+    let clean = String(id).trim().toLowerCase();
+    clean = clean.replace(/^lab_ax3000c_(\d+)/i, 'lab_ax3000cv2_$1');
+    return clean;
+  }
+
+  function databaseDeviceToPortalId(device) {
+    const rawId = typeof device === 'string' ? device : (device.device_id || device.id || '');
+    return normalizeDeviceId(rawId);
+  }
+
+  function populateDeviceDropdown(devices) {
+    deviceSelect.replaceChildren();
+    devices.forEach(device => {
       const opt = document.createElement('option');
       opt.value = device.id;
       opt.textContent = device.name;
       deviceSelect.appendChild(opt);
     });
+    deviceSelect.disabled = devices.length === 0;
+  }
 
-    // Select initial device
-    const initialDeviceId = (deviceSelect.value && DEVICES.some(d => d.id === deviceSelect.value))
-      ? deviceSelect.value
-      : (DEVICES.length > 0 ? DEVICES[0].id : null);
+  function loadLearningCatalog() {
+    return fetch('/api/index.php/learning/catalog', { credentials: 'include' })
+      .then(function (response) {
+        if (!response.ok) throw new Error('Không thể tải danh sách bài luyện tập.');
+        return response.json();
+      })
+      .then(function (data) {
+        const catalogDevices = Array.isArray(data.devices) ? data.devices : [];
+        _catalogDeviceIds = new Set(catalogDevices.map(databaseDeviceToPortalId));
+        _catalogLabIds = new Set(catalogDevices.flatMap(function (device) {
+          return Array.isArray(device.labs) ? device.labs.map(function (lab) { return normalizeLabId(lab.lab_id); }) : [];
+        }));
+        const visibleDevices = DEVICES.filter(function (device) {
+          return !_catalogDeviceIds || _catalogDeviceIds.has(normalizeDeviceId(device.id));
+        });
+        populateDeviceDropdown(visibleDevices);
+        const urlParams = new URLSearchParams(window.location.search);
+        const reqDevice = urlParams.get('device');
+        const reqLab = urlParams.get('lab');
+        const reqMode = urlParams.get('mode');
+        let initialDev = null;
+        if (reqDevice) {
+          const normReq = normalizeDeviceId(reqDevice);
+          initialDev = visibleDevices.find(function (d) {
+            return normalizeDeviceId(d.id) === normReq;
+          });
+        }
+        if (!initialDev && visibleDevices.length > 0) {
+          initialDev = visibleDevices[0];
+        }
+        if (initialDev) {
+          selectDevice(initialDev.id, reqLab, reqMode);
+        } else {
+          currentDeviceId = null;
+          navList.innerHTML = '<div class="empty-state"><p>Chưa có thiết bị luyện tập đang hoạt động.</p></div>';
+          showHero();
+          setBreadcrumb(['Chưa có bài luyện tập']);
+        }
+      });
+  }
 
-    if (initialDeviceId) {
-      selectDevice(initialDeviceId);
-    }
+  // ── Init ─────────────────────────────────────────────────────────
+  function init() {
+    const loadingOption = document.createElement('option');
+    loadingOption.textContent = 'Đang tải bài luyện tập...';
+    deviceSelect.replaceChildren(loadingOption);
+    deviceSelect.disabled = true;
 
     // Bind events
     deviceSelect.addEventListener('change', () => selectDevice(deviceSelect.value));
     btnCollapse.addEventListener('click', toggleSidebar);
-    actionBtn.addEventListener('click', toggleActionMenu);
-    document.addEventListener('click', onDocClick);
 
     // Practice screen events
     if (btnBackLesson) btnBackLesson.addEventListener('click', backToLesson);
@@ -115,13 +180,13 @@
         const lesson = getCurrentLesson();
         if (device && lesson) {
           const evalResult = evaluateLesson(device, lesson);
-          
+
           // Lấy thời gian thực để hiển thị trên bảng báo lỗi
           let elapsed = 0;
           if (typeof _practiceStartTime !== 'undefined' && _practiceStartTime) {
-             elapsed = Math.floor((new Date() - _practiceStartTime) / 1000);
+            elapsed = Math.floor((new Date() - _practiceStartTime) / 1000);
           }
-          
+
           // Show modal but don't record to DB (since it's Guide mode preview)
           showGradingModal(evalResult, device, lesson, currentMode, elapsed);
         }
@@ -132,9 +197,10 @@
 
     // 1. Click backdrop (viền đen ngoài bảng điểm)
     if (gradingBackdrop) gradingBackdrop.addEventListener('click', () => {
+      if (trackingSaveInFlight) return;
       // KHÓA màn hình nếu CHƯA ĐẠT ở chế độ Thực hành
       if (_lastEvalResult && !_lastEvalResult.passed && currentMode === 'practice') return;
-      
+
       // Nếu ĐẠT: Đóng và quay về danh sách bài học
       if (_lastEvalResult && _lastEvalResult.passed) {
         hideGradingModal();
@@ -175,7 +241,7 @@
       // Nhận tín hiệu Save thành công từ simulator AX3000H v2 (qua postMessage cross-origin)
       if (event.data && event.data.type === 'FTC_SAVE_SUCCESS') {
         // Delay nhỏ để frame đã load xong và đặt document._ftcIsSaved = true trước khi đọc
-        setTimeout(function() {
+        setTimeout(function () {
           try {
             const allDocs = getAllAccessibleDocuments(deviceIframe.contentWindow);
             let savedWin = null;
@@ -190,7 +256,7 @@
             if (typeof window.onSimulatorSave === 'function') {
               window.onSimulatorSave(savedWin);
             }
-          } catch(e) {}
+          } catch (e) { }
         }, 300);
       }
 
@@ -210,7 +276,7 @@
       // Xóa trắng các field được khai báo trong clearFields của bài học
       setTimeout(clearLessonFields, 300);
       setTimeout(clearLessonFields, 900);
-      
+
       // Gọi hook phục hồi dữ liệu nếu bài học có định nghĩa
       if (_currentLesson && typeof _currentLesson.onSimLoad === 'function') {
         setTimeout(() => { _currentLesson.onSimLoad(deviceIframe.contentWindow); }, 400);
@@ -240,36 +306,36 @@
                   el.setAttribute('autocomplete', 'off'); // Chuẩn chung
                   el.setAttribute('data-lpignore', 'true'); // Chặn LastPass
                   el.setAttribute('data-form-type', 'other');
-                  
+
                   if (el.tagName === 'INPUT' && (el.type === 'text' || el.type === 'password' || el.type === 'number')) {
                     // Bỏ qua các ô vốn dĩ đã bị khóa (readonly / disabled) từ mã HTML gốc
                     if (el.hasAttribute('readonly') || el.hasAttribute('disabled')) {
-                       return;
+                      return;
                     }
 
                     // Cài cắm cạm bẫy readonly: Edge/Chrome sẽ không hiện popup Saved Info trên ô readonly.
                     // Khi người dùng thực sự bấm vào hoặc tab vào, ta mới gỡ readonly ra.
                     el.setAttribute('readonly', 'readonly');
-                    
-                    const removeReadonly = function() {
+
+                    const removeReadonly = function () {
                       if (el.hasAttribute('readonly')) {
                         el.removeAttribute('readonly');
                       }
                     };
-                    
+
                     el.addEventListener('focus', removeReadonly);
                     el.addEventListener('click', removeReadonly);
                     el.addEventListener('mousedown', removeReadonly);
-                    
+
                     // Khôi phục readonly khi rời chuột/focus để đảm bảo chặn triệt để
-                    el.addEventListener('blur', function() {
+                    el.addEventListener('blur', function () {
                       if (el.value === '') {
                         el.setAttribute('readonly', 'readonly');
                       }
                     });
                   }
                 });
-              } catch(e) {}
+              } catch (e) { }
 
               if (!doc._ftcSaveListenerAttached) {
 
@@ -278,13 +344,13 @@
                 const hsh = (doc.location && doc.location.hash) ? doc.location.hash.toLowerCase() : '';
                 const isMainPage = hsh.includes('#/home') || hsh.includes('#/network') || hsh.includes('#/system') || hsh.includes('#/status') || hsh.includes('#/device');
                 const isLogin = !isMainPage && (loc.includes('login') || hsh.includes('login') || doc.querySelector('.login-fpt, form[action*="login"]'));
-                
+
                 if (isLogin) {
-                  const checkLoginFields = function(e, triggerEl) {
+                  const checkLoginFields = function (e, triggerEl) {
                     // Cố gắng tìm các ô nhập liệu user/pass trên trang (lấy mọi input không bị ẩn)
                     const inputs = Array.from(doc.querySelectorAll('input')).filter(i => i.type !== 'hidden' && i.style.display !== 'none' && !i.disabled);
                     let isOk = false;
-                    
+
                     let hasAdminPass = false;
                     let hasAdminUser = false;
                     let hasPasswordType = false;
@@ -323,34 +389,46 @@
                     return true;
                   };
 
-                  doc.addEventListener('click', function(e) {
+                  doc.addEventListener('click', function (e) {
                     let el = e.target;
-                    while(el && el !== doc) {
-                      const txt = (el.value || el.textContent || el.innerText || '').toLowerCase();
+                    // Bỏ qua nếu click vào các ô nhập liệu văn bản/mật khẩu
+                    if (el && el.tagName === 'INPUT' && el.type !== 'submit' && el.type !== 'button') {
+                      return;
+                    }
+
+                    while (el && el !== doc && el !== doc.body) {
+                      // Dừng nếu duyệt lên tới form/table/container lớn
+                      if (el.tagName === 'FORM' || el.tagName === 'TABLE' || el.tagName === 'BODY' || el.tagName === 'HTML') {
+                        break;
+                      }
+
+                      const txt = (el.value || el.textContent || el.innerText || '').toLowerCase().trim();
                       const cls = (el.className && typeof el.className === 'string') ? el.className.toLowerCase() : '';
                       const id = (el.id || '').toLowerCase();
-                      
-                      const isTextInput = el.tagName === 'INPUT' && (el.type === 'text' || el.type === 'password' || el.type === 'email' || el.type === 'number');
-                      if (!isTextInput && (el.tagName === 'INPUT' || el.tagName === 'BUTTON' || el.tagName === 'A' || el.tagName === 'SPAN') && 
-                          (el.type === 'submit' || txt.includes('login') || txt.includes('log in') || txt.includes('đăng nhập') || id.includes('login') || cls.includes('login') || cls.includes('btn-primary') || cls.includes('submit'))) {
-                        
+                      const isSubmitInput = el.tagName === 'INPUT' && (el.type === 'submit' || el.type === 'button') &&
+                        (txt.includes('login') || txt.includes('log in') || txt.includes('đăng nhập') || id.includes('login') || cls.includes('login') || cls.includes('submit'));
+                      const isButton = (el.tagName === 'BUTTON' || el.tagName === 'A' || el.tagName === 'SPAN') &&
+                        (txt.includes('login') || txt.includes('log in') || txt.includes('đăng nhập') || id.includes('login') || cls.includes('login') || cls.includes('btn-primary') || cls.includes('submit'));
+
+                      if (isSubmitInput || isButton) {
                         if (!checkLoginFields(e, el)) return false;
+                        break;
                       }
                       el = el.parentNode;
                     }
                   }, true);
 
-                  doc.addEventListener('keydown', function(e) {
+                  doc.addEventListener('keydown', function (e) {
                     if (e.key === 'Enter' || e.keyCode === 13) {
-                       if (!checkLoginFields(e, e.target)) return false;
+                      if (!checkLoginFields(e, e.target)) return false;
                     }
                   }, true);
                 }
 
                 // Sự kiện click nút Save/Apply
-                doc.addEventListener('click', function(e) {
+                doc.addEventListener('click', function (e) {
                   let el = e.target;
-                  while(el && el !== doc) {
+                  while (el && el !== doc) {
                     if ((el.tagName === 'INPUT' || el.tagName === 'BUTTON') && 
                         (el.type === 'submit' || (el.value || el.textContent || '').toLowerCase().includes('save') || (el.value || el.textContent || '').toLowerCase().includes('apply') || el.name === 'AddBtn' || (currentLessonId === 'ONT_be6500c-bai6' && (el.value || el.textContent || '').trim().toLowerCase() === 'add'))) {
                       window._hasClickedSaveInGuide = true;
@@ -365,7 +443,7 @@
 
                 // Đánh dấu người dùng đã chạm vào ô nhập liệu để tránh bị clear tự động
                 // Đồng thời hủy bỏ trạng thái "Đã Save" nếu người dùng sửa lại dữ liệu
-                doc.addEventListener('input', function(e) {
+                doc.addEventListener('input', function (e) {
                   if (e.target) {
                     e.target._ftcUserModified = true;
                   }
@@ -374,7 +452,7 @@
                     doc._ftcIsSaved = false;
                   }
                 }, true);
-                doc.addEventListener('change', function(e) {
+                doc.addEventListener('change', function (e) {
                   if (e.target) {
                     e.target._ftcUserModified = true;
                   }
@@ -386,25 +464,25 @@
 
                 // === BẮT LỖI TƯƠNG TÁC CHÍNH XÁC TUYỆT ĐỐI (Dành riêng cho SPAs) ===
                 if (!doc._ftcOriginalValues) doc._ftcOriginalValues = {};
-                
-                const captureBeforeEdit = function(e) {
-                    if (!e.isTrusted) return; // Chỉ bắt người dùng thật
-                    let el = e.target;
-                    // Nếu click vào thẻ label bọc input, lấy input bên trong
-                    if (el.tagName === 'LABEL') {
-                        const input = el.querySelector('input, select, textarea');
-                        if (input) el = input;
+
+                const captureBeforeEdit = function (e) {
+                  if (!e.isTrusted) return; // Chỉ bắt người dùng thật
+                  let el = e.target;
+                  // Nếu click vào thẻ label bọc input, lấy input bên trong
+                  if (el.tagName === 'LABEL') {
+                    const input = el.querySelector('input, select, textarea');
+                    if (input) el = input;
+                  }
+                  if (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA') {
+                    if (!el.dataset.ftcId) el.dataset.ftcId = 'ftc_' + Math.random().toString(36).substr(2, 9);
+                    const uid = el.dataset.ftcId;
+                    // Lưu lại giá trị của field NGAY TRƯỚC KHI người dùng kịp thay đổi nó
+                    if (doc._ftcOriginalValues[uid] === undefined) {
+                      doc._ftcOriginalValues[uid] = (el.type === 'checkbox' || el.type === 'radio') ? el.checked : el.value;
                     }
-                    if (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA') {
-                        if (!el.dataset.ftcId) el.dataset.ftcId = 'ftc_' + Math.random().toString(36).substr(2, 9);
-                        const uid = el.dataset.ftcId;
-                        // Lưu lại giá trị của field NGAY TRƯỚC KHI người dùng kịp thay đổi nó
-                        if (doc._ftcOriginalValues[uid] === undefined) {
-                            doc._ftcOriginalValues[uid] = (el.type === 'checkbox' || el.type === 'radio') ? el.checked : el.value;
-                        }
-                    }
+                  }
                 };
-                
+
                 // Mousedown và Focusin kích hoạt ngay trước khi giá trị kịp thay đổi
                 doc.addEventListener('mousedown', captureBeforeEdit, true);
                 doc.addEventListener('focusin', captureBeforeEdit, true);
@@ -413,7 +491,7 @@
                 doc._ftcSaveListenerAttached = true;
               }
             });
-          } catch(e) {}
+          } catch (e) { }
 
           if (currentMode === 'guide') {
             applyGuidePopups();
@@ -426,35 +504,35 @@
               // === GUIDE MODE: AUTO-BASELINE UI ===
               let btnGuideErrors = document.getElementById('btn-guide-errors');
               if (btnGuideErrors) {
-                 if (currentMode === 'guide' && evalResult) {
-                    const unexpectedError = evalResult.details.find(d => d.id.startsWith('unexpected_change'));
-                    const hasMissingSteps = !evalResult.passed;
-                    
-                    if (unexpectedError || hasMissingSteps) {
-                       btnGuideErrors.style.display = 'flex';
-                       
-                       // Ẩn xám nút nếu học viên chưa bấm Save
-                       if (!window._hasClickedSaveInGuide) {
-                          btnGuideErrors.disabled = true;
-                          btnGuideErrors.style.opacity = '0.5';
-                          btnGuideErrors.style.cursor = 'not-allowed';
-                          btnGuideErrors.style.background = '#f3f4f6';
-                          btnGuideErrors.style.color = '#9ca3af';
-                          btnGuideErrors.style.borderColor = '#d1d5db';
-                       } else {
-                          btnGuideErrors.disabled = false;
-                          btnGuideErrors.style.opacity = '1';
-                          btnGuideErrors.style.cursor = 'pointer';
-                          btnGuideErrors.style.background = '#fee2e2';
-                          btnGuideErrors.style.color = '#ef4444';
-                          btnGuideErrors.style.borderColor = '#fca5a5';
-                       }
+                if (currentMode === 'guide' && evalResult) {
+                  const unexpectedError = evalResult.details.find(d => d.id.startsWith('unexpected_change'));
+                  const hasMissingSteps = !evalResult.passed;
+
+                  if (unexpectedError || hasMissingSteps) {
+                    btnGuideErrors.style.display = 'flex';
+
+                    // Ẩn xám nút nếu học viên chưa bấm Save
+                    if (!window._hasClickedSaveInGuide) {
+                      btnGuideErrors.disabled = true;
+                      btnGuideErrors.style.opacity = '0.5';
+                      btnGuideErrors.style.cursor = 'not-allowed';
+                      btnGuideErrors.style.background = '#f3f4f6';
+                      btnGuideErrors.style.color = '#9ca3af';
+                      btnGuideErrors.style.borderColor = '#d1d5db';
                     } else {
-                       btnGuideErrors.style.display = 'none';
+                      btnGuideErrors.disabled = false;
+                      btnGuideErrors.style.opacity = '1';
+                      btnGuideErrors.style.cursor = 'pointer';
+                      btnGuideErrors.style.background = '#fee2e2';
+                      btnGuideErrors.style.color = '#ef4444';
+                      btnGuideErrors.style.borderColor = '#fca5a5';
                     }
-                 } else {
+                  } else {
                     btnGuideErrors.style.display = 'none';
-                 }
+                  }
+                } else {
+                  btnGuideErrors.style.display = 'none';
+                }
               }
               // ====================================
 
@@ -470,9 +548,9 @@
               } else if (btnSubmitLab && !btnSubmitLab.disabled) {
                 // Tự động tắt nút nếu học viên lỡ tay làm sai sau khi đã làm đúng hoặc chưa save lại
                 if (evalResult && (!evalResult.passed || !window._hasClickedSaveInGuide)) {
-                    btnSubmitLab.disabled = true;
-                    btnSubmitLab.style.opacity = '0.5';
-                    btnSubmitLab.style.cursor = 'not-allowed';
+                  btnSubmitLab.disabled = true;
+                  btnSubmitLab.style.opacity = '0.5';
+                  btnSubmitLab.style.cursor = 'not-allowed';
                 }
               }
             }
@@ -485,11 +563,20 @@
 
     // Show system ready after short delay
     setTimeout(() => {
-      statusText.textContent = 'System Ready';
+      if (statusText) statusText.textContent = 'System Ready';
     }, 1200);
 
     // Tải thông tin người dùng hiện tại từ API để dùng cho Tracking
     fetchCurrentUser();
+  }
+
+  function redirectToLogin() {
+    const isLocalHost = ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
+    if (isLocalHost) {
+      window.location.replace('/api/index.php/dev/bypass?next=' + encodeURIComponent(window.location.origin + '/portal.html'));
+    } else {
+      window.location.replace('/login/index.html');
+    }
   }
 
   function renderUserProfile() {
@@ -498,26 +585,43 @@
 
     if (_currentUser) {
       const initials = (_currentUser.name || 'K').substring(0, 2).toUpperCase();
+      const roleLabel = _currentUser.role_name
+        || ({ KTV: 'Kỹ thuật viên', ADMIN: 'Quản trị viên', DEV: 'Nhà phát triển' }[_currentUser.role])
+        || _currentUser.job_title
+        || 'Kỹ thuật viên';
       section.innerHTML = `
         <div class="auth-container">
           <div class="auth-user-info">
             <div class="auth-avatar">${initials}</div>
             <div class="auth-details">
-              <span class="auth-name" title="${_currentUser.name}">${_currentUser.name}</span>
-              <span class="auth-role">${_currentUser.technician_id}</span>
+              <span class="auth-name" title="${escapeHTML(_currentUser.name)}">${escapeHTML(_currentUser.name)}</span>
+              <span class="auth-role" title="${escapeHTML(roleLabel)}">${escapeHTML(roleLabel)}</span>
             </div>
           </div>
+          <button class="btn-auth btn-logout" id="btn-iam-logout" title="Đăng xuất">Đăng xuất</button>
         </div>
       `;
+      const btnIamLogout = document.getElementById('btn-iam-logout');
+      if (btnIamLogout) {
+        btnIamLogout.addEventListener('click', function () {
+          fetch('/api/index.php/auth/logout', { method: 'POST', credentials: 'include' })
+            .then(function () {
+              window.location.href = '/login/index.html';
+            });
+        });
+      }
     } else {
       section.innerHTML = `
         <div class="auth-container">
           <button class="btn-auth btn-login" id="btn-iam-login">Đăng nhập IAM</button>
         </div>
       `;
-      document.getElementById('btn-iam-login').addEventListener('click', function() {
-        window.location.href = '/api/index.php/auth/login?next=' + encodeURIComponent(window.location.pathname);
-      });
+      const btnIamLogin = document.getElementById('btn-iam-login');
+      if (btnIamLogin) {
+        btnIamLogin.addEventListener('click', function () {
+          redirectToLogin();
+        });
+      }
     }
   }
 
@@ -525,7 +629,7 @@
   /**
    * Lấy thông tin user đang đăng nhập từ API auth/session.
    * Kết quả được cache vào _currentUser để dùng khi gửi Tracking API.
-   * Không block UI nếu API lỗi — chỉ log warning.
+   * Nếu chưa đăng nhập, tự động chuyển hướng về trang login.
    */
   function fetchCurrentUser() {
     fetch('/api/index.php/auth/session', { credentials: 'include' })
@@ -535,36 +639,92 @@
         if (u) {
           _currentUser = {
             technician_id: u.user_id || u.id || 'UNKNOWN',
+            employee_id: u.employee_id || u.employeeId || '',
             name: u.displayName || u.display_name || u.email || 'KTV',
-            email: u.email || ''
+            email: u.email || '',
+            role: String(u.role || 'KTV').toUpperCase(),
+            role_name: u.roleName || u.role_name || '',
+            is_admin: Boolean(u.isAdmin ?? u.is_admin ?? u.permissions?.admin),
+            can_export_reports: Boolean(u.canExportReports ?? u.can_export_reports ?? u.permissions?.exportReports),
+            job_title: u.job_title || u.jobTitle || ''
           };
+          renderUserProfile();
+          if (_currentUser && _currentUser.is_admin) {
+            const btnDashboard = document.getElementById('btn-dashboard');
+            if (btnDashboard) {
+              btnDashboard.style.display = '';
+              btnDashboard.onclick = function () {
+                window.location.href = '/dashboard-authen/';
+              };
+            }
+          }
+          loadLearningCatalog().catch(function (error) {
+            console.warn('[Catalog] Không thể tải danh sách bài luyện tập:', error);
+            populateDeviceDropdown([]);
+            navList.innerHTML = '<div class="empty-state"><p>Không thể tải danh sách bài luyện tập.</p></div>';
+          });
+        } else {
+          _currentUser = null;
+          renderUserProfile();
+          redirectToLogin();
         }
-        renderUserProfile();
       })
       .catch(function () {
-        // Không làm gì — portal vẫn hoạt động bình thường
         console.warn('[Tracking] Không thể lấy thông tin user từ API.');
+        redirectToLogin();
       });
   }
 
   // ── Device Selection ─────────────────────────────────────────────
-  function selectDevice(deviceId) {
-    currentDeviceId = deviceId;
-    currentLessonId = null;
+  function selectDevice(deviceId, targetLabId = null, autoMode = null) {
+    const normDevId = normalizeDeviceId(deviceId);
+    if (_catalogDeviceIds && !_catalogDeviceIds.has(normDevId)) return;
 
-    const device = DEVICES.find(d => d.id === deviceId);
+    const device = DEVICES.find(d => normalizeDeviceId(d.id) === normDevId);
     if (!device) return;
 
+    currentDeviceId = device.id;
+    currentLessonId = null;
+
     // Sync dropdown
-    deviceSelect.value = deviceId;
+    deviceSelect.value = device.id;
 
     // Render nav list
     renderNavList(device);
 
-    // Automatically select first lesson if available
-    const firstLessonItem = navList.querySelector('.nav-item');
-    if (firstLessonItem && device.categories && device.categories[0] && device.categories[0].lessons[0]) {
-      selectLesson(device, device.categories[0].lessons[0], firstLessonItem);
+    // Automatically select requested or first lesson if available
+    const allAllowedLessons = (device.categories?.flatMap(category => category.lessons || []) || [])
+      .filter(lesson => {
+        if (!_catalogLabIds) return true;
+        const normLab = normalizeLabId(lesson.id);
+        return _catalogLabIds.has(normLab);
+      });
+
+    let chosenLesson = null;
+    if (targetLabId) {
+      const normTarget = normalizeLabId(targetLabId);
+      chosenLesson = allAllowedLessons.find(l => {
+        const lid = normalizeLabId(l.id);
+        return lid === normTarget
+          || lid.replace(/^lab_/i, '') === normTarget.replace(/^lab_/i, '')
+          || lid.endsWith(normTarget)
+          || normTarget.endsWith(lid);
+      });
+    }
+    if (!chosenLesson && allAllowedLessons.length > 0) {
+      chosenLesson = allAllowedLessons[0];
+    }
+    if (chosenLesson) {
+      const lessonItem = navList.querySelector(`[data-lesson-id="${chosenLesson.id}"]`) || navList.querySelector('.nav-item');
+      selectLesson(device, chosenLesson, lessonItem);
+      if (lessonItem && typeof lessonItem.scrollIntoView === 'function') {
+        lessonItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+      if (autoMode === 'practice' && btnPrac) {
+        setTimeout(() => btnPrac.click(), 100);
+      } else if (autoMode === 'guide' && btnGuide) {
+        setTimeout(() => btnGuide.click(), 100);
+      }
     } else {
       showHero();
       setBreadcrumb([device.name]);
@@ -585,6 +745,12 @@
     }
 
     device.categories.forEach(cat => {
+      const lessons = (cat.lessons || []).filter(lesson => {
+        if (!_catalogLabIds) return true;
+        const normLab = normalizeLabId(lesson.id);
+        return _catalogLabIds.has(normLab);
+      });
+      if (!lessons.length) return;
       // Category title
       const catTitle = document.createElement('div');
       catTitle.className = 'nav-category-title';
@@ -592,7 +758,7 @@
       navList.appendChild(catTitle);
 
       // Lessons
-      cat.lessons.forEach((lesson, idx) => {
+      lessons.forEach((lesson, idx) => {
         const item = document.createElement('div');
         item.className = 'nav-item';
         item.dataset.lessonId = lesson.id;
@@ -653,6 +819,10 @@
     // 💡 Hướng dẫn — mở giao diện thiết bị và BẬT POPUP HƯỚNG DẪN TỪNG BƯỚC
     const device = DEVICES.find(d => d.id === currentDeviceId);
     btnGuide.onclick = () => {
+      if (!_currentUser) {
+        redirectToLogin();
+        return;
+      }
       currentMode = 'guide';
       // Reset session trước rồi mở trang login
       const resetUrl = device.resetSessionUrl || null;
@@ -671,6 +841,10 @@
 
     // ⚡ Thực hành — mở trang login của thiết bị và TẮT POPUP (bắt buộc học viên login vào)
     btnPrac.onclick = () => {
+      if (!_currentUser) {
+        redirectToLogin();
+        return;
+      }
       currentMode = 'practice';
       const resetUrl = device.resetSessionUrl || null;
       const loginUrl = device.loginUrl + (device.loginUrl.includes('?') ? '&' : '?') + 'logout=1&_t=' + Date.now();
@@ -725,14 +899,14 @@
     try {
       sessionStorage.removeItem('ftc_ac1000f_wan_PPPUsername');
       sessionStorage.removeItem('ftc_ac1000f_wan_PPPPassword');
-    } catch(e) {}
+    } catch (e) { }
 
     // Reset wifi storage cho bài 2
     if (lesson && lesson.id === 'ac1-bai2') {
       try {
         localStorage.removeItem('ftc_sim_wifi24');
         localStorage.removeItem('ftc_sim_wifi5g');
-      } catch(e) {}
+      } catch (e) { }
     }
 
     // Lưu lesson hiện tại để dùng cho clearFields
@@ -747,8 +921,16 @@
       device: device,
       lesson: lesson,
       mode: enableGuide ? 'Hướng dẫn' : 'Thực hành',
-      startedAt: new Date().toISOString()
+      startedAt: new Date().toISOString(),
+      submissionId: crypto.randomUUID ? crypto.randomUUID() : ('sub-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10))
     };
+    const sessionToReserve = _trackingSession;
+    _trackingSession.startSettled = sessionToReserve.mode !== 'Thực hành';
+    _trackingSession.startPromise = sessionToReserve.mode === 'Thực hành'
+      ? reserveTrackingTimerStart(sessionToReserve)
+        .finally(function () { sessionToReserve.startSettled = true; })
+      : Promise.resolve(true);
+    _lastTrackingPayload = null;
 
     // ── Khởi động đồng hồ realtime trên toolbar ──
     startPracticeTimer();
@@ -813,9 +995,16 @@
   }
 
   function backToLesson() {
+    if (trackingSaveInFlight) return;
     // Reset đồng hồ và session tracking
+    const sessionToClose = _trackingSession;
+    const elapsedSec = stopPracticeTimer();
+    if (sessionToClose && sessionToClose.mode === 'Thực hành' && !sessionToClose.finalized) {
+      finalizeAbandonedTrackingSession(sessionToClose, elapsedSec);
+    }
     resetPracticeTimer();
     _trackingSession = null;
+    _lastTrackingPayload = null;
     _lastEvalResult = null;
     _lastSubmitDurationSec = 0;
 
@@ -833,7 +1022,7 @@
   function clearLessonFields() {
     if (window._hasClickedSaveInGuide) return;
     if (!_currentLesson) return;
-    
+
     // Nếu lesson có hàm customClear riêng thì chạy hàm đó
     if (typeof _currentLesson.customClear === 'function') {
       try { _currentLesson.customClear(); } catch (e) { console.error(e); }
@@ -866,10 +1055,10 @@
                 el.remove();
               }
             });
-          } catch(e) {}
+          } catch (e) { }
         });
       });
-    } catch(e) {}
+    } catch (e) { }
   }
 
 
@@ -947,7 +1136,7 @@
             }
             break;
           }
-        } catch (e) {}
+        } catch (e) { }
       }
 
       const expectedVal = (rule.trim !== false) ? String(rule.expected).trim() : String(rule.expected);
@@ -1005,95 +1194,95 @@
     });
 
     function getLabelForElement(el, doc) {
-       if (el.labels && el.labels.length > 0) return el.labels[0].textContent.trim().replace(/:$/, '');
-       if (el.id) {
-           const label = doc.querySelector(`label[for="${el.id}"]`);
-           if (label) return label.textContent.trim().replace(/:$/, '');
-       }
-       const tr = el.closest('tr');
-       if (tr) {
-           const th = tr.querySelector('th, td.head, td.label, .dt');
-           if (th && th !== el.parentElement) return th.textContent.trim().replace(/:$/, '');
-           const firstTd = tr.querySelector('td');
-           if (firstTd && firstTd !== el.closest('td')) return firstTd.textContent.trim().replace(/:$/, '');
-       }
-       const dl = el.closest('dl');
-       if (dl) {
-           const dt = dl.querySelector('dt, .dt');
-           if (dt) return dt.textContent.trim().replace(/:$/, '');
-       }
-       let parent = el.parentElement;
-       let depth = 0;
-       while (parent && parent !== doc.body && depth < 4) {
-           const prev = parent.previousElementSibling;
-           if (prev && (prev.tagName === 'LABEL' || prev.className.includes('label') || prev.className.includes('title') || prev.className.includes('dt'))) {
-               return prev.textContent.trim().replace(/:$/, '');
-           }
-           const labelEl = parent.querySelector('label, .label, .dt, .title, .head');
-           if (labelEl && labelEl !== el && !labelEl.contains(el)) {
-               return labelEl.textContent.trim().replace(/:$/, '');
-           }
-           parent = parent.parentElement;
-           depth++;
-       }
-       let fallback = el.id || el.name || el.placeholder;
-       if (fallback) return fallback.replace(/_/g, ' ');
-       return 'Trường ẩn/Không xác định';
+      if (el.labels && el.labels.length > 0) return el.labels[0].textContent.trim().replace(/:$/, '');
+      if (el.id) {
+        const label = doc.querySelector(`label[for="${el.id}"]`);
+        if (label) return label.textContent.trim().replace(/:$/, '');
+      }
+      const tr = el.closest('tr');
+      if (tr) {
+        const th = tr.querySelector('th, td.head, td.label, .dt');
+        if (th && th !== el.parentElement) return th.textContent.trim().replace(/:$/, '');
+        const firstTd = tr.querySelector('td');
+        if (firstTd && firstTd !== el.closest('td')) return firstTd.textContent.trim().replace(/:$/, '');
+      }
+      const dl = el.closest('dl');
+      if (dl) {
+        const dt = dl.querySelector('dt, .dt');
+        if (dt) return dt.textContent.trim().replace(/:$/, '');
+      }
+      let parent = el.parentElement;
+      let depth = 0;
+      while (parent && parent !== doc.body && depth < 4) {
+        const prev = parent.previousElementSibling;
+        if (prev && (prev.tagName === 'LABEL' || prev.className.includes('label') || prev.className.includes('title') || prev.className.includes('dt'))) {
+          return prev.textContent.trim().replace(/:$/, '');
+        }
+        const labelEl = parent.querySelector('label, .label, .dt, .title, .head');
+        if (labelEl && labelEl !== el && !labelEl.contains(el)) {
+          return labelEl.textContent.trim().replace(/:$/, '');
+        }
+        parent = parent.parentElement;
+        depth++;
+      }
+      let fallback = el.id || el.name || el.placeholder;
+      if (fallback) return fallback.replace(/_/g, ' ');
+      return 'Trường ẩn/Không xác định';
     }
 
     // === BỘ LỌC AUTO-BASELINE (TÌM THAO TÁC THỪA) ===
     let unexpectedErrors = [];
 
     allDocs.forEach(doc => {
-       if (doc._ftcOriginalValues) {
-          Object.keys(doc._ftcOriginalValues).forEach(uid => {
-             const originalValue = doc._ftcOriginalValues[uid];
-             const el = doc.querySelector(`[data-ftc-id="${uid}"]`);
-             if (el) {
-                // Kiểm tra xem input này có thuộc về các bước yêu cầu (rules) không?
-                const isExpected = rules.some(r => {
-                   try { return doc.querySelector(r.selector) === el; } catch(e) { return false; }
-                });
-                
-                // Nếu KHÔNG nằm trong rule, nhưng lại bị sửa giá trị khác gốc
-                if (!isExpected) {
-                   const currentValue = (el.type === 'checkbox' || el.type === 'radio') ? el.checked : el.value;
-                   if (String(currentValue) !== String(originalValue)) {
-                      // Bỏ qua đánh giá radio bị tắt để tránh 1 lần click sinh 2 lỗi trùng lặp
-                      if (el.type === 'radio' && !el.checked) return;
+      if (doc._ftcOriginalValues) {
+        Object.keys(doc._ftcOriginalValues).forEach(uid => {
+          const originalValue = doc._ftcOriginalValues[uid];
+          const el = doc.querySelector(`[data-ftc-id="${uid}"]`);
+          if (el) {
+            // Kiểm tra xem input này có thuộc về các bước yêu cầu (rules) không?
+            const isExpected = rules.some(r => {
+              try { return doc.querySelector(r.selector) === el; } catch (e) { return false; }
+            });
 
-                      let labelText = getLabelForElement(el, doc);
-                      let formattedOriginal = '';
-                      let formattedCurrent = '';
+            // Nếu KHÔNG nằm trong rule, nhưng lại bị sửa giá trị khác gốc
+            if (!isExpected) {
+              const currentValue = (el.type === 'checkbox' || el.type === 'radio') ? el.checked : el.value;
+              if (String(currentValue) !== String(originalValue)) {
+                // Bỏ qua đánh giá radio bị tắt để tránh 1 lần click sinh 2 lỗi trùng lặp
+                if (el.type === 'radio' && !el.checked) return;
 
-                      if (el.type === 'checkbox' || el.type === 'radio') {
-                          formattedOriginal = (originalValue === true || String(originalValue) === 'true') ? 'Bật/Enable' : 'Tắt/Disable';
-                          formattedCurrent = currentValue ? 'Bật/Enable' : 'Tắt/Disable';
-                      } else if (el.tagName === 'SELECT') {
-                          try {
-                             let optOrig = el.querySelector(`option[value="${originalValue}"]`);
-                             let optCurr = el.querySelector(`option[value="${currentValue}"]`);
-                             formattedOriginal = optOrig ? optOrig.textContent.trim() : originalValue;
-                             formattedCurrent = optCurr ? optCurr.textContent.trim() : currentValue;
-                          } catch(e) {
-                             formattedOriginal = originalValue;
-                             formattedCurrent = currentValue;
-                          }
-                      } else {
-                          formattedOriginal = originalValue || 'Trống';
-                          formattedCurrent = currentValue || 'Trống';
-                      }
-                      
-                      unexpectedErrors.push({
-                         label: labelText,
-                         expected: formattedOriginal,
-                         actual: formattedCurrent
-                      });
-                   }
+                let labelText = getLabelForElement(el, doc);
+                let formattedOriginal = '';
+                let formattedCurrent = '';
+
+                if (el.type === 'checkbox' || el.type === 'radio') {
+                  formattedOriginal = (originalValue === true || String(originalValue) === 'true') ? 'Bật/Enable' : 'Tắt/Disable';
+                  formattedCurrent = currentValue ? 'Bật/Enable' : 'Tắt/Disable';
+                } else if (el.tagName === 'SELECT') {
+                  try {
+                    let optOrig = el.querySelector(`option[value="${originalValue}"]`);
+                    let optCurr = el.querySelector(`option[value="${currentValue}"]`);
+                    formattedOriginal = optOrig ? optOrig.textContent.trim() : originalValue;
+                    formattedCurrent = optCurr ? optCurr.textContent.trim() : currentValue;
+                  } catch (e) {
+                    formattedOriginal = originalValue;
+                    formattedCurrent = currentValue;
+                  }
+                } else {
+                  formattedOriginal = originalValue || 'Trống';
+                  formattedCurrent = currentValue || 'Trống';
                 }
-             }
-          });
-       }
+
+                unexpectedErrors.push({
+                  label: labelText,
+                  expected: formattedOriginal,
+                  actual: formattedCurrent
+                });
+              }
+            }
+          }
+        });
+      }
     });
 
     // Cập nhật kết quả passed: Chỉ pass khi đủ rule VÀ không có thao tác thừa
@@ -1102,17 +1291,17 @@
     const score = passed ? 100 : Math.round((passedCount / rules.length) * (hasUnexpected ? 99 : 100));
 
     let finalTotalRules = rules.length + unexpectedErrors.length;
-    
+
     // Đẩy TẤT CẢ lỗi thao tác thừa vào danh sách details
     unexpectedErrors.forEach(err => {
-       details.push({
-         id: 'unexpected_change_' + Math.random(),
-         name: err.label,
-         expected: err.expected,
-         actual: err.actual,
-         passed: false,
-         message: 'Thao tác thừa ngoài yêu cầu'
-       });
+      details.push({
+        id: 'unexpected_change_' + Math.random(),
+        name: err.label,
+        expected: err.expected,
+        actual: err.actual,
+        passed: false,
+        message: 'Thao tác thừa ngoài yêu cầu'
+      });
     });
     // ===============================================
 
@@ -1148,12 +1337,16 @@
     //     Các lần KTV nộp thử bị Rớt (FAIL) sẽ bị bỏ qua để tránh rác DB.
     //   + Chế độ Thực hành (practice): LUÔN gửi log (Cả PASS và FAIL) ngay lúc bấm.
     // =========================================================================
+    setTrackingSaveStatus('', '');
     if (currentMode === 'practice' || (currentMode === 'guide' && evalResult.passed)) {
-      sendTrackingTimer(evalResult, durationSec);
+      const savePromise = sendTrackingTimer(evalResult, durationSec);
+      Promise.resolve(savePromise).finally(function () {
+        showGradingModal(evalResult, device, lesson, currentMode, durationSec);
+      });
+    } else {
+      setTrackingSaveStatus('warning', 'Lần thử ở chế độ Hướng dẫn chưa đạt nên không được ghi vào tiến độ.');
+      showGradingModal(evalResult, device, lesson, currentMode, durationSec);
     }
-
-    // Hiển thị modal kết quả cho KTV xem
-    showGradingModal(evalResult, device, lesson, currentMode, durationSec);
   }
 
   function showGradingModal(res, device, lesson, mode, durationSec) {
@@ -1188,7 +1381,7 @@
       if (gmSubtitle) gmSubtitle.textContent = 'Một số thông số cấu hình chưa đúng với yêu cầu đề bài.';
       if (gmStatusBox) gmStatusBox.className = 'gm-status-box failed';
       if (gmStatusTitle) gmStatusTitle.textContent = `✖ CHƯA ĐẠT (${res.passedCount}/${res.totalRules} tiêu chí đúng)`;
-      
+
       if (mode === 'guide') {
         if (gmStatusDesc) gmStatusDesc.textContent = 'Vui lòng kiểm tra lại các lỗi bên dưới, đóng bảng này và sửa lỗi.';
         if (btnModalRetry) {
@@ -1221,19 +1414,19 @@
 
         // Xác định section nào có lỗi (kể cả hint & item thực)
         const has24GFail = failedRealItems.some(i => i.id.startsWith('2.4G_') || i.id === '_24g_hint');
-        const has5GFail  = failedRealItems.some(i => i.id.startsWith('5G_')   || i.id === '_5g_hint');
+        const has5GFail = failedRealItems.some(i => i.id.startsWith('5G_') || i.id === '_5g_hint');
 
         res.details.forEach(item => {
           // Header row: chỉ vẽ nếu section đó có lỗi
           if (item._isHeader) {
             const shouldShow = (item.id === '_header_24g' && has24GFail) ||
-                               (item.id === '_header_5g'  && has5GFail);
+              (item.id === '_header_5g' && has5GFail);
             if (!shouldShow) return;
             const tr = document.createElement('tr');
             tr.innerHTML = `
               <td colspan="4" style="background:#1e293b;color:#94a3b8;font-weight:700;
                 font-size:11px;letter-spacing:1px;padding:6px 10px;text-align:center;">
-                ${item.name}
+                ${escapeHTML(item.name)}
               </td>
             `;
             gmChecklistBody.appendChild(tr);
@@ -1245,7 +1438,7 @@
             tr.innerHTML = `
               <td colspan="4" style="background:#7c2d12;color:#fed7aa;font-size:12px;
                 padding:6px 10px;font-style:italic;">
-                ⚠ ${item.expected}
+                ⚠ ${escapeHTML(item.expected)}
               </td>
             `;
             gmChecklistBody.appendChild(tr);
@@ -1255,9 +1448,9 @@
           if (item.passed) return;
           const tr = document.createElement('tr');
           tr.innerHTML = `
-            <td><strong>${item.name}</strong></td>
-            <td><code class="gm-code-val">${item.expected}</code></td>
-            <td><code class="gm-code-val" style="color:#b91c1c; font-weight:700;">${item.actual}</code></td>
+            <td><strong>${escapeHTML(item.name)}</strong></td>
+            <td><code class="gm-code-val">${escapeHTML(item.expected)}</code></td>
+            <td><code class="gm-code-val" style="color:#b91c1c; font-weight:700;">${escapeHTML(item.actual)}</code></td>
             <td><span class="gm-badge-fail">✖ Sai</span></td>
           `;
           gmChecklistBody.appendChild(tr);
@@ -1267,6 +1460,10 @@
 
     gradingModal.style.display = 'flex';
     gradingModal.setAttribute('aria-hidden', 'false');
+    window.requestAnimationFrame(() => {
+      const target = btnModalClose && btnModalClose.style.display !== 'none' ? btnModalClose : btnModalRetry;
+      target?.focus();
+    });
   }
 
   function hideGradingModal() {
@@ -1277,16 +1474,131 @@
   }
 
   // ── Tracking API ─────────────────────────────────────────────────
+  function reserveTrackingTimerStart(session) {
+    if (!session || !_currentUser) return Promise.resolve(false);
+    const labId = session.lesson && session.lesson.id
+      ? session.lesson.id
+      : (session.lesson && session.lesson.title ? session.lesson.title : '');
+    return fetch('/api/index.php/tracking/timer/start', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        submission_id: session.submissionId,
+        lab_id: labId,
+        mode: session.mode,
+        started_at: session.startedAt
+      })
+    })
+      .then(function (res) {
+        if (!res.ok) {
+          return res.json().catch(function () { return {}; }).then(function (err) {
+            const message = err && err.error && err.error.message
+              ? err.error.message
+              : `Không khởi tạo được phiên (HTTP ${res.status}).`;
+            throw new Error(message);
+          });
+        }
+        return res.json();
+      })
+      .then(function (data) {
+        const item = data && data.item ? data.item : {};
+        session.attemptNo = item.practice_attempt_no == null ? null : Number(item.practice_attempt_no);
+        session.serverSessionId = item.session_id || '';
+        return true;
+      })
+      .catch(function (err) {
+        console.warn('[Tracking] Chưa thể giữ số thứ tự phiên; máy chủ sẽ cấp số khi lưu kết quả:', err);
+        return false;
+      });
+  }
+
+  function finalizeAbandonedTrackingSession(session, durationSec) {
+    if (!session || !_currentUser) return Promise.resolve(false);
+    const labId = session.lesson && session.lesson.id
+      ? session.lesson.id
+      : (session.lesson && session.lesson.title ? session.lesson.title : '');
+    const user = _currentUser;
+    const finish = function () {
+      return fetch('/api/index.php/tracking/timer', {
+        method: 'POST',
+        credentials: 'include',
+        keepalive: true,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          submission_id: session.submissionId,
+          technician_id: user.technician_id,
+          name: user.name,
+          email: user.email || undefined,
+          lab_id: labId,
+          mode: session.mode,
+          started_at: session.startedAt,
+          finished_at: new Date().toISOString(),
+          duration_sec: durationSec || 0,
+          status: 'abandoned'
+        })
+      })
+        .then(function (response) {
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          session.finalized = true;
+          return true;
+        })
+        .catch(function (error) {
+          console.warn('[Tracking] Không thể ghi nhận phiên đã dừng:', error);
+          return false;
+        });
+    };
+    return Promise.resolve(session.startPromise).then(finish);
+  }
+
   /**
    * Gửi thông tin phiên thực hành lên server qua POST /api/index.php/tracking/timer.
    * Được gọi DUY NHẤT 1 LẦN khi KTV bấm nút trên modal kết quả.
    * @param {object|null} evalResult - Kết quả chấm điểm
    * @param {number} durationSec - Thời gian làm bài (giây), lấy từ đồng hồ đã dừng
    */
-  function sendTrackingTimer(evalResult, durationSec) {
-    if (!_trackingSession) return; // Chưa có phiên nào được bắt đầu
+  function setTrackingSaveStatus(status, message, allowRetry) {
+    if (!gmSaveStatus) return;
+    gmSaveStatus.hidden = !message;
+    gmSaveStatus.className = `gm-save-status${status ? ` is-${status}` : ''}`;
+    gmSaveStatus.replaceChildren();
+    if (!message) return;
 
+    const text = document.createElement('span');
+    text.textContent = message;
+    gmSaveStatus.appendChild(text);
+    if (allowRetry) {
+      const retry = document.createElement('button');
+      retry.type = 'button';
+      retry.className = 'gm-save-retry';
+      retry.textContent = 'Thử lưu lại';
+      retry.addEventListener('click', () => sendTrackingTimer(_lastEvalResult, _lastSubmitDurationSec, _lastTrackingPayload));
+      gmSaveStatus.appendChild(retry);
+    }
+  }
+
+  function setTrackingActionsDisabled(disabled) {
+    [btnModalRetry, btnModalClose].forEach(button => {
+      if (button) button.disabled = disabled;
+    });
+  }
+
+  function sendTrackingTimer(evalResult, durationSec, retryPayload = null) {
+    if (!_trackingSession) return; // Chưa có phiên nào được bắt đầu
     const session = _trackingSession;
+    if (session.startPromise && !session.startSettled) {
+      return session.startPromise.then(function () {
+        return sendTrackingTimer(evalResult, durationSec, retryPayload);
+      });
+    }
+    if (trackingSaveInFlight) return;
+    if (!_currentUser) {
+      setTrackingSaveStatus('error', 'Phiên đăng nhập không còn hợp lệ. Hãy đăng nhập lại trước khi nộp bài.');
+      return Promise.resolve(false);
+    }
+    trackingSaveInFlight = true;
+    setTrackingActionsDisabled(true);
+    setTrackingSaveStatus('saving', 'Đang lưu kết quả và cập nhật tiến độ...');
 
     const finishedAt = new Date();
 
@@ -1296,14 +1608,11 @@
     // Lấy lab_id chính xác từ lesson.id (khớp với data.js)
     const labId = session.lesson && session.lesson.id ? session.lesson.id : (session.lesson && session.lesson.title ? session.lesson.title : 'Unknown');
 
-    // Thông tin KTV — dùng từ user đã đăng nhập, fallback về anonymous
-    const user = _currentUser || {
-      technician_id: 'ANONYMOUS',
-      name: 'Người dùng chưa đăng nhập',
-      email: ''
-    };
+    // Thông tin KTV từ phiên đăng nhập; server đối chiếu lại danh tính này.
+    const user = _currentUser;
 
-    const payload = {
+    const payload = retryPayload ? { ...retryPayload } : {
+      submission_id: session.submissionId,
       technician_id: user.technician_id,
       name: user.name,
       email: user.email || undefined,
@@ -1315,7 +1624,8 @@
       duration_sec: durationSec || 0
     };
 
-    if (evalResult) {
+    if (!retryPayload && evalResult) {
+      payload.status = evalResult.passed ? 'completed' : 'failed';
       payload.is_passed = evalResult.passed;
       payload.score = evalResult.score;
       payload.grading_details = evalResult.details;
@@ -1325,8 +1635,9 @@
     Object.keys(payload).forEach(function (k) {
       if (payload[k] === undefined) delete payload[k];
     });
+    if (!retryPayload) _lastTrackingPayload = payload;
 
-    fetch('/api/index.php/tracking/timer', {
+    return fetch('/api/index.php/tracking/timer', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -1334,17 +1645,36 @@
     })
       .then(function (res) {
         if (!res.ok) {
-          return res.json().then(function (err) {
-            console.warn('[Tracking] API trả về lỗi:', err);
+          return res.json().catch(function () { return {}; }).then(function (err) {
+            const message = err && err.error && err.error.message
+              ? err.error.message
+              : `Không lưu được kết quả (HTTP ${res.status}).`;
+            throw new Error(message);
           });
         }
         return res.json().then(function (data) {
           console.info('[Tracking] Đã ghi phiên thực hành & chấm điểm:', data);
+          const item = data && data.item ? data.item : {};
+          session.finalized = true;
+          const attemptNote = item.practice_attempt_no
+            ? ` Lần thực hành ${item.practice_attempt_no}.`
+            : '';
+          if (item.normalized_saved === false) {
+            setTrackingSaveStatus('success', `Đã lưu kết quả luyện tập.${attemptNote} Bài ngoài phạm vi giao không cộng vào tiến độ lớp.`);
+          } else {
+            setTrackingSaveStatus('success', item.duplicate
+              ? `Kết quả này đã được lưu trước đó.${attemptNote}`
+              : `Đã lưu kết quả và cập nhật tiến độ thành công.${attemptNote}`);
+          }
         });
       })
       .catch(function (err) {
-        // Không hiển thị lỗi cho người dùng — portal vẫn hoạt động bình thường
         console.warn('[Tracking] Không thể gửi dữ liệu tracking:', err);
+        setTrackingSaveStatus('error', `Chưa lưu được kết quả: ${err.message || 'lỗi kết nối.'}`, true);
+      })
+      .finally(function () {
+        trackingSaveInFlight = false;
+        setTrackingActionsDisabled(false);
       });
   }
 
@@ -1452,30 +1782,13 @@
     sidebar.classList.toggle('collapsed');
   }
 
-  // ── Action Menu ──────────────────────────────────────────────────
-  function toggleActionMenu() {
-    actionMenu.classList.toggle('open');
+  // ── Dashboard Button (admin only) ──────────────────────────────────
+  const btnDashboard = document.getElementById('btn-dashboard');
+  if (btnDashboard) {
+    btnDashboard.addEventListener('click', function () {
+      window.location.href = '/dashboard-authen/';
+    });
   }
-
-  function onDocClick(e) {
-    if (!e.target.closest('.action-dropdown')) {
-      actionMenu.classList.remove('open');
-    }
-  }
-
-  // ── Action Menu Items ────────────────────────────────────────────
-  document.getElementById('menu-dashboard').addEventListener('click', () => {
-    actionMenu.classList.remove('open');
-    window.open('/dashboard-authen/', '_blank', 'noopener');
-  });
-
-  document.getElementById('menu-logout').addEventListener('click', () => {
-    actionMenu.classList.remove('open');
-    if (confirm('Bạn có muốn đăng xuất không?')) {
-      fetch('/api/index.php/auth/logout', { method: 'POST', credentials: 'include' })
-        .then(() => window.location.reload());
-    }
-  });
 
   // ── Step By Step Guide Popups Logic ──────────────────────────────
   function getLessonPopups(deviceId, lesson) {
@@ -1597,7 +1910,7 @@
             if (rect.width === 0 && rect.height === 0 && win.frameElement.offsetParent === null) {
               return;
             }
-          } catch(e) {}
+          } catch (e) { }
         }
 
         docs.push(win.document);
@@ -1684,62 +1997,62 @@
       (doc.head || doc.documentElement).appendChild(styleTag);
     }
 
-  function findGuideElements(doc, selectorStr) {
-    if (!doc || !selectorStr) return [];
-    const parts = selectorStr.split(',').map(s => s.trim());
-    const results = [];
-    for (const sel of parts) {
-      try {
-        if (!sel.includes(':contains(')) {
-          const els = doc.querySelectorAll(sel);
-          els.forEach(el => results.push(el));
-          continue;
-        }
-
-        // Tách selector thành các phân đoạn bằng khoảng trắng
-        const segments = sel.split(/\s+/).filter(Boolean);
-        let currentContexts = [doc.body || doc];
-
-        for (let i = 0; i < segments.length; i++) {
-          const seg = segments[i];
-          const match = seg.match(/^(.*?):contains\(["']?(.*?)["']?\)$/);
-          let baseSel = seg;
-          let textToMatch = null;
-
-          if (match) {
-            baseSel = match[1] || '*';
-            textToMatch = match[2].trim().toLowerCase();
+    function findGuideElements(doc, selectorStr) {
+      if (!doc || !selectorStr) return [];
+      const parts = selectorStr.split(',').map(s => s.trim());
+      const results = [];
+      for (const sel of parts) {
+        try {
+          if (!sel.includes(':contains(')) {
+            const els = doc.querySelectorAll(sel);
+            els.forEach(el => results.push(el));
+            continue;
           }
 
-          const nextContexts = [];
-          for (const ctx of currentContexts) {
-            const elements = ctx.querySelectorAll(baseSel);
-            elements.forEach(el => {
-              if (textToMatch) {
-                const txt = (el.textContent || el.innerText || '').trim().toLowerCase();
-                if (txt.includes(textToMatch)) {
+          // Tách selector thành các phân đoạn bằng khoảng trắng
+          const segments = sel.split(/\s+/).filter(Boolean);
+          let currentContexts = [doc.body || doc];
+
+          for (let i = 0; i < segments.length; i++) {
+            const seg = segments[i];
+            const match = seg.match(/^(.*?):contains\(["']?(.*?)["']?\)$/);
+            let baseSel = seg;
+            let textToMatch = null;
+
+            if (match) {
+              baseSel = match[1] || '*';
+              textToMatch = match[2].trim().toLowerCase();
+            }
+
+            const nextContexts = [];
+            for (const ctx of currentContexts) {
+              const elements = ctx.querySelectorAll(baseSel);
+              elements.forEach(el => {
+                if (textToMatch) {
+                  const txt = (el.textContent || el.innerText || '').trim().toLowerCase();
+                  if (txt.includes(textToMatch)) {
+                    nextContexts.push(el);
+                  }
+                } else {
                   nextContexts.push(el);
                 }
-              } else {
-                nextContexts.push(el);
-              }
-            });
+              });
+            }
+            currentContexts = nextContexts;
+            if (currentContexts.length === 0) break;
           }
-          currentContexts = nextContexts;
-          if (currentContexts.length === 0) break;
-        }
 
-        currentContexts.forEach(el => {
-          if (!results.includes(el)) {
-            results.push(el);
-          }
-        });
-      } catch (e) {
-        console.error("Error in findGuideElements for selector:", sel, e);
+          currentContexts.forEach(el => {
+            if (!results.includes(el)) {
+              results.push(el);
+            }
+          });
+        } catch (e) {
+          console.error("Error in findGuideElements for selector:", sel, e);
+        }
       }
+      return results;
     }
-    return results;
-  }
 
     function isPageActiveInTree(rootWin, pageName) {
       if (!rootWin || !pageName) return false;
@@ -1804,6 +2117,7 @@
       } catch (e) { }
 
       if (target) {
+<<<<<<< HEAD
         const openModal = Array.from(doc.querySelectorAll('.MuiDialog-root, .MuiModal-root, #modal_overlay, .modal-overlay, .modal_overlay, #modal-overlay')).find(m => {
           if (!m) return false;
           if (m.classList.contains('MuiDialog-root') || m.classList.contains('MuiModal-root')) {
@@ -1812,6 +2126,16 @@
           return m.classList.contains('active') || m.classList.contains('show') || m.style.display === 'flex' || m.style.display === 'block';
         });
         if (openModal && !openModal.contains(target)) {
+=======
+        const modalOverlay = doc.getElementById('modal_overlay') || doc.querySelector('.modal-overlay, .modal_overlay, #modal-overlay');
+        const isModalOpen = modalOverlay && (
+          modalOverlay.classList.contains('active') ||
+          modalOverlay.classList.contains('show') ||
+          modalOverlay.style.display === 'flex' ||
+          modalOverlay.style.display === 'block'
+        );
+        if (isModalOpen && !modalOverlay.contains(target)) {
+>>>>>>> main
           target = null;
         }
       }
@@ -1901,19 +2225,19 @@
   }
 
   // ── Hook cho Simulator Save ──────────────────────────────────────
-  window.onSimulatorSave = function(simWin, modalTitle) {
+  window.onSimulatorSave = function (simWin, modalTitle) {
     if (currentDeviceId === 'ax3000gz' && _currentLesson && _currentLesson.id === 'LAB_AX3000GZ_02') {
       if (modalTitle !== 'WLAN SSID Configuration') {
         return;
       }
     }
-    
+
     window._hasClickedSaveInGuide = true;
 
     if (_currentLesson && typeof _currentLesson.onSimSave === 'function') {
       try {
         _currentLesson.onSimSave(simWin);
-      } catch(e) {}
+      } catch (e) { }
     }
 
     // Đánh giá tức thì để mở nút Nộp bài ngay không cần chờ setInterval

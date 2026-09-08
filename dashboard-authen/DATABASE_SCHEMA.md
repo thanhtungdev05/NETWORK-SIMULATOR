@@ -1,221 +1,137 @@
-# Tài liệu Thiết kế Cơ sở Dữ liệu (Database Schema Documentation)
+# KTV, khu vực, chi nhánh và lớp đào tạo
 
-Tài liệu này mô tả chi tiết sơ đồ cơ sở dữ liệu quan hệ (RDBMS) chuẩn hóa **3NF**, áp dụng cho hệ thống **Dashboard Giám sát Thực hành KTV**.
+Tài liệu này mô tả nguồn dữ liệu hiện hành của dashboard. Schema vật lý được
+quản lý bởi các migration trong `api/migrations/`.
 
-> Phần 1–3 là mô hình nghiệp vụ tham chiếu. Schema vật lý đang chạy được mô tả ở phần 4 và được quản lý bởi các migration trong `api/migrations/`.
+## Quy tắc chính
 
----
-
-## 1. Sơ đồ Quan hệ Thực thể (ERD Diagram)
+Khu vực/chi nhánh hiện tại là thuộc tính của KTV, không phải thuộc tính suy ra
+từ lớp đào tạo:
 
 ```mermaid
 erDiagram
-    REGIONS ||--o{ TECHNICIANS : "thuộc"
-    TECHNICIANS ||--o{ SESSIONS : "thực hiện"
-    DEVICES ||--o{ LABS : "bao gồm"
-    LABS ||--o{ SESSIONS : "được thực hành trong"
+    ROLES ||--o{ USERS : "phân quyền"
+    REGIONS ||--o{ USERS : "khu vực hiện tại"
+    USERS ||--o{ CLASS_ENROLLMENTS : "tham gia"
+    TRAINING_CLASSES ||--o{ CLASS_ENROLLMENTS : "có học viên"
+    REGIONS ||--o{ TRAINING_CLASSES : "nơi tổ chức lớp"
+    CLASS_ENROLLMENTS ||--o{ LAB_ASSIGNMENTS : "được giao bài"
 
-    REGIONS {
-        string region_id PK
-        string region_name
-    }
-    TECHNICIANS {
-        string technician_id PK
+    USERS {
+        uuid user_id PK
+        string employee_id
         string email
-        string full_name
-        string region_id FK
+        string role FK
+        uuid region_id FK
     }
-    DEVICES {
-        string device_id PK
-        string model
-        string device_name
+    ROLES {
+        string role_code PK
+        boolean is_admin
+        boolean can_export_reports
     }
-    LABS {
-        string lab_id PK
-        string device_id FK
-        string lab_name
+    REGIONS {
+        uuid region_id PK
+        string region_code
+        string region_name
+        string branch_name
     }
-    SESSIONS {
-        string session_id PK
-        string technician_id FK
-        string lab_id FK
-        datetime started_at
-        int duration_sec
-        string mode
-        string status
-        boolean completed_first_try
-        string last_action
+    TRAINING_CLASSES {
+        uuid class_id PK
+        string class_code
+        uuid region_id FK
     }
 ```
 
----
+- `users.region_id -> regions.region_id`: nơi công tác hiện tại của KTV.
+- `training_classes.region_id -> regions.region_id`: nơi tổ chức/quản lý lớp.
+- Hai giá trị có thể khác nhau và không được dùng thay thế cho nhau.
+- `lab_assignments.region_id_snapshot`: khu vực lịch sử tại lúc giao bài; chỉ
+  dùng khi cần báo cáo lịch sử cố định.
 
-## 2. Danh mục Bảng & Từ điển Dữ liệu (Data Dictionary)
+## Quản lý lớp và giao bài
 
-### 2.1. Bảng `regions` (Danh mục Vùng miền)
-Lưu trữ danh sách các vùng miền quản lý KTV trên toàn hệ thống.
+Từ migration `033_training_class_assignment_management.sql`:
 
-| Tên trường | Kiểu dữ liệu | Khóa | Ràng buộc | Mô tả & Ví dụ |
-| :--- | :--- | :--- | :--- | :--- |
-| `region_id` | `VARCHAR(50)` | **PK** | `NOT NULL` | Mã định danh vùng miền (VD: `"REG_1"`) |
-| `region_name` | `VARCHAR(100)` | | `NOT NULL` | Tên hiển thị vùng miền (VD: `"Vùng 1"`) |
+- Mã lớp vận hành được sinh tuần tự theo dạng `FTC-000001` bằng PostgreSQL sequence.
+- Một KTV có thể có nhiều dòng `class_enrollments` đang hiệu lực ở các lớp khác nhau.
+- Thiết bị giao cho lớp được mở rộng thành các bài lab trong `class_lab_assignments`, sau đó
+  sinh `lab_assignments` cho từng thành viên.
+- Portal chỉ trả thiết bị/bài lab thuộc lớp đang hiệu lực qua `GET /api/index.php/learning/catalog`.
+- Import giao bài dùng ba sheet `Lop`, `ThanhVien`, `ThietBi`; kết quả được ghi audit tại
+  `assignment_import_log`.
+- Import có semantics cộng dồn/idempotent và không tự động xóa thành viên hoặc thiết bị vắng
+  khỏi workbook.
 
----
+## Cách đọc đơn giản
 
-### 2.2. Bảng `technicians` (Thông tin Kỹ thuật viên / Learners)
-Lưu trữ thông tin chi tiết về từng KTV tham gia thực hành.
-
-| Tên trường | Kiểu dữ liệu | Khóa | Ràng buộc | Mô tả & Ví dụ |
-| :--- | :--- | :--- | :--- | :--- |
-| `technician_id` | `VARCHAR(50)` | **PK** | `NOT NULL` | Mã KTV (VD: `"TECH_01"`) |
-| `email` | `VARCHAR(100)` | | `NOT NULL, UNIQUE` | Email tài khoản KTV (VD: `"nguyenvana@fpt.com"`) |
-| `full_name` | `VARCHAR(100)` | | `NOT NULL` | Họ và tên KTV (VD: `"Nguyễn Văn A"`) |
-| `region_id` | `VARCHAR(50)` | **FK** | `REFERENCES regions` | Mã vùng miền KTV trực thuộc (VD: `"REG_1"`) |
-
----
-
-### 2.3. Bảng `devices` (Danh mục Thiết bị)
-Lưu trữ danh sách các thiết bị phần mạng / ONT phục vụ làm lab.
-
-| Tên trường | Kiểu dữ liệu | Khóa | Ràng buộc | Mô tả & Ví dụ |
-| :--- | :--- | :--- | :--- | :--- |
-| `device_id` | `VARCHAR(50)` | **PK** | `NOT NULL` | Mã thiết bị (VD: `"DEV_01"`) |
-| `model` | `VARCHAR(50)` | | `NOT NULL` | Mã model phần cứng (VD: `"AC1000F"`) |
-| `device_name` | `VARCHAR(100)` | | `NOT NULL` | Tên thương mại / tên hiển thị (VD: `"ONT AC1000F"`) |
-
----
-
-### 2.4. Bảng `labs` (Danh mục Bài Lab Thực hành)
-Danh sách các bài lab thực hành thuộc từng loại thiết bị.
-
-| Tên trường | Kiểu dữ liệu | Khóa | Ràng buộc | Mô tả & Ví dụ |
-| :--- | :--- | :--- | :--- | :--- |
-| `lab_id` | `VARCHAR(50)` | **PK** | `NOT NULL` | Mã bài lab (VD: `"LAB_DEV_01_01"`) |
-| `device_id` | `VARCHAR(50)` | **FK** | `REFERENCES devices` | Mã thiết bị tương ứng (VD: `"DEV_01"`) |
-| `lab_name` | `VARCHAR(150)` | | `NOT NULL` | Tên bài lab (VD: `"Cấu hình PPPoE"`) |
-
----
-
-### 2.5. Bảng `sessions` (Nhật ký Phiên Thực hành / Submissions)
-Lưu vết từng phiên bắt đầu và nộp bài lab của KTV.
-
-| Tên trường | Kiểu dữ liệu | Khóa | Ràng buộc | Mô tả & Giá trị hợp lệ |
-| :--- | :--- | :--- | :--- | :--- |
-| `session_id` | `VARCHAR(50)` | **PK** | `NOT NULL` | Mã phiên làm lab (VD: `"SES_001"`) |
-| `technician_id` | `VARCHAR(50)` | **FK** | `REFERENCES technicians` | KTV thực hiện bài lab (VD: `"TECH_01"`) |
-| `lab_id` | `VARCHAR(50)` | **FK** | `REFERENCES labs` | Bài lab thực hiện (VD: `"LAB_DEV_01_01"`) |
-| `started_at` | `DATETIME` / `TIMESTAMP` | | `NOT NULL` | Thời điểm bắt đầu phiên (VD: `"2026-07-01T08:15:00Z"`) |
-| `duration_sec` | `INT` | | `DEFAULT 0` | Thời lượng thực hiện tính bằng giây (VD: `900` = 15 phút) |
-| `mode` | `VARCHAR(30)` | | `CHECK (mode IN ('Thực hành', 'Hướng dẫn'))` | Chế độ làm lab |
-| `status` | `VARCHAR(30)` | | `CHECK (status IN ('completed', 'in_progress', 'failed', 'abandoned', 'not_started'))` | Trạng thái kỹ thuật của phiên |
-| `completed_first_try` | `BOOLEAN` | | `NULL`, không có default | `TRUE/FALSE` khi có bằng chứng đánh giá; `NULL` khi chưa đủ dữ liệu |
-| `last_action` | `TEXT` | | | Thao tác cuối cùng ghi nhận trên simulator |
-
----
-
-## 3. Mã SQL DDL (Create Table Statements)
+Migration `025_ktv_location_directory.sql` tạo view `v_ktv_directory`. Mỗi KTV
+là một dòng đã có sẵn khu vực và chi nhánh:
 
 ```sql
--- 1. Bảng Regions
-CREATE TABLE regions (
-    region_id VARCHAR(50) PRIMARY KEY,
-    region_name VARCHAR(100) NOT NULL
-);
-
--- 2. Bảng Technicians
-CREATE TABLE technicians (
-    technician_id VARCHAR(50) PRIMARY KEY,
-    email VARCHAR(100) NOT NULL UNIQUE,
-    full_name VARCHAR(100) NOT NULL,
-    region_id VARCHAR(50) NOT NULL,
-    CONSTRAINT fk_tech_region FOREIGN KEY (region_id) REFERENCES regions(region_id) ON DELETE CASCADE
-);
-
--- 3. Bảng Devices
-CREATE TABLE devices (
-    device_id VARCHAR(50) PRIMARY KEY,
-    model VARCHAR(50) NOT NULL,
-    device_name VARCHAR(100) NOT NULL
-);
-
--- 4. Bảng Labs
-CREATE TABLE labs (
-    lab_id VARCHAR(50) PRIMARY KEY,
-    device_id VARCHAR(50) NOT NULL,
-    lab_name VARCHAR(150) NOT NULL,
-    CONSTRAINT fk_lab_device FOREIGN KEY (device_id) REFERENCES devices(device_id) ON DELETE CASCADE
-);
-
--- 5. Bảng Sessions
-CREATE TABLE sessions (
-    session_id VARCHAR(50) PRIMARY KEY,
-    technician_id VARCHAR(50) NOT NULL,
-    lab_id VARCHAR(50) NOT NULL,
-    started_at TIMESTAMP NOT NULL,
-    duration_sec INT DEFAULT 0,
-    mode VARCHAR(30) NOT NULL CHECK (mode IN ('Thực hành', 'Hướng dẫn')),
-    status VARCHAR(30) NOT NULL CHECK (status IN ('completed', 'in_progress', 'failed', 'abandoned', 'not_started')),
-    completed_first_try BOOLEAN,
-    last_action TEXT,
-    CONSTRAINT fk_session_tech FOREIGN KEY (technician_id) REFERENCES technicians(technician_id),
-    CONSTRAINT fk_session_lab FOREIGN KEY (lab_id) REFERENCES labs(lab_id)
-);
+SELECT employee_id,
+       display_name,
+       email,
+       region_code,
+       region_name,
+       branch_name
+  FROM v_ktv_directory
+ ORDER BY region_name, branch_name, display_name;
 ```
 
----
+Tra cứu một KTV:
 
-## 4. Schema vật lý hiện tại
-
-Migration `012_employee_roster_dashboard.sql` mở rộng bảng IAM `users` bằng các trường hồ sơ chuyển tiếp cần lấy từ workbook nhân viên:
-
-- Định danh và công việc: `employee_id`, `job_title`, `class_code`.
-- Thời gian đào tạo: `training_start_date`, `training_end_date`.
-- Trạng thái nghỉ việc: `is_terminated`, `termination_date`, `termination_reason`.
-- Đơn vị: `unit_code`, `unit_name`, `region_code`, `branch_code`, `dashboard_region`.
-- Truy vết đồng bộ: `employee_source`, `employee_seed_batch`, `employee_synced_at`.
-
-`employee_id` có unique index riêng và vẫn giữ `user_id`, `email`, `role`, `iam_profile` để tương thích IAM.
-
-Bảng `timer_sessions` có thêm:
-
-- `user_id` tham chiếu `users(user_id)`.
-- `status`, `completed_first_try`, `last_action` cho số liệu dashboard thực.
-- `is_mock`, `seed_batch`, `seed_key` để dữ liệu test có thể kiểm tra và chạy lại an toàn.
-
-Danh mục thiết bị và bài lab lấy từ `device_catalog` và `lab_catalog`. Dashboard join phiên theo `user_id`; các phiên cũ chưa có `user_id` được fallback bằng mã nhân viên hoặc email.
-
-Migration `013_training_classes_and_session_outcomes.sql` bổ sung:
-
-- `training_classes` và `class_enrollments` để lớp demo không ghi đè mã lớp nguồn trong `users.class_code`.
-- View `v_current_training_class` để lấy lớp đang hiệu lực.
-- `completed_first_try` trở thành nullable và không còn default `TRUE`; `NULL` có nghĩa chưa đủ bằng chứng đánh giá.
-- Check constraint cho status, mode, duration và quan hệ giữa status với first-try.
-
-Mô hình đích và đánh giá chi tiết nằm trong [DB_DASHBOARD_ASSESSMENT_2026-08-13.md](DB_DASHBOARD_ASSESSMENT_2026-08-13.md). Schema hiện tại vẫn là mô hình chuyển tiếp; cần `lab_assignments` và `lab_attempts` để tính tiến độ chương trình chính thức.
-
----
-
-## 5. Tương thích với Mã nguồn Frontend (`js/app.js`)
-
-API `GET /api/index.php/dashboard/all` trả về `{ sessions, devices, labs, technicians }`. Frontend xử lý như sau:
-
-1. `loadDashboardFromApi()` gọi API, không dùng mock data.
-2. `technicians` cung cấp tên, mã nhân viên, đơn vị và khu vực từ `users`; `class_code` lấy từ enrollment đang hiệu lực và `source_class_code` giữ lớp workbook.
-3. `mapApiSessions()` chuẩn hóa mỗi phiên từ `timer_sessions` và ghép metadata KTV từ catalog trên.
-4. `buildDeviceCatalog()` ghép danh sách thiết bị với bài lab theo `lab_id` → `device_id`.
-5. Danh sách lớp được dựng từ `training_classes`/`class_enrollments`; DB là nguồn dữ liệu chính khi API có trường `technicians`.
-6. Trường hợp API lỗi: dashboard hiển thị dữ liệu rỗng kèm thông báo "Không tải được dữ liệu timer_sessions" ở sidebar.
-
----
-
-## 6. Nạp và xác minh dữ liệu KTV test
-
-Workbook nhân viên không được chép vào repository. Chạy migration trước, sau đó truyền đường dẫn file vào CLI:
-
-```powershell
-php api/migrate.php
-php api/seed_dashboard_ktv.php --file="D:\NhanVien-2026-08-13.xlsx" --count=200 --batch=dashboard-ktv-20260813 --anchor-date=2026-08-13 --replace-batch
-php api/verify_dashboard_seed.php --batch=dashboard-ktv-20260813 --expected-users=200
+```sql
+SELECT *
+  FROM v_ktv_directory
+ WHERE LOWER(email) = LOWER('ktv@fpt.net');
 ```
 
-Có thể thêm `--dry-run` vào lệnh seed để chỉ đọc workbook và lập kế hoạch, không ghi DB. `--replace-batch` chỉ thay dữ liệu mock/enrollment thuộc đúng batch đã chỉ định. Với 200 KTV, seed tạo 20 lớp demo × 10 KTV và vẫn giữ nguyên lớp nguồn trong hồ sơ.
+Ứng dụng, API danh sách KTV và dashboard phải ưu tiên view này. Không cần join
+qua `training_classes` để xem nơi công tác của KTV.
+
+## Nguồn ghi dữ liệu
+
+File roster cập nhật theo luồng:
+
+1. `Parent Department` được chuẩn hóa thành một dòng trong `regions`.
+2. `Branch` cập nhật `regions.branch_name` (`PNC` hoặc `TIN`).
+3. `users.region_id` được gắn trực tiếp tới dòng `regions` tương ứng.
+4. `users.region_code` và `users.dashboard_region` chỉ giữ giá trị nguồn để
+   tương thích/import; chúng không phải nguồn đọc chính.
+
+Khi sửa thủ công trong Django Admin, chọn trường **Khu vực/chi nhánh hiện tại**
+của KTV. Không sửa khu vực của lớp để thay đổi nơi công tác của KTV.
+
+## Vai trò của các bảng
+
+| Bảng/view | Vai trò |
+| --- | --- |
+| `roles` | Danh mục `KTV`, `ADMIN`, `DEV` và quyền quản trị/xuất báo cáo |
+| `users` | Hồ sơ KTV và `region_id` hiện tại |
+| `regions` | Danh mục mã vùng, tên khu vực, tên chi nhánh |
+| `v_ktv_directory` | Read-model phẳng để xem KTV + khu vực + chi nhánh |
+| `training_classes` | Thông tin lớp; `region_id` là khu vực của lớp |
+| `class_enrollments` | Quan hệ KTV tham gia lớp |
+| `lab_assignments` | Bài được giao và snapshot lịch sử |
+| `timer_sessions` | Nhật ký phiên thực hành |
+
+## Phân quyền
+
+`users.role` tham chiếu `roles.role_code`:
+
+- `KTV`: sử dụng portal KTV, không có quyền quản trị hoặc xuất báo cáo.
+- `ADMIN`: có toàn bộ quyền quản trị dashboard nhưng không được xuất báo cáo.
+- `DEV`: có toàn bộ quyền như `ADMIN` và được xuất báo cáo.
+
+API phải kiểm tra `roles.is_admin` cho chức năng quản trị và
+`roles.can_export_reports` cho chức năng xuất báo cáo; không dựa riêng vào tên role.
+
+## Quy tắc dashboard
+
+- Danh sách và bộ lọc KTV: lấy khu vực/chi nhánh từ `v_ktv_directory`.
+- Ma trận tiến độ hiện tại: dùng khu vực hiện tại của KTV từ
+  `v_ktv_directory`; KTV chưa được gán khu vực hiển thị là chưa phân vùng.
+- Báo cáo lịch sử cố định: có thể dùng `region_id_snapshot` nếu nghiệp vụ yêu
+  cầu giữ nguyên khu vực tại thời điểm giao bài.
+- Lớp hiện tại lấy từ `class_enrollments`/`training_classes`, nhưng không ghi đè
+  khu vực hiện tại của KTV.

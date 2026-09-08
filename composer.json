@@ -2,13 +2,30 @@
   "name": "ftc/virtual-devices",
   "description": "FTC Virtual Devices portal and IAM integration",
   "type": "project",
+  "license": "proprietary",
   "require": {
-    "php": "^8.0",
+    "php": "^8.2",
+    "ext-ctype": "*",
     "ext-curl": "*",
+    "ext-dom": "*",
+    "ext-fileinfo": "*",
+    "ext-filter": "*",
+    "ext-gd": "*",
+    "ext-iconv": "*",
     "ext-json": "*",
+    "ext-libxml": "*",
+    "ext-mbstring": "*",
     "ext-pdo": "*",
     "ext-pdo_pgsql": "*",
+    "ext-simplexml": "*",
+    "ext-xml": "*",
+    "ext-xmlreader": "*",
+    "ext-xmlwriter": "*",
+    "ext-zip": "*",
+    "ext-zlib": "*",
+    "firebase/php-jwt": "^7.0",
+    "phpoffice/phpspreadsheet": "^5.9",
     "vlucas/phpdotenv": "^5.5",
-    "stevenmaguire/oauth2-keycloak": "^3.0"
+    "stevenmaguire/oauth2-keycloak": "^6.1"
   }
 }

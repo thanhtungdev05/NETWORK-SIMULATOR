@@ -1,74 +1,99 @@
+# ── Environment & Secrets ──────────────────────────────────────
 .env
 .env.*
 !.env.example
+admin_app/.env.admin
+!admin_app/.env.admin.example
 
+# ── Python / Virtual Environments ──────────────────────────────
 __pycache__/
+**/__pycache__/
 *.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+venv/
+.venv/
+env/
+env_*/
+ENV/
+.ruff_cache/
+.mypy_cache/
+coverage.xml
+temp/
 
+# ── Dependencies & Runtime Scratch ────────────────────────────
 vendor/
+node_modules/
 scratch/
+sim_state.json
+**/sim_state.json
 
-.vscode/
+# ── Logs & Temporary Files ────────────────────────────────────
 *.log
 *.tmp
 *.bak
+*.swp
+*~
+php_api.log
+_check_*.php
+_test_*.php
+_temp_*
 
-sim_state.json
+# ── IDE & OS Metadata ─────────────────────────────────────────
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+Desktop.ini
 
-# ── File rác / dev-only ──────────────────────────────────────
-# HAR capture (log HTTP dùng khi reverse-engineer router)
-**/reference/har/
-**/captures/*.har
-
-# Raw crawl data (log nội bộ khi build simulator, không cần deploy)
-**/reference/raw/
-
-# File Word / tài liệu (đặt vào Drive, không vào git)
+# ── Office / Docs (Đưa lên Google Drive, không commit git) ────
 *.docx
 *.xlsx
+!templates/Mau_Import_KTV.xlsx
 *.pptx
 
-# PHP runtime
-php_api.log
-
-# ── Script cào dữ liệu / dev-only tools ─────────────────────
-# Dùng khi build simulator, không cần khi deploy
-**/collector.py
-**/chay_collector.bat
-**/chay_thu_van_tay.bat
-
-# be12000 dev scripts
-sim_be12000/bung_*.py
-sim_be12000/trich_*.py
-sim_be12000/go_boc_viewsource.py
-sim_be12000/tao_factory_state.py
-sim_be12000/tools/
-
-# Hướng dẫn cào dữ liệu (nội bộ)
-**/HUONG-DAN*.md
-**/HUONG-DAN-CHUP-HAR.md
-
-# Captures (raw HTML từ router thật, không serve)
-**/captures/
-**/captures_new/
-
-# Reference data (dev-only, trừ vigor2927/reference/source/ là server cần)
+# ── Reverse-Engineer & Raw Crawl Data ─────────────────────────
 **/reference/har/
 **/reference/raw/
 **/reference/rendered/
 **/reference/vantay/
 **/reference/screenshot/
 **/reference/goi_tai_ve/
-sim_be12000/reference/source/
+**/captures/
+**/captures_new/
+**/captures/*.har
+**/sim_be12000/reference/source/
 
-# Dev notes nội bộ
+# ── Simulator Dev-only Tools & Scripts ────────────────────────
+**/collector.py
+**/chay_collector.bat
+**/chay_thu_van_tay.bat
+**/bung_*.py
+**/trich_*.py
+**/go_boc_viewsource.py
+**/tao_factory_state.py
+**/boc_modal.py
+**/clean_ext.py
+**/tools_kiem_thu.py
+**/Chay-server.bat
+**/tools/
+
+# ── Internal Dev Notes & Guides ───────────────────────────────
+**/HUONG-DAN*.md
 **/STATUS.md
 **/ISSUES.md
 **/CLAUDE.md
 **/CHUP-HAR-BO-SUNG.md
 
-# Dev tools thừa
-**/boc_modal.py
-**/clean_ext.py
-**/tools_kiem_thu.py
-**/Chay-server.bat
+# ── HTML ERD / Docs (Dev-only) ────────────────────────────────
+database_erd_visualizer.html
+database_erd.html
+erd_viewer.html
+
+# ── Django Admin Panel ────────────────────────────────────────
+admin_app/staticfiles/
+admin_app/admin_site/__pycache__/
+admin_app/admin_portal/__pycache__/
+admin_app/*.pyc

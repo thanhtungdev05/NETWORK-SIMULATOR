@@ -1,56 +1,74 @@
-# 🚀 Hệ Thống Giả Lập Thiết Bị Mạng FPT (FPT Network Device Simulator)
+# FPT Codex Tooling Kit
 
-Hệ thống giả lập giao diện quản trị web (Web Admin Interface) dành cho các dòng thiết bị modem/router mạng FPT Telecom. Dự án phục vụ mục đích thực hành, đào tạo, demo và tự động chấm điểm kỹ năng cấu hình thiết bị của Kỹ thuật viên (KTV).
+Target stack:
+- PHP 8.2+ custom REST API + PDO PostgreSQL
+- Django 5.2 Admin only
+- Python 3.12 stdlib dispatcher / reverse proxy
+- PostgreSQL / Neon
+- Vanilla HTML/CSS/JavaScript
+- FPT IAM / Keycloak-compatible OAuth2
+- Custom SQL migrations
+- PhpSpreadsheet
+- Docker/Gunicorn/PHP CLI runtime
 
----
+Explicitly excluded:
+- crawler
+- emulator
+- device selector automation
+- Shadow DOM device tooling
 
-## 📋 Yêu Cầu Hệ Thống (Prerequisites)
+## Install
 
-- **Python 3.x** (Khuyên dùng Python 3.8 trở lên)
-- **Hệ điều hành**: Windows, macOS, hoặc Linux.
-- 💡 **Lưu ý**: Dự án sử dụng hoàn toàn các thư viện chuẩn (Standard Library) của Python, **không cần cài đặt thêm bất kỳ thư viện bên thứ 3 nào** (`pip install`).
-- Môi trường chạy PHP nội bộ (đã được tích hợp sẵn qua script khởi động).
+Extract this ZIP, then from PowerShell:
 
----
-
-## 📥 1. Hướng Dẫn Clone Project
-
-Mở Terminal / Command Prompt / Git Bash và chạy lệnh:
-
-```bash
-git clone <URL_REPOSITORY_CUAR_BAN>
-cd giailapthietbi
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass
+.\setup_fpt_codex_tooling.ps1 -ProjectRoot "D:\FPT INTERN\VirtualDevices\FTC-VirtualDevices"
 ```
 
----
+The installer is conservative:
+- existing files are preserved where possible;
+- legacy generic skills are not deleted automatically;
+- the new exact-stack skills are installed alongside them;
+- an AGENTS.md stack-specific block is appended once;
+- a single multi-stack check script is added.
 
-## ⚡ 2. Hướng Dẫn Khởi Chạy (Quick Start)
+After setup, restart Antigravity and ask Codex:
 
-Bạn có thể khởi chạy toàn bộ hệ thống bằng **1 trong 2 cách** sau:
-
-### 🔹 Cách 1: Chạy bằng File Batch (Dành riêng cho Windows)
-Mở **Command Prompt (CMD)** hoặc **PowerShell** tại thư mục dự án và chạy:
-
-```cmd
-.\CHAY-TAT-CA.bat
+```text
+Read AGENTS.md and list the exact project-local skills available for this repository.
+Do not modify anything.
 ```
 
-> **Mô tả**: Lệnh này tự động bật **Master Dispatcher** chạy toàn bộ hệ thống trên **1 cổng duy nhất `8080`** và tự động mở trình duyệt truy cập `http://localhost:8080`.
+Then run:
 
-### 🔹 Cách 2: Chạy bằng Python (Khuyên dùng - Đa nền tảng Windows / macOS / Linux)
-Chạy lệnh Python trực tiếp từ thư mục gốc dự án:
-
-```bash
-python run_all.py
+```powershell
+.\scripts\check.ps1
 ```
 
-> **Mô tả**: Master Dispatcher gộp Portal, toàn bộ thiết bị giả lập và proxy API PHP (`/api/*`) sang **1 cổng duy nhất `8080`**.
+## Recommended MCP profile
+
+`fpt_web_tools`:
+- Context7
+- GitHub Official
+- Playwright
+
+| Dịch vụ | Đường dẫn truy cập | Mô tả |
+| :--- | :--- | :--- |
+| 🏠 **Portal Trung Tâm** | `http://localhost:8080/` | Trang chủ chọn thiết bị và chế độ thực hành |
+| 📊 **Dashboard Đào Tạo** | `http://localhost:8080/dashboard/` | Báo cáo tiến độ, KPI, ma trận kết quả KTV |
+| ⚙️ **Trang Quản Trị Admin** | `http://localhost:8080/admin/` | Quản lý KTV, Lớp học, Bài Lab, Timer Sessions, Xuất CSV |
+| 🔌 **PHP REST API** | `http://localhost:8080/api/` | API chấm điểm, tracking, IAM auth |
+| 📡 **8 Thiết bị Giả lập** | `http://localhost:8080/sim_<model>/` | Giao diện cấu hình AC1000F, AX3000C, AX3000GZ, AX3000HV2, AX3000S, BE12000, BE15000, Vigor2927 |
+
+### 🔐 Thông Tin Đăng Nhập Trang Admin
+- **URL**: `http://localhost:8080/admin/`
+- **Tài khoản**: Cấu hình tại biến `DJANGO_SUPERUSER_USERNAME` (mặc định: `admin`)
+- **Mật khẩu**: Cấu hình tại biến `DJANGO_SUPERUSER_PASSWORD` trong file `.env`
 
 ---
 
-## 🛠 3. Các Tính Năng Đào Tạo Cốt Lõi
-
-Dự án không chỉ mô phỏng thiết bị mà còn tích hợp bộ công cụ Đào tạo và Chấm điểm tự động:
+## 🛠 4. Các Tính Năng Đào Tạo Cốt Lõi
 
 ### A. Danh sách các dòng thiết bị giả lập (Simulators)
 Dự án đã giả lập thành công Web Admin Interface của 12 dòng thiết bị mạng thực tế phổ biến của FPT Telecom:
@@ -68,14 +86,14 @@ Dự án đã giả lập thành công Web Admin Interface của 12 dòng thiế
 12. **Router MikroTik** (`/sim_mikrotik_hexs`)
 
 ### B. Hai Chế Độ Hoạt Động (Dual Modes)
-1. **💡 Chế độ Hướng dẫn (Guide Mode)**
+1. **💡 Chế độ Hướng dẫn (Guide Mode):**
    - **Mục đích:** Học tập và rèn luyện.
    - **Tính năng:**
-     - Hiển thị bong bóng hướng dẫn (Tooltips) chỉ dẫn từng bước thao tác thực tế. Tooltips tự động đồng bộ theo từng trang con của thiết bị (ví dụ: chuyển trang WLAN, SNTP, Mesh, Port Forwarding...).
+     - Hiển thị bong bóng hướng dẫn (Tooltips) chỉ dẫn từng bước thao tác thực tế. Tooltips tự động đồng bộ theo từng trang con của thiết bị (chuyển trang WLAN, SNTP, Mesh, Port Forwarding...).
      - KTV được phép cấu hình sai. Khi ấn **Nộp Bài**, hệ thống sẽ hiện bảng báo lỗi, cho phép đóng bảng điểm để **quay lại giao diện cũ sửa lỗi** và nộp lại.
      - **Chỉ ghi nhận Tracking (Log) khi đạt 100%**: Tránh ghi nhận dữ liệu không hoàn chỉnh của học viên.
 
-2. **⚡ Chế độ Thực hành (Practice Mode)**
+2. **⚡ Chế độ Thực hành (Practice Mode):**
    - **Mục đích:** Kiểm tra, thi thật.
    - **Tính năng:**
      - Ẩn toàn bộ hướng dẫn, ép KTV tự nhớ các thông số cấu hình chuẩn FPT.
@@ -85,24 +103,21 @@ Dự án đã giả lập thành công Web Admin Interface của 12 dòng thiế
 ### C. Chấm Điểm Tự Động Thông Minh (Smart Auto-Grading)
 - **Lấy dữ liệu trực tiếp từ Iframe giả lập:** Dùng DOM query để đọc dữ liệu KTV đã nhập, so khớp với bộ quy tắc chuẩn (`rules`).
 - **Luật chấm điểm động linh hoạt:** Hỗ trợ chấm điểm phức tạp như kiểm tra giá trị bất kỳ trong danh sách (vd: NTP Server được chọn ứng cử viên thuộc `vn.pool.ntp.org` hoặc `asia.pool.ntp.org` bằng định dạng `any_of`).
-- **Lưu bộ nhớ tạm (Cache đa trang):** Khắc phục nhược điểm KTV phải chuyển trang khi cấu hình (VD: Cấu hình Wi-Fi 2.4G xong, nhấn *Save*, rồi chuyển sang Wi-Fi 5G, nhấn *Save*).
-  - Hệ thống tự động bắt tín hiệu *Save* từ bên trong iframe (`window.parent.onSimulatorSave`).
-  - Lấy điểm từng phần lưu vào `CACHE` cục bộ (`_AC1000F_BAI2_CACHE`).
-  - Gộp chung toàn bộ khi nhấn "Nộp Bài" ở ngoài Portal chính.
+- **Lưu bộ nhớ tạm (Cache đa trang):** Khắc phục nhược điểm KTV phải chuyển trang khi cấu hình. Hệ thống tự động bắt tín hiệu *Save* từ bên trong iframe, lấy điểm từng phần lưu vào `CACHE` cục bộ và gộp chung toàn bộ khi nhấn "Nộp Bài" ở ngoài Portal chính.
 
 ### D. Ngăn Chặn Tải Lại Trang (Anti-Reload Script)
 Thiết bị thực tế thường khởi động lại hoặc load lại trang khi bấm Save. Trong giả lập:
 - Tích hợp bộ script Python (vd: `fix_saves.py`) tự động quét mã nguồn `.asp` của các giả lập.
 - Chèn Javascript ngăn lệnh submit, hiển thị thông báo giả lập `✔ Saved successfully!` và gửi tín hiệu báo cáo cho Portal ở lớp vỏ ngoài.
 
-### E. Hệ thống Tracking API & Logging
+### E. Hệ thống Tracking API & Telemetry
 - Tích hợp sẵn endpoint `/api/index.php/tracking/timer`.
-- Ghi nhận: ID KTV, Tên Bài Học, Điểm số, Tổng thời gian hoàn thành (tính bằng giây) và danh sách các lỗi cấu hình.
+- Ghi nhận: ID KTV, Tên Bài Học, Điểm số, Tổng thời gian hoàn thành (tính bằng giây), địa chỉ IP, User Agent, loại phiên và danh sách các lỗi cấu hình.
 - 100% không bị gửi đúp dữ liệu nhờ màng lọc logic thông minh tại nút "Nộp Bài".
 
 ---
 
-## 📊 4. Dashboard Giám Sát KTV (Training Management Dashboard)
+## 📊 5. Dashboard Giám Sát KTV (Training Management Dashboard)
 
 Dự án cung cấp một Dashboard quản trị hoàn chỉnh dành cho Admin/Giảng viên để theo dõi, thống kê tiến độ học tập và kết quả của các KTV.
 
@@ -116,41 +131,20 @@ Dự án cung cấp một Dashboard quản trị hoàn chỉnh dành cho Admin/G
 
 ---
 
-## 💾 5. Cơ Sở Dữ Liệu & Migrations
+## 💾 6. Cơ Sở Dữ Liệu & Migrations
 
 Hệ thống sử dụng cơ sở dữ liệu quan hệ **PostgreSQL** (mặc định kết nối Neon Cloud qua biến môi trường `DATABASE_URL` trong file `.env`).
+
+Sơ đồ khóa ngoại, quy tắc xóa và các cột snapshot được mô tả tại
+[`docs/DATABASE_RELATIONSHIPS.md`](docs/DATABASE_RELATIONSHIPS.md).
 
 ### Quản lý Schema qua Migrations
 Mọi thay đổi cấu trúc bảng, view hay dữ liệu mẫu đều được quản lý thông qua các file di trú phiên bản đặt trong thư mục `api/migrations/`.
 Các lệnh CLI hữu ích để quản lý cơ sở dữ liệu:
-* **Kiểm tra trạng thái di trú:**
-  ```bash
-  php api/migrate.php --status
-  ```
-* **Chạy di trú (Cập nhật Schema):**
-  ```bash
-  php api/migrate.php
-  ```
-* **Khởi tạo dữ liệu KTV & Sessions mẫu (Seed):**
-  ```bash
-  php api/seed_dashboard_ktv.php
-  ```
-* **Xác minh tính đúng đắn của dữ liệu mẫu:**
-  ```bash
-  php api/verify_dashboard_seed.php
-  ```
-
----
-
-## 🌐 6. Cấu Trúc Cổng Dịch Vụ (Single-Port)
-
-| Thành phần | Địa chỉ (Routing qua Master Dispatcher) |
-|---|---|
-| **Portal Trung Tâm & Bài Học** | `http://localhost:8080/` |
-| **API Backend (PHP)** | `http://localhost:8080/api/index.php` |
-| **Dashboard Quản trị** | `http://localhost:8080/dashboard/` |
-| **Giả lập AC1000F** | `http://localhost:8080/sim_ac1000f/...` |
-| **Các giả lập khác** | `http://localhost:8080/sim_ax3000c/...` |
+* **Kiểm tra trạng thái di trú:** `php api/migrate.php --status`
+* **Chạy di trú (Cập nhật Schema):** `php api/migrate.php`
+* **Khởi tạo dữ liệu KTV & Sessions mẫu (Seed):** `php api/seed_dashboard_ktv.php`
+* **Xác minh tính đúng đắn của dữ liệu mẫu:** `php api/verify_dashboard_seed.php`
 
 ---
 

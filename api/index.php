@@ -8,6 +8,9 @@ require_once __DIR__ . '/lib/runtime.php';
 require_once __DIR__ . '/lib/PostgresSessionHandler.php';
 require_once __DIR__ . '/lib/iam_identity.php';
 require_once __DIR__ . '/lib/tracking_handler.php';
+require_once __DIR__ . '/lib/ktv_roster_import.php';
+require_once __DIR__ . '/lib/training_classes.php';
+require_once __DIR__ . '/lib/report_xlsx.php';
 require_once __DIR__ . '/lib/dashboard_report.php';
 load_app_environment($root);
 
@@ -16,7 +19,9 @@ $GLOBALS['request_id'] = bin2hex(random_bytes(8));
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 header('X-Request-ID: ' . $GLOBALS['request_id']);
-header('Access-Control-Allow-Origin: *');
+$corsOrigin = app_origin(env_value('APP_BASE_URL', '')) ?? request_origin();
+header('Access-Control-Allow-Origin: ' . $corsOrigin);
+header('Vary: Origin');
 header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Tracking-Key');
 header('Access-Control-Max-Age: 86400');
@@ -37,9 +42,8 @@ if ($path === '') {
 $segments = array_values(array_filter(explode('/', $path), fn($part) => $part !== ''));
 $resource = $segments[0] ?? '';
 
-function json_body(): array
+function json_body_with_limit(int $maximumBytes): array
 {
-    $maximumBytes = env_int('API_MAX_BODY_BYTES', 65536, 1024, 1048576);
     $contentLength = filter_var($_SERVER['CONTENT_LENGTH'] ?? null, FILTER_VALIDATE_INT);
     if ($contentLength !== false && $contentLength > $maximumBytes) {
         fail(413, 'payload-too-large', 'Request body exceeds the allowed size.');
@@ -56,17 +60,49 @@ function json_body(): array
     if ($raw === false || trim($raw) === '') {
         return [];
     }
-    $decoded = json_decode($raw, true);
-    if (!is_array($decoded)) {
+    try {
+        $decoded = json_decode($raw, true, 512, JSON_THROW_ON_ERROR | JSON_BIGINT_AS_STRING);
+    } catch (JsonException) {
         fail(400, 'bad-request', 'Invalid JSON body.');
     }
+    if (!is_array($decoded)) {
+        fail(400, 'bad-request', 'JSON body must be an object.');
+    }
     return $decoded;
+}
+
+function json_body(): array
+{
+    return json_body_with_limit(env_int('API_MAX_BODY_BYTES', 65536, 1024, 1048576));
+}
+
+function report_json_body(): array
+{
+    return json_body_with_limit(env_int('API_MAX_REPORT_BODY_BYTES', 8388608, 1048576, 16777216));
 }
 
 function respond(array $payload = [], int $status = 200): void
 {
     http_response_code($status);
-    echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $json = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    if ($json === false) {
+        http_response_code(500);
+        echo '{"error":{"code":"json-encode-failed","message":"Unable to encode API response."}}';
+        exit;
+    }
+
+    $acceptEncoding = strtolower((string)($_SERVER['HTTP_ACCEPT_ENCODING'] ?? ''));
+    if (strlen($json) >= 1024 && str_contains($acceptEncoding, 'gzip') && function_exists('gzencode')) {
+        $compressed = gzencode($json, 6);
+        if ($compressed !== false) {
+            header('Content-Encoding: gzip');
+            header('Vary: Accept-Encoding');
+            echo $compressed;
+            exit;
+        }
+    }
+
+    echo $json;
     exit;
 }
 
@@ -121,14 +157,20 @@ function is_https_request(): bool
 
 function is_local_request(): bool
 {
-    $host = strtolower((string)($_SERVER['HTTP_HOST'] ?? ''));
-    $host = explode(':', $host)[0] ?? $host;
+    $hostHeader = (string)($_SERVER['HTTP_HOST'] ?? '');
+    $parsedHost = parse_url('http://' . $hostHeader, PHP_URL_HOST);
+    $host = strtolower(trim((string)$parsedHost, '[]'));
 
     return in_array($host, ['localhost', '127.0.0.1', '::1'], true);
 }
 
 function dev_bypass_enabled(): bool
 {
+    if (env_value('APP_ENV', '') === 'production') {
+        // HTTP_HOST is controlled by the requester and must never grant
+        // administrator access in production.
+        return false;
+    }
     return is_local_request() || env_bool('AUTH_BYPASS_DEV', false);
 }
 
@@ -136,6 +178,67 @@ function request_origin(): string
 {
     $scheme = is_https_request() ? 'https' : 'http';
     return $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
+}
+
+function app_origin(string $url): ?string
+{
+    $parts = parse_url(trim($url));
+    if (!is_array($parts)) {
+        return null;
+    }
+    $scheme = strtolower((string)($parts['scheme'] ?? ''));
+    if (!in_array($scheme, ['http', 'https'], true)) {
+        return null;
+    }
+    $host = (string)($parts['host'] ?? '');
+    if ($host === '' || preg_match('/[\r\n]/', $host)) {
+        return null;
+    }
+    $port = isset($parts['port']) ? ':' . (int)$parts['port'] : '';
+    return $scheme . '://' . strtolower($host) . $port;
+}
+
+function is_local_origin(?string $origin): bool
+{
+    if (!$origin) {
+        return false;
+    }
+    $host = parse_url($origin, PHP_URL_HOST);
+    return in_array(strtolower((string)$host), ['localhost', '127.0.0.1', '::1'], true);
+}
+
+function enforce_write_origin(string $resource, string $method): void
+{
+    if (!in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
+        return;
+    }
+
+    // External tracking uses a secret header and is authenticated again by the
+    // handler. Every cookie-authenticated browser write must be same-origin.
+    $hasTrackingCredential = !empty($_SERVER['HTTP_X_TRACKING_KEY'])
+        || preg_match('/^Bearer\s+\S+/i', (string)($_SERVER['HTTP_AUTHORIZATION'] ?? '')) === 1;
+    if ($resource === 'tracking' && $hasTrackingCredential) {
+        return;
+    }
+
+    if (dev_bypass_enabled()) {
+        return;
+    }
+
+    $suppliedOrigin = app_origin((string)($_SERVER['HTTP_ORIGIN'] ?? ''));
+    if (!$suppliedOrigin) {
+        $suppliedOrigin = app_origin((string)($_SERVER['HTTP_REFERER'] ?? ''));
+    }
+    if (is_local_request() && is_local_origin($suppliedOrigin)) {
+        return;
+    }
+    $allowedOrigins = array_values(array_filter([
+        app_origin(env_value('APP_BASE_URL', '')),
+        is_local_request() ? app_origin(request_origin()) : null,
+    ]));
+    if (!$suppliedOrigin || !in_array($suppliedOrigin, $allowedOrigins, true)) {
+        fail(403, 'security/origin-rejected', 'This write request did not originate from the application.');
+    }
 }
 
 function base64url_encode(string $value): string
@@ -163,8 +266,14 @@ function initialize_session(string $root): void
         session_set_save_handler(new PostgresSessionHandler(fn(): PDO => db(), $ttlSeconds), true);
     } elseif ($driver === 'files') {
         $sessionPath = env_value('SESSION_SAVE_PATH', $root . DIRECTORY_SEPARATOR . 'scratch' . DIRECTORY_SEPARATOR . 'sessions');
-        if (!is_dir((string)$sessionPath) && !@mkdir((string)$sessionPath, 0775, true) && !is_dir((string)$sessionPath)) {
-            fail(500, 'session-config-error', 'Unable to initialize the session store.');
+        if (!is_dir((string)$sessionPath) && !@mkdir((string)$sessionPath, 0777, true) && !is_dir((string)$sessionPath)) {
+            $sessionPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'ftc_sessions';
+            if (!is_dir((string)$sessionPath) && !@mkdir((string)$sessionPath, 0777, true) && !is_dir((string)$sessionPath)) {
+                $sessionPath = sys_get_temp_dir();
+            }
+        }
+        if (!is_writable((string)$sessionPath)) {
+            $sessionPath = sys_get_temp_dir();
         }
         if (!is_writable((string)$sessionPath)) {
             fail(500, 'session-config-error', 'The session store is not writable.');
@@ -191,6 +300,8 @@ function is_root_iam_callback(string $resource, string $method): bool
         && (isset($_GET['code']) || isset($_GET['error']) || isset($_GET['state']));
 }
 
+enforce_write_origin($resource, $method);
+
 $requiresSession = api_resource_requires_session($resource) || $resource === 'dev' || is_root_iam_callback($resource, $method);
 
 if ($requiresSession) {
@@ -207,13 +318,80 @@ function mock_bypass_user(): array
     return [
         'user_id' => '00000000-0000-0000-0000-000000000001',
         'email' => 'dev-bypass@ftc.local',
-        'role' => 'admin',
-        'display_name' => 'KTV Admin (Bypass Mode)',
+        'role' => 'DEV',
+        'role_name' => 'Nhà phát triển',
+        'is_admin' => true,
+        'can_export_reports' => true,
+        'display_name' => 'KTV DEV (Bypass Mode)',
         'iam_subject' => 'dev-bypass-admin',
         'last_login_at' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
         'created_at' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
         'updated_at' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
     ];
+}
+
+function normalize_role_code(mixed $role): ?string
+{
+    if (!is_scalar($role)) {
+        return null;
+    }
+    $code = strtoupper(trim((string)$role));
+    if ($code === 'USER') {
+        $code = 'KTV';
+    }
+    return in_array($code, ['KTV', 'ADMIN', 'DEV'], true) ? $code : null;
+}
+
+function role_definition(mixed $role): array
+{
+    static $definitions = [];
+    $code = normalize_role_code($role) ?? 'KTV';
+    if (isset($definitions[$code])) {
+        return $definitions[$code];
+    }
+
+    $stmt = db()->prepare(
+        'SELECT role_code, role_name, is_admin, can_export_reports, sort_order
+           FROM roles
+          WHERE role_code = :role_code'
+    );
+    $stmt->execute(['role_code' => $code]);
+    $row = $stmt->fetch();
+    if (!$row) {
+        fail(500, 'role-config-missing', 'Role configuration is missing.');
+    }
+    $definitions[$code] = [
+        'role_code' => $code,
+        'role_name' => (string)$row['role_name'],
+        'is_admin' => database_boolean($row['is_admin']),
+        'can_export_reports' => database_boolean($row['can_export_reports']),
+        'sort_order' => (int)$row['sort_order'],
+    ];
+    return $definitions[$code];
+}
+
+function user_role_definition(array $user): array
+{
+    if (array_key_exists('is_admin', $user) && array_key_exists('can_export_reports', $user)) {
+        return [
+            'role_code' => normalize_role_code($user['role'] ?? null) ?? 'KTV',
+            'role_name' => (string)($user['role_name'] ?? ($user['role'] ?? 'KTV')),
+            'is_admin' => database_boolean($user['is_admin']),
+            'can_export_reports' => database_boolean($user['can_export_reports']),
+            'sort_order' => (int)($user['sort_order'] ?? 0),
+        ];
+    }
+    return role_definition($user['role'] ?? null);
+}
+
+function role_is_admin(array $user): bool
+{
+    return user_role_definition($user)['is_admin'];
+}
+
+function role_can_export_reports(array $user): bool
+{
+    return user_role_definition($user)['can_export_reports'];
 }
 
 function is_dev_bypass_session(): bool
@@ -254,6 +432,10 @@ function require_user(): array
         unset($_SESSION['user_id'], $_SESSION['user_email'], $_SESSION['iam_subject']);
         fail(401, 'auth/unauthenticated', 'Session user no longer exists.');
     }
+    if (database_boolean($user['is_terminated'] ?? false)) {
+        unset($_SESSION['user_id'], $_SESSION['user_email'], $_SESSION['iam_subject']);
+        fail(403, 'auth/account-inactive', 'This employee account is no longer active.');
+    }
     return $user;
 }
 
@@ -264,11 +446,23 @@ function require_admin(): array
     }
 
     $user = require_user();
-    if (($user['role'] ?? 'user') !== 'admin') {
+    if (!role_is_admin($user)) {
         if (dev_bypass_enabled()) {
             return mock_bypass_user();
         }
         fail(403, 'permission-denied', 'Admin permission is required.');
+    }
+    return $user;
+}
+
+function require_report_export(?array $user = null): array
+{
+    $user = $user ?? require_admin();
+    if (!role_is_admin($user)) {
+        fail(403, 'permission-denied', 'Admin permission is required.');
+    }
+    if (!role_can_export_reports($user)) {
+        fail(403, 'report-export-forbidden', 'Only the DEV role can export reports.');
     }
     return $user;
 }
@@ -294,10 +488,22 @@ function database_nullable_boolean(mixed $value): ?bool
     return $value === null ? null : database_boolean($value);
 }
 
+function safe_datetime(?string $value): ?string
+{
+    if (!$value) {
+        return null;
+    }
+    try {
+        return (new DateTimeImmutable($value))->format(DateTimeInterface::ATOM);
+    } catch (Throwable $e) {
+        return null;
+    }
+}
+
 const USER_COLUMNS = 'user_id, email, display_name, role, last_login_at, iam_profile,
     employee_id, job_title, training_start_date, training_end_date, class_code,
     is_terminated, termination_date, termination_reason, unit_code, unit_name,
-    region_code, branch_code, dashboard_region, region_id, employee_source,
+    region_code, dashboard_region, region_id, employee_source,
     employee_seed_batch, employee_synced_at, created_at, updated_at';
 const LOGIN_LOG_COLUMNS = 'id, created_at, event_type, user_id, employee_id, display_name, email, role, iam_subject, ip_address, user_agent, session_id_hash';
 
@@ -330,12 +536,24 @@ function user_response(?array $row): ?array
     if (!$row) {
         return null;
     }
+    $role = user_role_definition($row);
     return [
         'id' => $row['user_id'],
         'userId' => $row['user_id'],
         'user_id' => $row['user_id'],
         'email' => $row['email'],
-        'role' => $row['role'] ?? 'user',
+        'role' => $role['role_code'],
+        'roleName' => $role['role_name'],
+        'role_name' => $role['role_name'],
+        'isAdmin' => $role['is_admin'],
+        'is_admin' => $role['is_admin'],
+        'canExportReports' => $role['can_export_reports'],
+        'can_export_reports' => $role['can_export_reports'],
+        'permissions' => [
+            'admin' => $role['is_admin'],
+            'exportReports' => $role['can_export_reports'],
+            'export_reports' => $role['can_export_reports'],
+        ],
         'displayName' => $row['display_name'] ?? null,
         'display_name' => $row['display_name'] ?? null,
         'employeeId' => $row['employee_id'] ?? null,
@@ -348,6 +566,8 @@ function user_response(?array $row): ?array
         'training_end_date' => $row['training_end_date'] ?? null,
         'classCode' => $row['class_code'] ?? null,
         'class_code' => $row['class_code'] ?? null,
+        'className' => $row['class_name'] ?? null,
+        'class_name' => $row['class_name'] ?? null,
         'sourceClassCode' => $row['source_class_code'] ?? ($row['class_code'] ?? null),
         'source_class_code' => $row['source_class_code'] ?? ($row['class_code'] ?? null),
         'isTerminated' => database_boolean($row['is_terminated'] ?? false),
@@ -362,12 +582,16 @@ function user_response(?array $row): ?array
         'unit_name' => $row['unit_name'] ?? null,
         'regionCode' => $row['region_code'] ?? null,
         'region_code' => $row['region_code'] ?? null,
-        'branchCode' => $row['branch_code'] ?? null,
-        'branch_code' => $row['branch_code'] ?? null,
+        'regionName' => $row['region_name'] ?? ($row['dashboard_region'] ?? null),
+        'region_name' => $row['region_name'] ?? ($row['dashboard_region'] ?? null),
+        'branchName' => $row['branch_name'] ?? null,
+        'branch_name' => $row['branch_name'] ?? null,
         'dashboardRegion' => $row['dashboard_region'] ?? null,
         'dashboard_region' => $row['dashboard_region'] ?? null,
         'regionId' => $row['region_id'] ?? null,
         'region_id' => $row['region_id'] ?? null,
+        'locationAssigned' => database_boolean($row['location_assigned'] ?? !empty($row['region_id'])),
+        'location_assigned' => database_boolean($row['location_assigned'] ?? !empty($row['region_id'])),
         'lastLoginAt' => $row['last_login_at'] ?? null,
         'last_login_at' => $row['last_login_at'] ?? null,
         'createdAt' => $row['created_at'] ?? null,
@@ -486,7 +710,7 @@ function upsert_iam_user(array $profile): array
     }
 
     if ($existing) {
-        $role = $existing['role'] === 'admin' ? 'admin' : 'user';
+        $role = normalize_role_code($existing['role'] ?? null) ?? 'KTV';
 
         $stmt = db()->prepare(
             'UPDATE users
@@ -512,7 +736,7 @@ function upsert_iam_user(array $profile): array
             'employee_id' => $identity['employee_id'],
             'iam_profile' => $profileJson,
         ]);
-        return $stmt->fetch();
+        return $stmt->fetch() ?: $existing;
     }
 
     $stmt = db()->prepare(
@@ -524,12 +748,16 @@ function upsert_iam_user(array $profile): array
     );
     $stmt->execute([
         'email' => $identity['email'],
-        'role' => 'user',
+        'role' => 'KTV',
         'display_name' => $identity['display_name'],
         'employee_id' => $identity['employee_id'],
         'iam_profile' => $profileJson,
     ]);
-    return $stmt->fetch();
+    $newUser = $stmt->fetch();
+    if (!$newUser) {
+        fail(500, 'iam/upsert-failed', 'Failed to create user from IAM profile.');
+    }
+    return $newUser;
 }
 
 function iam_post_login_url(array $user): string
@@ -539,11 +767,17 @@ function iam_post_login_url(array $user): string
 
 function request_ip(): ?string
 {
-    $forwarded = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '';
-    if ($forwarded) {
-        $first = trim(explode(',', $forwarded)[0]);
-        if ($first !== '') {
-            return $first;
+    $dispatcherClient = trim((string)($_SERVER['HTTP_X_FTC_CLIENT_IP'] ?? ''));
+    if ($dispatcherClient !== '' && filter_var($dispatcherClient, FILTER_VALIDATE_IP)) {
+        return $dispatcherClient;
+    }
+    if (is_local_request() || env_bool('TRUST_X_FORWARDED_FOR', false)) {
+        $forwarded = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '';
+        if ($forwarded) {
+            $first = trim(explode(',', $forwarded)[0]);
+            if ($first !== '') {
+                return $first;
+            }
         }
     }
     return $_SERVER['REMOTE_ADDR'] ?? null;
@@ -576,7 +810,7 @@ function record_login_log(array $user, string $eventType = 'iam_callback_success
         'employee_id' => $user['employee_id'] ?? null,
         'display_name' => $user['display_name'] ?? null,
         'iam_subject' => $user['iam_subject'] ?? null,
-        'role' => $user['role'] ?? 'user',
+        'role' => normalize_role_code($user['role'] ?? null) ?? 'KTV',
         'ip_address' => request_ip(),
         'user_agent' => request_user_agent(),
         'session_id_hash' => session_id_hash(),
@@ -595,6 +829,10 @@ function handle_auth(array $segments, string $method): void
             $user = find_user_by_id((string)current_user_id());
         } elseif (current_email()) {
             $user = find_user((string)current_email());
+        }
+        if ($user && database_boolean($user['is_terminated'] ?? false)) {
+            unset($_SESSION['user_id'], $_SESSION['user_email'], $_SESSION['iam_subject']);
+            $user = null;
         }
         if (!$user && dev_bypass_enabled()) {
             $user = mock_bypass_user();
@@ -677,6 +915,10 @@ function process_iam_callback(): void
     $owner = $provider->getResourceOwner($token);
     $profile = $owner->toArray();
     $user = upsert_iam_user($profile);
+    if (database_boolean($user['is_terminated'] ?? false)) {
+        unset($_SESSION['user_id'], $_SESSION['user_email'], $_SESSION['iam_subject']);
+        fail(403, 'auth/account-inactive', 'This employee account is no longer active.');
+    }
 
     session_regenerate_id(true);
     $_SESSION['user_id'] = $user['user_id'];
@@ -802,7 +1044,8 @@ function handle_users(array $segments, string $method): void
 
         $role = trim((string)($_GET['role'] ?? ''));
         if ($role !== '') {
-            if (!in_array($role, ['user', 'admin'], true)) {
+            $role = normalize_role_code($role);
+            if ($role === null) {
                 fail(400, 'bad-filter', 'Invalid role filter.');
             }
             $where[] = 'role = :role';
@@ -840,7 +1083,7 @@ function handle_users(array $segments, string $method): void
     }
 
     if ($email && $method === 'GET') {
-        if (($current['role'] ?? 'user') !== 'admin' && $current['email'] !== $email) {
+        if (!role_is_admin($current) && $current['email'] !== $email) {
             fail(403, 'permission-denied', 'You can only read your own user profile.');
         }
         $user = find_user($email);
@@ -853,16 +1096,24 @@ function handle_users(array $segments, string $method): void
     if ($email && in_array($method, ['PUT', 'PATCH'], true)) {
         $actor = require_admin();
         $input = json_body();
-        $newRole = (string)($input['role'] ?? '');
-        if (!in_array($newRole, ['user', 'admin'], true)) {
-            fail(400, 'bad-request', 'Role must be user or admin.');
+        $newRole = normalize_role_code($input['role'] ?? null);
+        if ($newRole === null) {
+            fail(400, 'bad-request', 'Role must be KTV, ADMIN, or DEV.');
         }
+        $newRoleDefinition = role_definition($newRole);
 
         $pdo = db();
         $pdo->beginTransaction();
         try {
             $adminIds = $pdo
-                ->query("SELECT user_id FROM users WHERE role = 'admin' ORDER BY user_id FOR UPDATE")
+                ->query(
+                    'SELECT u.user_id
+                       FROM users u
+                       JOIN roles r ON r.role_code = u.role
+                      WHERE r.is_admin = TRUE
+                      ORDER BY u.user_id
+                      FOR UPDATE OF u'
+                )
                 ->fetchAll(PDO::FETCH_COLUMN);
             if (!in_array($actor['user_id'], $adminIds, true)) {
                 $pdo->rollBack();
@@ -880,7 +1131,7 @@ function handle_users(array $segments, string $method): void
                 $pdo->commit();
                 respond(['item' => user_response($target)]);
             }
-            if ($target['role'] === 'admin' && $newRole === 'user' && count($adminIds) <= 1) {
+            if (role_is_admin($target) && !$newRoleDefinition['is_admin'] && count($adminIds) <= 1) {
                 $pdo->rollBack();
                 fail(409, 'last-admin', 'The last administrator cannot be demoted.');
             }
@@ -888,6 +1139,10 @@ function handle_users(array $segments, string $method): void
             $stmt = $pdo->prepare('UPDATE users SET role = :role, updated_at = NOW() WHERE user_id = :user_id RETURNING ' . USER_COLUMNS);
             $stmt->execute(['user_id' => $target['user_id'], 'role' => $newRole]);
             $updated = $stmt->fetch();
+            if (!$updated) {
+                $pdo->rollBack();
+                fail(500, 'save-failed', 'User update returned no data.');
+            }
 
             $pdo->commit();
             respond(['item' => user_response($updated)]);
@@ -900,6 +1155,38 @@ function handle_users(array $segments, string $method): void
     }
 
     fail(404, 'not-found', 'Users endpoint not found.');
+}
+
+function role_response(array $row): array
+{
+    return [
+        'code' => (string)$row['role_code'],
+        'roleCode' => (string)$row['role_code'],
+        'role_code' => (string)$row['role_code'],
+        'name' => (string)$row['role_name'],
+        'roleName' => (string)$row['role_name'],
+        'role_name' => (string)$row['role_name'],
+        'isAdmin' => database_boolean($row['is_admin']),
+        'is_admin' => database_boolean($row['is_admin']),
+        'canExportReports' => database_boolean($row['can_export_reports']),
+        'can_export_reports' => database_boolean($row['can_export_reports']),
+        'sortOrder' => (int)$row['sort_order'],
+        'sort_order' => (int)$row['sort_order'],
+    ];
+}
+
+function handle_roles(array $segments, string $method): void
+{
+    require_admin();
+    if (($segments[1] ?? '') !== '' || $method !== 'GET') {
+        fail(404, 'not-found', 'Roles endpoint not found.');
+    }
+    $rows = db()->query(
+        'SELECT role_code, role_name, is_admin, can_export_reports, sort_order
+           FROM roles
+          ORDER BY sort_order, role_code'
+    )->fetchAll();
+    respond(['items' => array_map('role_response', $rows)]);
 }
 
 function handle_login_logs(array $segments, string $method): void
@@ -971,13 +1258,22 @@ function handle_health(string $method): void
         $latestMigration = $pdo->query('SELECT version FROM schema_migrations ORDER BY version DESC LIMIT 1')->fetchColumn() ?: null;
     }
 
+    $migrationFiles = glob(__DIR__ . '/migrations/*.sql') ?: [];
+    sort($migrationFiles, SORT_STRING);
+    $expectedMigration = $migrationFiles
+        ? basename($migrationFiles[array_key_last($migrationFiles)], '.sql')
+        : null;
+    $schemaReady = $expectedMigration !== null && $latestMigration === $expectedMigration;
+
     $version = env_value('RENDER_GIT_COMMIT', env_value('APP_VERSION', 'development'));
     respond([
-        'ok' => true,
+        'ok' => $schemaReady,
         'service' => 'postgres-api',
         'version' => $version ? substr($version, 0, 12) : 'development',
         'latestMigration' => $latestMigration,
-    ]);
+        'expectedMigration' => $expectedMigration,
+        'schemaReady' => $schemaReady,
+    ], $schemaReady ? 200 : 503);
 }
 
 function handle_dev(array $segments, string $method): void
@@ -1029,6 +1325,984 @@ function handle_dev(array $segments, string $method): void
     fail(404, 'not-found', 'Dev endpoint not found.');
 }
 
+function roster_batch_id(): string
+{
+    $timezone = new DateTimeZone(normalize_app_timezone(env_value('APP_TIMEZONE')));
+    return 'ktv-roster-' . (new DateTimeImmutable('now', $timezone))->format('Ymd-His') . '-' . bin2hex(random_bytes(4));
+}
+
+function roster_uploaded_file(): array
+{
+    $file = $_FILES['file'] ?? $_FILES['workbook'] ?? null;
+    if (!is_array($file)) {
+        fail(400, 'bad-request', 'Missing roster import file.');
+    }
+    $error = (int)($file['error'] ?? UPLOAD_ERR_NO_FILE);
+    if ($error !== UPLOAD_ERR_OK) {
+        $message = match ($error) {
+            UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'Uploaded file is too large.',
+            UPLOAD_ERR_PARTIAL => 'Uploaded file was only partially uploaded.',
+            UPLOAD_ERR_NO_FILE => 'Missing roster import file.',
+            default => 'Unable to receive uploaded file.',
+        };
+        fail(400, 'upload-error', $message);
+    }
+    $maximumBytes = env_int('ROSTER_IMPORT_MAX_BYTES', 5 * 1024 * 1024, 1024, 20 * 1024 * 1024);
+    if ((int)($file['size'] ?? 0) > $maximumBytes) {
+        fail(413, 'payload-too-large', 'Roster import file exceeds the allowed size.');
+    }
+    $name = (string)($file['name'] ?? '');
+    if (!preg_match('/\.xlsx$/i', $name)) {
+        fail(400, 'bad-request', 'Roster import file must be an .xlsx workbook.');
+    }
+    $path = (string)($file['tmp_name'] ?? '');
+    if ($path === '' || !is_uploaded_file($path)) {
+        fail(400, 'upload-error', 'Uploaded roster file is not available.');
+    }
+    return [
+        'path' => $path,
+        'name' => $name,
+        'size' => (int)($file['size'] ?? 0),
+    ];
+}
+
+function roster_parse_bool_query(string $key): bool
+{
+    $value = $_GET[$key] ?? $_POST[$key] ?? null;
+    if ($value === null) {
+        return false;
+    }
+    return in_array(strtolower(trim((string)$value)), ['1', 'true', 'yes', 'y', 'on'], true);
+}
+
+function roster_item_response(array $row): array
+{
+    $sourceClassCode = $row['class_code'] ?? null;
+    if (!empty($row['assigned_class_code'])) {
+        $row['source_class_code'] = $sourceClassCode;
+        $row['class_code'] = $row['assigned_class_code'];
+        $row['class_name'] = $row['assigned_class_name'] ?? $row['assigned_class_code'];
+    }
+    $item = user_response($row) ?? [];
+    $item['employeeSource'] = $row['employee_source'] ?? null;
+    $item['employee_source'] = $row['employee_source'] ?? null;
+    $item['employeeSeedBatch'] = $row['employee_seed_batch'] ?? null;
+    $item['employee_seed_batch'] = $row['employee_seed_batch'] ?? null;
+    $item['employeeSyncedAt'] = $row['employee_synced_at'] ?? null;
+    $item['employee_synced_at'] = $row['employee_synced_at'] ?? null;
+    $item['sourceRegionCode'] = $row['source_region_code'] ?? null;
+    $item['source_region_code'] = $row['source_region_code'] ?? null;
+    $item['sourceDashboardRegion'] = $row['source_dashboard_region'] ?? null;
+    $item['source_dashboard_region'] = $row['source_dashboard_region'] ?? null;
+    return $item;
+}
+
+function roster_assigned_class_join_sql(): string
+{
+    return <<<'SQL'
+LEFT JOIN LATERAL (
+    SELECT STRING_AGG(DISTINCT training.class_code, ', ' ORDER BY training.class_code) AS assigned_class_code,
+           STRING_AGG(DISTINCT training.class_name, ', ' ORDER BY training.class_name) AS assigned_class_name
+      FROM class_enrollments enrollment
+      JOIN training_classes training ON training.class_id = enrollment.class_id
+     WHERE enrollment.user_id = ktv.user_id
+        AND enrollment.status = 'active'
+        AND enrollment.is_mock = FALSE
+        AND (enrollment.valid_to IS NULL OR enrollment.valid_to >= CURRENT_DATE)
+        AND training.status IN ('planned', 'active')
+        AND training.is_mock = FALSE
+ ) assigned_class ON TRUE
+SQL;
+}
+
+function roster_base_where(array &$params, bool $includeFilters = true, ?array $filters = null): array
+{
+    $where = [];
+
+    if (!$includeFilters) {
+        return $where;
+    }
+
+    $filterSource = $filters ?? $_GET;
+    $statusValue = $filterSource['status'] ?? 'active';
+    if (!is_scalar($statusValue) && $statusValue !== null) {
+        fail(400, 'bad-filter', 'Invalid roster status filter.');
+    }
+    $status = strtolower(trim((string)$statusValue));
+    if ($status !== '' && $status !== 'all') {
+        if (!in_array($status, ['active', 'terminated'], true)) {
+            fail(400, 'bad-filter', 'Invalid roster status filter.');
+        }
+        $where[] = $status === 'terminated'
+            ? 'ktv.is_terminated = TRUE'
+            : 'ktv.is_terminated = FALSE';
+    }
+
+    $searchValue = $filterSource['search'] ?? '';
+    if (!is_scalar($searchValue) && $searchValue !== null) {
+        fail(400, 'bad-filter', 'Invalid roster search filter.');
+    }
+    $search = trim((string)$searchValue);
+    if (mb_strlen($search, 'UTF-8') > 200) {
+        fail(400, 'bad-filter', 'Roster search filter is too long.');
+    }
+    if ($search !== '') {
+        $searchPattern = '%' . $search . '%';
+        $where[] = '(
+            ktv.employee_id ILIKE :search_eid
+            OR ktv.email ILIKE :search_email
+            OR ktv.display_name ILIKE :search_name
+            OR COALESCE(assigned_class.assigned_class_code, ktv.class_code) ILIKE :search_class
+            OR ktv.unit_code ILIKE :search_unit
+            OR ktv.unit_name ILIKE :search_unitname
+            OR ktv.region_name ILIKE :search_region
+            OR ktv.branch_name ILIKE :search_branch
+        )';
+        $params['search_eid'] = $searchPattern;
+        $params['search_email'] = $searchPattern;
+        $params['search_name'] = $searchPattern;
+        $params['search_class'] = $searchPattern;
+        $params['search_unit'] = $searchPattern;
+        $params['search_unitname'] = $searchPattern;
+        $params['search_region'] = $searchPattern;
+        $params['search_branch'] = $searchPattern;
+    }
+
+    return $where;
+}
+
+function roster_stats(PDO $pdo): array
+{
+    $params = [];
+    $where = roster_base_where($params, false);
+    $whereSql = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
+
+    $summary = $pdo
+        ->prepare(
+            "SELECT
+                COUNT(*) AS total,
+                COUNT(*) FILTER (WHERE is_terminated = FALSE) AS active,
+                COUNT(*) FILTER (WHERE is_terminated = TRUE) AS terminated
+               FROM v_ktv_directory ktv
+              $whereSql"
+        );
+    $summary->execute($params);
+    $summary = $summary->fetch() ?: ['total' => 0, 'active' => 0, 'terminated' => 0];
+
+    $regionStmt = $pdo
+        ->prepare(
+            "SELECT COALESCE(NULLIF(ktv.region_name, ''), 'Chưa phân vùng') AS region,
+                    COUNT(*) AS total,
+                    COUNT(*) FILTER (WHERE is_terminated = FALSE) AS active,
+                    COUNT(*) FILTER (WHERE is_terminated = TRUE) AS terminated
+               FROM v_ktv_directory ktv
+              $whereSql
+              GROUP BY COALESCE(NULLIF(ktv.region_name, ''), 'Chưa phân vùng')
+              ORDER BY region"
+        );
+    $regionStmt->execute($params);
+    $regionRows = $regionStmt->fetchAll();
+
+    return [
+        'total' => (int)($summary['total'] ?? 0),
+        'active' => (int)($summary['active'] ?? 0),
+        'terminated' => (int)($summary['terminated'] ?? 0),
+        'byRegion' => array_map(static fn(array $row): array => [
+            'region' => (string)$row['region'],
+            'total' => (int)$row['total'],
+            'active' => (int)$row['active'],
+            'terminated' => (int)$row['terminated'],
+        ], $regionRows),
+        'by_region' => array_map(static fn(array $row): array => [
+            'region' => (string)$row['region'],
+            'total' => (int)$row['total'],
+            'active' => (int)$row['active'],
+            'terminated' => (int)$row['terminated'],
+        ], $regionRows),
+    ];
+}
+
+function handle_roster_import(array $actor): void
+{
+    $file = roster_uploaded_file();
+    $dryRun = roster_parse_bool_query('dry_run') || roster_parse_bool_query('dryRun');
+    $batch = trim((string)($_POST['batch_id'] ?? $_POST['batchId'] ?? $_GET['batch_id'] ?? ''));
+    if ($batch === '') {
+        $batch = roster_batch_id();
+    }
+    if (!preg_match('/^[A-Za-z0-9._:-]{1,100}$/', $batch)) {
+        fail(400, 'bad-request', 'Invalid roster batch id.');
+    }
+
+    try {
+        $parsed = parse_ktv_roster_xlsx($file['path']);
+    } catch (Throwable $exception) {
+        fail(400, 'bad-workbook', $exception->getMessage());
+    }
+
+    $pdo = db();
+    $parseErrors = $parsed['errors'] ?? [];
+    $parsedRows = $parsed['rows'] ?? [];
+    $terminationRows = $parsed['termination_rows'] ?? [];
+    $importMode = ($parsed['import_mode'] ?? 'snapshot') === 'delta' ? 'delta' : 'snapshot';
+    $terminateMissing = $importMode === 'snapshot';
+    $validRowCount = count($parsedRows) + count($terminationRows);
+    if ($dryRun) {
+        $preview = sync_ktv_roster(
+            $pdo,
+            $parsedRows,
+            $batch,
+            true,
+            $terminationRows,
+            $terminateMissing
+        );
+        $preview['errors'] = array_merge($parseErrors, $preview['errors'] ?? []);
+        $preview['error_count'] = count($preview['errors']);
+        $preview['errorCount'] = count($preview['errors']);
+        $preview['canImport'] = $preview['error_count'] === 0 && $validRowCount > 0;
+        $preview['can_import'] = $preview['canImport'];
+        $preview['headers'] = $parsed['headers'] ?? [];
+        $preview['terminationHeaders'] = $parsed['termination_headers'] ?? [];
+        $preview['termination_headers'] = $parsed['termination_headers'] ?? [];
+        $preview['sheetNames'] = $parsed['sheet_names'] ?? [];
+        $preview['sheet_names'] = $parsed['sheet_names'] ?? [];
+        $preview['fileName'] = $file['name'];
+        $preview['file_name'] = $file['name'];
+        respond(['data' => $preview]);
+    }
+
+    if ($parseErrors) {
+        respond([
+            'error' => [
+                'code' => 'bad-workbook',
+                'message' => 'Roster workbook contains invalid rows.',
+                'requestId' => $GLOBALS['request_id'] ?? null,
+                'details' => $parseErrors,
+            ],
+        ], 400);
+    }
+
+    if ($validRowCount === 0) {
+        fail(400, 'empty-roster', 'Roster workbook does not contain any valid employee rows.');
+    }
+
+    $preflight = sync_ktv_roster(
+        $pdo,
+        $parsedRows,
+        $batch,
+        true,
+        $terminationRows,
+        $terminateMissing
+    );
+    if (($preflight['error_count'] ?? 0) > 0) {
+        respond([
+            'error' => [
+                'code' => 'roster-conflict',
+                'message' => 'Roster import has conflicts. Please review preview errors before importing.',
+                'requestId' => $GLOBALS['request_id'] ?? null,
+                'details' => $preflight['errors'],
+            ],
+        ], 409);
+    }
+    if (($preflight['terminated'] ?? 0) > 0 && !roster_parse_bool_query('confirm_termination')) {
+        $message = $terminateMissing
+            ? 'This import will mark employees missing from the snapshot as terminated. Preview and explicitly confirm this change.'
+            : 'This import will mark employees listed in the Nghỉ việc sheet as terminated. Preview and explicitly confirm this change.';
+        respond([
+            'error' => [
+                'code' => 'termination-confirmation-required',
+                'message' => $message,
+                'requestId' => $GLOBALS['request_id'] ?? null,
+                'details' => $preflight['changes']['terminated'] ?? [],
+            ],
+        ], 409);
+    }
+
+    $pdo->beginTransaction();
+    try {
+        $result = sync_ktv_roster(
+            $pdo,
+            $parsedRows,
+            $batch,
+            false,
+            $terminationRows,
+            $terminateMissing
+        );
+        if (($result['error_count'] ?? 0) > 0) {
+            $pdo->rollBack();
+            respond([
+                'error' => [
+                    'code' => 'roster-conflict',
+                    'message' => 'Roster import encountered conflicts and was rolled back.',
+                    'requestId' => $GLOBALS['request_id'] ?? null,
+                    'details' => $result['errors'],
+                ],
+            ], 409);
+        }
+        $importedBy = ktv_roster_existing_imported_by($pdo, $actor['user_id'] ?? null);
+        ktv_roster_log_import($pdo, $result, $importedBy, $file['name']);
+        $pdo->commit();
+        respond(['data' => $result]);
+    } catch (Throwable $exception) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $exception;
+    }
+}
+
+function handle_roster_list(): void
+{
+    $pdo = db();
+    $limit = query_limit(50, 500);
+    $page = filter_var($_GET['page'] ?? 1, FILTER_VALIDATE_INT);
+    $page = $page === false || $page === null ? 1 : max(1, (int)$page);
+    $offset = ($page - 1) * $limit;
+
+    $params = [];
+    $where = roster_base_where($params, true);
+    $whereSql = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
+    $classJoinSql = roster_assigned_class_join_sql();
+
+    $countStmt = $pdo->prepare("SELECT COUNT(*) FROM v_ktv_directory ktv $classJoinSql $whereSql");
+    $countStmt->execute($params);
+    $total = (int)$countStmt->fetchColumn();
+
+    $sortSql = 'ktv.is_terminated ASC, ktv.region_name NULLS LAST, ktv.branch_name NULLS LAST, COALESCE(assigned_class.assigned_class_code, ktv.class_code) NULLS LAST, ktv.display_name NULLS LAST, ktv.email';
+
+    $sql = "SELECT ktv.*, assigned_class.assigned_class_code, assigned_class.assigned_class_name
+              FROM v_ktv_directory ktv
+              $classJoinSql
+             $whereSql
+             ORDER BY $sortSql
+             LIMIT :limit OFFSET :offset";
+    $stmt = $pdo->prepare($sql);
+    foreach ($params as $key => $value) {
+        $stmt->bindValue(':' . $key, $value);
+    }
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    $stmt->execute();
+    $rows = $stmt->fetchAll();
+
+    respond(['data' => [
+        'items' => array_map('roster_item_response', $rows),
+        'total' => $total,
+        'page' => $page,
+        'limit' => $limit,
+        'stats' => roster_stats($pdo),
+    ]]);
+}
+
+function handle_roster_regions(): void
+{
+    $stmt = db()->query(
+        'SELECT region_id, region_code, region_name, branch_name, dashboard_group
+           FROM regions
+          WHERE is_active = TRUE
+          ORDER BY branch_name NULLS LAST, region_name, region_code'
+    );
+    $items = array_map(static fn(array $row): array => [
+        'regionId' => $row['region_id'],
+        'region_id' => $row['region_id'],
+        'regionCode' => $row['region_code'],
+        'region_code' => $row['region_code'],
+        'regionName' => $row['region_name'],
+        'region_name' => $row['region_name'],
+        'branchName' => $row['branch_name'] ?? null,
+        'branch_name' => $row['branch_name'] ?? null,
+        'dashboardGroup' => $row['dashboard_group'] ?? null,
+        'dashboard_group' => $row['dashboard_group'] ?? null,
+    ], $stmt->fetchAll());
+
+    respond(['data' => ['items' => $items]]);
+}
+
+function handle_roster_history(): void
+{
+    $limit = query_limit(50, 200);
+    $page = filter_var($_GET['page'] ?? 1, FILTER_VALIDATE_INT);
+    $page = $page === false || $page === null ? 1 : max(1, (int)$page);
+    $offset = ($page - 1) * $limit;
+    $pdo = db();
+
+    try {
+        $countStmt = $pdo->query('SELECT COUNT(*) FROM roster_import_log');
+        $total = (int)$countStmt->fetchColumn();
+
+        $stmt = $pdo->prepare(
+            'SELECT log.*, users.email AS imported_by_email, users.display_name AS imported_by_name
+               FROM roster_import_log log
+               LEFT JOIN users ON users.user_id = log.imported_by
+              ORDER BY log.imported_at DESC
+              LIMIT :limit OFFSET :offset'
+        );
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        $items = array_map(static function (array $row): array {
+            $errors = json_decode((string)($row['error_details'] ?? '[]'), true);
+            return [
+                'id' => (int)$row['id'],
+                'batchId' => $row['batch_id'],
+                'batch_id' => $row['batch_id'],
+                'fileName' => $row['file_name'],
+                'file_name' => $row['file_name'],
+                'importedBy' => $row['imported_by'],
+                'imported_by' => $row['imported_by'],
+                'importedByName' => $row['imported_by_name'],
+                'importedByEmail' => $row['imported_by_email'],
+                'totalRows' => (int)$row['total_rows'],
+                'total_rows' => (int)$row['total_rows'],
+                'inserted' => (int)$row['inserted'],
+                'updated' => (int)$row['updated'],
+                'terminated' => (int)$row['terminated'],
+                'reactivated' => (int)$row['reactivated'],
+                'errorCount' => (int)$row['error_count'],
+                'error_count' => (int)$row['error_count'],
+                'errors' => is_array($errors) ? $errors : [],
+                'importedAt' => $row['imported_at'],
+                'imported_at' => $row['imported_at'],
+            ];
+        }, $stmt->fetchAll());
+    } catch (Throwable $e) {
+        report_exception($e, 'roster-history');
+        $items = [];
+        $total = 0;
+    }
+    respond(['data' => ['items' => $items, 'total' => $total, 'page' => $page, 'limit' => $limit]]);
+}
+
+function roster_optional_date_input(array $input, string $key): ?string
+{
+    if (!array_key_exists($key, $input) || $input[$key] === null || trim((string)$input[$key]) === '') {
+        return null;
+    }
+    $value = trim((string)$input[$key]);
+    $date = DateTimeImmutable::createFromFormat('!Y-m-d', $value, new DateTimeZone('UTC'));
+    $errors = DateTimeImmutable::getLastErrors();
+    $valid = $errors === false || ($errors['warning_count'] === 0 && $errors['error_count'] === 0);
+    if (!$date || !$valid || $date->format('Y-m-d') !== $value) {
+        fail(400, 'bad-request', "$key must be a YYYY-MM-DD date.");
+    }
+    return $value;
+}
+
+function handle_roster_update(string $employeeId): void
+{
+    if (!preg_match('/^\d{8}$/', $employeeId)) {
+        fail(400, 'bad-request', 'Invalid employee id.');
+    }
+    $input = json_body();
+    $pdo = db();
+
+    $stmt = $pdo->prepare('SELECT * FROM users WHERE employee_id = :employee_id FOR UPDATE');
+    $pdo->beginTransaction();
+    try {
+        $stmt->execute(['employee_id' => $employeeId]);
+        $existing = $stmt->fetch();
+        if (!$existing) {
+            $pdo->rollBack();
+            fail(404, 'not-found', 'KTV not found.');
+        }
+
+        $email = array_key_exists('email', $input) ? normalize_email((string)$input['email']) : (string)$existing['email'];
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $pdo->rollBack();
+            fail(400, 'bad-request', 'Invalid email.');
+        }
+        if ($email !== (string)$existing['email']) {
+            $emailCheck = $pdo->prepare('SELECT user_id FROM users WHERE LOWER(email) = LOWER(:email) AND user_id != :uid');
+            $emailCheck->execute(['email' => $email, 'uid' => $existing['user_id']]);
+            if ($emailCheck->fetch()) {
+                $pdo->rollBack();
+                fail(409, 'duplicate-email', 'Email is already in use by another user.');
+            }
+        }
+        $displayName = optional_text($input, 'displayName', 200)
+            ?? optional_text($input, 'display_name', 200)
+            ?? (string)$existing['display_name'];
+        if (trim($displayName) === '') {
+            $pdo->rollBack();
+            fail(400, 'bad-request', 'Display name is required.');
+        }
+
+        $regionIdSupplied = array_key_exists('regionId', $input) || array_key_exists('region_id', $input);
+        $regionId = $existing['region_id'] ?? null;
+        $regionCode = $existing['region_code'] ?? null;
+        $dashboardRegion = $existing['dashboard_region'] ?? null;
+        if ($regionIdSupplied) {
+            $requestedRegionId = optional_text($input, 'regionId', 36)
+                ?? optional_text($input, 'region_id', 36);
+            if ($requestedRegionId === null) {
+                $regionId = null;
+                $regionCode = null;
+                $dashboardRegion = null;
+            } else {
+                if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', $requestedRegionId)) {
+                    $pdo->rollBack();
+                    fail(400, 'bad-request', 'Invalid region id.');
+                }
+                $regionStmt = $pdo->prepare(
+                    'SELECT region_id, region_code, region_name, dashboard_group
+                       FROM regions
+                      WHERE region_id = :region_id AND is_active = TRUE'
+                );
+                $regionStmt->execute(['region_id' => $requestedRegionId]);
+                $region = $regionStmt->fetch();
+                if (!$region) {
+                    $pdo->rollBack();
+                    fail(400, 'bad-request', 'Selected region is unavailable.');
+                }
+                $regionId = $region['region_id'];
+                $regionCode = $region['region_code'];
+                $dashboardRegion = $region['dashboard_group'] ?: $region['region_name'];
+            }
+        } else {
+            // Backward compatibility for older clients. New clients submit only region_id.
+            $regionCode = optional_text($input, 'regionCode', 80)
+                ?? optional_text($input, 'region_code', 80)
+                ?? $regionCode;
+            $dashboardRegion = optional_text($input, 'dashboardRegion', 100)
+                ?? optional_text($input, 'dashboard_region', 100)
+                ?? $dashboardRegion;
+            if ($regionCode && $dashboardRegion) {
+                $regionId = ktv_roster_resolve_region($pdo, [
+                    'region_code' => strtoupper($regionCode),
+                    'dashboard_region' => $dashboardRegion,
+                    'branch' => null,
+                ], false);
+            }
+        }
+
+        $isTerminated = array_key_exists('isTerminated', $input)
+            ? (bool)$input['isTerminated']
+            : (array_key_exists('is_terminated', $input) ? (bool)$input['is_terminated'] : database_boolean($existing['is_terminated'] ?? false));
+        $terminationDate = roster_optional_date_input($input, 'terminationDate')
+            ?? roster_optional_date_input($input, 'termination_date')
+            ?? ($isTerminated ? ($existing['termination_date'] ?? (new DateTimeImmutable())->format('Y-m-d')) : null);
+        $terminationReason = optional_text($input, 'terminationReason', 500)
+            ?? optional_text($input, 'termination_reason', 500)
+            ?? ($isTerminated ? ($existing['termination_reason'] ?? 'Cập nhật từ dashboard') : null);
+        if (!$isTerminated) {
+            $terminationDate = null;
+            $terminationReason = null;
+        }
+
+        $update = $pdo->prepare(
+            'UPDATE users
+                SET email = :email,
+                    display_name = :display_name,
+                    job_title = :job_title,
+                    training_start_date = :training_start_date,
+                    training_end_date = :training_end_date,
+                    class_code = :class_code,
+                    is_terminated = :is_terminated,
+                    termination_date = :termination_date,
+                    termination_reason = :termination_reason,
+                    unit_code = :unit_code,
+                    unit_name = :unit_name,
+                    region_code = :region_code,
+                    dashboard_region = :dashboard_region,
+                    region_id = :region_id,
+                    employee_source = COALESCE(employee_source, :employee_source),
+                    employee_synced_at = NOW(),
+                    updated_at = NOW()
+              WHERE employee_id = :employee_id
+              RETURNING *'
+        );
+        $update->execute([
+            'email' => $email,
+            'display_name' => $displayName,
+            'job_title' => optional_text($input, 'jobTitle', 200)
+                ?? optional_text($input, 'job_title', 200)
+                ?? ($existing['job_title'] ?? null),
+            'training_start_date' => roster_optional_date_input($input, 'trainingStartDate')
+                ?? roster_optional_date_input($input, 'training_start_date')
+                ?? ($existing['training_start_date'] ?? null),
+            'training_end_date' => roster_optional_date_input($input, 'trainingEndDate')
+                ?? roster_optional_date_input($input, 'training_end_date')
+                ?? ($existing['training_end_date'] ?? null),
+            'class_code' => optional_text($input, 'classCode', 50)
+                ?? optional_text($input, 'class_code', 50)
+                ?? ($existing['class_code'] ?? null),
+            'is_terminated' => $isTerminated,
+            'termination_date' => $terminationDate,
+            'termination_reason' => $terminationReason,
+            'unit_code' => optional_text($input, 'unitCode', 100)
+                ?? optional_text($input, 'unit_code', 100)
+                ?? ($existing['unit_code'] ?? null),
+            'unit_name' => optional_text($input, 'unitName', 200)
+                ?? optional_text($input, 'unit_name', 200)
+                ?? ($existing['unit_name'] ?? null),
+            'region_code' => $regionCode ? strtoupper($regionCode) : null,
+            'dashboard_region' => $dashboardRegion,
+            'region_id' => $regionId,
+            'employee_source' => KTV_ROSTER_IMPORT_SOURCE,
+            'employee_id' => $employeeId,
+        ]);
+        $updated = $update->fetch();
+        if (!$updated) {
+            $pdo->rollBack();
+            fail(500, 'save-failed', 'Roster update returned no data.');
+        }
+        $directoryStmt = $pdo->prepare('SELECT * FROM v_ktv_directory WHERE user_id = :user_id');
+        $directoryStmt->execute(['user_id' => $updated['user_id']]);
+        $directoryRow = $directoryStmt->fetch() ?: $updated;
+        $pdo->commit();
+        respond(['item' => roster_item_response($directoryRow)]);
+    } catch (Throwable $exception) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $exception;
+    }
+}
+
+function build_roster_report_input(array $input = []): array
+{
+    $filters = $input['filters'] ?? null;
+    if ($filters !== null && !is_array($filters)) {
+        fail(400, 'bad-filter', 'Roster filters must be an object.');
+    }
+    $filters = $filters ?? [
+        'status' => $_GET['status'] ?? 'active',
+        'search' => $_GET['search'] ?? '',
+    ];
+
+    $pdo = db();
+    $params = [];
+    $where = roster_base_where($params, true, $filters);
+    $whereSql = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
+    $stmt = $pdo->prepare(
+        "SELECT ktv.*
+           FROM v_ktv_directory ktv
+          $whereSql
+          ORDER BY ktv.region_name NULLS LAST, ktv.branch_name NULLS LAST, ktv.display_name NULLS LAST, ktv.email"
+    );
+    $stmt->execute($params);
+    $rows = $stmt->fetchAll();
+
+    $status = strtolower(trim((string)($filters['status'] ?? 'active')));
+    $statusLabel = match ($status) {
+        'terminated' => 'Đã nghỉ',
+        'all' => 'Tất cả trạng thái',
+        default => 'Đang công tác',
+    };
+    $search = trim((string)($filters['search'] ?? ''));
+    $dataRows = [];
+    foreach ($rows as $index => $row) {
+        $dataRows[] = [
+            $index + 1,
+            $row['employee_id'] ?? '',
+            $row['display_name'] ?? '',
+            $row['email'] ?? '',
+            $row['job_title'] ?? '',
+            $row['dashboard_region'] ?? $row['region_name'] ?? '',
+            $row['branch_name'] ?? '',
+            $row['class_code'] ?? '',
+            database_boolean($row['is_terminated'] ?? false) ? 'Đã nghỉ' : 'Đang công tác',
+        ];
+    }
+
+    return [
+        'type' => 'roster',
+        'period' => 'Tại thời điểm xuất',
+        'scope' => $search !== '' ? $statusLabel . ' · Tìm kiếm: “' . $search . '”' : $statusLabel,
+        'filename' => $input['filename'] ?? 'FTC_Danh_sach_KTV',
+        'metadata' => [
+            ['Trạng thái', $statusLabel],
+            ['Từ khóa tìm kiếm', $search !== '' ? $search : 'Không áp dụng'],
+        ],
+        'headers' => [
+            'STT', 'Mã NV', 'Họ và tên', 'Email', 'Vị trí',
+            'Khu vực/CNx', 'Chi nhánh', 'Lớp', 'Trạng thái',
+        ],
+        'columnTypes' => ['integer', 'text', 'text', 'text', 'text', 'text', 'text', 'text', 'text'],
+        'rows' => $dataRows,
+    ];
+}
+
+function stream_report_input(array $input, array $actor): void
+{
+    try {
+        $timezone = new DateTimeZone(normalize_app_timezone(env_value('APP_TIMEZONE')));
+        $report = ftc_report_xlsx_normalize_descriptor($input, $actor, $timezone);
+        ftc_report_xlsx_stream($report);
+    } catch (InvalidArgumentException $exception) {
+        fail(400, 'invalid-report', $exception->getMessage());
+    } catch (Throwable $exception) {
+        report_exception($exception, 'report-export');
+        fail(500, 'report-export-failed', 'Không thể tạo file Excel. Vui lòng thử lại.');
+    }
+}
+
+function handle_roster_export(array $actor): void
+{
+    stream_report_input(build_roster_report_input(), $actor);
+}
+
+function handle_reports(array $segments, string $method): void
+{
+    $action = $segments[1] ?? '';
+    if ($action !== 'export') {
+        fail(404, 'not-found', 'Report endpoint not found.');
+    }
+    if ($method !== 'POST') {
+        fail(405, 'method-not-allowed', 'Report export only supports POST.');
+    }
+
+    // Kiểm tra quyền trước khi đọc body báo cáo có thể lớn.
+    $actor = require_report_export();
+    $input = report_json_body();
+    $typeValue = $input['type'] ?? '';
+    if (!is_string($typeValue)) {
+        fail(400, 'invalid-report', 'Loại báo cáo không hợp lệ.');
+    }
+    $type = strtolower(trim($typeValue));
+    if ($type === 'roster') {
+        $input = build_roster_report_input($input);
+    }
+    stream_report_input($input, $actor);
+}
+
+function handle_roster(array $segments, string $method): void
+{
+    $actor = require_admin();
+    $action = $segments[1] ?? '';
+
+    if ($action === 'import' && $method === 'POST') {
+        handle_roster_import($actor);
+    } elseif ($action === 'list' && $method === 'GET') {
+        handle_roster_list();
+    } elseif ($action === 'regions' && $method === 'GET') {
+        handle_roster_regions();
+    } elseif ($action === 'history' && $method === 'GET') {
+        handle_roster_history();
+    } elseif ($action === 'export' && $method === 'GET') {
+        require_report_export($actor);
+        handle_roster_export($actor);
+    } elseif ($action !== '' && $method === 'PATCH') {
+        handle_roster_update(rawurldecode($action));
+    }
+
+    fail(404, 'not-found', 'Roster endpoint not found.');
+}
+
+function training_class_uploaded_file(): array
+{
+    $file = $_FILES['file'] ?? $_FILES['workbook'] ?? null;
+    if (!is_array($file)) {
+        fail(400, 'bad-request', 'Missing class assignment workbook.');
+    }
+    $error = (int)($file['error'] ?? UPLOAD_ERR_NO_FILE);
+    if ($error !== UPLOAD_ERR_OK) {
+        fail(400, 'upload-error', 'Unable to receive class assignment workbook.');
+    }
+    $maximumBytes = env_int('CLASS_IMPORT_MAX_BYTES', TRAINING_CLASS_IMPORT_MAX_BYTES, 1024, 20 * 1024 * 1024);
+    if ((int)($file['size'] ?? 0) > $maximumBytes) {
+        fail(413, 'payload-too-large', 'Class assignment workbook exceeds the allowed size.');
+    }
+    $name = (string)($file['name'] ?? '');
+    if (!preg_match('/\.xlsx$/iD', $name)) {
+        fail(400, 'bad-request', 'Class assignment import must be an .xlsx workbook.');
+    }
+    $path = (string)($file['tmp_name'] ?? '');
+    if ($path === '' || !is_uploaded_file($path)) {
+        fail(400, 'upload-error', 'Uploaded class assignment workbook is not available.');
+    }
+    $mime = (new finfo(FILEINFO_MIME_TYPE))->file($path);
+    $allowedMimeTypes = [
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/zip',
+        'application/x-zip-compressed',
+        'application/octet-stream',
+    ];
+    if (!in_array($mime, $allowedMimeTypes, true)) {
+        fail(400, 'bad-workbook', 'Uploaded file content is not a valid XLSX workbook.');
+    }
+    $zip = new ZipArchive();
+    if ($zip->open($path) !== true || $zip->locateName('xl/workbook.xml') === false || $zip->numFiles > 1000) {
+        if ($zip->status === ZipArchive::ER_OK) {
+            $zip->close();
+        }
+        fail(400, 'bad-workbook', 'Uploaded file is not a valid XLSX package.');
+    }
+    $expandedBytes = 0;
+    for ($index = 0; $index < $zip->numFiles; $index++) {
+        $stat = $zip->statIndex($index);
+        $expandedBytes += (int)($stat['size'] ?? 0);
+        if ($expandedBytes > 64 * 1024 * 1024) {
+            $zip->close();
+            fail(413, 'workbook-too-large', 'Expanded workbook content exceeds the allowed size.');
+        }
+    }
+    $zip->close();
+    return ['path'=>$path, 'name'=>$name, 'size'=>(int)($file['size'] ?? 0)];
+}
+
+function handle_training_class_member_preview(): void
+{
+    $className = trim((string)($_POST['class_name'] ?? $_POST['className'] ?? ''));
+    if ($className === '' || mb_strlen($className, 'UTF-8') > 200) {
+        fail(400, 'bad-request', 'Tên lớp là bắt buộc và không được vượt quá 200 ký tự.');
+    }
+    $validFrom = training_class_date($_POST['valid_from'] ?? $_POST['validFrom'] ?? null, 'validFrom');
+    training_class_assert_dates($validFrom);
+    $file = training_class_uploaded_file();
+    try {
+        $parsed = parse_training_class_members_xlsx($file['path']);
+    } catch (Throwable $exception) {
+        report_exception($exception, 'class-member-preview');
+        fail(400, 'bad-workbook', 'Không thể đọc file danh sách KTV.');
+    }
+    $validated = validate_training_class_member_preview(db(), $parsed);
+    $existingCount = count(array_filter($validated['members'], static fn(array $member): bool => ($member['action'] ?? '') === 'existing'));
+    $newCount = count(array_filter($validated['members'], static fn(array $member): bool => ($member['action'] ?? '') === 'create'));
+    respond(['data'=>[
+        'file_name'=>$file['name'],
+        'member_count'=>count($validated['members']),
+        'existing_count'=>$existingCount,
+        'new_count'=>$newCount,
+        'error_count'=>count($validated['errors']),
+        'warning_count'=>count($validated['warnings']),
+        'members'=>$validated['members'],
+        'errors'=>$validated['errors'],
+        'warnings'=>$validated['warnings'],
+        'can_apply'=>count($validated['errors']) === 0 && count($validated['members']) > 0,
+    ]]);
+}
+
+function handle_training_class_import(array $actor): void
+{
+    $file = training_class_uploaded_file();
+    try {
+        $parsed = parse_training_class_xlsx($file['path']);
+    } catch (Throwable $exception) {
+        report_exception($exception, 'class-import-parse');
+        fail(400, 'bad-workbook', 'Unable to read the class assignment workbook.');
+    }
+    $validated = validate_training_class_import(db(), $parsed);
+    $batchId = trim((string)($_POST['batch_id'] ?? ''));
+    if ($batchId === '') {
+        $batchId = 'class-assignment-' . gmdate('Ymd-His') . '-' . bin2hex(random_bytes(4));
+    }
+    if (!preg_match('/^[A-Za-z0-9._:-]{8,100}$/D', $batchId)) {
+        fail(400, 'bad-request', 'Invalid class assignment import batch id.');
+    }
+    $preview = [
+        'batch_id'=>$batchId,
+        'file_name'=>$file['name'],
+        'class_count'=>count($validated['classes']),
+        'member_count'=>count($validated['members']),
+        'device_count'=>count($validated['devices']),
+        'error_count'=>count($validated['errors']),
+        'errors'=>$validated['errors'],
+        'can_import'=>count($validated['errors']) === 0 && count($validated['classes']) > 0,
+    ];
+    if (roster_parse_bool_query('dry_run') || roster_parse_bool_query('dryRun')) {
+        respond(['data'=>$preview]);
+    }
+    if (!$preview['can_import']) {
+        respond(['error'=>[
+            'code'=>'class-import-conflict',
+            'message'=>'Class assignment workbook contains invalid data.',
+            'requestId'=>$GLOBALS['request_id'] ?? null,
+            'details'=>$validated['errors'],
+        ]], 409);
+    }
+    $pdo = db();
+    $pdo->beginTransaction();
+    try {
+        $result = apply_training_class_import($pdo, $validated, $batchId, $actor, $file['name']);
+        $pdo->commit();
+        respond(['data'=>$result]);
+    } catch (Throwable $exception) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        report_exception($exception, 'class-import-apply');
+        fail(500, 'class-import-failed', 'Unable to apply the class assignment workbook.');
+    }
+}
+
+function handle_training_classes(array $segments, string $method): void
+{
+    $actor = require_admin();
+    $action = $segments[1] ?? '';
+    if ($action === '' && $method === 'GET') {
+        respond(['items'=>training_class_list(db())]);
+    }
+    if ($action === '' && $method === 'POST') {
+        $pdo = db();
+        $pdo->beginTransaction();
+        try {
+            $class = training_class_create(
+                $pdo,
+                json_body_with_limit(env_int('CLASS_API_MAX_BODY_BYTES', 1048576, 65536, 4194304)),
+                $actor
+            );
+            $pdo->commit();
+            respond(['item'=>$class], 201);
+        } catch (Throwable $exception) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $exception;
+        }
+    }
+    if ($action === 'catalog' && $method === 'GET') {
+        respond(['data'=>training_class_catalog(db())]);
+    }
+    if ($action === 'members' && ($segments[2] ?? '') === 'template' && $method === 'GET') {
+        stream_training_class_member_template();
+    }
+    if ($action === 'members' && ($segments[2] ?? '') === 'preview' && $method === 'POST') {
+        handle_training_class_member_preview();
+    }
+    if ($action === 'template' && $method === 'GET') {
+        stream_training_class_import_template();
+    }
+    if ($action === 'import' && $method === 'POST') {
+        handle_training_class_import($actor);
+    }
+    if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iD', $action) && $method === 'GET') {
+        respond(['item'=>training_class_detail(db(), $action)]);
+    }
+    if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iD', $action) && $method === 'PATCH') {
+        $pdo = db();
+        $pdo->beginTransaction();
+        try {
+            $class = training_class_update(
+                $pdo,
+                $action,
+                json_body_with_limit(env_int('CLASS_API_MAX_BODY_BYTES', 1048576, 65536, 4194304))
+            );
+            $pdo->commit();
+            respond(['item' => $class]);
+        } catch (Throwable $exception) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $exception;
+        }
+    }
+    fail(404, 'not-found', 'Training class endpoint not found.');
+}
+
+function handle_learning(array $segments, string $method): void
+{
+    $user = require_user();
+    $action = $segments[1] ?? '';
+    if ($action === 'catalog' && $method === 'GET') {
+        respond(['devices' => training_class_learning_catalog(db(), $user)]);
+    }
+    if (($action === 'personal-dashboard' || $action === 'me' || $action === 'progress') && $method === 'GET') {
+        respond(['data' => training_class_personal_dashboard_payload(db(), $user)]);
+    }
+    fail(404, 'not-found', 'Learning endpoint not found.');
+}
+
 function handle_dashboard(array $segments, string $method): void
 {
     if ($method !== 'GET') {
@@ -1040,12 +2314,54 @@ function handle_dashboard(array $segments, string $method): void
     $action = $segments[1] ?? '';
 
     if ($action === 'report') {
+        try {
+            respond(['data' => dashboard_report_payload(db(), $_GET)]);
+        } catch (InvalidArgumentException $exception) {
+            fail(400, 'invalid-report-period', $exception->getMessage());
+        } catch (Throwable $exception) {
+            report_exception($exception, 'dashboard-report');
+            fail(500, 'dashboard-report-failed', 'Unable to load dashboard report.');
+        }
+    }
+
+    if ($action === 'version') {
         $pdo = db();
         try {
-            $report = build_dashboard_report($pdo, $_GET);
-            respond(['data' => $report]);
-        } catch (InvalidArgumentException $exception) {
-            fail(400, 'bad-request', $exception->getMessage());
+            $version = $pdo->query(
+                <<<'SQL'
+                SELECT CONCAT(
+                           TO_CHAR(
+                               GREATEST(
+                                   COALESCE((SELECT MAX(updated_at) FROM users), 'epoch'::timestamptz),
+                                    COALESCE((
+                                        SELECT MAX(GREATEST(created_at, COALESCE(finished_at, started_at, created_at)))
+                                          FROM timer_sessions
+                                    ), 'epoch'::timestamptz),
+                                   COALESCE((SELECT MAX(updated_at) FROM regions), 'epoch'::timestamptz),
+                                   COALESCE((SELECT MAX(updated_at) FROM device_catalog), 'epoch'::timestamptz),
+                                   COALESCE((SELECT MAX(updated_at) FROM lab_catalog), 'epoch'::timestamptz),
+                                   COALESCE((SELECT MAX(updated_at) FROM training_classes), 'epoch'::timestamptz),
+                                   COALESCE((SELECT MAX(updated_at) FROM class_enrollments), 'epoch'::timestamptz),
+                                    COALESCE((SELECT MAX(updated_at) FROM class_lab_assignments), 'epoch'::timestamptz),
+                                    COALESCE((SELECT MAX(updated_at) FROM lab_assignments), 'epoch'::timestamptz),
+                                    COALESCE((SELECT MAX(linked_at) FROM timer_session_assignment_links), 'epoch'::timestamptz)
+                               ),
+                               'YYYYMMDDHH24MISS.US'
+                           ),
+                           ':', (SELECT COUNT(*) FROM users),
+                           ':', (SELECT COUNT(*) FROM timer_sessions),
+                           ':', (SELECT COUNT(*) FROM regions),
+                           ':', (SELECT COUNT(*) FROM training_classes),
+                           ':', (SELECT COUNT(*) FROM class_enrollments),
+                           ':', (SELECT COUNT(*) FROM lab_assignments),
+                           ':', (SELECT COUNT(*) FROM timer_session_assignment_links)
+                       )
+                SQL
+            )->fetchColumn();
+            respond(['data' => ['data_version' => is_string($version) ? $version : '']]);
+        } catch (Throwable $exception) {
+            report_exception($exception, 'dashboard-version');
+            fail(500, 'dashboard-version-failed', 'Unable to load dashboard version.');
         }
     }
 
@@ -1054,114 +2370,209 @@ function handle_dashboard(array $segments, string $method): void
     }
 
     $pdo = db();
-    $rows = $pdo
-        ->query(
-            <<<'SQL'
-            SELECT
-                timer.id AS session_id,
-                COALESCE(timer.user_id, roster.user_id) AS user_id,
-                COALESCE(roster.employee_id, timer.technician_id) AS technician_id,
-                COALESCE(roster.display_name, timer.name) AS full_name,
-                COALESCE(roster.email, timer.email) AS email,
-                roster.class_code,
-                roster.job_title,
-                roster.unit_code,
-                roster.unit_name,
-                roster.region_code,
-                roster.branch_code,
-                roster.dashboard_region AS region_name,
-                roster.is_terminated,
-                COALESCE(timer.started_at, timer.finished_at) AS started_at,
-                COALESCE(timer.duration_sec, 0) AS duration_sec,
-                timer.mode,
-                timer.device AS device_name,
-                timer.lab_id,
-                timer.lab_name,
-                timer.finished_at,
-                timer.is_passed,
-                timer.score,
-                timer.status,
-                timer.completed_first_try,
-                timer.last_action,
-                timer.is_mock,
-                timer.seed_batch
-             FROM timer_sessions timer
-             LEFT JOIN LATERAL (
-                 SELECT candidate.*
-                   FROM users candidate
-                  WHERE candidate.user_id = timer.user_id
-                     OR (
-                          timer.user_id IS NULL
-                          AND (
-                              candidate.employee_id = NULLIF(BTRIM(timer.technician_id), '')
-                              OR LOWER(candidate.email) = LOWER(NULLIF(BTRIM(timer.email), ''))
-                          )
+    try {
+        $userLookupRows = $pdo->query(
+            'SELECT user_id, employee_id, email, display_name, class_code, job_title,
+                    unit_code, unit_name, region_id, region_code, region_name,
+                    dashboard_region, dashboard_group, branch_name, is_terminated
+               FROM v_ktv_directory'
+        )->fetchAll();
+
+        $userByUserId = [];
+        $userByEmployeeId = [];
+        $userByEmail = [];
+        foreach ($userLookupRows as $u) {
+            $uid = (string)($u['user_id'] ?? '');
+            $eid = (string)($u['employee_id'] ?? '');
+            $em  = strtolower(trim((string)($u['email'] ?? '')));
+            if ($uid !== '') $userByUserId[$uid] = $u;
+            if ($eid !== '') $userByEmployeeId[$eid] = $u;
+            if ($em !== '') $userByEmail[$em] = $u;
+        }
+        unset($userLookupRows);
+
+        $timerSql = 'WITH eligible_dashboard_ktv AS (
+                    SELECT DISTINCT
+                           COALESCE(user_id::text, NULLIF(LOWER(email), \'\'), NULLIF(employee_id, \'\')) AS person_id,
+                           user_id,
+                           email,
+                           employee_id
+                      FROM v_ktv_directory
+                     WHERE is_terminated = FALSE
+                 ),
+                 eligible_dashboard_identities AS (
+                    SELECT person_id, \'user:\' || user_id::text AS identity_key
+                      FROM eligible_dashboard_ktv WHERE user_id IS NOT NULL
+                    UNION
+                    SELECT person_id, \'email:\' || LOWER(email)
+                      FROM eligible_dashboard_ktv WHERE NULLIF(email, \'\') IS NOT NULL
+                    UNION
+                    SELECT person_id, \'employee:\' || employee_id
+                      FROM eligible_dashboard_ktv WHERE NULLIF(employee_id, \'\') IS NOT NULL
+                 )
+                 SELECT
+                    timer.id AS session_id,
+                    timer.user_id,
+                    timer.technician_id,
+                    timer.name,
+                    timer.email,
+                    COALESCE(timer.started_at, timer.finished_at) AS started_at,
+                    timer.duration_sec,
+                    timer.mode,
+                    active_device.device_id,
+                    active_device.device_name,
+                    active_lab.lab_id,
+                    active_lab.lab_name,
+                    timer.is_passed,
+                    timer.status,
+                    timer.completed_first_try,
+                    timer.last_action,
+                    timer.practice_attempt_no,
+                    COALESCE(attribution.class_codes, \'[]\'::jsonb) AS assignment_class_codes
+                 FROM timer_sessions timer
+                 JOIN lab_catalog active_lab
+                   ON active_lab.lab_id = timer.lab_id
+                  AND active_lab.is_active = TRUE
+                 JOIN device_catalog active_device
+                   ON active_device.device_id = active_lab.device_id
+                  AND active_device.is_active = TRUE
+                  JOIN eligible_dashboard_identities dashboard_identity
+                   ON dashboard_identity.identity_key = CASE
+                       WHEN timer.user_id IS NOT NULL THEN \'user:\' || timer.user_id::text
+                       WHEN NULLIF(timer.email, \'\') IS NOT NULL THEN \'email:\' || LOWER(timer.email)
+                        ELSE \'employee:\' || COALESCE(timer.technician_id, \'\')
+                    END
+                  LEFT JOIN LATERAL (
+                      SELECT TO_JSONB(ARRAY_AGG(DISTINCT training.class_code ORDER BY training.class_code)) AS class_codes
+                        FROM timer_session_assignment_links link
+                        JOIN lab_assignments assignment ON assignment.assignment_id = link.assignment_id
+                        JOIN training_classes training ON training.class_id = assignment.class_id_snapshot
+                       WHERE link.timer_session_id = timer.id
+                  ) attribution ON TRUE
+                 WHERE (
+                     timer.user_id IS NOT NULL
+                     OR (timer.email IS NOT NULL AND timer.email != \'\')
+                     OR (timer.technician_id IS NOT NULL AND timer.technician_id != \'\')
+                 )
+                   AND NOT COALESCE(timer.is_mock, FALSE)
+                   AND timer.status IN (\'completed\', \'failed\')
+                   AND NOT (
+                     timer.user_id IS NULL
+                     AND (
+                         timer.technician_id = :bypass_anon
+                         OR timer.technician_id = :bypass_uuid
+                         OR timer.technician_id = :bypass_empty
+                         OR timer.email = :bypass_email_empty
+                         OR timer.email = :bypass_email_dev
                      )
-                  ORDER BY CASE
-                      WHEN candidate.user_id = timer.user_id THEN 0
-                      WHEN candidate.employee_id = NULLIF(BTRIM(timer.technician_id), '') THEN 1
-                      ELSE 2
-                  END
-                  LIMIT 1
-             ) roster ON TRUE
-             ORDER BY COALESCE(timer.started_at, timer.finished_at) DESC
-            SQL
-        )
-        ->fetchAll();
+                 )';
+        $timerParams = [
+            'bypass_anon'        => 'ANONYMOUS',
+            'bypass_uuid'        => '00000000-0000-0000-0000-000000000001',
+            'bypass_empty'       => '',
+            'bypass_email_empty' => '',
+            'bypass_email_dev'   => 'dev-bypass@ftc.local',
+        ];
 
-    $technicianRows = $pdo
-        ->query(
-            'SELECT ' . USER_COLUMNS . '
-               FROM users
-              WHERE employee_id IS NOT NULL
-                AND is_terminated = FALSE
-                AND job_title = \'CB Kỹ thuật TKBT\'
-              ORDER BY class_code NULLS LAST, display_name NULLS LAST, email'
-        )
-        ->fetchAll();
+        $dateFrom = trim((string)($_GET['from'] ?? ''));
+        $dateTo   = trim((string)($_GET['to'] ?? ''));
+        if ($dateFrom !== '') {
+            $timerSql .= ' AND COALESCE(timer.started_at, timer.finished_at) >= :date_from';
+            $timerParams['date_from'] = $dateFrom . 'T00:00:00+07:00';
+        }
+        if ($dateTo !== '') {
+            $timerSql .= ' AND COALESCE(timer.started_at, timer.finished_at) < (:date_to::date + INTERVAL \'1 day\')';
+            $timerParams['date_to'] = $dateTo;
+        }
+        $timerSql .= ' ORDER BY COALESCE(timer.started_at, timer.finished_at) DESC';
 
-    $currentClassRows = $pdo
-        ->query(
-            <<<'SQL'
-            SELECT user_id, class_code, class_name, region_name
-              FROM v_current_training_class
-             ORDER BY user_id
-            SQL
-        )
-        ->fetchAll();
-    $currentClasses = [];
-    foreach ($currentClassRows as $classRow) {
-        $currentClasses[(string)$classRow['user_id']] = $classRow;
+        $timerStmt = $pdo->prepare($timerSql);
+        foreach ($timerParams as $k => $v) {
+            $timerStmt->bindValue(':' . $k, $v);
+        }
+        $timerStmt->execute();
+        $rows = $timerStmt->fetchAll();
+
+        $resolveRoster = function (?array $tRow) use ($userByUserId, $userByEmployeeId, $userByEmail): ?array {
+            $uid = (string)($tRow['user_id'] ?? '');
+            $eid = trim((string)($tRow['technician_id'] ?? ''));
+            $em  = strtolower(trim((string)($tRow['email'] ?? '')));
+            if ($uid !== '' && isset($userByUserId[$uid])) return $userByUserId[$uid];
+            if ($eid !== '' && isset($userByEmployeeId[$eid])) return $userByEmployeeId[$eid];
+            if ($em !== '' && isset($userByEmail[$em])) return $userByEmail[$em];
+            return null;
+        };
+
+        $technicianRows = $pdo
+            ->query(
+                <<<'SQL'
+                SELECT directory.*,
+                        assigned_class.class_code AS active_class_code,
+                        assigned_class.class_name AS active_class_name
+                   FROM v_ktv_directory directory
+                   LEFT JOIN LATERAL (
+                       SELECT STRING_AGG(DISTINCT training.class_code, ', ' ORDER BY training.class_code) AS class_code,
+                              STRING_AGG(DISTINCT training.class_name, ', ' ORDER BY training.class_name) AS class_name
+                         FROM class_enrollments enrollment
+                         JOIN training_classes training ON training.class_id = enrollment.class_id
+                        WHERE enrollment.user_id = directory.user_id
+                          AND enrollment.status = 'active'
+                          AND enrollment.is_mock = FALSE
+                          AND (enrollment.valid_to IS NULL OR enrollment.valid_to >= CURRENT_DATE)
+                          AND training.status IN ('planned', 'active')
+                          AND training.is_mock = FALSE
+                   ) assigned_class ON TRUE
+                  WHERE directory.is_terminated = FALSE
+                  ORDER BY assigned_class.class_code NULLS LAST,
+                           directory.class_code NULLS LAST,
+                           directory.display_name NULLS LAST, directory.email
+                SQL
+            )
+            ->fetchAll();
+
+    } catch (Throwable $e) {
+        report_exception($e, 'dashboard-core-queries');
+        fail(500, 'dashboard-query-failed', 'Unable to load dashboard data.');
     }
     foreach ($technicianRows as &$technicianRow) {
         $technicianRow['source_class_code'] = $technicianRow['class_code'] ?? null;
-        $currentClass = $currentClasses[(string)$technicianRow['user_id']] ?? null;
-        if ($currentClass) {
-            $technicianRow['class_code'] = $currentClass['class_code'];
-        }
+        $technicianRow['class_code'] = $technicianRow['active_class_code']
+            ?? $technicianRow['class_code']
+            ?? null;
+        $technicianRow['class_name'] = $technicianRow['active_class_name']
+            ?? $technicianRow['class_code']
+            ?? 'Chưa xếp lớp';
     }
     unset($technicianRow);
 
     $sessions = [];
     $deviceMap = [];
+    $deviceById = [];
     $labMap = [];
     try {
         $catalogRows = $pdo
             ->query(
-                'SELECT d.device_id, d.model, d.device_name, l.lab_id, l.lab_name
+                'SELECT d.device_id, d.model, d.device_name, d.sort_order AS device_sort_order,
+                        l.lab_id, l.lab_name, l.sort_order AS lab_sort_order
                  FROM device_catalog d
-                 LEFT JOIN lab_catalog l ON l.device_id = d.device_id
-                 ORDER BY d.device_name, l.lab_name'
+                 LEFT JOIN lab_catalog l ON l.device_id = d.device_id AND l.is_active = TRUE
+                 WHERE d.is_active = TRUE
+                 ORDER BY d.sort_order, d.device_name, d.device_id,
+                          l.sort_order, l.lab_name, l.lab_id'
             )
             ->fetchAll();
         foreach ($catalogRows as $row) {
             $deviceName = (string)($row['device_name'] ?? '');
             if ($deviceName !== '' && !isset($deviceMap[$deviceName])) {
-                $deviceMap[$deviceName] = [
+                $device = [
                     'device_id' => (string)($row['device_id'] ?? ('DEV_' . count($deviceMap))),
                     'model' => (string)($row['model'] ?? ''),
                     'device_name' => $deviceName,
                 ];
+                $deviceMap[$deviceName] = $device;
+                if ($device['device_id'] !== '') {
+                    $deviceById[$device['device_id']] = $device;
+                }
             }
             $labId = (string)($row['lab_id'] ?? '');
             if ($labId !== '' && !isset($labMap[$labId])) {
@@ -1177,127 +2588,119 @@ function handle_dashboard(array $segments, string $method): void
     }
 
     foreach ($rows as $row) {
-        $currentClass = isset($row['user_id'])
-            ? ($currentClasses[(string)$row['user_id']] ?? null)
-            : null;
+        $roster = $resolveRoster($row);
+        $labKey = (string)($row['lab_id'] ?? '');
+        $catalogDeviceId = (string)($labMap[$labKey]['device_id'] ?? '');
+        $device = (string)($deviceById[$catalogDeviceId]['device_name'] ?? ($row['device_name'] ?? ''));
+        $decodedClassCodes = json_decode((string)($row['assignment_class_codes'] ?? '[]'), true);
+        $assignmentClassCodes = array_values(array_filter(
+            is_array($decodedClassCodes) ? $decodedClassCodes : [],
+            static fn(mixed $value): bool => is_string($value) && $value !== ''
+        ));
         $sessions[] = [
             'session_id' => (string)$row['session_id'],
-            'user_id' => isset($row['user_id']) && $row['user_id'] !== ''
-                ? (string)$row['user_id']
-                : null,
-            'technician_id' => (string)($row['technician_id'] ?? ''),
-            'full_name' => (string)($row['full_name'] ?? ''),
-            'email' => (string)($row['email'] ?? ''),
-            'region_name' => (string)($row['region_name'] ?? ''),
-            'class_code' => (string)($currentClass['class_code'] ?? ($row['class_code'] ?? '')),
-            'source_class_code' => (string)($row['class_code'] ?? ''),
-            'job_title' => (string)($row['job_title'] ?? ''),
-            'unit_code' => (string)($row['unit_code'] ?? ''),
-            'unit_name' => (string)($row['unit_name'] ?? ''),
-            'region_code' => (string)($row['region_code'] ?? ''),
-            'branch_code' => (string)($row['branch_code'] ?? ''),
-            'is_terminated' => database_boolean($row['is_terminated'] ?? false),
-            'started_at' => $row['started_at'] ? (new DateTimeImmutable($row['started_at']))->format(DateTimeInterface::ATOM) : null,
-            'finished_at' => $row['finished_at'] ? (new DateTimeImmutable($row['finished_at']))->format(DateTimeInterface::ATOM) : null,
-            'duration_sec' => (int)$row['duration_sec'],
+            'technician_id' => (string)($roster['employee_id'] ?? ($row['technician_id'] ?? '')),
+            'full_name' => (string)($roster['display_name'] ?? ($row['name'] ?? '')),
+            'email' => (string)($roster['email'] ?? ($row['email'] ?? '')),
+            'started_at' => safe_datetime($row['started_at']),
+            'duration_sec' => $row['duration_sec'] !== null ? (int)$row['duration_sec'] : null,
             'mode' => (string)($row['mode'] ?? 'Thực hành'),
-            'device_name' => (string)($row['device_name'] ?? ''),
-            'lab_id' => (string)($row['lab_id'] ?? ''),
-            'lab_name' => isset($labMap[(string)($row['lab_id'] ?? '')]) ? $labMap[(string)($row['lab_id'] ?? '')]['lab_name'] : (string)($row['lab_name'] ?? ''),
+            'device_id' => (string)($row['device_id'] ?? ''),
+            'device_name' => $device,
+            'lab_name' => isset($labMap[$labKey]) ? $labMap[$labKey]['lab_name'] : (string)($row['lab_name'] ?? ''),
             'is_passed' => isset($row['is_passed']) ? (bool)$row['is_passed'] : null,
-            'score' => isset($row['score']) ? (float)$row['score'] : null,
             'status' => (string)($row['status'] ?? ((isset($row['is_passed']) && $row['is_passed'] === false) ? 'failed' : 'completed')),
             'completed_first_try' => database_nullable_boolean($row['completed_first_try'] ?? null),
+            'practice_attempt_no' => $row['practice_attempt_no'] !== null ? (int)$row['practice_attempt_no'] : null,
             'last_action' => (string)($row['last_action'] ?? ''),
-            'is_mock' => database_boolean($row['is_mock'] ?? false),
-            'seed_batch' => (string)($row['seed_batch'] ?? ''),
+            'assignment_class_codes' => $assignmentClassCodes,
         ];
 
-        $device = (string)($row['device_name'] ?? '');
-        if ($device !== '' && !isset($deviceMap[$device])) {
-            $deviceMap[$device] = [
-                'device_id' => 'DEV_' . count($deviceMap),
-                'model' => $device,
-                'device_name' => $device,
-            ];
-        }
-
-        $labKey = (string)($row['lab_id'] ?? '');
-        $labName = (string)($row['lab_name'] ?? $labKey);
-        if ($labKey !== '' && !isset($labMap[$labKey])) {
-            $labMap[$labKey] = [
-                'lab_id' => $labKey,
-                'lab_name' => $labName,
-                'device_id' => $deviceMap[$device]['device_id'] ?? 'DEV_' . count($deviceMap),
-            ];
-        }
     }
 
     $assignments = [];
-    try {
-        $assignmentRows = $pdo
-            ->query(
+    $assignmentsAvailable = true;
+    $includeAssignments = !array_key_exists('include_assignments', $_GET)
+        || filter_var($_GET['include_assignments'], FILTER_VALIDATE_BOOLEAN);
+    if ($includeAssignments) {
+        try {
+            $assignmentRows = $pdo
+                ->query(
                 <<<'SQL'
-                SELECT
-                    p.assignment_id,
-                    p.employee_code AS employee_id,
-                    p.full_name,
-                    p.email,
-                    p.class_id,
-                    p.class_code,
-                    p.region_id,
-                    p.region_name,
-                    p.device_id,
-                    p.device_name,
-                    p.lab_id,
-                    p.lab_name,
-                    p.assigned_at,
-                    p.due_at,
-                    p.assignment_status AS status,
-                    p.completed_at,
-                    p.first_pass_attempt_no,
-                    CASE WHEN p.first_try_success IS NOT NULL THEN TRUE ELSE FALSE END AS first_try_evaluated,
-                    p.practice_attempt_count AS attempt_count,
-                    0 AS avg_duration_sec
-                  FROM v_lab_assignment_progress p
-                 WHERE p.assignment_status <> 'waived'
-                 ORDER BY p.assigned_at DESC
+                SELECT progress.email,
+                       progress.class_code,
+                       progress.class_name,
+                       progress.device_name,
+                       progress.lab_name,
+                       progress.assignment_status AS status,
+                       progress.completed_at,
+                       progress.first_pass_attempt_no
+                  FROM v_lab_assignment_progress progress
+                  JOIN users roster ON roster.user_id = progress.user_id
+                  JOIN training_classes training ON training.class_id = progress.class_id
+                  JOIN lab_assignments assignment ON assignment.assignment_id = progress.assignment_id
+                  LEFT JOIN class_lab_assignments class_assignment
+                    ON class_assignment.class_lab_assignment_id = assignment.class_lab_assignment_id
+                 WHERE roster.is_terminated = FALSE
+                   AND training.is_mock = FALSE
+                   AND progress.assignment_status <> 'waived'
+                   AND (
+                       class_assignment.class_lab_assignment_id IS NULL
+                       OR class_assignment.status IN ('assigned', 'active', 'closed')
+                   )
+                 ORDER BY progress.class_code, progress.email,
+                          progress.device_name, progress.lab_name
                 SQL
-            )
-            ->fetchAll();
-        foreach ($assignmentRows as $row) {
-            $assignments[] = [
-                'assignment_id' => (string)$row['assignment_id'],
-                'employee_id' => (string)($row['employee_id'] ?? ''),
-                'display_name' => (string)($row['display_name'] ?? ''),
-                'email' => (string)($row['email'] ?? ''),
-                'class_id' => (string)$row['class_id'],
-                'class_code' => (string)$row['class_code'],
-                'region_id' => (string)($row['region_id'] ?? ''),
-                'region_name' => (string)($row['region_name'] ?? ''),
-                'device_id' => (string)$row['device_id'],
-                'device_name' => (string)$row['device_name'],
-                'lab_id' => (string)$row['lab_id'],
-                'lab_name' => (string)$row['lab_name'],
-                'assigned_at' => $row['assigned_at'] ? (new DateTimeImmutable($row['assigned_at']))->format(DateTimeInterface::ATOM) : null,
-                'due_at' => $row['due_at'] ? (new DateTimeImmutable($row['due_at']))->format(DateTimeInterface::ATOM) : null,
-                'status' => (string)$row['status'],
-                'completed_at' => $row['completed_at'] ? (new DateTimeImmutable($row['completed_at']))->format(DateTimeInterface::ATOM) : null,
-                'first_pass_attempt_no' => $row['first_pass_attempt_no'] !== null ? (int)$row['first_pass_attempt_no'] : null,
-                'first_try_evaluated' => (bool)($row['first_try_evaluated'] ?? false),
-                'attempt_count' => (int)($row['attempt_count'] ?? 0),
-                'avg_duration_sec' => (int)($row['avg_duration_sec'] ?? 0),
-            ];
+                )
+                ->fetchAll();
+            foreach ($assignmentRows as $row) {
+                $assignments[] = [
+                    'email' => (string)($row['email'] ?? ''),
+                    'class_code' => (string)$row['class_code'],
+                    'class_name' => (string)($row['class_name'] ?? ''),
+                    'device_name' => (string)$row['device_name'],
+                    'lab_name' => (string)$row['lab_name'],
+                    'status' => (string)$row['status'],
+                    'completed_at' => safe_datetime($row['completed_at']),
+                    'first_pass_attempt_no' => $row['first_pass_attempt_no'] !== null
+                        ? (int)$row['first_pass_attempt_no']
+                        : null,
+                ];
+            }
+        } catch (Throwable $e) {
+            $assignmentsAvailable = false;
+            report_exception($e, 'dashboard-assignments');
         }
-    } catch (Throwable $ignored) {
     }
+
+    $dashboardTechnicians = array_map(static fn(array $row): array => [
+        'user_id' => (string)$row['user_id'],
+        'email' => (string)($row['email'] ?? ''),
+        'display_name' => $row['display_name'] ?? null,
+        'employee_id' => $row['employee_id'] ?? null,
+        'job_title' => $row['job_title'] ?? null,
+        'class_code' => $row['class_code'] ?? null,
+        'class_name' => $row['class_name'] ?? null,
+        'unit_code' => $row['unit_code'] ?? null,
+        'unit_name' => $row['unit_name'] ?? null,
+        'region_id' => $row['region_id'] ?? null,
+        'region_code' => $row['region_code'] ?? null,
+        'region_name' => $row['region_name'] ?? null,
+        'dashboard_region' => $row['dashboard_region'] ?? null,
+        'dashboard_group' => $row['dashboard_group'] ?? null,
+        'branch_name' => $row['branch_name'] ?? null,
+        'location_assigned' => database_boolean($row['location_assigned'] ?? false),
+        'is_terminated' => database_boolean($row['is_terminated'] ?? false),
+        'updated_at' => $row['updated_at'] ?? null,
+    ], $technicianRows);
 
     respond(['data' => [
         'sessions' => $sessions,
         'devices' => array_values($deviceMap),
         'labs' => array_values($labMap),
-        'technicians' => array_map('user_response', $technicianRows),
+        'technicians' => $dashboardTechnicians,
         'assignments' => $assignments,
+        'assignments_available' => $includeAssignments ? $assignmentsAvailable : null,
     ]]);
 }
 
@@ -1308,12 +2711,22 @@ try {
         handle_iam($segments, $method);
     } elseif ($resource === 'users') {
         handle_users($segments, $method);
+    } elseif ($resource === 'roles') {
+        handle_roles($segments, $method);
     } elseif ($resource === 'login_logs') {
         handle_login_logs($segments, $method);
     } elseif ($resource === 'tracking') {
         handle_tracking($segments, $method);
     } elseif ($resource === 'dev') {
         handle_dev($segments, $method);
+    } elseif ($resource === 'roster') {
+        handle_roster($segments, $method);
+    } elseif ($resource === 'classes') {
+        handle_training_classes($segments, $method);
+    } elseif ($resource === 'learning') {
+        handle_learning($segments, $method);
+    } elseif ($resource === 'reports') {
+        handle_reports($segments, $method);
     } elseif ($resource === 'dashboard') {
         handle_dashboard($segments, $method);
     } elseif ($resource === 'health') {

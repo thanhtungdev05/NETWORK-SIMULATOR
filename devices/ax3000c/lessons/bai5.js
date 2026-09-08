@@ -6,7 +6,7 @@
 window.DEVICE_AX3000C_LESSONS = window.DEVICE_AX3000C_LESSONS || [];
 
 window.DEVICE_AX3000C_LESSONS.push({
-  id: 'LAB_AX3000C_05',
+  id: 'LAB_AX3000CV2_05',
   title: 'Cấu hình DHCP',
   subtitle: 'Cấu hình DHCP',
   instructions: [

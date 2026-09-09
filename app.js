@@ -659,9 +659,29 @@
             }
           }
           loadLearningCatalog().catch(function (error) {
-            console.warn('[Catalog] Không thể tải danh sách bài luyện tập:', error);
-            populateDeviceDropdown([]);
-            navList.innerHTML = '<div class="empty-state"><p>Không thể tải danh sách bài luyện tập.</p></div>';
+            console.warn('[Catalog] Không thể tải danh sách bài luyện tập, chuyển sang chế độ offline:', error);
+            _catalogDeviceIds = null;
+            _catalogLabIds = null;
+            populateDeviceDropdown(DEVICES);
+            const urlParams = new URLSearchParams(window.location.search);
+            const reqDevice = urlParams.get('device');
+            const reqLab = urlParams.get('lab');
+            const reqMode = urlParams.get('mode');
+            let initialDev = null;
+            if (reqDevice) {
+              const normReq = normalizeDeviceId(reqDevice);
+              initialDev = DEVICES.find(function (d) {
+                return normalizeDeviceId(d.id) === normReq;
+              });
+            }
+            if (!initialDev && DEVICES.length > 0) {
+              initialDev = DEVICES[0];
+            }
+            if (initialDev) {
+              selectDevice(initialDev.id, reqLab, reqMode);
+            } else {
+              navList.innerHTML = '<div class="empty-state"><p>Không thể tải danh sách bài luyện tập.</p></div>';
+            }
           });
         } else {
           _currentUser = null;
@@ -2117,7 +2137,6 @@
       } catch (e) { }
 
       if (target) {
-<<<<<<< HEAD
         const openModal = Array.from(doc.querySelectorAll('.MuiDialog-root, .MuiModal-root, #modal_overlay, .modal-overlay, .modal_overlay, #modal-overlay')).find(m => {
           if (!m) return false;
           if (m.classList.contains('MuiDialog-root') || m.classList.contains('MuiModal-root')) {
@@ -2126,16 +2145,6 @@
           return m.classList.contains('active') || m.classList.contains('show') || m.style.display === 'flex' || m.style.display === 'block';
         });
         if (openModal && !openModal.contains(target)) {
-=======
-        const modalOverlay = doc.getElementById('modal_overlay') || doc.querySelector('.modal-overlay, .modal_overlay, #modal-overlay');
-        const isModalOpen = modalOverlay && (
-          modalOverlay.classList.contains('active') ||
-          modalOverlay.classList.contains('show') ||
-          modalOverlay.style.display === 'flex' ||
-          modalOverlay.style.display === 'block'
-        );
-        if (isModalOpen && !modalOverlay.contains(target)) {
->>>>>>> main
           target = null;
         }
       }

@@ -16,7 +16,7 @@ window.DEVICE_ONT_BE6500C_LESSONS.push({
     "- Internal Port: <span class=\"val\">80</span>"
   ],
   practiceUrl: '/sim_ONT_be6500c/network__portforward.html',
-  clearFields: [],
+  clearFields: ['input[name="name"]', 'input[name="source.portRange"]', 'input[name="destination.portRange"]'],
   grading: {
     description: 'Kiểm tra bài 6',
     rules: [

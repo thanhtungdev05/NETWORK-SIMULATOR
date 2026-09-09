@@ -69,8 +69,6 @@
   const gmIcon = document.getElementById('gm-icon');
   const gmTitle = document.getElementById('gm-title');
   const gmSubtitle = document.getElementById('gm-subtitle');
-  const gmScoreBadge = document.getElementById('gm-score-badge');
-  const gmScoreNum = document.getElementById('gm-score-num');
   const gmMetaDevice = document.getElementById('gm-meta-device');
   const gmMetaLesson = document.getElementById('gm-meta-lesson');
   const gmMetaMode = document.getElementById('gm-meta-mode');
@@ -1381,10 +1379,7 @@
     if (gmMetaMode) gmMetaMode.textContent = mode === 'guide' ? '💡 Hướng dẫn' : '⚡ Thực hành';
     if (gmMetaTime) gmMetaTime.textContent = timeStr;
 
-    if (gmScoreNum) gmScoreNum.textContent = res.score;
-
     if (res.passed) {
-      if (gmScoreBadge) gmScoreBadge.classList.remove('failed');
       if (gmIcon) gmIcon.textContent = '🎉';
       if (gmTitle) gmTitle.textContent = 'KẾT QUẢ: ĐẠT YÊU CẦU';
       if (gmSubtitle) gmSubtitle.textContent = 'Chúc mừng bạn đã cấu hình chính xác bài thực hành!';
@@ -1395,7 +1390,6 @@
       if (btnModalClose) btnModalClose.style.display = '';
       if (btnModalRetry) btnModalRetry.style.display = 'none';
     } else {
-      if (gmScoreBadge) gmScoreBadge.classList.add('failed');
       if (gmIcon) gmIcon.textContent = '⚠️';
       if (gmTitle) gmTitle.textContent = 'KẾT QUẢ: CHƯA ĐẠT';
       if (gmSubtitle) gmSubtitle.textContent = 'Một số thông số cấu hình chưa đúng với yêu cầu đề bài.';

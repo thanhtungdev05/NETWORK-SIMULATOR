@@ -29,15 +29,19 @@ IS_RENDER = os.environ.get('RENDER', '').strip().lower() == 'true'
 IS_PRODUCTION = APP_ENV == 'production' or IS_RENDER
 DEBUG = os.environ.get('DJANGO_DEBUG', '0') == '1' and not IS_PRODUCTION
 
+RENDER_EXTERNAL_URL = os.environ.get('RENDER_EXTERNAL_URL', '').strip()
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME', '').strip()
+
 _configured_hosts = [
     host.strip()
     for host in os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',')
     if host.strip()
 ]
-_app_url = urlparse(APP_BASE_URL) if APP_BASE_URL else None
-_app_host = _app_url.hostname if _app_url else None
+_app_url = urlparse(APP_BASE_URL) if APP_BASE_URL else (urlparse(RENDER_EXTERNAL_URL) if RENDER_EXTERNAL_URL else None)
+_app_host = _app_url.hostname if _app_url else RENDER_EXTERNAL_HOSTNAME
+
 ALLOWED_HOSTS = list(dict.fromkeys(_configured_hosts + [
-    host for host in [_app_host, 'localhost', '127.0.0.1', '[::1]'] if host
+    host for host in [_app_host, '.onrender.com', 'localhost', '127.0.0.1', '[::1]'] if host
 ]))
 
 _configured_csrf_origins = [
@@ -48,6 +52,7 @@ _configured_csrf_origins = [
 _app_origin = f'{_app_url.scheme}://{_app_url.netloc}' if _app_url and _app_url.scheme and _app_url.netloc else None
 CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(_configured_csrf_origins + [origin for origin in [
     _app_origin,
+    'https://*.onrender.com',
     'http://localhost:8080',
     'http://127.0.0.1:8080',
     'http://localhost:8083',

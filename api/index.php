@@ -21,8 +21,11 @@ $GLOBALS['request_id'] = bin2hex(random_bytes(8));
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 header('X-Request-ID: ' . $GLOBALS['request_id']);
-$corsOrigin = app_origin(env_value('APP_BASE_URL', '')) ?? request_origin();
+$configuredOrigin = app_origin(env_value('APP_BASE_URL', '')) ?: app_origin(env_value('RENDER_EXTERNAL_URL', ''));
+$suppliedOrigin = app_origin((string)($_SERVER['HTTP_ORIGIN'] ?? '')) ?: app_origin((string)($_SERVER['HTTP_REFERER'] ?? ''));
+$corsOrigin = $suppliedOrigin ?: ($configuredOrigin ?: request_origin());
 header('Access-Control-Allow-Origin: ' . $corsOrigin);
+header('Access-Control-Allow-Credentials: true');
 header('Vary: Origin');
 header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Tracking-Key');
@@ -179,7 +182,9 @@ function dev_bypass_enabled(): bool
 function request_origin(): string
 {
     $scheme = is_https_request() ? 'https' : 'http';
-    return $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
+    $host = (string)($_SERVER['HTTP_X_FORWARDED_HOST'] ?? ($_SERVER['HTTP_HOST'] ?? 'localhost'));
+    $host = trim(explode(',', $host)[0]);
+    return $scheme . '://' . $host;
 }
 
 function app_origin(string $url): ?string
@@ -196,8 +201,12 @@ function app_origin(string $url): ?string
     if ($host === '' || preg_match('/[\r\n]/', $host)) {
         return null;
     }
-    $port = isset($parts['port']) ? ':' . (int)$parts['port'] : '';
-    return $scheme . '://' . strtolower($host) . $port;
+    $port = isset($parts['port']) ? (int)$parts['port'] : 0;
+    $portStr = '';
+    if ($port > 0 && !(($scheme === 'http' && $port === 80) || ($scheme === 'https' && $port === 443))) {
+        $portStr = ':' . $port;
+    }
+    return $scheme . '://' . strtolower($host) . $portStr;
 }
 
 function is_local_origin(?string $origin): bool
@@ -234,13 +243,32 @@ function enforce_write_origin(string $resource, string $method): void
     if (is_local_request() && (!$suppliedOrigin || is_local_origin($suppliedOrigin))) {
         return;
     }
+
+    $currentOrigin = app_origin(request_origin());
     $allowedOrigins = array_values(array_filter([
         app_origin(env_value('APP_BASE_URL', '')),
-        is_local_request() ? app_origin(request_origin()) : null,
+        app_origin(env_value('RENDER_EXTERNAL_URL', '')),
+        $currentOrigin,
     ]));
-    if (!$suppliedOrigin || !in_array($suppliedOrigin, $allowedOrigins, true)) {
-        fail(403, 'security/origin-rejected', 'This write request did not originate from the application.');
+
+    // 1. Direct match in allowed origins
+    if ($suppliedOrigin && in_array($suppliedOrigin, $allowedOrigins, true)) {
+        return;
     }
+
+    // 2. Same-host check (Origin hostname equals server request hostname)
+    $suppliedHost = parse_url((string)$suppliedOrigin, PHP_URL_HOST);
+    $currentHost = parse_url((string)$currentOrigin, PHP_URL_HOST);
+    if (!empty($suppliedHost) && !empty($currentHost) && strtolower((string)$suppliedHost) === strtolower((string)$currentHost)) {
+        return;
+    }
+
+    // 3. Render cloud domain auto-match (*.onrender.com)
+    if (!empty($suppliedHost) && str_ends_with(strtolower((string)$suppliedHost), '.onrender.com')) {
+        return;
+    }
+
+    fail(403, 'security/origin-rejected', 'This write request did not originate from the application.');
 }
 
 function base64url_encode(string $value): string

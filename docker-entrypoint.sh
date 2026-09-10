@@ -65,7 +65,7 @@ DJANGO_PID=$!
 echo "Django Admin running on 127.0.0.1:${DJANGO_PORT} (proxied as /admin/)"
 
 # 4. Master Dispatcher: portal + all device simulators + proxy /api/* + /admin/*
-START_PHP=0 API_PORT=${API_PORT} DJANGO_PORT=${DJANGO_PORT} python3 run_all.py &
+START_PHP=0 START_DJANGO=0 API_PORT=${API_PORT} DJANGO_PORT=${DJANGO_PORT} python3 run_all.py &
 MASTER_PID=$!
 
 echo "============================================================="
@@ -86,4 +86,8 @@ while kill -0 "$MASTER_PID" 2>/dev/null \
 done
 
 echo "ERROR: A required service exited unexpectedly."
+echo "--- /tmp/php_api.log ---"
+cat /tmp/php_api.log 2>/dev/null || true
+echo "--- /tmp/django_admin.log ---"
+cat /tmp/django_admin.log 2>/dev/null || true
 exit 1

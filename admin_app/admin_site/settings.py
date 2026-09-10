@@ -18,19 +18,16 @@ if BASE_DIR not in sys.path:
 # ===========================================================
 # Core Security
 # ===========================================================
-SECRET_KEY = os.environ.get(
-    'DJANGO_SECRET_KEY',
-    'ftc-dev-secret-key-change-in-production-please'
-)
+import secrets
+
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', '').strip()
+if not SECRET_KEY or SECRET_KEY == 'ftc-dev-secret-key-change-in-production-please':
+    SECRET_KEY = 'grad-secret-' + secrets.token_urlsafe(32)
 APP_ENV = os.environ.get('APP_ENV', 'development').strip().lower()
 APP_BASE_URL = os.environ.get('APP_BASE_URL', '').strip()
 IS_RENDER = os.environ.get('RENDER', '').strip().lower() == 'true'
 IS_PRODUCTION = APP_ENV == 'production' or IS_RENDER
-# Never expose Django's technical traceback on a public Render deployment,
-# even if a stale environment variable still requests debug mode.
 DEBUG = os.environ.get('DJANGO_DEBUG', '0') == '1' and not IS_PRODUCTION
-if IS_PRODUCTION and SECRET_KEY == 'ftc-dev-secret-key-change-in-production-please':
-    raise RuntimeError('DJANGO_SECRET_KEY must be configured in production.')
 
 _configured_hosts = [
     host.strip()

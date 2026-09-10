@@ -194,9 +194,8 @@ progress_scoped AS (
 pair_outcomes AS (
     SELECT person_id,
            lab_id,
-           MIN(practice_attempt_no) FILTER (
-                WHERE mode IN ('Thực hành', 'practice')
-                  AND is_passed IS TRUE
+           MIN(COALESCE(practice_attempt_no, 1)) FILTER (
+                WHERE is_passed IS TRUE
            ) AS first_pass_attempt_no
       FROM progress_scoped
      GROUP BY person_id, lab_id
@@ -292,9 +291,8 @@ monthly_pair_outcomes AS (
     SELECT cohort.month,
            cohort.person_id,
            cohort.lab_id,
-           MIN(session.practice_attempt_no) FILTER (
-               WHERE session.mode IN ('Thực hành', 'practice')
-                 AND session.is_passed IS TRUE
+           MIN(COALESCE(session.practice_attempt_no, 1)) FILTER (
+               WHERE session.is_passed IS TRUE
            ) AS first_pass_attempt_no
       FROM month_cohort cohort
       LEFT JOIN numbered_sessions session
@@ -375,8 +373,7 @@ pair_progress AS (
     SELECT cohort.person_id,
            cohort.lab_id,
            BOOL_OR(
-               progress.mode IN ('Thực hành', 'practice')
-               AND progress.is_passed IS TRUE
+               progress.is_passed IS TRUE
            ) AS completed
       FROM cohort_pairs cohort
       LEFT JOIN progress_scoped progress

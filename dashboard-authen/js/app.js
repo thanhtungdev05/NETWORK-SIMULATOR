@@ -4997,7 +4997,7 @@ function initDateRangePicker() {
     });
 }
 
-const REPORT_EXPORT_TEMPLATE_VERSION = 'FTC-XLSX-1.0';
+const REPORT_EXPORT_TEMPLATE_VERSION = 'GRAD-XLSX-1.0';
 const REPORT_EXPORT_DEFAULT_BY_VIEW = {
     overview: 'activity',
     technicians: 'activity',
@@ -5027,7 +5027,7 @@ function normalizeReportFilenamePart(value, fallback = 'bao_cao') {
 function buildReportFilename(prefix, scope = '') {
     const timestamp = new Date();
     const timePart = `${String(timestamp.getHours()).padStart(2, '0')}${String(timestamp.getMinutes()).padStart(2, '0')}`;
-    const safePrefix = normalizeReportFilenamePart(prefix, 'FTC_Bao_cao');
+    const safePrefix = normalizeReportFilenamePart(prefix, 'Bao_cao_dao_tao');
     const safeScope = scope ? `_${normalizeReportFilenamePart(scope, '')}` : '';
     return `${safePrefix}${safeScope}_${fmtDate(timestamp)}_${timePart}.xlsx`;
 }
@@ -5130,10 +5130,10 @@ function buildActivityReportDescriptor() {
         : 'Tất cả phiên hoạt động trong kỳ đã chọn';
     return {
         type: 'activity',
-        title: 'FTC - BÁO CÁO CHI TIẾT HOẠT ĐỘNG KTV',
+        title: 'BÁO CÁO CHI TIẾT HOẠT ĐỘNG THỰC HÀNH',
         period,
         scope,
-        filename: buildReportFilename('FTC_Chi_tiet_hoat_dong_KTV'),
+        filename: buildReportFilename('Chi_tiet_hoat_dong_thuc_hanh'),
         countLabel: `${formatNumber.format(orderedRows.length)} phiên hoạt động`,
         available: orderedRows.length > 0,
         metadata: [
@@ -5143,40 +5143,42 @@ function buildActivityReportDescriptor() {
         headers: [
             'STT', 'Ngày', 'Giờ', 'Mã phiên', 'Mã NV', 'Họ và tên', 'Email', 'Vị trí',
             'Khu vực/CNx', 'Chi nhánh', 'Đơn vị', 'Lớp', 'Thiết bị', 'Bài lab', 'Kỹ năng',
-            'Chế độ', 'Kết quả', 'Hoàn thành lần đầu', 'Thời lượng (giây)',
-            'Thời lượng', 'Hành động cuối'
+            'Chế độ', 'Thời lượng', 'Số giây', 'Kết quả', 'Hoàn thành lần đầu', 'Điểm số',
+            'Chi tiết điểm', 'Thao tác cuối'
         ],
         columnTypes: [
             'integer', 'date', 'time', 'text', 'text', 'text', 'text', 'text',
-            'text', 'text', 'text', 'text', 'text', 'text', 'text', 'text',
-            'text', 'text', 'integer', 'text', 'text'
+            'text', 'text', 'text', 'text', 'text', 'text', 'text',
+            'text', 'text', 'integer', 'text', 'text', 'number',
+            'text', 'text'
         ],
-        rows: orderedRows.map((row, index) => {
-            const technician = technicianByIdentity.get(String(row.learner || '').trim().toLowerCase())
-                || technicianByIdentity.get(String(row.technicianId || '').trim().toLowerCase());
-            const email = technician?.email || (String(row.learner || '').includes('@') ? row.learner : '');
+        rows: orderedRows.map((item, index) => {
+            const date = new Date(item.startedAt);
+            const grading = parseGradingDetails(item.gradingDetails);
             return [
                 index + 1,
-                row.date || '',
-                row.time || '',
-                row.sessionId || '',
-                technician?.employeeId || row.technicianId || '',
-                technician?.displayName || row.technicianName || getLearnerName(row.learner),
-                email,
-                technician?.jobTitle || row.jobTitle || '',
-                technician?.dashboardRegion || row.region || '',
-                technician?.branchName || row.branchName || '',
-                technician?.unitName || row.unitName || row.unitCode || '',
-                technician?.className || technician?.classCode || row.classCode || '',
-                row.device || '',
-                row.lab || '',
-                row.skill || '',
-                row.mode || '',
-                row.status || 'Chưa có kết quả',
-                row.firstTry === true ? 'Có' : (row.firstTry === false ? 'Không' : ''),
-                row.duration ?? '',
-                row.duration === null || row.duration === undefined ? '' : formatDuration(row.duration),
-                row.lastAction || ''
+                isValidDate(date) ? fmtDate(date) : '',
+                isValidDate(date) ? `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}` : '',
+                item.id,
+                item.technicianId,
+                item.name,
+                item.email,
+                item.jobTitle || 'KTV',
+                item.region,
+                item.branchName || '',
+                item.unitName || '',
+                item.classCode || '',
+                item.device,
+                item.lab,
+                item.skill,
+                item.mode,
+                item.duration,
+                item.durationSec,
+                item.isPassed ? 'Đạt' : 'Chưa đạt',
+                item.completedFirstTry ? 'Có' : 'Không',
+                item.score,
+                grading.summaryText,
+                item.lastAction
             ];
         })
     };
@@ -5193,34 +5195,30 @@ function formatAuthoritativeRegionMetric(cell = {}) {
     return `${completed}/${assigned} (${rate}%) · ${attempts} lượt`;
 }
 
-function buildAuthoritativeRegionReportDescriptor(matrix) {
-    const groups = matrix.device_groups || [];
-    const columns = groups.flatMap(group => (group.labs || []).map(lab => ({
-        device: group.device?.name || group.device?.device_name || group.device_name || '',
-        lab: lab.name || lab.lab_name || '',
-        labId: lab.lab_id || ''
-    })));
-    const rows = (matrix.rows || []).map((row, index) => {
-        const region = row.region || {};
-        const regionName = region.name || region.region_name || region.code || region.region_code || '';
-        const location = regionName;
+function buildAuthoritativeRegionReportDescriptor(reportMatrix = {}) {
+    const columns = (reportMatrix.columns || []).map(col => ({
+        device: col.device || '',
+        lab: col.lab || col.labName || '',
+        labId: col.labId || ''
+    }));
+    const rows = (reportMatrix.rows || []).map((row, index) => {
         return [
             index + 1,
-            location,
+            row.region || row.regionName || '',
             ...columns.map(column => formatAuthoritativeRegionMetric(row.cells?.[column.labId])),
             formatAuthoritativeRegionMetric(row.total)
         ];
     });
     return {
         type: 'region',
-        title: 'FTC - BÁO CÁO TIẾN ĐỘ THỰC HÀNH THEO CHI NHÁNH',
+        title: 'BÁO CÁO TIẾN ĐỘ THỰC HÀNH THEO ĐƠN VỊ',
         period: dashboardReport?.meta?.period?.label || getRangeLabel(),
-        scope: 'Ma trận Khu vực/CNx theo thiết bị và bài lab',
-        filename: buildReportFilename('FTC_Tien_do_theo_chi_nhanh'),
+        scope: 'Ma trận Khu vực theo thiết bị và bài lab',
+        filename: buildReportFilename('Tien_do_theo_don_vi'),
         countLabel: `${formatNumber.format(rows.length)} khu vực · ${formatNumber.format(columns.length)} bài lab`,
         available: rows.length > 0 && columns.length > 0,
         metadata: [['Quy ước ô dữ liệu', 'Hoàn thành/phạm vi (tỷ lệ) · lượt thực hành']],
-        headers: ['STT', 'Khu vực/CNx', ...columns.map(column => `${column.device} - ${column.lab}`), 'Tổng khu vực'],
+        headers: ['STT', 'Khu vực', ...columns.map(column => `${column.device} - ${column.lab}`), 'Tổng khu vực'],
         columnTypes: ['integer', 'text', ...columns.map(() => 'text'), 'text'],
         rows
     };
@@ -5254,17 +5252,17 @@ function buildRegionReportDescriptor() {
     });
     return {
         type: 'region',
-        title: 'FTC - BÁO CÁO TIẾN ĐỘ THỰC HÀNH THEO CHI NHÁNH',
+        title: 'BÁO CÁO TIẾN ĐỘ THỰC HÀNH THEO ĐƠN VỊ',
         period: getRangeLabel(),
-        scope: 'Ma trận Khu vực/CNx theo thiết bị và bài lab',
-        filename: buildReportFilename('FTC_Tien_do_theo_chi_nhanh'),
+        scope: 'Ma trận Khu vực theo thiết bị và bài lab',
+        filename: buildReportFilename('Tien_do_theo_don_vi'),
         countLabel: `${formatNumber.format(rows.length)} khu vực · ${formatNumber.format(columns.length)} bài lab`,
         available: rows.length > 0 && columns.length > 0,
         metadata: [
             ['Quy ước ô dữ liệu', 'Hoàn thành/phạm vi (tỷ lệ) · lượt thực hành'],
             ['Nguồn phạm vi', 'Danh mục KTV đang hoạt động và danh mục bài lab']
         ],
-        headers: ['STT', 'Khu vực/CNx', ...columns.map(column => `${column.device} - ${column.lab}`), 'Tổng khu vực'],
+        headers: ['STT', 'Khu vực', ...columns.map(column => `${column.device} - ${column.lab}`), 'Tổng khu vực'],
         columnTypes: ['integer', 'text', ...columns.map(() => 'text'), 'text'],
         rows
     };
@@ -5280,10 +5278,10 @@ function buildClassMatrixReportDescriptor() {
     const scope = `${classLabel} · ${deviceLabel}${searchLabel}`;
     return {
         type: 'class_matrix',
-        title: 'FTC - BÁO CÁO TIẾN ĐỘ KTV THEO LỚP',
+        title: 'BÁO CÁO TIẾN ĐỘ HỌC VIÊN THEO LỚP',
         period: 'Dữ liệu lũy kế',
         scope,
-        filename: buildReportFilename('FTC_Tien_do_KTV_theo_lop', classLabel),
+        filename: buildReportFilename('Tien_do_hoc_vien_theo_lop', classLabel),
         countLabel: `${formatNumber.format(data.rows.length)} KTV · ${formatNumber.format(data.columns.length)} bài lab`,
         available: data.rows.length > 0 && data.columns.length > 0,
         metadata: [
@@ -5336,7 +5334,7 @@ function getRosterReportPreview() {
         type: 'roster',
         period: 'Tại thời điểm xuất',
         scope: getRosterExportScope(),
-        filename: buildReportFilename('FTC_Danh_sach_KTV'),
+        filename: buildReportFilename('Danh_sach_hoc_vien'),
         countLabel: state.rosterLoaded ? `${formatNumber.format(state.rosterTotal)} hồ sơ KTV` : 'Toàn bộ kết quả phù hợp',
         available: true
     };
@@ -5347,6 +5345,15 @@ function getReportExportPreview(type) {
     if (type === 'class_matrix') return buildClassMatrixReportDescriptor();
     if (type === 'roster') return getRosterReportPreview();
     return buildActivityReportDescriptor();
+}
+
+function updateReportExportPreview(type = getSelectedReportExportType()) {
+    let preview;
+    try {
+        preview = getReportExportPreview(type);
+    } catch (error) {
+        preview = { period: '—', scope: 'Không thể đọc bộ lọc hiện tại', countLabel: 'Không có dữ liệu', filename: 'Bao_cao_dao_tao.xlsx', available: false };
+    }
 }
 
 async function ensureTrainingAssignmentsLoaded({ force = false } = {}) {
@@ -6046,7 +6053,7 @@ function switchDashboardView(viewName, { updateHistory = true, focusHeading = tr
     if (eyebrow) eyebrow.textContent = viewCopy.eyebrow;
     if (title) title.textContent = viewCopy.title;
     if (subtitle) subtitle.textContent = viewCopy.subtitle;
-    document.title = `${viewCopy.title} | FTC`;
+    document.title = `${viewCopy.title} | Dashboard Đào Tạo`;
 
     document.querySelectorAll('.sidebar-link[data-dashboard-view]').forEach(link => {
         const isActive = link.dataset.dashboardView === activeDashboardView;
@@ -6110,7 +6117,7 @@ function initDashboardViewRouting() {
     if (eyebrow) eyebrow.textContent = viewCopy.eyebrow;
     if (title) title.textContent = viewCopy.title;
     if (subtitle) subtitle.textContent = viewCopy.subtitle;
-    document.title = `${viewCopy.title} | FTC`;
+    document.title = `${viewCopy.title} | Dashboard Đào Tạo`;
 
     document.querySelectorAll('.sidebar-link[data-dashboard-view]').forEach(link => {
         const isActive = link.dataset.dashboardView === activeDashboardView;

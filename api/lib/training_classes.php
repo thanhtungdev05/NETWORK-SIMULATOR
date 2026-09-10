@@ -1442,28 +1442,28 @@ function training_class_personal_dashboard_payload(PDO $pdo, array $user): array
             $guideCount++;
         } else {
             $practiceCount++;
-            $totalDurationSec += $duration;
-            if ($score !== null) {
-                $totalScores += $score;
-                $scoredSessionsCount++;
-            }
+        }
+        $totalDurationSec += $duration;
+        if ($score !== null) {
+            $totalScores += $score;
+            $scoredSessionsCount++;
+        }
 
-            // Track unique labs attempted/passed from sessions
-            if ($labId !== '') {
-                $sessionAttemptedLabs[$labId] = true;
-                $isPassed = isset($sess['is_passed']) && (bool)$sess['is_passed'];
-                if ($isPassed) {
-                    $sessionPassedLabIds[$labId] = true;
-                }
+        // Track unique labs attempted/passed from sessions
+        if ($labId !== '') {
+            $sessionAttemptedLabs[$labId] = true;
+            $isPassed = isset($sess['is_passed']) && (bool)$sess['is_passed'];
+            if ($isPassed) {
+                $sessionPassedLabIds[$labId] = true;
             }
+        }
 
-            // First-try stats
-            $attemptNo = $sess['practice_attempt_no'] !== null ? (int)$sess['practice_attempt_no'] : null;
-            if ($attemptNo === 1) {
-                $sessionFirstTryTotal++;
-                if (isset($sess['is_passed']) && (bool)$sess['is_passed']) {
-                    $sessionFirstTryPass++;
-                }
+        // First-try stats
+        $attemptNo = $sess['practice_attempt_no'] !== null ? (int)$sess['practice_attempt_no'] : null;
+        if ($attemptNo === 1 || ($attemptNo === null && isset($sess['is_passed']) && (bool)$sess['is_passed'])) {
+            $sessionFirstTryTotal++;
+            if (isset($sess['is_passed']) && (bool)$sess['is_passed']) {
+                $sessionFirstTryPass++;
             }
         }
 
@@ -1483,11 +1483,11 @@ function training_class_personal_dashboard_payload(PDO $pdo, array $user): array
                 $trendDaysMap[$dateKey]['guide_count']++;
             } else {
                 $trendDaysMap[$dateKey]['practice_count']++;
-                if ($score !== null) {
-                    $trendDaysMap[$dateKey]['scores'][] = $score;
-                }
-                $trendDaysMap[$dateKey]['duration_sec'] += $duration;
             }
+            if ($score !== null) {
+                $trendDaysMap[$dateKey]['scores'][] = $score;
+            }
+            $trendDaysMap[$dateKey]['duration_sec'] += $duration;
         }
 
         $sessions[] = [

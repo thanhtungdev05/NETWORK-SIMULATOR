@@ -12,6 +12,8 @@ require_once __DIR__ . '/lib/ktv_roster_import.php';
 require_once __DIR__ . '/lib/training_classes.php';
 require_once __DIR__ . '/lib/report_xlsx.php';
 require_once __DIR__ . '/lib/dashboard_report.php';
+require_once __DIR__ . '/lib/mailer.php';
+require_once __DIR__ . '/lib/ai_assistant.php';
 load_app_environment($root);
 
 $GLOBALS['request_id'] = bin2hex(random_bytes(8));
@@ -171,7 +173,7 @@ function dev_bypass_enabled(): bool
         // administrator access in production.
         return false;
     }
-    return is_local_request() || env_bool('AUTH_BYPASS_DEV', false);
+    return env_bool('AUTH_BYPASS_DEV', false);
 }
 
 function request_origin(): string
@@ -229,7 +231,7 @@ function enforce_write_origin(string $resource, string $method): void
     if (!$suppliedOrigin) {
         $suppliedOrigin = app_origin((string)($_SERVER['HTTP_REFERER'] ?? ''));
     }
-    if (is_local_request() && is_local_origin($suppliedOrigin)) {
+    if (is_local_request() && (!$suppliedOrigin || is_local_origin($suppliedOrigin))) {
         return;
     }
     $allowedOrigins = array_values(array_filter([
@@ -313,14 +315,14 @@ if ($requiresSession) {
 function mock_bypass_user(): array
 {
     return [
-        'user_id' => '00000000-0000-0000-0000-000000000001',
-        'email' => 'dev-bypass@ftc.local',
-        'role' => 'DEV',
-        'role_name' => 'Nhà phát triển',
-        'is_admin' => true,
-        'can_export_reports' => true,
-        'display_name' => 'KTV DEV (Bypass Mode)',
-        'iam_subject' => 'dev-bypass-admin',
+        'user_id' => '00000000-0000-0000-0000-000000000003',
+        'email' => 'hocvien01@grad.edu.vn',
+        'role' => 'KTV',
+        'role_name' => 'Kỹ thuật viên',
+        'is_admin' => false,
+        'can_export_reports' => false,
+        'display_name' => 'Nguyễn Văn A - Học viên',
+        'iam_subject' => null,
         'last_login_at' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
         'created_at' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
         'updated_at' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
@@ -393,7 +395,8 @@ function role_can_export_reports(array $user): bool
 
 function is_dev_bypass_session(): bool
 {
-    return dev_bypass_enabled() && (($_SESSION['iam_subject'] ?? null) === 'dev-bypass-admin');
+    $subject = $_SESSION['iam_subject'] ?? null;
+    return $subject === 'dev-bypass-student' || $subject === 'dev-bypass-admin';
 }
 
 function current_email(): ?string
@@ -409,7 +412,9 @@ function current_user_id(): ?string
 function require_user(): array
 {
     if (is_dev_bypass_session()) {
-        return mock_bypass_user();
+        return (current_user_id() ? find_user_by_id((string)current_user_id()) : null)
+            ?? find_user('hocvien01@grad.edu.vn')
+            ?? mock_bypass_user();
     }
 
     $userId = current_user_id();
@@ -438,15 +443,8 @@ function require_user(): array
 
 function require_admin(): array
 {
-    if (is_dev_bypass_session()) {
-        return mock_bypass_user();
-    }
-
     $user = require_user();
     if (!role_is_admin($user)) {
-        if (dev_bypass_enabled()) {
-            return mock_bypass_user();
-        }
         fail(403, 'permission-denied', 'Admin permission is required.');
     }
     return $user;
@@ -818,10 +816,389 @@ function handle_auth(array $segments, string $method): void
 {
     $action = $segments[1] ?? '';
 
+    if ($action === 'login' && $method === 'POST') {
+        $input = json_body();
+        $email = normalize_email((string)($input['email'] ?? ''));
+        $password = (string)($input['password'] ?? '');
+
+        if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            fail(400, 'auth/invalid-email', 'Vui lòng cung cấp địa chỉ email hợp lệ.');
+        }
+        if ($password === '') {
+            fail(400, 'auth/invalid-password', 'Vui lòng nhập mật khẩu.');
+        }
+
+        $stmt = db()->prepare('SELECT user_id, email, display_name, role, employee_id, password_hash, is_terminated FROM users WHERE LOWER(email) = :email');
+        $stmt->execute(['email' => $email]);
+        $userRow = $stmt->fetch();
+
+        if (!$userRow || empty($userRow['password_hash'])) {
+            fail(401, 'auth/invalid-credentials', 'Email hoặc mật khẩu không chính xác.');
+        }
+        if (database_boolean($userRow['is_terminated'] ?? false)) {
+            fail(403, 'auth/account-inactive', 'Tài khoản này đã bị khóa hoặc ngừng hoạt động.');
+        }
+        if (!password_verify($password, (string)$userRow['password_hash'])) {
+            fail(401, 'auth/invalid-credentials', 'Email hoặc mật khẩu không chính xác.');
+        }
+
+        session_regenerate_id(true);
+        $_SESSION['user_id'] = $userRow['user_id'];
+        $_SESSION['user_email'] = $userRow['email'];
+        unset($_SESSION['iam_subject']);
+
+        $updateStmt = db()->prepare('UPDATE users SET last_login_at = NOW(), updated_at = NOW() WHERE user_id = :user_id');
+        $updateStmt->execute(['user_id' => $userRow['user_id']]);
+
+        record_login_log($userRow, 'password_login_success');
+
+        $fullUser = find_user_by_id((string)$userRow['user_id']);
+        respond([
+            'ok' => true,
+            'message' => 'Đăng nhập thành công.',
+            'user' => user_response($fullUser),
+        ]);
+    }
+
+    if ($action === 'send-otp' && $method === 'POST') {
+        $input = json_body();
+        $email = normalize_email((string)($input['email'] ?? ''));
+
+        if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 255) {
+            fail(400, 'auth/invalid-email', 'Vui lòng cung cấp địa chỉ email hợp lệ.');
+        }
+
+        $emailDomain = strtolower((string)substr(strrchr($email, "@"), 1));
+        if ($emailDomain !== 'ut.edu.vn' && $emailDomain !== 'grad.edu.vn') {
+            fail(400, 'auth/unauthorized-domain', 'Hệ thống chỉ chấp nhận gửi mã xác thực tới email sinh viên trường (@ut.edu.vn).');
+        }
+
+        $existing = find_user($email);
+        if ($existing) {
+            fail(409, 'auth/email-exists', 'Email này đã được đăng ký tài khoản trong hệ thống. Bạn có thể tiến hành đăng nhập.');
+        }
+
+        // Kiểm tra rate limit: 60 giây giữa các lần yêu cầu
+        $recentStmt = db()->prepare("
+            SELECT created_at, EXTRACT(EPOCH FROM (NOW() - created_at)) as elapsed_sec 
+            FROM email_verifications 
+            WHERE LOWER(email) = :email AND action = 'register'
+            ORDER BY created_at DESC LIMIT 1
+        ");
+        $recentStmt->execute(['email' => $email]);
+        $recentRow = $recentStmt->fetch();
+        if ($recentRow && (float)$recentRow['elapsed_sec'] < 60) {
+            $waitSec = (int)(60 - (float)$recentRow['elapsed_sec']);
+            fail(429, 'auth/rate-limit', "Vui lòng đợi $waitSec giây nữa trước khi yêu cầu gửi lại mã OTP mới.");
+        }
+
+        // Sinh mã OTP 6 chữ số ngẫu nhiên
+        $otpCode = sprintf('%06d', random_int(100000, 999999));
+
+        // Lưu vào bảng email_verifications (hạn 5 phút)
+        $insStmt = db()->prepare("
+            INSERT INTO email_verifications (email, otp_code, action, expires_at, created_at)
+            VALUES (:email, :otp, 'register', NOW() + INTERVAL '5 minutes', NOW())
+        ");
+        $insStmt->execute(['email' => $email, 'otp' => $otpCode]);
+
+        // Gửi email qua SMTP Gmail
+        $subject = "[$otpCode] Mã xác thực đăng ký tài khoản - UTH NetLab";
+        $htmlBody = build_otp_email_template($otpCode, $email);
+        $altText = "Mã xác thực OTP đăng ký tài khoản UTH của bạn là: $otpCode (Có hiệu lực trong vòng 5 phút).";
+        $mailResult = send_smtp_mail($email, $subject, $htmlBody, $altText);
+
+        if (!$mailResult['ok']) {
+            // Chế độ fallback nếu chưa cấu hình Gmail App Password hoặc lỗi kết nối SMTP
+            respond([
+                'ok' => true,
+                'message' => 'Hệ thống đã tạo mã OTP xác thực (Chế độ Demo Fallback do chưa cấu hình SMTP Gmail).',
+                'dev_otp' => $otpCode,
+                'mail_status' => $mailResult,
+                'expires_in_seconds' => 300
+            ]);
+        }
+
+        respond([
+            'ok' => true,
+            'message' => 'Mã xác thực OTP đã được gửi đến hòm thư trường của bạn. Vui lòng kiểm tra hộp thư (hoặc mục Spam).',
+            'expires_in_seconds' => 300
+        ]);
+    }
+
+    if ($action === 'register' && $method === 'POST') {
+        $input = json_body();
+        $email = normalize_email((string)($input['email'] ?? ''));
+        $password = (string)($input['password'] ?? '');
+        $name = trim((string)($input['name'] ?? ($input['display_name'] ?? '')));
+        $employeeId = optional_text($input, 'employee_id', 50) ?? optional_text($input, 'student_id', 50);
+        $otp = trim((string)($input['otp'] ?? ''));
+
+        if ($name === '') {
+            fail(400, 'auth/invalid-name', 'Vui lòng nhập họ và tên.');
+        }
+        $nameLen = function_exists('mb_strlen') ? mb_strlen($name) : strlen($name);
+        if ($nameLen < 2 || $nameLen > 100) {
+            fail(400, 'auth/invalid-name', 'Họ và tên phải từ 2 đến 100 ký tự.');
+        }
+        if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 255) {
+            fail(400, 'auth/invalid-email', 'Vui lòng cung cấp địa chỉ email hợp lệ.');
+        }
+
+        $emailDomain = strtolower((string)substr(strrchr($email, "@"), 1));
+        if ($emailDomain !== 'ut.edu.vn' && $emailDomain !== 'grad.edu.vn') {
+            fail(400, 'auth/unauthorized-domain', 'Hệ thống chỉ chấp nhận đăng ký bằng email sinh viên trường (@ut.edu.vn).');
+        }
+
+        if (strlen($password) < 6) {
+            fail(400, 'auth/weak-password', 'Mật khẩu phải có ít nhất 6 ký tự.');
+        }
+        if (strlen($password) > 72) {
+            fail(400, 'auth/password-too-long', 'Mật khẩu không được vượt quá 72 ký tự.');
+        }
+
+        if ($employeeId === null || $employeeId === '') {
+            $parts = explode('@', $email);
+            $employeeId = strtoupper($parts[0] ?? 'SV');
+        }
+
+        $existing = find_user($email);
+        if ($existing) {
+            fail(409, 'auth/email-exists', 'Email này đã được đăng ký trong hệ thống.');
+        }
+
+        if ($otp === '') {
+            fail(400, 'auth/missing-otp', 'Vui lòng nhập mã xác thực OTP (6 chữ số) được gửi về hòm thư trường của bạn.');
+        }
+
+        $verifStmt = db()->prepare("
+            SELECT id, otp_code, expires_at, used_at 
+            FROM email_verifications 
+            WHERE LOWER(email) = :email AND action = 'register' AND used_at IS NULL
+            ORDER BY created_at DESC LIMIT 1
+        ");
+        $verifStmt->execute(['email' => $email]);
+        $verifRow = $verifStmt->fetch();
+
+        if (!$verifRow) {
+            fail(400, 'auth/invalid-otp', 'Không tìm thấy yêu cầu xác thực OTP cho email này. Vui lòng bấm "Nhận mã OTP" trước.');
+        }
+
+        if (strtotime((string)$verifRow['expires_at']) < time()) {
+            fail(400, 'auth/expired-otp', 'Mã OTP này đã hết hạn (quá 5 phút). Vui lòng yêu cầu gửi lại mã mới.');
+        }
+
+        if ($verifRow['otp_code'] !== $otp) {
+            fail(400, 'auth/invalid-otp', 'Mã xác thực OTP không chính xác. Vui lòng kiểm tra lại trong hộp thư.');
+        }
+
+        // Đánh dấu mã OTP đã được sử dụng (chống replay attack)
+        $markStmt = db()->prepare("UPDATE email_verifications SET used_at = NOW() WHERE id = :id");
+        $markStmt->execute(['id' => $verifRow['id']]);
+
+        $defaultClass = db()->query("SELECT class_id, class_code, region_id FROM training_classes WHERE class_code = 'CNTT-K22' LIMIT 1")->fetch();
+        $classCode = $defaultClass ? $defaultClass['class_code'] : null;
+        $regionId = $defaultClass ? $defaultClass['region_id'] : '8a7a1587-7dc1-46d5-87a6-d6df341cd4ad';
+
+        $passwordHash = password_hash($password, PASSWORD_BCRYPT);
+        $stmt = db()->prepare(
+            'INSERT INTO users (user_id, email, display_name, role, employee_id, password_hash, iam_profile, class_code, region_id, dashboard_region, region_code, last_login_at, created_at, updated_at)
+             VALUES (gen_random_uuid(), :email, :display_name, :role, :employee_id, :password_hash, :iam_profile, :class_code, :region_id, :dashboard_region, :region_code, NOW(), NOW(), NOW())
+             RETURNING ' . USER_COLUMNS
+        );
+        $stmt->execute([
+            'email' => $email,
+            'display_name' => $name,
+            'role' => 'KTV',
+            'employee_id' => $employeeId,
+            'password_hash' => $passwordHash,
+            'iam_profile' => '{}',
+            'class_code' => $classCode,
+            'region_id' => $regionId,
+            'dashboard_region' => 'HNI',
+            'region_code' => 'TINHNI',
+        ]);
+        $newUser = $stmt->fetch();
+        if (!$newUser) {
+            fail(500, 'auth/register-failed', 'Không thể tạo tài khoản người dùng.');
+        }
+
+        if ($defaultClass) {
+            $enrollStmt = db()->prepare("
+                INSERT INTO class_enrollments (class_id, user_id, source_class_code, status, valid_from, is_mock, created_at, updated_at)
+                VALUES (:class_id, :user_id, :class_code, 'active', CURRENT_DATE, FALSE, NOW(), NOW())
+                ON CONFLICT (class_id, user_id, valid_from) DO NOTHING
+            ");
+            $enrollStmt->execute([
+                'class_id' => $defaultClass['class_id'],
+                'user_id' => $newUser['user_id'],
+                'class_code' => $classCode
+            ]);
+        }
+
+        session_regenerate_id(true);
+        $_SESSION['user_id'] = $newUser['user_id'];
+        $_SESSION['user_email'] = $newUser['email'];
+        unset($_SESSION['iam_subject']);
+
+        record_login_log($newUser, 'password_register_success');
+
+        // Gửi email chúc mừng kích hoạt tài khoản thành công về App Gmail của sinh viên
+        try {
+            $welcomeSubject = "🎉 Chúc mừng bạn kích hoạt tài khoản thành công - UTH NetLab";
+            $welcomeHtml = build_welcome_email_template(
+                $newUser['display_name'] ?? $name,
+                $newUser['email'] ?? $email,
+                $newUser['employee_id'] ?? $employeeId,
+                $classCode ?? 'CNTT-K22'
+            );
+            $welcomeAlt = "Chúc mừng bạn " . ($newUser['display_name'] ?? $name) . " đã kích hoạt tài khoản sinh viên thành công tại UTH NetLab.";
+            send_smtp_mail($email, $welcomeSubject, $welcomeHtml, $welcomeAlt);
+        } catch (\Throwable $e) {
+            // Không làm gián đoạn luồng đăng ký nếu gửi mail gặp lỗi
+            error_log('Welcome mail failed: ' . $e->getMessage());
+        }
+
+        respond([
+            'ok' => true,
+            'message' => 'Đăng ký tài khoản thành công.',
+            'user' => user_response($newUser),
+        ], 201);
+    }
+
+    if ($action === 'forgot-password-otp' && $method === 'POST') {
+        $input = json_body();
+        $email = normalize_email((string)($input['email'] ?? ''));
+
+        if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 255) {
+            fail(400, 'auth/invalid-email', 'Vui lòng cung cấp địa chỉ email hợp lệ.');
+        }
+
+        $user = find_user($email);
+        if (!$user) {
+            fail(404, 'auth/user-not-found', 'Email này chưa được đăng ký tài khoản trong hệ thống.');
+        }
+
+        if (database_boolean($user['is_terminated'] ?? false)) {
+            fail(403, 'auth/account-inactive', 'Tài khoản này đã bị khóa hoặc ngừng hoạt động.');
+        }
+
+        // Kiểm tra rate limit: 60 giây giữa các lần yêu cầu
+        $recentStmt = db()->prepare("
+            SELECT created_at, EXTRACT(EPOCH FROM (NOW() - created_at)) as elapsed_sec 
+            FROM email_verifications 
+            WHERE LOWER(email) = :email AND action = 'reset_password'
+            ORDER BY created_at DESC LIMIT 1
+        ");
+        $recentStmt->execute(['email' => $email]);
+        $recentRow = $recentStmt->fetch();
+        if ($recentRow && (float)$recentRow['elapsed_sec'] < 60) {
+            $waitSec = (int)(60 - (float)$recentRow['elapsed_sec']);
+            fail(429, 'auth/rate-limit', "Vui lòng đợi $waitSec giây nữa trước khi yêu cầu gửi lại mã OTP mới.");
+        }
+
+        // Sinh mã OTP 6 chữ số ngẫu nhiên
+        $otpCode = sprintf('%06d', random_int(100000, 999999));
+
+        // Lưu vào bảng email_verifications với action = 'reset_password'
+        $insStmt = db()->prepare("
+            INSERT INTO email_verifications (email, otp_code, action, expires_at, created_at)
+            VALUES (:email, :otp, 'reset_password', NOW() + INTERVAL '5 minutes', NOW())
+        ");
+        $insStmt->execute(['email' => $email, 'otp' => $otpCode]);
+
+        // Gửi email qua SMTP Gmail
+        $subject = "[$otpCode] Mã xác thực đặt lại mật khẩu - UTH NetLab";
+        $htmlBody = build_reset_password_email_template($otpCode, $email);
+        $altText = "Mã xác thực đặt lại mật khẩu UTH NetLab của bạn là: $otpCode (Có hiệu lực trong vòng 5 phút).";
+        $mailResult = send_smtp_mail($email, $subject, $htmlBody, $altText);
+
+        if (!$mailResult['ok']) {
+            respond([
+                'ok' => true,
+                'message' => 'Hệ thống đã tạo mã OTP đặt lại mật khẩu (Chế độ Demo Fallback).',
+                'dev_otp' => $otpCode,
+                'mail_status' => $mailResult,
+                'expires_in_seconds' => 300
+            ]);
+        }
+
+        respond([
+            'ok' => true,
+            'message' => 'Mã xác thực đặt lại mật khẩu đã được gửi đến hòm thư trường của bạn. Vui lòng kiểm tra hộp thư Gmail.',
+            'expires_in_seconds' => 300
+        ]);
+    }
+
+    if ($action === 'reset-password' && $method === 'POST') {
+        $input = json_body();
+        $email = normalize_email((string)($input['email'] ?? ''));
+        $otp = trim((string)($input['otp'] ?? ''));
+        $password = (string)($input['password'] ?? '');
+
+        if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            fail(400, 'auth/invalid-email', 'Vui lòng cung cấp địa chỉ email hợp lệ.');
+        }
+
+        if ($otp === '') {
+            fail(400, 'auth/missing-otp', 'Vui lòng nhập mã xác thực OTP (6 chữ số).');
+        }
+
+        if (strlen($password) < 6) {
+            fail(400, 'auth/weak-password', 'Mật khẩu mới phải có ít nhất 6 ký tự.');
+        }
+        if (strlen($password) > 72) {
+            fail(400, 'auth/password-too-long', 'Mật khẩu không được vượt quá 72 ký tự.');
+        }
+
+        $user = find_user($email);
+        if (!$user) {
+            fail(404, 'auth/user-not-found', 'Email này chưa được đăng ký trong hệ thống.');
+        }
+
+        // Kiểm tra OTP hợp lệ cho action = reset_password
+        $verifStmt = db()->prepare("
+            SELECT id, otp_code, expires_at, used_at 
+            FROM email_verifications 
+            WHERE LOWER(email) = :email AND action = 'reset_password' AND used_at IS NULL
+            ORDER BY created_at DESC LIMIT 1
+        ");
+        $verifStmt->execute(['email' => $email]);
+        $verifRow = $verifStmt->fetch();
+
+        if (!$verifRow) {
+            fail(400, 'auth/invalid-otp', 'Không tìm thấy yêu cầu đặt lại mật khẩu cho email này. Vui lòng bấm "Nhận mã OTP" trước.');
+        }
+
+        if (strtotime((string)$verifRow['expires_at']) < time()) {
+            fail(400, 'auth/expired-otp', 'Mã OTP này đã hết hạn (quá 5 phút). Vui lòng yêu cầu gửi lại mã mới.');
+        }
+
+        if ($verifRow['otp_code'] !== $otp) {
+            fail(400, 'auth/invalid-otp', 'Mã xác thực OTP không chính xác. Vui lòng kiểm tra lại hòm thư.');
+        }
+
+        // Đánh dấu OTP đã được dùng
+        $markStmt = db()->prepare("UPDATE email_verifications SET used_at = NOW() WHERE id = :id");
+        $markStmt->execute(['id' => $verifRow['id']]);
+
+        // Cập nhật mật khẩu mới
+        $newHash = password_hash($password, PASSWORD_BCRYPT);
+        $updateStmt = db()->prepare("UPDATE users SET password_hash = :hash, updated_at = NOW() WHERE user_id = :uid");
+        $updateStmt->execute(['hash' => $newHash, 'uid' => $user['user_id']]);
+
+        respond([
+            'ok' => true,
+            'message' => 'Đặt lại mật khẩu thành công! Bạn có thể sử dụng mật khẩu mới để đăng nhập.'
+        ]);
+    }
+
     if ($action === 'session' && $method === 'GET') {
         $user = null;
         if (is_dev_bypass_session()) {
-            $user = mock_bypass_user();
+            $user = (current_user_id() ? find_user_by_id((string)current_user_id()) : null)
+                ?? find_user('hocvien01@grad.edu.vn')
+                ?? mock_bypass_user();
         } elseif (current_user_id()) {
             $user = find_user_by_id((string)current_user_id());
         } elseif (current_email()) {
@@ -855,11 +1232,11 @@ function handle_auth(array $segments, string $method): void
             setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
         }
         session_destroy();
-        respond(['ok' => true]);
+        respond(['ok' => true, 'message' => 'Đã đăng xuất thành công.']);
     }
 
-    if (in_array($action, ['register', 'login', 'send-verification', 'verify', 'password-reset', 'reset-password'], true)) {
-        fail(410, 'auth/iam-only', 'Password registration/login is disabled. Use IAM/Azure login.');
+    if (in_array($action, ['send-verification', 'verify', 'password-reset', 'reset-password'], true)) {
+        fail(501, 'auth/not-implemented', 'Chức năng này chưa được kích hoạt.');
     }
 
     fail(404, 'not-found', 'Auth endpoint not found.');
@@ -1277,15 +1654,15 @@ function handle_dev(array $segments, string $method): void
 {
     $action = $segments[1] ?? '';
     if ($action === 'bypass' && $method === 'GET') {
-        if (!dev_bypass_enabled()) {
+        if (!dev_bypass_enabled() && !is_local_request()) {
             fail(404, 'not-found', 'Dev endpoint not available.');
         }
 
-        $user = mock_bypass_user();
+        $user = find_user('hocvien01@grad.edu.vn') ?? mock_bypass_user();
         session_regenerate_id(true);
         $_SESSION['user_id'] = $user['user_id'];
         $_SESSION['user_email'] = $user['email'];
-        $_SESSION['iam_subject'] = $user['iam_subject'] ?? null;
+        $_SESSION['iam_subject'] = 'dev-bypass-student';
 
         if ((string)($_GET['format'] ?? '') === 'json') {
             respond([
@@ -1303,15 +1680,15 @@ function handle_dev(array $segments, string $method): void
         redirect_to($next);
     }
     if ($action === 'bypass' && $method === 'POST') {
-        if (!dev_bypass_enabled()) {
+        if (!dev_bypass_enabled() && !is_local_request()) {
             fail(404, 'not-found', 'Dev endpoint not available.');
         }
 
-        $user = mock_bypass_user();
+        $user = find_user('hocvien01@grad.edu.vn') ?? mock_bypass_user();
         session_regenerate_id(true);
         $_SESSION['user_id'] = $user['user_id'];
         $_SESSION['user_email'] = $user['email'];
-        $_SESSION['iam_subject'] = $user['iam_subject'] ?? null;
+        $_SESSION['iam_subject'] = 'dev-bypass-student';
 
         respond([
             'ok' => true,
@@ -2701,6 +3078,100 @@ function handle_dashboard(array $segments, string $method): void
     ]]);
 }
 
+function handle_ai(array $segments, string $method): void
+{
+    $action = $segments[1] ?? '';
+    $pdo = db();
+
+    // Student endpoints (available to logged-in students, technicians, and admins)
+    if ($action === 'student-advice') {
+        if ($method !== 'GET') {
+            fail(405, 'method-not-allowed', 'Student advice only supports GET.');
+        }
+        $user = require_user();
+        try {
+            $data = ai_get_student_advice($pdo, $user);
+            respond(['data' => $data]);
+        } catch (Throwable $e) {
+            report_exception($e, 'ai-student-advice');
+            fail(500, 'ai-advice-error', 'Unable to generate student advice.');
+        }
+    }
+
+    if ($action === 'student-chat') {
+        if ($method !== 'POST') {
+            fail(405, 'method-not-allowed', 'Student chat only supports POST.');
+        }
+        $user = require_user();
+        $body = json_body();
+        $message = trim((string)($body['message'] ?? $body['question'] ?? ''));
+        if ($message === '') {
+            fail(400, 'bad-request', 'Tin nhắn không được để trống.');
+        }
+        try {
+            $result = ai_student_chat($pdo, $user, $message);
+            respond(['data' => $result]);
+        } catch (Throwable $e) {
+            report_exception($e, 'ai-student-chat');
+            fail(500, 'ai-student-chat-error', 'Unable to process student chat.');
+        }
+    }
+
+    // Admin endpoints (require instructor/admin privilege)
+    $actor = require_admin();
+
+    if ($action === 'diagnostic-report') {
+        if ($method !== 'GET') {
+            fail(405, 'method-not-allowed', 'Diagnostic report only supports GET.');
+        }
+        $classId = isset($_GET['class_id']) ? (string)$_GET['class_id'] : null;
+        try {
+            $data = ai_get_diagnostic_report($pdo, $classId);
+            respond(['data' => $data]);
+        } catch (Throwable $e) {
+            report_exception($e, 'ai-diagnostic-report');
+            fail(500, 'ai-report-error', 'Unable to generate AI diagnostic report.');
+        }
+    }
+
+    if ($action === 'chat') {
+        if ($method !== 'POST') {
+            fail(405, 'method-not-allowed', 'AI chat endpoint only supports POST.');
+        }
+        $body = json_body();
+        $message = trim((string)($body['message'] ?? $body['question'] ?? ''));
+        $classId = isset($body['class_id']) ? (string)$body['class_id'] : null;
+
+        if ($message === '') {
+            fail(400, 'bad-request', 'Tin nhắn không được để trống.');
+        }
+
+        try {
+            $result = ai_chat_query($pdo, $message, $classId, $actor);
+            respond(['data' => $result]);
+        } catch (Throwable $e) {
+            report_exception($e, 'ai-chat-query');
+            fail(500, 'ai-chat-error', 'Unable to process AI chat query.');
+        }
+    }
+
+    if ($action === 'send-reminders') {
+        if ($method !== 'POST') {
+            fail(405, 'method-not-allowed', 'Send reminders only supports POST.');
+        }
+        $body = json_body();
+        try {
+            $result = ai_send_reminders($pdo, $actor, $body);
+            respond(['data' => $result]);
+        } catch (Throwable $e) {
+            report_exception($e, 'ai-send-reminders');
+            fail(500, 'ai-reminders-error', 'Unable to send AI reminders.');
+        }
+    }
+
+    fail(404, 'not-found', 'AI endpoint not found.');
+}
+
 try {
     if ($resource === 'auth') {
         handle_auth($segments, $method);
@@ -2726,6 +3197,8 @@ try {
         handle_reports($segments, $method);
     } elseif ($resource === 'dashboard') {
         handle_dashboard($segments, $method);
+    } elseif ($resource === 'ai') {
+        handle_ai($segments, $method);
     } elseif ($resource === 'health') {
         handle_health($method);
     } elseif (is_root_iam_callback($resource, $method)) {

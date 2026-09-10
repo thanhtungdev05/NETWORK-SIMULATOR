@@ -77,8 +77,32 @@
   let _chartMode = 'score'; // 'score' | 'frequency'
   let _selectedMonth = ''; // 'YYYY-MM'
 
+  // Student AI Coach & Tutor elements (Part 2)
+  let _studentAiAdvice = null;
+  let _aiChatLoading = false;
+
+  const elAiCoachCard = document.getElementById('ai-coach-card');
+  const elAiStatusPill = document.getElementById('ai-status-pill');
+  const elAiFeedbackText = document.getElementById('ai-feedback-text');
+  const elAiMistakeAlert = document.getElementById('ai-mistake-alert');
+  const elAiMistakeContent = document.getElementById('ai-mistake-content');
+  const elAiNextLabName = document.getElementById('ai-next-lab-name');
+  const elAiNextDeviceName = document.getElementById('ai-next-device-name');
+  const btnAiLaunchLab = document.getElementById('btn-ai-launch-lab');
+  const btnHeroOpenTutor = document.getElementById('btn-hero-open-tutor');
+
+  const studentAiFab = document.getElementById('student-ai-fab');
+  const studentAiBackdrop = document.getElementById('student-ai-backdrop');
+  const studentAiDrawer = document.getElementById('student-ai-drawer');
+  const studentAiCloseBtn = document.getElementById('student-ai-close-btn');
+  const studentAiChatBody = document.getElementById('student-ai-chat-body');
+  const studentAiInput = document.getElementById('student-ai-input');
+  const studentAiSendBtn = document.getElementById('student-ai-send-btn');
+  const studentAiChipsBar = document.getElementById('student-ai-chips-bar');
+
   function init() {
     setupEventListeners();
+    setupStudentAiEvents();
     fetchDashboardData();
   }
 
@@ -177,6 +201,7 @@
         }
         _dashboardData = data.data;
         renderDashboard(_dashboardData);
+        fetchStudentAiAdvice();
         showLoading(false);
       })
       .catch(err => {
@@ -207,7 +232,7 @@
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
           <circle cx="12" cy="7" r="4"></circle>
         </svg>
-        <span>Mã KTV: <strong>${escapeHTML(user.employee_id || 'Chưa có')}</strong></span>
+        <span>Mã sinh viên: <strong>${escapeHTML(user.employee_id || 'Chưa có')}</strong></span>
       `;
     }
 
@@ -224,14 +249,14 @@
     }
 
     if (elTagRegion) {
-      const regionName = user.region_name || user.unit_name || 'FTC Toàn quốc';
+      const regionName = user.region_name || user.unit_name || 'Phòng Thực Hành Mạng UTH';
       elTagRegion.innerHTML = `
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="10"></circle>
           <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
           <path d="M2 12h20"></path>
         </svg>
-        <span>Khu vực: <strong>${escapeHTML(regionName)}</strong></span>
+        <span>Đơn vị: <strong>${escapeHTML(regionName)}</strong></span>
       `;
     }
 
@@ -650,8 +675,8 @@
               <span class="lab-title-text">${escapeHTML(lab.lab_name)}</span>
               ${attemptInfo ? `<span class="lab-attempt-tag">${attemptInfo}</span>` : ''}
             </div>
-            <a class="btn-start-lab" href="/portal.html?device=${encodeURIComponent(dev.device_id)}&lab=${encodeURIComponent(lab.lab_id)}">
-              Làm bài →
+            <a class="btn-start-lab" href="/portal.html?device=${encodeURIComponent(dev.device_id)}&lab=${encodeURIComponent(lab.lab_id)}&mode=practice">
+              ${lab.status === 'passed' ? 'Luyện lại ↻' : 'Làm bài →'}
             </a>
           </div>
         `;
@@ -848,6 +873,270 @@
     }).finally(() => {
       window.location.href = '/login/';
     });
+  }
+
+  // ── Student AI Learning Coach & Tutor (Part 2) ─────────────────────
+
+  function setupStudentAiEvents() {
+    if (studentAiFab) {
+      studentAiFab.addEventListener('click', openAiTutorDrawer);
+    }
+    if (btnHeroOpenTutor) {
+      btnHeroOpenTutor.addEventListener('click', openAiTutorDrawer);
+    }
+    if (studentAiCloseBtn) {
+      studentAiCloseBtn.addEventListener('click', closeAiTutorDrawer);
+    }
+    if (studentAiBackdrop) {
+      studentAiBackdrop.addEventListener('click', closeAiTutorDrawer);
+    }
+    if (studentAiSendBtn) {
+      studentAiSendBtn.addEventListener('click', handleStudentAiSend);
+    }
+    if (studentAiInput) {
+      studentAiInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          handleStudentAiSend();
+        }
+      });
+    }
+    if (studentAiChipsBar) {
+      studentAiChipsBar.addEventListener('click', (e) => {
+        const btn = e.target.closest('.student-chip-btn');
+        if (btn && btn.dataset.query) {
+          sendStudentChatMessage(btn.dataset.query);
+        }
+      });
+    }
+  }
+
+  function openAiTutorDrawer() {
+    if (studentAiDrawer) studentAiDrawer.classList.add('active');
+    if (studentAiBackdrop) studentAiBackdrop.classList.add('active');
+    if (studentAiInput) {
+      setTimeout(() => studentAiInput.focus(), 300);
+    }
+  }
+
+  function closeAiTutorDrawer() {
+    if (studentAiDrawer) studentAiDrawer.classList.remove('active');
+    if (studentAiBackdrop) studentAiBackdrop.classList.remove('active');
+  }
+
+  function fetchStudentAiAdvice() {
+    fetch('/api/index.php/ai/student-advice', {
+      method: 'GET',
+      credentials: 'include',
+      headers: { 'Accept': 'application/json' }
+    })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (!data || !data.data) return;
+        _studentAiAdvice = data.data;
+        renderStudentAiCoach(_studentAiAdvice);
+      })
+      .catch(err => {
+        console.warn('[PersonalDashboard] Error fetching AI advice:', err);
+      });
+  }
+
+  function renderStudentAiCoach(advice) {
+    if (!advice) return;
+    const student = advice.student || {};
+    const prog = advice.progress || {};
+    const nextLab = advice.next_recommended_lab;
+    const mistakes = advice.personal_mistakes || [];
+
+    // 1. Status Pill
+    if (elAiStatusPill) {
+      elAiStatusPill.className = `ai-status-pill ${prog.status_level || 'on_track'}`;
+      let icon = '🎯';
+      if (prog.status_level === 'needs_acceleration') icon = '⚡';
+      if (prog.status_level === 'excellent') icon = '⭐';
+      elAiStatusPill.textContent = `${icon} ${prog.status_text || 'Đang bám sát tiến độ'}`;
+    }
+
+    // 2. Feedback Text
+    if (elAiFeedbackText) {
+      elAiFeedbackText.innerHTML = formatMarkdown(advice.ai_feedback || 'Hãy tiếp tục rèn luyện các bài thực hành được giao.');
+    }
+
+    // 3. Mistake Alert
+    if (elAiMistakeAlert && elAiMistakeContent) {
+      if (mistakes.length > 0) {
+        const m = mistakes[0];
+        elAiMistakeContent.innerHTML = `
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+            <strong>⚠️ Điểm nghẽn từ bài vừa làm: ${escapeHTML(m.lab_name)} (${escapeHTML(m.device_name)})</strong>
+            <span class="ai-mistake-pill actual" style="font-size: 11px;">${escapeHTML(m.category)}</span>
+          </div>
+          <div style="margin-bottom: 8px; color: #78350f;">
+            💡 <strong>Lời khuyên AI:</strong> ${escapeHTML(m.tip)}
+          </div>
+          <div class="ai-mistake-details">
+            <span class="ai-mistake-pill">🎯 Tiêu chí: <strong>${escapeHTML(m.rule_name)}</strong></span>
+            <span class="ai-mistake-pill expected">✓ Yêu cầu: <code>${escapeHTML(m.expected)}</code></span>
+            <span class="ai-mistake-pill actual">✖ Thực tế: <code>${escapeHTML(m.actual || '(Chưa lưu)')}</code></span>
+          </div>
+        `;
+        elAiMistakeAlert.style.display = 'block';
+      } else {
+        elAiMistakeAlert.style.display = 'none';
+      }
+    }
+
+    // 4. Next Lab Card
+    if (nextLab) {
+      if (elAiNextLabName) elAiNextLabName.textContent = nextLab.lab_name;
+      if (elAiNextDeviceName) elAiNextDeviceName.textContent = `Thiết bị: ${nextLab.device_name}`;
+      if (btnAiLaunchLab) {
+        btnAiLaunchLab.href = nextLab.portal_url || `/portal.html?device=${nextLab.device_id}&lab=${nextLab.lab_id}&mode=practice`;
+        btnAiLaunchLab.style.display = 'inline-flex';
+      }
+    } else {
+      if (elAiNextLabName) elAiNextLabName.textContent = '🎉 Bạn đã hoàn thành toàn bộ bài tập!';
+      if (elAiNextDeviceName) elAiNextDeviceName.textContent = 'Tất cả bài thực hành đã đạt tiêu chuẩn 100%';
+      if (btnAiLaunchLab) btnAiLaunchLab.style.display = 'none';
+    }
+
+    initStudentTutorDrawer(advice);
+  }
+
+  function initStudentTutorDrawer(advice) {
+    if (!studentAiChatBody || studentAiChatBody.children.length > 0) return;
+    const student = advice.student || {};
+    const prog = advice.progress || {};
+    const name = student.display_name || 'bạn';
+
+    const welcomeMsg = `Chào bạn **${name}**! 👋\n\nTôi là **Gia Sư AI** hỗ trợ học tập mạng. Hiện bạn đã hoàn thành **${prog.passed_count || 0}/${prog.total_assigned || 0} bài** (${prog.completion_pct || 0}%).\n\nBạn có thể hỏi tôi:\n- *Tôi cần làm bài nào tiếp theo?*\n- *Tại sao bài trước của tôi bị trừ điểm?*\n- *Hướng dẫn cấu hình PPPoE chuẩn quy trình?*`;
+    appendStudentChatMessage('ai', welcomeMsg);
+  }
+
+  function handleStudentAiSend() {
+    if (!studentAiInput) return;
+    const text = studentAiInput.value.trim();
+    if (!text) return;
+    studentAiInput.value = '';
+    sendStudentChatMessage(text);
+  }
+
+  function sendStudentChatMessage(text) {
+    if (_aiChatLoading) return;
+    _aiChatLoading = true;
+    if (studentAiSendBtn) studentAiSendBtn.disabled = true;
+
+    appendStudentChatMessage('user', text);
+    const typingId = appendStudentTypingIndicator();
+
+    fetch('/api/index.php/ai/student-chat', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ message: text })
+    })
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then(json => {
+        removeStudentTypingIndicator(typingId);
+        const data = json.data || {};
+        appendStudentChatMessage('ai', data.answer || 'Tôi đã tiếp nhận câu hỏi của bạn.');
+        if (data.suggested_questions && data.suggested_questions.length > 0) {
+          updateStudentPromptChips(data.suggested_questions);
+        }
+      })
+      .catch(err => {
+        removeStudentTypingIndicator(typingId);
+        appendStudentChatMessage('ai', `⚠️ Không thể kết nối với Gia Sư AI (${err.message}). Vui lòng thử lại.`);
+      })
+      .finally(() => {
+        _aiChatLoading = false;
+        if (studentAiSendBtn) studentAiSendBtn.disabled = false;
+      });
+  }
+
+  function appendStudentChatMessage(role, text) {
+    if (!studentAiChatBody) return;
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `student-chat-msg ${role}`;
+
+    const avatar = document.createElement('div');
+    avatar.className = 'student-chat-avatar';
+    avatar.textContent = role === 'ai' ? '🤖' : '👤';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'student-chat-bubble';
+    bubble.innerHTML = role === 'user' ? escapeHTML(text).replace(/\n/g, '<br>') : formatMarkdown(text);
+
+    msgDiv.appendChild(avatar);
+    msgDiv.appendChild(bubble);
+    studentAiChatBody.appendChild(msgDiv);
+    studentAiChatBody.scrollTop = studentAiChatBody.scrollHeight;
+  }
+
+  function appendStudentTypingIndicator() {
+    if (!studentAiChatBody) return null;
+    const id = 'student_typing_' + Date.now();
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'student-chat-msg ai';
+    msgDiv.id = id;
+
+    const avatar = document.createElement('div');
+    avatar.className = 'student-chat-avatar';
+    avatar.textContent = '🤖';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'student-chat-bubble';
+    bubble.style.color = '#64748b';
+    bubble.innerHTML = '<em>Gia sư AI đang phân tích bài thi và chuẩn bị câu trả lời...</em>';
+
+    msgDiv.appendChild(avatar);
+    msgDiv.appendChild(bubble);
+    studentAiChatBody.appendChild(msgDiv);
+    studentAiChatBody.scrollTop = studentAiChatBody.scrollHeight;
+    return id;
+  }
+
+  function removeStudentTypingIndicator(id) {
+    if (!id) return;
+    const el = document.getElementById(id);
+    if (el) el.remove();
+  }
+
+  function updateStudentPromptChips(questions) {
+    if (!studentAiChipsBar || !questions || questions.length === 0) return;
+    studentAiChipsBar.innerHTML = '';
+    questions.forEach(q => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'student-chip-btn';
+      btn.dataset.query = q;
+      btn.textContent = q;
+      studentAiChipsBar.appendChild(btn);
+    });
+  }
+
+  function formatMarkdown(text) {
+    if (!text) return '';
+    let escaped = escapeHTML(text);
+
+    escaped = escaped.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+    escaped = escaped.replace(/^#### (.*$)/gim, '<h4>$1</h4>');
+    escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    escaped = escaped.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    escaped = escaped.replace(/`([^`]+)`/g, '<code>$1</code>');
+    escaped = escaped.replace(/^\s*-\s+(.*$)/gim, '<li>$1</li>');
+    escaped = escaped.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+    escaped = escaped.replace(/^\s*(\d+)\.\s+(.*$)/gim, '<li>$2</li>');
+    escaped = escaped.replace(/\n\n/g, '</p><p>');
+    escaped = escaped.replace(/\n/g, '<br>');
+
+    return `<p>${escaped}</p>`;
   }
 
   // ── Helper Utilities ───────────────────────────────────────────────

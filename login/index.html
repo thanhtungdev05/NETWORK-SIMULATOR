@@ -3,44 +3,220 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Đăng nhập hệ thống FTC - Giả lập Thiết bị bằng tài khoản IAM.">
+  <meta name="description" content="Hệ thống Đào tạo & Giả lập Cấu hình Thiết bị Mạng - Đồ án Tốt nghiệp">
   <meta name="theme-color" content="#071632">
-  <title>Đăng nhập | FTC - Giả lập Thiết bị</title>
-  <link rel="stylesheet" href="styles.css">
+  <title>Đăng nhập & Đăng ký | Hệ Thống Giả Lập Mạng</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=20260910-v6">
 </head>
 <body>
   <main class="login-shell">
     <section class="login-card" aria-labelledby="login-title">
-      <div class="brand-logo-wrap">
-        <img
-          class="brand-logo"
-          src="../assets/logoFPT.png"
-          alt="FTC - FPT Telecom"
-          width="286"
-          height="318"
-        >
+      <!-- Brand & Header -->
+      <div class="brand-header">
+        <div class="brand-badge">
+          <span class="badge-icon">🌐</span>
+          <span class="badge-text">NETWORK SIMULATOR</span>
+        </div>
+        <h1 id="login-title" class="brand-title">Hệ Thống Giả Lập Thiết Bị</h1>
+        <p class="brand-subtitle">Nền tảng đào tạo và thực hành cấu hình mạng viễn thông</p>
       </div>
 
-      <div class="login-heading">
-        <h1 id="login-title">FTC - Giả lập Thiết bị</h1>
-        <p class="login-description">Đăng nhập để tiếp tục vào hệ thống đào tạo và thực hành thiết bị.</p>
+      <!-- Navigation Tabs -->
+      <div class="auth-tabs" role="tablist">
+        <button type="button" class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Đăng Nhập</button>
+        <button type="button" class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">Đăng Ký</button>
       </div>
 
-      <a class="iam-button" id="iam-login" href="/api/index.php/iam/login">
-        <span class="iam-icon" aria-hidden="true">
-          <i></i><i></i><i></i><i></i>
-        </span>
-        <span class="button-label">Đăng nhập bằng IAM</span>
-        <span class="button-arrow" aria-hidden="true">→</span>
-      </a>
+      <!-- Alert Box -->
+      <div id="auth-alert" class="auth-alert" style="display: none;" role="alert">
+        <span class="alert-icon" id="alert-icon">⚠️</span>
+        <span class="alert-message" id="alert-message"></span>
+      </div>
 
-      <p class="security-note">
-        <span aria-hidden="true">●</span>
-        Sử dụng tài khoản IAM nội bộ của bạn
-      </p>
+      <!-- TAB 1: FORM ĐĂNG NHẬP -->
+      <form id="form-login" class="auth-form" onsubmit="event.preventDefault(); handleLoginSubmit(event); return false;" autocomplete="on">
+        <div class="form-group">
+          <label for="login-email">Email tài khoản</label>
+          <div class="input-wrap">
+            <span class="input-icon">✉️</span>
+            <input type="email" id="login-email" name="email" placeholder="vidu@grad.edu.vn" required autocomplete="email">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="login-password">Mật khẩu</label>
+          <div class="input-wrap">
+            <span class="input-icon">🔒</span>
+            <input type="password" id="login-password" name="password" placeholder="••••••••" required autocomplete="current-password">
+            <button type="button" class="btn-toggle-pwd" onclick="togglePasswordVisibility('login-password', this)" title="Hiện/Ẩn mật khẩu">👁️</button>
+          </div>
+          <div style="display: flex; justify-content: flex-end; margin-top: 2px;">
+            <a href="javascript:void(0)" onclick="switchAuthTab('forgot')" class="forgot-link" style="font-size: 12px; color: #60a5fa; text-decoration: none; font-weight: 500;">Quên mật khẩu?</a>
+          </div>
+        </div>
+
+        <!-- Tài khoản demo nhanh -->
+        <div class="quick-demo-section">
+          <span class="quick-demo-label">⚡ Chọn tài khoản demo nhanh:</span>
+          <div class="quick-demo-chips">
+            <button type="button" class="chip-btn" onclick="fillQuickAccount('admin@grad.edu.vn', 'Admin@123')" title="Quyền Quản trị viên">👑 Admin</button>
+            <button type="button" class="chip-btn" onclick="fillQuickAccount('giangvien@grad.edu.vn', 'Teacher@123')" title="Quyền Giảng viên">👨‍🏫 Giảng viên</button>
+            <button type="button" class="chip-btn" onclick="fillQuickAccount('hocvien01@grad.edu.vn', 'Student@123')" title="Quyền Học viên">🎓 Học viên</button>
+          </div>
+        </div>
+
+        <button type="button" id="btn-submit-login" class="btn-primary-auth" onclick="handleLoginSubmit(event)">
+          <span class="btn-text">Đăng Nhập</span>
+          <span class="btn-spinner" style="display: none;">⏳ Đang đăng nhập...</span>
+        </button>
+
+        <p class="switch-prompt">
+          Chưa có tài khoản? <a href="javascript:void(0)" onclick="switchAuthTab('register')">👉 Bấm vào đây để Đăng Ký tài khoản mới</a>
+        </p>
+      </form>
+
+      <!-- TAB 2: FORM ĐĂNG KÝ -->
+      <form id="form-register" class="auth-form" style="display: none;" onsubmit="event.preventDefault(); handleRegisterSubmit(event); return false;" autocomplete="off">
+        <div class="form-group">
+          <label for="reg-name">Họ và tên <span class="req">*</span></label>
+          <div class="input-wrap">
+            <span class="input-icon">👤</span>
+            <input type="text" id="reg-name" name="name" placeholder="Nguyễn Văn A" required autocomplete="name">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="reg-email">Email sinh viên UTH <span class="req">*</span></label>
+          <div class="input-row-otp">
+            <div class="input-wrap input-wrap-flex">
+              <span class="input-icon">✉️</span>
+              <input type="email" id="reg-email" name="email" placeholder="tungdt5101@ut.edu.vn" required autocomplete="email">
+            </div>
+            <button type="button" id="btn-send-otp" class="btn-otp-action" onclick="handleSendOtp(event)">
+              <span class="otp-btn-text">Nhận mã OTP</span>
+              <span class="otp-btn-spinner" style="display: none;">⏳ Đang gửi...</span>
+            </button>
+          </div>
+          <small class="input-hint" style="font-size: 12px; color: #38bdf8; margin-top: 5px; display: block; font-weight: 500;">
+            🎓 Bắt buộc sử dụng email sinh viên trường: <strong>@ut.edu.vn</strong>
+          </small>
+        </div>
+
+        <div class="form-group" id="group-reg-otp">
+          <label for="reg-otp">Mã xác thực OTP (6 chữ số) <span class="req">*</span></label>
+          <div class="input-wrap">
+            <span class="input-icon">🔑</span>
+            <input type="text" id="reg-otp" name="otp" class="input-otp-field" placeholder="Nhập mã 6 số gửi về Gmail trường" maxlength="6" inputmode="numeric" autocomplete="one-time-code" required>
+          </div>
+          <small id="otp-hint-text" class="input-hint" style="font-size: 12px; color: #94a3b8; margin-top: 4px; display: block;">
+            ⏱️ Bấm "Nhận mã OTP" để hệ thống gửi mã xác thực về hòm thư trường (hiệu lực 5 phút).
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label for="reg-student-id">Mã sinh viên (tùy chọn)</label>
+          <div class="input-wrap">
+            <span class="input-icon">🆔</span>
+            <input type="text" id="reg-student-id" name="student_id" placeholder="Tự động lấy từ email hoặc nhập ví dụ: 2251010001">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="reg-password">Mật khẩu <span class="req">*</span></label>
+          <div class="input-wrap">
+            <span class="input-icon">🔒</span>
+            <input type="password" id="reg-password" name="password" placeholder="Tối thiểu 6 ký tự" required autocomplete="new-password">
+            <button type="button" class="btn-toggle-pwd" onclick="togglePasswordVisibility('reg-password', this)" title="Hiện/Ẩn mật khẩu">👁️</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="reg-confirm-password">Xác nhận mật khẩu <span class="req">*</span></label>
+          <div class="input-wrap">
+            <span class="input-icon">🔑</span>
+            <input type="password" id="reg-confirm-password" name="confirm_password" placeholder="Nhập lại mật khẩu" required autocomplete="new-password">
+            <button type="button" class="btn-toggle-pwd" onclick="togglePasswordVisibility('reg-confirm-password', this)" title="Hiện/Ẩn mật khẩu">👁️</button>
+          </div>
+        </div>
+
+        <button type="button" id="btn-submit-register" class="btn-primary-auth" onclick="handleRegisterSubmit(event)">
+          <span class="btn-text">Tạo Tài Khoản Học Viên</span>
+          <span class="btn-spinner" style="display: none;">⏳ Đang tạo tài khoản...</span>
+        </button>
+
+        <p class="switch-prompt">
+          Đã có tài khoản? <a href="javascript:void(0)" onclick="switchAuthTab('login')">👉 Quay lại Đăng nhập</a>
+        </p>
+      </form>
+
+      <!-- TAB 3: FORM QUÊN MẬT KHẨU -->
+      <form id="form-forgot" class="auth-form" style="display: none;" onsubmit="event.preventDefault(); handleResetPasswordSubmit(event); return false;" autocomplete="off">
+        <div class="form-group">
+          <label for="forgot-email">Email sinh viên UTH <span class="req">*</span></label>
+          <div class="input-row-otp">
+            <div class="input-wrap input-wrap-flex">
+              <span class="input-icon">✉️</span>
+              <input type="email" id="forgot-email" name="email" placeholder="tungdt5101@ut.edu.vn" required autocomplete="email">
+            </div>
+            <button type="button" id="btn-send-forgot-otp" class="btn-otp-action" onclick="handleSendForgotOtp(event)">
+              <span class="otp-btn-text">Nhận mã OTP</span>
+              <span class="otp-btn-spinner" style="display: none;">⏳ Đang gửi...</span>
+            </button>
+          </div>
+          <small class="input-hint" style="font-size: 12px; color: #94a3b8; margin-top: 4px; display: block;">
+            Mã OTP đặt lại mật khẩu sẽ được gửi trực tiếp đến Gmail trường của bạn.
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label for="forgot-otp">Mã xác thực OTP (6 chữ số) <span class="req">*</span></label>
+          <div class="input-wrap">
+            <span class="input-icon">🔑</span>
+            <input type="text" id="forgot-otp" name="otp" class="input-otp-field" placeholder="Nhập mã 6 số từ Gmail" maxlength="6" inputmode="numeric" autocomplete="one-time-code" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="forgot-new-password">Mật khẩu mới <span class="req">*</span></label>
+          <div class="input-wrap">
+            <span class="input-icon">🔒</span>
+            <input type="password" id="forgot-new-password" name="new_password" placeholder="Tối thiểu 6 ký tự" required autocomplete="new-password">
+            <button type="button" class="btn-toggle-pwd" onclick="togglePasswordVisibility('forgot-new-password', this)" title="Hiện/Ẩn mật khẩu">👁️</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="forgot-confirm-password">Xác nhận mật khẩu mới <span class="req">*</span></label>
+          <div class="input-wrap">
+            <span class="input-icon">🔑</span>
+            <input type="password" id="forgot-confirm-password" name="confirm_new_password" placeholder="Nhập lại mật khẩu mới" required autocomplete="new-password">
+            <button type="button" class="btn-toggle-pwd" onclick="togglePasswordVisibility('forgot-confirm-password', this)" title="Hiện/Ẩn mật khẩu">👁️</button>
+          </div>
+        </div>
+
+        <button type="button" id="btn-submit-reset-password" class="btn-primary-auth" onclick="handleResetPasswordSubmit(event)">
+          <span class="btn-text">Đặt Lại Mật Khẩu</span>
+          <span class="btn-spinner" style="display: none;">⏳ Đang xử lý...</span>
+        </button>
+
+        <p class="switch-prompt">
+          Nhớ lại mật khẩu rồi? <a href="javascript:void(0)" onclick="switchAuthTab('login')">👉 Quay lại Đăng nhập</a>
+        </p>
+      </form>
+
+      <!-- Footer Quick Mode -->
+      <div class="auth-footer-bypass">
+        <a id="link-dev-bypass" href="/api/index.php/dev/bypass?next=/portal.html" class="btn-bypass-subtle">
+          ⚡ Vào nhanh chế độ thực hành học viên (Bypass)
+        </a>
+      </div>
+
     </section>
   </main>
 
-  <script src="app.js?v=local-bypass-20260805"></script>
+  <script src="app.js?v=20260910-v8"></script>
 </body>
 </html>

@@ -569,12 +569,7 @@
   }
 
   function redirectToLogin() {
-    const isLocalHost = ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
-    if (isLocalHost) {
-      window.location.replace('/api/index.php/dev/bypass?next=' + encodeURIComponent(window.location.origin + '/portal.html'));
-    } else {
-      window.location.replace('/login/index.html');
-    }
+    window.location.replace('/login/index.html');
   }
 
   function renderUserProfile() {
@@ -611,7 +606,7 @@
     } else {
       section.innerHTML = `
         <div class="auth-container">
-          <button class="btn-auth btn-login" id="btn-iam-login">Đăng nhập IAM</button>
+          <button class="btn-auth btn-login" id="btn-iam-login">Đăng nhập</button>
         </div>
       `;
       const btnIamLogin = document.getElementById('btn-iam-login');

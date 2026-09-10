@@ -6,9 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#f3f6fb">
     <meta name="color-scheme" content="light">
-    <title>Dashboard giám sát thực hành KTV | FTC</title>
-    <link rel="stylesheet" href="css/styles.css?v=20260907-class-edit-v7">
-    <link rel="stylesheet" href="css/dashboard-professional.css?v=20260907-class-edit-v7">
+    <title>Dashboard Giám Sát Đào Tạo & Thực Hành Mạng</title>
+    <link rel="stylesheet" href="css/styles.css?v=20260910-grad-v1">
+    <link rel="stylesheet" href="css/dashboard-professional.css?v=20260910-grad-v1">
+    <link rel="stylesheet" href="css/ai-copilot.css?v=20260910-ai-v1">
 </head>
 
 <body>
@@ -20,10 +21,10 @@
     <div class="page" id="appPage" aria-busy="true">
         <aside class="sidebar" aria-label="Điều hướng dashboard">
             <div class="sidebar-brand">
-                <div class="sidebar-logo">FTC</div>
+                <div class="sidebar-logo">NET</div>
                 <div class="sidebar-brand-copy">
-                    <strong>Giám sát KTV</strong>
-                    <span>Trung tâm vận hành</span>
+                    <strong>Quản Lý Đào Tạo</strong>
+                    <span>Hệ Thống Giả Lập</span>
                 </div>
                 <button class="sidebar-toggle" type="button" id="sidebarToggle" aria-label="Thu gọn thanh điều hướng"
                     aria-expanded="true">
@@ -93,11 +94,11 @@
         <div class="app-main">
             <header class="topbar">
                 <div class="brand">
-                    <div class="brand-mark">FTC</div>
+                    <div class="brand-mark">NET</div>
                     <div>
-                        <div class="page-eyebrow" id="pageEyebrow">Tổng quan vận hành</div>
-                        <h1 id="pageTitle" tabindex="-1">Dashboard giám sát thực hành KTV</h1>
-                        <div class="subtitle" id="pageSubtitle">Theo dõi hoạt động, tiến độ và chất lượng thực hành
+                        <div class="page-eyebrow" id="pageEyebrow">Hệ Thống Đào Tạo & Giả Lập Mạng</div>
+                        <h1 id="pageTitle" tabindex="-1">Dashboard Giám Sát Đào Tạo & Thực Hành</h1>
+                        <div class="subtitle" id="pageSubtitle">Theo dõi hoạt động, tiến độ và chất lượng thực hành của học viên
                         </div>
                     </div>
                 </div>
@@ -1462,7 +1463,7 @@
 
                 <div class="report-export-file-preview">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l4 4v16H6zM14 2v5h5M9 13h6m-6 4h6" /></svg>
-                    <span><small>Tên file</small><strong id="reportExportFilename">FTC_Bao_cao.xlsx</strong></span>
+                    <span><small>Tên file</small><strong id="reportExportFilename">Bao_cao_dao_tao.xlsx</strong></span>
                 </div>
                 <p class="report-export-note">Workbook giữ đúng tiếng Việt, kiểu ngày/giờ, độ rộng cột và có sẵn bộ lọc, cố định tiêu đề.</p>
                 <div class="report-export-status" id="reportExportStatus" role="status" aria-live="polite" hidden></div>
@@ -1483,7 +1484,101 @@
 
     <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
 
+    <!-- AI Assistant Copilot Floating Action Button (FAB) -->
+    <button type="button" class="ai-copilot-fab" id="aiCopilotFab" aria-label="Mở Trợ lý AI Đào Tạo">
+        <span class="fab-sparkle" aria-hidden="true">✨</span>
+        <span>Trợ lý AI Đào Tạo</span>
+        <span class="fab-badge" id="aiFabBadge" style="display: none;">!</span>
+    </button>
+
+    <!-- AI Copilot Backdrop & Slide-in Drawer -->
+    <div class="ai-drawer-backdrop" id="aiDrawerBackdrop" aria-hidden="true"></div>
+    <aside class="ai-drawer" id="aiDrawer" role="dialog" aria-modal="true" aria-labelledby="aiDrawerTitle">
+        <!-- Header -->
+        <header class="ai-drawer-header">
+            <div class="ai-header-brand">
+                <div class="ai-header-icon" aria-hidden="true">🤖</div>
+                <div>
+                    <h3 class="ai-header-title" id="aiDrawerTitle">Trợ Lý AI Phân Tích & Giám Sát</h3>
+                    <p class="ai-header-subtitle">Hệ Thống Đào Tạo Mạng UTH NetLab</p>
+                </div>
+            </div>
+            <div class="ai-drawer-actions">
+                <button type="button" class="ai-header-btn" id="aiDrawerClose" aria-label="Đóng Trợ lý AI">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Subheader: Filter by Class -->
+        <div class="ai-filter-bar">
+            <span class="ai-filter-label">Phạm vi:</span>
+            <select class="ai-class-select" id="aiClassSelect" aria-label="Lọc theo lớp học">
+                <option value="all">Toàn bộ các lớp học (Tổng quan)</option>
+            </select>
+            <button type="button" class="ai-refresh-btn" id="aiRefreshBtn" title="Làm mới dữ liệu phân tích">
+                🔄 Cập nhật
+            </button>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="ai-tabs-nav" role="tablist">
+            <button type="button" class="ai-tab-btn active" id="aiTabDiagBtn" role="tab" aria-selected="true">
+                <span>📊 Chẩn đoán Điểm nghẽn</span>
+            </button>
+            <button type="button" class="ai-tab-btn" id="aiTabChatBtn" role="tab" aria-selected="false">
+                <span>💬 Hỏi đáp AI</span>
+            </button>
+        </div>
+
+        <!-- Tab 1: Chẩn đoán điểm nghẽn đào tạo -->
+        <div class="ai-tab-content active" id="aiTabDiagContent" role="tabpanel">
+            <!-- Dynamically rendered by ai-assistant.js -->
+        </div>
+
+        <!-- Tab 2: Trợ lý AI Hỏi Đáp -->
+        <div class="ai-tab-content" id="aiTabChatContent" role="tabpanel">
+            <div class="ai-chat-view">
+                <div class="ai-chat-messages" id="aiChatMessages">
+                    <div class="ai-msg assistant">
+                        <div class="ai-msg-avatar" aria-hidden="true">🤖</div>
+                        <div class="ai-msg-bubble">
+                            <p><strong>Xin chào Quản trị viên / Giảng viên!</strong></p>
+                            <p>Tôi là <strong>Trợ lý AI Giám sát Đào tạo UTH NetLab</strong>. Tôi đọc dữ liệu thực tế từ hệ thống để chẩn đoán điểm nghẽn, lỗi cấu hình sinh viên hay mắc phải và tiến độ từng học viên.</p>
+                            <p>Thầy/Cô có thể chọn các câu hỏi gợi ý bên dưới hoặc nhập câu hỏi trực tiếp để tra cứu ngay!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Suggested Question Chips -->
+                <div class="ai-prompt-chips-wrapper">
+                    <div class="ai-prompt-chips-title">Gợi ý câu hỏi nhanh:</div>
+                    <div class="ai-prompt-chips" id="aiPromptChips">
+                        <button type="button" class="ai-chip" data-prompt="Bài thực hành nào học viên hay làm sai nhất?">⚠️ Bài hay sai nhất?</button>
+                        <button type="button" class="ai-chip" data-prompt="Lỗi cấu hình nào học viên hay mắc phải nhất?">🔍 Lỗi cấu hình phổ biến?</button>
+                        <button type="button" class="ai-chip" data-prompt="Tiến độ của lớp CNTT-K22 như thế nào?">📈 Tiến độ lớp CNTT-K22?</button>
+                        <button type="button" class="ai-chip" data-prompt="Những học viên nào đang gặp khó khăn cần hỗ trợ?">🚨 Học viên cần hỗ trợ?</button>
+                        <button type="button" class="ai-chip" data-prompt="Tình hình làm bài của sinh viên Tùng Đặng Thanh?">👤 Tra cứu SV Tùng Đặng Thanh?</button>
+                    </div>
+                </div>
+
+                <!-- Chat Input Bar -->
+                <div class="ai-chat-input-bar">
+                    <input type="text" class="ai-chat-input" id="aiChatInput" placeholder="Hỏi AI về bài lab, lỗi sai, tiến độ sinh viên..." autocomplete="off">
+                    <button type="button" class="ai-chat-send-btn" id="aiChatSendBtn" aria-label="Gửi câu hỏi">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </aside>
+
     <script src="js/app.js?v=20260907-class-edit-v7"></script>
+    <script src="js/ai-assistant.js?v=20260910-ai-v1"></script>
 </body>
 
 </html>

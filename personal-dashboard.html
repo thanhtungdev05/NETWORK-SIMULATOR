@@ -4,12 +4,56 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Dashboard Tiến độ Cá nhân dành cho Kỹ thuật viên - FTC Network Simulator">
-  <title>Tiến Độ Cá Nhân — FTC Network Simulator</title>
+  <meta name="description" content="Dashboard Tiến độ Cá nhân dành cho Học viên - Hệ Thống Giả Lập Mạng">
+  <title>Tiến Độ Cá Nhân | Hệ Thống Giả Lập Mạng</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/personal-dashboard.css?v=20260904-result-clarity-v2">
+  <link rel="stylesheet" href="assets/personal-dashboard.css?v=20260910-v3-ultra">
+  <link rel="stylesheet" href="assets/personal-ai-coach.css?v=20260910-v3-ultra">
+  <style>
+    /* Critical Drawer & FAB styles to guarantee zero layout glitches */
+    .student-ai-drawer {
+      position: fixed !important;
+      top: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 480px !important;
+      max-width: 100vw !important;
+      background: #ffffff !important;
+      transform: translateX(100%) !important;
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      z-index: 10000 !important;
+      box-shadow: -8px 0 32px rgba(15, 23, 42, 0.25) !important;
+      display: flex !important;
+      flex-direction: column !important;
+    }
+    .student-ai-drawer.active {
+      transform: translateX(0) !important;
+    }
+    .student-ai-backdrop {
+      position: fixed !important;
+      inset: 0 !important;
+      background: rgba(15, 23, 42, 0.45) !important;
+      backdrop-filter: blur(4px) !important;
+      z-index: 9998 !important;
+      opacity: 0 !important;
+      visibility: hidden !important;
+      transition: opacity 0.3s ease, visibility 0.3s ease !important;
+      pointer-events: none !important;
+    }
+    .student-ai-backdrop.active {
+      opacity: 1 !important;
+      visibility: visible !important;
+      pointer-events: auto !important;
+    }
+    .student-ai-fab {
+      position: fixed !important;
+      bottom: 28px !important;
+      right: 28px !important;
+      z-index: 9999 !important;
+    }
+  </style>
 </head>
 
 <body>
@@ -22,9 +66,9 @@
       <div class="dash-brand-icon">🌐</div>
       <div>
         <div class="dash-brand-title">NETWORK SIMULATOR</div>
-        <div style="font-size: 11px; color: var(--text-muted); font-weight: 500;">Hệ thống giả lập mạng FPT</div>
+        <div style="font-size: 11px; color: var(--text-muted); font-weight: 500;">Hệ thống đào tạo & thực hành mạng</div>
       </div>
-      <span class="dash-brand-badge">Dashboard KTV</span>
+      <span class="dash-brand-badge">Tiến độ Học viên</span>
     </a>
 
     <div class="dash-nav-actions">
@@ -80,18 +124,65 @@
     <!-- ── GREETING HERO BANNER (Fig 1 Style) ── -->
     <section class="hero-banner" aria-label="Lời chào">
       <div class="hero-left">
-        <h1 class="hero-title" id="hero-greeting-title">Xin chào, Kỹ thuật viên! 👋</h1>
+        <h1 class="hero-title" id="hero-greeting-title">Xin chào, Học viên! 👋</h1>
         <p class="hero-desc" id="hero-greeting-desc">
           Theo dõi sát tiến độ rèn luyện bài lab, xem lịch sử phiên thực hành và nâng cao kỹ năng cấu hình thiết bị.
         </p>
         <div class="hero-tags">
-          <div class="hero-tag" id="tag-employee-id">Mã KTV: —</div>
+          <div class="hero-tag" id="tag-employee-id">Mã sinh viên: —</div>
           <div class="hero-tag" id="tag-class-name">Lớp: —</div>
-          <div class="hero-tag" id="tag-region">Khu vực: —</div>
+          <div class="hero-tag" id="tag-region">Đơn vị: —</div>
         </div>
       </div>
       <div class="hero-right-art">
         <div class="hero-illustration"></div>
+      </div>
+    </section>
+
+    <!-- ── AI LEARNING COACH & RECOMMENDATIONS CARD (PART 2) ── -->
+    <section class="ai-coach-card" id="ai-coach-card" aria-label="Gia sư AI & Lời khuyên cá nhân">
+      <div class="ai-coach-header">
+        <div class="ai-coach-brand">
+          <div class="ai-coach-avatar">🤖</div>
+          <div class="ai-coach-title-wrap">
+            <h3>Trợ Lý Học Tập AI & Khuyến Nghị Cá Nhân</h3>
+            <p>Hệ thống AI phân tích trực tiếp từ kết quả chấm điểm các bài lab và tiến độ của bạn</p>
+          </div>
+        </div>
+        <div class="ai-coach-actions">
+          <span class="ai-status-pill on_track" id="ai-status-pill">⚡ Đang tải đánh giá...</span>
+          <button type="button" class="btn-ai-open-tutor" id="btn-hero-open-tutor">
+            <span>💬 Hỏi Gia Sư AI</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="ai-coach-grid">
+        <!-- Left: Personalized AI feedback & Mistakes -->
+        <div class="ai-feedback-box">
+          <div class="ai-feedback-text" id="ai-feedback-text">
+            Đang phân tích dữ liệu thực hành và lịch sử bài nộp của bạn...
+          </div>
+          <div class="ai-mistake-alert" id="ai-mistake-alert" style="display: none;">
+            <div id="ai-mistake-content"></div>
+          </div>
+        </div>
+
+        <!-- Right: Recommended Next Lab -->
+        <div class="ai-recommended-card" id="ai-recommended-card">
+          <div>
+            <div class="ai-recommended-header">
+              <span>🎯 Bài Tiếp Theo Bạn Nên Làm</span>
+            </div>
+            <div class="ai-recommended-lab-name" id="ai-next-lab-name">Đang tải đề xuất...</div>
+            <div class="ai-recommended-device" id="ai-next-device-name">Thiết bị: —</div>
+          </div>
+          <div class="ai-recommended-actions">
+            <a href="#" class="btn-ai-launch-lab" id="btn-ai-launch-lab">
+              <span>🚀 Làm bài ngay →</span>
+            </a>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -330,7 +421,54 @@
 
   </main>
 
-  <script src="assets/personal-dashboard.js?v=20260904-result-clarity-v2"></script>
+  <!-- ══════════════════════════════════════════════════════════════════════════
+       STUDENT AI TUTOR FAB & DRAWER (PART 2)
+       ══════════════════════════════════════════════════════════════════════════ -->
+  <button type="button" class="student-ai-fab" id="student-ai-fab" title="Mở Gia Sư AI hỗ trợ học tập">
+    <span class="fab-icon">🤖</span>
+    <span>Gia Sư AI</span>
+  </button>
+
+  <div class="student-ai-backdrop" id="student-ai-backdrop"></div>
+
+  <aside class="student-ai-drawer" id="student-ai-drawer" aria-label="Gia Sư AI Trợ Lý Cá Nhân">
+    <div class="student-ai-header">
+      <div class="student-ai-header-brand">
+        <div class="student-ai-header-icon">🤖</div>
+        <div class="student-ai-header-text">
+          <h4>Gia Sư AI - Trợ Lý Cá Nhân</h4>
+          <p id="student-ai-subtitle">Đồng hành & hỗ trợ thực hành mạng 24/7</p>
+        </div>
+      </div>
+      <button type="button" class="student-ai-close-btn" id="student-ai-close-btn" title="Đóng trợ lý">✕</button>
+    </div>
+
+    <!-- Quick Prompt Chips -->
+    <div class="student-ai-chips-bar" id="student-ai-chips-bar">
+      <button type="button" class="student-chip-btn" data-query="Tôi cần làm bài nào tiếp theo?">🎯 Bài tiếp theo?</button>
+      <button type="button" class="student-chip-btn" data-query="Tại sao bài trước của tôi bị trừ điểm?">🔍 Tại sao bị trừ điểm?</button>
+      <button type="button" class="student-chip-btn" data-query="Làm sao để cấu hình PPPoE đúng?">🌐 Hướng dẫn PPPoE</button>
+      <button type="button" class="student-chip-btn" data-query="Hướng dẫn cấu hình DHCP Server?">🖥️ Cấu hình DHCP</button>
+    </div>
+
+    <!-- Chat Messages Body -->
+    <div class="student-ai-chat-body" id="student-ai-chat-body">
+      <!-- Default welcome msg rendered by JS -->
+    </div>
+
+    <!-- Chat Input Bar -->
+    <div class="student-ai-input-bar">
+      <input type="text" class="student-ai-input" id="student-ai-input" placeholder="Hỏi Gia Sư AI về bài lab, lỗi cấu hình..." autocomplete="off">
+      <button type="button" class="student-ai-send-btn" id="student-ai-send-btn" title="Gửi tin nhắn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+      </button>
+    </div>
+  </aside>
+
+  <script src="assets/personal-dashboard.js?v=20260910-v3-ultra"></script>
 </body>
 
 </html>

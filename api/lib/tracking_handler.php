@@ -73,7 +73,7 @@ function tracking_timer_response(array $timer): array
  */
 function sync_tracking_attempt(PDO $pdo, int $timerId, array $timer, ?string $userId): bool
 {
-    if (!$userId || ($timer['mode'] ?? '') !== 'Thực hành') {
+    if (!$userId) {
         return false;
     }
     $lookup = $pdo->prepare(
@@ -132,7 +132,9 @@ function sync_tracking_attempt(PDO $pdo, int $timerId, array $timer, ?string $us
         ]);
     }
     $passed = ($timer['is_passed'] ?? null) === true;
-    $attemptNo = isset($timer['practice_attempt_no']) ? (int)$timer['practice_attempt_no'] : null;
+    $attemptNo = isset($timer['practice_attempt_no']) && $timer['practice_attempt_no'] !== null
+        ? (int)$timer['practice_attempt_no']
+        : 1;
     if ($passed && $attemptNo !== null) {
         $update = $pdo->prepare(
             <<<'SQL'
@@ -392,23 +394,6 @@ function handle_tracking(array $segments, string $method): void
             fail(400, 'bad-request', "status must be 'completed', 'failed' or 'abandoned'.");
         }
 
-        $completedFirstTry = null;
-        $firstTryKey = array_key_exists('completed_first_try', $input)
-            ? 'completed_first_try'
-            : (array_key_exists('completedFirstTry', $input) ? 'completedFirstTry' : null);
-        if ($firstTryKey !== null && $input[$firstTryKey] !== null && $input[$firstTryKey] !== '') {
-            if (!is_bool($input[$firstTryKey])) {
-                fail(400, 'bad-request', 'completed_first_try must be a JSON boolean.');
-            }
-            $completedFirstTry = $input[$firstTryKey];
-        }
-        if ($status !== 'completed' && $completedFirstTry !== null) {
-            fail(400, 'bad-request', 'completed_first_try is only valid for completed sessions.');
-        }
-        if ($mode === 'Hướng dẫn') {
-            $completedFirstTry = null;
-        }
-
         $durationSec = $input['duration_sec'] ?? $input['durationSec'] ?? $input['duration'] ?? null;
         $durationWasProvided = $durationSec !== null;
         if ($durationSec !== null) {
@@ -440,6 +425,23 @@ function handle_tracking(array $segments, string $method): void
         }
         if (($status === 'completed' && $isPassed === false) || ($status === 'failed' && $isPassed === true)) {
             fail(400, 'bad-request', 'status and is_passed describe conflicting outcomes.');
+        }
+
+        $completedFirstTry = null;
+        $firstTryKey = array_key_exists('completed_first_try', $input)
+            ? 'completed_first_try'
+            : (array_key_exists('completedFirstTry', $input) ? 'completedFirstTry' : null);
+        if ($firstTryKey !== null && $input[$firstTryKey] !== null && $input[$firstTryKey] !== '') {
+            if (!is_bool($input[$firstTryKey])) {
+                fail(400, 'bad-request', 'completed_first_try must be a JSON boolean.');
+            }
+            $completedFirstTry = $input[$firstTryKey];
+        }
+        if ($status !== 'completed' && $completedFirstTry !== null) {
+            fail(400, 'bad-request', 'completed_first_try is only valid for completed sessions.');
+        }
+        if ($mode === 'Hướng dẫn' && $isPassed !== true) {
+            $completedFirstTry = null;
         }
         if ($status !== 'completed' && $completedFirstTry !== null) {
             fail(400, 'bad-request', 'completed_first_try is only valid for completed sessions.');
@@ -783,7 +785,7 @@ function handle_tracking(array $segments, string $method): void
                 }
                 $timer['practice_attempt_no'] = $practiceAttemptNo;
                 $timer['completed_first_try'] = $timer['is_passed'] === true
-                    ? $practiceAttemptNo === 1
+                    ? ($practiceAttemptNo === null || $practiceAttemptNo === 1)
                     : null;
 
                 $insert = $pdo->prepare(

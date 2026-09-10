@@ -125,7 +125,8 @@ DOWNLOADABLE_ROOT_FILES = {
 }
 PUBLIC_ROOT_PREFIXES = ('/devices/', '/assets/', '/login/')
 DASHBOARD_PUBLIC_PATHS = {
-    '/', '/index.html', '/css/styles.css', '/css/dashboard-professional.css', '/js/app.js'
+    '/', '/index.html', '/css/styles.css', '/css/dashboard-professional.css',
+    '/css/ai-copilot.css', '/js/app.js', '/js/ai-assistant.js'
 }
 SENSITIVE_EXTENSIONS = {
     '.env', '.ini', '.log', '.lock', '.md', '.php', '.py', '.pyc', '.sql',

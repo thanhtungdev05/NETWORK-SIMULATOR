@@ -649,6 +649,18 @@
         || ({ KTV: 'Kỹ thuật viên', ADMIN: 'Quản trị viên', DEV: 'Nhà phát triển' }[_currentUser.role])
         || _currentUser.job_title
         || 'Kỹ thuật viên';
+      const role = String(_currentUser.role || 'KTV').toUpperCase();
+      const isStaff = Boolean(_currentUser.is_admin || ['GIANGVIEN', 'ADMIN', 'DEV'].includes(role));
+      const dashboardBtnLabel = role === 'GIANGVIEN' ? 'Dashboard Giảng Viên' : 'Quản Lý Đào Tạo';
+      const dashboardBtnHtml = isStaff ? `
+        <a href="/dashboard/" class="btn-auth btn-sidebar-dashboard" title="Đến Dashboard Quản Lý Đào Tạo & Soạn bài lab">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M4 13h6V4H4v9zm0 7h6v-4H4v4zm10 0h6v-9h-6v9zm0-16v4h6V4h-6z"/>
+          </svg>
+          <span>${dashboardBtnLabel}</span>
+        </a>
+      ` : '';
+
       section.innerHTML = `
         <div class="auth-container">
           <div class="auth-user-info">
@@ -658,6 +670,7 @@
               <span class="auth-role" title="${escapeHTML(roleLabel)}">${escapeHTML(roleLabel)}</span>
             </div>
           </div>
+          ${dashboardBtnHtml}
           <button class="btn-auth btn-logout" id="btn-iam-logout" title="Đăng xuất">Đăng xuất</button>
         </div>
       `;
@@ -709,13 +722,17 @@
             job_title: u.job_title || u.jobTitle || ''
           };
           renderUserProfile();
-          if (_currentUser && (_currentUser.is_admin || _currentUser.role === 'GIANGVIEN')) {
+          const role = String(_currentUser.role || 'KTV').toUpperCase();
+          const isStaff = Boolean(_currentUser.is_admin || ['GIANGVIEN', 'ADMIN', 'DEV'].includes(role));
+          if (_currentUser && isStaff) {
             const btnDashboard = document.getElementById('btn-dashboard');
             if (btnDashboard) {
-              btnDashboard.style.display = '';
-              btnDashboard.onclick = function () {
-                window.location.href = '/dashboard-authen/';
-              };
+              btnDashboard.style.display = 'inline-flex';
+              const btnText = document.getElementById('btn-dashboard-text');
+              if (btnText) {
+                btnText.textContent = role === 'GIANGVIEN' ? 'Dashboard Giảng Viên' : 'Quản Lý Đào Tạo';
+              }
+              btnDashboard.href = '/dashboard/';
             }
           }
           loadLearningCatalog().catch(function (error) {

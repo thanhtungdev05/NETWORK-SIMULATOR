@@ -402,6 +402,18 @@ html, body {
   box-shadow: 0 4px 10px rgba(79, 70, 229, 0.35);
 }
 
+.dashboard-portal-btn {
+  background: linear-gradient(135deg, #0284c7, #0369a1) !important;
+  color: #fff !important;
+  text-decoration: none !important;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);
+}
+.dashboard-portal-btn:hover {
+  background: linear-gradient(135deg, #0369a1, #075985) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(2, 132, 199, 0.4);
+}
+
 .action-dropdown-menu {
   display: none;
   position: absolute;
@@ -1395,6 +1407,21 @@ html, body {
   color: #fff;
 }
 .btn-login:hover { background: #0097a7; }
+
+.btn-sidebar-dashboard {
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  color: #fff !important;
+  text-decoration: none !important;
+  border: 1px solid rgba(255,255,255,0.15);
+  margin-bottom: 8px;
+  gap: 7px;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);
+}
+.btn-sidebar-dashboard:hover {
+  background: linear-gradient(135deg, #0369a1, #075985);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(2, 132, 199, 0.4);
+}
 
 .btn-logout {
   background: rgba(255, 255, 255, 0.05);

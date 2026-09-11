@@ -226,6 +226,18 @@
     const initials = displayName.substring(0, 2).toUpperCase();
     if (elUserAvatar) elUserAvatar.textContent = initials;
 
+    // Show Dashboard button for lecturers and admins
+    const role = String(user.role || '').toUpperCase();
+    const isStaff = Boolean(user.is_admin || ['GIANGVIEN', 'ADMIN', 'DEV'].includes(role));
+    const btnGotoDashboard = document.getElementById('btn-goto-dashboard');
+    if (btnGotoDashboard && isStaff) {
+      btnGotoDashboard.style.display = 'inline-flex';
+      const btnText = document.getElementById('btn-goto-dashboard-text');
+      if (btnText) {
+        btnText.textContent = role === 'GIANGVIEN' ? 'Dashboard Giảng Viên' : 'Quản Lý Đào Tạo';
+      }
+    }
+
     if (elTagEmployeeId) {
       elTagEmployeeId.innerHTML = `
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

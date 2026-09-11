@@ -3,13 +3,13 @@
   'use strict';
 
   // Helper: Get redirect target from URL
-  function getRedirectUrl() {
+  function getRedirectUrl(defaultFallback = '/portal.html') {
     const params = new URLSearchParams(window.location.search);
-    const target = params.get('redirect') || params.get('next') || '/portal.html';
-    if (target.startsWith('/') && !target.startsWith('//')) {
+    const target = params.get('redirect') || params.get('next');
+    if (target && target.startsWith('/') && !target.startsWith('//')) {
       return target;
     }
-    return '/portal.html';
+    return defaultFallback;
   }
 
   // Show Alert Banner
@@ -151,7 +151,11 @@
 
       window.showAlert('Đăng nhập thành công! Đang chuyển hướng...', 'success');
       setTimeout(() => {
-        window.location.replace(getRedirectUrl());
+        const u = data.user || {};
+        const role = String(u.role || '').toUpperCase();
+        const isStaff = Boolean(u.isAdmin || u.is_admin || ['GIANGVIEN', 'ADMIN', 'DEV'].includes(role));
+        const defaultFallback = isStaff ? '/dashboard/' : '/portal.html';
+        window.location.replace(getRedirectUrl(defaultFallback));
       }, 400);
 
     } catch (err) {

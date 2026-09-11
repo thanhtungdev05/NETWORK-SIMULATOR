@@ -363,10 +363,13 @@ function normalize_role_code(mixed $role): ?string
         return null;
     }
     $code = strtoupper(trim((string)$role));
-    if ($code === 'USER') {
+    if ($code === 'USER' || $code === 'STUDENT' || $code === 'HOCVIEN') {
         $code = 'KTV';
     }
-    return in_array($code, ['KTV', 'ADMIN', 'DEV'], true) ? $code : null;
+    if ($code === 'TEACHER' || $code === 'INSTRUCTOR') {
+        $code = 'GIANGVIEN';
+    }
+    return in_array($code, ['KTV', 'GIANGVIEN', 'ADMIN', 'DEV'], true) ? $code : null;
 }
 
 function role_definition(mixed $role): array
@@ -474,6 +477,15 @@ function require_admin(): array
     $user = require_user();
     if (!role_is_admin($user)) {
         fail(403, 'permission-denied', 'Admin permission is required.');
+    }
+    return $user;
+}
+
+function require_instructor_or_admin(): array
+{
+    $user = require_user();
+    if (!role_is_admin($user) && ($user['role'] ?? '') !== 'GIANGVIEN') {
+        fail(403, 'permission-denied', 'Instructor or Admin permission is required.');
     }
     return $user;
 }
@@ -1500,7 +1512,7 @@ function handle_users(array $segments, string $method): void
         $input = json_body();
         $newRole = normalize_role_code($input['role'] ?? null);
         if ($newRole === null) {
-            fail(400, 'bad-request', 'Role must be KTV, ADMIN, or DEV.');
+            fail(400, 'bad-request', 'Role must be KTV, GIANGVIEN, ADMIN, or DEV.');
         }
         $newRoleDefinition = role_definition($newRole);
 
@@ -2711,7 +2723,7 @@ function handle_dashboard(array $segments, string $method): void
         fail(405, 'method-not-allowed', 'Dashboard endpoint only supports GET.');
     }
 
-    require_admin();
+    require_instructor_or_admin();
 
     $action = $segments[1] ?? '';
 
@@ -3145,8 +3157,8 @@ function handle_ai(array $segments, string $method): void
         }
     }
 
-    // Admin endpoints (require instructor/admin privilege)
-    $actor = require_admin();
+    // Admin & Instructor endpoints
+    $actor = require_instructor_or_admin();
 
     if ($action === 'diagnostic-report') {
         if ($method !== 'GET') {

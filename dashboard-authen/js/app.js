@@ -2713,21 +2713,36 @@ async function guardDashboardAdmin() {
     const user = response.ok ? (await response.json().catch(() => null))?.user : null;
     const role = String(user?.role || '').toUpperCase();
     const isAdmin = Boolean(user && (user.isAdmin ?? user.is_admin ?? user.permissions?.admin ?? ['ADMIN', 'DEV'].includes(role)));
-    if (!isAdmin) {
+    const isInstructor = role === 'GIANGVIEN';
+    const isStaff = isAdmin || isInstructor;
+    if (!isStaff) {
         window.location.replace(`${window.location.origin}/`);
         return false;
     }
     state.currentUser = user;
-    state.isAdmin = true;
+    state.isAdmin = isAdmin;
+    state.isInstructor = isInstructor;
     state.canExportReports = Boolean(
         user.canExportReports
         ?? user.can_export_reports
         ?? user.permissions?.exportReports
         ?? user.permissions?.export_reports
-        ?? role === 'DEV'
+        ?? ['DEV', 'ADMIN', 'GIANGVIEN'].includes(role)
     );
     applyReportExportPermission();
+    applyRolePermissions();
     return true;
+}
+
+function applyRolePermissions() {
+    const navUsersLink = document.getElementById('navUsersLink');
+    if (navUsersLink) {
+        // Chỉ tài khoản có quyền Admin mới thấy mục Phân quyền & Người dùng
+        navUsersLink.style.display = state.isAdmin ? '' : 'none';
+    }
+    if (!state.isAdmin && activeDashboardView === 'users') {
+        switchDashboardView('overview');
+    }
 }
 
 function applyReportExportPermission() {
@@ -6022,6 +6037,11 @@ const DASHBOARD_VIEWS = {
         title: 'Quản lý lớp học',
         subtitle: 'Đăng ký lớp, chọn KTV và phân giao thiết bị thực hành'
     },
+    users: {
+        eyebrow: 'Quản trị hệ thống & Phân quyền',
+        title: 'Quản lý Người dùng & Phân quyền',
+        subtitle: 'Tìm kiếm tài khoản, kiểm tra thông tin và nâng/hạ quyền Giảng viên & Học viên'
+    },
 };
 
 let activeDashboardView = 'overview';
@@ -6076,6 +6096,11 @@ function switchDashboardView(viewName, { updateHistory = true, focusHeading = tr
     } else if (activeDashboardView === 'classes') {
         setDataSourceLabel('Lớp học và bài giao từ cơ sở dữ liệu');
         loadTrainingClasses();
+    } else if (activeDashboardView === 'users') {
+        setDataSourceLabel('Dữ liệu người dùng từ cơ sở dữ liệu');
+        if (typeof window.loadUsersManagementList === 'function') {
+            window.loadUsersManagementList();
+        }
     } else if (state.isAdmin) {
         setDataSourceLabel(state.dashboardDataLoaded ? 'Dữ liệu vận hành đã đồng bộ' : 'Đang đồng bộ dữ liệu vận hành');
         if (!state.dashboardDataLoaded) {

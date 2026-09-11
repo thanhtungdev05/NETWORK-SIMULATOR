@@ -642,7 +642,7 @@
             job_title: u.job_title || u.jobTitle || ''
           };
           renderUserProfile();
-          if (_currentUser && _currentUser.is_admin) {
+          if (_currentUser && (_currentUser.is_admin || _currentUser.role === 'GIANGVIEN')) {
             const btnDashboard = document.getElementById('btn-dashboard');
             if (btnDashboard) {
               btnDashboard.style.display = '';

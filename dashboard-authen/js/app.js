@@ -2582,7 +2582,7 @@ function refreshFilterOptionLists() {
 }
 
 async function refreshDashboardData({ force = false, announce = false } = {}) {
-    if (activeDashboardView === 'roster' && !force) return false;
+    if (['roster', 'classes', 'users'].includes(activeDashboardView) && !force) return false;
     if (dashboardRefreshInFlight || (document.hidden && !force)) return false;
     dashboardRefreshInFlight = true;
     setRefreshButtonBusy(true);
@@ -2764,6 +2764,14 @@ async function loadInitialDashboardData() {
     if (activeDashboardView === 'roster') {
         setDataSourceLabel('Hồ sơ KTV từ cơ sở dữ liệu');
         await loadRosterList();
+        setDashboardLoading(false);
+        return;
+    }
+    if (activeDashboardView === 'users') {
+        setDataSourceLabel('Dữ liệu người dùng từ cơ sở dữ liệu');
+        if (typeof window.loadUsersManagementList === 'function') {
+            await window.loadUsersManagementList();
+        }
         setDashboardLoading(false);
         return;
     }
@@ -6122,6 +6130,10 @@ function switchDashboardView(viewName, { updateHistory = true, focusHeading = tr
     if (focusHeading) window.requestAnimationFrame(() => document.getElementById('pageTitle')?.focus({ preventScroll: true }));
 }
 
+window.switchDashboardView = switchDashboardView;
+window.DASHBOARD_VIEWS = DASHBOARD_VIEWS;
+window.setDataSourceLabel = setDataSourceLabel;
+
 function initDashboardViewRouting() {
     let requestedView = new URLSearchParams(window.location.search).get('view') || 'overview';
     if (requestedView === 'instructors') requestedView = 'class_matrix';
@@ -6163,6 +6175,13 @@ function initDashboardViewRouting() {
         btn.setAttribute('aria-pressed', String(isActive));
     });
 
+    if (activeDashboardView === 'users') {
+        setDataSourceLabel('Dữ liệu người dùng từ cơ sở dữ liệu');
+        if (typeof window.loadUsersManagementList === 'function') {
+            window.loadUsersManagementList();
+        }
+    }
+
     window.addEventListener('popstate', () => {
         const currentView = new URLSearchParams(window.location.search).get('view') || 'overview';
         if (Object.hasOwn(DASHBOARD_VIEWS, currentView) && currentView !== activeDashboardView) {
@@ -6192,6 +6211,15 @@ function initSidebarNavigation() {
 
 function initDashboardExperience() {
     document.getElementById('refreshDashboardBtn')?.addEventListener('click', async () => {
+        if (activeDashboardView === 'users') {
+            setRefreshButtonBusy(true);
+            if (typeof window.loadUsersManagementList === 'function') {
+                await window.loadUsersManagementList();
+            }
+            setRefreshButtonBusy(false);
+            showToast('Danh sách tài khoản đã được cập nhật.', 'success');
+            return;
+        }
         if (activeDashboardView === 'classes') {
             setRefreshButtonBusy(true);
             const succeeded = await loadTrainingClasses();
@@ -6224,6 +6252,7 @@ function initDashboardExperience() {
         setDashboardSyncState('syncing', 'Đã có kết nối, đang đồng bộ lại');
         if (activeDashboardView === 'roster') loadRosterList();
         else if (activeDashboardView === 'classes') loadTrainingClasses();
+        else if (activeDashboardView === 'users' && typeof window.loadUsersManagementList === 'function') window.loadUsersManagementList();
         else if (state.dashboardDataLoaded) refreshDashboardData({ force: true });
         else if (state.isAdmin) loadDashboardFromApi();
     });

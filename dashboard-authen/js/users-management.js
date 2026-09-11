@@ -198,8 +198,83 @@
         return (name || 'U').substring(0, 2).toUpperCase();
     }
 
+    // Chuyển trực tiếp sang view Quản lý Người dùng (kể cả khi app.js chưa load xong)
+    function switchToUsersViewManual() {
+        const masterContainer = document.querySelector('.dashboard-master-container');
+        if (masterContainer) masterContainer.hidden = true;
+
+        document.querySelectorAll('.dashboard-page-view').forEach(section => {
+            section.hidden = (section.dataset.pageView !== 'users');
+        });
+
+        const usersSection = document.getElementById('users');
+        if (usersSection) {
+            usersSection.hidden = false;
+        }
+
+        const eyebrow = document.getElementById('pageEyebrow');
+        const title = document.getElementById('pageTitle');
+        const subtitle = document.getElementById('pageSubtitle');
+        if (eyebrow) eyebrow.textContent = 'Quản trị hệ thống & Phân quyền';
+        if (title) title.textContent = 'Quản lý Người dùng & Phân quyền';
+        if (subtitle) subtitle.textContent = 'Tìm kiếm tài khoản, kiểm tra thông tin và nâng/hạ quyền Giảng viên & Học viên';
+        document.title = 'Quản lý Người dùng & Phân quyền | Dashboard Đào Tạo';
+
+        document.querySelectorAll('.sidebar-link[data-dashboard-view]').forEach(link => {
+            const isActive = (link.dataset.dashboardView === 'users');
+            link.classList.toggle('active', isActive);
+            if (isActive) link.setAttribute('aria-current', 'page');
+            else link.removeAttribute('aria-current');
+        });
+
+        try {
+            const url = new URL(window.location.href);
+            if (url.searchParams.get('view') !== 'users') {
+                url.searchParams.set('view', 'users');
+                window.history.pushState({}, '', url.toString());
+            }
+        } catch (_) {}
+
+        if (typeof window.setDataSourceLabel === 'function') {
+            window.setDataSourceLabel('Dữ liệu người dùng từ cơ sở dữ liệu');
+        } else {
+            const label = document.getElementById('dataSourceLabel');
+            if (label) label.textContent = 'Dữ liệu người dùng từ cơ sở dữ liệu';
+        }
+
+        loadUsersManagementList();
+    }
+
+    // Gắn sự kiện click vào menu sidebar
+    function initUsersNavigation() {
+        const navUsersLink = document.getElementById('navUsersLink');
+        if (navUsersLink) {
+            navUsersLink.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                if (typeof window.switchDashboardView === 'function' && window.DASHBOARD_VIEWS && window.DASHBOARD_VIEWS.users) {
+                    window.switchDashboardView('users');
+                } else {
+                    switchToUsersViewManual();
+                }
+            }, true);
+        }
+
+        const currentView = new URLSearchParams(window.location.search).get('view');
+        if (currentView === 'users') {
+            setTimeout(() => {
+                if (typeof window.switchDashboardView === 'function' && window.DASHBOARD_VIEWS && window.DASHBOARD_VIEWS.users) {
+                    window.switchDashboardView('users');
+                } else {
+                    switchToUsersViewManual();
+                }
+            }, 60);
+        }
+    }
+
     // Gắn sự kiện khi tài liệu sẵn sàng
-    document.addEventListener('DOMContentLoaded', function () {
+    function initUsersManagement() {
         const searchInput = document.getElementById('usersSearchInput');
         const roleFilter = document.getElementById('usersRoleFilter');
         const refreshBtn = document.getElementById('btnRefreshUsers');
@@ -218,9 +293,18 @@
         if (refreshBtn) {
             refreshBtn.addEventListener('click', loadUsersManagementList);
         }
-    });
+
+        initUsersNavigation();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initUsersManagement);
+    } else {
+        initUsersManagement();
+    }
 
     // Expose ra window để HTML và app.js gọi
     window.loadUsersManagementList = loadUsersManagementList;
     window.changeUserRole = changeUserRole;
+    window.switchToUsersViewManual = switchToUsersViewManual;
 })();

@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="css/styles.css?v=20260910-grad-v1">
     <link rel="stylesheet" href="css/dashboard-professional.css?v=20260910-grad-v1">
     <link rel="stylesheet" href="css/ai-copilot.css?v=20260910-ai-v1">
-    <link rel="stylesheet" href="css/users-management.css?v=20260911-users-v1">
+    <link rel="stylesheet" href="css/users-management.css?v=20260911-users-v3">
 </head>
 
 <body>
@@ -1113,52 +1113,61 @@
 
                 <!-- Quản lý Người dùng & Phân quyền (Admin) -->
                 <section class="section dashboard-page-view" id="users" data-page-view="users" hidden>
-                    <div class="roster-toolbar" style="margin-bottom: 16px; display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
-                        <div style="display: flex; gap: 12px; flex: 1; min-width: 320px; max-width: 650px;">
-                            <label class="roster-search-field" for="usersSearchInput" style="flex: 1;">
-                                <svg viewBox="0 0 24 24" aria-hidden="true">
-                                    <circle cx="11" cy="11" r="7"></circle>
-                                    <path d="m16 16 5 5"></path>
-                                </svg>
-                                <input type="search" id="usersSearchInput"
-                                    placeholder="Tìm kiếm theo Họ tên, Email, Mã SV/GV..." autocomplete="off">
-                            </label>
-                            <select id="usersRoleFilter" class="roster-select" aria-label="Lọc vai trò">
-                                <option value="">Tất cả vai trò</option>
-                                <option value="KTV">🎓 Học viên (KTV)</option>
-                                <option value="GIANGVIEN">👨‍🏫 Giảng viên</option>
-                                <option value="ADMIN">👑 Quản trị viên</option>
-                            </select>
+                    <div class="roster-panel" style="padding: 24px;">
+                        <div class="section-title" style="margin-bottom: 20px;">
+                            <div>
+                                <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; color: var(--text-primary);">Danh Sách Tài Khoản & Phân Quyền</h2>
+                                <span style="font-size: 13px; color: var(--text-muted);">Quản trị viên có thể tìm kiếm học viên đăng ký mới để nâng quyền thành Giảng viên hoặc hạ quyền về Học viên.</span>
+                            </div>
                         </div>
-                        <div>
-                            <button type="button" class="button secondary" id="btnRefreshUsers" title="Làm mới danh sách">
-                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2">
-                                    <path d="M20 6v5h-5M4 18v-5h5M18.5 9A7 7 0 0 0 6.2 6.2L4 8m16 8-2.2 1.8A7 7 0 0 1 5.5 15" />
-                                </svg>
-                                <span>Làm mới</span>
-                            </button>
-                        </div>
-                    </div>
 
-                    <div class="roster-table-wrapper" tabindex="0" aria-label="Danh sách tài khoản người dùng, có thể cuộn ngang">
-                        <table class="roster-table" id="usersTable">
-                            <thead>
-                                <tr>
-                                    <th scope="col" style="width: 24%;">Họ và tên</th>
-                                    <th scope="col" style="width: 28%;">Email tài khoản</th>
-                                    <th scope="col" style="width: 14%;">Mã định danh</th>
-                                    <th scope="col" style="width: 14%;">Vai trò hiện tại</th>
-                                    <th scope="col" style="width: 20%; text-align: center;">Thao tác phân quyền</th>
-                                </tr>
-                            </thead>
-                            <tbody id="usersTableBody">
-                                <tr>
-                                    <td colspan="5" style="text-align: center; padding: 32px; color: var(--text-muted);">
-                                        Đang tải danh sách người dùng...
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <div class="roster-toolbar" style="margin-bottom: 16px; display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+                            <div style="display: flex; gap: 12px; flex: 1; min-width: 320px; max-width: 650px;">
+                                <label class="roster-search-field" for="usersSearchInput" style="flex: 1;">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        <circle cx="11" cy="11" r="7"></circle>
+                                        <path d="m16 16 5 5"></path>
+                                    </svg>
+                                    <input type="search" id="usersSearchInput"
+                                        placeholder="Tìm kiếm theo Họ tên, Email, Mã SV/GV..." autocomplete="off">
+                                </label>
+                                <select id="usersRoleFilter" class="roster-select" aria-label="Lọc vai trò">
+                                    <option value="">Tất cả vai trò</option>
+                                    <option value="KTV">🎓 Học viên (KTV)</option>
+                                    <option value="GIANGVIEN">👨‍🏫 Giảng viên</option>
+                                    <option value="ADMIN">👑 Quản trị viên</option>
+                                </select>
+                            </div>
+                            <div>
+                                <button type="button" class="button secondary" id="btnRefreshUsers" title="Làm mới danh sách">
+                                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2">
+                                        <path d="M20 6v5h-5M4 18v-5h5M18.5 9A7 7 0 0 0 6.2 6.2L4 8m16 8-2.2 1.8A7 7 0 0 1 5.5 15" />
+                                    </svg>
+                                    <span>Làm mới</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="roster-table-wrapper" tabindex="0" aria-label="Danh sách tài khoản người dùng, có thể cuộn ngang">
+                            <table class="roster-table" id="usersTable">
+                                <thead>
+                                    <tr>
+                                        <th scope="col" style="width: 24%;">Họ và tên</th>
+                                        <th scope="col" style="width: 28%;">Email tài khoản</th>
+                                        <th scope="col" style="width: 14%;">Mã định danh</th>
+                                        <th scope="col" style="width: 14%;">Vai trò hiện tại</th>
+                                        <th scope="col" style="width: 20%; text-align: center;">Thao tác phân quyền</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody">
+                                    <tr>
+                                        <td colspan="5" style="text-align: center; padding: 32px; color: var(--text-muted);">
+                                            Đang tải danh sách người dùng...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </section>
             </main>
@@ -1635,9 +1644,9 @@
         </div>
     </aside>
 
-    <script src="js/app.js?v=20260907-class-edit-v7"></script>
-    <script src="js/ai-assistant.js?v=20260910-ai-v1"></script>
-    <script src="js/users-management.js?v=20260911-users-v1"></script>
+    <script src="js/app.js?v=20260911-users-v3"></script>
+    <script src="js/ai-assistant.js?v=20260911-ai-v3"></script>
+    <script src="js/users-management.js?v=20260911-users-v3"></script>
 </body>
 
 </html>

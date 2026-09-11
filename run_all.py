@@ -126,7 +126,8 @@ DOWNLOADABLE_ROOT_FILES = {
 PUBLIC_ROOT_PREFIXES = ('/devices/', '/assets/', '/login/')
 DASHBOARD_PUBLIC_PATHS = {
     '/', '/index.html', '/css/styles.css', '/css/dashboard-professional.css',
-    '/css/ai-copilot.css', '/js/app.js', '/js/ai-assistant.js'
+    '/css/ai-copilot.css', '/css/users-management.css',
+    '/js/app.js', '/js/ai-assistant.js', '/js/users-management.js'
 }
 SENSITIVE_EXTENSIONS = {
     '.env', '.ini', '.log', '.lock', '.md', '.php', '.py', '.pyc', '.sql',
@@ -508,8 +509,15 @@ class MasterDispatcher(SimpleHTTPRequestHandler):
             if not sub.startswith('/'):
                 sub = '/' + sub
             if sub not in DASHBOARD_PUBLIC_PATHS:
-                self.send_error(404, 'Not Found')
-                return
+                ext = os.path.splitext(sub)[1].lower()
+                is_safe_asset = (
+                    ext in ('.css', '.js', '.png', '.jpg', '.jpeg', '.svg', '.gif', '.webp', '.ico', '.woff', '.woff2', '.ttf', '.map')
+                    and not any(sub.endswith(s_ext) for s_ext in SENSITIVE_EXTENSIONS)
+                    and not os.path.basename(sub).lower() in SENSITIVE_BASENAMES
+                )
+                if not is_safe_asset:
+                    self.send_error(404, 'Not Found')
+                    return
             original_path = self.path
             original_directory = self.directory
             try:

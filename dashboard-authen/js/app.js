@@ -6158,6 +6158,7 @@ function switchDashboardView(viewName, { updateHistory = true, focusHeading = tr
 window.switchDashboardView = switchDashboardView;
 window.DASHBOARD_VIEWS = DASHBOARD_VIEWS;
 window.setDataSourceLabel = setDataSourceLabel;
+window.showToast = showToast;
 
 function initDashboardViewRouting() {
     let requestedView = new URLSearchParams(window.location.search).get('view') || 'overview';

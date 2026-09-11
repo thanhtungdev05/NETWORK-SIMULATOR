@@ -3212,6 +3212,302 @@ function handle_ai(array $segments, string $method): void
     fail(404, 'not-found', 'AI endpoint not found.');
 }
 
+function handle_labs(array $segments, string $method): void
+{
+    $pdo = db();
+    $labId = $segments[1] ?? '';
+
+    // GET /labs or GET /labs/{lab_id}
+    if ($method === 'GET') {
+        if ($labId !== '') {
+            $stmt = $pdo->prepare(
+                "SELECT l.lab_id, l.device_id, l.lab_name, l.sort_order, l.is_active,
+                        d.device_name, d.model,
+                        c.title, c.subtitle, c.instructions, c.practice_url, c.clear_fields, c.grading_rules,
+                        c.created_by, c.created_at, c.updated_at,
+                        (c.lab_id IS NOT NULL) AS is_custom
+                   FROM lab_catalog l
+                   JOIN device_catalog d ON d.device_id = l.device_id
+                   LEFT JOIN custom_lab_definitions c ON c.lab_id = l.lab_id
+                  WHERE l.lab_id = :labId"
+            );
+            $stmt->execute([':labId' => $labId]);
+            $item = $stmt->fetch();
+            if (!$item) {
+                fail(404, 'not-found', 'Lab exercise not found.');
+            }
+            if ($item['instructions'] && is_string($item['instructions'])) {
+                $item['instructions'] = json_decode($item['instructions'], true);
+            }
+            if ($item['clear_fields'] && is_string($item['clear_fields'])) {
+                $item['clear_fields'] = json_decode($item['clear_fields'], true);
+            }
+            if ($item['grading_rules'] && is_string($item['grading_rules'])) {
+                $item['grading_rules'] = json_decode($item['grading_rules'], true);
+            }
+            respond(['ok' => true, 'item' => $item]);
+        }
+
+        $deviceId = trim($_GET['device_id'] ?? '');
+        $activeOnly = filter_var($_GET['active_only'] ?? false, FILTER_VALIDATE_BOOLEAN);
+
+        $sql = "SELECT l.lab_id, l.device_id, l.lab_name, l.sort_order, l.is_active,
+                       d.device_name, d.model,
+                       c.title, c.subtitle, c.instructions, c.practice_url, c.clear_fields, c.grading_rules,
+                       c.created_by, c.created_at, c.updated_at,
+                       (c.lab_id IS NOT NULL) AS is_custom
+                  FROM lab_catalog l
+                  JOIN device_catalog d ON d.device_id = l.device_id
+                  LEFT JOIN custom_lab_definitions c ON c.lab_id = l.lab_id
+                 WHERE 1=1";
+        $params = [];
+        if ($deviceId !== '') {
+            $sql .= " AND l.device_id = :deviceId";
+            $params[':deviceId'] = $deviceId;
+        }
+        if ($activeOnly) {
+            $sql .= " AND l.is_active = TRUE";
+        }
+        $sql .= " ORDER BY d.sort_order, l.sort_order, l.lab_id";
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $items = $stmt->fetchAll();
+        foreach ($items as &$item) {
+            if ($item['instructions'] && is_string($item['instructions'])) {
+                $item['instructions'] = json_decode($item['instructions'], true);
+            }
+            if ($item['clear_fields'] && is_string($item['clear_fields'])) {
+                $item['clear_fields'] = json_decode($item['clear_fields'], true);
+            }
+            if ($item['grading_rules'] && is_string($item['grading_rules'])) {
+                $item['grading_rules'] = json_decode($item['grading_rules'], true);
+            }
+        }
+        unset($item);
+
+        respond([
+            'ok' => true,
+            'count' => count($items),
+            'items' => $items,
+            'data' => $items,
+        ]);
+    }
+
+    // POST /labs (Create new custom lab)
+    if ($method === 'POST') {
+        $user = require_instructor_or_admin();
+        $body = json_body();
+
+        $deviceId = trim((string)($body['device_id'] ?? ''));
+        $labName = trim((string)($body['lab_name'] ?? ''));
+        $subtitle = trim((string)($body['subtitle'] ?? $labName));
+        $practiceUrl = trim((string)($body['practice_url'] ?? ''));
+
+        if ($deviceId === '') {
+            fail(400, 'validation-error', 'Thiết bị mục tiêu (device_id) không được để trống.');
+        }
+        if ($labName === '') {
+            fail(400, 'validation-error', 'Tên bài thực hành (lab_name) không được để trống.');
+        }
+        if ($practiceUrl === '') {
+            fail(400, 'validation-error', 'Đường dẫn thực hành (practice_url) không được để trống.');
+        }
+
+        $devCheck = $pdo->prepare("SELECT device_name FROM device_catalog WHERE device_id = :deviceId");
+        $devCheck->execute([':deviceId' => $deviceId]);
+        if (!$devCheck->fetch()) {
+            fail(400, 'validation-error', "Thiết bị $deviceId không tồn tại trong hệ thống.");
+        }
+
+        // Check if lab_name already exists for this device
+        $nameCheck = $pdo->prepare("SELECT 1 FROM lab_catalog WHERE device_id = :deviceId AND lab_name = :labName");
+        $nameCheck->execute([':deviceId' => $deviceId, ':labName' => $labName]);
+        if ($nameCheck->fetch()) {
+            fail(400, 'validation-error', "Tên bài thực hành \"$labName\" đã tồn tại trên thiết bị này. Vui lòng chọn tên khác.");
+        }
+
+        $orderStmt = $pdo->prepare("SELECT COALESCE(MAX(sort_order), 0) + 1 AS next_order FROM lab_catalog WHERE device_id = :deviceId");
+        $orderStmt->execute([':deviceId' => $deviceId]);
+        $nextOrder = (int)$orderStmt->fetchColumn();
+
+        $customLabId = trim((string)($body['lab_id'] ?? ''));
+        if ($customLabId === '') {
+            $prefix = strtoupper(str_replace('DEV_', '', $deviceId));
+            $customLabId = sprintf('LAB_%s_%02d', $prefix, $nextOrder);
+            $chkStmt = $pdo->prepare("SELECT 1 FROM lab_catalog WHERE lab_id = :lid");
+            $chkStmt->execute([':lid' => $customLabId]);
+            if ($chkStmt->fetch()) {
+                $customLabId = sprintf('LAB_%s_%d_%d', $prefix, $nextOrder, time() % 10000);
+            }
+        }
+
+        $instructions = $body['instructions'] ?? [];
+        if (is_string($instructions)) {
+            $instructions = array_values(array_filter(array_map('trim', explode("\n", $instructions))));
+        }
+        if (!is_array($instructions) || empty($instructions)) {
+            $instructions = [
+                '<b>Yêu cầu:</b>',
+                'Thực hiện cấu hình các thông số trên thiết bị theo yêu cầu của bài thực hành.',
+            ];
+        }
+
+        $clearFields = is_array($body['clear_fields'] ?? null) ? $body['clear_fields'] : [];
+        $gradingRules = is_array($body['grading_rules'] ?? null) ? $body['grading_rules'] : [];
+
+        $pdo->beginTransaction();
+        try {
+            $insCatalog = $pdo->prepare(
+                "INSERT INTO lab_catalog (lab_id, device_id, lab_name, sort_order, is_active)
+                 VALUES (:labId, :deviceId, :labName, :sortOrder, TRUE)
+                 ON CONFLICT (lab_id) DO UPDATE
+                 SET lab_name = EXCLUDED.lab_name,
+                     sort_order = EXCLUDED.sort_order,
+                     is_active = TRUE,
+                     updated_at = NOW()"
+            );
+            $insCatalog->execute([
+                ':labId' => $customLabId,
+                ':deviceId' => $deviceId,
+                ':labName' => $labName,
+                ':sortOrder' => $nextOrder,
+            ]);
+
+            $rawUserId = (string)($user['user_id'] ?? '');
+            $userId = ($rawUserId !== '' && preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $rawUserId)) ? $rawUserId : null;
+            $insCustom = $pdo->prepare(
+                "INSERT INTO custom_lab_definitions
+                    (lab_id, device_id, title, subtitle, instructions, practice_url, clear_fields, grading_rules, created_by)
+                 VALUES
+                    (:labId, :deviceId, :title, :subtitle, :instructions::jsonb, :practiceUrl, :clearFields::jsonb, :gradingRules::jsonb, :createdBy)
+                 ON CONFLICT (lab_id) DO UPDATE
+                 SET title = EXCLUDED.title,
+                     subtitle = EXCLUDED.subtitle,
+                     instructions = EXCLUDED.instructions,
+                     practice_url = EXCLUDED.practice_url,
+                     clear_fields = EXCLUDED.clear_fields,
+                     grading_rules = EXCLUDED.grading_rules,
+                     updated_at = NOW()"
+            );
+            $insCustom->execute([
+                ':labId' => $customLabId,
+                ':deviceId' => $deviceId,
+                ':title' => $labName,
+                ':subtitle' => $subtitle,
+                ':instructions' => json_encode($instructions, JSON_UNESCAPED_UNICODE),
+                ':practiceUrl' => $practiceUrl,
+                ':clearFields' => json_encode($clearFields, JSON_UNESCAPED_UNICODE),
+                ':gradingRules' => json_encode($gradingRules, JSON_UNESCAPED_UNICODE),
+                ':createdBy' => $userId,
+            ]);
+
+            $pdo->commit();
+            respond([
+                'ok' => true,
+                'lab_id' => $customLabId,
+                'message' => "Đã tạo thành công bài thực hành [$labName].",
+            ], 201);
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    // PUT/PATCH /labs/{lab_id}
+    if ($method === 'PUT' || $method === 'PATCH') {
+        require_instructor_or_admin();
+        if ($labId === '') {
+            fail(400, 'validation-error', 'Thiếu lab_id để cập nhật.');
+        }
+        $body = json_body();
+
+        $chk = $pdo->prepare("SELECT lab_id, device_id FROM lab_catalog WHERE lab_id = :lid");
+        $chk->execute([':lid' => $labId]);
+        $existing = $chk->fetch();
+        if (!$existing) {
+            fail(404, 'not-found', 'Bài lab không tồn tại.');
+        }
+
+        $pdo->beginTransaction();
+        try {
+            if (isset($body['lab_name'])) {
+                $updCat = $pdo->prepare("UPDATE lab_catalog SET lab_name = :name, updated_at = NOW() WHERE lab_id = :lid");
+                $updCat->execute([':name' => trim((string)$body['lab_name']), ':lid' => $labId]);
+            }
+            if (isset($body['is_active'])) {
+                $updCat = $pdo->prepare("UPDATE lab_catalog SET is_active = :act, updated_at = NOW() WHERE lab_id = :lid");
+                $updCat->execute([':act' => $body['is_active'] ? 'true' : 'false', ':lid' => $labId]);
+            }
+
+            $chkCustom = $pdo->prepare("SELECT 1 FROM custom_lab_definitions WHERE lab_id = :lid");
+            $chkCustom->execute([':lid' => $labId]);
+            if ($chkCustom->fetch()) {
+                $fields = [];
+                $params = [':lid' => $labId];
+                if (isset($body['title']) || isset($body['lab_name'])) {
+                    $fields[] = "title = :title";
+                    $params[':title'] = trim((string)($body['title'] ?? $body['lab_name']));
+                }
+                if (isset($body['subtitle'])) {
+                    $fields[] = "subtitle = :subtitle";
+                    $params[':subtitle'] = trim((string)$body['subtitle']);
+                }
+                if (isset($body['practice_url'])) {
+                    $fields[] = "practice_url = :url";
+                    $params[':url'] = trim((string)$body['practice_url']);
+                }
+                if (isset($body['instructions'])) {
+                    $fields[] = "instructions = :instructions::jsonb";
+                    $params[':instructions'] = json_encode($body['instructions'], JSON_UNESCAPED_UNICODE);
+                }
+                if (isset($body['grading_rules'])) {
+                    $fields[] = "grading_rules = :rules::jsonb";
+                    $params[':rules'] = json_encode($body['grading_rules'], JSON_UNESCAPED_UNICODE);
+                }
+                if (isset($body['clear_fields'])) {
+                    $fields[] = "clear_fields = :clear::jsonb";
+                    $params[':clear'] = json_encode($body['clear_fields'], JSON_UNESCAPED_UNICODE);
+                }
+
+                if (!empty($fields)) {
+                    $fields[] = "updated_at = NOW()";
+                    $sql = "UPDATE custom_lab_definitions SET " . implode(', ', $fields) . " WHERE lab_id = :lid";
+                    $updCust = $pdo->prepare($sql);
+                    $updCust->execute($params);
+                }
+            }
+
+            $pdo->commit();
+            respond(['ok' => true, 'message' => 'Cập nhật bài thực hành thành công.']);
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    // DELETE /labs/{lab_id}
+    if ($method === 'DELETE') {
+        require_instructor_or_admin();
+        if ($labId === '') {
+            fail(400, 'validation-error', 'Thiếu lab_id để xóa.');
+        }
+
+        $stmt = $pdo->prepare("UPDATE lab_catalog SET is_active = FALSE, updated_at = NOW() WHERE lab_id = :lid");
+        $stmt->execute([':lid' => $labId]);
+        if ($stmt->rowCount() === 0) {
+            fail(404, 'not-found', 'Bài lab không tồn tại.');
+        }
+        respond(['ok' => true, 'message' => 'Đã ẩn bài thực hành thành công.']);
+    }
+
+    fail(405, 'method-not-allowed', 'Labs endpoint does not support this method.');
+}
+
 try {
     if ($resource === 'auth') {
         handle_auth($segments, $method);
@@ -3239,6 +3535,8 @@ try {
         handle_dashboard($segments, $method);
     } elseif ($resource === 'ai') {
         handle_ai($segments, $method);
+    } elseif ($resource === 'labs') {
+        handle_labs($segments, $method);
     } elseif ($resource === 'health') {
         handle_health($method);
     } elseif (is_root_iam_callback($resource, $method)) {

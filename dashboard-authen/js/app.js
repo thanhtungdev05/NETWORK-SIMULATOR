@@ -2737,10 +2737,25 @@ async function guardDashboardAdmin() {
 function applyRolePermissions() {
     const navUsersLink = document.getElementById('navUsersLink');
     if (navUsersLink) {
-        // Chỉ tài khoản có quyền Admin mới thấy mục Phân quyền & Người dùng
         navUsersLink.style.display = state.isAdmin ? '' : 'none';
     }
-    if (!state.isAdmin && activeDashboardView === 'users') {
+    const navRosterLink = document.getElementById('navRosterLink');
+    if (navRosterLink) {
+        navRosterLink.style.display = state.isAdmin ? '' : 'none';
+    }
+    const navAdminLabel = document.getElementById('navAdminLabel');
+    if (navAdminLabel) {
+        navAdminLabel.style.display = state.isAdmin ? '' : 'none';
+    }
+    const navAnalyticsLink = document.getElementById('navAnalyticsLink');
+    if (navAnalyticsLink) {
+        navAnalyticsLink.style.display = state.isAdmin ? '' : 'none';
+    }
+    const navLabsLink = document.getElementById('navLabsLink');
+    if (navLabsLink) {
+        navLabsLink.style.display = (state.isAdmin || state.isInstructor) ? '' : 'none';
+    }
+    if (!state.isAdmin && (activeDashboardView === 'users' || activeDashboardView === 'roster' || activeDashboardView === 'analytics')) {
         switchDashboardView('overview');
     }
 }
@@ -6050,6 +6065,11 @@ const DASHBOARD_VIEWS = {
         title: 'Quản lý Người dùng & Phân quyền',
         subtitle: 'Tìm kiếm tài khoản, kiểm tra thông tin và nâng/hạ quyền Giảng viên & Học viên'
     },
+    labs: {
+        eyebrow: 'Không gian Giảng viên & Soạn bài',
+        title: 'Quản lý Bài Thực Hành (Lab Studio)',
+        subtitle: 'Xem danh mục bài lab, biên soạn đề bài và cấu hình tiêu chuẩn chấm điểm trên các dòng thiết bị'
+    },
 };
 
 let activeDashboardView = 'overview';
@@ -6108,6 +6128,11 @@ function switchDashboardView(viewName, { updateHistory = true, focusHeading = tr
         setDataSourceLabel('Dữ liệu người dùng từ cơ sở dữ liệu');
         if (typeof window.loadUsersManagementList === 'function') {
             window.loadUsersManagementList();
+        }
+    } else if (activeDashboardView === 'labs') {
+        setDataSourceLabel('Danh mục bài thực hành từ cơ sở dữ liệu');
+        if (typeof window.loadLabsManagementList === 'function') {
+            window.loadLabsManagementList();
         }
     } else if (state.isAdmin) {
         setDataSourceLabel(state.dashboardDataLoaded ? 'Dữ liệu vận hành đã đồng bộ' : 'Đang đồng bộ dữ liệu vận hành');
@@ -6179,6 +6204,11 @@ function initDashboardViewRouting() {
         setDataSourceLabel('Dữ liệu người dùng từ cơ sở dữ liệu');
         if (typeof window.loadUsersManagementList === 'function') {
             window.loadUsersManagementList();
+        }
+    } else if (activeDashboardView === 'labs') {
+        setDataSourceLabel('Danh mục bài thực hành từ cơ sở dữ liệu');
+        if (typeof window.loadLabsManagementList === 'function') {
+            window.loadLabsManagementList();
         }
     }
 

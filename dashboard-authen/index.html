@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="css/dashboard-professional.css?v=20260910-grad-v1">
     <link rel="stylesheet" href="css/ai-copilot.css?v=20260910-ai-v1">
     <link rel="stylesheet" href="css/users-management.css?v=20260911-users-v3">
+    <link rel="stylesheet" href="css/labs-management.css?v=20260911-labs-v1">
 </head>
 
 <body>
@@ -46,7 +47,7 @@
                 </a>
 
                 <span class="sidebar-nav-label">Phân tích</span>
-                <a class="sidebar-link" href="?view=analytics" data-dashboard-view="analytics"
+                <a class="sidebar-link" href="?view=analytics" data-dashboard-view="analytics" id="navAnalyticsLink"
                     aria-label="Báo cáo chi nhánh">
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M4 19V9m5 10V5m5 14v-6m5 6V8M3 19h18" />
@@ -70,14 +71,25 @@
                     <span>Tra cứu KTV</span>
                 </a>
 
-                <span class="sidebar-nav-label">Quản trị</span>
+                <span class="sidebar-nav-label" id="navTrainingLabel">Đào tạo & Thực hành</span>
                 <a class="sidebar-link" href="?view=classes" data-dashboard-view="classes" aria-label="Quản lý lớp học">
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M12 2 2 7l10 5 10-5-10-5zm-8 9 8 4 8-4M4 16l8 4 8-4"/>
                     </svg>
                     <span>Quản lý lớp</span>
                 </a>
-                <a class="sidebar-link" href="?view=roster" data-dashboard-view="roster" aria-label="Quản lý KTV">
+                <a class="sidebar-link" href="?view=labs" data-dashboard-view="labs" id="navLabsLink" aria-label="Soạn & Quản lý Bài Lab">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                    <span>Quản lý Bài thực hành</span>
+                </a>
+
+                <span class="sidebar-nav-label" id="navAdminLabel">Quản trị hệ thống</span>
+                <a class="sidebar-link" href="?view=roster" data-dashboard-view="roster" id="navRosterLink" aria-label="Quản lý KTV">
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                         <path
                             d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
@@ -1170,6 +1182,53 @@
                         </div>
                     </div>
                 </section>
+
+                <!-- Quản lý Bài Thực Hành (Lab Studio - Giảng viên & Admin) -->
+                <section class="section dashboard-page-view" id="labs" data-page-view="labs" hidden>
+                    <div class="roster-panel" style="padding: 24px;">
+                        <div class="section-title" style="margin-bottom: 20px;">
+                            <div>
+                                <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; color: var(--text-primary);">Không Gian Soạn Bài & Quản Lý Lab</h2>
+                                <span style="font-size: 13px; color: var(--text-muted);">Biên soạn đề bài thực hành mới, hướng dẫn từng bước và thiết lập tiêu chuẩn chấm điểm tự động cho học viên trên các dòng thiết bị.</span>
+                            </div>
+                        </div>
+
+                        <div class="labs-toolbar">
+                            <div class="labs-toolbar-left">
+                                <label class="labs-search-field" for="labsSearchInput">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        <circle cx="11" cy="11" r="7"></circle>
+                                        <path d="m16 16 5 5"></path>
+                                    </svg>
+                                    <input type="search" id="labsSearchInput"
+                                        placeholder="Tìm bài lab theo tên, mã lab, thiết bị..." autocomplete="off">
+                                </label>
+                                <select id="labsDeviceFilter" class="labs-device-select" aria-label="Lọc theo dòng thiết bị">
+                                    <option value="">Tất cả thiết bị (Toàn bộ)</option>
+                                </select>
+                            </div>
+                            <div class="labs-toolbar-right">
+                                <button type="button" class="button secondary" id="btnRefreshLabs" title="Làm mới danh mục">
+                                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2">
+                                        <path d="M20 6v5h-5M4 18v-5h5M18.5 9A7 7 0 0 0 6.2 6.2L4 8m16 8-2.2 1.8A7 7 0 0 1 5.5 15" />
+                                    </svg>
+                                    <span>Làm mới</span>
+                                </button>
+                                <button type="button" class="button primary" id="btnOpenCreateLabModal">
+                                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    </svg>
+                                    <span>+ Tạo Bài Lab Mới</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="labs-grid" id="labsGrid">
+                            <!-- Rendered dynamically by labs-management.js -->
+                        </div>
+                    </div>
+                </section>
             </main>
         </div>
     </div>
@@ -1549,6 +1608,103 @@
         </section>
     </div>
 
+    <!-- Modal Soạn Thảo & Tạo Bài Lab Mới (Lecturer Lab Studio) -->
+    <div class="lab-modal-backdrop" id="modalCreateLab" aria-hidden="true" hidden>
+        <div class="lab-modal-card" role="dialog" aria-modal="true" aria-labelledby="modalCreateLabTitle" tabindex="-1">
+            <div class="lab-modal-header">
+                <div>
+                    <h3 id="modalCreateLabTitle">Soạn Bài Thực Hành Mới</h3>
+                    <div class="lab-modal-subtitle">Tạo bài lab trên thiết bị mô phỏng và định nghĩa quy tắc chấm điểm tự động</div>
+                </div>
+                <button type="button" class="lab-modal-close" id="btnCloseCreateLabModal" aria-label="Đóng popup">×</button>
+            </div>
+            <div class="lab-modal-body">
+                <form id="formCreateLab" class="lab-form">
+                    <div class="lab-form-row two-cols">
+                        <div class="lab-field-group">
+                            <label for="labSelectDevice" class="lab-label">Dòng thiết bị áp dụng <span class="required">*</span></label>
+                            <select id="labSelectDevice" class="lab-input" required>
+                                <option value="">-- Chọn thiết bị --</option>
+                            </select>
+                        </div>
+                        <div class="lab-field-group">
+                            <label for="labPresetSelect" class="lab-label">Mẫu bài lab gợi ý (Preset)</label>
+                            <select id="labPresetSelect" class="lab-input">
+                                <option value="custom">Tùy chỉnh (Trống)</option>
+                                <option value="wan_pppoe">Cấu hình WAN PPPoE Internet</option>
+                                <option value="wifi_config">Cấu hình Wi-Fi SSID & Mật khẩu WPA2</option>
+                                <option value="lan_dhcp">Cấu hình Đổi IP LAN & Dải DHCP</option>
+                                <option value="port_forward">Mở Port (Port Forwarding / NAT)</option>
+                                <option value="dns_config">Đổi máy chủ DNS Google/Cloudflare</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="lab-form-row">
+                        <div class="lab-field-group">
+                            <label for="labInputTitle" class="lab-label">Tên bài thực hành <span class="required">*</span></label>
+                            <input type="text" id="labInputTitle" class="lab-input" placeholder="Ví dụ: Cấu hình PPPoE WAN & VLAN Internet" required>
+                            <small class="lab-help-text">Tên bài phải rõ ràng và chưa trùng lặp trên dòng thiết bị đã chọn.</small>
+                        </div>
+                    </div>
+
+                    <div class="lab-form-row">
+                        <div class="lab-field-group">
+                            <label for="labInputSubtitle" class="lab-label">Mục tiêu & Tóm tắt bài thực hành</label>
+                            <input type="text" id="labInputSubtitle" class="lab-input" placeholder="Ví dụ: KTV cấu hình thông số kết nối quang GPON/XGS-PON...">
+                        </div>
+                    </div>
+
+                    <div class="lab-form-row">
+                        <div class="lab-field-group">
+                            <label for="labTextInstructions" class="lab-label">Các bước thực hiện (Mỗi bước 1 dòng) <span class="required">*</span></label>
+                            <textarea id="labTextInstructions" class="lab-textarea" rows="4" placeholder="Bước 1: Vào trang quản trị thiết bị...&#10;Bước 2: Chọn mục Cài đặt mạng WAN...&#10;Bước 3: Nhập Username và Password...&#10;Bước 4: Nhấn Áp dụng để hoàn tất." required></textarea>
+                            <small class="lab-help-text">Hệ thống sẽ hiển thị từng bước này trong khung Hướng dẫn của giao diện thực hành.</small>
+                        </div>
+                    </div>
+
+                    <div class="lab-rules-section">
+                        <div class="lab-rules-header">
+                            <div>
+                                <h4 style="margin: 0; font-size: 14px; font-weight: 700; color: var(--text-primary);">Tiêu chuẩn chấm điểm tự động (Grading Rules)</h4>
+                                <small style="color: var(--text-muted);">Hệ thống sẽ tự động quét selector và so khớp giá trị học viên cấu hình trên giao diện mô phỏng.</small>
+                            </div>
+                            <button type="button" class="button secondary" id="btnAddGradingRule" style="font-size: 12px; padding: 4px 10px;">
+                                + Thêm quy tắc chấm
+                            </button>
+                        </div>
+                        <div class="lab-rules-list" id="labRulesList">
+                            <!-- Dynamic rule rows -->
+                        </div>
+                    </div>
+
+                    <div class="lab-form-actions">
+                        <button type="button" class="button secondary" id="btnCancelCreateLab">Hủy</button>
+                        <button type="submit" class="button primary" id="btnSubmitCreateLab">
+                            <span>Lưu & Phát hành Bài Lab</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Xem Hướng Dẫn Bài Lab -->
+    <div class="lab-modal-backdrop" id="modalLabInstructions" aria-hidden="true" hidden>
+        <div class="lab-modal-card" style="max-width: 600px;" role="dialog" aria-modal="true" aria-labelledby="modalInstructionsTitle" tabindex="-1">
+            <div class="lab-modal-header">
+                <div>
+                    <h3 id="modalInstructionsTitle">Hướng dẫn bài thực hành</h3>
+                    <div class="lab-modal-subtitle" id="modalInstructionsSubtitle"></div>
+                </div>
+                <button type="button" class="lab-modal-close" id="btnCloseInstructionsModal" aria-label="Đóng">×</button>
+            </div>
+            <div class="lab-modal-body" id="modalInstructionsBody" style="padding: 20px;">
+                <!-- Instructions list -->
+            </div>
+        </div>
+    </div>
+
     <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
 
     <!-- AI Assistant Copilot Floating Action Button (FAB) -->
@@ -1644,9 +1800,10 @@
         </div>
     </aside>
 
-    <script src="js/app.js?v=20260911-users-v3"></script>
+    <script src="js/app.js?v=20260911-labs-v1"></script>
     <script src="js/ai-assistant.js?v=20260911-ai-v3"></script>
     <script src="js/users-management.js?v=20260911-users-v3"></script>
+    <script src="js/labs-management.js?v=20260911-labs-v1"></script>
 </body>
 
 </html>

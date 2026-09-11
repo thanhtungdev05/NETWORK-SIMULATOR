@@ -113,13 +113,80 @@
     deviceSelect.disabled = devices.length === 0;
   }
 
-  function loadLearningCatalog() {
-    return fetch('/api/index.php/learning/catalog', { credentials: 'include' })
-      .then(function (response) {
-        if (!response.ok) throw new Error('Không thể tải danh sách bài luyện tập.');
-        return response.json();
+  function integrateCustomLabs() {
+    return fetch('/api/index.php/labs', { credentials: 'include' })
+      .then(function (res) { return res.ok ? res.json() : null; })
+      .then(function (json) {
+        const items = (json && (json.items || json.data)) || [];
+        if (!Array.isArray(items)) return;
+        const customLabs = items.filter(function (l) { return l.is_custom && l.is_active; });
+        customLabs.forEach(function (lab) {
+          const normDev = normalizeDeviceId(lab.device_id);
+          const device = DEVICES.find(function (d) { return normalizeDeviceId(d.id) === normDev; });
+          if (!device) return;
+          if (!device.categories || device.categories.length === 0) {
+            device.categories = [{ title: 'HỌC TẬP', lessons: [] }];
+          }
+          const cat = device.categories[0];
+          if (!cat.lessons) cat.lessons = [];
+
+          const normLabId = normalizeLabId(lab.lab_id);
+          const existingIdx = cat.lessons.findIndex(function (l) { return normalizeLabId(l.id) === normLabId; });
+
+          const rawInstructions = Array.isArray(lab.instructions) ? lab.instructions : (lab.instructions ? [lab.instructions] : []);
+          const formattedInstructions = rawInstructions.map(function (step) {
+            return String(step).replace(/\n/g, '<br>');
+          });
+
+          const rawRules = Array.isArray(lab.grading_rules) ? lab.grading_rules : [];
+          const formattedRules = rawRules.map(function (r, i) {
+            return {
+              id: r.id || ('rule_' + (i + 1)),
+              name: r.name || ('Tiêu chí ' + (i + 1)),
+              selector: r.selector,
+              expected: r.expected,
+              type: r.type || 'text_exact',
+              trim: r.trim !== false,
+              required: r.required !== false
+            };
+          });
+
+          const lessonObj = {
+            id: lab.lab_id,
+            title: lab.title || lab.lab_name,
+            subtitle: lab.subtitle || '',
+            instructions: formattedInstructions,
+            practiceUrl: lab.practice_url || device.loginUrl || '',
+            clearFields: Array.isArray(lab.clear_fields) ? lab.clear_fields : [],
+            grading: {
+              description: lab.subtitle || lab.title || lab.lab_name,
+              rules: formattedRules
+            }
+          };
+
+          if (existingIdx >= 0) {
+            cat.lessons[existingIdx] = lessonObj;
+          } else {
+            cat.lessons.push(lessonObj);
+          }
+        });
       })
-      .then(function (data) {
+      .catch(function (err) {
+        console.warn('Không thể tải bài thực hành tùy biến:', err);
+      });
+  }
+
+  function loadLearningCatalog() {
+    return Promise.all([
+      fetch('/api/index.php/learning/catalog', { credentials: 'include' })
+        .then(function (response) {
+          if (!response.ok) throw new Error('Không thể tải danh sách bài luyện tập.');
+          return response.json();
+        }),
+      integrateCustomLabs()
+    ])
+      .then(function (results) {
+        const data = results[0];
         const catalogDevices = Array.isArray(data.devices) ? data.devices : [];
         _catalogDeviceIds = new Set(catalogDevices.map(databaseDeviceToPortalId));
         _catalogLabIds = new Set(catalogDevices.flatMap(function (device) {

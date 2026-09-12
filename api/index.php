@@ -2642,10 +2642,161 @@ function handle_training_class_import(array $actor): void
 
 function handle_training_classes(array $segments, string $method): void
 {
-    $actor = require_admin();
+    $actor = require_instructor_or_admin();
     $action = $segments[1] ?? '';
     if ($action === '' && $method === 'GET') {
         respond(['items'=>training_class_list(db())]);
+    }
+    if ($action === 'assign-lab' && $method === 'POST') {
+        $body = json_body();
+        $classId = trim((string)($body['class_id'] ?? ''));
+        $labId = trim((string)($body['lab_id'] ?? ''));
+        $dueAt = !empty($body['due_at']) ? trim((string)$body['due_at']) : null;
+        $isRequired = (bool)($body['is_required'] ?? true);
+
+        if ($classId === '') {
+            fail(400, 'validation-error', 'Mã lớp học (class_id) không được để trống.');
+        }
+        if ($labId === '') {
+            fail(400, 'validation-error', 'Mã bài thực hành (lab_id) không được để trống.');
+        }
+
+        $pdo = db();
+        $isUuid = (bool)preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iD', $classId);
+        if ($isUuid) {
+            $stmtClass = $pdo->prepare("SELECT class_id, class_code, class_name, curriculum_id, region_id FROM training_classes WHERE class_id = CAST(:cid AS uuid)");
+            $stmtClass->execute([':cid' => $classId]);
+        } else {
+            $stmtClass = $pdo->prepare("SELECT class_id, class_code, class_name, curriculum_id, region_id FROM training_classes WHERE LOWER(class_code) = LOWER(:cid) LIMIT 1");
+            $stmtClass->execute([':cid' => $classId]);
+        }
+        $classRow = $stmtClass->fetch();
+        if (!$classRow) {
+            fail(404, 'not-found', 'Lớp học không tồn tại.');
+        }
+        $classId = (string)$classRow['class_id'];
+
+        $stmtLab = $pdo->prepare("SELECT lab_id, lab_name, device_id FROM lab_catalog WHERE lab_id = :lid");
+        $stmtLab->execute([':lid' => $labId]);
+        $labRow = $stmtLab->fetch();
+        if (!$labRow) {
+            fail(404, 'not-found', 'Bài thực hành không tồn tại.');
+        }
+
+        $formattedDueAt = null;
+        if ($dueAt !== null && $dueAt !== '') {
+            try {
+                $d = new DateTimeImmutable($dueAt);
+                $formattedDueAt = $d->format('Y-m-d H:i:sP');
+            } catch (Throwable) {
+                fail(400, 'validation-error', 'Định dạng hạn nộp (due_at) không hợp lệ.');
+            }
+        }
+
+        $curriculumId = $classRow['curriculum_id'] ?? null;
+        if (!$curriculumId) {
+            $curriculumId = training_class_default_curriculum_id($pdo);
+        }
+
+        $pdo->beginTransaction();
+        try {
+            // 1. Ensure curriculum_labs has (curriculum_id, lab_id, required_mode)
+            $chkCur = $pdo->prepare("SELECT curriculum_lab_id FROM curriculum_labs WHERE curriculum_id = CAST(:cur_id AS uuid) AND lab_id = :lid AND required_mode IN ('practice', 'both') LIMIT 1");
+            $chkCur->execute([':cur_id' => $curriculumId, ':lid' => $labId]);
+            $curLabId = $chkCur->fetchColumn();
+
+            if (!$curLabId) {
+                $insCur = $pdo->prepare("
+                    INSERT INTO curriculum_labs (
+                        curriculum_lab_id, curriculum_id, lab_id, required_mode, is_required,
+                        sort_order, available_offset_days, due_offset_days, created_at, updated_at
+                    ) VALUES (
+                        gen_random_uuid(), CAST(:cur_id AS uuid), :lid, 'both', :req,
+                        (SELECT COALESCE(MAX(sort_order), 0) + 1 FROM curriculum_labs WHERE curriculum_id = CAST(:cur_id AS uuid)),
+                        0, NULL, NOW(), NOW()
+                    )
+                    ON CONFLICT (curriculum_id, lab_id, required_mode) DO UPDATE
+                    SET is_required = EXCLUDED.is_required, updated_at = NOW()
+                    RETURNING curriculum_lab_id
+                ");
+                $insCur->execute([
+                    ':cur_id' => $curriculumId,
+                    ':lid' => $labId,
+                    ':req' => $isRequired ? 'true' : 'false'
+                ]);
+                $curLabId = $insCur->fetchColumn();
+            }
+
+            // 2. Upsert class_lab_assignments
+            $upsertClassAssign = $pdo->prepare("
+                INSERT INTO class_lab_assignments (
+                    class_id, curriculum_lab_id, assigned_at, due_at, status,
+                    assignment_source, is_inferred, created_at, updated_at
+                ) VALUES (
+                    CAST(:cid AS uuid), CAST(:clid AS uuid), NOW(), :due, 'active',
+                    'manual', FALSE, NOW(), NOW()
+                )
+                ON CONFLICT (class_id, curriculum_lab_id) DO UPDATE SET
+                    due_at = EXCLUDED.due_at,
+                    status = 'active',
+                    updated_at = NOW()
+                RETURNING class_lab_assignment_id
+            ");
+            $upsertClassAssign->execute([
+                ':cid' => $classId,
+                ':clid' => $curLabId,
+                ':due' => $formattedDueAt,
+            ]);
+            $classLabAssignId = $upsertClassAssign->fetchColumn();
+
+            // 3. Upsert lab_assignments for active enrolled students
+            $upsertStudentAssign = $pdo->prepare("
+                INSERT INTO lab_assignments (
+                    enrollment_id, class_lab_assignment_id, curriculum_lab_id,
+                    assigned_at, due_at, status, region_id_snapshot, class_id_snapshot,
+                    assignment_source, is_inferred, created_at, updated_at
+                )
+                SELECT ce.enrollment_id, CAST(:cla_id AS uuid), CAST(:clid AS uuid),
+                       NOW(), :due, 'assigned', COALESCE(tc.region_id, u.region_id),
+                       tc.class_id, 'manual', FALSE, NOW(), NOW()
+                  FROM class_enrollments ce
+                  JOIN training_classes tc ON tc.class_id = ce.class_id
+                  JOIN users u ON u.user_id = ce.user_id
+                 WHERE ce.class_id = CAST(:cid AS uuid)
+                   AND ce.status = 'active'
+                ON CONFLICT (enrollment_id, curriculum_lab_id) DO UPDATE SET
+                    due_at = EXCLUDED.due_at,
+                    class_lab_assignment_id = EXCLUDED.class_lab_assignment_id,
+                    updated_at = NOW()
+            ");
+            $upsertStudentAssign->execute([
+                ':cla_id' => $classLabAssignId,
+                ':clid' => $curLabId,
+                ':due' => $formattedDueAt,
+                ':cid' => $classId,
+            ]);
+            $studentCount = $upsertStudentAssign->rowCount();
+
+            $pdo->commit();
+
+            respond([
+                'ok' => true,
+                'message' => "Đã giao bài [{$labRow['lab_name']}] cho lớp [{$classRow['class_code']}] thành công ($studentCount học viên).",
+                'data' => [
+                    'class_id' => $classId,
+                    'class_code' => $classRow['class_code'],
+                    'lab_id' => $labId,
+                    'lab_name' => $labRow['lab_name'],
+                    'due_at' => $formattedDueAt,
+                    'students_assigned' => $studentCount,
+                ]
+            ]);
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
     }
     if ($action === '' && $method === 'POST') {
         $pdo = db();
@@ -3048,7 +3199,8 @@ function handle_dashboard(array $segments, string $method): void
                        progress.lab_name,
                        progress.assignment_status AS status,
                        progress.completed_at,
-                       progress.first_pass_attempt_no
+                       progress.first_pass_attempt_no,
+                       COALESCE(class_assignment.due_at, assignment.due_at) AS due_at
                   FROM v_lab_assignment_progress progress
                   JOIN users roster ON roster.user_id = progress.user_id
                   JOIN training_classes training ON training.class_id = progress.class_id
@@ -3076,6 +3228,7 @@ function handle_dashboard(array $segments, string $method): void
                     'lab_name' => (string)$row['lab_name'],
                     'status' => (string)$row['status'],
                     'completed_at' => safe_datetime($row['completed_at']),
+                    'due_at' => safe_datetime($row['due_at']),
                     'first_pass_attempt_no' => $row['first_pass_attempt_no'] !== null
                         ? (int)$row['first_pass_attempt_no']
                         : null,
@@ -3150,6 +3303,7 @@ function handle_ai(array $segments, string $method): void
         }
         try {
             $result = ai_student_chat($pdo, $user, $message);
+            $result['model'] = $result['model'] ?? 'local-rag';
             respond(['data' => $result]);
         } catch (Throwable $e) {
             report_exception($e, 'ai-student-chat');
@@ -3188,6 +3342,7 @@ function handle_ai(array $segments, string $method): void
 
         try {
             $result = ai_chat_query($pdo, $message, $classId, $actor);
+            $result['model'] = $result['model'] ?? 'local-rag';
             respond(['data' => $result]);
         } catch (Throwable $e) {
             report_exception($e, 'ai-chat-query');
@@ -3497,12 +3652,49 @@ function handle_labs(array $segments, string $method): void
             fail(400, 'validation-error', 'Thiếu lab_id để xóa.');
         }
 
-        $stmt = $pdo->prepare("UPDATE lab_catalog SET is_active = FALSE, updated_at = NOW() WHERE lab_id = :lid");
-        $stmt->execute([':lid' => $labId]);
-        if ($stmt->rowCount() === 0) {
+        $chkLab = $pdo->prepare("SELECT lab_id, lab_name FROM lab_catalog WHERE lab_id = :lid");
+        $chkLab->execute([':lid' => $labId]);
+        $labRow = $chkLab->fetch();
+        if (!$labRow) {
             fail(404, 'not-found', 'Bài lab không tồn tại.');
         }
-        respond(['ok' => true, 'message' => 'Đã ẩn bài thực hành thành công.']);
+
+        // Check if there are any student attempts
+        $sessCheck = $pdo->prepare("SELECT COUNT(*) FROM timer_sessions WHERE lab_id = :lid");
+        $sessCheck->execute([':lid' => $labId]);
+        $sessionCount = (int)$sessCheck->fetchColumn();
+
+        if ($sessionCount > 0) {
+            // Safe deactivation to preserve grading history
+            $stmt = $pdo->prepare("UPDATE lab_catalog SET is_active = FALSE, updated_at = NOW() WHERE lab_id = :lid");
+            $stmt->execute([':lid' => $labId]);
+            respond([
+                'ok' => true,
+                'action' => 'deactivated',
+                'message' => "Bài lab [{$labRow['lab_name']}] đã có {$sessionCount} lượt thực hành nên đã được chuyển sang trạng thái Ẩn để bảo toàn lịch sử chấm điểm.",
+            ]);
+        } else {
+            // Clean deletion
+            $pdo->beginTransaction();
+            try {
+                $pdo->prepare("DELETE FROM lab_assignments WHERE curriculum_lab_id IN (SELECT curriculum_lab_id FROM curriculum_labs WHERE lab_id = :lid)")->execute([':lid' => $labId]);
+                $pdo->prepare("DELETE FROM class_lab_assignments WHERE curriculum_lab_id IN (SELECT curriculum_lab_id FROM curriculum_labs WHERE lab_id = :lid)")->execute([':lid' => $labId]);
+                $pdo->prepare("DELETE FROM curriculum_labs WHERE lab_id = :lid")->execute([':lid' => $labId]);
+                $pdo->prepare("DELETE FROM custom_lab_definitions WHERE lab_id = :lid")->execute([':lid' => $labId]);
+                $pdo->prepare("DELETE FROM lab_catalog WHERE lab_id = :lid")->execute([':lid' => $labId]);
+                $pdo->commit();
+                respond([
+                    'ok' => true,
+                    'action' => 'deleted',
+                    'message' => "Đã xóa hoàn toàn bài thực hành [{$labRow['lab_name']}] khỏi hệ thống.",
+                ]);
+            } catch (Throwable $e) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                throw $e;
+            }
+        }
     }
 
     fail(405, 'method-not-allowed', 'Labs endpoint does not support this method.');

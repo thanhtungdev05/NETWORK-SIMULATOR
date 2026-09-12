@@ -333,11 +333,234 @@ function ai_get_diagnostic_report(PDO $pdo, ?string $classIdentifier = null): ar
 }
 
 /**
+ * Call Google Gemini 1.5 Flash REST API
+ */
+function ai_call_gemini_api(string $systemPrompt, string $userPrompt): ?array
+{
+    $apiKey = env_value('GEMINI_API_KEY');
+    if (!$apiKey || trim($apiKey) === '') {
+        return null;
+    }
+
+    $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' . urlencode(trim($apiKey));
+
+    $payload = [
+        'system_instruction' => [
+            'parts' => [
+                ['text' => $systemPrompt]
+            ]
+        ],
+        'contents' => [
+            [
+                'role' => 'user',
+                'parts' => [
+                    ['text' => $userPrompt]
+                ]
+            ]
+        ],
+        'generationConfig' => [
+            'temperature' => 0.3,
+            'maxOutputTokens' => 2048,
+            'topP' => 0.85,
+        ]
+    ];
+
+    if (!function_exists('curl_init')) {
+        return null;
+    }
+
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_UNICODE),
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+        CURLOPT_TIMEOUT => 20,
+        CURLOPT_CONNECTTIMEOUT => 6,
+        CURLOPT_SSL_VERIFYPEER => true,
+    ]);
+
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlError = curl_error($ch);
+    curl_close($ch);
+
+    if ($response === false || $httpCode < 200 || $httpCode >= 300) {
+        error_log("Gemini API Error (HTTP {$httpCode}): " . ($curlError ?: substr((string)$response, 0, 500)));
+        return null;
+    }
+
+    $decoded = json_decode((string)$response, true);
+    $text = $decoded['candidates'][0]['content']['parts'][0]['text'] ?? null;
+    if (!$text || trim($text) === '') {
+        return null;
+    }
+
+    return [
+        'text' => trim($text),
+        'model' => 'gemini-1.5-flash',
+        'usage' => $decoded['usageMetadata'] ?? null,
+    ];
+}
+
+/**
+ * Builds real-time RAG context for Management / Instructor Dashboard queries
+ */
+function ai_build_rag_context(PDO $pdo, ?string $classIdentifier = null, ?array $actor = null): string
+{
+    $report = ai_get_diagnostic_report($pdo, $classIdentifier);
+    $now = date('Y-m-d H:i:s');
+    
+    $prompt = "Bạn là Trợ Lý AI Giám Sát & Phân Tích Đào Tạo Mạng (UTH NetLab AI Assistant) trực thuộc Trường Đại học Giao thông Vận tải TP.HCM (UTH).\n";
+    $prompt .= "Nhiệm vụ của bạn là hỗ trợ Giảng viên và Quản trị viên phân tích kết quả học tập, chẩn đoán điểm nghẽn, lỗi sai của sinh viên và đề xuất giải pháp sư phạm.\n";
+    $prompt .= "Thời gian hiện tại của hệ thống: {$now}.\n\n";
+
+    $prompt .= "=== DỮ LIỆU ĐÀO TẠO THỰC TẾ TRÊN HỆ THỐNG (LIVE RAG CONTEXT) ===\n\n";
+
+    // 1. Top Failed Labs
+    $prompt .= "1. DANH SÁCH BÀI THỰC HÀNH CÓ TỶ LỆ TRƯỢT/SAI CAO NHẤT:\n";
+    if (!empty($report['top_failed_labs'])) {
+        foreach (array_slice($report['top_failed_labs'], 0, 5) as $idx => $lab) {
+            $num = $idx + 1;
+            $prompt .= "- {$num}. Bài {$lab['lab_name']} ({$lab['device_name']}): {$lab['failed_count']}/{$lab['total_attempts']} lượt trượt (Tỷ lệ trượt: {$lab['fail_rate_percent']}%), Điểm TB: {$lab['avg_score']}/100, Thời gian TB: {$lab['avg_duration_min']} phút.\n";
+        }
+    } else {
+        $prompt .= "- Hiện chưa ghi nhận bài lab nào có tỷ lệ trượt cao.\n";
+    }
+    $prompt .= "\n";
+
+    // 2. Common Configuration Mistakes
+    $prompt .= "2. CÁC LỖI CẤU HÌNH HỌC VIÊN HAY MẮC PHẢI NHẤT (THEO TIÊU CHÍ CHẤM TỰ ĐỘNG):\n";
+    if (!empty($report['common_mistakes'])) {
+        foreach (array_slice($report['common_mistakes'], 0, 5) as $idx => $m) {
+            $num = $idx + 1;
+            $details = !empty($m['reasons']) ? (' - Chi tiết: ' . implode('; ', $m['reasons'])) : '';
+            $prompt .= "- {$num}. [{$m['category']}] {$m['rule_name']} (Bài {$m['lab_name']}): Bị sai {$m['fail_count']} lần{$details}.\n";
+        }
+    } else {
+        $prompt .= "- Chưa có lỗi cấu hình phổ biến nghiêm trọng.\n";
+    }
+    $prompt .= "\n";
+
+    // 3. Struggling Students
+    $prompt .= "3. HỌC VIÊN CÓ NGUY CƠ CHẬM TIẾN ĐỘ HOẶC CẦN QUAN TÂM HỖ TRỢ:\n";
+    if (!empty($report['struggling_students'])) {
+        foreach (array_slice($report['struggling_students'], 0, 8) as $idx => $st) {
+            $num = $idx + 1;
+            $stuck = '';
+            if (!empty($st['stuck_labs'])) {
+                $stuckLabs = array_map(fn($l) => "{$l['lab_name']} ({$l['fail_count']} lần trượt)", $st['stuck_labs']);
+                $stuck = ' - Bài gặp khó khăn: ' . implode(', ', $stuckLabs);
+            }
+            $prompt .= "- {$num}. {$st['student_name']} ({$st['email']}) - Lớp: {$st['class_code']}: Đã đạt {$st['passed_labs']}/{$st['total_assigned_labs']} bài ({$st['completion_percent']}%), Mức cảnh báo: {$st['attention_level']}{$stuck}.\n";
+        }
+    } else {
+        $prompt .= "- Tất cả học viên đều duy trì tiến độ tốt (>35%).\n";
+    }
+    $prompt .= "\n";
+
+    // 4. Classes Summary
+    $classes = $pdo->query("
+        SELECT tc.class_code, tc.class_name,
+               COUNT(DISTINCT ce.user_id) AS total_students,
+               COUNT(la.assignment_id) AS total_assignments,
+               SUM(CASE WHEN la.status = 'passed' THEN 1 ELSE 0 END) AS passed_count
+          FROM training_classes tc
+          LEFT JOIN class_enrollments ce ON ce.class_id = tc.class_id AND ce.status = 'active'
+          LEFT JOIN lab_assignments la ON la.class_id_snapshot = tc.class_id AND la.status <> 'waived'
+         WHERE tc.is_mock = FALSE
+         GROUP BY tc.class_id, tc.class_code, tc.class_name
+         ORDER BY tc.class_code
+    ")->fetchAll();
+
+    $prompt .= "4. TỔNG HỢP CÁC LỚP HỌC TRÊN HỆ THỐNG:\n";
+    foreach ($classes as $c) {
+        $pct = $c['total_assignments'] > 0 ? round(($c['passed_count'] / $c['total_assignments']) * 100, 1) : 0;
+        $prompt .= "- Lớp {$c['class_code']} ({$c['class_name']}): {$c['total_students']} học viên, {$c['total_assignments']} lượt giao, hoàn thành {$c['passed_count']} bài ({$pct}%).\n";
+    }
+    $prompt .= "\n";
+
+    $prompt .= "=== YÊU CẦU TRẢ LỜI ===\n";
+    $prompt .= "1. Sử dụng số liệu chính xác từ DỮ LIỆU ĐÀO TẠO THỰC TẾ ở trên để trả lời câu hỏi của Giảng viên.\n";
+    $prompt .= "2. Nếu Giảng viên hỏi về một sinh viên cụ thể hoặc lớp cụ thể, hãy trích xuất thông tin khớp nhất.\n";
+    $prompt .= "3. Định dạng câu trả lời bằng GitHub Markdown đẹp mắt: có tiêu đề H3 (###), danh sách gạch đầu dòng, chữ in đậm các con số và từ khóa quan trọng, trích dẫn rõ ràng và kèm lời khuyên sư phạm thiết thực.\n";
+    $prompt .= "4. Luôn dùng Tiếng Việt trang trọng, chuẩn mực sư phạm và hữu ích.\n";
+
+    return $prompt;
+}
+
+/**
+ * Builds real-time personal RAG context for individual student coaching queries
+ */
+function ai_build_student_rag_context(PDO $pdo, array $user): string
+{
+    $advice = ai_get_student_advice($pdo, $user);
+    $st = $advice['student'];
+    $prog = $advice['progress'];
+    $nextLab = $advice['next_recommended_lab'];
+    $mistakes = $advice['personal_mistakes'];
+    $strengths = $advice['strengths'];
+
+    $prompt = "Bạn là Gia Sư AI Đồng Hành Học Tập Mạng (UTH NetLab AI Tutor) trực thuộc Trường Đại học Giao thông Vận tải TP.HCM (UTH).\n";
+    $prompt .= "Nhiệm vụ của bạn là đồng hành, giải đáp thắc mắc kỹ thuật, chỉ ra lỗi sai và động viên sinh viên học tập thực hành mạng.\n\n";
+
+    $prompt .= "=== HỒ SƠ & DỮ LIỆU HỌC TẬP THỰC TẾ CỦA SINH VIÊN ĐANG HỎI ===\n";
+    $prompt .= "- Họ tên: {$st['display_name']}\n";
+    $prompt .= "- Email: {$st['email']}\n";
+    $prompt .= "- Lớp: {$st['class_code']} ({$st['class_name']})\n";
+    $prompt .= "- Tiến độ hoàn thành: {$prog['passed_count']} / {$prog['total_assigned']} bài ({$prog['completion_pct']}%)\n";
+    $prompt .= "- Điểm trung bình: " . ($prog['avg_score'] ?? 0) . "/100 qua {$prog['total_sessions']} phiên làm bài (Tổng: {$prog['total_duration_min']} phút)\n";
+    
+    if ($nextLab) {
+        $prompt .= "- Bài thực hành tiếp theo được đề xuất: {$nextLab['lab_name']} (Thiết bị: {$nextLab['device_name']})\n";
+    }
+
+    if (!empty($mistakes)) {
+        $prompt .= "- Các lỗi sai gần nhất trong bài thực hành:\n";
+        foreach (array_slice($mistakes, 0, 4) as $idx => $m) {
+            $prompt .= "  + Bài {$m['lab_name']}: Tiêu chí '{$m['rule_name']}' - Thực tế nhập '{$m['actual']}' thay vì '{$m['expected']}' ({$m['category']})\n";
+        }
+    }
+
+    if (!empty($strengths)) {
+        $prompt .= "- Các bài lab sinh viên đã hoàn thành xuất sắc: " . implode(', ', $strengths) . "\n";
+    }
+
+    $prompt .= "\n=== YÊU CẦU TRẢ LỜI ===\n";
+    $prompt .= "1. Xưng hô thân thiện: 'Mình' hoặc 'Gia sư AI' và 'bạn' (hoặc gọi tên {$st['display_name']}).\n";
+    $prompt .= "2. Luôn dựa vào kết quả học tập thực tế trên để hướng dẫn bạn sinh viên.\n";
+    $prompt .= "3. Trả lời chi tiết, có tâm, hướng dẫn kỹ thuật mạng chính xác (PPPoE, VLAN, IP, DHCP, Wi-Fi, NAT...).\n";
+    $prompt .= "4. Nhắc nhở các mẹo quan trọng như nhấn nút Save/Apply trước khi nộp bài.\n";
+    $prompt .= "5. Dùng Markdown đẹp mắt, sinh động với biểu tượng cảm xúc phù hợp.\n";
+
+    return $prompt;
+}
+
+/**
  * Natural Language Q&A Chatbot for Management Dashboard
  * Analyzes questions and crafts data-backed, actionable insights.
  */
 function ai_chat_query(PDO $pdo, string $question, ?string $classIdentifier = null, ?array $actor = null): array
 {
+    // 1. Try Gemini 1.5 Flash with live DB RAG context
+    $ragContext = ai_build_rag_context($pdo, $classIdentifier, $actor);
+    $geminiRes = ai_call_gemini_api($ragContext, $question);
+    if ($geminiRes && !empty($geminiRes['text'])) {
+        return [
+            'question' => $question,
+            'answer' => $geminiRes['text'],
+            'intent' => 'gemini_generative',
+            'suggested_questions' => [
+                'Bài thực hành nào học viên hay làm sai nhất?',
+                'Lỗi cấu hình nào học viên hay mắc phải nhất?',
+                'Những học viên nào đang gặp khó khăn cần hỗ trợ?',
+                'Tiến độ chung của lớp CNTT-K22?',
+            ],
+            'model' => 'gemini-1.5-flash',
+        ];
+    }
+
+    // 2. Deterministic Local RAG Fallback
     $q = mb_strtolower(trim($question));
     $classId = ai_resolve_class_id($pdo, $classIdentifier);
     $report = ai_get_diagnostic_report($pdo, $classIdentifier);
@@ -905,6 +1128,23 @@ function ai_get_student_advice(PDO $pdo, array $user): array
  */
 function ai_student_chat(PDO $pdo, array $user, string $message): array
 {
+    // 1. Try Gemini 1.5 Flash with student personal RAG context
+    $ragContext = ai_build_student_rag_context($pdo, $user);
+    $geminiRes = ai_call_gemini_api($ragContext, $message);
+    if ($geminiRes && !empty($geminiRes['text'])) {
+        return [
+            'message' => $message,
+            'answer' => $geminiRes['text'],
+            'suggested_questions' => [
+                'Tôi cần làm bài nào tiếp theo?',
+                'Tại sao bài trước của tôi bị trừ điểm?',
+                'Hướng dẫn các bước cấu hình chuẩn?',
+            ],
+            'model' => 'gemini-1.5-flash',
+        ];
+    }
+
+    // 2. Deterministic Local Coaching Fallback
     $q = mb_strtolower(trim($message));
     $advice = ai_get_student_advice($pdo, $user);
     $nextLab = $advice['next_recommended_lab'];

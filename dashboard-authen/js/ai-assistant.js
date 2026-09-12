@@ -481,7 +481,7 @@
 
             const json = await res.json();
             const data = json.data || {};
-            appendMessage('assistant', data.answer);
+            appendMessage('assistant', data.answer, data.model);
             updateSuggestedChips(data.suggested_questions);
         } catch (err) {
             removeTypingIndicator(typingId);
@@ -493,7 +493,7 @@
         }
     }
 
-    function appendMessage(role, text) {
+    function appendMessage(role, text, model = null) {
         if (!chatMessages) return;
         const msgDiv = document.createElement('div');
         msgDiv.className = `ai-msg ${role}`;
@@ -504,7 +504,19 @@
 
         const bubble = document.createElement('div');
         bubble.className = 'ai-msg-bubble';
-        bubble.innerHTML = role === 'user' ? escapeHtml(text).replace(/\n/g, '<br>') : formatMarkdown(text);
+        
+        let badgeHtml = '';
+        if (role === 'assistant' && model === 'gemini-1.5-flash') {
+            badgeHtml = `<div style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; background: #e0e7ff; color: #4338ca; font-size: 0.68rem; font-weight: 700; margin-bottom: 8px;">
+                <span>⚡ Powered by Google Gemini 1.5 Flash</span>
+            </div>`;
+        } else if (role === 'assistant' && model === 'local-rag') {
+            badgeHtml = `<div style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; background: #f1f5f9; color: #475569; font-size: 0.68rem; font-weight: 600; margin-bottom: 8px;">
+                <span>ℹ️ Local RAG Engine</span>
+            </div>`;
+        }
+
+        bubble.innerHTML = role === 'user' ? escapeHtml(text).replace(/\n/g, '<br>') : (badgeHtml + formatMarkdown(text));
 
         msgDiv.appendChild(avatar);
         msgDiv.appendChild(bubble);

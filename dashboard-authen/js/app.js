@@ -2182,6 +2182,7 @@ function normalizeTrainingAssignments(apiAssignments = []) {
         status: item.status || 'assigned',
         completed: item.status === 'passed' || Boolean(item.passed),
         completedAt: item.completed_at || item.completedAt || null,
+        dueAt: item.due_at || item.dueAt || null,
         firstPassAttemptNo: item.first_pass_attempt_no == null
             ? null
             : Number(item.first_pass_attempt_no)
@@ -4376,6 +4377,21 @@ function getClassMatrixData() {
     let totalClassAttempts = 0;
     const labStats = new Map(); // colKey -> { assigned, completed, attempted, attempts }
     columns.forEach(col => {
+        let colDueAt = null;
+        if (state.assignmentsLoaded && Array.isArray(trainingAssignments)) {
+            for (const a of trainingAssignments) {
+                if (
+                    (!selectedClass || a.classCode === selectedClass.code) &&
+                    a.device === col.device &&
+                    a.lab === col.lab &&
+                    a.dueAt
+                ) {
+                    colDueAt = a.dueAt;
+                    break;
+                }
+            }
+        }
+        col.dueAt = colDueAt;
         labStats.set(`${col.device}\u001f${col.lab}`, { assigned: 0, completed: 0, attempted: 0, attempts: 0 });
     });
 
@@ -4437,6 +4453,8 @@ function getClassMatrixData() {
                 lab: col.lab,
                 assigned: isAssigned,
                 completed: isCompleted,
+                dueAt: assign?.dueAt || col.dueAt || null,
+                completedAt: assign?.completedAt || null,
                 attempts,
                 firstPassAttemptNo,
                 lastSession: labSessions[labSessions.length - 1] || null
@@ -4562,11 +4580,22 @@ function renderClassMatrixReport() {
             <th class="ktv-rate-head" scope="col" rowspan="2">Tỷ lệ</th>
         </tr>
         <tr class="report-lab-header-row">
-            ${data.columns.map(col => `
-                <th class="report-lab-head report-device-tone-${col.groupIndex % 5} ${col.isFirst ? 'group-start' : ''} ${col.isLast ? 'group-end' : ''}" scope="col" title="${escapeHTML(`${col.device} • ${col.lab}`)}">
-                    ${escapeHTML(col.lab)}
-                </th>
-            `).join('')}
+            ${data.columns.map(col => {
+                let dueBadge = '';
+                if (col.dueAt) {
+                    const d = new Date(col.dueAt);
+                    if (!isNaN(d.getTime())) {
+                        const dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+                        dueBadge = `<span class="lab-due-badge" style="display: block; font-size: 10px; color: #dc2626; font-weight: 600; margin-top: 2px;">⏰ Hạn: ${dateStr}</span>`;
+                    }
+                }
+                return `
+                    <th class="report-lab-head report-device-tone-${col.groupIndex % 5} ${col.isFirst ? 'group-start' : ''} ${col.isLast ? 'group-end' : ''}" scope="col" title="${escapeHTML(`${col.device} • ${col.lab}${col.dueAt ? ` • Hạn nộp: ${col.dueAt}` : ''}`)}">
+                        <div>${escapeHTML(col.lab)}</div>
+                        ${dueBadge}
+                    </th>
+                `;
+            }).join('')}
         </tr>
     `;
 
@@ -4592,18 +4621,43 @@ function renderClassMatrixReport() {
                     if (!cell.assigned) {
                         return `<td class="report-metric-cell report-cell-zero" title="${escapeHTML(`${row.name} • ${cell.device} • ${cell.lab}: Chưa phân công`)}"><strong>—</strong><span>Chưa giao</span></td>`;
                     }
+
+                    const hasDue = Boolean(cell.dueAt);
+                    const dueDate = hasDue ? new Date(cell.dueAt) : null;
+                    const isOverdue = dueDate && !isNaN(dueDate.getTime()) && (new Date() > dueDate);
+
                     if (cell.completed) {
+                        let isLate = false;
+                        if (dueDate && cell.completedAt) {
+                            const compDate = new Date(cell.completedAt);
+                            if (!isNaN(compDate.getTime()) && compDate > dueDate) {
+                                isLate = true;
+                            }
+                        }
                         const passNote = cell.firstPassAttemptNo === 1 
-                            ? 'Đạt ngay lần thực hành 1' 
-                            : (cell.firstPassAttemptNo > 1 ? `Đạt ở lần thực hành thứ ${cell.firstPassAttemptNo}` : 'Đã đạt chuẩn');
-                        const tooltip = `${row.name} • ${cell.device} • ${cell.lab}: Đã đạt (${passNote}) • Tổng ${cell.attempts} lượt thực hành`;
-                        return `<td class="report-metric-cell report-cell-high" title="${escapeHTML(tooltip)}"><strong>1/1</strong><span>100% HT</span></td>`;
+                            ? 'Đạt ngay lần 1' 
+                            : (cell.firstPassAttemptNo > 1 ? `Đạt lần ${cell.firstPassAttemptNo}` : 'Đã đạt');
+                        
+                        if (isLate) {
+                            const tooltip = `${row.name} • ${cell.device} • ${cell.lab}: Đã đạt (Nộp muộn sau deadline ${cell.dueAt}) • ${passNote}`;
+                            return `<td class="report-metric-cell report-cell-medium" title="${escapeHTML(tooltip)}"><strong style="color: #d97706;">⚠️ 1/1</strong><span style="color: #b45309; font-weight: 600;">Nộp muộn</span></td>`;
+                        }
+
+                        const tooltip = `${row.name} • ${cell.device} • ${cell.lab}: Đã đạt đúng hạn • ${passNote} • ${cell.attempts} lượt`;
+                        return `<td class="report-metric-cell report-cell-high" title="${escapeHTML(tooltip)}"><strong style="color: #16a34a;">✓ 1/1</strong><span>Đúng hạn</span></td>`;
                     }
+
+                    if (isOverdue) {
+                        const tooltip = `${row.name} • ${cell.device} • ${cell.lab}: Quá hạn nộp bài (Hạn: ${cell.dueAt}) • Chưa đạt`;
+                        return `<td class="report-metric-cell report-cell-low" style="background: #fef2f2;" title="${escapeHTML(tooltip)}"><strong style="color: #dc2626;">✕ 0/1</strong><span style="color: #b91c1c; font-weight: 600;">Quá hạn</span></td>`;
+                    }
+
                     if (cell.attempts > 0) {
-                        const tooltip = `${row.name} • ${cell.device} • ${cell.lab}: Chưa đạt • Đã làm ${cell.attempts} lượt thực hành`;
-                        return `<td class="report-metric-cell report-cell-low" title="${escapeHTML(tooltip)}"><strong>0/1</strong><span>0% HT</span></td>`;
+                        const tooltip = `${row.name} • ${cell.device} • ${cell.lab}: Chưa đạt • Đã làm ${cell.attempts} lượt`;
+                        return `<td class="report-metric-cell report-cell-low" title="${escapeHTML(tooltip)}"><strong>0/1</strong><span>Chưa đạt</span></td>`;
                     }
-                    const tooltip = `${row.name} • ${cell.device} • ${cell.lab}: Chưa làm`;
+
+                    const tooltip = `${row.name} • ${cell.device} • ${cell.lab}: Chưa làm${cell.dueAt ? ` • Hạn: ${cell.dueAt}` : ''}`;
                     return `<td class="report-metric-cell report-cell-zero" title="${escapeHTML(tooltip)}"><strong>0/1</strong><span>Chưa làm</span></td>`;
                 }).join('')}
                 <td class="ktv-total-cell ${rateClass}">

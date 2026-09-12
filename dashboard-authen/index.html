@@ -1620,6 +1620,7 @@
             </div>
             <div class="lab-modal-body modal-body">
                 <form id="formCreateLab" class="lab-form">
+                    <input type="hidden" id="modalLabId" value="">
                     <div class="lab-form-row two-cols">
                         <div class="lab-field-group">
                             <label for="modalLabDevice" class="lab-label">Dòng thiết bị áp dụng <span class="required" style="color: #ef4444;">*</span></label>
@@ -1687,6 +1688,62 @@
                         <button type="button" class="button secondary" id="btnCancelCreateLab">Hủy</button>
                         <button type="submit" class="button primary" id="btnSubmitCreateLab">
                             <span>Lưu & Phát hành Bài Lab</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Giao Bài Lab Cho Lớp Học (Assign Lab to Class) -->
+    <div class="lab-modal-backdrop modal-overlay" id="modalAssignLabToClass" aria-hidden="true" hidden>
+        <div class="lab-modal-card modal-dialog" style="max-width: 540px;" role="dialog" aria-modal="true" aria-labelledby="modalAssignLabTitle" tabindex="-1">
+            <div class="lab-modal-header modal-header">
+                <div>
+                    <h3 id="modalAssignLabTitle">Giao Bài Thực Hành Cho Lớp</h3>
+                    <div class="lab-modal-subtitle" id="modalAssignLabSubtitle">Phân công bài tập và đặt hạn chót nộp bài (Deadline)</div>
+                </div>
+                <button type="button" class="lab-modal-close modal-close-btn" id="btnCloseModalAssignLab" aria-label="Đóng popup">×</button>
+            </div>
+            <div class="lab-modal-body modal-body">
+                <form id="formAssignLabToClass" class="lab-form">
+                    <input type="hidden" id="assignLabId" value="">
+                    
+                    <div class="lab-form-row">
+                        <div class="lab-field-group">
+                            <label class="lab-label">Bài thực hành</label>
+                            <div id="assignLabNameDisplay" style="font-weight: 600; color: #0284c7; padding: 10px 14px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; font-size: 14px;"></div>
+                        </div>
+                    </div>
+
+                    <div class="lab-form-row">
+                        <div class="lab-field-group">
+                            <label for="assignClassSelect" class="lab-label">Lớp học tiếp nhận bài tập <span class="required" style="color: #ef4444;">*</span></label>
+                            <select id="assignClassSelect" class="lab-input form-control" required>
+                                <option value="">-- Chọn lớp học --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="lab-form-row">
+                        <div class="lab-field-group">
+                            <label for="assignDueAt" class="lab-label">Hạn chót nộp bài (Deadline)</label>
+                            <input type="datetime-local" id="assignDueAt" class="lab-input form-control">
+                            <small class="lab-help-text">Để trống nếu bài thực hành không giới hạn thời gian nộp bài.</small>
+                        </div>
+                    </div>
+
+                    <div class="lab-form-row">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13.5px; font-weight: 500;">
+                            <input type="checkbox" id="assignIsRequired" checked style="width: 16px; height: 16px; accent-color: #0284c7;">
+                            <span>Bắt buộc hoàn thành để tính tỷ lệ đạt môn học</span>
+                        </label>
+                    </div>
+
+                    <div class="lab-form-actions modal-footer">
+                        <button type="button" class="button secondary" id="btnCancelAssignLab">Hủy</button>
+                        <button type="submit" class="button primary" id="btnSubmitAssignLab">
+                            <span>📤 Xác Nhận Giao Bài Cho Lớp</span>
                         </button>
                     </div>
                 </form>
@@ -1805,10 +1862,10 @@
         </div>
     </aside>
 
-    <script src="js/app.js?v=20260911-labs-v2"></script>
-    <script src="js/ai-assistant.js?v=20260911-ai-v3"></script>
-    <script src="js/users-management.js?v=20260911-users-v3"></script>
-    <script src="js/labs-management.js?v=20260911-labs-v2"></script>
+    <script src="js/app.js?v=20260912-v1"></script>
+    <script src="js/ai-assistant.js?v=20260912-v1"></script>
+    <script src="js/users-management.js?v=20260912-v1"></script>
+    <script src="js/labs-management.js?v=20260912-v1"></script>
 </body>
 
 </html>

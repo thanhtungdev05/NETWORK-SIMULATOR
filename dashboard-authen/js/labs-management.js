@@ -262,14 +262,18 @@
             let actionsHtml = '';
             if (isCustom) {
                 actionsHtml = `
-                    <button type="button" class="button secondary" style="padding: 4px 10px; font-size: 12px;" onclick="window.viewLabInstructions('${labId}')">👁️ Đề bài</button>
-                    <button type="button" class="button secondary" style="padding: 4px 10px; font-size: 12px; color: ${isActive ? '#ef4444' : '#22c55e'};" onclick="window.toggleLabStatus('${labId}', ${!isActive})">
-                        ${isActive ? 'Ẩn' : 'Bật lại'}
+                    <button type="button" class="button secondary" style="padding: 4px 8px; font-size: 11.5px;" onclick="window.openAssignLabModal('${labId}')" title="Giao bài tập cho lớp học và đặt hạn nộp">📤 Giao bài</button>
+                    <button type="button" class="button secondary" style="padding: 4px 8px; font-size: 11.5px;" onclick="window.viewLabInstructions('${labId}')" title="Xem nội dung đề bài">👁️ Đề bài</button>
+                    <button type="button" class="button secondary" style="padding: 4px 8px; font-size: 11.5px; color: #0284c7;" onclick="window.openEditLabModal('${labId}')" title="Chỉnh sửa nội dung và tiêu chí chấm">✏️ Sửa</button>
+                    <button type="button" class="button secondary" style="padding: 4px 8px; font-size: 11.5px; color: ${isActive ? '#f59e0b' : '#22c55e'};" onclick="window.toggleLabStatus('${labId}', ${!isActive})">
+                        ${isActive ? 'Ẩn' : 'Bật'}
                     </button>
+                    <button type="button" class="button secondary" style="padding: 4px 8px; font-size: 11.5px; color: #ef4444;" onclick="window.deleteLab('${labId}')" title="Xóa bài thực hành khỏi hệ thống">🗑️ Xóa</button>
                 `;
             } else {
                 actionsHtml = `
-                    <button type="button" class="button secondary" style="padding: 4px 10px; font-size: 12px;" onclick="window.viewLabInstructions('${labId}')">👁️ Xem đề bài</button>
+                    <button type="button" class="button secondary" style="padding: 4px 8px; font-size: 11.5px;" onclick="window.openAssignLabModal('${labId}')" title="Giao bài tập cho lớp học và đặt hạn nộp">📤 Giao bài</button>
+                    <button type="button" class="button secondary" style="padding: 4px 8px; font-size: 11.5px;" onclick="window.viewLabInstructions('${labId}')" title="Xem nội dung đề bài">👁️ Đề bài</button>
                 `;
             }
 
@@ -306,8 +310,18 @@
         const modal = document.getElementById('modalCreateLab');
         if (!modal) return;
 
-        // Reset form
+        // Reset form & hidden edit ID
         document.getElementById('formCreateLab')?.reset();
+        const labIdInput = document.getElementById('modalLabId');
+        if (labIdInput) labIdInput.value = '';
+
+        const titleEl = document.getElementById('modalCreateLabTitle');
+        if (titleEl) titleEl.textContent = 'Soạn Bài Thực Hành Mới';
+        const subTitleEl = modal.querySelector('.lab-modal-subtitle');
+        if (subTitleEl) subTitleEl.textContent = 'Tạo bài lab trên thiết bị mô phỏng và định nghĩa quy tắc chấm điểm tự động';
+        const submitBtn = document.getElementById('btnSubmitCreateLab');
+        if (submitBtn) submitBtn.innerHTML = '<span>Lưu & Phát hành Bài Lab</span>';
+
         const rulesContainer = document.getElementById('modalGradingRulesContainer');
         if (rulesContainer) {
             rulesContainer.innerHTML = '';
@@ -350,9 +364,241 @@
     function closeCreateLabModal() {
         const modal = document.getElementById('modalCreateLab');
         if (!modal) return;
+        const labIdInput = document.getElementById('modalLabId');
+        if (labIdInput) labIdInput.value = '';
         modal.classList.remove('open');
         modal.setAttribute('aria-hidden', 'true');
         modal.hidden = true;
+    }
+
+    // Mở Modal Chỉnh Sửa Lab
+    async function openEditLabModal(labId) {
+        let lab = currentLabs.find(l => l.lab_id === labId);
+        if (!lab) {
+            try {
+                const res = await fetch(`/api/index.php/labs/${encodeURIComponent(labId)}`, { credentials: 'include' });
+                if (res.ok) {
+                    const json = await res.json();
+                    lab = json.item;
+                }
+            } catch (err) {
+                console.error('Error fetching lab detail:', err);
+            }
+        }
+        if (!lab) {
+            notify('⚠️ Không tìm thấy thông tin bài thực hành.', 'error');
+            return;
+        }
+
+        const modal = document.getElementById('modalCreateLab');
+        if (!modal) return;
+
+        document.getElementById('formCreateLab')?.reset();
+        const rulesContainer = document.getElementById('modalGradingRulesContainer');
+        if (rulesContainer) rulesContainer.innerHTML = '';
+
+        const titleEl = document.getElementById('modalCreateLabTitle');
+        if (titleEl) titleEl.textContent = 'Chỉnh Sửa Bài Thực Hành';
+        const subTitleEl = modal.querySelector('.lab-modal-subtitle');
+        if (subTitleEl) subTitleEl.textContent = `Cập nhật thông tin và quy tắc chấm điểm cho bài [${lab.lab_name || lab.title || labId}]`;
+        const submitBtn = document.getElementById('btnSubmitCreateLab');
+        if (submitBtn) submitBtn.innerHTML = '<span>💾 Lưu Thay Đổi Bài Lab</span>';
+
+        const labIdInput = document.getElementById('modalLabId');
+        if (labIdInput) labIdInput.value = labId;
+
+        const modalDevSelect = document.getElementById('modalLabDevice');
+        if (modalDevSelect) {
+            if ((!modalDevSelect.options || modalDevSelect.options.length <= 1) && currentDevices.length > 0) {
+                populateDeviceDropdown(currentDevices);
+            }
+            modalDevSelect.value = lab.device_id || '';
+        }
+
+        const presetSelect = document.getElementById('modalLabPreset');
+        if (presetSelect) presetSelect.value = 'custom';
+
+        const nameInput = document.getElementById('modalLabName');
+        if (nameInput) nameInput.value = lab.lab_name || lab.title || '';
+
+        const subtitleInput = document.getElementById('modalLabSubtitle');
+        if (subtitleInput) subtitleInput.value = lab.subtitle || '';
+
+        const urlInput = document.getElementById('modalLabPracticeUrl');
+        if (urlInput) urlInput.value = lab.practice_url || '';
+
+        const instInput = document.getElementById('modalLabInstructions');
+        if (instInput) {
+            if (Array.isArray(lab.instructions)) {
+                instInput.value = lab.instructions.join('\n');
+            } else if (typeof lab.instructions === 'string') {
+                instInput.value = lab.instructions;
+            } else {
+                instInput.value = '';
+            }
+        }
+
+        const rules = Array.isArray(lab.grading_rules) ? lab.grading_rules : [];
+        if (rules.length > 0) {
+            rules.forEach(r => {
+                addRuleRow(r.name || '', r.selector || '', r.expected || '', r.type || 'text_exact');
+            });
+        } else {
+            addRuleRow('', '', '', 'text_exact');
+        }
+
+        modal.hidden = false;
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
+
+        setTimeout(() => {
+            document.getElementById('modalLabName')?.focus();
+        }, 100);
+    }
+
+    // Xóa bài lab an toàn
+    async function deleteLab(labId) {
+        const lab = currentLabs.find(l => l.lab_id === labId);
+        const labName = lab ? (lab.lab_name || lab.title || labId) : labId;
+        if (!confirm(`Bạn có chắc chắn muốn xóa bài thực hành [${labName}] không?\n\nLưu ý: Nếu bài chưa có sinh viên nào làm, hệ thống sẽ xóa hoàn toàn. Nếu đã có dữ liệu làm bài, hệ thống sẽ chuyển sang chế độ Ẩn an toàn để bảo toàn lịch sử chấm điểm.`)) {
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/index.php/labs/${encodeURIComponent(labId)}`, {
+                method: 'DELETE',
+                credentials: 'include',
+                headers: { 'Accept': 'application/json' }
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(data.error?.message || data.message || `Lỗi HTTP ${res.status}`);
+            }
+            notify(`✅ ${data.message || 'Đã xử lý bài thực hành thành công.'}`, 'success');
+            await loadLabsManagementList();
+        } catch (err) {
+            console.error('[LabsManagement] Delete lab error:', err);
+            notify('⚠️ Lỗi: ' + err.message, 'error');
+        }
+    }
+
+    let classListCache = [];
+
+    // Mở Modal Giao Bài Cho Lớp
+    async function openAssignLabModal(labId) {
+        const lab = currentLabs.find(l => l.lab_id === labId);
+        if (!lab) return;
+
+        const modal = document.getElementById('modalAssignLabToClass');
+        if (!modal) return;
+
+        const labIdInput = document.getElementById('assignLabId');
+        if (labIdInput) labIdInput.value = labId;
+
+        const nameDisplay = document.getElementById('assignLabNameDisplay');
+        if (nameDisplay) {
+            const devName = lab.device_name || lab.model || lab.device_id;
+            nameDisplay.innerHTML = `<strong>${escapeHtml(devName)}</strong>: ${escapeHtml(lab.lab_name || lab.title || labId)}`;
+        }
+
+        const classSelect = document.getElementById('assignClassSelect');
+        if (classSelect) {
+            classSelect.innerHTML = '<option value="">-- Đang tải danh sách lớp... --</option>';
+            try {
+                if (!classListCache.length) {
+                    const res = await fetch('/api/index.php/classes', { credentials: 'include' });
+                    if (res.ok) {
+                        const json = await res.json();
+                        classListCache = json.items || [];
+                    }
+                }
+                if (classListCache.length > 0) {
+                    classSelect.innerHTML = '<option value="">-- Chọn lớp học --</option>' + classListCache
+                        .filter(c => !c.is_mock)
+                        .map(c => `<option value="${escapeHtml(c.class_id)}">${escapeHtml(c.class_code)} — ${escapeHtml(c.class_name)}</option>`)
+                        .join('');
+                } else {
+                    classSelect.innerHTML = '<option value="">Chưa có lớp học nào</option>';
+                }
+            } catch (err) {
+                classSelect.innerHTML = '<option value="">Lỗi tải danh sách lớp</option>';
+            }
+        }
+
+        // Gợi ý hạn chót: 7 ngày tới lúc 23:59
+        const dueInput = document.getElementById('assignDueAt');
+        if (dueInput) {
+            const nextWeek = new Date();
+            nextWeek.setDate(nextWeek.getDate() + 7);
+            const yyyy = nextWeek.getFullYear();
+            const mm = String(nextWeek.getMonth() + 1).padStart(2, '0');
+            const dd = String(nextWeek.getDate()).padStart(2, '0');
+            dueInput.value = `${yyyy}-${mm}-${dd}T23:59`;
+        }
+
+        modal.hidden = false;
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeAssignLabModal() {
+        const modal = document.getElementById('modalAssignLabToClass');
+        if (!modal) return;
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden', 'true');
+        modal.hidden = true;
+    }
+
+    async function handleAssignLabSubmit(e) {
+        e.preventDefault();
+        const labId = document.getElementById('assignLabId')?.value?.trim();
+        const classId = document.getElementById('assignClassSelect')?.value?.trim();
+        const dueAt = document.getElementById('assignDueAt')?.value?.trim();
+        const isRequired = document.getElementById('assignIsRequired')?.checked ?? true;
+
+        if (!labId || !classId) {
+            notify('⚠️ Vui lòng chọn lớp học tiếp nhận bài thực hành.', 'error');
+            return;
+        }
+
+        const submitBtn = document.getElementById('btnSubmitAssignLab');
+        const origHtml = submitBtn ? submitBtn.innerHTML : '';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span>⏳ Đang giao bài cho lớp...</span>';
+        }
+
+        try {
+            const res = await fetch('/api/index.php/classes/assign-lab', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({
+                    class_id: classId,
+                    lab_id: labId,
+                    due_at: dueAt || null,
+                    is_required: isRequired
+                })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(data.error?.message || data.message || `Lỗi HTTP ${res.status}`);
+            }
+            notify(`🎉 ${data.message || 'Giao bài thực hành thành công!'}`, 'success');
+            closeAssignLabModal();
+
+            if (typeof refreshAssignmentsForClassExport === 'function') {
+                refreshAssignmentsForClassExport();
+            }
+        } catch (err) {
+            console.error('[LabsManagement] Assign lab error:', err);
+            notify('⚠️ Lỗi: ' + err.message, 'error');
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = origHtml || '<span>📤 Xác Nhận Giao Bài Cho Lớp</span>';
+            }
+        }
     }
 
     // Thêm dòng tiêu chí chấm điểm trong Modal
@@ -505,9 +751,14 @@
             submitBtn.innerHTML = '<span>⏳ Đang lưu bài học...</span>';
         }
 
+        const editLabId = document.getElementById('modalLabId')?.value?.trim();
+        const isEdit = Boolean(editLabId);
+        const url = isEdit ? `/api/index.php/labs/${encodeURIComponent(editLabId)}` : '/api/index.php/labs';
+        const method = isEdit ? 'PUT' : 'POST';
+
         try {
-            const res = await fetch('/api/index.php/labs', {
-                method: 'POST',
+            const res = await fetch(url, {
+                method: method,
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
@@ -518,12 +769,12 @@
 
             const data = await res.json().catch(() => ({}));
             if (!res.ok) {
-                const msg = data.error?.message || data.message || 'Không thể tạo bài thực hành.';
+                const msg = data.error?.message || data.message || (isEdit ? 'Không thể cập nhật bài thực hành.' : 'Không thể tạo bài thực hành.');
                 notify('⚠️ Lỗi: ' + msg, 'error');
                 return;
             }
 
-            notify(`✅ Đã tạo thành công bài thực hành mới: "${labName}"!`, 'success');
+            notify(isEdit ? `✅ Đã cập nhật thành công bài thực hành: "${labName}"!` : `✅ Đã tạo thành công bài thực hành mới: "${labName}"!`, 'success');
             closeCreateLabModal();
 
             // Chuyển bộ lọc thiết bị về đúng dòng thiết bị vừa tạo để hiển thị ngay
@@ -726,19 +977,22 @@
             modalCreate.addEventListener('click', function (e) {
                 if (e.target === modalCreate) closeCreateLabModal();
             });
-        }
-        const modalView = document.getElementById('modalViewLabInstructions');
-        if (modalView) {
-            modalView.addEventListener('click', function (e) {
-                if (e.target === modalView) closeViewInstructionsModal();
+        const modalAssign = document.getElementById('modalAssignLabToClass');
+        if (modalAssign) {
+            modalAssign.addEventListener('click', function (e) {
+                if (e.target === modalAssign) closeAssignLabModal();
             });
         }
+        document.getElementById('btnCloseModalAssignLab')?.addEventListener('click', closeAssignLabModal);
+        document.getElementById('btnCancelAssignLab')?.addEventListener('click', closeAssignLabModal);
+        document.getElementById('formAssignLabToClass')?.addEventListener('submit', handleAssignLabSubmit);
 
         // Bấm Escape để đóng modal
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') {
                 closeCreateLabModal();
                 closeViewInstructionsModal();
+                closeAssignLabModal();
             }
         });
 
@@ -786,6 +1040,10 @@
     window.loadLabsManagementList = loadLabsManagementList;
     window.openCreateLabModal = openCreateLabModal;
     window.closeCreateLabModal = closeCreateLabModal;
+    window.openEditLabModal = openEditLabModal;
+    window.deleteLab = deleteLab;
+    window.openAssignLabModal = openAssignLabModal;
+    window.closeAssignLabModal = closeAssignLabModal;
     window.closeViewInstructionsModal = closeViewInstructionsModal;
     window.toggleLabStatus = toggleLabStatus;
     window.viewLabInstructions = viewLabInstructions;

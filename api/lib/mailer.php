@@ -27,8 +27,85 @@ function send_smtp_mail(
         ];
     }
 
+    // 1. Hỗ trợ gửi qua HTTPS Relay Webhook (Google Apps Script qua port 443 HTTPS)
+    // Giúp vượt qua tường lửa chặn cổng SMTP (25, 465, 587) trên các cloud hosting miễn phí như Render Cloud
+    $relayUrl = env_value('EMAIL_RELAY_URL', '');
+    if ($relayUrl !== '') {
+        $payload = json_encode([
+            'to' => $toEmail,
+            'subject' => $subject,
+            'html' => $htmlBody,
+            'text' => $altText !== '' ? $altText : strip_tags($htmlBody),
+            'fromName' => $fromName
+        ], JSON_UNESCAPED_UNICODE);
+
+        $contextHttp = stream_context_create([
+            'http' => [
+                'method' => 'POST',
+                'header' => "Content-Type: application/json\r\n",
+                'content' => $payload,
+                'timeout' => 15,
+                'ignore_errors' => true
+            ],
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false
+            ]
+        ]);
+
+        $relayResp = @file_get_contents($relayUrl, false, $contextHttp);
+        if ($relayResp !== false) {
+            $respJson = json_decode($relayResp, true);
+            if (!empty($respJson['ok'])) {
+                return [
+                    'ok' => true,
+                    'port_used' => 443,
+                    'message' => 'Email đã được gửi thành công qua HTTPS Relay.'
+                ];
+            }
+        }
+    }
+
+    // 2. Hỗ trợ gửi qua Resend API (port 443 HTTPS) nếu có thiết lập RESEND_API_KEY
+    $resendKey = env_value('RESEND_API_KEY', '');
+    if ($resendKey !== '') {
+        $resendPayload = json_encode([
+            'from' => "$fromName <onboarding@resend.dev>",
+            'to' => [$toEmail],
+            'subject' => $subject,
+            'html' => $htmlBody,
+            'text' => $altText !== '' ? $altText : strip_tags($htmlBody)
+        ], JSON_UNESCAPED_UNICODE);
+
+        $contextResend = stream_context_create([
+            'http' => [
+                'method' => 'POST',
+                'header' => "Authorization: Bearer $resendKey\r\nContent-Type: application/json\r\n",
+                'content' => $resendPayload,
+                'timeout' => 15,
+                'ignore_errors' => true
+            ],
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false
+            ]
+        ]);
+
+        $resendResp = @file_get_contents('https://api.resend.com/emails', false, $contextResend);
+        if ($resendResp !== false) {
+            $respJson = json_decode($resendResp, true);
+            if (!empty($respJson['id'])) {
+                return [
+                    'ok' => true,
+                    'port_used' => 443,
+                    'message' => 'Email đã được gửi thành công qua Resend HTTPS API.'
+                ];
+            }
+        }
+    }
+
     $passClean = str_replace(' ', '', $pass);
-    $timeout = 10;
+    $timeout = 8;
     $context = stream_context_create([
         'ssl' => [
             'verify_peer' => false,
@@ -227,7 +304,8 @@ function send_smtp_mail(
     return [
         'ok' => false,
         'reason' => $lastReason,
-        'message' => $lastError ?: 'Không thể kết nối đến máy chủ SMTP qua các cổng 465/587.'
+        'message' => ($lastError ?: 'Không thể kết nối đến máy chủ SMTP qua các cổng 465/587.') .
+                     ' (Lưu ý: Nền tảng Render gói Free chặn kết nối ra ngoài ở các cổng SMTP 25, 465, 587. Bạn có thể gửi thư trực tiếp thành công 100% khi chạy trên máy tính Localhost, hoặc thiết lập EMAIL_RELAY_URL gửi qua cổng HTTPS 443).'
     ];
 }
 

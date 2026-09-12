@@ -42,6 +42,80 @@ function env_int(string $key, int $default, int $minimum, int $maximum): int
     return max($minimum, min($maximum, (int)$value));
 }
 
+/**
+ * Tự động phát hiện địa chỉ IPv4 LAN cục bộ (Wi-Fi / Ethernet)
+ * Giúp thiết bị di động (điện thoại iPhone/Android) cùng mạng Wi-Fi truy cập được thay vì localhost
+ */
+function get_network_lan_ip(): ?string
+{
+    static $cachedLanIp = null;
+    if ($cachedLanIp !== null) {
+        return $cachedLanIp;
+    }
+
+    if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+        $output = @shell_exec('ipconfig');
+        if ($output && preg_match_all('/IPv4 Address[ .]*:[ ]*([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)/i', $output, $matches)) {
+            foreach ($matches[1] as $ip) {
+                if ($ip !== '127.0.0.1' && !str_starts_with($ip, '169.254.')) {
+                    $cachedLanIp = $ip;
+                    return $ip;
+                }
+            }
+        }
+    } else {
+        $output = @shell_exec('hostname -I 2>/dev/null') ?: @shell_exec('ip route get 1 2>/dev/null');
+        if ($output && preg_match('/([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)/', $output, $m)) {
+            if ($m[1] !== '127.0.0.1') {
+                $cachedLanIp = $m[1];
+                return $m[1];
+            }
+        }
+    }
+    return null;
+}
+
+/**
+ * Phân giải URL gốc của ứng dụng (ưu tiên Host thực tế hoặc LAN IP để thiết bị ngoài / mobile mở được link)
+ */
+function resolve_app_base_url(): string
+{
+    // 1. Nếu request đến qua Host thực tế (khác localhost / 127.0.0.1)
+    $httpHost = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'] ?? null;
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https' ? 'https' : 'http';
+
+    if ($httpHost) {
+        $hostOnly = strtolower(explode(':', $httpHost)[0]);
+        if ($hostOnly !== 'localhost' && $hostOnly !== '127.0.0.1' && $hostOnly !== '::1') {
+            return "{$scheme}://{$httpHost}";
+        }
+    }
+
+    // 2. Kiểm tra APP_BASE_URL trong môi trường
+    $envBase = env_value('APP_BASE_URL', '');
+    if ($envBase !== '') {
+        $parsed = parse_url($envBase);
+        $envHost = strtolower($parsed['host'] ?? '');
+        if ($envHost !== '' && $envHost !== 'localhost' && $envHost !== '127.0.0.1') {
+            return rtrim($envBase, '/');
+        }
+    }
+
+    // 3. Nếu cấu hình là localhost, tự động thay thế bằng LAN IP thực tế để điện thoại truy cập được
+    $lanIp = get_network_lan_ip();
+    if ($lanIp) {
+        $port = 8080;
+        if ($envBase !== '' && !empty(parse_url($envBase, PHP_URL_PORT))) {
+            $port = (int)parse_url($envBase, PHP_URL_PORT);
+        } elseif ($httpHost && str_contains($httpHost, ':')) {
+            $port = (int)explode(':', $httpHost)[1];
+        }
+        return "http://{$lanIp}:{$port}";
+    }
+
+    return $envBase !== '' ? rtrim($envBase, '/') : 'http://127.0.0.1:8080';
+}
+
 function normalize_app_timezone(?string $timezone): string
 {
     $timezone = trim((string)$timezone);

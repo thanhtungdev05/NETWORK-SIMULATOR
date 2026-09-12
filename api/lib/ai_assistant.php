@@ -1251,7 +1251,7 @@ function ai_handle_chat_reminder_command(PDO $pdo, string $question, ?string $cl
     $results = [];
     $sentCount = 0;
     $failedCount = 0;
-    $appBaseUrl = env_value('APP_BASE_URL', 'http://127.0.0.1:8080');
+    $appBaseUrl = resolve_app_base_url();
 
     foreach ($students as $st) {
         $email = $st['email'];

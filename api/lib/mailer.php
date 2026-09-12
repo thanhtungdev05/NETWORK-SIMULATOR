@@ -493,7 +493,7 @@ function build_reminder_email_template(
     $safeName = htmlspecialchars($studentName, ENT_QUOTES, 'UTF-8');
     $safeEmail = htmlspecialchars($studentEmail, ENT_QUOTES, 'UTF-8');
     $safeClass = htmlspecialchars($classCode, ENT_QUOTES, 'UTF-8');
-    $appBaseUrl = env_value('APP_BASE_URL', 'http://127.0.0.1:8080');
+    $appBaseUrl = resolve_app_base_url();
 
     $stuckHtml = '';
     if (!empty($stuckLabs)) {
@@ -619,7 +619,7 @@ function build_manager_report_email_template(
 ): string {
     $currentYear = date('Y');
     $safeName = htmlspecialchars($managerName, ENT_QUOTES, 'UTF-8');
-    $appBaseUrl = env_value('APP_BASE_URL', 'http://127.0.0.1:8080');
+    $appBaseUrl = resolve_app_base_url();
 
     $labRows = '';
     foreach (array_slice($topFailedLabs, 0, 4) as $lab) {
@@ -693,7 +693,7 @@ function build_device_reminder_email_template(
     $safeClass = htmlspecialchars($classCode, ENT_QUOTES, 'UTF-8');
     $devName = htmlspecialchars($device['device_name'] ?? 'Thiết bị mạng', ENT_QUOTES, 'UTF-8');
     $devId = htmlspecialchars($device['device_id'] ?? 'DEV_AC1000F', ENT_QUOTES, 'UTF-8');
-    $appBaseUrl = env_value('APP_BASE_URL', 'http://127.0.0.1:8080');
+    $appBaseUrl = resolve_app_base_url();
     $portalUrl = "{$appBaseUrl}/portal.html?device={$devId}&mode=practice";
     $safeDeadline = $deadline ? htmlspecialchars($deadline, ENT_QUOTES, 'UTF-8') : 'Trước buổi học thực hành tiếp theo';
     $safeNote = $customNote ? htmlspecialchars($customNote, ENT_QUOTES, 'UTF-8') : 'Học viên vui lòng đọc kỹ sơ đồ đấu nối, bảng thông số VLAN/PPPoE và nhấn nút Lưu (Save/Apply) cấu hình trên giao diện thiết bị trước khi nhấn Nộp bài.';

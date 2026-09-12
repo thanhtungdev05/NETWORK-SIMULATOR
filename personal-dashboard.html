@@ -9,8 +9,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/personal-dashboard.css?v=20260910-v3-ultra">
-  <link rel="stylesheet" href="assets/personal-ai-coach.css?v=20260910-v3-ultra">
+  <link rel="stylesheet" href="assets/personal-dashboard.css?v=20260912-mobile-v2">
+  <link rel="stylesheet" href="assets/personal-ai-coach.css?v=20260912-mobile-v2">
   <style>
     /* Critical Drawer & FAB styles to guarantee zero layout glitches */
     .student-ai-drawer {
@@ -87,11 +87,12 @@
       </a>
 
       <!-- Button to switch to Simulator -->
-      <a href="/portal.html" class="btn-action-primary" id="btn-goto-practice">
+      <a href="/portal.html" class="btn-action-primary" id="btn-goto-practice" title="Vào phòng thực hành">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
           <polygon points="5 3 19 12 5 21 5 3"></polygon>
         </svg>
-        <span>Vào phòng thực hành</span>
+        <span class="btn-goto-text-desktop">Vào phòng thực hành</span>
+        <span class="btn-goto-text-mobile">Vào Lab</span>
       </a>
 
       <!-- Logout button -->
@@ -101,7 +102,7 @@
           <polyline points="16 17 21 12 16 7"></polyline>
           <line x1="21" y1="12" x2="9" y2="12"></line>
         </svg>
-        <span>Đăng xuất</span>
+        <span class="btn-logout-text">Đăng xuất</span>
       </button>
     </div>
   </header>

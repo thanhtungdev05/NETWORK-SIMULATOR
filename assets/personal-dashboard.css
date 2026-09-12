@@ -1525,3 +1525,339 @@ body {
   cursor: not-allowed;
   transform: none;
 }
+
+/* ==========================================================================
+   MOBILE & TABLET RESPONSIVE STYLING (Comprehensive Media Queries)
+   Specifically designed for modern smartphones (iPhone, Android) and tablets
+   ========================================================================== */
+
+/* Prevent page-level horizontal overflow */
+html, body {
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+  position: relative !important;
+}
+
+.dash-container {
+  width: 100% !important;
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+}
+
+/* ── 1. Breakpoint: Tablets & Small Desktops (<= 1024px) ───────────────── */
+@media (max-width: 1024px) {
+  .dash-navbar {
+    padding: 0 20px;
+  }
+
+  .dash-container {
+    padding: 20px 20px 60px;
+  }
+
+  .dashboard-main-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .metrics-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
+/* ── 2. Breakpoint: Tablets & Mobile Landscape (<= 768px) ─────────────── */
+@media (max-width: 768px) {
+  /* Navbar */
+  .dash-navbar {
+    height: auto !important;
+    min-height: 58px !important;
+    padding: 10px 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .dash-brand {
+    gap: 8px !important;
+    flex-shrink: 0 !important;
+    min-width: 0 !important;
+  }
+
+  .dash-brand-icon {
+    width: 34px !important;
+    height: 34px !important;
+    font-size: 17px !important;
+    border-radius: 8px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .dash-brand-title {
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.2px !important;
+    white-space: nowrap !important;
+  }
+
+  .dash-brand > div > div:nth-child(2) {
+    display: none !important; /* Hide long subtitle 'Hệ thống đào tạo...' on mobile */
+  }
+
+  .dash-brand-badge {
+    display: none !important; /* Hide 'Tiến độ Học viên' badge on mobile */
+  }
+
+  .dash-nav-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .user-pill-widget {
+    padding: 3px 8px 3px 4px !important;
+    gap: 6px !important;
+  }
+
+  .user-avatar-sm {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 11px !important;
+  }
+
+  .user-name-text {
+    max-width: 80px !important;
+    font-size: 12px !important;
+  }
+
+  #btn-goto-practice {
+    padding: 6px 14px !important;
+    font-size: 12.5px !important;
+    white-space: nowrap !important;
+    gap: 6px !important;
+    flex-shrink: 0 !important;
+    border-radius: 9999px !important;
+    height: 34px !important;
+  }
+
+  .btn-goto-text-desktop {
+    display: none !important;
+  }
+
+  .btn-goto-text-mobile {
+    display: inline !important;
+  }
+
+  #btn-logout {
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+    height: 34px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .btn-logout-text {
+    display: none !important; /* Show logout icon only */
+  }
+
+  /* Main Container */
+  .dash-container {
+    padding: 14px 12px 60px !important;
+    gap: 16px !important;
+  }
+
+  /* Hero Greeting Banner */
+  .hero-banner {
+    padding: 18px 16px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 14px !important;
+    border-radius: var(--radius-lg) !important;
+  }
+
+  .hero-left {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  .hero-title {
+    font-size: 19px !important;
+    line-height: 1.35 !important;
+  }
+
+  .hero-desc {
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+  }
+
+  .hero-tags {
+    flex-direction: column !important;
+    gap: 6px !important;
+    width: 100% !important;
+  }
+
+  .hero-tag {
+    width: 100% !important;
+    font-size: 12px !important;
+    padding: 6px 10px !important;
+    word-break: break-word !important;
+    border-radius: 8px !important;
+  }
+
+  .hero-right-art {
+    display: none !important;
+  }
+
+  /* Cards & Titles */
+  .content-card {
+    padding: 16px 14px !important;
+    border-radius: 14px !important;
+    gap: 14px !important;
+  }
+
+  .card-title-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+
+  .card-title {
+    font-size: 15px !important;
+  }
+
+  .chart-header-actions {
+    width: 100% !important;
+    justify-content: flex-start !important;
+    flex-wrap: wrap !important;
+  }
+
+  .chart-container {
+    height: 190px !important;
+  }
+
+  /* Assigned Devices Grid */
+  .device-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .device-card {
+    padding: 14px !important;
+  }
+
+  .lab-item-row {
+    padding: 8px 10px !important;
+    gap: 8px !important;
+  }
+
+  .lab-title-text {
+    font-size: 12.5px !important;
+    max-width: 160px !important;
+  }
+
+  /* History Table & Toolbar */
+  .table-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .table-filters {
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+
+  .search-input {
+    width: 100% !important;
+    min-width: 100% !important;
+  }
+
+  .filter-select {
+    width: 100% !important;
+  }
+
+  .custom-table-wrap {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    border-radius: var(--radius-sm) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .custom-table {
+    min-width: 620px !important;
+    font-size: 12px !important;
+  }
+
+  .custom-table th, .custom-table td {
+    padding: 8px 10px !important;
+  }
+
+  .pagination-row {
+    flex-direction: column !important;
+    gap: 10px !important;
+    align-items: center !important;
+  }
+}
+
+/* ── 3. Breakpoint: Small Mobile Phones (<= 480px) ─────────────────────── */
+@media (max-width: 480px) {
+  .dash-navbar {
+    padding: 8px 10px !important;
+  }
+
+  .dash-brand-title {
+    font-size: 12px !important;
+  }
+
+  .user-name-text {
+    display: none !important; /* Avatar only on small phones */
+  }
+
+  .user-pill-widget {
+    padding: 2px !important;
+    border: none !important;
+    background: transparent !important;
+  }
+
+  #btn-goto-practice {
+    padding: 6px 10px !important;
+    font-size: 11.5px !important;
+  }
+
+  .metrics-row {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .metric-card {
+    padding: 14px 16px !important;
+    gap: 8px !important;
+  }
+
+  .metric-value {
+    font-size: 22px !important;
+  }
+
+  .donut-chart-wrap {
+    width: 130px !important;
+    height: 130px !important;
+  }
+
+  .donut-chart-svg {
+    width: 130px !important;
+    height: 130px !important;
+  }
+
+  .donut-center-percent {
+    font-size: 22px !important;
+  }
+
+  .student-ai-fab {
+    bottom: 16px !important;
+    right: 14px !important;
+    padding: 9px 15px !important;
+    font-size: 12.5px !important;
+  }
+}

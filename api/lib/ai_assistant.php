@@ -404,9 +404,314 @@ function ai_call_gemini_api(string $systemPrompt, string $userPrompt): ?array
 }
 
 /**
+ * Helper to strip Vietnamese diacritics for flexible fuzzy matching
+ */
+function ai_remove_vietnamese_accents(string $str): string
+{
+    $str = preg_replace("/(à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ)/u", "a", $str);
+    $str = preg_replace("/(è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ)/u", "e", $str);
+    $str = preg_replace("/(ì|í|ị|ỉ|ĩ)/u", "i", $str);
+    $str = preg_replace("/(ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ)/u", "o", $str);
+    $str = preg_replace("/(ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ)/u", "u", $str);
+    $str = preg_replace("/(ỳ|ý|ỵ|ỷ|ỹ)/u", "y", $str);
+    $str = preg_replace("/(đ)/u", "d", $str);
+    $str = preg_replace("/(À|Á|Ạ|Ả|Ã|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ)/u", "a", $str);
+    $str = preg_replace("/(È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ)/u", "e", $str);
+    $str = preg_replace("/(Ì|Í|Ị|Ỉ|Ĩ)/u", "i", $str);
+    $str = preg_replace("/(Ò|Ó|Ọ|Ỏ|Õ|Ô|Ồ|Ố|Ộ|Ổ|Ỗ|Ơ|Ờ|Ớ|Ợ|Ở|Ỡ)/u", "o", $str);
+    $str = preg_replace("/(Ù|Ú|Ụ|Ủ|Ũ|Ư|Ừ|Ứ|Ự|Ử|Ữ)/u", "u", $str);
+    $str = preg_replace("/(Ỳ|Ý|Ỵ|Ỷ|Ỹ)/u", "y", $str);
+    $str = preg_replace("/(Đ)/u", "d", $str);
+    return strtolower(trim((string)$str));
+}
+
+/**
+ * Flexible student lookup supporting conversational Vietnamese (e.g. 'còn phương sang thì sao', 'phuong sang the nao', 'sangnp3251')
+ */
+function ai_search_students(PDO $pdo, string $question, ?string $classIdentifier = null): array
+{
+    $qLower = mb_strtolower(trim($question));
+    $qUnaccent = ai_remove_vietnamese_accents($question);
+
+    // If the question is purely about class progress or device/lab errors without person references, skip student search
+    $isClassQuery = (str_contains($qLower, 'lớp') || str_contains($qLower, 'lop')) && 
+                    (str_contains($qLower, 'tiến độ') || str_contains($qLower, 'tien do') || str_contains($qLower, 'tỷ lệ') || str_contains($qLower, 'danh sách'));
+    $isGeneralLabQuery = str_contains($qLower, 'bài thực hành nào') || 
+                         str_contains($qLower, 'bài nào') || 
+                         str_contains($qLower, 'hay sai') || 
+                         str_contains($qLower, 'làm sai nhất') || 
+                         str_contains($qLower, 'lỗi cấu hình') ||
+                         str_contains($qLower, 'phổ biến nhất');
+    $hasPersonWord = str_contains($qLower, 'sinh viên') || str_contains($qLower, 'sinh vien') ||
+                     str_contains($qLower, 'bạn ') || str_contains($qLower, 'ban ') ||
+                     str_contains($qLower, 'em ') ||
+                     str_contains($qLower, 'còn ') || str_contains($qLower, 'con ') ||
+                     str_contains($qLower, 'thế còn') || str_contains($qLower, 'the con') ||
+                     str_contains($qLower, 'hồ sơ') || str_contains($qLower, 'tra cứu') ||
+                     str_contains($qLower, 'của ');
+    if (($isClassQuery || $isGeneralLabQuery) && !$hasPersonWord) {
+        return ['best' => null, 'others' => [], 'total_found' => 0];
+    }
+
+    // Stop words
+    $stopWords = [
+        'còn', 'con', 'thì', 'thi', 'sao', 'thế', 'the', 'nào', 'nao', 'ra', 
+        'của', 'cua', 'cho', 'tôi', 'toi', 'mình', 'minh', 'xem', 'biết', 'biet', 
+        'với', 'voi', 'về', 've', 'ở', 'o', 'lớp', 'lop', 'như', 'nhu', 'được', 'duoc', 
+        'làm', 'lam', 'bài', 'bai', 'chưa', 'chua', 'mấy', 'may', 'điểm', 'diem', 
+        'học', 'hoc', 'viên', 'vien', 'sinh', 'bạn', 'ban', 
+        'em', 'chị', 'chi', 'thầy', 'thay', 'cô', 'co', 'hỏi', 'hoi', 'ai', 
+        'tình', 'hình', 'kết', 'quả', 'thông', 'tin', 'hồ', 'sơ', 'tra', 'cứu',
+        'bao', 'nhiêu', 'nhieu', 'đang', 'dang', 'gì', 'gi', 'đâu', 'dau', 'khác', 'khac',
+        'tiến', 'tien', 'độ', 'do', 'quá', 'qua', 'trình', 'trinh', 'báo', 'bao', 'cáo', 'cao', 
+        'toàn', 'toan', 'bộ', 'bo', 'chung', 'tất', 'tat', 'cả', 'ca', 'danh', 'sách', 'sach'
+    ];
+
+    // Extract tokens
+    $rawTokens = preg_split('/[\s,\?\.!\(\)\[\]:;\-\+\/\'"]+/u', $qLower);
+    $tokens = [];
+    foreach ($rawTokens as $t) {
+        $t = trim($t);
+        if (mb_strlen($t) >= 2 && !in_array($t, $stopWords, true)) {
+            $tokens[] = $t;
+        }
+    }
+
+    if (empty($tokens)) {
+        return ['best' => null, 'others' => [], 'total_found' => 0];
+    }
+
+    $stmt = $pdo->query("
+        SELECT u.user_id, u.email, u.display_name, u.employee_id, u.role,
+               tc.class_id, tc.class_code, tc.class_name
+        FROM users u
+        LEFT JOIN class_enrollments ce ON ce.user_id = u.user_id AND ce.status = 'active'
+        LEFT JOIN training_classes tc ON tc.class_id = ce.class_id
+        WHERE u.is_terminated = FALSE
+    ");
+    $rawUsers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // De-duplicate by user_id
+    $users = [];
+    foreach ($rawUsers as $ru) {
+        $uid = $ru['user_id'];
+        if (!isset($users[$uid])) {
+            $users[$uid] = $ru;
+        }
+    }
+
+    $scored = [];
+
+    foreach ($users as $u) {
+        $dispNameRaw = (string)($u['display_name'] ?? '');
+        $dispName = trim((string)preg_replace('/\s*[-–—]\s*(học viên|giảng viên|admin|ktv).*/iu', '', $dispNameRaw));
+        $email = (string)($u['email'] ?? '');
+        $empId = (string)($u['employee_id'] ?? '');
+
+        $nameLower = mb_strtolower($dispName);
+        $nameUnaccent = ai_remove_vietnamese_accents($dispName);
+        $emailLower = strtolower($email);
+        $emailPrefix = explode('@', $emailLower)[0] ?? '';
+        $empIdLower = strtolower($empId);
+
+        $score = 0;
+
+        // 1. Full name match
+        if ($dispName !== '' && mb_strlen($dispName) >= 3) {
+            if (str_contains($qLower, $nameLower)) {
+                $score += 160;
+            } elseif (str_contains($qUnaccent, $nameUnaccent)) {
+                $score += 140;
+            }
+        }
+
+        // 2. Email or Employee ID match
+        if ($empId !== '' && mb_strlen($empId) >= 3 && (str_contains($qLower, $empIdLower) || str_contains($qUnaccent, $empIdLower))) {
+            $score += 150;
+        }
+        if ($emailPrefix !== '' && mb_strlen($emailPrefix) >= 3 && (str_contains($qLower, $emailPrefix) || str_contains($qUnaccent, $emailPrefix))) {
+            $score += 145;
+        }
+
+        // 3. Name components match
+        if ($dispName !== '') {
+            $nameParts = preg_split('/\s+/u', $nameLower);
+            $namePartsUnaccent = preg_split('/\s+/u', $nameUnaccent);
+
+            // Consecutive pair match (e.g. "phương sang", "đặng minh", "minh anh")
+            if (count($nameParts) >= 2) {
+                for ($i = 0; $i < count($nameParts) - 1; $i++) {
+                    $pair = $nameParts[$i] . ' ' . $nameParts[$i + 1];
+                    $pairUn = $namePartsUnaccent[$i] . ' ' . $namePartsUnaccent[$i + 1];
+                    if (str_contains($qLower, $pair)) {
+                        $score += 85;
+                    } elseif (str_contains($qUnaccent, $pairUn)) {
+                        $score += 75;
+                    }
+                }
+            }
+
+            $matchedTokens = 0;
+            $lastName = end($nameParts);
+            $lastNameUn = end($namePartsUnaccent);
+
+            foreach ($tokens as $tok) {
+                $tokUn = ai_remove_vietnamese_accents($tok);
+                if ($tok === $lastName) {
+                    $matchedTokens++;
+                    $score += 45; // Exact accented given name
+                } elseif ($tokUn === $lastNameUn && mb_strlen($tok) >= 3) {
+                    $matchedTokens++;
+                    $score += 35; // Unaccented given name (>= 3 chars)
+                } elseif (in_array($tok, $nameParts, true)) {
+                    $matchedTokens++;
+                    $score += 25;
+                } elseif (in_array($tokUn, $namePartsUnaccent, true) && mb_strlen($tok) >= 3) {
+                    $matchedTokens++;
+                    $score += 15;
+                }
+            }
+            if ($matchedTokens >= 2) {
+                $score += 35;
+            }
+        }
+
+        // Bonus if user is in active selected class
+        if ($classIdentifier && !empty($u['class_code'])) {
+            if (strcasecmp($classIdentifier, $u['class_code']) === 0 || strcasecmp($classIdentifier, (string)$u['class_id']) === 0) {
+                $score += 15;
+            }
+        }
+
+        if ($score >= 35) {
+            $u['_score'] = $score;
+            $scored[] = $u;
+        }
+    }
+
+    usort($scored, fn($a, $b) => $b['_score'] <=> $a['_score']);
+
+    return [
+        'best' => $scored[0] ?? null,
+        'others' => array_slice($scored, 1, 3),
+        'total_found' => count($scored)
+    ];
+}
+
+/**
+ * Builds rich, structured Markdown profile for a queried student
+ */
+function ai_build_student_response(PDO $pdo, array $user, array $others, string $question): string
+{
+    $uId = (string)$user['user_id'];
+    $uEmail = (string)$user['email'];
+    $uName = (string)($user['display_name'] ?? $uEmail);
+    $uClass = (string)($user['class_code'] ?? 'Chưa xếp lớp');
+    $className = (string)($user['class_name'] ?? '');
+    $empId = (string)($user['employee_id'] ?? '');
+
+    // 1. Progress from assignments
+    $progStmt = $pdo->prepare('
+        SELECT 
+            COUNT(*) AS total_labs,
+            SUM(CASE WHEN assignment_status = \'passed\' THEN 1 ELSE 0 END) AS passed_labs,
+            ROUND(100.0 * SUM(CASE WHEN assignment_status = \'passed\' THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0), 1) AS pct
+        FROM v_lab_assignment_progress
+        WHERE user_id = :uid AND assignment_status <> \'waived\'
+    ');
+    $progStmt->execute(['uid' => $uId]);
+    $prog = $progStmt->fetch() ?: ['total_labs' => 0, 'passed_labs' => 0, 'pct' => 0];
+
+    // 2. Real sessions from timer_sessions
+    $sessStmt = $pdo->prepare('
+        SELECT 
+            COUNT(*) AS session_count,
+            ROUND(AVG(score), 1) AS avg_score,
+            ROUND(SUM(duration_sec) / 60.0, 1) AS total_min,
+            MAX(score) AS max_score
+        FROM timer_sessions
+        WHERE (user_id = :uid OR LOWER(email) = LOWER(:email))
+          AND status IN (\'completed\', \'failed\')
+    ');
+    $sessStmt->execute(['uid' => $uId, 'email' => $uEmail]);
+    $sess = $sessStmt->fetch() ?: ['session_count' => 0, 'avg_score' => 0, 'total_min' => 0, 'max_score' => 0];
+
+    // 3. Detailed recent sessions
+    $recentStmt = $pdo->prepare('
+        SELECT ts.lab_id, ts.score, ts.status, ts.duration_sec, ts.created_at,
+               COALESCE(lc.lab_name, ts.lab_id) AS lab_name,
+               COALESCE(dc.device_name, lc.device_id, \'Thiết bị mạng\') AS device_name
+        FROM timer_sessions ts
+        LEFT JOIN lab_catalog lc ON lc.lab_id = ts.lab_id
+        LEFT JOIN device_catalog dc ON dc.device_id = lc.device_id
+        WHERE (ts.user_id = :uid OR LOWER(ts.email) = LOWER(:email))
+        ORDER BY ts.created_at DESC
+        LIMIT 6
+    ');
+    $recentStmt->execute(['uid' => $uId, 'email' => $uEmail]);
+    $recentSessions = $recentStmt->fetchAll();
+
+    $answer = "### 👤 Hồ Sơ Học Tập: **{$uName}**\n\n";
+    $answer .= "- **Email:** `{$uEmail}`" . ($empId ? " | **Mã SV/KTV:** `{$empId}`" : "") . "\n";
+    $answer .= "- **Lớp sinh hoạt:** **{$uClass}**" . ($className ? " ({$className})" : "") . "\n";
+
+    if ((int)$prog['total_labs'] > 0) {
+        $pct = $prog['pct'] !== null ? $prog['pct'] : 0;
+        $answer .= "- **Tiến độ phân công:** **{$prog['passed_labs']} / {$prog['total_labs']} bài đạt chuẩn** (**{$pct}%**)\n";
+    } else {
+        $answer .= "- **Tiến độ phân công:** *Học viên chưa được xếp vào lớp có bài tập phân công chính thức.*\n";
+    }
+
+    $sessCount = (int)$sess['session_count'];
+    $avgScoreStr = $sess['avg_score'] !== null ? number_format((float)$sess['avg_score'], 1) : '0.0';
+    $totalMinStr = $sess['total_min'] !== null ? number_format((float)$sess['total_min'], 1) : '0.0';
+    $maxScoreStr = $sess['max_score'] !== null ? number_format((float)$sess['max_score'], 1) : '0.0';
+
+    if ($sessCount > 0) {
+        $answer .= "- **Điểm trung bình:** **{$avgScoreStr} / 100** (Điểm cao nhất: **{$maxScoreStr}**)\n";
+        $answer .= "- **Tổng thời gian luyện tập:** **{$totalMinStr} phút** qua **{$sessCount} phiên làm bài**\n\n";
+    } else {
+        $answer .= "- **Lịch sử làm bài:** *Chưa có phiên thực hành nào được ghi nhận.*\n\n";
+    }
+
+    // Sessions breakdown
+    if (!empty($recentSessions)) {
+        $answer .= "#### 📋 Lịch sử các bài thực hành gần nhất:\n";
+        foreach ($recentSessions as $s) {
+            $score = round((float)$s['score'], 1);
+            $icon = $score >= 80 ? '✅' : ($score >= 50 ? '⚠️' : '❌');
+            $durMin = round(((int)$s['duration_sec']) / 60.0, 1);
+            $timeStr = date('d/m/Y H:i', strtotime($s['created_at']));
+            $answer .= "{$icon} **{$s['device_name']}** — **{$s['lab_name']}**: **{$score}/100 điểm** ({$durMin} phút, lúc {$timeStr})\n";
+        }
+        $answer .= "\n";
+    }
+
+    // AI Pedagogical Advice
+    $answer .= "#### 💡 Nhận xét sư phạm từ Trợ Lý AI:\n";
+    if ($sessCount === 0) {
+        $answer .= "- Học viên **{$uName}** chưa bắt đầu luyện tập bài lab nào trên cổng thực hành. Giảng viên nên gửi thông báo đôn đốc hoặc kiểm tra việc đăng nhập của học viên.\n";
+    } elseif ((float)($sess['avg_score'] ?? 0) >= 80) {
+        $answer .= "- Học viên nắm rất vững các kỹ năng cấu hình thiết bị thực hành với điểm số ấn tượng (**{$avgScoreStr}/100**). Có thể đề xuất làm thêm các bài nâng cao hoặc hỗ trợ các bạn khác trong lớp.\n";
+    } elseif ((float)($sess['avg_score'] ?? 0) >= 50) {
+        $answer .= "- Học viên có nỗ lực thực hành và đạt điểm ở mức trung bình (**{$avgScoreStr}/100**). Cần lưu ý kiểm tra lại các bước lưu cấu hình (write memory) và thông số WAN/VLAN.\n";
+    } else {
+        $answer .= "- Điểm số hiện tại của học viên còn thấp (**{$avgScoreStr}/100**). Giảng viên nên bố trí trợ giảng kèm cặp hoặc hướng dẫn lại các bài lab cơ bản.\n";
+    }
+
+    // Other matches hint
+    if (!empty($others)) {
+        $otherNames = array_map(fn($o) => "**{$o['display_name']}** (`{$o['email']}`)", $others);
+        $answer .= "\n> 💡 *Hệ thống cũng tìm thấy các học viên có tên gần giống:* " . implode(', ', $otherNames) . ". Thầy/Cô có thể gõ thêm email hoặc mã SV nếu cần xem bạn khác.\n";
+    }
+
+    return $answer;
+}
+
+/**
  * Builds real-time RAG context for Management / Instructor Dashboard queries
  */
-function ai_build_rag_context(PDO $pdo, ?string $classIdentifier = null, ?array $actor = null): string
+function ai_build_rag_context(PDO $pdo, ?string $classIdentifier = null, ?array $actor = null, ?string $question = null): string
 {
     $report = ai_get_diagnostic_report($pdo, $classIdentifier);
     $now = date('Y-m-d H:i:s');
@@ -480,6 +785,18 @@ function ai_build_rag_context(PDO $pdo, ?string $classIdentifier = null, ?array 
     }
     $prompt .= "\n";
 
+    if ($question !== null && trim($question) !== '') {
+        $studentMatch = ai_search_students($pdo, $question, $classIdentifier);
+        if (!empty($studentMatch['best'])) {
+            $matchedUser = $studentMatch['best'];
+            $others = $studentMatch['others'] ?? [];
+            $studentSummary = ai_build_student_response($pdo, $matchedUser, $others, $question);
+            $prompt .= "=== HỒ SƠ HỌC VIÊN ĐƯỢC HỎI ĐÍCH DANH TRONG CÂU HỎI CỦA GIẢNG VIÊN ===\n";
+            $prompt .= $studentSummary . "\n\n";
+            $prompt .= "HƯỚNG DẪN TRẢ LỜI: Giảng viên đang hỏi về học viên này ('{$matchedUser['display_name']}'). Hãy ưu tiên trả lời chi tiết về học viên này, phân tích điểm số, tiến độ thực hành và đề xuất giải pháp sư phạm cụ thể.\n\n";
+        }
+    }
+
     $prompt .= "=== YÊU CẦU TRẢ LỜI ===\n";
     $prompt .= "1. Sử dụng số liệu chính xác từ DỮ LIỆU ĐÀO TẠO THỰC TẾ ở trên để trả lời câu hỏi của Giảng viên.\n";
     $prompt .= "2. Nếu Giảng viên hỏi về một sinh viên cụ thể hoặc lớp cụ thể, hãy trích xuất thông tin khớp nhất.\n";
@@ -542,25 +859,56 @@ function ai_build_student_rag_context(PDO $pdo, array $user): string
  */
 function ai_chat_query(PDO $pdo, string $question, ?string $classIdentifier = null, ?array $actor = null): array
 {
+    // Search student first with high flexibility (handles 'còn phương sang thì sao', 'phuong sang the nao', 'sangnp3251')
+    $studentSearchResult = ai_search_students($pdo, $question, $classIdentifier);
+
     // 1. Try Gemini 1.5 Flash with live DB RAG context
-    $ragContext = ai_build_rag_context($pdo, $classIdentifier, $actor);
+    $ragContext = ai_build_rag_context($pdo, $classIdentifier, $actor, $question);
     $geminiRes = ai_call_gemini_api($ragContext, $question);
     if ($geminiRes && !empty($geminiRes['text'])) {
+        $suggested = [
+            'Bài thực hành nào học viên hay làm sai nhất?',
+            'Lỗi cấu hình nào học viên hay mắc phải nhất?',
+            'Những học viên nào đang gặp khó khăn cần hỗ trợ?',
+            'Tiến độ chung của lớp CNTT-K22?',
+        ];
+        if (!empty($studentSearchResult['best'])) {
+            $name = (string)($studentSearchResult['best']['display_name'] ?? '');
+            $suggested[0] = str_contains(mb_strtolower($name), 'tùng') ? 'Còn học viên Phương Sang thì sao?' : 'Còn học viên Tùng Đặng Thanh thì sao?';
+        }
         return [
             'question' => $question,
             'answer' => $geminiRes['text'],
-            'intent' => 'gemini_generative',
-            'suggested_questions' => [
-                'Bài thực hành nào học viên hay làm sai nhất?',
-                'Lỗi cấu hình nào học viên hay mắc phải nhất?',
-                'Những học viên nào đang gặp khó khăn cần hỗ trợ?',
-                'Tiến độ chung của lớp CNTT-K22?',
-            ],
+            'intent' => !empty($studentSearchResult['best']) ? 'student_lookup' : 'gemini_generative',
+            'suggested_questions' => $suggested,
             'model' => 'gemini-1.5-flash',
         ];
     }
 
     // 2. Deterministic Local RAG Fallback
+    // Intent 0: Specific Student Match (Highest priority when inquiry is about a person)
+    if (!empty($studentSearchResult['best'])) {
+        $foundUser = $studentSearchResult['best'];
+        $others = $studentSearchResult['others'] ?? [];
+        $answer = ai_build_student_response($pdo, $foundUser, $others, $question);
+
+        $name = (string)($foundUser['display_name'] ?? '');
+        $altName = str_contains(mb_strtolower($name), 'tùng') ? 'Phương Sang' : 'Tùng Đặng Thanh';
+
+        return [
+            'question' => $question,
+            'answer' => $answer,
+            'intent' => 'student_lookup',
+            'suggested_questions' => [
+                "Còn học viên {$altName} thì sao?",
+                'Tiến độ lớp CNTT-K22 như thế nào?',
+                'Bài nào học viên hay làm sai nhất?',
+                'Lỗi cấu hình nào phổ biến?',
+            ],
+            'model' => 'local-rag',
+        ];
+    }
+
     $q = mb_strtolower(trim($question));
     $classId = ai_resolve_class_id($pdo, $classIdentifier);
     $report = ai_get_diagnostic_report($pdo, $classIdentifier);
@@ -788,148 +1136,6 @@ function ai_chat_query(PDO $pdo, string $question, ?string $classIdentifier = nu
         ];
     }
 
-    // Intent 6: Specific Student Lookup
-    $stopWords = [
-        'sinh', 'viên', 'học', 'tiến', 'độ', 'bài', 'làm', 'của', 'bạn', 'thầy', 'cô', 
-        'xem', 'tình', 'hình', 'như', 'thế', 'nào', 'ra', 'sao', 'cho', 'tôi', 'biết', 
-        'với', 'trong', 'lớp', 'các', 'những', 'em', 'tra', 'cứu', 'thông', 'tin', 'kết', 'quả'
-    ];
-    $rawTokens = preg_split('/[\s,\?\.!\(\)\[\]]+/u', $q);
-    $meaningfulTokens = array_values(array_filter($rawTokens, fn($w) => mb_strlen($w) >= 2 && !in_array($w, $stopWords, true)));
-
-    $foundUser = null;
-    $accountTokens = array_filter($meaningfulTokens, fn($t) => preg_match('/\d/', $t) || str_contains($t, '@'));
-    $hasPersonIndicator = str_contains($q, 'sinh viên') || str_contains($q, 'học viên') || str_contains($q, 'ktv') || str_contains($q, 'bạn ') || str_contains($q, 'em ') || str_contains($q, 'hồ sơ') || str_contains($q, 'tra cứu') || !empty($accountTokens);
-
-    if ($hasPersonIndicator && !empty($meaningfulTokens)) {
-        // Priority 1: Exact / strong account ID matches (contains digits or @)
-        if (!empty($accountTokens)) {
-            $accStmt = $pdo->prepare('
-                SELECT u.user_id, u.email, u.display_name, u.employee_id, tc.class_code, tc.class_name
-                FROM users u
-                LEFT JOIN class_enrollments ce ON ce.user_id = u.user_id AND ce.status = \'active\'
-                LEFT JOIN training_classes tc ON tc.class_id = ce.class_id
-                WHERE LOWER(u.email) LIKE :term OR LOWER(COALESCE(u.employee_id, \'\')) LIKE :term
-                LIMIT 1
-            ');
-            foreach ($accountTokens as $accTok) {
-                $accStmt->execute(['term' => '%' . $accTok . '%']);
-                $u = $accStmt->fetch();
-                if ($u) {
-                    $foundUser = $u;
-                    break;
-                }
-            }
-        }
-
-        // Priority 2: Multi-token similarity scoring across candidate users
-        if (!$foundUser) {
-            $candStmt = $pdo->query('
-                SELECT u.user_id, u.email, u.display_name, u.employee_id, tc.class_code, tc.class_name
-                FROM users u
-                LEFT JOIN class_enrollments ce ON ce.user_id = u.user_id AND ce.status = \'active\'
-                LEFT JOIN training_classes tc ON tc.class_id = ce.class_id
-                WHERE u.is_terminated = FALSE
-            ');
-            $candidates = $candStmt->fetchAll();
-
-            $bestScore = 0;
-            $bestCandidate = null;
-            foreach ($candidates as $cand) {
-                $nameText = mb_strtolower((string)($cand['display_name'] ?? ''));
-                $emailText = mb_strtolower((string)($cand['email'] ?? ''));
-                $empText = mb_strtolower((string)($cand['employee_id'] ?? ''));
-                $fullText = "{$nameText} {$emailText} {$empText}";
-
-                $score = 0;
-                foreach ($meaningfulTokens as $tok) {
-                    if (str_contains($nameText, $tok)) {
-                        $score += 5;
-                    } elseif (str_contains($fullText, $tok)) {
-                        $score += 2;
-                    }
-                }
-                if ($score > $bestScore) {
-                    $bestScore = $score;
-                    $bestCandidate = $cand;
-                }
-            }
-            if ($bestScore >= 5) {
-                $foundUser = $bestCandidate;
-            }
-        }
-    }
-
-    if ($foundUser) {
-        $uId = (string)$foundUser['user_id'];
-        $uEmail = (string)$foundUser['email'];
-        $uName = (string)($foundUser['display_name'] ?? $uEmail);
-        $uClass = (string)($foundUser['class_code'] ?? 'Chưa xếp lớp');
-
-        // Get student assignment progress
-        $progStmt = $pdo->prepare('
-            SELECT 
-                COUNT(*) AS total_labs,
-                SUM(CASE WHEN assignment_status = \'passed\' THEN 1 ELSE 0 END) AS passed_labs,
-                ROUND(100.0 * SUM(CASE WHEN assignment_status = \'passed\' THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0), 1) AS pct
-            FROM v_lab_assignment_progress
-            WHERE user_id = :uid
-        ');
-        $progStmt->execute(['uid' => $uId]);
-        $prog = $progStmt->fetch() ?: ['total_labs' => 0, 'passed_labs' => 0, 'pct' => 0];
-
-        // Get completed sessions
-        $sessStmt = $pdo->prepare('
-            SELECT 
-                COUNT(*) AS session_count,
-                ROUND(AVG(score), 1) AS avg_score,
-                ROUND(SUM(duration_sec) / 60.0, 1) AS total_min
-            FROM timer_sessions
-            WHERE (user_id = :uid OR LOWER(email) = LOWER(:email))
-              AND status IN (\'completed\', \'failed\')
-        ');
-        $sessStmt->execute(['uid' => $uId, 'email' => $uEmail]);
-        $sess = $sessStmt->fetch() ?: ['session_count' => 0, 'avg_score' => 0, 'total_min' => 0];
-
-        // Get passed lab details
-        $passedLabsStmt = $pdo->prepare('
-            SELECT device_name, lab_name, completed_at
-            FROM v_lab_assignment_progress
-            WHERE user_id = :uid AND assignment_status = \'passed\'
-            ORDER BY completed_at DESC
-        ');
-        $passedLabsStmt->execute(['uid' => $uId]);
-        $passedLabs = $passedLabsStmt->fetchAll();
-
-        $progPct = $prog['pct'] !== null ? $prog['pct'] : 0;
-        $answer = "### 👤 Hồ Sơ Học Tập: **{$uName}**\n\n";
-        $answer .= "- **Email:** `{$uEmail}` | **Mã SV/KTV:** " . ($foundUser['employee_id'] ?? 'N/A') . "\n";
-        $answer .= "- **Lớp sinh hoạt:** **{$uClass}** (" . ($foundUser['class_name'] ?? '') . ")\n";
-        $answer .= "- **Tiến độ hoàn thành:** **{$prog['passed_labs']} / {$prog['total_labs']} bài** (**{$progPct}%**)\n";
-        $answer .= "- **Điểm trung bình:** **" . ($sess['avg_score'] ?? '—') . " / 100**\n";
-        $answer .= "- **Tổng thời gian luyện tập:** **" . ($sess['total_min'] ?? 0) . " phút** qua **" . ($sess['session_count'] ?? 0) . " phiên**\n\n";
-
-        if (!empty($passedLabs)) {
-            $answer .= "#### Các bài lab đã hoàn thành đạt chuẩn:\n";
-            foreach (array_slice($passedLabs, 0, 5) as $pl) {
-                $answer .= "✅ **{$pl['device_name']}**: {$pl['lab_name']}\n";
-            }
-        } else {
-            $answer .= "⚠️ *Học viên chưa hoàn thành đạt bài lab nào được giao.*\n";
-        }
-
-        return [
-            'question' => $question,
-            'answer' => $answer,
-            'intent' => 'student_lookup',
-            'suggested_questions' => [
-                'Tiến độ lớp CNTT-K22 như thế nào?',
-                'Những bài lab nào hay bị sai nhất?',
-                'Lỗi cấu hình nào phổ biến?',
-            ],
-        ];
-    }
-
     // Default Intent: General Overview & Pedagogical Synthesis
     $topLab = $report['top_failed_labs'][0] ?? null;
     $urgentCount = $report['summary']['urgent_students_count'];
@@ -948,7 +1154,7 @@ function ai_chat_query(PDO $pdo, string $question, ?string $classIdentifier = nu
     $answer .= "- *'Bài thực hành nào hay sai nhất?'*\n";
     $answer .= "- *'Lỗi cấu hình nào học viên hay mắc phải?'*\n";
     $answer .= "- *'Tiến độ của lớp CNTT-K22?'*\n";
-    $answer .= "- *'Tra cứu học viên Tùng Đặng Thanh (tungdt5101)?'*\n";
+    $answer .= "- *'Tra cứu bất kỳ học viên nào (VD: \"còn phương sang thì sao\", \"sinh viên Tùng\", \"điểm của Anbcd\", \"học viên 00384102\")'* \n";
 
     return [
         'question' => $question,

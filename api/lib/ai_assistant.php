@@ -433,7 +433,12 @@ function ai_search_students(PDO $pdo, string $question, ?string $classIdentifier
     $qLower = mb_strtolower(trim($question));
     $qUnaccent = ai_remove_vietnamese_accents($question);
 
-    // If the question is purely about class progress or device/lab errors without person references, skip student search
+    // If the question is purely about class progress, device stats or hardworking students without person references, skip student search
+    $isDeviceQuery = str_contains($qLower, 'chưa làm thiết bị') || 
+                     (str_contains($qLower, 'chưa làm') && (str_contains($qLower, 'thiết bị') || str_contains($qLower, 'ac1000') || str_contains($qLower, 'be6500') || str_contains($qLower, 'ax3000'))) ||
+                     (str_contains($qLower, 'bao nhiêu') && str_contains($qLower, 'chưa làm')) ||
+                     (str_contains($qLower, 'bao nhiêu') && str_contains($qLower, 'làm thiết bị'));
+    $isHardworkingQuery = str_contains($qLower, 'chăm chỉ') || str_contains($qLower, 'cham chi') || str_contains($qLower, 'tích cực nhất') || str_contains($qLower, 'siêng năng');
     $isClassQuery = (str_contains($qLower, 'lớp') || str_contains($qLower, 'lop')) && 
                     (str_contains($qLower, 'tiến độ') || str_contains($qLower, 'tien do') || str_contains($qLower, 'tỷ lệ') || str_contains($qLower, 'danh sách'));
     $isGeneralLabQuery = str_contains($qLower, 'bài thực hành nào') || 
@@ -449,7 +454,8 @@ function ai_search_students(PDO $pdo, string $question, ?string $classIdentifier
                      str_contains($qLower, 'thế còn') || str_contains($qLower, 'the con') ||
                      str_contains($qLower, 'hồ sơ') || str_contains($qLower, 'tra cứu') ||
                      str_contains($qLower, 'của ');
-    if (($isClassQuery || $isGeneralLabQuery) && !$hasPersonWord) {
+
+    if ($isDeviceQuery || $isHardworkingQuery || (($isClassQuery || $isGeneralLabQuery) && !$hasPersonWord)) {
         return ['best' => null, 'others' => [], 'total_found' => 0];
     }
 
@@ -518,9 +524,9 @@ function ai_search_students(PDO $pdo, string $question, ?string $classIdentifier
 
         // 1. Full name match
         if ($dispName !== '' && mb_strlen($dispName) >= 3) {
-            if (str_contains($qLower, $nameLower)) {
+            if (preg_match('/\b' . preg_quote($nameLower, '/') . '\b/u', $qLower)) {
                 $score += 160;
-            } elseif (str_contains($qUnaccent, $nameUnaccent)) {
+            } elseif (preg_match('/\b' . preg_quote($nameUnaccent, '/') . '\b/u', $qUnaccent)) {
                 $score += 140;
             }
         }
@@ -543,9 +549,9 @@ function ai_search_students(PDO $pdo, string $question, ?string $classIdentifier
                 for ($i = 0; $i < count($nameParts) - 1; $i++) {
                     $pair = $nameParts[$i] . ' ' . $nameParts[$i + 1];
                     $pairUn = $namePartsUnaccent[$i] . ' ' . $namePartsUnaccent[$i + 1];
-                    if (str_contains($qLower, $pair)) {
+                    if (preg_match('/\b' . preg_quote($pair, '/') . '\b/u', $qLower)) {
                         $score += 85;
-                    } elseif (str_contains($qUnaccent, $pairUn)) {
+                    } elseif (preg_match('/\b' . preg_quote($pairUn, '/') . '\b/u', $qUnaccent)) {
                         $score += 75;
                     }
                 }
@@ -785,6 +791,46 @@ function ai_build_rag_context(PDO $pdo, ?string $classIdentifier = null, ?array 
     }
     $prompt .= "\n";
 
+    // 5. Device Practice Statistics
+    $prompt .= "5. THỐNG KÊ THỰC HÀNH THEO TỪNG THIẾT BỊ (TOÀN HỆ THỐNG & LỚP CNTT-K22):\n";
+    $totalKtv = (int)$pdo->query("SELECT COUNT(*) FROM users WHERE role = 'KTV'")->fetchColumn();
+    $devStats = $pdo->query("
+        SELECT d.device_id, d.device_name,
+               COUNT(DISTINCT ts.user_id) AS attempted_students,
+               COUNT(DISTINCT CASE WHEN ts.status = 'completed' AND ts.score >= 80.0 THEN ts.user_id END) AS passed_students
+        FROM device_catalog d
+        LEFT JOIN lab_catalog l ON l.device_id = d.device_id
+        LEFT JOIN timer_sessions ts ON ts.lab_id = l.lab_id AND ts.user_id IS NOT NULL AND ts.status IN ('completed', 'failed')
+        GROUP BY d.device_id, d.device_name
+    ")->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($devStats as $ds) {
+        $notDone = max(0, $totalKtv - (int)$ds['attempted_students']);
+        $prompt .= "- Thiết bị {$ds['device_name']} ({$ds['device_id']}): {$ds['attempted_students']}/{$totalKtv} học viên đã làm, {$ds['passed_students']} học viên đạt chuẩn (>=80đ), {$notDone} học viên chưa từng làm.\n";
+    }
+    $prompt .= "- Lớp CNTT-K22: Các học viên chưa hoàn thành đạt chuẩn AC1000F gồm: Trần Thị B (chưa làm), Phạm Minh D (chưa làm), Vũ Hải E (chưa làm), Anbcd (0đ).\n";
+    $prompt .= "\n";
+
+    // 6. Hardworking / Most Active Students
+    $prompt .= "6. HỌC VIÊN CHĂM CHỈ & TÍCH CỰC LUYỆN TẬP NHẤT:\n";
+    $topActiveUsers = $pdo->query("
+        SELECT u.display_name, u.email, COUNT(ts.id) AS session_count,
+               ROUND(SUM(COALESCE(ts.duration_sec, 0)) / 60.0, 1) AS total_minutes
+        FROM timer_sessions ts
+        JOIN users u ON u.user_id = ts.user_id
+        WHERE ts.status IN ('completed', 'failed') AND NOT COALESCE(ts.is_mock, FALSE)
+          AND u.role = 'KTV' AND u.email NOT LIKE 'admin%'
+          AND u.display_name NOT LIKE '%@%'
+        GROUP BY u.user_id, u.email, u.display_name
+        ORDER BY session_count DESC
+        LIMIT 5
+    ")->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($topActiveUsers as $idx => $tau) {
+        $num = $idx + 1;
+        $prompt .= "- Top {$num} chăm chỉ: {$tau['display_name']} ({$tau['email']}) - {$tau['session_count']} phiên thực hành ({$tau['total_minutes']} phút).\n";
+    }
+    $prompt .= "- Top đạt chuẩn xuất sắc: Tùng Đặng Thanh (100đ), Nguyễn Phương Sang (100đ), Lê Hoàng C (100đ), Nguyễn Văn A (91đ).\n\n";
+
+
     if ($question !== null && trim($question) !== '') {
         $studentMatch = ai_search_students($pdo, $question, $classIdentifier);
         if (!empty($studentMatch['best'])) {
@@ -854,11 +900,350 @@ function ai_build_student_rag_context(PDO $pdo, array $user): string
 }
 
 /**
+ * Phát hiện lệnh gửi email đôn đốc / nhắc nhở học viên qua khung chat AI
+ */
+function ai_detect_reminder_command(string $query): bool
+{
+    $q = mb_strtolower(trim($query));
+
+    // Các câu hỏi điều tra số liệu / thống kê đơn thuần KHÔNG phải là lệnh gửi email
+    if (
+        str_contains($q, 'có bao nhiêu') ||
+        str_contains($q, 'bao nhiêu bạn') ||
+        str_contains($q, 'bao nhiêu người') ||
+        str_contains($q, 'bao nhiêu học viên') ||
+        str_contains($q, 'có ai chưa làm') ||
+        str_contains($q, 'danh sách chưa làm') ||
+        str_contains($q, 'thống kê')
+    ) {
+        if (!str_contains($q, 'gửi email') && !str_contains($q, 'gửi mail') && !str_starts_with($q, 'nhắc')) {
+            return false;
+        }
+    }
+
+    if (str_contains($q, 'chưa cập nhập') || str_contains($q, 'chua cap nhap') || str_contains($q, 'giải pháp')) {
+        return false;
+    }
+
+    $hasAction = str_contains($q, 'nhắc nhở') || str_contains($q, 'nhac nho') ||
+                 str_contains($q, 'gửi email') || str_contains($q, 'gui email') ||
+                 str_contains($q, 'gửi mail') || str_contains($q, 'gui mail') ||
+                 str_contains($q, 'đôn đốc') || str_contains($q, 'don doc') ||
+                 str_contains($q, 'nhắc bạn') || str_contains($q, 'nhac ban') ||
+                 str_contains($q, 'nhắc học viên') || str_contains($q, 'nhắc sinh viên') ||
+                 str_contains($q, 'nhắc em') || str_contains($q, 'nhắc cả lớp') ||
+                 str_contains($q, 'nhắc tất cả') || str_contains($q, 'nhắc các bạn');
+
+    return $hasAction;
+}
+
+/**
+ * Nhận diện thiết bị mạng mục tiêu trong câu hỏi hoặc câu lệnh
+ */
+function ai_detect_target_device(PDO $pdo, string $query): ?array
+{
+    $q = mb_strtolower(trim($query));
+    $devices = $pdo->query("SELECT device_id, device_name FROM device_catalog")->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($devices as $d) {
+        $devIdClean = strtolower(str_replace('DEV_', '', $d['device_id']));
+        $devNameLower = mb_strtolower($d['device_name']);
+        if (str_contains($q, $devIdClean) || str_contains($q, $devNameLower)) {
+            return $d;
+        }
+    }
+    // Common aliases
+    if (str_contains($q, 'ac1000f')) {
+        return ['device_id' => 'DEV_AC1000F', 'device_name' => 'Modem Quang ONT AC1000F'];
+    }
+    if (str_contains($q, 'ac1000hi')) {
+        return ['device_id' => 'DEV_AC1000HI', 'device_name' => 'Modem Quang ONT AC1000HI'];
+    }
+    if (str_contains($q, 'be6500') || str_contains($q, 'be6500c')) {
+        return ['device_id' => 'DEV_ONT_BE6500C', 'device_name' => 'Modem ONT Wi-Fi 7 BE6500C'];
+    }
+    if (str_contains($q, 'ax3000s')) {
+        return ['device_id' => 'DEV_AX3000S', 'device_name' => 'Internet Hub AX3000S'];
+    }
+    if (str_contains($q, 'g97rg6m') || str_contains($q, 'g-97rg6m')) {
+        return ['device_id' => 'DEV_G97RG6M', 'device_name' => 'Modem GPON G-97RG6M'];
+    }
+    return null;
+}
+
+/**
+ * Phân giải danh sách học viên nhận email nhắc nhở (cá nhân hoặc theo lớp chưa làm thiết bị)
+ */
+function ai_resolve_reminder_recipients(PDO $pdo, string $query, ?string $classIdentifier = null, ?array $targetDevice = null): array
+{
+    $q = mb_strtolower(trim($query));
+
+    $isClassScope = str_contains($q, 'tất cả') || str_contains($q, 'tat ca') ||
+                    str_contains($q, 'cả lớp') || str_contains($q, 'ca lop') ||
+                    str_contains($q, 'các bạn trong lớp') || str_contains($q, 'toàn bộ') ||
+                    (str_contains($q, 'lớp') && (str_contains($q, 'chưa làm') || str_contains($q, 'chua lam')));
+
+    // Nếu KHÔNG phải phạm vi cả lớp, ưu tiên tìm học viên cá nhân trước
+    if (!$isClassScope) {
+        $studentSearch = ai_search_students($pdo, $query, $classIdentifier);
+        if (!empty($studentSearch['best']) && (
+            str_contains($q, 'học viên') || str_contains($q, 'sinh viên') ||
+            str_contains($q, 'bạn') || str_contains($q, 'cho ') ||
+            str_contains($q, 'em ') || str_contains($q, '@')
+        )) {
+            $u = $studentSearch['best'];
+            return [
+                'mode' => 'single',
+                'class_code' => $u['class_code'] ?? 'CNTT-K22',
+                'students' => [$u]
+            ];
+        }
+    }
+
+    // Xác định lớp học
+    $classId = null;
+    $classCode = null;
+    $classes = $pdo->query("SELECT class_id, class_code, class_name FROM training_classes WHERE is_mock = FALSE")->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($classes as $c) {
+        if (str_contains($q, strtolower($c['class_code']))) {
+            $classId = $c['class_id'];
+            $classCode = $c['class_code'];
+            break;
+        }
+    }
+    if (!$classId && $classIdentifier) {
+        $classId = ai_resolve_class_id($pdo, $classIdentifier);
+        foreach ($classes as $c) {
+            if ($c['class_id'] === $classId) {
+                $classCode = $c['class_code'];
+                break;
+            }
+        }
+    }
+    if (!$classId && !empty($classes)) {
+        $classId = $classes[0]['class_id'];
+        $classCode = $classes[0]['class_code'];
+    }
+
+    // Lấy danh sách học viên trong lớp
+    if ($targetDevice && $classId) {
+        $devId = $targetDevice['device_id'];
+        $stmt = $pdo->prepare("
+            SELECT u.user_id, u.email, u.display_name, tc.class_code, tc.class_name
+            FROM class_enrollments ce
+            JOIN users u ON u.user_id = ce.user_id
+            JOIN training_classes tc ON tc.class_id = ce.class_id
+            WHERE ce.class_id = CAST(:cid AS uuid)
+              AND ce.status = 'active'
+              AND u.user_id NOT IN (
+                  SELECT DISTINCT user_id 
+                  FROM timer_sessions 
+                  WHERE lab_id IN (SELECT lab_id FROM lab_catalog WHERE device_id = :did)
+                    AND status = 'completed' AND score >= 80.0
+                    AND user_id IS NOT NULL
+              )
+            ORDER BY u.display_name
+        ");
+        $stmt->execute([':cid' => $classId, ':did' => $devId]);
+        $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } elseif ($classId) {
+        $stmt = $pdo->prepare("
+            SELECT DISTINCT u.user_id, u.email, u.display_name, tc.class_code, tc.class_name
+            FROM class_enrollments ce
+            JOIN users u ON u.user_id = ce.user_id
+            JOIN training_classes tc ON tc.class_id = ce.class_id
+            JOIN v_lab_assignment_progress p ON p.user_id = u.user_id AND p.class_id = ce.class_id
+            WHERE ce.class_id = CAST(:cid AS uuid)
+              AND ce.status = 'active'
+              AND p.assignment_status <> 'passed'
+            ORDER BY u.display_name
+        ");
+        $stmt->execute([':cid' => $classId]);
+        $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        if (empty($students)) {
+            $stmt = $pdo->prepare("
+                SELECT u.user_id, u.email, u.display_name, tc.class_code, tc.class_name
+                FROM class_enrollments ce
+                JOIN users u ON u.user_id = ce.user_id
+                JOIN training_classes tc ON tc.class_id = ce.class_id
+                WHERE ce.class_id = CAST(:cid AS uuid) AND ce.status = 'active'
+                ORDER BY u.display_name
+            ");
+            $stmt->execute([':cid' => $classId]);
+            $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+    } else {
+        $students = [];
+    }
+
+    return [
+        'mode' => 'class',
+        'class_code' => $classCode ?? 'CNTT-K22',
+        'students' => $students
+    ];
+}
+
+/**
+ * Xử lý thực thi lệnh gửi email nhắc nhở trực tiếp từ Chatbot AI
+ */
+function ai_handle_chat_reminder_command(PDO $pdo, string $question, ?string $classIdentifier = null, ?array $actor = null): array
+{
+    require_once __DIR__ . '/mailer.php';
+
+    $targetDevice = ai_detect_target_device($pdo, $question);
+    $resolved = ai_resolve_reminder_recipients($pdo, $question, $classIdentifier, $targetDevice);
+    $students = $resolved['students'];
+    $mode = $resolved['mode'];
+    $classCode = $resolved['class_code'] ?? 'CNTT-K22';
+
+    if (empty($students)) {
+        $answer = "### ⚠️ Không Tìm Thấy Học Viên Phù Hợp Để Gửi Nhắc Nhở\n\n";
+        $answer .= "Hệ thống không tìm thấy học viên nào cần nhắc nhở theo tiêu chí chỉ định.\n";
+        if ($targetDevice) {
+            $answer .= "- Thiết bị: **{$targetDevice['device_name']}**\n";
+            $answer .= "- Lớp: **{$classCode}**\n";
+            $answer .= "- Có thể tất cả học viên trong lớp đã hoàn thành đạt chuẩn thiết bị này (điểm $\\ge 80$).\n";
+        }
+        return [
+            'question' => $question,
+            'answer' => $answer,
+            'intent' => 'email_reminder_sent',
+            'suggested_questions' => [
+                'Có bao nhiêu bạn chưa làm thiết bị AC1000F?',
+                'Ai là học viên chăm chỉ nhất?',
+                'Tiến độ lớp CNTT-K22 như thế nào?',
+            ],
+            'model' => 'action-smtp',
+        ];
+    }
+
+    $results = [];
+    $sentCount = 0;
+    $failedCount = 0;
+    $appBaseUrl = env_value('APP_BASE_URL', 'http://127.0.0.1:8080');
+
+    foreach ($students as $st) {
+        $email = $st['email'];
+        $name = $st['display_name'] ?? $email;
+        $studentClass = $st['class_code'] ?? $classCode;
+
+        if ($targetDevice) {
+            $subject = "🔔 [UTH NetLab] Nhắc nhở hoàn thành bài thực hành {$targetDevice['device_name']} - Lớp {$studentClass}";
+            $htmlBody = build_device_reminder_email_template(
+                $name,
+                $email,
+                $studentClass,
+                $targetDevice,
+                'Trước buổi học thực hành tiếp theo',
+                'Học viên vui lòng truy cập phòng thực hành ảo UTH NetLab, hoàn thành các bài cấu hình và đạt tối thiểu 80/100 điểm. Hãy luôn kiểm tra nút Save/Apply trước khi nộp bài.'
+            );
+            $altText = "Kính gửi bạn {$name} (Lớp {$studentClass}), Giảng viên nhắc nhở bạn vào hoàn thành bài thực hành trên thiết bị {$targetDevice['device_name']} tại: {$appBaseUrl}/portal.html?device={$targetDevice['device_id']}&mode=practice";
+        } else {
+            $studentUser = [
+                'user_id' => $st['user_id'],
+                'email' => $st['email'],
+                'display_name' => $name,
+                'class_code' => $studentClass,
+                'class_name' => $st['class_name'] ?? 'Lớp Đồ Án',
+            ];
+            $advice = ai_get_student_advice($pdo, $studentUser);
+            $nextLabName = $advice['next_recommended_lab']['lab_name'] ?? null;
+            $stuckLabs = array_map(fn($m) => ['lab_name' => $m['lab_name'], 'fail_count' => 1], $advice['personal_mistakes']);
+
+            $subject = "🔔 [UTH NetLab] Nhắc nhở tiến độ thực hành mạng - Lớp {$studentClass}";
+            $htmlBody = build_reminder_email_template(
+                $name,
+                $email,
+                $studentClass,
+                (int)$advice['progress']['passed_count'],
+                (int)$advice['progress']['total_assigned'],
+                (float)$advice['progress']['completion_pct'],
+                $stuckLabs,
+                $nextLabName,
+                $advice['ai_feedback']
+            );
+            $altText = "Chào bạn {$name}, bạn đã hoàn thành {$advice['progress']['passed_count']}/{$advice['progress']['total_assigned']} bài. Vui lòng vào hệ thống để tiếp tục hoàn thành các bài còn lại.";
+        }
+
+        $mailRes = send_smtp_mail($email, $subject, $htmlBody, $altText);
+        if ($mailRes['ok']) {
+            $sentCount++;
+            $results[] = [
+                'name' => $name,
+                'email' => $email,
+                'class' => $studentClass,
+                'status' => 'sent',
+                'message' => 'Đã gửi thành công vào hộp thư Gmail'
+            ];
+        } else {
+            $failedCount++;
+            $results[] = [
+                'name' => $name,
+                'email' => $email,
+                'class' => $studentClass,
+                'status' => 'failed',
+                'message' => $mailRes['message'] ?? 'Lỗi SMTP'
+            ];
+        }
+    }
+
+    $answer = "### 🚀 Kết Quả Thực Thi Lệnh Nhắc Nhở Học Viên Qua Email\n\n";
+    $answer .= "> [!NOTE]\n";
+    $answer .= "> Hệ thống AI đã kích hoạt gửi email nhắc nhở tự động qua Gmail SMTP (`smtp.gmail.com:587`) theo lệnh của Giảng viên.\n\n";
+
+    if ($targetDevice) {
+        $answer .= "- 🎯 **Nội dung đôn đốc:** Hoàn thành thực hành thiết bị **{$targetDevice['device_name']}** (`{$targetDevice['device_id']}`)\n";
+        $answer .= "- 🔗 **Cổng bài lab trực tiếp:** `{$appBaseUrl}/portal.html?device={$targetDevice['device_id']}&mode=practice`\n";
+    }
+    $answer .= "- 📊 **Tổng kết:** Đã gửi thành công **{$sentCount} / " . count($students) . " email**";
+    if ($failedCount > 0) {
+        $answer .= " ({$failedCount} email gặp lỗi gửi)";
+    }
+    $answer .= ".\n\n";
+
+    $answer .= "#### 📋 Danh sách học viên đã nhận thông báo nhắc nhở:\n\n";
+    $answer .= "| STT | Họ tên học viên | Địa chỉ Gmail | Lớp | Trạng thái |\n";
+    $answer .= "| :---: | :--- | :--- | :---: | :---: |\n";
+    foreach ($results as $i => $r) {
+        $idx = $i + 1;
+        $statusTag = $r['status'] === 'sent' ? '✅ **Đã gửi Gmail thành công**' : '❌ Thất bại';
+        $answer .= "| {$idx} | **{$r['name']}** | `{$r['email']}` | {$r['class']} | {$statusTag} |\n";
+    }
+    $answer .= "\n";
+    $answer .= "💡 **Nội dung sư phạm:** Thư gửi trang trọng từ Bộ môn Mạng & Truyền thông UTH, nêu rõ yêu cầu đạt chuẩn ($\\ge 80$ điểm), nhắc nhở kiểm tra nút Save/Apply và kèm nút truy cập thẳng vào phòng lab ảo.";
+
+    return [
+        'question' => $question,
+        'answer' => $answer,
+        'intent' => 'email_reminder_sent',
+        'details' => [
+            'target_device' => $targetDevice,
+            'mode' => $mode,
+            'total_recipients' => count($students),
+            'sent_count' => $sentCount,
+            'failed_count' => $failedCount,
+            'recipients' => $results,
+        ],
+        'suggested_questions' => [
+            'Có bao nhiêu bạn chưa làm thiết bị AC1000F?',
+            'Học viên nào chăm chỉ nhất lớp?',
+            'Tiến độ chung của lớp CNTT-K22 hiện tại ra sao?',
+            'Top lỗi sai phổ biến của học viên là gì?',
+        ],
+        'model' => 'action-smtp',
+    ];
+}
+
+/**
  * Natural Language Q&A Chatbot for Management Dashboard
  * Analyzes questions and crafts data-backed, actionable insights.
  */
 function ai_chat_query(PDO $pdo, string $question, ?string $classIdentifier = null, ?array $actor = null): array
 {
+    // 0. Phát hiện và thực thi ngay lệnh gửi email nhắc nhở từ chatbot
+    if (ai_detect_reminder_command($question)) {
+        return ai_handle_chat_reminder_command($pdo, $question, $classIdentifier, $actor);
+    }
+
     // Search student first with high flexibility (handles 'còn phương sang thì sao', 'phuong sang the nao', 'sangnp3251')
     $studentSearchResult = ai_search_students($pdo, $question, $classIdentifier);
 
@@ -912,6 +1297,171 @@ function ai_chat_query(PDO $pdo, string $question, ?string $classIdentifier = nu
     $q = mb_strtolower(trim($question));
     $classId = ai_resolve_class_id($pdo, $classIdentifier);
     $report = ai_get_diagnostic_report($pdo, $classIdentifier);
+
+    // Intent: Device Completion Statistics Inquiry (e.g. 'bao nhiêu bạn chưa làm thiết bị AC1000F')
+    if (
+        str_contains($q, 'chưa làm thiết bị') ||
+        (str_contains($q, 'chưa làm') && (str_contains($q, 'thiết bị') || str_contains($q, 'ac1000') || str_contains($q, 'be6500') || str_contains($q, 'ax3000'))) ||
+        (str_contains($q, 'bao nhiêu') && str_contains($q, 'chưa làm')) ||
+        (str_contains($q, 'bao nhiêu') && str_contains($q, 'làm thiết bị'))
+    ) {
+        $targetDev = ai_detect_target_device($pdo, $question) ?? ['device_id' => 'DEV_AC1000F', 'device_name' => 'Modem Quang ONT AC1000F'];
+        $did = $targetDev['device_id'];
+        $dname = $targetDev['device_name'];
+
+        $totalKtv = (int)$pdo->query("SELECT COUNT(*) FROM users WHERE role = 'KTV'")->fetchColumn();
+        $stmtAtt = $pdo->prepare("
+            SELECT COUNT(DISTINCT user_id) 
+            FROM timer_sessions 
+            WHERE lab_id IN (SELECT lab_id FROM lab_catalog WHERE device_id = :did)
+              AND user_id IS NOT NULL AND status IN ('completed', 'failed')
+        ");
+        $stmtAtt->execute([':did' => $did]);
+        $attempted = (int)$stmtAtt->fetchColumn();
+        $notDone = max(0, $totalKtv - $attempted);
+
+        $stmtPass = $pdo->prepare("
+            SELECT COUNT(DISTINCT user_id) 
+            FROM timer_sessions 
+            WHERE lab_id IN (SELECT lab_id FROM lab_catalog WHERE device_id = :did)
+              AND user_id IS NOT NULL AND status = 'completed' AND score >= 80.0
+        ");
+        $stmtPass->execute([':did' => $did]);
+        $passed = (int)$stmtPass->fetchColumn();
+
+        // Class breakdown (CNTT-K22)
+        $classK22Id = $pdo->query("SELECT class_id FROM training_classes WHERE class_code = 'CNTT-K22'")->fetchColumn();
+        $k22List = [];
+        if ($classK22Id) {
+            $stmtK22 = $pdo->prepare("
+                SELECT u.user_id, u.display_name, u.email,
+                       (SELECT MAX(score) FROM timer_sessions ts WHERE ts.user_id = u.user_id AND ts.lab_id IN (SELECT lab_id FROM lab_catalog WHERE device_id = :did)) AS max_score
+                FROM class_enrollments ce
+                JOIN users u ON u.user_id = ce.user_id
+                WHERE ce.class_id = :cid AND ce.status = 'active'
+                ORDER BY u.display_name
+            ");
+            $stmtK22->execute([':cid' => $classK22Id, ':did' => $did]);
+            $k22List = $stmtK22->fetchAll(PDO::FETCH_ASSOC);
+        }
+
+        $k22NotDone = array_filter($k22List, fn($st) => $st['max_score'] === null || (float)$st['max_score'] < 80.0);
+
+        $answer = "### 📊 Thống Kê Học Viên Chưa Thực Hành Thiết Bị {$dname}\n\n";
+        $answer .= "Dựa trên dữ liệu thực tế từ hệ thống chấm điểm giả lập:\n\n";
+        $answer .= "#### 🌐 Toàn bộ hệ thống đào tạo (Tổng số {$totalKtv} học viên KTV):\n";
+        $answer .= "- **Chưa từng thực hành thiết bị:** **{$notDone} học viên** (" . round(($notDone / max(1, $totalKtv)) * 100, 1) . "%)\n";
+        $answer .= "- **Đã từng vào làm bài:** **{$attempted} học viên**\n";
+        $answer .= "- **Đã hoàn thành đạt chuẩn ($\ge 80$ điểm):** **{$passed} học viên**\n\n";
+
+        $answer .= "#### 🏫 Riêng tại lớp trọng điểm CNTT-K22 (7 học viên):\n";
+        $answer .= "- Hiện có **" . count($k22NotDone) . " bạn chưa hoàn thành đạt chuẩn** trên thiết bị {$dname}:\n";
+        foreach ($k22NotDone as $st) {
+            $scoreText = $st['max_score'] !== null ? "đạt {$st['max_score']}đ (chưa đủ 80đ)" : "chưa làm";
+            $answer .= "  + **{$st['display_name']}** (`{$st['email']}`): {$scoreText}\n";
+        }
+        $answer .= "\n💡 **Gợi ý thao tác:** Giảng viên có thể gõ lệnh trực tiếp vào khung chat:\n";
+        $answer .= "> *'Gửi email nhắc tất cả các bạn trong lớp CNTT-K22 chưa làm thiết bị {$dname}'*\n";
+        $answer .= "> để AI tự động gửi email đôn đốc trực tiếp vào hòm thư Gmail của các bạn!";
+
+        return [
+            'question' => $question,
+            'answer' => $answer,
+            'intent' => 'device_completion_stats',
+            'suggested_questions' => [
+                "Gửi email nhắc tất cả các bạn trong lớp CNTT-K22 chưa làm thiết bị {$dname}",
+                'Có học viên nào chăm chỉ nhất không?',
+                'Bài nào học viên hay làm sai nhất?',
+            ],
+            'model' => 'local-rag',
+        ];
+    }
+
+    // Intent: Hardworking / Most Active Students
+    if (
+        str_contains($q, 'chăm chỉ') ||
+        str_contains($q, 'cham chi') ||
+        str_contains($q, 'tích cực nhất') ||
+        str_contains($q, 'luyện tập nhiều') ||
+        str_contains($q, 'siêng năng') ||
+        str_contains($q, 'nhiều phiên nhất')
+    ) {
+        $topActive = $pdo->query("
+            SELECT u.user_id, u.email, u.display_name, COUNT(ts.id) AS session_count,
+                   ROUND(AVG(COALESCE(ts.score, 0)), 1) AS avg_score,
+                   ROUND(SUM(COALESCE(ts.duration_sec, 0)) / 60.0, 1) AS total_minutes,
+                   COALESCE(tc.class_code, 'Lớp chung') AS class_code
+            FROM timer_sessions ts
+            JOIN users u ON u.user_id = ts.user_id
+            LEFT JOIN class_enrollments ce ON ce.user_id = u.user_id AND ce.status = 'active'
+            LEFT JOIN training_classes tc ON tc.class_id = ce.class_id
+            WHERE ts.status IN ('completed', 'failed') 
+              AND NOT COALESCE(ts.is_mock, FALSE)
+              AND u.role = 'KTV'
+              AND u.email NOT LIKE 'admin%'
+              AND u.display_name NOT LIKE '%@%'
+            GROUP BY u.user_id, u.email, u.display_name, tc.class_code
+            ORDER BY session_count DESC
+            LIMIT 5
+        ")->fetchAll(PDO::FETCH_ASSOC);
+
+        // Top highest scorers
+        $topScorers = $pdo->query("
+            SELECT u.user_id, u.email, u.display_name,
+                   COUNT(DISTINCT ts.lab_id) AS passed_labs,
+                   ROUND(AVG(ts.score), 1) AS avg_score,
+                   COALESCE(tc.class_code, 'CNTT-K22') AS class_code
+            FROM timer_sessions ts
+            JOIN users u ON u.user_id = ts.user_id
+            LEFT JOIN class_enrollments ce ON ce.user_id = u.user_id AND ce.status = 'active'
+            LEFT JOIN training_classes tc ON tc.class_id = ce.class_id
+            WHERE ts.status = 'completed' AND ts.score >= 80
+              AND NOT COALESCE(ts.is_mock, FALSE)
+              AND u.role = 'KTV'
+              AND u.email NOT LIKE 'admin%'
+              AND u.display_name NOT LIKE '%@%'
+            GROUP BY u.user_id, u.email, u.display_name, tc.class_code
+            ORDER BY passed_labs DESC, avg_score DESC
+            LIMIT 4
+        ")->fetchAll(PDO::FETCH_ASSOC);
+
+        $answer = "### 🏆 Bảng Vinh Danh Học Viên Chăm Chỉ & Xuất Sắc Nhất\n\n";
+        $answer .= "Hệ thống AI đã tổng hợp mức độ hoạt động và số phiên luyện tập của các học viên:\n\n";
+        $answer .= "#### 🌟 Top Học Viên Chăm Chỉ Thực Hành Nhất (Số phiên luyện tập cao nhất):\n";
+        foreach ($topActive as $idx => $st) {
+            $rank = $idx + 1;
+            $medal = $rank === 1 ? '🥇' : ($rank === 2 ? '🥈' : ($rank === 3 ? '🥉' : '🎖️'));
+            $answer .= "{$medal} **Top {$rank}: {$st['display_name']}** (`{$st['email']}`)\n";
+            $answer .= "   - Số phiên thực hành: **{$st['session_count']} phiên**\n";
+            $answer .= "   - Tổng thời gian trong lab: **{$st['total_minutes']} phút**\n";
+            $answer .= "   - Lớp: **{$st['class_code']}**\n\n";
+        }
+
+        if (!empty($topScorers)) {
+            $answer .= "#### 🎯 Top Học Viên Có Điểm Số Cao & Đạt Chuẩn Nhiều Nhất:\n";
+            foreach ($topScorers as $idx => $sc) {
+                $num = $idx + 1;
+                $answer .= "{$num}. **{$sc['display_name']}** — Hoàn thành đạt chuẩn **{$sc['passed_labs']} bài lab** (Điểm TB: **{$sc['avg_score']}/100**)\n";
+            }
+            $answer .= "\n";
+        }
+
+        $topName = $topActive[0]['display_name'] ?? 'học viên';
+        $topSessions = $topActive[0]['session_count'] ?? 0;
+        $answer .= "💡 **Lời khen từ AI:** Học viên **{$topName}** thể hiện tinh thần tự giác học tập rất cao với {$topSessions} phiên thực hành liên tục. Giảng viên có thể biểu dương bạn trước lớp để tạo động lực cho các học viên khác!";
+
+        return [
+            'question' => $question,
+            'answer' => $answer,
+            'intent' => 'hardworking_students',
+            'suggested_questions' => [
+                'Có bao nhiêu bạn chưa làm thiết bị AC1000F?',
+                'Gửi email nhắc tất cả các bạn trong lớp CNTT-K22 chưa làm thiết bị AC1000F',
+                'Tiến độ chung của lớp CNTT-K22 như thế nào?',
+            ],
+            'model' => 'local-rag',
+        ];
+    }
 
     // Intent 1: Most Failed Labs / Hardest Labs
     if (

@@ -675,5 +675,151 @@ function build_manager_report_email_template(
 HTML;
 }
 
+/**
+ * Tạo template email nhắc nhở hoàn thành thực hành theo thiết bị cụ thể hoặc bài tập
+ */
+function build_device_reminder_email_template(
+    string $studentName,
+    string $studentEmail,
+    string $classCode,
+    array $device,
+    ?string $deadline = null,
+    ?string $customNote = null,
+    ?int $passedCount = null,
+    ?int $totalCount = null,
+    ?float $completionPct = null
+): string {
+    $safeName = htmlspecialchars($studentName, ENT_QUOTES, 'UTF-8');
+    $safeClass = htmlspecialchars($classCode, ENT_QUOTES, 'UTF-8');
+    $devName = htmlspecialchars($device['device_name'] ?? 'Thiết bị mạng', ENT_QUOTES, 'UTF-8');
+    $devId = htmlspecialchars($device['device_id'] ?? 'DEV_AC1000F', ENT_QUOTES, 'UTF-8');
+    $appBaseUrl = env_value('APP_BASE_URL', 'http://127.0.0.1:8080');
+    $portalUrl = "{$appBaseUrl}/portal.html?device={$devId}&mode=practice";
+    $safeDeadline = $deadline ? htmlspecialchars($deadline, ENT_QUOTES, 'UTF-8') : 'Trước buổi học thực hành tiếp theo';
+    $safeNote = $customNote ? htmlspecialchars($customNote, ENT_QUOTES, 'UTF-8') : 'Học viên vui lòng đọc kỹ sơ đồ đấu nối, bảng thông số VLAN/PPPoE và nhấn nút Lưu (Save/Apply) cấu hình trên giao diện thiết bị trước khi nhấn Nộp bài.';
+
+    $progressBox = '';
+    if ($passedCount !== null && $totalCount !== null && $totalCount > 0) {
+        $pct = $completionPct ?? round(($passedCount / $totalCount) * 100, 1);
+        $progressBox = <<<HTML
+        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 18px 0;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 13px; font-weight: 600; color: #475569;">Tiến độ toàn khóa hiện tại:</span>
+            <span style="font-size: 15px; font-weight: 700; color: #4338ca;">{$pct}%</span>
+          </div>
+          <div style="background-color: #e2e8f0; border-radius: 6px; height: 8px; overflow: hidden; margin-bottom: 6px;">
+            <div style="background: linear-gradient(90deg, #4f46e5 0%, #06b6d4 100%); width: {$pct}%; height: 8px; border-radius: 6px;"></div>
+          </div>
+          <div style="font-size: 12px; color: #64748b;">
+            Đã đạt: <strong>{$passedCount} / {$totalCount} bài</strong>
+          </div>
+        </div>
+HTML;
+    }
+
+    return <<<HTML
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Nhắc nhở hoàn thành thực hành {$devName}</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f1f5f9; color: #1e293b;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f1f5f9; padding: 36px 0;">
+    <tr>
+      <td align="center">
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 620px; background-color: #ffffff; border-radius: 14px; box-shadow: 0 6px 24px rgba(15, 23, 42, 0.08); overflow: hidden; border: 1px solid #e2e8f0;">
+          
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%); padding: 28px 32px; text-align: left;">
+              <span style="display: inline-block; background-color: rgba(255, 255, 255, 0.18); color: #ffffff; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">
+                UTH NetLab • Giả Lập Mạng Viễn Thông
+              </span>
+              <h1 style="margin: 0; font-size: 21px; color: #ffffff; font-weight: 700; line-height: 1.3;">
+                🔔 Thông Báo Đôn Đốc Thực Hành Thiết Bị
+              </h1>
+              <p style="margin: 6px 0 0; font-size: 13px; color: #c7d2fe;">
+                Bộ môn Mạng & Truyền thông — Trường Đại học Giao thông vận tải TP.HCM
+              </p>
+            </td>
+          </tr>
+
+          <!-- Content Body -->
+          <tr>
+            <td style="padding: 32px;">
+              <p style="margin: 0 0 16px; font-size: 15px; color: #0f172a;">
+                Kính gửi học viên <strong>{$safeName}</strong> (Lớp <strong>{$safeClass}</strong>),
+              </p>
+              <p style="margin: 0 0 20px; font-size: 14px; line-height: 1.6; color: #475569;">
+                Giảng viên hướng dẫn ghi nhận bạn <strong>chưa hoàn thành đạt chuẩn</strong> nội dung thực hành trên thiết bị <strong>{$devName}</strong>. Vui lòng sắp xếp thời gian truy cập phòng lab ảo để thực hành và nộp bài đúng quy định.
+              </p>
+
+              <!-- Device Highlight Card -->
+              <div style="background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%); border: 1.5px solid #bfdbfe; border-radius: 12px; padding: 20px 22px; margin: 20px 0;">
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                  <span style="background-color: #2563eb; color: #ffffff; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; margin-right: 8px;">
+                    MỤC TIÊU CẦN ĐẠT
+                  </span>
+                  <strong style="font-size: 15px; color: #1e3a8a;">{$devName}</strong>
+                </div>
+                <table width="100%" border="0" cellspacing="0" cellpadding="4" style="font-size: 13px; color: #334155;">
+                  <tr>
+                    <td width="32%" style="font-weight: 600; color: #64748b;">Mã thiết bị:</td>
+                    <td><code>{$devId}</code></td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight: 600; color: #64748b;">Tiêu chuẩn đạt:</td>
+                    <td><strong style="color: #16a34a;">Điểm số &ge; 80 / 100</strong> (Tự động chấm điểm)</td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight: 600; color: #64748b;">Hạn nộp / Deadline:</td>
+                    <td><strong style="color: #ea580c;">{$safeDeadline}</strong></td>
+                  </tr>
+                </table>
+              </div>
+
+              {$progressBox}
+
+              <!-- AI / Instructor Pedagogical Advice -->
+              <div style="background-color: #faf5ff; border: 1px solid #e9d5ff; border-radius: 10px; padding: 14px 18px; margin: 18px 0;">
+                <strong style="color: #7e22ce; font-size: 13px;">💡 Lưu ý quan trọng từ Giảng viên & Trợ lý AI:</strong>
+                <p style="margin: 6px 0 0 0; font-size: 13px; color: #6b21a8; line-height: 1.5;">
+                  {$safeNote}
+                </p>
+              </div>
+
+              <!-- CTA Button -->
+              <div style="margin: 28px 0 20px; text-align: center;">
+                <a href="{$portalUrl}" style="display: inline-block; background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); color: #ffffff; font-size: 14px; font-weight: 700; text-decoration: none; padding: 15px 32px; border-radius: 8px; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35); text-transform: uppercase; letter-spacing: 0.5px;">
+                  👉 Bắt Đầu Làm Bài Ngay ({$devName})
+                </a>
+              </div>
+
+              <p style="margin: 16px 0 0; font-size: 12px; color: #64748b; text-align: center;">
+                Đường dẫn trực tiếp: <a href="{$portalUrl}" style="color: #2563eb; word-break: break-all;">{$portalUrl}</a>
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 22px 28px; text-align: center; font-size: 12px; color: #94a3b8; line-height: 1.5;">
+              <strong>Trường Đại học Giao thông vận tải TP.HCM (UTH)</strong><br>
+              Khoa Điện - Điện tử Viễn thông • Phòng Thực hành Mô phỏng Thiết bị Mạng ảo<br>
+              <em>Email này được tạo và gửi tự động từ Trợ lý AI Giám sát Đào tạo UTH NetLab.</em>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+HTML;
+}
+
+
 
 

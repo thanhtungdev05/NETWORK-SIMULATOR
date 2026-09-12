@@ -478,6 +478,9 @@
 
             if (!res.ok) {
                 const errJson = await res.json().catch(() => ({}));
+                if (res.status === 401) {
+                    throw new Error('Phiên làm việc đã hết hạn (do máy chủ vừa cập nhật bản mới). Bạn vui lòng [bấm vào đây để đăng nhập lại](/login/?redirect=/dashboard/) hoặc nhấn F5 tải lại trang.');
+                }
                 throw new Error(errJson.error?.message || `Lỗi phản hồi HTTP ${res.status}`);
             }
 
@@ -594,6 +597,9 @@
 
         // Code blocks & inline code
         escaped = escaped.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+        // Links [text](url)
+        escaped = escaped.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_self" style="color: #2563eb; text-decoration: underline; font-weight: 600;">$1</a>');
 
         // Bullet lists
         escaped = escaped.replace(/^\s*-\s+(.*$)/gim, '<li>$1</li>');

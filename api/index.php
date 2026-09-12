@@ -291,10 +291,15 @@ function initialize_session(string $root): void
 
     $driver = strtolower(is_local_request()
         ? env_value('SESSION_DRIVER_LOCAL', 'files')
-        : env_value('SESSION_DRIVER', 'files'));
+        : env_value('SESSION_DRIVER', 'database'));
     if ($driver === 'database') {
-        session_set_save_handler(new PostgresSessionHandler(fn(): PDO => db(), $ttlSeconds), true);
-    } elseif ($driver === 'files') {
+        try {
+            session_set_save_handler(new PostgresSessionHandler(fn(): PDO => db(), $ttlSeconds), true);
+        } catch (Throwable) {
+            $driver = 'files';
+        }
+    }
+    if ($driver === 'files') {
         $sessionPath = env_value('SESSION_SAVE_PATH', $root . DIRECTORY_SEPARATOR . 'scratch' . DIRECTORY_SEPARATOR . 'sessions');
         if (!is_dir((string)$sessionPath) && !@mkdir((string)$sessionPath, 0777, true) && !is_dir((string)$sessionPath)) {
             $sessionPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'ftc_sessions';
@@ -306,7 +311,7 @@ function initialize_session(string $root): void
             $sessionPath = sys_get_temp_dir();
         }
         session_save_path((string)$sessionPath);
-    } else {
+    } elseif ($driver !== 'database') {
         fail(500, 'session-config-error', 'Unsupported session driver.');
     }
 
@@ -454,7 +459,7 @@ function require_user(): array
         if (dev_bypass_enabled()) {
             return mock_bypass_user();
         }
-        fail(401, 'auth/unauthenticated', 'You must sign in first.');
+        fail(401, 'auth/unauthenticated', 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục.');
     }
 
     $user = $userId ? find_user_by_id($userId) : find_user((string)$email);
@@ -463,7 +468,7 @@ function require_user(): array
             return mock_bypass_user();
         }
         unset($_SESSION['user_id'], $_SESSION['user_email'], $_SESSION['iam_subject']);
-        fail(401, 'auth/unauthenticated', 'Session user no longer exists.');
+        fail(401, 'auth/unauthenticated', 'Phiên làm việc không hợp lệ hoặc tài khoản không tồn tại. Vui lòng đăng nhập lại.');
     }
     if (database_boolean($user['is_terminated'] ?? false)) {
         unset($_SESSION['user_id'], $_SESSION['user_email'], $_SESSION['iam_subject']);

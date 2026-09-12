@@ -12,7 +12,8 @@
         activeClass: 'all',
         diagnosticData: null,
         isLoading: false,
-        chatHistory: []
+        chatHistory: [],
+        lastFocusedStudent: null
     };
 
     // DOM Elements
@@ -468,7 +469,8 @@
                 credentials: 'include',
                 body: JSON.stringify({
                     message: text,
-                    class_id: state.activeClass
+                    class_id: state.activeClass,
+                    focused_student: state.lastFocusedStudent || null
                 })
             });
 
@@ -481,6 +483,9 @@
 
             const json = await res.json();
             const data = json.data || {};
+            if (data.focused_student) {
+                state.lastFocusedStudent = data.focused_student;
+            }
             appendMessage('assistant', data.answer, data.model);
             updateSuggestedChips(data.suggested_questions);
         } catch (err) {

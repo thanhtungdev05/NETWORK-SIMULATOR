@@ -1,6 +1,19 @@
 <?php
 declare(strict_types=1);
 
+if (!function_exists('database_boolean')) {
+    function database_boolean(mixed $value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+        if (is_int($value)) {
+            return $value === 1;
+        }
+        return in_array(strtolower(trim((string)$value)), ['1', 't', 'true', 'yes', 'y', 'on'], true);
+    }
+}
+
 /**
  * AI Assistant Module for Network Lab Management Dashboard
  * Provides diagnostic analytics, failure pattern extraction, and intelligent Q&A.
@@ -905,6 +918,7 @@ function ai_build_student_rag_context(PDO $pdo, array $user): string
 function ai_detect_reminder_command(string $query): bool
 {
     $q = mb_strtolower(trim($query));
+    $q = str_replace(['qmail', 'gmai', 'gmaill'], 'gmail', $q);
 
     // Các câu hỏi điều tra số liệu / thống kê đơn thuần KHÔNG phải là lệnh gửi email
     if (
@@ -928,11 +942,22 @@ function ai_detect_reminder_command(string $query): bool
     $hasAction = str_contains($q, 'nhắc nhở') || str_contains($q, 'nhac nho') ||
                  str_contains($q, 'gửi email') || str_contains($q, 'gui email') ||
                  str_contains($q, 'gửi mail') || str_contains($q, 'gui mail') ||
+                 str_contains($q, 'gửi tin nhắn') || str_contains($q, 'gui tin nhan') ||
+                 str_contains($q, 'nhắn tin') || str_contains($q, 'nhan tin') ||
+                 str_contains($q, 'nhắn cho') || str_contains($q, 'nhan cho') ||
+                 str_contains($q, 'nhắn bạn') || str_contains($q, 'nhan ban') ||
+                 str_contains($q, 'nhắn riêng') || str_contains($q, 'nhan rieng') ||
+                 str_contains($q, 'nhắn em') || str_contains($q, 'nhan em') ||
                  str_contains($q, 'đôn đốc') || str_contains($q, 'don doc') ||
                  str_contains($q, 'nhắc bạn') || str_contains($q, 'nhac ban') ||
                  str_contains($q, 'nhắc học viên') || str_contains($q, 'nhắc sinh viên') ||
                  str_contains($q, 'nhắc em') || str_contains($q, 'nhắc cả lớp') ||
-                 str_contains($q, 'nhắc tất cả') || str_contains($q, 'nhắc các bạn');
+                 str_contains($q, 'nhắc tất cả') || str_contains($q, 'nhắc các bạn') ||
+                 str_contains($q, 'nhắc bạn ấy') || str_contains($q, 'nhac ban ay') ||
+                 str_contains($q, 'nhắc em ấy') || str_contains($q, 'nhac em ay') ||
+                 str_contains($q, 'nhắc người này') || str_contains($q, 'nhắc người đó') ||
+                 str_contains($q, 'qua gmail') || str_contains($q, 'qua mail') ||
+                 str_contains($q, 'vào gmail') || str_contains($q, 'vào mail');
 
     return $hasAction;
 }
@@ -973,93 +998,168 @@ function ai_detect_target_device(PDO $pdo, string $query): ?array
 /**
  * Phân giải danh sách học viên nhận email nhắc nhở (cá nhân hoặc theo lớp chưa làm thiết bị)
  */
-function ai_resolve_reminder_recipients(PDO $pdo, string $query, ?string $classIdentifier = null, ?array $targetDevice = null): array
+function ai_resolve_reminder_recipients(PDO $pdo, string $query, ?string $classIdentifier = null, ?array $targetDevice = null, ?array $focusedStudent = null): array
 {
     $q = mb_strtolower(trim($query));
+    $qNormalized = str_replace(['qmail', 'gmai', 'gmaill'], 'gmail', $q);
 
+    // 1. Explicit email in query (e.g. "bạn gửi tin nhắn bạn tùng gmail tungdt5101@ut.edu.vn")
+    if (preg_match('/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/', $query, $emailMatches)) {
+        $matchedEmail = strtolower($emailMatches[0]);
+        $stmt = $pdo->prepare("
+            SELECT u.user_id, u.email, u.display_name, COALESCE(tc.class_code, 'CNTT-K22') AS class_code, tc.class_name
+            FROM users u
+            LEFT JOIN class_enrollments ce ON ce.user_id = u.user_id AND ce.status = 'active'
+            LEFT JOIN training_classes tc ON tc.class_id = ce.class_id
+            WHERE LOWER(u.email) = :email
+            LIMIT 1
+        ");
+        $stmt->execute([':email' => $matchedEmail]);
+        $userByEmail = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($userByEmail) {
+            return [
+                'mode' => 'single',
+                'class_code' => $userByEmail['class_code'] ?? 'CNTT-K22',
+                'students' => [$userByEmail],
+                'target_type' => 'explicit_email'
+            ];
+        } else {
+            $nameFromEmail = explode('@', $matchedEmail)[0];
+            return [
+                'mode' => 'single',
+                'class_code' => 'CNTT-K22',
+                'students' => [
+                    [
+                        'user_id' => null,
+                        'email' => $matchedEmail,
+                        'display_name' => $nameFromEmail,
+                        'class_code' => 'CNTT-K22',
+                        'class_name' => 'Lớp Đồ Án'
+                    ]
+                ],
+                'target_type' => 'explicit_email'
+            ];
+        }
+    }
+
+    // 2. Conversational pronoun referring to the last focused student (e.g. "nhắc bạn ấy làm tiếp qua qmail")
+    $hasPronoun = str_contains($q, 'bạn ấy') || str_contains($q, 'ban ay') ||
+                  str_contains($q, 'em ấy') || str_contains($q, 'em ay') ||
+                  str_contains($q, 'bạn này') || str_contains($q, 'ban nay') ||
+                  str_contains($q, 'em này') || str_contains($q, 'em nay') ||
+                  str_contains($q, 'bạn đó') || str_contains($q, 'ban do') ||
+                  str_contains($q, 'em đó') || str_contains($q, 'em do') ||
+                  str_contains($q, 'người này') || str_contains($q, 'nguoi nay') ||
+                  str_contains($q, 'người đó') || str_contains($q, 'nguoi do') ||
+                  str_contains($q, 'vừa rồi') || str_contains($q, 'vua roi') ||
+                  str_contains($q, 'làm tiếp');
+
+    if ($hasPronoun && !empty($focusedStudent) && !empty($focusedStudent['email'])) {
+        $stmt = $pdo->prepare("
+            SELECT u.user_id, u.email, u.display_name, COALESCE(tc.class_code, 'CNTT-K22') AS class_code, tc.class_name
+            FROM users u
+            LEFT JOIN class_enrollments ce ON ce.user_id = u.user_id AND ce.status = 'active'
+            LEFT JOIN training_classes tc ON tc.class_id = ce.class_id
+            WHERE LOWER(u.email) = LOWER(:email) OR u.user_id::text = :uid
+            LIMIT 1
+        ");
+        $stmt->execute([
+            ':email' => $focusedStudent['email'],
+            ':uid' => $focusedStudent['user_id'] ?? ''
+        ]);
+        $freshUser = $stmt->fetch(PDO::FETCH_ASSOC);
+        $targetUser = $freshUser ?: $focusedStudent;
+
+        return [
+            'mode' => 'single',
+            'class_code' => $targetUser['class_code'] ?? 'CNTT-K22',
+            'students' => [$targetUser],
+            'target_type' => 'conversational_pronoun'
+        ];
+    }
+
+    // 3. Check for class scope
     $isClassScope = str_contains($q, 'tất cả') || str_contains($q, 'tat ca') ||
                     str_contains($q, 'cả lớp') || str_contains($q, 'ca lop') ||
                     str_contains($q, 'các bạn trong lớp') || str_contains($q, 'toàn bộ') ||
+                    str_contains($q, 'các học viên trong lớp') ||
                     (str_contains($q, 'lớp') && (str_contains($q, 'chưa làm') || str_contains($q, 'chua lam')));
 
-    // Nếu KHÔNG phải phạm vi cả lớp, ưu tiên tìm học viên cá nhân trước
+    // 4. If NOT class scope, search for student by name
     if (!$isClassScope) {
         $studentSearch = ai_search_students($pdo, $query, $classIdentifier);
         if (!empty($studentSearch['best']) && (
             str_contains($q, 'học viên') || str_contains($q, 'sinh viên') ||
             str_contains($q, 'bạn') || str_contains($q, 'cho ') ||
-            str_contains($q, 'em ') || str_contains($q, '@')
+            str_contains($q, 'em ') || str_contains($q, 'tin nhắn') ||
+            str_contains($q, 'nhắn') || str_contains($q, 'nhắc')
         )) {
             $u = $studentSearch['best'];
             return [
                 'mode' => 'single',
                 'class_code' => $u['class_code'] ?? 'CNTT-K22',
-                'students' => [$u]
+                'students' => [$u],
+                'target_type' => 'student_name'
             ];
         }
     }
 
-    // Xác định lớp học
-    $classId = null;
-    $classCode = null;
-    $classes = $pdo->query("SELECT class_id, class_code, class_name FROM training_classes WHERE is_mock = FALSE")->fetchAll(PDO::FETCH_ASSOC);
-    foreach ($classes as $c) {
-        if (str_contains($q, strtolower($c['class_code']))) {
-            $classId = $c['class_id'];
-            $classCode = $c['class_code'];
-            break;
-        }
-    }
-    if (!$classId && $classIdentifier) {
-        $classId = ai_resolve_class_id($pdo, $classIdentifier);
+    // 5. If it IS class scope, resolve class members
+    if ($isClassScope) {
+        $classId = null;
+        $classCode = null;
+        $classes = $pdo->query("SELECT class_id, class_code, class_name FROM training_classes WHERE is_mock = FALSE")->fetchAll(PDO::FETCH_ASSOC);
         foreach ($classes as $c) {
-            if ($c['class_id'] === $classId) {
+            if (str_contains($q, strtolower($c['class_code']))) {
+                $classId = $c['class_id'];
                 $classCode = $c['class_code'];
                 break;
             }
         }
-    }
-    if (!$classId && !empty($classes)) {
-        $classId = $classes[0]['class_id'];
-        $classCode = $classes[0]['class_code'];
-    }
+        if (!$classId && $classIdentifier && strtolower(trim($classIdentifier)) !== 'all') {
+            $classId = ai_resolve_class_id($pdo, $classIdentifier);
+            foreach ($classes as $c) {
+                if ($c['class_id'] === $classId) {
+                    $classCode = $c['class_code'];
+                    break;
+                }
+            }
+        }
+        if (!$classId && !empty($classes)) {
+            foreach ($classes as $c) {
+                if (stripos($c['class_code'], 'CNTT') !== false) {
+                    $classId = $c['class_id'];
+                    $classCode = $c['class_code'];
+                    break;
+                }
+            }
+            if (!$classId) {
+                $classId = $classes[0]['class_id'];
+                $classCode = $classes[0]['class_code'];
+            }
+        }
 
-    // Lấy danh sách học viên trong lớp
-    if ($targetDevice && $classId) {
-        $devId = $targetDevice['device_id'];
-        $stmt = $pdo->prepare("
-            SELECT u.user_id, u.email, u.display_name, tc.class_code, tc.class_name
-            FROM class_enrollments ce
-            JOIN users u ON u.user_id = ce.user_id
-            JOIN training_classes tc ON tc.class_id = ce.class_id
-            WHERE ce.class_id = CAST(:cid AS uuid)
-              AND ce.status = 'active'
-              AND u.user_id NOT IN (
-                  SELECT DISTINCT user_id 
-                  FROM timer_sessions 
-                  WHERE lab_id IN (SELECT lab_id FROM lab_catalog WHERE device_id = :did)
-                    AND status = 'completed' AND score >= 80.0
-                    AND user_id IS NOT NULL
-              )
-            ORDER BY u.display_name
-        ");
-        $stmt->execute([':cid' => $classId, ':did' => $devId]);
-        $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } elseif ($classId) {
-        $stmt = $pdo->prepare("
-            SELECT DISTINCT u.user_id, u.email, u.display_name, tc.class_code, tc.class_name
-            FROM class_enrollments ce
-            JOIN users u ON u.user_id = ce.user_id
-            JOIN training_classes tc ON tc.class_id = ce.class_id
-            JOIN v_lab_assignment_progress p ON p.user_id = u.user_id AND p.class_id = ce.class_id
-            WHERE ce.class_id = CAST(:cid AS uuid)
-              AND ce.status = 'active'
-              AND p.assignment_status <> 'passed'
-            ORDER BY u.display_name
-        ");
-        $stmt->execute([':cid' => $classId]);
-        $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        if (empty($students)) {
+        if ($targetDevice && $classId) {
+            $devId = $targetDevice['device_id'];
+            $stmt = $pdo->prepare("
+                SELECT u.user_id, u.email, u.display_name, tc.class_code, tc.class_name
+                FROM class_enrollments ce
+                JOIN users u ON u.user_id = ce.user_id
+                JOIN training_classes tc ON tc.class_id = ce.class_id
+                WHERE ce.class_id = CAST(:cid AS uuid)
+                  AND ce.status = 'active'
+                  AND u.user_id NOT IN (
+                      SELECT DISTINCT user_id 
+                      FROM timer_sessions 
+                      WHERE lab_id IN (SELECT lab_id FROM lab_catalog WHERE device_id = :did)
+                        AND status = 'completed' AND score >= 80.0
+                        AND user_id IS NOT NULL
+                  )
+                ORDER BY u.display_name
+            ");
+            $stmt->execute([':cid' => $classId, ':did' => $devId]);
+            $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } else {
             $stmt = $pdo->prepare("
                 SELECT u.user_id, u.email, u.display_name, tc.class_code, tc.class_name
                 FROM class_enrollments ce
@@ -1071,29 +1171,61 @@ function ai_resolve_reminder_recipients(PDO $pdo, string $query, ?string $classI
             $stmt->execute([':cid' => $classId]);
             $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
-    } else {
-        $students = [];
+
+        return [
+            'mode' => 'class',
+            'class_code' => $classCode ?? 'CNTT-K22',
+            'students' => $students,
+            'target_type' => 'class_group'
+        ];
     }
 
+    // 6. Ambiguous target -> DO NOT SEND TO CLASS BLINDLY!
     return [
-        'mode' => 'class',
-        'class_code' => $classCode ?? 'CNTT-K22',
-        'students' => $students
+        'mode' => 'ambiguous',
+        'class_code' => null,
+        'students' => [],
+        'target_type' => 'unknown'
     ];
 }
 
 /**
  * Xử lý thực thi lệnh gửi email nhắc nhở trực tiếp từ Chatbot AI
  */
-function ai_handle_chat_reminder_command(PDO $pdo, string $question, ?string $classIdentifier = null, ?array $actor = null): array
+function ai_handle_chat_reminder_command(PDO $pdo, string $question, ?string $classIdentifier = null, ?array $actor = null, ?array $focusedStudent = null): array
 {
     require_once __DIR__ . '/mailer.php';
 
     $targetDevice = ai_detect_target_device($pdo, $question);
-    $resolved = ai_resolve_reminder_recipients($pdo, $question, $classIdentifier, $targetDevice);
+    $resolved = ai_resolve_reminder_recipients($pdo, $question, $classIdentifier, $targetDevice, $focusedStudent);
     $students = $resolved['students'];
     $mode = $resolved['mode'];
     $classCode = $resolved['class_code'] ?? 'CNTT-K22';
+
+    if ($mode === 'ambiguous') {
+        $answer = "### ❓ Vui Lòng Xác Định Rõ Học Viên Cần Gửi Nhắc Nhở\n\n";
+        $answer .= "Hệ thống chưa rõ Thầy/Cô muốn gửi email nhắc nhở riêng cho **cá nhân học viên nào** hay gửi cho **cả lớp/nhóm học viên**.\n\n";
+        $answer .= "💡 **Thầy/Cô có thể ra lệnh cụ thể theo 1 trong các cách sau:**\n";
+        $answer .= "1. **Gửi riêng cho 1 học viên cụ thể:**\n";
+        $answer .= "   - *'Gửi tin nhắn bạn Tùng gmail tungdt5101@ut.edu.vn'*\n";
+        $answer .= "   - *'Nhắc nhở học viên Nguyễn Phương Sang vào làm bài AC1000F'*\n";
+        $answer .= "   - *(Hoặc sau khi vừa tra cứu một học viên, chỉ cần gõ: 'Nhắc bạn ấy làm bài tiếp')*\n\n";
+        $answer .= "2. **Gửi cho cả lớp hoặc nhóm học viên chưa làm bài:**\n";
+        $answer .= "   - *'Gửi email nhắc tất cả các bạn trong lớp CNTT-K22 chưa làm thiết bị AC1000F'*\n";
+        $answer .= "   - *'Nhắc nhở cả lớp CNTT-K22 làm bài thực hành'*\n";
+
+        return [
+            'question' => $question,
+            'answer' => $answer,
+            'intent' => 'reminder_clarification_needed',
+            'suggested_questions' => [
+                'Gửi tin nhắn bạn Tùng gmail tungdt5101@ut.edu.vn',
+                'Gửi email nhắc tất cả các bạn trong lớp CNTT-K22 chưa làm thiết bị AC1000F',
+                'Nhắc nhở học viên Nguyễn Phương Sang vào làm bài AC1000F',
+            ],
+            'model' => 'system-action',
+        ];
+    }
 
     if (empty($students)) {
         $answer = "### ⚠️ Không Tìm Thấy Học Viên Phù Hợp Để Gửi Nhắc Nhở\n\n";
@@ -1139,7 +1271,7 @@ function ai_handle_chat_reminder_command(PDO $pdo, string $question, ?string $cl
             $altText = "Kính gửi bạn {$name} (Lớp {$studentClass}), Giảng viên nhắc nhở bạn vào hoàn thành bài thực hành trên thiết bị {$targetDevice['device_name']} tại: {$appBaseUrl}/portal.html?device={$targetDevice['device_id']}&mode=practice";
         } else {
             $studentUser = [
-                'user_id' => $st['user_id'],
+                'user_id' => $st['user_id'] ?? null,
                 'email' => $st['email'],
                 'display_name' => $name,
                 'class_code' => $studentClass,
@@ -1186,7 +1318,52 @@ function ai_handle_chat_reminder_command(PDO $pdo, string $question, ?string $cl
         }
     }
 
-    $answer = "### 🚀 Kết Quả Thực Thi Lệnh Nhắc Nhở Học Viên Qua Email\n\n";
+    if ($mode === 'single') {
+        $st = $students[0];
+        $answer = "### 🚀 Đã Gửi Email Nhắc Nhở Riêng Cho Học Viên Thành Công\n\n";
+        $answer .= "> [!NOTE]\n";
+        $answer .= "> Hệ thống AI đã kết nối cổng Gmail SMTP (`smtp.gmail.com:587`) và gửi thông báo nhắc nhở riêng cho học viên **{$st['display_name']}** (`{$st['email']}`).\n\n";
+
+        if ($targetDevice) {
+            $answer .= "- 🎯 **Nội dung đôn đốc:** Hoàn thành bài thực hành trên thiết bị **{$targetDevice['device_name']}** (`{$targetDevice['device_id']}`)\n";
+            $answer .= "- 🔗 **Cổng bài lab trực tiếp:** `{$appBaseUrl}/portal.html?device={$targetDevice['device_id']}&mode=practice`\n";
+        }
+        $answer .= "- 👤 **Học viên nhận thư:** **{$st['display_name']}**\n";
+        $answer .= "- 📧 **Địa chỉ Gmail:** `{$st['email']}`\n";
+        $answer .= "- 🏫 **Lớp sinh hoạt:** **{$classCode}**\n";
+        $answer .= "- 📊 **Trạng thái gửi:** ✅ **Đã gửi Gmail thành công**\n\n";
+        $answer .= "💡 **Nội dung sư phạm:** Thư gửi trang trọng từ Bộ môn Mạng & Truyền thông UTH, nêu rõ yêu cầu đạt chuẩn ($\\ge 80$ điểm), nhắc nhở kiểm tra nút Save/Apply và kèm nút truy cập thẳng vào phòng lab ảo.";
+
+        return [
+            'question' => $question,
+            'answer' => $answer,
+            'intent' => 'email_reminder_sent',
+            'focused_student' => [
+                'user_id' => $st['user_id'] ?? null,
+                'display_name' => $st['display_name'],
+                'email' => $st['email'],
+                'class_code' => $classCode
+            ],
+            'details' => [
+                'target_device' => $targetDevice,
+                'mode' => $mode,
+                'total_recipients' => 1,
+                'sent_count' => $sentCount,
+                'failed_count' => $failedCount,
+                'recipients' => $results,
+            ],
+            'suggested_questions' => [
+                'Còn học viên Phương Sang thì sao?',
+                'Có bao nhiêu bạn chưa làm thiết bị AC1000F?',
+                'Gửi email nhắc tất cả các bạn trong lớp CNTT-K22 chưa làm thiết bị AC1000F',
+                'Tiến độ chung của lớp CNTT-K22 hiện tại ra sao?',
+            ],
+            'model' => 'action-smtp',
+        ];
+    }
+
+    // Class / group mode
+    $answer = "### 🚀 Kết Quả Thực Thi Lệnh Nhắc Nhở Cả Lớp Qua Email\n\n";
     $answer .= "> [!NOTE]\n";
     $answer .= "> Hệ thống AI đã kích hoạt gửi email nhắc nhở tự động qua Gmail SMTP (`smtp.gmail.com:587`) theo lệnh của Giảng viên.\n\n";
 
@@ -1237,11 +1414,11 @@ function ai_handle_chat_reminder_command(PDO $pdo, string $question, ?string $cl
  * Natural Language Q&A Chatbot for Management Dashboard
  * Analyzes questions and crafts data-backed, actionable insights.
  */
-function ai_chat_query(PDO $pdo, string $question, ?string $classIdentifier = null, ?array $actor = null): array
+function ai_chat_query(PDO $pdo, string $question, ?string $classIdentifier = null, ?array $actor = null, ?array $focusedStudent = null): array
 {
     // 0. Phát hiện và thực thi ngay lệnh gửi email nhắc nhở từ chatbot
     if (ai_detect_reminder_command($question)) {
-        return ai_handle_chat_reminder_command($pdo, $question, $classIdentifier, $actor);
+        return ai_handle_chat_reminder_command($pdo, $question, $classIdentifier, $actor, $focusedStudent);
     }
 
     // Search student first with high flexibility (handles 'còn phương sang thì sao', 'phuong sang the nao', 'sangnp3251')
@@ -1257,17 +1434,29 @@ function ai_chat_query(PDO $pdo, string $question, ?string $classIdentifier = nu
             'Những học viên nào đang gặp khó khăn cần hỗ trợ?',
             'Tiến độ chung của lớp CNTT-K22?',
         ];
+        $focusedData = null;
         if (!empty($studentSearchResult['best'])) {
-            $name = (string)($studentSearchResult['best']['display_name'] ?? '');
+            $bestUser = $studentSearchResult['best'];
+            $name = (string)($bestUser['display_name'] ?? '');
             $suggested[0] = str_contains(mb_strtolower($name), 'tùng') ? 'Còn học viên Phương Sang thì sao?' : 'Còn học viên Tùng Đặng Thanh thì sao?';
+            $focusedData = [
+                'user_id' => $bestUser['user_id'] ?? null,
+                'display_name' => $bestUser['display_name'] ?? '',
+                'email' => $bestUser['email'] ?? '',
+                'class_code' => $bestUser['class_code'] ?? 'CNTT-K22'
+            ];
         }
-        return [
+        $resp = [
             'question' => $question,
             'answer' => $geminiRes['text'],
             'intent' => !empty($studentSearchResult['best']) ? 'student_lookup' : 'gemini_generative',
             'suggested_questions' => $suggested,
             'model' => 'gemini-1.5-flash',
         ];
+        if ($focusedData) {
+            $resp['focused_student'] = $focusedData;
+        }
+        return $resp;
     }
 
     // 2. Deterministic Local RAG Fallback
@@ -1284,6 +1473,12 @@ function ai_chat_query(PDO $pdo, string $question, ?string $classIdentifier = nu
             'question' => $question,
             'answer' => $answer,
             'intent' => 'student_lookup',
+            'focused_student' => [
+                'user_id' => $foundUser['user_id'] ?? null,
+                'display_name' => $foundUser['display_name'] ?? '',
+                'email' => $foundUser['email'] ?? '',
+                'class_code' => $foundUser['class_code'] ?? 'CNTT-K22'
+            ],
             'suggested_questions' => [
                 "Còn học viên {$altName} thì sao?",
                 'Tiến độ lớp CNTT-K22 như thế nào?',

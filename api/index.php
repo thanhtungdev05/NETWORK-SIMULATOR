@@ -3335,13 +3335,14 @@ function handle_ai(array $segments, string $method): void
         $body = json_body();
         $message = trim((string)($body['message'] ?? $body['question'] ?? ''));
         $classId = isset($body['class_id']) ? (string)$body['class_id'] : null;
+        $focusedStudent = !empty($body['focused_student']) && is_array($body['focused_student']) ? $body['focused_student'] : null;
 
         if ($message === '') {
             fail(400, 'bad-request', 'Tin nhắn không được để trống.');
         }
 
         try {
-            $result = ai_chat_query($pdo, $message, $classId, $actor);
+            $result = ai_chat_query($pdo, $message, $classId, $actor, $focusedStudent);
             $result['model'] = $result['model'] ?? 'local-rag';
             respond(['data' => $result]);
         } catch (Throwable $e) {

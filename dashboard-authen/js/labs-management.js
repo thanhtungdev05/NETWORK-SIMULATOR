@@ -977,6 +977,7 @@
             modalCreate.addEventListener('click', function (e) {
                 if (e.target === modalCreate) closeCreateLabModal();
             });
+        }
         const modalAssign = document.getElementById('modalAssignLabToClass');
         if (modalAssign) {
             modalAssign.addEventListener('click', function (e) {

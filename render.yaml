@@ -25,3 +25,6 @@ services:
         sync: false
       - key: SMTP_PASS
         sync: false
+      - key: EMAIL_RELAY_URL
+        sync: false
+

@@ -579,6 +579,9 @@
     function scrollChatToBottom() {
         if (chatMessages) {
             chatMessages.scrollTop = chatMessages.scrollHeight;
+            requestAnimationFrame(() => {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            });
         }
     }
 

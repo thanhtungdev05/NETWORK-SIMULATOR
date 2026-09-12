@@ -1344,9 +1344,8 @@ function ai_handle_chat_reminder_command(PDO $pdo, string $question, ?string $cl
             $answer .= "- 🏫 **Lớp sinh hoạt:** **{$classCode}**\n";
             $answer .= "- ❌ **Nguyên nhân chi tiết:** `{$errDetail}`\n\n";
             $answer .= "🛠️ **Hướng dẫn khắc phục:**\n";
-            $answer .= "1. Kiểm tra cấu hình `SMTP_USER` và `SMTP_PASS` (Mật khẩu ứng dụng Gmail 16 chữ số) trên server hosting.\n";
-            $answer .= "2. Đảm bảo cổng SMTP `465` (SSL) hoặc `587` (TLS) không bị tường lửa chặn kết nối ra ngoài.\n";
-            $answer .= "3. Thử thực hiện lại lệnh nhắc nhở sau ít phút.";
+            $answer .= "1. **Dùng ngay trên máy tính cá nhân (Localhost):** Truy cập `http://localhost:8080/dashboard/` (hoặc qua IP LAN) để gửi trực tiếp qua cổng SMTP không bị tường lửa chặn.\n";
+            $answer .= "2. **Hoặc cấu hình gửi từ Render Cloud qua HTTPS:** Tạo Google Apps Script Web App (chạy qua cổng HTTPS 443 không bao giờ bị chặn) và thêm biến `EMAIL_RELAY_URL` trong Render Dashboard (xem tài liệu `docs/EMAIL_RELAY_GUIDE.md`).\n";
         }
 
         return [
@@ -1416,7 +1415,9 @@ function ai_handle_chat_reminder_command(PDO $pdo, string $question, ?string $cl
     if ($sentCount > 0) {
         $answer .= "💡 **Nội dung sư phạm:** Thư gửi trang trọng từ Bộ môn Mạng & Truyền thông UTH, nêu rõ yêu cầu đạt chuẩn ($\\ge 80$ điểm), nhắc nhở kiểm tra nút Save/Apply và kèm nút truy cập thẳng vào phòng lab ảo.";
     } else {
-        $answer .= "🛠️ **Khắc phục:** Vui lòng kiểm tra lại cấu hình thông tin SMTP trên server hoặc thử gửi lại.";
+        $answer .= "🛠️ **Khắc phục:**\n";
+        $answer .= "1. Sử dụng trên máy tính cá nhân (`http://localhost:8080/dashboard/`) để gửi email qua SMTP không bị chặn.\n";
+        $answer .= "2. Hoặc cấu hình `EMAIL_RELAY_URL` (Google Apps Script qua HTTPS port 443) trong Render Dashboard để gửi từ Render Cloud (xem `docs/EMAIL_RELAY_GUIDE.md`).";
     }
 
     return [

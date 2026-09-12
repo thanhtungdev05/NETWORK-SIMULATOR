@@ -1320,24 +1320,39 @@ function ai_handle_chat_reminder_command(PDO $pdo, string $question, ?string $cl
 
     if ($mode === 'single') {
         $st = $students[0];
-        $answer = "### 🚀 Đã Gửi Email Nhắc Nhở Riêng Cho Học Viên Thành Công\n\n";
-        $answer .= "> [!NOTE]\n";
-        $answer .= "> Hệ thống AI đã kết nối cổng Gmail SMTP (`smtp.gmail.com:587`) và gửi thông báo nhắc nhở riêng cho học viên **{$st['display_name']}** (`{$st['email']}`).\n\n";
+        if ($sentCount > 0) {
+            $answer = "### 🚀 Đã Gửi Email Nhắc Nhở Riêng Cho Học Viên Thành Công\n\n";
+            $answer .= "> [!NOTE]\n";
+            $answer .= "> Hệ thống AI đã kết nối cổng Gmail SMTP và gửi thông báo nhắc nhở riêng cho học viên **{$st['display_name']}** (`{$st['email']}`).\n\n";
 
-        if ($targetDevice) {
-            $answer .= "- 🎯 **Nội dung đôn đốc:** Hoàn thành bài thực hành trên thiết bị **{$targetDevice['device_name']}** (`{$targetDevice['device_id']}`)\n";
-            $answer .= "- 🔗 **Cổng bài lab trực tiếp:** `{$appBaseUrl}/portal.html?device={$targetDevice['device_id']}&mode=practice`\n";
+            if ($targetDevice) {
+                $answer .= "- 🎯 **Nội dung đôn đốc:** Hoàn thành bài thực hành trên thiết bị **{$targetDevice['device_name']}** (`{$targetDevice['device_id']}`)\n";
+                $answer .= "- 🔗 **Cổng bài lab trực tiếp:** `{$appBaseUrl}/portal.html?device={$targetDevice['device_id']}&mode=practice`\n";
+            }
+            $answer .= "- 👤 **Học viên nhận thư:** **{$st['display_name']}**\n";
+            $answer .= "- 📧 **Địa chỉ Gmail:** `{$st['email']}`\n";
+            $answer .= "- 🏫 **Lớp sinh hoạt:** **{$classCode}**\n";
+            $answer .= "- 📊 **Trạng thái gửi:** ✅ **Đã gửi Gmail thành công**\n\n";
+            $answer .= "💡 **Nội dung sư phạm:** Thư gửi trang trọng từ Bộ môn Mạng & Truyền thông UTH, nêu rõ yêu cầu đạt chuẩn ($\\ge 80$ điểm), nhắc nhở kiểm tra nút Save/Apply và kèm nút truy cập thẳng vào phòng lab ảo.";
+        } else {
+            $errDetail = $results[0]['message'] ?? 'Lỗi kết nối máy chủ SMTP';
+            $answer = "### ⚠️ Không Thể Gửi Email Nhắc Nhở Đến Học Viên\n\n";
+            $answer .= "> [!WARNING]\n";
+            $answer .= "> Hệ thống đã phát sinh lỗi khi kết nối cổng Gmail SMTP để gửi thư cho học viên **{$st['display_name']}** (`{$st['email']}`).\n\n";
+            $answer .= "- 👤 **Học viên:** **{$st['display_name']}**\n";
+            $answer .= "- 📧 **Địa chỉ Gmail:** `{$st['email']}`\n";
+            $answer .= "- 🏫 **Lớp sinh hoạt:** **{$classCode}**\n";
+            $answer .= "- ❌ **Nguyên nhân chi tiết:** `{$errDetail}`\n\n";
+            $answer .= "🛠️ **Hướng dẫn khắc phục:**\n";
+            $answer .= "1. Kiểm tra cấu hình `SMTP_USER` và `SMTP_PASS` (Mật khẩu ứng dụng Gmail 16 chữ số) trên server hosting.\n";
+            $answer .= "2. Đảm bảo cổng SMTP `465` (SSL) hoặc `587` (TLS) không bị tường lửa chặn kết nối ra ngoài.\n";
+            $answer .= "3. Thử thực hiện lại lệnh nhắc nhở sau ít phút.";
         }
-        $answer .= "- 👤 **Học viên nhận thư:** **{$st['display_name']}**\n";
-        $answer .= "- 📧 **Địa chỉ Gmail:** `{$st['email']}`\n";
-        $answer .= "- 🏫 **Lớp sinh hoạt:** **{$classCode}**\n";
-        $answer .= "- 📊 **Trạng thái gửi:** ✅ **Đã gửi Gmail thành công**\n\n";
-        $answer .= "💡 **Nội dung sư phạm:** Thư gửi trang trọng từ Bộ môn Mạng & Truyền thông UTH, nêu rõ yêu cầu đạt chuẩn ($\\ge 80$ điểm), nhắc nhở kiểm tra nút Save/Apply và kèm nút truy cập thẳng vào phòng lab ảo.";
 
         return [
             'question' => $question,
             'answer' => $answer,
-            'intent' => 'email_reminder_sent',
+            'intent' => $sentCount > 0 ? 'email_reminder_sent' : 'email_reminder_failed',
             'focused_student' => [
                 'user_id' => $st['user_id'] ?? null,
                 'display_name' => $st['display_name'],
@@ -1363,9 +1378,20 @@ function ai_handle_chat_reminder_command(PDO $pdo, string $question, ?string $cl
     }
 
     // Class / group mode
-    $answer = "### 🚀 Kết Quả Thực Thi Lệnh Nhắc Nhở Cả Lớp Qua Email\n\n";
-    $answer .= "> [!NOTE]\n";
-    $answer .= "> Hệ thống AI đã kích hoạt gửi email nhắc nhở tự động qua Gmail SMTP (`smtp.gmail.com:587`) theo lệnh của Giảng viên.\n\n";
+    if ($sentCount > 0 && $failedCount === 0) {
+        $answer = "### 🚀 Kết Quả Thực Thi Lệnh Nhắc Nhở Cả Lớp Qua Email\n\n";
+        $answer .= "> [!NOTE]\n";
+        $answer .= "> Hệ thống AI đã kích hoạt gửi email nhắc nhở tự động qua Gmail SMTP theo lệnh của Giảng viên.\n\n";
+    } elseif ($sentCount > 0 && $failedCount > 0) {
+        $answer = "### ⚠️ Kết Quả Gửi Email Nhắc Nhở (Có {$failedCount} Email Gặp Lỗi)\n\n";
+        $answer .= "> [!WARNING]\n";
+        $answer .= "> Hệ thống đã gửi thành công {$sentCount} email, tuy nhiên có {$failedCount} email chưa gửi được do lỗi SMTP.\n\n";
+    } else {
+        $firstErr = $results[0]['message'] ?? 'Lỗi kết nối máy chủ SMTP';
+        $answer = "### ❌ Gửi Email Nhắc Nhở Cả Lớp Thất Bại\n\n";
+        $answer .= "> [!CAUTION]\n";
+        $answer .= "> Hệ thống không thể kết nối hoặc gửi email qua Gmail SMTP. Chi tiết: `{$firstErr}`\n\n";
+    }
 
     if ($targetDevice) {
         $answer .= "- 🎯 **Nội dung đôn đốc:** Hoàn thành thực hành thiết bị **{$targetDevice['device_name']}** (`{$targetDevice['device_id']}`)\n";
@@ -1377,21 +1403,26 @@ function ai_handle_chat_reminder_command(PDO $pdo, string $question, ?string $cl
     }
     $answer .= ".\n\n";
 
-    $answer .= "#### 📋 Danh sách học viên đã nhận thông báo nhắc nhở:\n\n";
-    $answer .= "| STT | Họ tên học viên | Địa chỉ Gmail | Lớp | Trạng thái |\n";
-    $answer .= "| :---: | :--- | :--- | :---: | :---: |\n";
+    $answer .= "#### 📋 Danh sách học viên và trạng thái gửi:\n\n";
+    $answer .= "| STT | Họ tên học viên | Địa chỉ Gmail | Lớp | Trạng thái | Chi tiết |\n";
+    $answer .= "| :---: | :--- | :--- | :---: | :---: | :--- |\n";
     foreach ($results as $i => $r) {
         $idx = $i + 1;
-        $statusTag = $r['status'] === 'sent' ? '✅ **Đã gửi Gmail thành công**' : '❌ Thất bại';
-        $answer .= "| {$idx} | **{$r['name']}** | `{$r['email']}` | {$r['class']} | {$statusTag} |\n";
+        $statusTag = $r['status'] === 'sent' ? '✅ **Thành công**' : '❌ **Thất bại**';
+        $msgNote = htmlspecialchars($r['message'] ?? '');
+        $answer .= "| {$idx} | **{$r['name']}** | `{$r['email']}` | {$r['class']} | {$statusTag} | {$msgNote} |\n";
     }
     $answer .= "\n";
-    $answer .= "💡 **Nội dung sư phạm:** Thư gửi trang trọng từ Bộ môn Mạng & Truyền thông UTH, nêu rõ yêu cầu đạt chuẩn ($\\ge 80$ điểm), nhắc nhở kiểm tra nút Save/Apply và kèm nút truy cập thẳng vào phòng lab ảo.";
+    if ($sentCount > 0) {
+        $answer .= "💡 **Nội dung sư phạm:** Thư gửi trang trọng từ Bộ môn Mạng & Truyền thông UTH, nêu rõ yêu cầu đạt chuẩn ($\\ge 80$ điểm), nhắc nhở kiểm tra nút Save/Apply và kèm nút truy cập thẳng vào phòng lab ảo.";
+    } else {
+        $answer .= "🛠️ **Khắc phục:** Vui lòng kiểm tra lại cấu hình thông tin SMTP trên server hoặc thử gửi lại.";
+    }
 
     return [
         'question' => $question,
         'answer' => $answer,
-        'intent' => 'email_reminder_sent',
+        'intent' => $sentCount > 0 ? 'email_reminder_sent' : 'email_reminder_failed',
         'details' => [
             'target_device' => $targetDevice,
             'mode' => $mode,

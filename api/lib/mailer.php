@@ -11,23 +11,24 @@ function send_smtp_mail(
     string $altText = ''
 ): array {
     $host = env_value('SMTP_HOST', 'smtp.gmail.com');
-    $port = (int)env_value('SMTP_PORT', '587');
-    $user = env_value('SMTP_USER', '');
-    $pass = env_value('SMTP_PASS', '');
+    $configuredPort = (int)env_value('SMTP_PORT', '465');
+    // Fallback thông tin tài khoản SMTP khi môi trường Render Cloud chưa thiết lập file .env
+    $user = trim((string)env_value('SMTP_USER', 'dtung2788@gmail.com'));
+    $pass = trim((string)env_value('SMTP_PASS', 'goqz rrca zrna ovjq'));
     $fromName = env_value('SMTP_FROM_NAME', 'Hệ Thống Thực Hành Mạng UTH');
-    $fromEmail = env_value('SMTP_FROM_EMAIL', $user !== '' ? $user : 'no-reply@ut.edu.vn');
+    $fromEmail = env_value('SMTP_FROM_EMAIL', $user !== '' ? $user : 'dtung2788@gmail.com');
 
     // Nếu chưa cấu hình mật khẩu SMTP ứng dụng
     if ($pass === '' || $user === '') {
         return [
             'ok' => false,
             'reason' => 'smtp_not_configured',
-            'message' => 'Chưa cấu hình SMTP_USER hoặc SMTP_PASS trong file .env. Hệ thống đang chuyển sang chế độ Demo Fallback.'
+            'message' => 'Chưa cấu hình SMTP_USER hoặc SMTP_PASS trong file .env hoặc biến môi trường Render.'
         ];
     }
 
     $passClean = str_replace(' ', '', $pass);
-    $timeout = 15;
+    $timeout = 10;
     $context = stream_context_create([
         'ssl' => [
             'verify_peer' => false,
@@ -36,157 +37,198 @@ function send_smtp_mail(
         ]
     ]);
 
-    $useDirectSsl = ($port === 465);
-    $connectHost = ($useDirectSsl ? 'ssl://' : '') . $host . ':' . $port;
+    // Hỗ trợ tự động chuyển cổng: Cố gắng gửi qua cổng được cấu hình (mặc định 465 direct SSL), nếu lỗi sẽ tự động thử tiếp cổng còn lại (587 TLS)
+    $portsToTry = array_values(array_unique([$configuredPort, 465, 587]));
+    $lastError = '';
+    $lastReason = 'unknown';
 
-    $socket = @stream_socket_client($connectHost, $errno, $errstr, $timeout, STREAM_CLIENT_CONNECT, $context);
-    if (!$socket) {
+    foreach ($portsToTry as $port) {
+        $useDirectSsl = ($port === 465);
+        $connectHost = ($useDirectSsl ? 'ssl://' : '') . $host . ':' . $port;
+
+        $socket = @stream_socket_client($connectHost, $errno, $errstr, $timeout, STREAM_CLIENT_CONNECT, $context);
+        if (!$socket) {
+            $lastReason = 'connect_failed';
+            $lastError = "Không thể kết nối đến máy chủ SMTP ($connectHost): $errstr ($errno)";
+            continue;
+        }
+
+        stream_set_timeout($socket, $timeout);
+
+        $readResponse = function () use ($socket): string {
+            $data = '';
+            while (!feof($socket)) {
+                $line = fgets($socket, 512);
+                if ($line === false) break;
+                $data .= $line;
+                if (preg_match('/^\d{3}\s/', $line)) {
+                    break;
+                }
+            }
+            return $data;
+        };
+
+        $sendCommand = function (string $cmd) use ($socket, $readResponse): string {
+            fputs($socket, $cmd . "\r\n");
+            return $readResponse();
+        };
+
+        $banner = $readResponse();
+        if (!str_starts_with($banner, '220')) {
+            fclose($socket);
+            $lastReason = 'banner_error';
+            $lastError = "SMTP Banner error on $connectHost: $banner";
+            continue;
+        }
+
+        $ehlo = $sendCommand('EHLO [127.0.0.1]');
+        if (!str_starts_with($ehlo, '250')) {
+            fclose($socket);
+            $lastReason = 'ehlo_error';
+            $lastError = "EHLO failed on $connectHost: $ehlo";
+            continue;
+        }
+
+        // Nếu dùng STARTTLS (port 587 hoặc cổng không direct SSL)
+        if (!$useDirectSsl) {
+            $starttls = $sendCommand('STARTTLS');
+            if (!str_starts_with($starttls, '220')) {
+                fclose($socket);
+                $lastReason = 'starttls_error';
+                $lastError = "STARTTLS failed on $connectHost: $starttls";
+                continue;
+            }
+
+            $cryptoMethod = STREAM_CRYPTO_METHOD_TLS_CLIENT;
+            if (defined('STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT')) {
+                $cryptoMethod |= STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT;
+            }
+            if (defined('STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT')) {
+                $cryptoMethod |= STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT;
+            }
+
+            $cryptoOk = stream_socket_enable_crypto($socket, true, $cryptoMethod);
+            if (!$cryptoOk) {
+                fclose($socket);
+                $lastReason = 'tls_negotiation_failed';
+                $lastError = "TLS negotiation failed on $connectHost";
+                continue;
+            }
+
+            $ehlo2 = $sendCommand('EHLO [127.0.0.1]');
+            if (!str_starts_with($ehlo2, '250')) {
+                fclose($socket);
+                $lastReason = 'ehlo2_error';
+                $lastError = "EHLO post-TLS failed on $connectHost: $ehlo2";
+                continue;
+            }
+        }
+
+        $auth = $sendCommand('AUTH LOGIN');
+        if (!str_starts_with($auth, '334')) {
+            fclose($socket);
+            $lastReason = 'auth_init_failed';
+            $lastError = "AUTH LOGIN rejected on $connectHost: $auth";
+            continue;
+        }
+
+        $sendUser = $sendCommand(base64_encode($user));
+        if (!str_starts_with($sendUser, '334')) {
+            fclose($socket);
+            $lastReason = 'user_rejected';
+            $lastError = "Username rejected on $connectHost: $sendUser";
+            continue;
+        }
+
+        $sendPass = $sendCommand(base64_encode($passClean));
+        if (!str_starts_with($sendPass, '235')) {
+            fclose($socket);
+            return [
+                'ok' => false,
+                'reason' => 'pass_rejected',
+                'message' => "Mật khẩu SMTP bị từ chối: $sendPass (Kiểm tra lại Gmail App Password 16 ký tự)."
+            ];
+        }
+
+        $mailFrom = $sendCommand("MAIL FROM:<$fromEmail>");
+        if (!str_starts_with($mailFrom, '250')) {
+            fclose($socket);
+            $lastReason = 'mail_from_rejected';
+            $lastError = "MAIL FROM rejected on $connectHost: $mailFrom";
+            continue;
+        }
+
+        $rcptTo = $sendCommand("RCPT TO:<$toEmail>");
+        if (!str_starts_with($rcptTo, '250')) {
+            fclose($socket);
+            $lastReason = 'rcpt_to_rejected';
+            $lastError = "RCPT TO rejected on $connectHost: $rcptTo";
+            continue;
+        }
+
+        $dataCmd = $sendCommand('DATA');
+        if (!str_starts_with($dataCmd, '354')) {
+            fclose($socket);
+            $lastReason = 'data_rejected';
+            $lastError = "DATA command rejected on $connectHost: $dataCmd";
+            continue;
+        }
+
+        $boundary = '=_uth_otp_' . bin2hex(random_bytes(8));
+        $encodedSubject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
+        $encodedFromName = '=?UTF-8?B?' . base64_encode($fromName) . '?=';
+
+        $headers = [
+            "From: $encodedFromName <$fromEmail>",
+            "To: <$toEmail>",
+            "Subject: $encodedSubject",
+            "MIME-Version: 1.0",
+            "Date: " . date('r'),
+            "Content-Type: multipart/alternative; boundary=\"$boundary\"",
+            "X-Mailer: UTH-NetLab-Mailer/1.0"
+        ];
+
+        $rawMessage = implode("\r\n", $headers) . "\r\n\r\n";
+
+        // Text version
+        $rawMessage .= "--$boundary\r\n";
+        $rawMessage .= "Content-Type: text/plain; charset=UTF-8\r\n";
+        $rawMessage .= "Content-Transfer-Encoding: 8bit\r\n\r\n";
+        $rawMessage .= ($altText !== '' ? $altText : strip_tags($htmlBody)) . "\r\n\r\n";
+
+        // HTML version
+        $rawMessage .= "--$boundary\r\n";
+        $rawMessage .= "Content-Type: text/html; charset=UTF-8\r\n";
+        $rawMessage .= "Content-Transfer-Encoding: 8bit\r\n\r\n";
+        $rawMessage .= $htmlBody . "\r\n\r\n";
+
+        $rawMessage .= "--$boundary--\r\n";
+        $rawMessage .= ".\r\n";
+
+        fputs($socket, $rawMessage);
+        $sendDataResult = $readResponse();
+
+        $sendCommand('QUIT');
+        fclose($socket);
+
+        if (!str_starts_with($sendDataResult, '250')) {
+            $lastReason = 'send_data_failed';
+            $lastError = "Lỗi gửi nội dung trên $connectHost: $sendDataResult";
+            continue;
+        }
+
         return [
-            'ok' => false,
-            'reason' => 'connect_failed',
-            'message' => "Không thể kết nối đến máy chủ SMTP ($connectHost): $errstr ($errno)"
+            'ok' => true,
+            'port_used' => $port,
+            'message' => 'Email đã được gửi thành công.'
         ];
     }
 
-    stream_set_timeout($socket, $timeout);
-
-    $readResponse = function () use ($socket): string {
-        $data = '';
-        while (!feof($socket)) {
-            $line = fgets($socket, 512);
-            if ($line === false) break;
-            $data .= $line;
-            if (preg_match('/^\d{3}\s/', $line)) {
-                break;
-            }
-        }
-        return $data;
-    };
-
-    $sendCommand = function (string $cmd) use ($socket, $readResponse): string {
-        fputs($socket, $cmd . "\r\n");
-        return $readResponse();
-    };
-
-    $banner = $readResponse();
-    if (!str_starts_with($banner, '220')) {
-        fclose($socket);
-        return ['ok' => false, 'reason' => 'banner_error', 'message' => "SMTP Banner error: $banner"];
-    }
-
-    $ehlo = $sendCommand('EHLO [127.0.0.1]');
-    if (!str_starts_with($ehlo, '250')) {
-        fclose($socket);
-        return ['ok' => false, 'reason' => 'ehlo_error', 'message' => "EHLO failed: $ehlo"];
-    }
-
-    // Nếu dùng STARTTLS (port 587)
-    if (!$useDirectSsl) {
-        $starttls = $sendCommand('STARTTLS');
-        if (!str_starts_with($starttls, '220')) {
-            fclose($socket);
-            return ['ok' => false, 'reason' => 'starttls_error', 'message' => "STARTTLS failed: $starttls"];
-        }
-
-        $cryptoMethod = STREAM_CRYPTO_METHOD_TLS_CLIENT;
-        if (defined('STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT')) {
-            $cryptoMethod |= STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT;
-        }
-        if (defined('STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT')) {
-            $cryptoMethod |= STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT;
-        }
-
-        $cryptoOk = stream_socket_enable_crypto($socket, true, $cryptoMethod);
-        if (!$cryptoOk) {
-            fclose($socket);
-            return ['ok' => false, 'reason' => 'tls_negotiation_failed', 'message' => "TLS negotiation failed"];
-        }
-
-        $ehlo2 = $sendCommand('EHLO [127.0.0.1]');
-        if (!str_starts_with($ehlo2, '250')) {
-            fclose($socket);
-            return ['ok' => false, 'reason' => 'ehlo2_error', 'message' => "EHLO post-TLS failed: $ehlo2"];
-        }
-    }
-
-    $auth = $sendCommand('AUTH LOGIN');
-    if (!str_starts_with($auth, '334')) {
-        fclose($socket);
-        return ['ok' => false, 'reason' => 'auth_init_failed', 'message' => "AUTH LOGIN rejected: $auth"];
-    }
-
-    $sendUser = $sendCommand(base64_encode($user));
-    if (!str_starts_with($sendUser, '334')) {
-        fclose($socket);
-        return ['ok' => false, 'reason' => 'user_rejected', 'message' => "Username rejected: $sendUser"];
-    }
-
-    $sendPass = $sendCommand(base64_encode($passClean));
-    if (!str_starts_with($sendPass, '235')) {
-        fclose($socket);
-        return ['ok' => false, 'reason' => 'pass_rejected', 'message' => "Password rejected: $sendPass (Kiểm tra lại Gmail App Password 16 ký tự)"];
-    }
-
-    $mailFrom = $sendCommand("MAIL FROM:<$fromEmail>");
-    if (!str_starts_with($mailFrom, '250')) {
-        fclose($socket);
-        return ['ok' => false, 'reason' => 'mail_from_rejected', 'message' => "MAIL FROM rejected: $mailFrom"];
-    }
-
-    $rcptTo = $sendCommand("RCPT TO:<$toEmail>");
-    if (!str_starts_with($rcptTo, '250')) {
-        fclose($socket);
-        return ['ok' => false, 'reason' => 'rcpt_to_rejected', 'message' => "RCPT TO rejected: $rcptTo"];
-    }
-
-    $dataCmd = $sendCommand('DATA');
-    if (!str_starts_with($dataCmd, '354')) {
-        fclose($socket);
-        return ['ok' => false, 'reason' => 'data_rejected', 'message' => "DATA command rejected: $dataCmd"];
-    }
-
-    $boundary = '=_uth_otp_' . bin2hex(random_bytes(8));
-    $encodedSubject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
-    $encodedFromName = '=?UTF-8?B?' . base64_encode($fromName) . '?=';
-
-    $headers = [
-        "From: $encodedFromName <$fromEmail>",
-        "To: <$toEmail>",
-        "Subject: $encodedSubject",
-        "MIME-Version: 1.0",
-        "Date: " . date('r'),
-        "Content-Type: multipart/alternative; boundary=\"$boundary\"",
-        "X-Mailer: UTH-NetLab-Mailer/1.0"
+    return [
+        'ok' => false,
+        'reason' => $lastReason,
+        'message' => $lastError ?: 'Không thể kết nối đến máy chủ SMTP qua các cổng 465/587.'
     ];
-
-    $rawMessage = implode("\r\n", $headers) . "\r\n\r\n";
-
-    // Text version
-    $rawMessage .= "--$boundary\r\n";
-    $rawMessage .= "Content-Type: text/plain; charset=UTF-8\r\n";
-    $rawMessage .= "Content-Transfer-Encoding: 8bit\r\n\r\n";
-    $rawMessage .= ($altText !== '' ? $altText : strip_tags($htmlBody)) . "\r\n\r\n";
-
-    // HTML version
-    $rawMessage .= "--$boundary\r\n";
-    $rawMessage .= "Content-Type: text/html; charset=UTF-8\r\n";
-    $rawMessage .= "Content-Transfer-Encoding: 8bit\r\n\r\n";
-    $rawMessage .= $htmlBody . "\r\n\r\n";
-
-    $rawMessage .= "--$boundary--\r\n";
-    $rawMessage .= ".\r\n";
-
-    fputs($socket, $rawMessage);
-    $sendDataResult = $readResponse();
-
-    $sendCommand('QUIT');
-    fclose($socket);
-
-    if (!str_starts_with($sendDataResult, '250')) {
-        return ['ok' => false, 'reason' => 'send_data_failed', 'message' => "Lỗi gửi nội dung: $sendDataResult"];
-    }
-
-    return ['ok' => true, 'message' => 'Email đã được gửi thành công.'];
 }
 
 /**

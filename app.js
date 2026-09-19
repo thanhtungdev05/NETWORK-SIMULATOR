@@ -2479,9 +2479,9 @@
       return store[lesson.id];
     }
 
-    // Nếu là bài học Mô hình Đa thiết bị (Topology)
-    if (lesson.isTopology && Array.isArray(lesson.guidePopups)) {
-      return lesson.guidePopups;
+    // Nếu là bài học Mô hình Đa thiết bị (Topology): Không dùng tooltip bubble theo yêu cầu
+    if (lesson.isTopology) {
+      return [];
     }
 
     // Fallback nếu dùng getStepByStepPopups hoặc lesson.guidePopups
@@ -2560,6 +2560,12 @@
 
     const lesson = getCurrentLesson();
     if (!lesson) return;
+
+    // Đối với Mô hình Mạng Liên Kết (Topology): Sử dụng popup hướng dẫn các bước toàn cảnh, tắt tooltip bubble
+    if (lesson.isTopology) {
+      clearGuidePopups();
+      return;
+    }
 
     // 1. Direct DOM injection cho iframe 1 (ONT hoặc thiết bị đơn)
     try {

@@ -1261,7 +1261,8 @@ html, body {
   animation: spin 0.7s linear infinite;
 }
 
-#device-iframe {
+#device-iframe,
+#device-iframe-2 {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -2095,6 +2096,201 @@ html, body {
 .term-input-row {
   display: flex;
   align-items: center;
+}
+
+.diag-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.diag-info {
+  flex: 1;
+}
+
+.diag-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.diag-desc {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.diag-status {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: #334155;
+  color: #cbd5e1;
+  white-space: nowrap;
+}
+
+.diag-status.success {
+  background: #065f46;
+  color: #34d399;
+}
+
+.diag-status.warning {
+  background: #854d0e;
+  color: #fef08a;
+}
+
+.diag-status.danger {
+  background: #991b1b;
+  color: #fecaca;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   VIRTUAL CLIENT CLI TERMINAL STYLING
+══════════════════════════════════════════════════════════════════════════ */
+.topology-terminal-panel {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.terminal-window {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #0c0d12;
+  border: 1px solid #282c3f;
+  border-radius: 10px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+  overflow: hidden;
+}
+
+.terminal-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: #181b26;
+  border-bottom: 1px solid #282c3f;
+}
+
+.terminal-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.terminal-dots .dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+}
+
+.dot-red { background: #ff5f56; }
+.dot-yellow { background: #ffbd2e; }
+.dot-green { background: #27c93f; }
+
+.terminal-title {
+  font-size: 12px;
+  font-family: monospace;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.terminal-quick-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #12151f;
+  border-bottom: 1px solid #222638;
+  overflow-x: auto;
+}
+
+.quick-bar-label {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.btn-term-quick {
+  padding: 4px 10px;
+  background: #1e2438;
+  color: #93c5fd;
+  border: 1px solid #2e3856;
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: monospace;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.btn-term-quick:hover {
+  background: #0284c7;
+  color: #fff;
+  border-color: #38bdf8;
+}
+
+.btn-term-clear {
+  margin-left: auto;
+  color: #f87171;
+  border-color: #5c2b2b;
+  background: #231619;
+}
+
+.btn-term-clear:hover {
+  background: #ef4444;
+  color: #fff;
+}
+
+.terminal-body {
+  flex: 1;
+  padding: 16px 20px;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #e2e8f0;
+  overflow-y: auto;
+}
+
+.term-banner {
+  color: #64748b;
+  margin: 0 0 12px 0;
+  white-space: pre-wrap;
+}
+
+#terminal-output {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.term-output-entry {
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.term-output-entry .term-cmd-echo {
+  color: #38bdf8;
+  font-weight: bold;
+}
+
+.term-output-entry.success {
+  color: #4ade80;
+}
+
+.term-output-entry.warning {
+  color: #facc15;
+}
+
+.term-output-entry.error {
+  color: #f87171;
+}
+
+.term-input-row {
+  display: flex;
+  align-items: center;
   gap: 8px;
   margin-top: 8px;
 }
@@ -2115,4 +2311,228 @@ html, body {
   font-size: inherit;
   outline: none;
   padding: 0;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   TOPOLOGY STEP-BY-STEP GUIDE MODAL & BUTTON
+   ══════════════════════════════════════════════════════════════════════ */
+.topol-guide-btn {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(245, 158, 11, 0.4);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.topol-guide-btn:hover {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.5);
+}
+
+.topol-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  padding: 20px;
+  animation: fadeIn 0.2s ease-out;
+}
+.topol-modal-dialog {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 860px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+.topol-modal-header {
+  padding: 18px 24px;
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  border-bottom: 1px solid #334155;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.topol-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.topol-modal-title h3 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+.topol-modal-badge {
+  background: #f59e0b;
+  color: #0f172a;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+.topol-modal-close {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+.topol-modal-close:hover {
+  background: #334155;
+  color: #ffffff;
+}
+.topol-modal-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.topol-guide-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 16px 20px;
+  position: relative;
+  transition: border-color 0.2s;
+}
+.topol-guide-card.card-ont {
+  border-left: 4px solid #0284c7;
+}
+.topol-guide-card.card-router {
+  border-left: 4px solid #f59e0b;
+}
+.topol-guide-card.card-client {
+  border-left: 4px solid #10b981;
+}
+.topol-guide-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.topol-guide-card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #f8fafc;
+  font-weight: 700;
+  font-size: 14px;
+}
+.topol-guide-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.topol-guide-step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #cbd5e1;
+}
+.topol-step-circle {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #334155;
+  color: #38bdf8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  margin-top: 1px;
+}
+.card-router .topol-step-circle {
+  color: #f59e0b;
+}
+.card-client .topol-step-circle {
+  color: #34d399;
+}
+.topol-guide-val {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 12px;
+  font-weight: 700;
+}
+.card-router .topol-guide-val {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+}
+.card-client .topol-guide-val {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+.topol-card-jump-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.topol-card-jump-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+.topol-modal-footer {
+  padding: 14px 24px;
+  background: #1e293b;
+  border-top: 1px solid #334155;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+.topol-modal-btn-primary {
+  background: #0284c7;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.topol-modal-btn-primary:hover {
+  background: #0369a1;
 }

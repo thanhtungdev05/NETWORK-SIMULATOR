@@ -91,6 +91,22 @@
   const topolPingBadge = document.getElementById('topol-ping-badge');
   let currentTopologyTab = 'topology';
 
+  const topologyGuideModal = document.getElementById('topology-guide-modal');
+  const btnCloseTopolGuide = document.getElementById('btn-close-topol-guide');
+  const btnStartTopolGuide = document.getElementById('btn-start-topol-guide');
+  const btnTopolGuideSteps = document.getElementById('btn-topol-guide-steps');
+  const btnGuideJumpDev1 = document.getElementById('btn-guide-jump-dev1');
+  const btnGuideJumpDev2 = document.getElementById('btn-guide-jump-dev2');
+  const btnGuideJumpTerm = document.getElementById('btn-guide-jump-term');
+
+  function showTopologyGuideModal() {
+    if (topologyGuideModal) topologyGuideModal.style.display = 'flex';
+  }
+
+  function hideTopologyGuideModal() {
+    if (topologyGuideModal) topologyGuideModal.style.display = 'none';
+  }
+
   // Track current iframe URL
   let currentIframeUrl = '';
   let trackingSaveInFlight = false;
@@ -310,6 +326,40 @@
     }
 
     initTopologyTerminal();
+
+    // ── Topology Step-by-Step Guide Modal Events ───────────────────────
+    if (btnTopolGuideSteps) {
+      btnTopolGuideSteps.addEventListener('click', showTopologyGuideModal);
+    }
+    if (btnCloseTopolGuide) {
+      btnCloseTopolGuide.addEventListener('click', hideTopologyGuideModal);
+    }
+    if (btnStartTopolGuide) {
+      btnStartTopolGuide.addEventListener('click', hideTopologyGuideModal);
+    }
+    if (topologyGuideModal) {
+      topologyGuideModal.addEventListener('click', (e) => {
+        if (e.target === topologyGuideModal) hideTopologyGuideModal();
+      });
+    }
+    if (btnGuideJumpDev1) {
+      btnGuideJumpDev1.addEventListener('click', () => {
+        hideTopologyGuideModal();
+        switchTopologyTab('device1');
+      });
+    }
+    if (btnGuideJumpDev2) {
+      btnGuideJumpDev2.addEventListener('click', () => {
+        hideTopologyGuideModal();
+        switchTopologyTab('device2');
+      });
+    }
+    if (btnGuideJumpTerm) {
+      btnGuideJumpTerm.addEventListener('click', () => {
+        hideTopologyGuideModal();
+        switchTopologyTab('terminal');
+      });
+    }
 
     // ── Grading Modal Events ──────────────────────────────────────────
 
@@ -1045,10 +1095,12 @@
     } else if (tabName === 'device1') {
       if (deviceIframe) {
         deviceIframe.style.display = 'block';
+        if (currentMode === 'guide') setTimeout(applyGuidePopups, 120);
       }
     } else if (tabName === 'device2') {
       if (deviceIframe2) {
         deviceIframe2.style.display = 'block';
+        if (currentMode === 'guide') setTimeout(applyGuidePopups, 120);
       }
     } else if (tabName === 'terminal') {
       if (topologyTerminalPanel) {
@@ -1529,6 +1581,9 @@
         }
 
         switchTopologyTab('topology');
+        if (enableGuide) {
+          setTimeout(showTopologyGuideModal, 350);
+        }
       }, 80);
     } else {
       if (topologyDeviceTabs) topologyDeviceTabs.style.display = 'none';
@@ -2424,6 +2479,11 @@
       return store[lesson.id];
     }
 
+    // Nếu là bài học Mô hình Đa thiết bị (Topology)
+    if (lesson.isTopology && Array.isArray(lesson.guidePopups)) {
+      return lesson.guidePopups;
+    }
+
     // Fallback nếu dùng getStepByStepPopups hoặc lesson.guidePopups
     if (window.getStepByStepPopups) {
       const steps = window.getStepByStepPopups(deviceId, lesson.id);
@@ -2455,6 +2515,9 @@
       if (deviceIframe && deviceIframe.contentWindow) {
         broadcastToWindowTree(deviceIframe.contentWindow, { type: 'CLEAR_GUIDE_POPUPS' });
       }
+      if (deviceIframe2 && deviceIframe2.contentWindow) {
+        broadcastToWindowTree(deviceIframe2.contentWindow, { type: 'CLEAR_GUIDE_POPUPS' });
+      }
     } catch (e) { }
 
     // Direct DOM cleanup if accessible
@@ -2466,6 +2529,15 @@
           el.classList.remove('ftc-guide-target-highlight');
         });
       });
+      if (deviceIframe2 && deviceIframe2.contentWindow) {
+        const allDocs2 = getAllAccessibleDocuments(deviceIframe2.contentWindow);
+        allDocs2.forEach(doc => {
+          doc.querySelectorAll('.ftc-guide-bubble, .guide-tooltip-bubble').forEach(el => el.remove());
+          doc.querySelectorAll('.ftc-guide-target-highlight').forEach(el => {
+            el.classList.remove('ftc-guide-target-highlight');
+          });
+        });
+      }
     } catch (e) { }
   }
 
@@ -2489,11 +2561,12 @@
     const lesson = getCurrentLesson();
     if (!lesson) return;
 
-    // 1. Direct DOM injection cho từng document trong iframe (xử lý linh hoạt login vs bài học)
+    // 1. Direct DOM injection cho iframe 1 (ONT hoặc thiết bị đơn)
     try {
+      const dev1Id = (lesson && lesson.isTopology) ? 'ac1000f' : currentDeviceId;
       const allDocs = getAllAccessibleDocuments(deviceIframe.contentWindow);
       allDocs.forEach(doc => {
-        const popups = getLessonPopupsForDoc(currentDeviceId, lesson, doc);
+        const popups = getLessonPopupsForDoc(dev1Id, lesson, doc);
         if (popups && popups.length > 0) {
           injectGuidePopupsIntoDoc(doc, popups);
         } else {
@@ -2502,6 +2575,23 @@
         }
       });
     } catch (e) { }
+
+    // 2. Direct DOM injection cho iframe 2 (Router DrayTek Vigor 2927 trong Topology)
+    if (lesson && lesson.isTopology && deviceIframe2 && deviceIframe2.contentWindow) {
+      try {
+        const dev2Id = 'vigor2927';
+        const allDocs2 = getAllAccessibleDocuments(deviceIframe2.contentWindow);
+        allDocs2.forEach(doc => {
+          const popups = getLessonPopupsForDoc(dev2Id, lesson, doc);
+          if (popups && popups.length > 0) {
+            injectGuidePopupsIntoDoc(doc, popups);
+          } else {
+            doc.querySelectorAll('.ftc-guide-bubble').forEach(el => el.remove());
+            doc.querySelectorAll('.ftc-guide-target-highlight').forEach(el => el.classList.remove('ftc-guide-target-highlight'));
+          }
+        });
+      } catch (e) { }
+    }
   }
 
   function getAllAccessibleDocuments(rootWin) {

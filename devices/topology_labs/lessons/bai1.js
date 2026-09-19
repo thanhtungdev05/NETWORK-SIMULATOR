@@ -80,6 +80,34 @@
       '</div>'
     ],
 
+    // Hướng dẫn popups từng bước (Tooltip guide bubbles)
+    guidePopups: [
+      // ── ONT AC1000F ──
+      { selector: 'input#username, input[name="username"]', text: 'Nhập admin', position: 'right' },
+      { selector: 'input#password, input[name="password"]', text: 'Nhập admin', position: 'right' },
+      { selector: 'input[type="submit"], input[value="Login"], input[value="Đăng nhập"]', text: 'Bấm Đăng nhập', position: 'bottom' },
+      { selector: 'a[onclick*="change_bg2"]', text: 'Bước 1: Chọn Network', position: 'bottom' },
+      { selector: 'a[href*="home_wan"]', text: 'Bước 2: Chọn mục WAN', position: 'right' },
+      { selector: 'select[name="wanTypeRadio"], #wanTypeRadio', text: 'Bước 3: Chọn Bridge Mode (3)', position: 'right', expected: '3' },
+      { selector: 'select[name="wan_dot1q"]', text: 'Bước 4: Chọn Tag (Yes)', position: 'right', expected: 'Yes' },
+      { selector: 'input[name="wan_vid"]', text: 'Bước 5: Nhập VLAN ID 2502', position: 'right', expected: '2502' },
+      { selector: 'input[name="SaveBtn"], input[value="Save"]', text: 'Bước 6: Bấm Save lưu cấu hình WAN', position: 'right' },
+      { selector: 'a[href*="home_lan"], a[href*="lan"]', text: 'Bước 7: Chọn mục LAN', position: 'right' },
+      { selector: 'input[name="dhcpTypeRadio"][value="0"], #dhcpDisable', text: 'Bước 8: Chọn Disable DHCP', position: 'right', expected: '0' },
+      { selector: 'input[name="SaveBtn"], input[value="Save"]', text: 'Bước 9: Bấm Save lưu cấu hình LAN', position: 'right' },
+
+      // ── Router DrayTek Vigor 2927 ──
+      { selector: 'input[name="aa"], input.userpwd:not([type="password"])', text: 'Nhập admin', position: 'right' },
+      { selector: 'input[name="ab"], input.userpwd[type="password"]', text: 'Nhập admin', position: 'right' },
+      { selector: 'button[type="submit"], input.login', text: 'Bấm Login', position: 'bottom' },
+      { selector: 'select[name="iAccessMode0"]', text: 'Bước 1: Chọn PPPoE', position: 'left', expected: '1' },
+      { selector: 'input[name="btnDtPage0"]', text: 'Bước 2: Bấm Details Page', position: 'right' },
+      { selector: 'input[name="sPppUserName"], input[name="sUserName"], input[name="sAccount"]', text: 'Bước 3: Nhập sgfdl-210208-218', position: 'right', expected: 'sgfdl-210208-218' },
+      { selector: 'input[name="sPppPassword"], input[name="sPassword"]', text: 'Bước 4: Nhập fpt12345', position: 'right', expected: 'fpt12345' },
+      { selector: 'input[name="sLanIp"], input[name="sIp"], input[name="iLanIp"]', text: 'Đổi sang 192.168.10.1 (chống xung đột)', position: 'right', expected: '192.168.10.1' },
+      { selector: 'input[type="submit"], input[value="OK"]', text: 'Bấm OK / Apply để lưu', position: 'right' }
+    ],
+
     // Bộ máy chấm điểm tương quan liên thiết bị (Correlated Cross-Device Grading Engine)
     grading: {
       description: 'Đánh giá liên kết đa thiết bị: ONT Bridge Mode + Router DrayTek PPPoE',

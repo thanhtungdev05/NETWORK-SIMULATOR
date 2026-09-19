@@ -8,7 +8,7 @@
   <meta name="description"
     content="Hệ thống giả lập mạng FPT — Thực hành cấu hình 6 thiết bị mạng AC1000F, AC1000HI, AX3000CV2, AX3000GZ, AX3000HV2 và AX3000S">
   <title>NETWORK SIMULATOR — Hệ Thống Giả Lập Mạng FPT</title>
-  <link rel="stylesheet" href="styles.css?v=20260919_v3">
+  <link rel="stylesheet" href="styles.css?v=20260919_v4">
 </head>
 
 <body>
@@ -207,6 +207,10 @@
               <span class="topol-tab-icon">💻</span>
               <span class="topol-tab-label">Virtual Client (CLI)</span>
               <span class="topol-ping-badge" id="topol-ping-badge">Ping: Sẵn sàng</span>
+            </button>
+            <button type="button" class="topol-guide-btn" id="btn-topol-guide-steps" title="Xem các bước thiết lập mô hình liên kết">
+              <span class="topol-tab-icon">💡</span>
+              <span>Hướng Dẫn Các Bước</span>
             </button>
           </div>
 
@@ -507,6 +511,107 @@ Gõ "ping 8.8.8.8", "ipconfig" hoặc chọn các lệnh nhanh ở trên để k
           </div>
         </div>
 
+        <!-- ── Topology Step-by-Step Guide Modal ── -->
+        <div id="topology-guide-modal" class="topol-modal-backdrop" style="display: none;">
+          <div class="topol-modal-dialog">
+            <div class="topol-modal-header">
+              <div class="topol-modal-title">
+                <span class="topol-modal-badge">HƯỚNG DẪN CHI TIẾT</span>
+                <h3>CÁC BƯỚC THIẾT LẬP MÔ HÌNH MẠNG LIÊN KẾT</h3>
+              </div>
+              <button type="button" class="topol-modal-close" id="btn-close-topol-guide">&times;</button>
+            </div>
+            <div class="topol-modal-body">
+              <!-- GIAI ĐOẠN 1: CẤU HÌNH ONT AC1000F -->
+              <div class="topol-guide-card card-ont">
+                <div class="topol-guide-card-header">
+                  <div class="topol-guide-card-title">
+                    <span>🌐 GIAI ĐOẠN 1: CẤU HÌNH THIẾT BỊ 1 — ONT AC1000F (BRIDGE MODE)</span>
+                  </div>
+                  <button type="button" class="topol-card-jump-btn" id="btn-guide-jump-dev1">🛠️ Đến màn hình ONT</button>
+                </div>
+                <ul class="topol-guide-steps-list">
+                  <li class="topol-guide-step-item">
+                    <span class="topol-step-circle">1</span>
+                    <div>Đăng nhập vào ONT: Tên đăng nhập <span class="topol-guide-val">admin</span> / Mật khẩu <span class="topol-guide-val">admin</span>.</div>
+                  </li>
+                  <li class="topol-guide-step-item">
+                    <span class="topol-step-circle">2</span>
+                    <div>Vào menu <strong>Network &rarr; WAN</strong>:
+                      <br>&bull; Connection Type: Chọn <span class="topol-guide-val">Bridge Mode</span> (giá trị 3).
+                      <br>&bull; 802.1q: Chọn <span class="topol-guide-val">Tag (Yes)</span>.
+                      <br>&bull; VLAN ID: Nhập <span class="topol-guide-val">2502</span> (VLAN Internet FPT).
+                      <br>&bull; Bấm <strong>Save & Apply</strong> để lưu.
+                    </div>
+                  </li>
+                  <li class="topol-guide-step-item">
+                    <span class="topol-step-circle">3</span>
+                    <div>Vào menu <strong>Network &rarr; LAN</strong>:
+                      <br>&bull; Tại mục DHCP Server: Chọn <span class="topol-guide-val">Disable</span> (Tắt cấp DHCP trên modem quang).
+                      <br>&bull; Bấm <strong>Save</strong> để hoàn tất biến ONT thành cầu nối quang trong suốt.
+                    </div>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- GIAI ĐOẠN 2: CẤU HÌNH ROUTER DRAYTEK VIGOR 2927 -->
+              <div class="topol-guide-card card-router">
+                <div class="topol-guide-card-header">
+                  <div class="topol-guide-card-title">
+                    <span>🔀 GIAI ĐOẠN 2: CẤU HÌNH THIẾT BỊ 2 — ROUTER DRAYTEK VIGOR 2927</span>
+                  </div>
+                  <button type="button" class="topol-card-jump-btn" id="btn-guide-jump-dev2">🛠️ Đến màn hình Router</button>
+                </div>
+                <ul class="topol-guide-steps-list">
+                  <li class="topol-guide-step-item">
+                    <span class="topol-step-circle">4</span>
+                    <div>Chuyển sang Tab <strong>Thiết bị 2: Router Vigor 2927</strong>. Đăng nhập với tài khoản <span class="topol-guide-val">admin</span> / <span class="topol-guide-val">admin</span>.</div>
+                  </li>
+                  <li class="topol-guide-step-item">
+                    <span class="topol-step-circle">5</span>
+                    <div>Vào menu <strong>WAN &rarr; Internet Access</strong> (WAN 1):
+                      <br>&bull; Access Mode: Chọn <span class="topol-guide-val">PPPoE</span>.
+                      <br>&bull; Bấm <strong>Details Page</strong>: Nhập Username <span class="topol-guide-val">sgfdl-210208-218</span> / Password <span class="topol-guide-val">fpt12345</span>.
+                      <br>&bull; Bấm <strong>OK / Apply</strong> để lưu cấu hình quay số PPPoE qua kênh quang.
+                    </div>
+                  </li>
+                  <li class="topol-guide-step-item">
+                    <span class="topol-step-circle">6</span>
+                    <div>Vào menu <strong>LAN &rarr; General Setup</strong> (LAN 1):
+                      <br>&bull; Đổi địa chỉ IP sang <span class="topol-guide-val">192.168.10.1</span> (để tránh xung đột mạng với dải 192.168.1.1 của ONT).
+                      <br>&bull; Kích hoạt <strong>DHCP Server</strong> cấp phát dải <span class="topol-guide-val">192.168.10.10 - 192.168.10.200</span> cho các máy trạm.
+                      <br>&bull; Bấm <strong>OK</strong> để lưu.
+                    </div>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- GIAI ĐOẠN 3: KIỂM TRA THÔNG TUYẾN & NỘP BÀI -->
+              <div class="topol-guide-card card-client">
+                <div class="topol-guide-card-header">
+                  <div class="topol-guide-card-title">
+                    <span>💻 GIAI ĐOẠN 3: KIỂM TRA THÔNG MẠNG & NỘP BÀI</span>
+                  </div>
+                  <button type="button" class="topol-card-jump-btn" id="btn-guide-jump-term">💻 Đến Virtual Client</button>
+                </div>
+                <ul class="topol-guide-steps-list">
+                  <li class="topol-guide-step-item">
+                    <span class="topol-step-circle">7</span>
+                    <div>Chuyển sang Tab <strong>Virtual Client (CLI)</strong>. Chạy lệnh <span class="topol-guide-val">ping 8.8.8.8</span> hoặc <span class="topol-guide-val">tracert 8.8.8.8</span>.</div>
+                  </li>
+                  <li class="topol-guide-step-item">
+                    <span class="topol-step-circle">8</span>
+                    <div>Khi kết quả báo thông suốt (0% packet loss), bấm nút <strong>📝 Nộp bài & Chấm điểm</strong> để ghi nhận kết quả hoàn thành.</div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class="topol-modal-footer">
+              <button type="button" class="topol-modal-btn-primary" id="btn-start-topol-guide">✔ Đã hiểu & Bắt đầu làm bài</button>
+            </div>
+          </div>
+        </div>
+
       </main>
     </div><!-- /#main -->
 
@@ -669,16 +774,16 @@ Gõ "ping 8.8.8.8", "ipconfig" hoặc chọn các lệnh nhanh ở trên để k
   <script src="devices/ONT_be6500c/data.js?v=2000000002"></script>
 
   <!-- Mikrotik hEX S -->
-  <script src="devices/mikrotik_hexs/lessons/bai1.js?v=20260919_v3"></script>
-  <script src="devices/mikrotik_hexs/data.js?v=20260919_v3"></script>
+  <script src="devices/mikrotik_hexs/lessons/bai1.js?v=20260919_v4"></script>
+  <script src="devices/mikrotik_hexs/data.js?v=20260919_v4"></script>
 
   <!-- Topology Labs (Multi-Device) -->
-  <script src="devices/topology_labs/lessons/bai1.js?v=20260919_v3"></script>
-  <script src="devices/topology_labs/data.js?v=20260919_v3"></script>
+  <script src="devices/topology_labs/lessons/bai1.js?v=20260919_v4"></script>
+  <script src="devices/topology_labs/data.js?v=20260919_v4"></script>
 
-  <script src="devices/index.js?v=20260919_v3"></script>
-  <script src="data.js?v=20260919_v3"></script>
-  <script src="app.js?v=20260919_v3"></script>
+  <script src="devices/index.js?v=20260919_v4"></script>
+  <script src="data.js?v=20260919_v4"></script>
+  <script src="app.js?v=20260919_v4"></script>
 
 </body>
 

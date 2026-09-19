@@ -79,6 +79,18 @@
   const gmChecklistBody = document.getElementById('gm-checklist-body');
   const gmSaveStatus = document.getElementById('gm-save-status');
 
+  // ── Multi-Device Topology DOM Refs ──────────────────────────────
+  const topologyDeviceTabs = document.getElementById('topology-device-tabs');
+  const deviceIframe2 = document.getElementById('device-iframe-2');
+  const topologyCanvasPanel = document.getElementById('topology-canvas-panel');
+  const topologyTerminalPanel = document.getElementById('topology-terminal-panel');
+  const topolDev1Label = document.getElementById('topol-dev1-label');
+  const topolDev2Label = document.getElementById('topol-dev2-label');
+  const topolDev1Role = document.getElementById('topol-dev1-role');
+  const topolDev2Role = document.getElementById('topol-dev2-role');
+  const topolPingBadge = document.getElementById('topol-ping-badge');
+  let currentTopologyTab = 'topology';
+
   // Track current iframe URL
   let currentIframeUrl = '';
   let trackingSaveInFlight = false;
@@ -87,6 +99,7 @@
     if (!id) return '';
     const clean = String(id).trim().replace(/^DEV_/i, '').toLowerCase();
     if (clean === 'ax3000cv2') return 'ax3000c';
+    if (clean === 'topology' || clean === 'topology_labs') return 'topology_labs';
     return clean;
   }
 
@@ -193,7 +206,7 @@
           return Array.isArray(device.labs) ? device.labs.map(function (lab) { return normalizeLabId(lab.lab_id); }) : [];
         }));
         const visibleDevices = DEVICES.filter(function (device) {
-          return !_catalogDeviceIds || _catalogDeviceIds.has(normalizeDeviceId(device.id));
+          return device.isTopology || !_catalogDeviceIds || _catalogDeviceIds.has(normalizeDeviceId(device.id));
         });
         populateDeviceDropdown(visibleDevices);
         const urlParams = new URLSearchParams(window.location.search);
@@ -257,6 +270,46 @@
         }
       });
     }
+
+    // ── Multi-Device Topology Tabs & Navigation ────────────────────────
+    if (topologyDeviceTabs) {
+      topologyDeviceTabs.querySelectorAll('.topol-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tab = btn.dataset.topolTab;
+          if (tab) switchTopologyTab(tab);
+        });
+      });
+    }
+
+    const btnTopolRefresh = document.getElementById('btn-topol-refresh-state');
+    if (btnTopolRefresh) {
+      btnTopolRefresh.addEventListener('click', () => {
+        updateTopologyLiveState();
+      });
+    }
+
+    const btnGotoDev1 = document.getElementById('btn-goto-dev1');
+    if (btnGotoDev1) {
+      btnGotoDev1.addEventListener('click', () => switchTopologyTab('device1'));
+    }
+
+    const btnGotoDev2 = document.getElementById('btn-goto-dev2');
+    if (btnGotoDev2) {
+      btnGotoDev2.addEventListener('click', () => switchTopologyTab('device2'));
+    }
+
+    const btnGotoTerm = document.getElementById('btn-goto-terminal');
+    if (btnGotoTerm) {
+      btnGotoTerm.addEventListener('click', () => switchTopologyTab('terminal'));
+    }
+
+    if (deviceIframe2) {
+      deviceIframe2.addEventListener('load', () => {
+        iframeLoading.classList.add('hidden');
+      });
+    }
+
+    initTopologyTerminal();
 
     // ── Grading Modal Events ──────────────────────────────────────────
 
@@ -792,6 +845,7 @@
     // Automatically select requested or first lesson if available
     const allAllowedLessons = (device.categories?.flatMap(category => category.lessons || []) || [])
       .filter(lesson => {
+        if (device.isTopology || (lesson && lesson.isTopology)) return true;
         if (!_catalogLabIds) return true;
         const normLab = normalizeLabId(lesson.id);
         return _catalogLabIds.has(normLab);
@@ -843,6 +897,7 @@
 
     device.categories.forEach(cat => {
       const lessons = (cat.lessons || []).filter(lesson => {
+        if (device.isTopology || (lesson && lesson.isTopology)) return true;
         if (!_catalogLabIds) return true;
         const normLab = normalizeLabId(lesson.id);
         return _catalogLabIds.has(normLab);
@@ -958,6 +1013,401 @@
     };
   }
 
+  // ══════════════════════════════════════════════════════════════════
+  // MULTI-DEVICE TOPOLOGY ENGINE
+  // ══════════════════════════════════════════════════════════════════
+
+  function switchTopologyTab(tabName) {
+    currentTopologyTab = tabName;
+    if (!topologyDeviceTabs) return;
+
+    // Cập nhật trạng thái active của các nút tab
+    const tabButtons = topologyDeviceTabs.querySelectorAll('.topol-tab-btn');
+    tabButtons.forEach(btn => {
+      if (btn.dataset.topolTab === tabName) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+
+    // Ẩn tất cả các view/iframe
+    if (deviceIframe) deviceIframe.style.display = 'none';
+    if (deviceIframe2) deviceIframe2.style.display = 'none';
+    if (topologyCanvasPanel) topologyCanvasPanel.style.display = 'none';
+    if (topologyTerminalPanel) topologyTerminalPanel.style.display = 'none';
+
+    if (tabName === 'topology') {
+      if (topologyCanvasPanel) {
+        topologyCanvasPanel.style.display = 'flex';
+        updateTopologyLiveState();
+      }
+    } else if (tabName === 'device1') {
+      if (deviceIframe) {
+        deviceIframe.style.display = 'block';
+      }
+    } else if (tabName === 'device2') {
+      if (deviceIframe2) {
+        deviceIframe2.style.display = 'block';
+      }
+    } else if (tabName === 'terminal') {
+      if (topologyTerminalPanel) {
+        topologyTerminalPanel.style.display = 'flex';
+        const termInput = document.getElementById('terminal-input');
+        if (termInput) setTimeout(() => termInput.focus(), 100);
+      }
+    }
+  }
+
+  function inspectTopologyState() {
+    const docs1 = deviceIframe ? getAllAccessibleDocuments(deviceIframe.contentWindow) : [];
+    const docs2 = deviceIframe2 ? getAllAccessibleDocuments(deviceIframe2.contentWindow) : [];
+
+    let ontWanMode = '';
+    let ont8021q = '';
+    let ontVlan = '';
+    let isOntDhcpDisabled = false;
+
+    // Inspect ONT
+    for (const doc of docs1) {
+      try {
+        const selWan = doc.querySelector('select[name="wanTypeRadio"]') || doc.querySelector('input[name="wanTypeRadio"]:checked');
+        if (selWan && selWan.value) ontWanMode = selWan.value;
+
+        const sel8021q = doc.querySelector('select[name="wan_dot1q"]') || doc.querySelector('input[name="wan_dot1q"]:checked');
+        if (sel8021q && sel8021q.value) ont8021q = sel8021q.value;
+
+        const inpVlan = doc.querySelector('input[name="wan_vid"]');
+        if (inpVlan && inpVlan.value) ontVlan = inpVlan.value.trim();
+
+        const rdoDhcp = doc.querySelector('input[name="dhcpTypeRadio"]:checked');
+        if (rdoDhcp) {
+          isOntDhcpDisabled = (rdoDhcp.value === '0' || rdoDhcp.value === 'Disable');
+        }
+      } catch (e) {}
+    }
+
+    // Inspect Router
+    let routerPppoeMode = false;
+    let routerPppoeUser = '';
+    let routerLanIp = '192.168.10.1'; // Target
+
+    for (const doc of docs2) {
+      try {
+        const selAcc = doc.querySelector('select[name="iAccessMode0"]') || doc.querySelector('select[name="iAccessMode"]');
+        if (selAcc && (selAcc.value === '1' || selAcc.value === 'pppoe')) {
+          routerPppoeMode = true;
+        }
+        const inpUser = doc.querySelector('input[name="sPppUserName"], input[name="sUserName"], input[name="sAccount"]');
+        if (inpUser && inpUser.value) {
+          routerPppoeUser = inpUser.value.trim();
+        }
+        const inpIp = doc.querySelector('input[name="sLanIp"], input[name="sIp"], input[name="iLanIp"]');
+        if (inpIp && inpIp.value) {
+          routerLanIp = inpIp.value.trim();
+        }
+      } catch (e) {}
+    }
+
+    const isOntBridge = (ontWanMode === '3' || ontWanMode.toLowerCase() === 'bridge');
+    const isVlanCorrect = (ontVlan === '2502');
+    const isVlanTagged = (ont8021q === 'Yes' || ont8021q === '1' || ont8021q === 'Tag');
+    const isRouterPppoe = routerPppoeMode || (routerPppoeUser === 'sgfdl-210208-218');
+    const hasIpConflict = (routerLanIp === '192.168.1.1');
+    const isNetworkOnline = isOntBridge && isVlanTagged && isVlanCorrect && isRouterPppoe && !hasIpConflict;
+
+    return {
+      isOntBridge,
+      ontVlan: ontVlan || '2502',
+      isVlanTagged,
+      isOntDhcpDisabled,
+      isRouterPppoe,
+      routerPppoeUser: routerPppoeUser || 'sgfdl-210208-218',
+      routerLanIp: routerLanIp || '192.168.10.1',
+      hasIpConflict,
+      isNetworkOnline
+    };
+  }
+
+  function updateTopologyLiveState() {
+    const state = inspectTopologyState();
+
+    // Node 1 badges
+    const nodeDev1Pill = document.getElementById('node-dev1-state-pill');
+    const nodeDev1Vlan = document.getElementById('node-dev1-vlan');
+    const nodeDev1Dhcp = document.getElementById('node-dev1-dhcp');
+    if (nodeDev1Pill) {
+      if (state.isOntBridge) {
+        nodeDev1Pill.textContent = 'Bridge Mode (OK)';
+        nodeDev1Pill.style.background = 'rgba(16, 185, 129, 0.2)';
+        nodeDev1Pill.style.color = '#10b981';
+      } else {
+        nodeDev1Pill.textContent = 'Route Mode (Chưa cấu hình)';
+        nodeDev1Pill.style.background = 'rgba(239, 68, 68, 0.2)';
+        nodeDev1Pill.style.color = '#ef4444';
+      }
+    }
+    if (nodeDev1Vlan) nodeDev1Vlan.textContent = state.ontVlan ? `${state.ontVlan} (Internet FPT)` : '2502';
+    if (nodeDev1Dhcp) {
+      nodeDev1Dhcp.textContent = state.isOntDhcpDisabled ? 'Disabled (Đã tắt)' : 'Enabled (Chưa tắt)';
+      nodeDev1Dhcp.style.color = state.isOntDhcpDisabled ? '#10b981' : '#f59e0b';
+    }
+
+    // Node 2 badges
+    const nodeDev2Pill = document.getElementById('node-dev2-state-pill');
+    const nodeDev2Ip = document.getElementById('node-dev2-ip');
+    const nodeDev2Pppoe = document.getElementById('node-dev2-pppoe');
+    if (nodeDev2Pill) {
+      if (state.isRouterPppoe) {
+        nodeDev2Pill.textContent = 'PPPoE Dialed (Up)';
+        nodeDev2Pill.style.background = 'rgba(16, 185, 129, 0.2)';
+        nodeDev2Pill.style.color = '#10b981';
+      } else {
+        nodeDev2Pill.textContent = 'PPPoE Chưa kết nối';
+        nodeDev2Pill.style.background = 'rgba(245, 158, 11, 0.2)';
+        nodeDev2Pill.style.color = '#f59e0b';
+      }
+    }
+    if (nodeDev2Ip) {
+      nodeDev2Ip.textContent = state.routerLanIp;
+      if (state.hasIpConflict) {
+        nodeDev2Ip.style.color = '#ef4444';
+        nodeDev2Ip.title = 'XUNG ĐỘT: Trùng IP với ONT (192.168.1.1)!';
+      } else {
+        nodeDev2Ip.style.color = '#38bdf8';
+        nodeDev2Ip.title = 'IP Subnet sạch, không xung đột';
+      }
+    }
+    if (nodeDev2Pppoe) nodeDev2Pppoe.textContent = state.routerPppoeUser;
+
+    // Client PC badges
+    const nodeClientIp = document.getElementById('node-client-ip');
+    const nodeClientGw = document.getElementById('node-client-gw');
+    if (nodeClientGw) nodeClientGw.textContent = state.routerLanIp;
+    if (nodeClientIp) {
+      const parts = state.routerLanIp.split('.');
+      if (parts.length === 4) {
+        nodeClientIp.textContent = `${parts[0]}.${parts[1]}.${parts[2]}.150`;
+      }
+    }
+
+    // Diagnostics Matrix
+    const diagBridgeStatus = document.getElementById('diag-bridge-status');
+    const diagPppoeStatus = document.getElementById('diag-pppoe-status');
+    const diagConflictStatus = document.getElementById('diag-conflict-status');
+
+    if (diagBridgeStatus) {
+      diagBridgeStatus.className = state.isOntBridge ? 'diag-status success' : 'diag-status warning';
+      diagBridgeStatus.textContent = state.isOntBridge ? '✓ BRIDGE OK' : 'CHƯA CHUYỂN';
+    }
+    if (diagPppoeStatus) {
+      diagPppoeStatus.className = state.isRouterPppoe ? 'diag-status success' : 'diag-status warning';
+      diagPppoeStatus.textContent = state.isRouterPppoe ? '✓ QUAY SỐ OK' : 'CHƯA KẾT NỐI';
+    }
+    if (diagConflictStatus) {
+      diagConflictStatus.className = state.hasIpConflict ? 'diag-status danger' : 'diag-status success';
+      diagConflictStatus.textContent = state.hasIpConflict ? '⚠ XUNG ĐỘT IP' : '✓ AN TOÀN';
+    }
+
+    // Ping Badge on Tab
+    if (topolPingBadge) {
+      if (state.isNetworkOnline) {
+        topolPingBadge.textContent = 'Ping: 12ms (Online)';
+        topolPingBadge.style.background = '#065f46';
+        topolPingBadge.style.color = '#34d399';
+      } else if (state.hasIpConflict) {
+        topolPingBadge.textContent = 'Ping: Xung đột IP';
+        topolPingBadge.style.background = '#991b1b';
+        topolPingBadge.style.color = '#fecaca';
+      } else {
+        topolPingBadge.textContent = 'Ping: Mất kết nối';
+        topolPingBadge.style.background = '#854d0e';
+        topolPingBadge.style.color = '#fef08a';
+      }
+    }
+  }
+
+  // Virtual Client CLI Terminal Logic
+  function initTopologyTerminal() {
+    const termInput = document.getElementById('terminal-input');
+    const termOutput = document.getElementById('terminal-output');
+    const btnTermClear = document.getElementById('btn-term-clear');
+    const quickButtons = document.querySelectorAll('.btn-term-quick[data-cmd]');
+
+    if (!termInput || !termOutput) return;
+
+    function appendOutput(text, type = '') {
+      const entry = document.createElement('div');
+      entry.className = `term-output-entry ${type}`;
+      entry.textContent = text;
+      termOutput.appendChild(entry);
+      const termBody = document.getElementById('terminal-body');
+      if (termBody) termBody.scrollTop = termBody.scrollHeight;
+    }
+
+    function executeCommand(rawCmd) {
+      const cmd = rawCmd.trim();
+      if (!cmd) return;
+
+      appendOutput(`C:\\Users\\KTV_FPT> ${cmd}`, 'term-cmd-echo');
+      const lower = cmd.toLowerCase();
+      const state = inspectTopologyState();
+
+      if (lower === 'clear' || lower === 'cls') {
+        termOutput.innerHTML = '';
+        return;
+      }
+
+      if (lower === 'help') {
+        appendOutput(
+          'Danh sách lệnh hỗ trợ:\n' +
+          '  ping <ip>       - Gửi gói tin ICMP kiểm tra kết nối (vd: ping 8.8.8.8)\n' +
+          '  ipconfig        - Xem cấu hình IP, Subnet Mask, Default Gateway máy trạm\n' +
+          '  tracert <ip>    - Dò tìm lộ trình các chặng mạng (vd: tracert 8.8.8.8)\n' +
+          '  clear / cls     - Xóa sạch màn hình dòng lệnh\n' +
+          '  help            - Xem hướng dẫn lệnh'
+        );
+        return;
+      }
+
+      if (lower.startsWith('ping 8.8.8.8')) {
+        if (state.isNetworkOnline) {
+          appendOutput(
+            '\nPinging 8.8.8.8 with 32 bytes of data:\n' +
+            'Reply from 8.8.8.8: bytes=32 time=12ms TTL=118\n' +
+            'Reply from 8.8.8.8: bytes=32 time=14ms TTL=118\n' +
+            'Reply from 8.8.8.8: bytes=32 time=11ms TTL=118\n' +
+            'Reply from 8.8.8.8: bytes=32 time=13ms TTL=118\n\n' +
+            'Ping statistics for 8.8.8.8:\n' +
+            '    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\n' +
+            'Approximate round trip times in milli-seconds:\n' +
+            '    Minimum = 11ms, Maximum = 14ms, Average = 12ms\n' +
+            '>>> THÀNH CÔNG: Mô hình liên kết ONT Bridge + Router PPPoE thông suốt!',
+            'success'
+          );
+        } else if (state.hasIpConflict) {
+          appendOutput(
+            '\nPinging 8.8.8.8 with 32 bytes of data:\n' +
+            'Request timed out.\n' +
+            'Request timed out.\n' +
+            'Request timed out.\n' +
+            'Request timed out.\n\n' +
+            '[CẢNH BÁO XUNG ĐỘT IP] Phát hiện Gateway Router đang dùng 192.168.1.1 trùng với IP ONT!\n' +
+            'Gói tin bị định tuyến vòng lặp. Vui lòng đổi LAN IP Router sang 192.168.10.1.',
+            'error'
+          );
+        } else if (!state.isOntBridge) {
+          appendOutput(
+            '\nPinging 8.8.8.8 with 32 bytes of data:\n' +
+            'Destination host unreachable.\n' +
+            'Destination host unreachable.\n\n' +
+            '[LỖI KẾT NỐI] ONT AC1000F chưa chuyển sang Bridge Mode (VLAN 2502). Router không thể quay số PPPoE qua kênh quang.',
+            'error'
+          );
+        } else {
+          appendOutput(
+            '\nPinging 8.8.8.8 with 32 bytes of data:\n' +
+            'Destination host unreachable.\n' +
+            'Request timed out.\n\n' +
+            '[LỖI KẾT NỐI] Router WAN 1 chưa thiết lập PPPoE hoặc thông tin tài khoản ISP chưa chính xác.',
+            'warning'
+          );
+        }
+        updateTopologyLiveState();
+        return;
+      }
+
+      if (lower.startsWith('ping 192.168.10.1')) {
+        appendOutput(
+          '\nPinging 192.168.10.1 with 32 bytes of data:\n' +
+          'Reply from 192.168.10.1: bytes=32 time<1ms TTL=64\n' +
+          'Reply from 192.168.10.1: bytes=32 time<1ms TTL=64\n' +
+          'Reply from 192.168.10.1: bytes=32 time<1ms TTL=64\n' +
+          'Reply from 192.168.10.1: bytes=32 time<1ms TTL=64\n' +
+          '>>> Gateway Router DrayTek Vigor 2927 phản hồi tức thì (LAN kết nối tốt).',
+          'success'
+        );
+        return;
+      }
+
+      if (lower.startsWith('ping 192.168.1.1')) {
+        appendOutput(
+          '\nPinging 192.168.1.1 with 32 bytes of data:\n' +
+          'Reply from 192.168.1.1: bytes=32 time=1ms TTL=64\n' +
+          'Reply from 192.168.1.1: bytes=32 time=1ms TTL=64\n' +
+          '>>> Cổng quản trị modem quang ONT AC1000F phản hồi bình thường.',
+          'success'
+        );
+        return;
+      }
+
+      if (lower.startsWith('ipconfig')) {
+        const gw = state.routerLanIp || '192.168.10.1';
+        const parts = gw.split('.');
+        const clientIp = `${parts[0]}.${parts[1]}.${parts[2]}.150`;
+        appendOutput(
+          '\nWindows IP Configuration\n\n' +
+          'Ethernet adapter Local Area Connection:\n' +
+          '   Connection-specific DNS Suffix  . : fpt.vn\n' +
+          '   IPv4 Address. . . . . . . . . . . : ' + clientIp + '\n' +
+          '   Subnet Mask . . . . . . . . . . . : 255.255.255.0\n' +
+          '   Default Gateway . . . . . . . . . : ' + gw + '\n' +
+          '   DHCP Server . . . . . . . . . . . : ' + gw + ' (DrayTek Vigor 2927)\n' +
+          '   DNS Servers . . . . . . . . . . . : 8.8.8.8, 8.8.4.4\n',
+          'term-line'
+        );
+        return;
+      }
+
+      if (lower.startsWith('tracert 8.8.8.8') || lower.startsWith('traceroute 8.8.8.8')) {
+        if (state.isNetworkOnline) {
+          appendOutput(
+            '\nTracing route to dns.google [8.8.8.8] over a maximum of 30 hops:\n\n' +
+            '  1    <1 ms    <1 ms    <1 ms  192.168.10.1 (Router DrayTek Vigor 2927)\n' +
+            '  2     1 ms     1 ms     1 ms  192.168.1.1 (ONT AC1000F Bridge)\n' +
+            '  3     4 ms     3 ms     4 ms  118.69.182.1 (FPT Broadband BRAS Gateway)\n' +
+            '  4    12 ms    11 ms    12 ms  8.8.8.8 (dns.google)\n\n' +
+            'Trace complete.',
+            'success'
+          );
+        } else {
+          appendOutput(
+            '\nTracing route to 8.8.8.8 over a maximum of 30 hops:\n\n' +
+            '  1    <1 ms    <1 ms    <1 ms  192.168.10.1\n' +
+            '  2     *        *        *     Request timed out.\n' +
+            '  3     *        *        *     Request timed out.\n\n' +
+            'Trace failed: Kênh truyền Internet chưa thông.',
+            'error'
+          );
+        }
+        return;
+      }
+
+      appendOutput(`'${cmd}' is not recognized as an internal or external command, operable program or batch file.\nGõ 'help' để xem các lệnh khả dụng.`);
+    }
+
+    termInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        const val = termInput.value;
+        termInput.value = '';
+        executeCommand(val);
+      }
+    });
+
+    if (btnTermClear) {
+      btnTermClear.addEventListener('click', function () {
+        termOutput.innerHTML = '';
+      });
+    }
+
+    quickButtons.forEach(btn => {
+      btn.addEventListener('click', function () {
+        const cmd = btn.dataset.cmd;
+        if (cmd) executeCommand(cmd);
+      });
+    });
+  }
+
   // ── Open In Frame ────────────────────────────────────────────────
   function openInFrame(device, lesson, url, modeLabel, enableGuide) {
     if (!device || !url) return;
@@ -1034,11 +1484,10 @@
 
     // Reset iframe loading state
     iframeLoading.classList.remove('hidden');
-    deviceIframe.src = 'about:blank';
 
     // Thiết lập trạng thái ban đầu cho nút Nộp bài
     if (btnSubmitLab) {
-      if (currentMode === 'guide') {
+      if (currentMode === 'guide' && !lesson.isTopology) {
         btnSubmitLab.disabled = true;
         btnSubmitLab.style.opacity = '0.5';
         btnSubmitLab.style.cursor = 'not-allowed';
@@ -1058,13 +1507,45 @@
       if (sidebar) sidebar.classList.add('collapsed');
     }
 
-    // Load URL into iframe
-    setTimeout(() => {
-      // Force reload even if only hash changes
-      const urlObj = new URL(url, window.location.origin);
-      urlObj.searchParams.set('_t', Date.now());
-      deviceIframe.src = urlObj.toString();
-    }, 80);
+    // Load URL into iframe (Multi-Device Topology aware)
+    if (lesson.isTopology) {
+      if (topologyDeviceTabs) topologyDeviceTabs.style.display = 'flex';
+      const dev1 = lesson.device1 || { name: 'ONT AC1000F', role: 'Bridge Mode', practiceUrl: '/sim_ac1000f/cgi-bin/login.asp' };
+      const dev2 = lesson.device2 || { name: 'Router Vigor 2927', role: 'PPPoE Gateway', practiceUrl: '/sim_vigor2927/weblogin.htm' };
+      if (topolDev1Label) topolDev1Label.textContent = `Thiết bị 1: ${dev1.shortName || dev1.name}`;
+      if (topolDev2Label) topolDev2Label.textContent = `Thiết bị 2: ${dev2.shortName || dev2.name}`;
+      if (topolDev1Role) topolDev1Role.textContent = dev1.role || 'Bridge Mode';
+      if (topolDev2Role) topolDev2Role.textContent = dev2.role || 'PPPoE Gateway';
+
+      setTimeout(() => {
+        const urlObj1 = new URL(dev1.practiceUrl || url, window.location.origin);
+        urlObj1.searchParams.set('_t', Date.now());
+        deviceIframe.src = urlObj1.toString();
+
+        if (deviceIframe2) {
+          const urlObj2 = new URL(dev2.practiceUrl || '/sim_vigor2927/weblogin.htm', window.location.origin);
+          urlObj2.searchParams.set('_t', Date.now());
+          deviceIframe2.src = urlObj2.toString();
+        }
+
+        switchTopologyTab('topology');
+      }, 80);
+    } else {
+      if (topologyDeviceTabs) topologyDeviceTabs.style.display = 'none';
+      if (topologyCanvasPanel) topologyCanvasPanel.style.display = 'none';
+      if (topologyTerminalPanel) topologyTerminalPanel.style.display = 'none';
+      if (deviceIframe2) {
+        deviceIframe2.style.display = 'none';
+        deviceIframe2.src = 'about:blank';
+      }
+      deviceIframe.style.display = 'block';
+
+      setTimeout(() => {
+        const urlObj = new URL(url, window.location.origin);
+        urlObj.searchParams.set('_t', Date.now());
+        deviceIframe.src = urlObj.toString();
+      }, 80);
+    }
   }
 
   // ── View Switchers ───────────────────────────────────────────────
@@ -1106,6 +1587,15 @@
     _lastSubmitDurationSec = 0;
 
     deviceIframe.src = '';
+    if (deviceIframe2) {
+      deviceIframe2.src = '';
+      deviceIframe2.style.display = 'none';
+    }
+    if (topologyDeviceTabs) topologyDeviceTabs.style.display = 'none';
+    if (topologyCanvasPanel) topologyCanvasPanel.style.display = 'none';
+    if (topologyTerminalPanel) topologyTerminalPanel.style.display = 'none';
+    deviceIframe.style.display = '';
+
     currentIframeUrl = '';
     clearGuidePopups();
     showLesson();
@@ -1164,6 +1654,12 @@
     if (!lesson) return null;
 
     if (lesson.grading && typeof lesson.grading.customGrading === 'function') {
+      if (lesson.isTopology) {
+        const allDocs1 = getAllAccessibleDocuments(deviceIframe.contentWindow);
+        const allDocs2 = deviceIframe2 ? getAllAccessibleDocuments(deviceIframe2.contentWindow) : [];
+        const topolState = (typeof inspectTopologyState === 'function') ? inspectTopologyState() : {};
+        return lesson.grading.customGrading(allDocs1, allDocs2, topolState);
+      }
       const allDocs = getAllAccessibleDocuments(deviceIframe.contentWindow);
       return lesson.grading.customGrading(allDocs);
     }
@@ -1508,16 +2004,24 @@
         // Xác định section nào có lỗi (kể cả hint & item thực)
         const has24GFail = failedRealItems.some(i => i.id.startsWith('2.4G_') || i.id === '_24g_hint');
         const has5GFail = failedRealItems.some(i => i.id.startsWith('5G_') || i.id === '_5g_hint');
+        const hasOntFail = failedRealItems.some(i => i.group === 'ont' || i.id.startsWith('ont_'));
+        const hasRouterFail = failedRealItems.some(i => i.group === 'router' || i.id.startsWith('vigor_') || i.id.startsWith('router_'));
+        const hasLinkFail = failedRealItems.some(i => i.group === 'link' || i.id.startsWith('link_') || i.id.startsWith('ping_'));
 
         res.details.forEach(item => {
           // Header row: chỉ vẽ nếu section đó có lỗi
           if (item._isHeader) {
-            const shouldShow = (item.id === '_header_24g' && has24GFail) ||
-              (item.id === '_header_5g' && has5GFail);
+            let shouldShow = false;
+            if (item.id === '_header_24g' && has24GFail) shouldShow = true;
+            else if (item.id === '_header_5g' && has5GFail) shouldShow = true;
+            else if (item.id === '_header_ont' && hasOntFail) shouldShow = true;
+            else if (item.id === '_header_router' && hasRouterFail) shouldShow = true;
+            else if (item.id === '_header_link' && hasLinkFail) shouldShow = true;
+            else if (item.id.startsWith('_header_')) shouldShow = true;
             if (!shouldShow) return;
             const tr = document.createElement('tr');
             tr.innerHTML = `
-              <td colspan="4" style="background:#1e293b;color:#94a3b8;font-weight:700;
+              <td colspan="4" style="background:#1e293b;color:#38bdf8;font-weight:700;
                 font-size:11px;letter-spacing:1px;padding:6px 10px;text-align:center;">
                 ${escapeHTML(item.name)}
               </td>
@@ -1539,9 +2043,19 @@
           }
           // Tiêu chí thường: chỉ vẽ nếu sai
           if (item.passed) return;
+
+          let groupBadge = '';
+          if (item.group === 'ont') {
+            groupBadge = '<span style="background:#0284c7;color:#fff;padding:2px 6px;border-radius:4px;font-size:10px;margin-right:6px;font-weight:700;">ONT</span>';
+          } else if (item.group === 'router') {
+            groupBadge = '<span style="background:#d97706;color:#fff;padding:2px 6px;border-radius:4px;font-size:10px;margin-right:6px;font-weight:700;">ROUTER</span>';
+          } else if (item.group === 'link') {
+            groupBadge = '<span style="background:#16a34a;color:#fff;padding:2px 6px;border-radius:4px;font-size:10px;margin-right:6px;font-weight:700;">LINK</span>';
+          }
+
           const tr = document.createElement('tr');
           tr.innerHTML = `
-            <td><strong>${escapeHTML(item.name)}</strong></td>
+            <td>${groupBadge}<strong>${escapeHTML(item.name)}</strong></td>
             <td><code class="gm-code-val">${escapeHTML(item.expected)}</code></td>
             <td><code class="gm-code-val" style="color:#b91c1c; font-weight:700;">${escapeHTML(item.actual)}</code></td>
             <td><span class="gm-badge-fail">✖ Sai</span></td>

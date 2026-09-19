@@ -8,7 +8,7 @@
   <meta name="description"
     content="Hệ thống giả lập mạng FPT — Thực hành cấu hình 6 thiết bị mạng AC1000F, AC1000HI, AX3000CV2, AX3000GZ, AX3000HV2 và AX3000S">
   <title>NETWORK SIMULATOR — Hệ Thống Giả Lập Mạng FPT</title>
-  <link rel="stylesheet" href="styles.css?v=20260911-dash-v2">
+  <link rel="stylesheet" href="styles.css?v=20260919_v3">
 </head>
 
 <body>
@@ -186,6 +186,30 @@
             </div>
           </div>
 
+          <!-- ── MULTI-DEVICE TOPOLOGY TABS BAR ── -->
+          <div id="topology-device-tabs" class="topology-tabs-bar" style="display: none;">
+            <button type="button" class="topol-tab-btn active" data-topol-tab="topology" title="Xem sơ đồ đấu nối & giám sát hệ thống">
+              <span class="topol-tab-icon">🗺️</span>
+              <span class="topol-tab-label">Sơ đồ đấu nối</span>
+              <span class="topol-status-dot online"></span>
+            </button>
+            <button type="button" class="topol-tab-btn" data-topol-tab="device1" title="Cấu hình Thiết bị 1">
+              <span class="topol-tab-icon">🌐</span>
+              <span class="topol-tab-label" id="topol-dev1-label">Thiết bị 1: ONT AC1000F</span>
+              <span class="topol-role-badge" id="topol-dev1-role">Bridge Mode</span>
+            </button>
+            <button type="button" class="topol-tab-btn" data-topol-tab="device2" title="Cấu hình Thiết bị 2">
+              <span class="topol-tab-icon">🔀</span>
+              <span class="topol-tab-label" id="topol-dev2-label">Thiết bị 2: Router Vigor 2927</span>
+              <span class="topol-role-badge" id="topol-dev2-role">PPPoE Gateway</span>
+            </button>
+            <button type="button" class="topol-tab-btn" data-topol-tab="terminal" title="Mở máy trạm kiểm tra thông mạng (Ping)">
+              <span class="topol-tab-icon">💻</span>
+              <span class="topol-tab-label">Virtual Client (CLI)</span>
+              <span class="topol-ping-badge" id="topol-ping-badge">Ping: Sẵn sàng</span>
+            </button>
+          </div>
+
           <!-- Server warning (shown if device needs separate server) -->
           <div id="server-warning" class="server-warning" style="display:none">
             <span class="sw-icon">⚠️</span>
@@ -193,13 +217,215 @@
           </div>
 
           <!-- iframe container -->
-          <div class="iframe-wrap">
+          <div class="iframe-wrap" id="iframe-wrapper">
             <div class="iframe-loading" id="iframe-loading">
               <div class="iframe-spinner"></div>
-              <p>Đang tải giao diện thiết bị...</p>
+              <p id="iframe-loading-text">Đang tải giao diện thiết bị...</p>
             </div>
-            <iframe id="device-iframe" name="device-frame" title="Giao diện thiết bị" allowfullscreen>
-            </iframe>
+
+            <!-- Device 1 iframe -->
+            <iframe id="device-iframe" name="device-frame" title="Giao diện thiết bị 1" allowfullscreen></iframe>
+
+            <!-- Device 2 iframe (Multi-Device Topology) -->
+            <iframe id="device-iframe-2" name="device-frame-2" title="Giao diện thiết bị 2" allowfullscreen style="display: none;"></iframe>
+
+            <!-- Topology Map & Live Diagnostics Canvas Panel -->
+            <div id="topology-canvas-panel" class="topology-panel" style="display: none;">
+              <!-- Sơ đồ mạng tương tác -->
+              <div class="topol-canvas-wrapper">
+                <div class="topol-canvas-header">
+                  <div class="topol-header-title">
+                    <span class="topol-badge-live">LIVE TOPOLOGY</span>
+                    <h3>SƠ ĐỒ ĐẤU NỐI & GIÁM SÁT MÔ HÌNH MẠNG THỜI GIAN THỰC</h3>
+                  </div>
+                  <div class="topol-header-actions">
+                    <button type="button" class="topol-action-btn" id="btn-topol-refresh-state" title="Làm mới trạng thái kết nối">
+                      <span>🔄 Cập nhật trạng thái</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Interactive Diagram Area -->
+                <div class="topol-diagram-container">
+                  <!-- Node 1: ISP OLT -->
+                  <div class="topol-node topol-node-isp">
+                    <div class="node-icon">🏢</div>
+                    <div class="node-name">ISP FPT TELECOM</div>
+                    <div class="node-desc">OLT Quang Trung Tâm (OLT-SGN-01)</div>
+                    <div class="node-port-tag">PON Port 1 (1490/1310nm)</div>
+                    <div class="node-status-indicator online">
+                      <span class="led-dot active"></span> Optical Signal OK (-19 dBm)
+                    </div>
+                  </div>
+
+                  <!-- Cable 1: Optical Fiber PON -->
+                  <div class="topol-cable cable-fiber">
+                    <div class="cable-line fiber-line">
+                      <div class="cable-pulse fiber-pulse"></div>
+                    </div>
+                    <div class="cable-label">Cáp quang PON (1-Core Single Mode)</div>
+                  </div>
+
+                  <!-- Node 2: ONT AC1000F -->
+                  <div class="topol-node topol-node-device" id="node-device1">
+                    <div class="node-top-bar">
+                      <span class="node-type-badge">THIẾT BỊ 1</span>
+                      <span class="node-state-pill" id="node-dev1-state-pill">Bridge Mode</span>
+                    </div>
+                    <div class="node-icon">🌐</div>
+                    <div class="node-name" id="node-dev1-title">ONT AC1000F</div>
+                    <div class="node-ip">IP Quản trị: <span class="val">192.168.1.1</span></div>
+                    <div class="node-ports-row">
+                      <span class="port-chip active" title="Cổng PON kết nối cáp quang ISP">PON: Link Up</span>
+                      <span class="port-chip active port-connected" id="node-dev1-lan1-port" title="Cổng LAN 1 nối cáp sang Router WAN 1">
+                        <span class="led-dot active"></span> LAN 1
+                      </span>
+                      <span class="port-chip disabled">LAN 2</span>
+                      <span class="port-chip disabled">LAN 3</span>
+                      <span class="port-chip disabled">LAN 4</span>
+                    </div>
+                    <div class="node-config-summary" id="node-dev1-summary">
+                      <div>VLAN ID: <strong id="node-dev1-vlan">2502 (Internet)</strong></div>
+                      <div>DHCP: <strong id="node-dev1-dhcp">Disabled (Tắt)</strong></div>
+                    </div>
+                    <button type="button" class="node-btn-goto" id="btn-goto-dev1">🛠️ Cấu hình ONT</button>
+                  </div>
+
+                  <!-- Cable 2: CAT6 UTP Cable -->
+                  <div class="topol-cable cable-copper">
+                    <div class="cable-line copper-line">
+                      <div class="cable-pulse copper-pulse"></div>
+                    </div>
+                    <div class="cable-label">Cáp mạng CAT6 (LAN 1 ➔ WAN 1)</div>
+                    <div class="cable-speed-badge">1 Gbps Full-Duplex</div>
+                  </div>
+
+                  <!-- Node 3: Router DrayTek Vigor 2927 -->
+                  <div class="topol-node topol-node-device" id="node-device2">
+                    <div class="node-top-bar">
+                      <span class="node-type-badge router-badge">THIẾT BỊ 2</span>
+                      <span class="node-state-pill router-pill" id="node-dev2-state-pill">PPPoE Gateway</span>
+                    </div>
+                    <div class="node-icon">🔀</div>
+                    <div class="node-name" id="node-dev2-title">DrayTek Vigor 2927</div>
+                    <div class="node-ip">IP Gateway: <span class="val" id="node-dev2-ip">192.168.10.1</span></div>
+                    <div class="node-ports-row">
+                      <span class="port-chip active port-connected" id="node-dev2-wan1-port" title="Cổng WAN 1 nhận cáp từ ONT LAN 1">
+                        <span class="led-dot active"></span> WAN 1
+                      </span>
+                      <span class="port-chip active" id="node-dev2-lan1-port" title="Cổng LAN 1 cấp mạng cho máy trạm">
+                        <span class="led-dot active"></span> LAN 1
+                      </span>
+                      <span class="port-chip">LAN 2</span>
+                      <span class="port-chip">LAN 3</span>
+                      <span class="port-chip">LAN 4</span>
+                    </div>
+                    <div class="node-config-summary" id="node-dev2-summary">
+                      <div>PPPoE: <strong id="node-dev2-pppoe">sgfdl-210208-218</strong></div>
+                      <div>DHCP Pool: <strong id="node-dev2-dhcp">192.168.10.10-200</strong></div>
+                    </div>
+                    <button type="button" class="node-btn-goto" id="btn-goto-dev2">🛠️ Cấu hình Router</button>
+                  </div>
+
+                  <!-- Cable 3: LAN to Client PC -->
+                  <div class="topol-cable cable-client">
+                    <div class="cable-line client-line">
+                      <div class="cable-pulse client-pulse"></div>
+                    </div>
+                    <div class="cable-label">Ethernet LAN</div>
+                  </div>
+
+                  <!-- Node 4: Client PC -->
+                  <div class="topol-node topol-node-client">
+                    <div class="node-icon">💻</div>
+                    <div class="node-name">CLIENT PC</div>
+                    <div class="node-desc">KTV Workstation</div>
+                    <div class="node-client-ip">IP: <span class="val" id="node-client-ip">192.168.10.150</span></div>
+                    <div class="node-client-gw">GW: <span class="val" id="node-client-gw">192.168.10.1</span></div>
+                    <button type="button" class="node-btn-goto btn-terminal-goto" id="btn-goto-terminal">💻 Mở Terminal Ping</button>
+                  </div>
+                </div>
+
+                <!-- Real-time Diagnostics Matrix -->
+                <div class="topol-diagnostics-bar">
+                  <div class="diag-card" id="diag-cable-card">
+                    <div class="diag-icon">🔌</div>
+                    <div class="diag-info">
+                      <div class="diag-title">Cáp đấu nối vật lý</div>
+                      <div class="diag-desc" id="diag-cable-desc">Đã cắm LAN 1 ➔ WAN 1 (Link Up 1Gbps)</div>
+                    </div>
+                    <span class="diag-status success">✓ TỐT</span>
+                  </div>
+
+                  <div class="diag-card" id="diag-bridge-card">
+                    <div class="diag-icon">🌉</div>
+                    <div class="diag-info">
+                      <div class="diag-title">ONT Bridge Mode</div>
+                      <div class="diag-desc" id="diag-bridge-desc">Kiểm tra chế độ cầu nối & VLAN 2502</div>
+                    </div>
+                    <span class="diag-status" id="diag-bridge-status">ĐANG CHECK</span>
+                  </div>
+
+                  <div class="diag-card" id="diag-pppoe-card">
+                    <div class="diag-icon">🔑</div>
+                    <div class="diag-info">
+                      <div class="diag-title">PPPoE Session</div>
+                      <div class="diag-desc" id="diag-pppoe-desc">Quay số WAN 1 Router tới ISP</div>
+                    </div>
+                    <span class="diag-status" id="diag-pppoe-status">ĐANG CHECK</span>
+                  </div>
+
+                  <div class="diag-card" id="diag-conflict-card">
+                    <div class="diag-icon">🛡️</div>
+                    <div class="diag-info">
+                      <div class="diag-title">Chống xung đột IP</div>
+                      <div class="diag-desc" id="diag-conflict-desc">ONT: 192.168.1.1 ⟷ Router: 192.168.10.1</div>
+                    </div>
+                    <span class="diag-status" id="diag-conflict-status">AN TOÀN</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Virtual Client CLI Terminal Panel -->
+            <div id="topology-terminal-panel" class="topology-panel topology-terminal-panel" style="display: none;">
+              <div class="terminal-window">
+                <div class="terminal-titlebar">
+                  <div class="terminal-dots">
+                    <span class="dot dot-red"></span>
+                    <span class="dot dot-yellow"></span>
+                    <span class="dot dot-green"></span>
+                  </div>
+                  <div class="terminal-title">Command Prompt — Client PC Workstation (IP: 192.168.10.150)</div>
+                </div>
+
+                <!-- Quick Action Buttons -->
+                <div class="terminal-quick-bar">
+                  <span class="quick-bar-label">Lệnh nhanh:</span>
+                  <button type="button" class="btn-term-quick" data-cmd="ping 8.8.8.8">⚡ ping 8.8.8.8</button>
+                  <button type="button" class="btn-term-quick" data-cmd="ping 192.168.10.1">⚡ ping 192.168.10.1 (Router)</button>
+                  <button type="button" class="btn-term-quick" data-cmd="ping 192.168.1.1">⚡ ping 192.168.1.1 (ONT)</button>
+                  <button type="button" class="btn-term-quick" data-cmd="ipconfig">📄 ipconfig /all</button>
+                  <button type="button" class="btn-term-quick" data-cmd="tracert 8.8.8.8">🛤️ tracert 8.8.8.8</button>
+                  <button type="button" class="btn-term-quick btn-term-clear" id="btn-term-clear">🧹 Clear</button>
+                </div>
+
+                <!-- Terminal Body Output -->
+                <div class="terminal-body" id="terminal-body">
+                  <pre class="term-line term-banner">Microsoft Windows [Version 10.0.19045.3803]
+(c) Microsoft Corporation. All rights reserved.
+
+UTH NetLab Virtual PC Terminal v2.0 — Kết nối mạng LAN Router DrayTek Vigor 2927
+Gõ "ping 8.8.8.8", "ipconfig" hoặc chọn các lệnh nhanh ở trên để kiểm tra kết nối mạng.</pre>
+                  <div id="terminal-output"></div>
+                  <div class="term-input-row">
+                    <span class="term-prompt">C:\Users\KTV_FPT&gt;</span>
+                    <input type="text" id="terminal-input" class="term-input" autocomplete="off" spellcheck="false" placeholder="Nhập lệnh (vd: ping 8.8.8.8)...">
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </section>
 
@@ -397,14 +623,14 @@
   <script src="devices/be15000/data.js?v=1787733369"></script>
 
   <!-- ONT Vigor2927 -->
-  <script src="devices/vigor2927/tooltips/common_login.js?v=1788507000"></script>
-  <script src="devices/vigor2927/lessons/bai1.js?v=1788507000"></script>
-  <script src="devices/vigor2927/lessons/bai2.js?v=1788507000"></script>
-  <script src="devices/vigor2927/lessons/bai3.js?v=1788507000"></script>
-  <script src="devices/vigor2927/lessons/bai4.js?v=1788507000"></script>
-  <script src="devices/vigor2927/lessons/bai5.js?v=1788507000"></script>
-  <script src="devices/vigor2927/lessons/bai6.js?v=1788507000"></script>
-  <script src="devices/vigor2927/data.js?v=1788507000"></script>
+  <script src="devices/vigor2927/tooltips/common_login.js?v=20260919_v3"></script>
+  <script src="devices/vigor2927/lessons/bai1.js?v=20260919_v3"></script>
+  <script src="devices/vigor2927/lessons/bai2.js?v=20260919_v3"></script>
+  <script src="devices/vigor2927/lessons/bai3.js?v=20260919_v3"></script>
+  <script src="devices/vigor2927/lessons/bai4.js?v=20260919_v3"></script>
+  <script src="devices/vigor2927/lessons/bai5.js?v=20260919_v3"></script>
+  <script src="devices/vigor2927/lessons/bai6.js?v=20260919_v3"></script>
+  <script src="devices/vigor2927/data.js?v=20260919_v3"></script>
 
   <!-- ONT AC1000HI -->
   <script src="devices/ac1000HI/tooltips/common_login.js?v=1788507000"></script>
@@ -443,12 +669,16 @@
   <script src="devices/ONT_be6500c/data.js?v=2000000002"></script>
 
   <!-- Mikrotik hEX S -->
-  <script src="devices/mikrotik_hexs/lessons/bai1.js?v=1788507000"></script>
-  <script src="devices/mikrotik_hexs/data.js?v=1788507000"></script>
+  <script src="devices/mikrotik_hexs/lessons/bai1.js?v=20260919_v3"></script>
+  <script src="devices/mikrotik_hexs/data.js?v=20260919_v3"></script>
 
-  <script src="devices/index.js?v=1787733369"></script>
-  <script src="data.js?v=1787733369"></script>
-  <script src="app.js?v=20260911-dash-v2"></script>
+  <!-- Topology Labs (Multi-Device) -->
+  <script src="devices/topology_labs/lessons/bai1.js?v=20260919_v3"></script>
+  <script src="devices/topology_labs/data.js?v=20260919_v3"></script>
+
+  <script src="devices/index.js?v=20260919_v3"></script>
+  <script src="data.js?v=20260919_v3"></script>
+  <script src="app.js?v=20260919_v3"></script>
 
 </body>
 

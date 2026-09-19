@@ -1434,7 +1434,685 @@ html, body {
   border-color: rgba(255, 59, 48, 0.3);
 }
 
-/* áº¨n khi sidebar thu gá»n */
+/* Ẩn khi sidebar thu gọn */
 #sidebar.collapsed .user-profile-section {
   display: none;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MULTI-DEVICE TOPOLOGY LABS STYLING
+══════════════════════════════════════════════════════════════════════════ */
+
+/* Top Navigation Tabs Bar */
+.topology-tabs-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #1e2538;
+  border-bottom: 2px solid #2d3752;
+  overflow-x: auto;
+  z-index: 10;
+}
+
+.topol-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  background: #252e45;
+  color: #cbd5e1;
+  border: 1px solid #3b4668;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.topol-tab-btn:hover {
+  background: #2d3856;
+  color: #fff;
+  border-color: #00b4d8;
+}
+
+.topol-tab-btn.active {
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  color: #fff;
+  border-color: #38bdf8;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
+}
+
+.topol-tab-icon {
+  font-size: 15px;
+}
+
+.topol-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
+}
+
+.topol-role-badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #e2e8f0;
+  font-weight: 500;
+}
+
+.topol-ping-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: #0f766e;
+  color: #ccfbf1;
+  font-weight: 600;
+}
+
+/* Topology Panel Wrapper */
+.topology-panel {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: #0f172a;
+  color: #f8fafc;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.topol-canvas-wrapper {
+  padding: 24px 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 1080px;
+}
+
+/* Header */
+.topol-canvas-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #334155;
+  padding-bottom: 16px;
+}
+
+.topol-header-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.topol-header-title h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #f1f5f9;
+  letter-spacing: 0.5px;
+}
+
+.topol-badge-live {
+  display: inline-block;
+  padding: 3px 8px;
+  background: #ef4444;
+  color: #fff;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  animation: pulse-live 1.8s infinite;
+}
+
+@keyframes pulse-live {
+  0% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 0.8; transform: scale(1); }
+}
+
+.topol-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #1e293b;
+  color: #38bdf8;
+  border: 1px solid #0284c7;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.topol-action-btn:hover {
+  background: #0284c7;
+  color: #fff;
+}
+
+/* Diagram Layout (Nodes + Cables) */
+.topol-diagram-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 24px 20px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  position: relative;
+}
+
+/* Nodes */
+.topol-node {
+  flex: 1;
+  max-width: 250px;
+  min-width: 200px;
+  background: #0f172a;
+  border: 2px solid #334155;
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  position: relative;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.topol-node:hover {
+  transform: translateY(-2px);
+  border-color: #38bdf8;
+}
+
+.topol-node-isp {
+  border-color: #f59e0b;
+}
+
+.node-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.node-type-badge {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #0284c7;
+  color: #fff;
+}
+
+.node-type-badge.router-badge {
+  background: #8b5cf6;
+}
+
+.node-state-pill {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+  font-weight: 600;
+}
+
+.node-icon {
+  font-size: 32px;
+  margin: 4px 0 8px;
+}
+
+.node-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.node-desc {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+.node-ip {
+  font-size: 12px;
+  color: #cbd5e1;
+  margin-top: 6px;
+  background: #1e293b;
+  padding: 3px 8px;
+  border-radius: 4px;
+  width: 100%;
+}
+
+.node-ip .val {
+  color: #38bdf8;
+  font-weight: 700;
+  font-family: monospace;
+}
+
+.node-ports-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+  margin: 10px 0;
+  width: 100%;
+}
+
+.port-chip {
+  font-size: 10px;
+  padding: 2px 6px;
+  background: #334155;
+  color: #94a3b8;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.port-chip.active {
+  background: #064e3b;
+  color: #34d399;
+  font-weight: 600;
+}
+
+.port-chip.port-connected {
+  border: 1px solid #10b981;
+}
+
+.led-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  display: inline-block;
+}
+
+.led-dot.active {
+  animation: led-blink 1s infinite;
+}
+
+@keyframes led-blink {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(0.85); }
+}
+
+.node-config-summary {
+  font-size: 11px;
+  color: #94a3b8;
+  background: #1e293b;
+  border-radius: 4px;
+  padding: 6px 8px;
+  width: 100%;
+  text-align: left;
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.node-config-summary strong {
+  color: #f8fafc;
+}
+
+.node-btn-goto {
+  width: 100%;
+  padding: 7px 0;
+  background: #0284c7;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.node-btn-goto:hover {
+  background: #0369a1;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
+}
+
+.node-btn-goto.btn-terminal-goto {
+  background: #0d9488;
+}
+
+.node-btn-goto.btn-terminal-goto:hover {
+  background: #0f766e;
+}
+
+.node-status-indicator {
+  font-size: 11px;
+  color: #f59e0b;
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.node-status-indicator.online {
+  color: #10b981;
+}
+
+/* Cables */
+.topol-cable {
+  flex: 0 0 110px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  position: relative;
+}
+
+.cable-line {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  position: relative;
+  overflow: hidden;
+}
+
+.cable-line.fiber-line {
+  background: #f59e0b;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+}
+
+.cable-line.copper-line {
+  background: #0284c7;
+  box-shadow: 0 0 8px rgba(2, 132, 199, 0.5);
+}
+
+.cable-line.client-line {
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+}
+
+.cable-pulse {
+  position: absolute;
+  top: 0;
+  left: -20px;
+  width: 20px;
+  height: 100%;
+  border-radius: 3px;
+  animation: pulse-stream 1.4s linear infinite;
+}
+
+.cable-pulse.fiber-pulse {
+  background: #fff;
+  box-shadow: 0 0 10px #fff;
+}
+
+.cable-pulse.copper-pulse {
+  background: #67e8f9;
+  box-shadow: 0 0 10px #67e8f9;
+}
+
+.cable-pulse.client-pulse {
+  background: #a7f3d0;
+  box-shadow: 0 0 10px #a7f3d0;
+}
+
+@keyframes pulse-stream {
+  0% { left: -20px; }
+  100% { left: 100%; }
+}
+
+.cable-label {
+  font-size: 10px;
+  color: #94a3b8;
+  text-align: center;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.cable-speed-badge {
+  font-size: 9px;
+  font-weight: 700;
+  color: #38bdf8;
+  background: rgba(2, 132, 199, 0.2);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+/* Real-time Diagnostics Bar */
+.topol-diagnostics-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.diag-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 14px 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.diag-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.diag-info {
+  flex: 1;
+}
+
+.diag-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.diag-desc {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.diag-status {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: #334155;
+  color: #cbd5e1;
+  white-space: nowrap;
+}
+
+.diag-status.success {
+  background: #065f46;
+  color: #34d399;
+}
+
+.diag-status.warning {
+  background: #854d0e;
+  color: #fef08a;
+}
+
+.diag-status.danger {
+  background: #991b1b;
+  color: #fecaca;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   VIRTUAL CLIENT CLI TERMINAL STYLING
+══════════════════════════════════════════════════════════════════════════ */
+.topology-terminal-panel {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.terminal-window {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #0c0d12;
+  border: 1px solid #282c3f;
+  border-radius: 10px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+  overflow: hidden;
+}
+
+.terminal-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: #181b26;
+  border-bottom: 1px solid #282c3f;
+}
+
+.terminal-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.terminal-dots .dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+}
+
+.dot-red { background: #ff5f56; }
+.dot-yellow { background: #ffbd2e; }
+.dot-green { background: #27c93f; }
+
+.terminal-title {
+  font-size: 12px;
+  font-family: monospace;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.terminal-quick-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #12151f;
+  border-bottom: 1px solid #222638;
+  overflow-x: auto;
+}
+
+.quick-bar-label {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.btn-term-quick {
+  padding: 4px 10px;
+  background: #1e2438;
+  color: #93c5fd;
+  border: 1px solid #2e3856;
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: monospace;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.btn-term-quick:hover {
+  background: #0284c7;
+  color: #fff;
+  border-color: #38bdf8;
+}
+
+.btn-term-clear {
+  margin-left: auto;
+  color: #f87171;
+  border-color: #5c2b2b;
+  background: #231619;
+}
+
+.btn-term-clear:hover {
+  background: #ef4444;
+  color: #fff;
+}
+
+.terminal-body {
+  flex: 1;
+  padding: 16px 20px;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #e2e8f0;
+  overflow-y: auto;
+}
+
+.term-banner {
+  color: #64748b;
+  margin: 0 0 12px 0;
+  white-space: pre-wrap;
+}
+
+#terminal-output {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.term-output-entry {
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.term-output-entry .term-cmd-echo {
+  color: #38bdf8;
+  font-weight: bold;
+}
+
+.term-output-entry.success {
+  color: #4ade80;
+}
+
+.term-output-entry.warning {
+  color: #facc15;
+}
+
+.term-output-entry.error {
+  color: #f87171;
+}
+
+.term-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.term-prompt {
+  color: #38bdf8;
+  font-weight: bold;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.term-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #f8fafc;
+  font-family: inherit;
+  font-size: inherit;
+  outline: none;
+  padding: 0;
 }

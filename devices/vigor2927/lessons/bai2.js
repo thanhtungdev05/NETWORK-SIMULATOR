@@ -1,4 +1,4 @@
-﻿/**
+/**
  * devices/vigor2927/lessons/bai1.js
  * Bài 1: Khám phá Vigor2927
  */
@@ -6,7 +6,7 @@
 window.DEVICE_VIGOR2927_LESSONS = window.DEVICE_VIGOR2927_LESSONS || [];
 
 window.DEVICE_VIGOR2927_LESSONS.push({
-  id: 'vg2927-bai1',
+  id: 'vg2927-bai2',
   title: 'Cấu hình wifi',
   subtitle: 'Cấu hình wifi',
   instructions: [

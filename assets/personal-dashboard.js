@@ -1384,7 +1384,12 @@
 
         const circle = document.createElement('div');
         circle.className = 'cal-day-circle';
-        circle.innerHTML = wd.has_activity ? '✓' : (wd.day_label ? wd.day_label.replace('T', '') : '•');
+        if (wd.has_activity) {
+          circle.innerHTML = wd.is_today ? '🔥' : '✓';
+        } else {
+          const shortLabel = (wd.day_label || wd.day_name || '').replace('T', '');
+          circle.innerHTML = shortLabel === 'CN' ? 'CN' : (shortLabel || '•');
+        }
 
         cell.appendChild(label);
         cell.appendChild(circle);

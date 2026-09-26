@@ -9,8 +9,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/personal-dashboard.css?v=20260912-mobile-v2">
-  <link rel="stylesheet" href="assets/personal-ai-coach.css?v=20260912-mobile-v2">
+  <link rel="stylesheet" href="assets/personal-dashboard.css?v=20260926-streak-v4">
+  <link rel="stylesheet" href="assets/personal-ai-coach.css?v=20260926-streak-v4">
   <style>
     /* Critical Drawer & FAB styles to guarantee zero layout glitches */
     .student-ai-drawer {
@@ -52,6 +52,536 @@
       bottom: 28px !important;
       right: 28px !important;
       z-index: 9999 !important;
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       CRITICAL INLINE GAMIFICATION STYLES (DUOLINGO STREAKS & REWARDS)
+       Guaranteed rendering even with aggressive browser / proxy caching
+       ══════════════════════════════════════════════════════════════════════════ */
+    .nav-streak-pill {
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 6px !important;
+      padding: 6px 14px !important;
+      background: #fff7ed !important;
+      border: 1.5px solid #fed7aa !important;
+      border-radius: 999px !important;
+      font-size: 12.5px !important;
+      font-weight: 700 !important;
+      color: #c2410c !important;
+      cursor: pointer !important;
+      transition: all 0.2s ease !important;
+    }
+    .nav-streak-pill:hover {
+      background: #ffedd5 !important;
+      transform: scale(1.03) !important;
+    }
+
+    .streak-gamification-card {
+      position: relative !important;
+      background: linear-gradient(135deg, #ffffff 0%, #fffbf5 100%) !important;
+      border: 1.5px solid #fed7aa !important;
+      border-radius: 20px !important;
+      padding: 20px 24px !important;
+      box-shadow: 0 10px 25px -5px rgba(249, 115, 22, 0.09), 0 4px 12px rgba(15, 23, 42, 0.04) !important;
+      margin-bottom: 24px !important;
+      overflow: hidden !important;
+      display: block !important;
+    }
+    .streak-card-glow {
+      position: absolute !important;
+      top: -40px !important;
+      left: -40px !important;
+      width: 140px !important;
+      height: 140px !important;
+      background: radial-gradient(circle, rgba(251, 146, 60, 0.25) 0%, rgba(251, 146, 60, 0) 70%) !important;
+      pointer-events: none !important;
+    }
+    .streak-card-main {
+      position: relative !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      gap: 20px !important;
+      flex-wrap: wrap !important;
+    }
+
+    /* Left: Streak Flame Col */
+    .streak-flame-col {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+      min-width: 160px !important;
+      padding: 12px 18px !important;
+      background: #ffffff !important;
+      border: 1px solid #ffedd5 !important;
+      border-radius: 16px !important;
+      box-shadow: 0 2px 8px rgba(234, 88, 12, 0.06) !important;
+    }
+    .streak-flame-wrapper {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+    }
+    .streak-flame-icon {
+      font-size: 42px !important;
+      line-height: 1 !important;
+      filter: drop-shadow(0 4px 8px rgba(234, 88, 12, 0.35)) !important;
+      display: inline-block !important;
+    }
+    .animated-flame {
+      animation: flameBounce 1.8s infinite ease-in-out !important;
+    }
+    @keyframes flameBounce {
+      0%, 100% { transform: scale(1) translateY(0); }
+      50% { transform: scale(1.12) translateY(-4px); }
+    }
+    .streak-number {
+      font-size: 34px !important;
+      font-weight: 800 !important;
+      color: #ea580c !important;
+      line-height: 1.1 !important;
+      margin-top: 4px !important;
+      font-feature-settings: "tnum" !important;
+    }
+    .streak-unit {
+      font-size: 11px !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.05em !important;
+      color: #9a3412 !important;
+      margin-top: 2px !important;
+    }
+    .streak-meta-pills {
+      display: flex !important;
+      gap: 6px !important;
+      margin-top: 10px !important;
+    }
+    .streak-pill {
+      font-size: 11px !important;
+      font-weight: 600 !important;
+      padding: 3px 8px !important;
+      border-radius: 999px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+    }
+    .streak-pill.longest {
+      background: #fef3c7 !important;
+      color: #b45309 !important;
+      border: 1px solid #fde68a !important;
+    }
+    .streak-pill.freeze {
+      background: #e0f2fe !important;
+      color: #0369a1 !important;
+      border: 1px solid #bae6fd !important;
+    }
+
+    /* Center: Calendar & Mascot */
+    .streak-center-col {
+      flex: 1 !important;
+      min-width: 300px !important;
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 12px !important;
+    }
+    .streak-calendar-row {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      gap: 8px !important;
+      background: #ffffff !important;
+      padding: 12px 18px !important;
+      border: 1px solid #f1f5f9 !important;
+      border-radius: 16px !important;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+    }
+    .cal-day-cell {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      gap: 4px !important;
+      flex: 1 !important;
+    }
+    .cal-day-label {
+      font-size: 11.5px !important;
+      font-weight: 700 !important;
+      color: #64748b !important;
+    }
+    .cal-day-circle {
+      width: 36px !important;
+      height: 36px !important;
+      border-radius: 50% !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      font-size: 13.5px !important;
+      font-weight: 700 !important;
+      background: #f8fafc !important;
+      border: 2px solid #e2e8f0 !important;
+      color: #94a3b8 !important;
+      transition: all 0.2s ease !important;
+    }
+    .cal-day-cell.active .cal-day-circle {
+      background: linear-gradient(135deg, #f97316, #ea580c) !important;
+      border-color: #ea580c !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 10px rgba(234, 88, 12, 0.35) !important;
+    }
+    .cal-day-cell.today .cal-day-circle {
+      border-color: #f97316 !important;
+      border-width: 2.5px !important;
+    }
+    .cal-day-cell.today.active .cal-day-circle {
+      animation: todayPulse 2s infinite !important;
+    }
+    @keyframes todayPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(234, 88, 12, 0.4); }
+      50% { box-shadow: 0 0 0 6px rgba(234, 88, 12, 0); }
+    }
+
+    .streak-mascot-msg {
+      display: flex !important;
+      align-items: center !important;
+      gap: 12px !important;
+      background: #ffffff !important;
+      border: 1px solid #ffedd5 !important;
+      padding: 10px 16px !important;
+      border-radius: 14px !important;
+    }
+    .mascot-avatar {
+      font-size: 28px !important;
+      line-height: 1 !important;
+      flex-shrink: 0 !important;
+    }
+    .mascot-bubble {
+      flex: 1 !important;
+    }
+    .mascot-bubble p {
+      font-size: 13px !important;
+      color: #475569 !important;
+      line-height: 1.45 !important;
+      margin: 0 !important;
+    }
+    .mascot-bubble strong {
+      color: #ea580c !important;
+    }
+
+    /* Right: NetCoins Balance & Actions */
+    .streak-actions-col {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 10px !important;
+      min-width: 210px !important;
+    }
+    .netcoins-balance-box {
+      background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%) !important;
+      border: 1.5px solid #fde68a !important;
+      border-radius: 14px !important;
+      padding: 12px 16px !important;
+      text-align: center !important;
+    }
+    .netcoins-label {
+      font-size: 10.5px !important;
+      font-weight: 700 !important;
+      color: #b45309 !important;
+      letter-spacing: 0.04em !important;
+    }
+    .netcoins-amount {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 6px !important;
+      margin-top: 2px !important;
+    }
+    .coin-spin {
+      font-size: 22px !important;
+      display: inline-block !important;
+      animation: coinGlow 2.5s infinite ease-in-out !important;
+    }
+    @keyframes coinGlow {
+      0%, 100% { transform: scale(1) rotate(0deg); }
+      50% { transform: scale(1.15) rotate(10deg); }
+    }
+    #netcoins-balance-val {
+      font-size: 26px !important;
+      font-weight: 800 !important;
+      color: #92400e !important;
+      font-feature-settings: "tnum" !important;
+    }
+    .coin-unit {
+      font-size: 13px !important;
+      font-weight: 700 !important;
+      color: #b45309 !important;
+    }
+    .netcoins-sub {
+      font-size: 11px !important;
+      font-weight: 600 !important;
+      color: #78350f !important;
+      margin-top: 4px !important;
+    }
+    .streak-buttons-wrap {
+      display: flex !important;
+      gap: 8px !important;
+    }
+    .btn-daily-checkin {
+      flex: 1 !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 6px !important;
+      padding: 9px 12px !important;
+      background: #ffffff !important;
+      border: 1.5px solid #f97316 !important;
+      color: #ea580c !important;
+      font-size: 12px !important;
+      font-weight: 700 !important;
+      border-radius: 10px !important;
+      cursor: pointer !important;
+      transition: all 0.2s ease !important;
+    }
+    .btn-daily-checkin:hover:not(:disabled) {
+      background: #ffedd5 !important;
+      transform: translateY(-1px) !important;
+    }
+    .btn-daily-checkin:disabled {
+      opacity: 0.65 !important;
+      cursor: not-allowed !important;
+      background: #f8fafc !important;
+      border-color: #cbd5e1 !important;
+      color: #64748b !important;
+    }
+    .btn-open-rewards {
+      flex: 1 !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 6px !important;
+      padding: 9px 12px !important;
+      background: linear-gradient(135deg, #ea580c, #c2410c) !important;
+      border: none !important;
+      color: #ffffff !important;
+      font-size: 12px !important;
+      font-weight: 700 !important;
+      border-radius: 10px !important;
+      cursor: pointer !important;
+      box-shadow: 0 4px 12px rgba(234, 88, 12, 0.28) !important;
+      transition: all 0.2s ease !important;
+    }
+    .btn-open-rewards:hover {
+      background: linear-gradient(135deg, #f97316, #ea580c) !important;
+      transform: translateY(-1px) !important;
+      box-shadow: 0 6px 16px rgba(234, 88, 12, 0.38) !important;
+    }
+
+    /* Modal Critical Styles */
+    .reward-modal-backdrop {
+      position: fixed !important;
+      inset: 0 !important;
+      background: rgba(15, 23, 42, 0.55) !important;
+      backdrop-filter: blur(4px) !important;
+      z-index: 10001 !important;
+    }
+    .reward-modal {
+      position: fixed !important;
+      top: 50% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) !important;
+      width: 900px !important;
+      max-width: calc(100vw - 32px) !important;
+      max-height: calc(100vh - 48px) !important;
+      background: #ffffff !important;
+      border-radius: 20px !important;
+      box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.3) !important;
+      z-index: 10002 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      overflow: hidden !important;
+      animation: modalPop 0.22s ease-out !important;
+    }
+    @keyframes modalPop {
+      from { opacity: 0; transform: translate(-50%, -46%) scale(0.96); }
+      to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+    .reward-modal-header {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      padding: 18px 24px !important;
+      border-bottom: 1px solid #e2e8f0 !important;
+      background: #f8fafc !important;
+    }
+    .reward-modal-title-wrap {
+      display: flex !important;
+      align-items: center !important;
+      gap: 12px !important;
+    }
+    .reward-modal-icon { font-size: 28px !important; }
+    .reward-modal-title-wrap h3 { font-size: 17px !important; font-weight: 800 !important; margin: 0 !important; }
+    .reward-modal-title-wrap p { font-size: 12.5px !important; color: #64748b !important; margin: 2px 0 0 0 !important; }
+    .reward-modal-header-right { display: flex !important; align-items: center !important; gap: 12px !important; }
+    .modal-coin-badge {
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 5px !important;
+      padding: 5px 12px !important;
+      background: #fef3c7 !important;
+      border: 1.5px solid #fde68a !important;
+      border-radius: 999px !important;
+      font-size: 13px !important;
+      color: #92400e !important;
+    }
+    .modal-coin-badge strong { font-size: 15px !important; font-weight: 800 !important; }
+    .reward-modal-close {
+      width: 32px !important;
+      height: 32px !important;
+      border: 1px solid #e2e8f0 !important;
+      border-radius: 50% !important;
+      background: #fff !important;
+      cursor: pointer !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      font-size: 14px !important;
+      color: #64748b !important;
+    }
+    .reward-modal-close:hover { background: #fee2e2 !important; color: #dc2626 !important; border-color: #fca5a5 !important; }
+    .reward-modal-tabs {
+      display: flex !important;
+      gap: 8px !important;
+      padding: 12px 24px !important;
+      background: #fff !important;
+      border-bottom: 1px solid #e2e8f0 !important;
+    }
+    .reward-tab-btn {
+      padding: 8px 16px !important;
+      background: transparent !important;
+      border: 1px solid transparent !important;
+      border-radius: 10px !important;
+      font-size: 13px !important;
+      font-weight: 600 !important;
+      color: #475569 !important;
+      cursor: pointer !important;
+      transition: all 0.2s ease !important;
+    }
+    .reward-tab-btn:hover { background: #f1f5f9 !important; }
+    .reward-tab-btn.active {
+      background: #fff7ed !important;
+      border-color: #fed7aa !important;
+      color: #ea580c !important;
+      font-weight: 700 !important;
+    }
+    .reward-modal-body {
+      padding: 20px 24px !important;
+      overflow-y: auto !important;
+      flex: 1 !important;
+    }
+    .reward-grid {
+      display: grid !important;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)) !important;
+      gap: 16px !important;
+    }
+    .reward-card {
+      background: #ffffff !important;
+      border: 1.5px solid #e2e8f0 !important;
+      border-radius: 14px !important;
+      padding: 18px !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: space-between !important;
+      gap: 14px !important;
+      transition: all 0.2s ease !important;
+    }
+    .reward-card:hover {
+      border-color: #f97316 !important;
+      box-shadow: 0 8px 20px rgba(249, 115, 22, 0.1) !important;
+      transform: translateY(-2px) !important;
+    }
+    .reward-card-top { display: flex !important; gap: 12px !important; }
+    .reward-item-icon {
+      font-size: 32px !important;
+      line-height: 1 !important;
+      width: 48px !important;
+      height: 48px !important;
+      background: #f8fafc !important;
+      border-radius: 10px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      flex-shrink: 0 !important;
+    }
+    .reward-card-info { flex: 1 !important; }
+    .reward-card-category {
+      display: inline-block !important;
+      font-size: 10.5px !important;
+      font-weight: 700 !important;
+      padding: 2px 7px !important;
+      border-radius: 999px !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.03em !important;
+      margin-bottom: 4px !important;
+    }
+    .reward-card-category.academic { background: #ede9fe !important; color: #6d28d9 !important; }
+    .reward-card-category.voucher { background: #fee2e2 !important; color: #b91c1c !important; }
+    .reward-card-category.souvenir { background: #e0f2fe !important; color: #0369a1 !important; }
+    .reward-item-title { font-size: 14px !important; font-weight: 700 !important; color: #0f172a !important; line-height: 1.35 !important; }
+    .reward-item-desc { font-size: 12px !important; color: #475569 !important; line-height: 1.45 !important; margin-top: 6px !important; }
+    .reward-card-bottom {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      padding-top: 12px !important;
+      border-top: 1px dashed #e2e8f0 !important;
+    }
+    .reward-cost-tag {
+      display: flex !important;
+      align-items: center !important;
+      gap: 4px !important;
+      font-size: 14px !important;
+      font-weight: 800 !important;
+      color: #b45309 !important;
+    }
+    .btn-redeem-gift {
+      padding: 6px 14px !important;
+      background: linear-gradient(135deg, #f97316, #ea580c) !important;
+      border: none !important;
+      border-radius: 10px !important;
+      color: #fff !important;
+      font-size: 12.5px !important;
+      font-weight: 700 !important;
+      cursor: pointer !important;
+      transition: all 0.2s ease !important;
+    }
+    .btn-redeem-gift:hover:not(:disabled) { opacity: 0.92 !important; transform: translateY(-1px) !important; }
+    .btn-redeem-gift:disabled { background: #e2e8f0 !important; color: #94a3b8 !important; cursor: not-allowed !important; }
+
+    .reward-history-list { display: flex !important; flex-direction: column !important; gap: 10px !important; }
+    .history-item {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      padding: 14px 18px !important;
+      background: #f8fafc !important;
+      border: 1px solid #e2e8f0 !important;
+      border-radius: 12px !important;
+    }
+    .history-item-left { display: flex !important; align-items: center !important; gap: 12px !important; }
+    .history-status-badge {
+      padding: 4px 10px !important;
+      border-radius: 999px !important;
+      font-size: 11px !important;
+      font-weight: 700 !important;
+    }
+    .history-status-badge.pending { background: #fef3c7 !important; color: #b45309 !important; border: 1px solid #fde68a !important; }
+    .history-status-badge.fulfilled { background: #dcfce7 !important; color: #15803d !important; border: 1px solid #bbf7d0 !important; }
+    .history-status-badge.rejected { background: #fee2e2 !important; color: #b91c1c !important; border: 1px solid #fecaca !important; }
+
+    .speedrun-table { width: 100% !important; border-collapse: collapse !important; font-size: 13px !important; }
+    .speedrun-table th, .speedrun-table td { padding: 10px 14px !important; text-align: left !important; border-bottom: 1px solid #e2e8f0 !important; }
+    .speedrun-table th { background: #f8fafc !important; font-weight: 700 !important; color: #475569 !important; }
+
+    @media (max-width: 768px) {
+      .streak-card-main { flex-direction: column !important; align-items: stretch !important; }
+      .streak-flame-col, .streak-actions-col { min-width: 100% !important; }
     }
   </style>
 </head>
@@ -596,7 +1126,7 @@
     </div>
   </div>
 
-  <script src="assets/personal-dashboard.js?v=20260926-gamification-v1"></script>
+  <script src="assets/personal-dashboard.js?v=20260926-streak-v4"></script>
 </body>
 
 </html>

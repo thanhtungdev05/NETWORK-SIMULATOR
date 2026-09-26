@@ -70,7 +70,7 @@ function send_smtp_mail(
     $resendKey = env_value('RESEND_API_KEY', '');
     if ($resendKey !== '') {
         $resendPayload = json_encode([
-            'from' => "$fromName <onboarding@resend.dev>",
+            'from' => 'UTH NetLab <onboarding@resend.dev>',
             'to' => [$toEmail],
             'subject' => $subject,
             'html' => $htmlBody,
@@ -102,6 +102,8 @@ function send_smtp_mail(
                 ];
             }
             if (!empty($respJson['message'])) {
+                $lastReason = 'resend_rejected';
+                $lastError = 'Resend API từ chối: ' . $respJson['message'];
                 error_log("Resend API error: " . $respJson['message']);
             }
         }

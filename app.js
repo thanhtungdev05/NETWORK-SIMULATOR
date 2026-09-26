@@ -1804,6 +1804,10 @@
         deviceIframe.src = urlObj.toString();
       }, 80);
     }
+
+    if (typeof window.updatePortalAiContext === 'function') {
+      window.updatePortalAiContext();
+    }
   }
 
   // ── View Switchers ───────────────────────────────────────────────
@@ -3157,6 +3161,255 @@
     }
   };
 
+  // ── Portal AI Copilot / Assistant for Modem Simulator ───────────
+  function setupPortalAiCopilot() {
+    const fab = document.getElementById('portalAiFab');
+    const drawer = document.getElementById('portalAiDrawer');
+    const closeBtn = document.getElementById('portalAiCloseBtn');
+    const clearBtn = document.getElementById('portalAiClearBtn');
+    const contextText = document.getElementById('portalAiContextText');
+    const chipsContainer = document.getElementById('portalAiChips');
+    const messages = document.getElementById('portalAiMessages');
+    const input = document.getElementById('portalAiInput');
+    const sendBtn = document.getElementById('portalAiSendBtn');
+
+    if (!fab || !drawer) return;
+
+    let isAiBusy = false;
+
+    function toggleDrawer(forceOpen) {
+      const isVisible = drawer.style.display !== 'none';
+      const nextState = forceOpen !== undefined ? forceOpen : !isVisible;
+      drawer.style.display = nextState ? 'flex' : 'none';
+      if (nextState) {
+        updatePortalAiContext();
+        if (input) setTimeout(() => input.focus(), 150);
+      }
+    }
+
+    fab.addEventListener('click', () => toggleDrawer());
+    if (closeBtn) closeBtn.addEventListener('click', () => toggleDrawer(false));
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        messages.innerHTML = `
+          <div class="portal-ai-msg ai">
+            <div class="portal-ai-msg-avatar">🤖</div>
+            <div class="portal-ai-msg-bubble">
+              <p><strong>Đoạn hội thoại đã được làm mới.</strong></p>
+              <p>Tôi là <strong>Trợ lý AI Kỹ Thuật UTH NetLab</strong>. Bạn cần hướng dẫn cấu hình thiết bị nào hoặc gặp lỗi mạng gì?</p>
+            </div>
+          </div>
+        `;
+        updatePortalAiContext();
+      });
+    }
+
+    window.updatePortalAiContext = function () {
+      if (!contextText || !chipsContainer) return;
+      const device = DEVICES.find(d => d.id === currentDeviceId);
+      const lesson = getCurrentLesson();
+
+      const devName = device ? device.name : 'Thiết bị mạng';
+      const lessonTitle = lesson ? lesson.title : '';
+      contextText.textContent = `Đang thực hành: ${devName}${lessonTitle ? ' — ' + lessonTitle : ''}`;
+
+      // Tạo các chips gợi ý phù hợp với ngữ cảnh thiết bị
+      let suggestedChips = [];
+      const devId = currentDeviceId || '';
+
+      if (devId === 'topology_labs' || (lesson && lesson.isTopology)) {
+        suggestedChips = [
+          'Hướng dẫn làm bài mô hình liên kết này?',
+          'Cách chuyển ONT sang Bridge Mode VLAN 2502?',
+          'Đổi IP LAN tránh trùng 192.168.1.1?',
+          'Tại sao máy trạm ping 8.8.8.8 không thông?'
+        ];
+      } else if (devId === 'vigor2927') {
+        suggestedChips = [
+          'Cấu hình PPPoE trên WAN 1 Vigor 2927?',
+          'Đổi IP LAN sang 192.168.10.1 và bật DHCP?',
+          'Mở Port Redirection (NAT)?',
+          'Khắc phục xung đột IP với ONT?'
+        ];
+      } else if (devId === 'mikrotik_hexs') {
+        suggestedChips = [
+          '5 bước cấu hình Router MikroTik hEX S?',
+          'Tạo PPPoE Client trên cổng ether1?',
+          'Tạo Bridge LAN và gán IP Gateway?',
+          'Tại sao phải cấu hình NAT Masquerade?'
+        ];
+      } else if (devId === 'be6500c' || devId === 'ONT_be6500c') {
+        suggestedChips = [
+          'Cấu hình AP Mode trên BE6500C?',
+          'Đặt IP tĩnh 192.168.1.250 và tắt DHCP?',
+          'Công nghệ Wi-Fi 7 MLO có ưu điểm gì?'
+        ];
+      } else if (devId === 'ax3000gz' || devId === 'ax3000cv2' || devId === 'ax3000hv2') {
+        suggestedChips = [
+          'Cấu hình Bridge Mode trên LuCI OpenWrt?',
+          'Gán 802.1q VLAN 2502 như thế nào?',
+          'Băng tần 160MHz trên Wi-Fi 6 là gì?',
+          'Cách kiểm tra công suất quang RX?'
+        ];
+      } else {
+        suggestedChips = [
+          'Cấu hình Bridge Mode VLAN 2502?',
+          'Cấu hình quay số PPPoE FPT?',
+          'Khắc phục lỗi trùng IP 192.168.1.1?',
+          'Cách kiểm tra thông tuyến bằng ping và tracert?'
+        ];
+      }
+
+      chipsContainer.innerHTML = '';
+      suggestedChips.forEach(chipText => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'portal-ai-chip';
+        btn.textContent = chipText;
+        btn.addEventListener('click', () => {
+          sendUserMessage(chipText);
+        });
+        chipsContainer.appendChild(btn);
+      });
+    };
+
+    function renderMarkdownToHtml(text) {
+      if (!text) return '';
+      let html = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+      html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+      html = html.replace(/^#### (.*$)/gim, '<h4>$1</h4>');
+      html = html.replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>');
+      html = html.replace(/\*(.*?)\*/gim, '<em>$1</em>');
+      html = html.replace(/`([^`]+)`/gim, '<code>$1</code>');
+      html = html.replace(/^\s*[-•]\s+(.*$)/gim, '<li>$1</li>');
+      html = html.replace(/(<li>.*<\/li>)/gim, '<ul>$1</ul>');
+      html = html.replace(/<\/ul>\s*<ul>/gim, '');
+      html = html.replace(/\n\n+/gim, '<br><br>');
+      html = html.replace(/\n/gim, '<br>');
+
+      return html;
+    }
+
+    function appendMessage(role, rawContent) {
+      if (!messages) return;
+      const msgDiv = document.createElement('div');
+      msgDiv.className = `portal-ai-msg ${role}`;
+
+      const avatar = document.createElement('div');
+      avatar.className = 'portal-ai-msg-avatar';
+      avatar.textContent = role === 'user' ? '👤' : '🤖';
+
+      const bubble = document.createElement('div');
+      bubble.className = 'portal-ai-msg-bubble';
+
+      if (role === 'user') {
+        bubble.textContent = rawContent;
+      } else {
+        bubble.innerHTML = renderMarkdownToHtml(rawContent);
+      }
+
+      msgDiv.appendChild(avatar);
+      msgDiv.appendChild(bubble);
+      messages.appendChild(msgDiv);
+      messages.scrollTop = messages.scrollHeight;
+      return msgDiv;
+    }
+
+    function showTypingIndicator() {
+      if (!messages) return null;
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'portal-ai-msg ai typing-indicator';
+
+      const avatar = document.createElement('div');
+      avatar.className = 'portal-ai-msg-avatar';
+      avatar.textContent = '🤖';
+
+      const bubble = document.createElement('div');
+      bubble.className = 'portal-ai-msg-bubble';
+      bubble.innerHTML = `
+        <div class="portal-ai-typing">
+          <span class="portal-ai-typing-dot"></span>
+          <span class="portal-ai-typing-dot"></span>
+          <span class="portal-ai-typing-dot"></span>
+        </div>
+      `;
+
+      msgDiv.appendChild(avatar);
+      msgDiv.appendChild(bubble);
+      messages.appendChild(msgDiv);
+      messages.scrollTop = messages.scrollHeight;
+      return msgDiv;
+    }
+
+    function sendUserMessage(text) {
+      if (!text || !text.trim() || isAiBusy) return;
+      const cleanText = text.trim();
+      if (input) input.value = '';
+
+      appendMessage('user', cleanText);
+      isAiBusy = true;
+      if (sendBtn) sendBtn.disabled = true;
+
+      const typingDiv = showTypingIndicator();
+
+      fetch('/api/index.php/ai/student-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ message: cleanText })
+      })
+        .then(res => res.json())
+        .then(json => {
+          if (typingDiv && typingDiv.parentNode) {
+            typingDiv.parentNode.removeChild(typingDiv);
+          }
+          isAiBusy = false;
+          if (sendBtn) sendBtn.disabled = false;
+
+          const data = (json && (json.data || json)) || {};
+          const answer = data.answer || 'Tôi đã tiếp nhận câu hỏi của bạn nhưng chưa có phản hồi.';
+          appendMessage('ai', answer);
+
+          if (Array.isArray(data.suggested_questions) && data.suggested_questions.length > 0 && chipsContainer) {
+            chipsContainer.innerHTML = '';
+            data.suggested_questions.forEach(q => {
+              const b = document.createElement('button');
+              b.type = 'button';
+              b.className = 'portal-ai-chip';
+              b.textContent = q;
+              b.addEventListener('click', () => sendUserMessage(q));
+              chipsContainer.appendChild(b);
+            });
+          }
+        })
+        .catch(err => {
+          if (typingDiv && typingDiv.parentNode) {
+            typingDiv.parentNode.removeChild(typingDiv);
+          }
+          isAiBusy = false;
+          if (sendBtn) sendBtn.disabled = false;
+          appendMessage('ai', `⚠️ Không thể kết nối với Trợ lý AI (${err.message || 'Lỗi mạng'}). Vui lòng thử lại sau ít giây.`);
+        });
+    }
+
+    if (sendBtn && input) {
+      sendBtn.addEventListener('click', () => sendUserMessage(input.value));
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          sendUserMessage(input.value);
+        }
+      });
+    }
+
+    updatePortalAiContext();
+  }
+
   // ── Boot ─────────────────────────────────────────────────────────
   init();
+  setupPortalAiCopilot();
 })();

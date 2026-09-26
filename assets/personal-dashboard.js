@@ -1082,9 +1082,13 @@
     avatar.textContent = role === 'ai' ? '🤖' : '👤';
 
     let badgeHtml = '';
-    if (role === 'ai' && model === 'gemini-1.5-flash') {
+    if (role === 'ai' && (model === 'gemini-1.5-flash' || model === 'gemini-2.0-flash' || (model && model.startsWith('gemini')))) {
       badgeHtml = `<div style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; background: #e0e7ff; color: #4338ca; font-size: 0.68rem; font-weight: 700; margin-bottom: 8px;">
-        <span>⚡ Powered by Google Gemini 1.5 Flash</span>
+        <span>⚡ Powered by Google Gemini AI</span>
+      </div>`;
+    } else if (role === 'ai' && model === 'network-expert-engine') {
+      badgeHtml = `<div style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; background: #e0f2fe; color: #0369a1; font-size: 0.68rem; font-weight: 700; margin-bottom: 8px;">
+        <span>🛡️ UTH NetLab Network Expert Engine</span>
       </div>`;
     } else if (role === 'ai' && model === 'local-rag') {
       badgeHtml = `<div style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; background: #f1f5f9; color: #475569; font-size: 0.68rem; font-weight: 600; margin-bottom: 8px;">

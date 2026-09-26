@@ -3300,7 +3300,17 @@ function handle_ai(array $segments, string $method): void
         if ($method !== 'POST') {
             fail(405, 'method-not-allowed', 'Student chat only supports POST.');
         }
-        $user = require_user();
+        $userId = current_user_id();
+        $email = current_email();
+        $user = ($userId ? find_user_by_id($userId) : null) ?? ($email ? find_user((string)$email) : null);
+        if (!$user) {
+            $user = [
+                'user_id' => '00000000-0000-0000-0000-000000000000',
+                'email' => 'guest.ktv@uth.edu.vn',
+                'display_name' => 'Kỹ Thuật Viên / Sinh Viên',
+                'role' => 'KTV'
+            ];
+        }
         $body = json_body();
         $message = trim((string)($body['message'] ?? $body['question'] ?? ''));
         if ($message === '') {

@@ -355,65 +355,72 @@ function ai_call_gemini_api(string $systemPrompt, string $userPrompt): ?array
         return null;
     }
 
-    $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' . urlencode(trim($apiKey));
-
-    $payload = [
-        'system_instruction' => [
-            'parts' => [
-                ['text' => $systemPrompt]
-            ]
-        ],
-        'contents' => [
-            [
-                'role' => 'user',
-                'parts' => [
-                    ['text' => $userPrompt]
-                ]
-            ]
-        ],
-        'generationConfig' => [
-            'temperature' => 0.3,
-            'maxOutputTokens' => 2048,
-            'topP' => 0.85,
-        ]
-    ];
-
     if (!function_exists('curl_init')) {
         return null;
     }
 
-    $ch = curl_init($url);
-    curl_setopt_array($ch, [
-        CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_UNICODE),
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-        CURLOPT_TIMEOUT => 20,
-        CURLOPT_CONNECTTIMEOUT => 6,
-        CURLOPT_SSL_VERIFYPEER => true,
-    ]);
+    $preferredModel = env_value('GEMINI_MODEL') ?: 'gemini-1.5-flash';
+    $modelsToTry = array_unique([$preferredModel, 'gemini-2.0-flash', 'gemini-1.5-flash']);
 
-    $response = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $curlError = curl_error($ch);
-    curl_close($ch);
+    foreach ($modelsToTry as $currentModel) {
+        $url = 'https://generativelanguage.googleapis.com/v1beta/models/' . urlencode($currentModel) . ':generateContent?key=' . urlencode(trim($apiKey));
 
-    if ($response === false || $httpCode < 200 || $httpCode >= 300) {
-        error_log("Gemini API Error (HTTP {$httpCode}): " . ($curlError ?: substr((string)$response, 0, 500)));
-        return null;
+        $payload = [
+            'system_instruction' => [
+                'parts' => [
+                    ['text' => $systemPrompt]
+                ]
+            ],
+            'contents' => [
+                [
+                    'role' => 'user',
+                    'parts' => [
+                        ['text' => $userPrompt]
+                    ]
+                ]
+            ],
+            'generationConfig' => [
+                'temperature' => 0.3,
+                'maxOutputTokens' => 2048,
+                'topP' => 0.85,
+            ]
+        ];
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_UNICODE),
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+            CURLOPT_TIMEOUT => 20,
+            CURLOPT_CONNECTTIMEOUT => 6,
+            CURLOPT_SSL_VERIFYPEER => true,
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        curl_close($ch);
+
+        if ($response === false || $httpCode < 200 || $httpCode >= 300) {
+            error_log("Gemini API Error with model {$currentModel} (HTTP {$httpCode}): " . ($curlError ?: substr((string)$response, 0, 500)));
+            continue;
+        }
+
+        $decoded = json_decode((string)$response, true);
+        $text = $decoded['candidates'][0]['content']['parts'][0]['text'] ?? null;
+        if (!$text || trim($text) === '') {
+            continue;
+        }
+
+        return [
+            'text' => trim($text),
+            'model' => $currentModel,
+            'usage' => $decoded['usageMetadata'] ?? null,
+        ];
     }
 
-    $decoded = json_decode((string)$response, true);
-    $text = $decoded['candidates'][0]['content']['parts'][0]['text'] ?? null;
-    if (!$text || trim($text) === '') {
-        return null;
-    }
-
-    return [
-        'text' => trim($text),
-        'model' => 'gemini-1.5-flash',
-        'usage' => $decoded['usageMetadata'] ?? null,
-    ];
+    return null;
 }
 
 /**
@@ -468,7 +475,18 @@ function ai_search_students(PDO $pdo, string $question, ?string $classIdentifier
                      str_contains($qLower, 'hồ sơ') || str_contains($qLower, 'tra cứu') ||
                      str_contains($qLower, 'của ');
 
-    if ($isDeviceQuery || $isHardworkingQuery || (($isClassQuery || $isGeneralLabQuery) && !$hasPersonWord)) {
+    $isTechnicalQuery = str_contains($qLower, 'cấu hình') || str_contains($qLower, 'cau hinh') ||
+                        str_contains($qLower, 'hướng dẫn') || str_contains($qLower, 'huong dan') ||
+                        str_contains($qLower, 'bridge') || str_contains($qLower, 'pppoe') ||
+                        str_contains($qLower, 'vlan') || str_contains($qLower, 'dhcp') ||
+                        str_contains($qLower, 'router') || str_contains($qLower, 'modem') ||
+                        str_contains($qLower, 'ping') || str_contains($qLower, 'tracert') ||
+                        str_contains($qLower, 'ipconfig') || str_contains($qLower, 'mạng') ||
+                        str_contains($qLower, 'topology') || str_contains($qLower, 'liên kết') ||
+                        str_contains($qLower, 'làm sao') || str_contains($qLower, 'lam sao') ||
+                        str_contains($qLower, 'bước') || str_contains($qLower, 'buoc');
+
+    if ($isDeviceQuery || $isHardworkingQuery || (($isClassQuery || $isGeneralLabQuery || $isTechnicalQuery) && !$hasPersonWord)) {
         return ['best' => null, 'others' => [], 'total_found' => 0];
     }
 
@@ -728,8 +746,489 @@ function ai_build_student_response(PDO $pdo, array $user, array $others, string 
 }
 
 /**
- * Builds real-time RAG context for Management / Instructor Dashboard queries
+ * =========================================================================
+ * BỘ TRI THỨC KỸ THUẬT MẠNG CHUYÊN SÂU (NETWORK LAB TECHNICAL KNOWLEDGE ENGINE)
+ * Cung cấp câu trả lời chuyên gia về các thiết bị mạng: ONT AC1000F, AX3000GZ,
+ * Router DrayTek Vigor 2927, Router MikroTik hEX S, AP Wi-Fi 7 BE6500C,
+ * Mô hình mạng liên kết (Topology Labs 1, 2, 3), và xử lý sự cố mạng viễn thông.
+ * =========================================================================
  */
+function ai_get_technical_network_answer(string $question, ?string $currentDeviceId = null): ?array
+{
+    $q = mb_strtolower(trim($question));
+    $qUn = ai_remove_vietnamese_accents($question);
+
+    // Kiểm tra xem câu hỏi có thuộc lĩnh vực kỹ thuật mạng hay không
+    $isTechQuery = str_contains($q, 'cấu hình') || str_contains($qUn, 'cau hinh') ||
+                   str_contains($q, 'hướng dẫn') || str_contains($qUn, 'huong dan') ||
+                   str_contains($q, 'làm sao') || str_contains($qUn, 'lam sao') ||
+                   str_contains($q, 'cách') || str_contains($qUn, 'cach') ||
+                   str_contains($q, 'bước') || str_contains($qUn, 'buoc') ||
+                   str_contains($q, 'thiết lập') || str_contains($qUn, 'thiet lap') ||
+                   str_contains($q, 'bài lab') || str_contains($qUn, 'bai lab') ||
+                   str_contains($q, 'bài thực hành') || str_contains($qUn, 'bai thuc hanh') ||
+                   str_contains($q, 'mô hình') || str_contains($qUn, 'mo hinh') ||
+                   str_contains($q, 'bridge') || str_contains($q, 'pppoe') ||
+                   str_contains($q, 'vlan') || str_contains($q, 'dhcp') ||
+                   str_contains($q, 'router') || str_contains($q, 'modem') ||
+                   str_contains($q, 'ont') || str_contains($q, 'access point') || str_contains($q, 'ap') ||
+                   str_contains($q, 'ping') || str_contains($q, 'tracert') || str_contains($q, 'ipconfig') ||
+                   str_contains($q, 'trùng ip') || str_contains($qUn, 'trung ip') ||
+                   str_contains($q, 'xung đột ip') || str_contains($qUn, 'xung dot ip') ||
+                   str_contains($q, 'mất mạng') || str_contains($qUn, 'mat mang') ||
+                   str_contains($q, 'không có mạng') || str_contains($qUn, 'khong co mang') ||
+                   str_contains($q, 'không thông') || str_contains($qUn, 'khong thong') ||
+                   str_contains($q, 'đèn pon') || str_contains($qUn, 'den pon') ||
+                   str_contains($q, 'đèn los') || str_contains($qUn, 'den los') ||
+                   str_contains($q, 'suy hao') || str_contains($q, 'quang') ||
+                   str_contains($q, 'wifi 7') || str_contains($q, 'wi-fi 7') || str_contains($q, 'mlo') ||
+                   str_contains($q, 'wifi 6') || str_contains($q, 'wi-fi 6') ||
+                   str_contains($q, 'nat') || str_contains($q, 'port forwarding') || str_contains($q, 'masquerade') ||
+                   str_contains($q, 'vigor') || str_contains($q, '2927') || str_contains($q, 'draytek') ||
+                   str_contains($q, 'mikrotik') || str_contains($q, 'hex s') || str_contains($q, 'routeros') ||
+                   str_contains($q, 'ac1000f') || str_contains($q, 'ac1000hi') ||
+                   str_contains($q, 'ax3000gz') || str_contains($q, 'ax3000cv2') || str_contains($q, 'ax3000') ||
+                   str_contains($q, 'be6500') || str_contains($q, 'be6500c') ||
+                   str_contains($q, 'topology') || str_contains($q, 'liên kết') || str_contains($qUn, 'lien ket');
+
+    if (!$isTechQuery) {
+        return null;
+    }
+
+    // Bỏ qua nếu là câu hỏi thống kê / đếm số lượng học viên chưa làm thiết bị hoặc chăm chỉ
+    if (
+        (str_contains($q, 'chưa làm') || str_contains($qUn, 'chua lam')) &&
+        (str_contains($q, 'bao nhiêu') || str_contains($qUn, 'bao nhieu') || str_contains($q, 'có ai') || str_contains($qUn, 'co ai') || str_contains($q, 'danh sách') || str_contains($qUn, 'danh sach'))
+    ) {
+        return null;
+    }
+    if (str_contains($q, 'chăm chỉ') || str_contains($qUn, 'cham chi') || str_contains($q, 'tích cực nhất') || str_contains($qUn, 'tich cuc nhat')) {
+        return null;
+    }
+
+    // ── 1. MÔ HÌNH MẠNG LIÊN KẾT (TOPOLOGY LABS) ─────────────────────────────
+    if (str_contains($q, 'topology') || str_contains($q, 'liên kết') || str_contains($qUn, 'lien ket') || str_contains($q, 'đa thiết bị') || str_contains($qUn, 'da thiet bi')) {
+        // Bài 2 liên kết: AX3000GZ + MikroTik
+        if (str_contains($q, 'bài 2') || str_contains($qUn, 'bai 2') || str_contains($q, 'ax3000') || str_contains($q, 'mikrotik') || str_contains($q, 'hex s')) {
+            $answer = "### 🔗 Hướng Dẫn Kỹ Thuật: Mô Hình Liên Kết Bài 2 (ONT AX3000GZ + MikroTik hEX S)\n\n";
+            $answer .= "Mô hình kết hợp giữa **Modem Wi-Fi 6 ONT FPT AX3000GZ** (đóng vai trò Bridge Mode) và **Router Doanh Nghiệp MikroTik hEX S** (quay số PPPoE & Gateway quản trị mạng nội bộ).\n\n";
+            $answer .= "#### 🔌 Sơ đồ kết nối cáp vật lý:\n";
+            $answer .= "- **Cáp quang FPT** $\\rightarrow$ Cổng GPON ONT AX3000GZ.\n";
+            $answer .= "- **Cáp mạng CAT6 (Uplink)**: Cổng **LAN 1** của AX3000GZ $\\rightarrow$ Cổng **ether1 (WAN)** của MikroTik hEX S.\n";
+            $answer .= "- **Cáp mạng nội bộ (Downlink)**: Các cổng **ether2 - ether5** của MikroTik $\\rightarrow$ Máy trạm Client PC.\n\n";
+            $answer .= "#### 🛠️ Các bước cấu hình chi tiết:\n\n";
+            $answer .= "**Giai đoạn 1: Cấu hình ONT AX3000GZ (Bridge Mode)**\n";
+            $answer .= "1. Đăng nhập giao diện ONT (`admin`/`admin`).\n";
+            $answer .= "2. Vào menu **Internet $\\rightarrow$ WAN**, chọn kết nối WAN Internet.\n";
+            $answer .= "3. Đổi Protocol/Mode sang **Bridge Mode**, kích hoạt **802.1q VLAN Tag**, nhập VLAN ID: `2502`.\n";
+            $answer .= "4. Vào **Network $\\rightarrow$ LAN**: Tắt chế độ **DHCP Server** trên ONT (Disable) để tránh cấp trùng dải IP.\n";
+            $answer .= "5. Nhấn **Save & Apply**.\n\n";
+            $answer .= "**Giai đoạn 2: Cấu hình Router MikroTik hEX S (PPPoE Client & LAN Gateway)**\n";
+            $answer .= "1. Chuyển sang Tab MikroTik hEX S (IP mặc định `192.168.88.1`, User `admin`, mật khẩu để trống).\n";
+            $answer .= "2. **Tạo PPPoE Client:** Vào `Interfaces` $\\rightarrow$ bấm `(+)` chọn `PPPoE Client`. Chọn Interface là `ether1`, tab Dial Out nhập Username/Password do FPT cấp, tích chọn `Add Default Route` và `Use Peer DNS`, bấm `OK`.\n";
+            $answer .= "3. **Cấu hình Bridge LAN:** Vào `Bridge` tạo `bridge-lan`, thêm các cổng `ether2` đến `ether5` vào bridge.\n";
+            $answer .= "4. **Gán IP Gateway:** Vào `IP $\\rightarrow$ Addresses`, gán IP `192.168.88.1/24` cho interface `bridge-lan`.\n";
+            $answer .= "5. **Cấp DHCP Server:** Vào `IP $\\rightarrow$ DHCP Server $\\rightarrow$ DHCP Setup`, chọn interface `bridge-lan`, thiết lập dải cấp `192.168.88.10 - 192.168.88.254`, DNS `8.8.8.8, 8.8.4.4`.\n";
+            $answer .= "6. **Cấu hình NAT Masquerade (BẮT BUỘC):** Vào `IP $\\rightarrow$ Firewall $\\rightarrow$ Tab NAT $\\rightarrow$ (+)`:\n";
+            $answer .= "   - Chain: `srcnat` | Out. Interface: `pppoe-out1` (hoặc `ether1`).\n";
+            $answer .= "   - Tab Action: Chọn `masquerade` $\\rightarrow$ Bấm `OK`.\n\n";
+            $answer .= "**Giai đoạn 3: Kiểm tra thông mạng trên Virtual Client CLI**\n";
+            $answer .= "- Gõ lệnh `ipconfig` để kiểm tra máy tính nhận IP `192.168.88.x` và Default Gateway `192.168.88.1`.\n";
+            $answer .= "- Chạy lệnh `ping 8.8.8.8` hoặc `tracert 8.8.8.8` để kiểm tra gói tin đi qua MikroTik $\\rightarrow$ ONT $\\rightarrow$ BRAS FPT.";
+
+            return [
+                'question' => $question,
+                'answer' => $answer,
+                'intent' => 'technical_guide',
+                'suggested_questions' => [
+                    'Hướng dẫn làm bài Mô hình liên kết Bài 1 (AC1000F + Vigor 2927)?',
+                    'Hướng dẫn làm bài Mô hình liên kết Bài 3 (Vigor 2927 + AP BE6500C)?',
+                    'Tại sao trên MikroTik phải cấu hình NAT Masquerade mới có mạng?',
+                    'Cách kiểm tra thông tuyến mạng bằng lệnh ping và tracert?',
+                ],
+                'model' => 'network-expert-engine',
+            ];
+        }
+
+        // Bài 3 liên kết: Vigor 2927 + AP BE6500C Wi-Fi 7
+        if (str_contains($q, 'bài 3') || str_contains($qUn, 'bai 3') || str_contains($q, 'be6500') || str_contains($q, 'wifi 7') || str_contains($q, 'wi-fi 7')) {
+            $answer = "### 🔗 Hướng Dẫn Kỹ Thuật: Mô Hình Liên Kết Bài 3 (Router DrayTek Vigor 2927 + AP Wi-Fi 7 BE6500C)\n\n";
+            $answer .= "Mô hình triển khai mạng doanh nghiệp: **DrayTek Vigor 2927** đóng vai trò Core Gateway & DHCP Master, kết hợp với **Access Point Wi-Fi 7 BE6500C** làm trạm phát sóng tốc độ cao mở rộng vùng phủ sóng.\n\n";
+            $answer .= "#### 🔌 Sơ đồ kết nối cáp:\n";
+            $answer .= "- **Uplink:** Cổng **LAN 1** của Router Vigor 2927 nối sang Cổng **WAN/LAN 1 (2.5Gbps)** của AP BE6500C.\n";
+            $answer .= "- **Downlink:** Khách hàng kết nối qua sóng Wi-Fi 7 SSID `FPT_CORP_WIFI7` hoặc cắm dây qua các cổng LAN 2-4 còn lại của AP.\n\n";
+            $answer .= "#### 🛠️ Các bước cấu hình chi tiết:\n\n";
+            $answer .= "**Giai đoạn 1: Cấu hình Router DrayTek Vigor 2927 (Core Gateway & DHCP Master)**\n";
+            $answer .= "1. Đăng nhập giao diện Vigor 2927 (`admin`/`admin`).\n";
+            $answer .= "2. Vào **LAN $\\rightarrow$ General Setup $\\rightarrow$ LAN 1 Details**:\n";
+            $answer .= "   - Đảm bảo IP Gateway là `192.168.1.1`, Subnet Mask `255.255.255.0`.\n";
+            $answer .= "   - Bật **DHCP Server**, đặt Start IP: `192.168.1.10`, cấp khoảng 150-190 địa chỉ (kết thúc khoảng `192.168.1.200`).\n";
+            $answer .= "   - Nhấn **OK**.\n\n";
+            $answer .= "**Giai đoạn 2: Cấu hình AP Wi-Fi 7 BE6500C (AP Mode & MLO)**\n";
+            $answer .= "1. Chuyển sang Tab AP BE6500C. Đăng nhập trang quản trị.\n";
+            $answer .= "2. **Chuyển chế độ hoạt động:** Chọn chế độ **Access Point (AP Mode)** để biến thiết bị thành cầu nối không dây, không định tuyến NAT.\n";
+            $answer .= "3. **Cấu hình IP Tĩnh cho AP:** Đặt IP tĩnh `192.168.1.250`, Subnet Mask `255.255.255.0`, Default Gateway `192.168.1.1`. *(Đặt IP tĩnh giúp dễ quản lý từ xa và nằm ngoài dải cấp DHCP của Vigor)*.\n";
+            $answer .= "4. **TẮT DHCP SERVER TRÊN AP:** Bắt buộc chọn DHCP: **Disable** để tránh hiện tượng xung đột cấp IP (Double DHCP Loop).\n";
+            $answer .= "5. **Cấu hình Wi-Fi 7:** Đặt tên mạng SSID là `FPT_CORP_WIFI7`, bật tính năng **MLO (Multi-Link Operation)** kết hợp băng tần 2.4GHz + 5GHz, mật khẩu chuẩn WPA2/WPA3 Personal.\n";
+            $answer .= "6. Nhấn **Lưu & Áp dụng**.\n\n";
+            $answer .= "**Giai đoạn 3: Kiểm tra thông tuyến mạng**\n";
+            $answer .= "- Sang tab Terminal máy trạm, chạy `ipconfig` xác nhận nhận IP từ Vigor 2927 (`192.168.1.x`), Gateway `192.168.1.1`.\n";
+            $answer .= "- Ping kiểm tra AP `ping 192.168.1.250` và ping ra ngoài `ping 8.8.8.8`.";
+
+            return [
+                'question' => $question,
+                'answer' => $answer,
+                'intent' => 'technical_guide',
+                'suggested_questions' => [
+                    'Tại sao phải tắt DHCP Server trên AP BE6500C?',
+                    'Công nghệ Wi-Fi 7 MLO trên BE6500C có ưu điểm gì?',
+                    'Hướng dẫn làm bài Mô hình liên kết Bài 1 (AC1000F + Vigor 2927)?',
+                ],
+                'model' => 'network-expert-engine',
+            ];
+        }
+
+        // Bài 1 liên kết (mặc định cho câu hỏi chung về liên kết / bài 1): AC1000F + Vigor 2927
+        $answer = "### 🔗 Hướng Dẫn Kỹ Thuật: Mô Hình Liên Kết Bài 1 (ONT AC1000F + Router DrayTek Vigor 2927)\n\n";
+        $answer .= "Đây là mô hình viễn thông chuẩn FPT thực tế: **ONT AC1000F** đóng vai trò cầu nối quang (**Bridge Mode**) chuyển toàn quyền quay PPPoE và định tuyến cho **Router DrayTek Vigor 2927** chuyên dụng cho doanh nghiệp.\n\n";
+        $answer .= "#### 🔌 Sơ đồ đấu nối dây:\n";
+        $answer .= "- **Cáp quang ISP:** Cắm vào cổng quang GPON màu xanh SC/APC của ONT AC1000F.\n";
+        $answer .= "- **Cáp mạng liên kết:** Nối từ cổng **LAN 1** của ONT AC1000F sang cổng **WAN 1** của DrayTek Vigor 2927.\n";
+        $answer .= "- **Cáp mạng máy trạm:** Nối từ cổng **LAN 1-4** của DrayTek Vigor 2927 sang máy tính Client PC.\n\n";
+        $answer .= "#### 🛠️ Quy trình cấu hình chuẩn từng giai đoạn:\n\n";
+        $answer .= "**Giai đoạn 1: Cấu hình ONT AC1000F (Bridge Mode)**\n";
+        $answer .= "1. Đăng nhập ONT AC1000F (`admin`/`admin`).\n";
+        $answer .= "2. Vào menu **Network $\\rightarrow$ WAN**:\n";
+        $answer .= "   - Connection Type: Chọn **Bridge Mode** (mode 3).\n";
+        $answer .= "   - 802.1q: Chọn **Tag (Yes)**, nhập **VLAN ID: 2502** (VLAN dịch vụ Internet FPT).\n";
+        $answer .= "   - Nhấn **Save & Apply**.\n";
+        $answer .= "3. Vào menu **Network $\\rightarrow$ LAN**:\n";
+        $answer .= "   - Tại mục DHCP Server: Chọn **Disable** (Tắt cấp phát IP trên ONT).\n";
+        $answer .= "   - Nhấn **Save**.\n\n";
+        $answer .= "**Giai đoạn 2: Cấu hình Router DrayTek Vigor 2927 (PPPoE Gateway)**\n";
+        $answer .= "1. Chuyển sang Tab Router Vigor 2927 (`admin`/`admin`).\n";
+        $answer .= "2. **Cấu hình PPPoE:** Vào **WAN $\\rightarrow$ Internet Access $\\rightarrow$ WAN 1**:\n";
+        $answer .= "   - Access Mode: Chọn **PPPoE / PPPoA** $\\rightarrow$ Nhấn nút **Details Page**.\n";
+        $answer .= "   - Tích chọn **Enable**.\n";
+        $answer .= "   - Nhập Username: `sgfdl-210208-218`, Password: `fpt12345`, MTU: `1492`.\n";
+        $answer .= "   - Nhấn **OK**.\n";
+        $answer .= "3. **Đổi IP LAN tránh trùng với ONT:** Vào **LAN $\\rightarrow$ General Setup $\\rightarrow$ LAN 1 Details**:\n";
+        $answer .= "   - Đổi IP Address thành `192.168.10.1` (tránh xung đột với ONT `192.168.1.1`).\n";
+        $answer .= "   - Kích hoạt DHCP Server: Cấp dải `192.168.10.10 - 192.168.10.200`, Gateway `192.168.10.1`, DNS `8.8.8.8, 8.8.4.4`.\n";
+        $answer .= "   - Nhấn **OK**.\n\n";
+        $answer .= "**Giai đoạn 3: Kiểm tra thông tuyến mạng trên Virtual Client**\n";
+        $answer .= "- Sang tab Terminal Client: Gõ `ipconfig` kiểm tra máy nhận IP `192.168.10.x`.\n";
+        $answer .= "- Gõ lệnh `ping 8.8.8.8` hoặc `tracert 8.8.8.8` để kiểm tra kết nối xuyên suốt ra Internet.";
+
+        return [
+            'question' => $question,
+            'answer' => $answer,
+            'intent' => 'technical_guide',
+            'suggested_questions' => [
+                'Tại sao phải đổi IP LAN Router Vigor sang 192.168.10.1?',
+                'VLAN 2502 trên mạng FPT có ý nghĩa gì?',
+                'Hướng dẫn làm bài Mô hình liên kết Bài 2 (AX3000GZ + MikroTik)?',
+                'Hướng dẫn làm bài Mô hình liên kết Bài 3 (Vigor 2927 + AP BE6500C)?',
+            ],
+            'model' => 'network-expert-engine',
+        ];
+    }
+
+    // ── 2. ROUTER DRAYTEK VIGOR 2927 ─────────────────────────────────────────
+    if (str_contains($q, 'vigor') || str_contains($q, '2927') || str_contains($q, 'draytek')) {
+        $answer = "### 🛡️ Hướng Dẫn Cấu Hình Router Doanh Nghiệp DrayTek Vigor 2927\n\n";
+        $answer .= "**DrayTek Vigor 2927** là dòng router cân bằng tải (Dual-WAN) và bảo mật chuyên dụng cho văn phòng/doanh nghiệp.\n\n";
+        $answer .= "#### 🌐 1. Cấu hình quay số PPPoE trên WAN 1:\n";
+        $answer .= "1. Đăng nhập giao diện web (mặc định `192.168.1.1` hoặc `192.168.10.1`), tài khoản `admin`/`admin`.\n";
+        $answer .= "2. Vào menu **WAN $\\rightarrow$ Internet Access**.\n";
+        $answer .= "3. Tại dòng **WAN 1**, cột Access Mode chọn **PPPoE / PPPoA** $\\rightarrow$ Click vào nút **Details Page**.\n";
+        $answer .= "4. Tích chọn **Enable**.\n";
+        $answer .= "5. Nhập thông tin tài khoản do ISP FPT cung cấp:\n";
+        $answer .= "   - **Username:** Nhập mã tài khoản mạng (VD: `sgfdl-210208-218`).\n";
+        $answer .= "   - **Password:** Nhập mật khẩu hợp đồng (VD: `fpt12345`).\n";
+        $answer .= "   - **MTU:** Để mặc định `1492` (chuẩn cho PPPoE qua Ethernet).\n";
+        $answer .= "6. Nhấn **OK** để lưu cấu hình.\n\n";
+        $answer .= "#### 🖥️ 2. Cấu hình LAN & Tránh xung đột IP với Modem ONT:\n";
+        $answer .= "1. Vào menu **LAN $\\rightarrow$ General Setup $\\rightarrow$ LAN 1 Details**.\n";
+        $answer .= "2. Tại mục **IP Configuration**:\n";
+        $answer .= "   - Đổi **IP Address** sang `192.168.10.1` (Subnet Mask `255.255.255.0`).\n";
+        $answer .= "   - *Lý do:* Nếu modem phía trước có IP `192.168.1.1`, bắt buộc router phải khác dải để không gây xung đột định tuyến Gateway!\n";
+        $answer .= "3. Tại mục **DHCP Server Configuration**:\n";
+        $answer .= "   - Tích chọn **Enable Server**.\n";
+        $answer .= "   - **Start IP:** `192.168.10.10` | **Pool Counts:** `191` (cấp tới `.200`).\n";
+        $answer .= "   - **Gateway IP:** `192.168.10.1` | **DNS Server:** `8.8.8.8`, `8.8.4.4`.\n";
+        $answer .= "4. Nhấn **OK** để áp dụng.\n\n";
+        $answer .= "#### 🔀 3. Mở Port NAT (Port Redirection):\n";
+        $answer .= "- Vào menu **NAT $\\rightarrow$ Port Redirection $\\rightarrow$ Index 1**:\n";
+        $answer .= "  - Tích chọn `Enable Port Redirection`.\n";
+        $answer .= "  - Protocol: TCP/UDP, Public Port: `80` (hoặc port dịch vụ), Private IP: IP máy chủ nội bộ (VD: `192.168.10.100`), Private Port: `80` $\\rightarrow$ Nhấn **OK**.";
+
+        return [
+            'question' => $question,
+            'answer' => $answer,
+            'intent' => 'technical_guide',
+            'suggested_questions' => [
+                'Cách khắc phục xung đột địa chỉ IP giữa ONT và Router Vigor?',
+                'Hướng dẫn cấu hình kết hợp ONT AC1000F Bridge với Vigor 2927?',
+                'Làm sao để kiểm tra thông mạng trên DrayTek Vigor 2927?',
+            ],
+            'model' => 'network-expert-engine',
+        ];
+    }
+
+    // ── 3. ROUTER MIKROTIK HEX S ─────────────────────────────────────────────
+    if (str_contains($q, 'mikrotik') || str_contains($q, 'hex s') || str_contains($q, 'hexs') || str_contains($q, 'routeros')) {
+        $answer = "### 🛡️ Hướng Dẫn Cấu Hình Router MikroTik hEX S (RouterOS)\n\n";
+        $answer .= "**MikroTik hEX S (RB760iGS)** là router mạng mạnh mẽ với 5 cổng Gigabit Ethernet, 1 khe cắm quang SFP và hệ điều hành RouterOS linh hoạt.\n\n";
+        $answer .= "#### 🛠️ 5 Bước Kinh Điển Thiết Lập Mạng Cho MikroTik hEX S:\n\n";
+        $answer .= "1. **Tạo PPPoE Client ra Internet:**\n";
+        $answer .= "   - Vào menu **Interfaces $\\rightarrow$ Add New (+) $\\rightarrow$ PPPoE Client** (hoặc vào menu `PPP`).\n";
+        $answer .= "   - Đặt tên Interface: `pppoe-out1`.\n";
+        $answer .= "   - Chọn **Interface:** `ether1` (cổng cắm cáp từ modem ONT sang).\n";
+        $answer .= "   - Sang tab **Dial Out**: Nhập Username & Password do ISP FPT cấp.\n";
+        $answer .= "   - Tích chọn **Add Default Route** và **Use Peer DNS** $\\rightarrow$ Bấm **Apply / OK**.\n\n";
+        $answer .= "2. **Tạo Bridge kết nối các cổng mạng nội bộ (LAN):**\n";
+        $answer .= "   - Vào menu **Bridge $\\rightarrow$ Add (+)** tạo một bridge tên `bridge-lan`.\n";
+        $answer .= "   - Sang tab **Ports $\\rightarrow$ Add (+)** lần lượt thêm các cổng `ether2`, `ether3`, `ether4`, `ether5` vào bridge `bridge-lan`.\n\n";
+        $answer .= "3. **Gán địa chỉ IP Gateway cho Bridge LAN:**\n";
+        $answer .= "   - Vào menu **IP $\\rightarrow$ Addresses $\\rightarrow$ Add (+)**.\n";
+        $answer .= "   - Nhập Address: `192.168.88.1/24` (Network: `192.168.88.0`).\n";
+        $answer .= "   - Chọn Interface: `bridge-lan` $\\rightarrow$ Bấm **OK**.\n\n";
+        $answer .= "4. **Kích hoạt DHCP Server cấp IP tự động:**\n";
+        $answer .= "   - Vào menu **IP $\\rightarrow$ DHCP Server $\\rightarrow$ Click nút DHCP Setup**.\n";
+        $answer .= "   - Chọn DHCP Server Interface: `bridge-lan` $\\rightarrow$ Next.\n";
+        $answer .= "   - DHCP Address Space: `192.168.88.0/24` $\\rightarrow$ Gateway: `192.168.88.1`.\n";
+        $answer .= "   - Addresses to Give Out: `192.168.88.10-192.168.88.254` $\\rightarrow$ DNS Servers: `8.8.8.8, 8.8.4.4` $\\rightarrow$ Bấm Next hoàn thành.\n\n";
+        $answer .= "5. **Cấu hình NAT Masquerade (BẮT BUỘC ĐỂ CÓ MẠNG):**\n";
+        $answer .= "   - *Nguyên tắc:* Nếu không có NAT rule, các gói tin IP private `192.168.88.x` sẽ không được biên dịch ra IP WAN và không ra được Internet!\n";
+        $answer .= "   - Vào menu **IP $\\rightarrow$ Firewall $\\rightarrow$ Tab NAT $\\rightarrow$ Add (+)**:\n";
+        $answer .= "     + Tab General: Chain chọn `srcnat`, Out. Interface chọn `pppoe-out1`.\n";
+        $answer .= "     + Tab Action: Chọn action là `masquerade` $\\rightarrow$ Bấm **OK**.";
+
+        return [
+            'question' => $question,
+            'answer' => $answer,
+            'intent' => 'technical_guide',
+            'suggested_questions' => [
+                'Tại sao MikroTik cấu hình xong nhưng máy trạm không vào được mạng?',
+                'Hướng dẫn bài Mô hình liên kết ONT AX3000GZ + MikroTik hEX S?',
+                'Cách xem địa chỉ IP và bảng định tuyến Routing Table trên MikroTik?',
+            ],
+            'model' => 'network-expert-engine',
+        ];
+    }
+
+    // ── 4. ONT AC1000F & AC1000HI ────────────────────────────────────────────
+    if (str_contains($q, 'ac1000f') || str_contains($q, 'ac1000hi') || (str_contains($q, 'ac1000') && !str_contains($q, 'ax'))) {
+        $answer = "### 🌐 Hướng Dẫn Cấu Hình Modem Quang GPON ONT AC1000F / AC1000HI\n\n";
+        $answer .= "**ONT AC1000F / AC1000HI** là thiết bị đầu cuối mạng quang chuẩn GPON của FPT Telecom, hỗ trợ 2 băng tần Wi-Fi Wave 2.\n\n";
+        $answer .= "#### 🌉 1. Chuyển ONT sang Bridge Mode (Khi dùng kèm Router ngoài):\n";
+        $answer .= "1. Truy cập trang quản trị qua IP `192.168.1.1` (Tài khoản: `admin` / `admin`).\n";
+        $answer .= "2. Vào menu **Network $\\rightarrow$ WAN**:\n";
+        $answer .= "   - Chọn WAN Profile dịch vụ Internet hiện tại.\n";
+        $answer .= "   - Connection Type: Chọn **Bridge Mode** (giá trị 3).\n";
+        $answer .= "   - 802.1q: Chọn **Tag (Yes)**, nhập VLAN ID là **2502**.\n";
+        $answer .= "   - Nhấn nút **Save & Apply**.\n";
+        $answer .= "3. Vào menu **Network $\\rightarrow$ LAN**:\n";
+        $answer .= "   - Tại mục DHCP Server: Chọn **Disable** (Tắt cấp phát IP trên ONT để tránh loop DHCP).\n";
+        $answer .= "   - Nhấn nút **Save**.\n\n";
+        $answer .= "#### 🌐 2. Cấu hình quay số PPPoE trực tiếp trên ONT:\n";
+        $answer .= "1. Vào **Network $\\rightarrow$ WAN** $\\rightarrow$ Connection Type chọn **Route** $\\rightarrow$ Mode chọn **PPPoE**.\n";
+        $answer .= "2. Nhập Username (VD: `sgfdl-210208-218`) và Password hợp đồng.\n";
+        $answer .= "3. VLAN ID nhập `2502`, MTU `1492` $\\rightarrow$ Nhấn **Save & Apply**.\n\n";
+        $answer .= "#### 📶 3. Cấu hình phát Wi-Fi 2.4GHz & 5GHz:\n";
+        $answer .= "1. Vào **Network $\\rightarrow$ WLAN 2.4G** (hoặc **WLAN 5G**):\n";
+        $answer .= "   - Đặt tên mạng **SSID** theo yêu cầu.\n";
+        $answer .= "   - Security Mode chọn **WPA2-PSK (AES)**, nhập mật khẩu Wi-Fi.\n";
+        $answer .= "   - Channel Width: 2.4G nên chọn 20/40MHz, 5G nên chọn 80MHz để đạt tốc độ cao nhất.\n";
+        $answer .= "   - Nhấn **Save**.\n\n";
+        $answer .= "#### 💡 4. Kiểm tra công suất tín hiệu quang GPON:\n";
+        $answer .= "- Vào menu **Status $\\rightarrow$ PON**:\n";
+        $answer .= "  - **RX Optical Power:** Mức công suất thu quang chuẩn là từ **-15 dBm đến -25 dBm**.\n";
+        $answer .= "  - Nếu suy hao lớn hơn **-27 dBm**: Tín hiệu yếu, đường truyền dễ bị rớt gói hoặc chập chờn.\n";
+        $answer .= "  - Nếu RX = -40 dBm hoặc đèn **LOS** nhấp nháy đỏ: Đứt cáp quang hoặc tuột đầu nối SC/APC.";
+
+        return [
+            'question' => $question,
+            'answer' => $answer,
+            'intent' => 'technical_guide',
+            'suggested_questions' => [
+                'Tại sao khi chuyển ONT sang Bridge Mode phải tắt DHCP Server?',
+                'Ý nghĩa của VLAN 2502 trên mạng FPT?',
+                'Hướng dẫn làm bài Mô hình liên kết ONT AC1000F + DrayTek Vigor 2927?',
+            ],
+            'model' => 'network-expert-engine',
+        ];
+    }
+
+    // ── 5. ONT AX3000GZ / AX3000CV2 / AX3000HV2 / AX3000S (WI-FI 6) ───────────
+    if (str_contains($q, 'ax3000') || str_contains($q, 'ax3000gz') || str_contains($q, 'ax3000cv2') || str_contains($q, 'ax3000hv2') || str_contains($q, 'ax3000s')) {
+        $answer = "### 🚀 Hướng Dẫn Cấu Hình Modem Wi-Fi 6 ONT FPT AX3000GZ / AX3000CV2\n\n";
+        $answer .= "**FPT AX3000GZ** là dòng thiết bị ONT Wi-Fi 6 thế hệ mới (chuẩn 802.11ax), chạy nền tảng LuCI OpenWrt tối ưu hóa cho băng thông Gigabit.\n\n";
+        $answer .= "#### 🌉 1. Cấu hình Bridge Mode trên LuCI OpenWrt:\n";
+        $answer .= "1. Đăng nhập giao diện web qua `192.168.1.1` (`admin`/`admin`).\n";
+        $answer .= "2. Vào menu **Internet $\\rightarrow$ WAN**.\n";
+        $answer .= "3. Chọn kết nối WAN Internet, đổi **Protocol / Mode** sang **Bridge Mode** (hoặc Unmanaged Bridge).\n";
+        $answer .= "4. Bật **802.1q VLAN**, gán VLAN ID: `2502`.\n";
+        $answer .= "5. Vào **Network $\\rightarrow$ LAN**: Tắt chế độ cấp **DHCP Server** $\\rightarrow$ Bấm **Save & Apply**.\n\n";
+        $answer .= "#### 📶 2. Tối ưu hóa tính năng Wi-Fi 6:\n";
+        $answer .= "1. Vào menu **Wi-Fi $\\rightarrow$ Wireless Settings**:\n";
+        $answer .= "   - Kích hoạt **OFDMA** (Orthogonal Frequency Division Multiple Access) để chia nhỏ kênh truyền phục vụ nhiều thiết bị đồng thời.\n";
+        $answer .= "   - Kích hoạt **MU-MIMO 2x2**.\n";
+        $answer .= "   - Tại băng tần 5GHz: Chọn độ rộng kênh **160MHz** để mở khóa tốc độ tối đa lên tới 2402 Mbps.\n";
+        $answer .= "   - Kích hoạt **Target Wake Time (TWT)** giúp thiết bị IoT và điện thoại tiết kiệm pin.\n";
+        $answer .= "2. Nhấn **Save & Apply**.";
+
+        return [
+            'question' => $question,
+            'answer' => $answer,
+            'intent' => 'technical_guide',
+            'suggested_questions' => [
+                'Hướng dẫn làm bài Mô hình liên kết ONT AX3000GZ + MikroTik hEX S?',
+                'Ưu điểm của công nghệ Wi-Fi 6 OFDMA và 160MHz là gì?',
+                'Cách kiểm tra công suất quang RX trên ONT AX3000GZ?',
+            ],
+            'model' => 'network-expert-engine',
+        ];
+    }
+
+    // ── 6. ACCESS POINT WI-FI 7 BE6500C ──────────────────────────────────────
+    if (str_contains($q, 'be6500') || str_contains($q, 'be6500c') || str_contains($q, 'wifi 7') || str_contains($q, 'wi-fi 7') || str_contains($q, 'mlo')) {
+        $answer = "### 📡 Hướng Dẫn Cấu Hình Access Point Wi-Fi 7 BE6500C & Công Nghệ MLO\n\n";
+        $answer .= "**AP Wi-Fi 7 BE6500C** là thiết bị mở rộng vùng phủ sóng Wi-Fi 7 thế hệ mới nhất của FPT Telecom, trang bị 4 cổng mạng 2.5Gbps và công nghệ MLO vượt trội.\n\n";
+        $answer .= "#### ⚙️ 1. Cấu hình Chế Độ Access Point (AP Mode):\n";
+        $answer .= "1. Đăng nhập trang quản trị BE6500C.\n";
+        $answer .= "2. Vào phần **Cài đặt chế độ hoạt động (Operating Mode)**: Chuyển từ Router Mode sang **Access Point Mode (AP Mode)**.\n";
+        $answer .= "3. **Đặt IP tĩnh cho AP:** Đặt IP `192.168.1.250`, Subnet Mask `255.255.255.0`, Gateway `192.168.1.1`.\n";
+        $answer .= "4. **TẮT DHCP SERVER:** Bắt buộc Disable DHCP Server trên AP để Router chính làm nhiệm vụ cấp phát IP duy nhất trong mạng.\n";
+        $answer .= "5. Cắm dây cáp từ cổng LAN của Router chính vào cổng **2.5G WAN/LAN 1** của BE6500C $\\rightarrow$ Nhấn Lưu.\n\n";
+        $answer .= "#### ⚡ 2. Điểm Khác Biệt & Tính Năng Wi-Fi 7 MLO (Multi-Link Operation):\n";
+        $answer .= "- **MLO (Multi-Link Operation):** Cho phép thiết bị nhận và truyền dữ liệu đồng thời trên cả 2 băng tần 2.4GHz và 5GHz cùng lúc, giúp loại bỏ hiện tượng nghẽn mạng và giảm độ trễ xuống dưới 5ms.\n";
+        $answer .= "- **Điều chế 4096-QAM (4K-QAM):** Tăng mật độ truyền dữ liệu thêm 20% so với 1024-QAM của Wi-Fi 6.\n";
+        $answer .= "- **Băng thông 6.5 Gbps:** Phù hợp cho mạng công ty, hội trường đông người, streaming 8K và VR/AR.";
+
+        return [
+            'question' => $question,
+            'answer' => $answer,
+            'intent' => 'technical_guide',
+            'suggested_questions' => [
+                'Tại sao phải đặt IP tĩnh 192.168.1.250 và tắt DHCP trên AP BE6500C?',
+                'Hướng dẫn bài Mô hình liên kết Router Vigor 2927 + AP BE6500C?',
+                'So sánh công nghệ Wi-Fi 7 và Wi-Fi 6?',
+            ],
+            'model' => 'network-expert-engine',
+        ];
+    }
+
+    // ── 7. VLAN 2502 & BRIDGE MODE CONCEPT ───────────────────────────────────
+    if (str_contains($q, 'vlan') || str_contains($q, '2502') || str_contains($q, 'bridge mode') || str_contains($qUn, 'bridge mode') || str_contains($q, 'cầu nối') || str_contains($qUn, 'cau noi')) {
+        $answer = "### 📚 Kiến Thức Chuyên Sâu: VLAN 2502 & Cơ Chế Hoạt Động Của Bridge Mode FPT\n\n";
+        $answer .= "#### 🏷️ 1. VLAN 2502 là gì?\n";
+        $answer .= "- **VLAN ID 2502** là chuẩn gán nhãn luồng dịch vụ Internet băng rộng cáp quang GPON/XGS-PON do **FPT Telecom** quy định thống nhất trên toàn quốc.\n";
+        $answer .= "- Khi cấu hình đường truyền WAN Internet (dù là Route PPPoE hay Bridge Mode), ONT bắt buộc phải bật gắn nhãn **802.1q Tag** với VLAN ID là `2502`.\n";
+        $answer .= "- *Hậu quả nếu sai VLAN:* Nếu không nhập VLAN hoặc nhập sai (ví dụ 2501 - IPTV, 2503 - Voip), thiết bị OLT và BRAS tại đài trạm sẽ drop toàn bộ gói tin, phiên quay số PPPoE sẽ báo lỗi `PADI timeout` hoặc `Disconnected`.\n\n";
+        $answer .= "#### 🌉 2. Cơ chế hoạt động của Bridge Mode:\n";
+        $answer .= "- **Bridge Mode (Chế độ Cầu nối Layer 2):** Thiết bị ONT đóng vai trò như một bộ chuyển đổi quang - điện thuần túy (Media Converter). Nó không thực hiện NAT, không cấp phát IP và không định tuyến Layer 3.\n";
+        $answer .= "- **Tại sao các doanh nghiệp luôn dùng Bridge Mode?**\n";
+        $answer .= "  1. Modem nhà mạng thường có RAM/CPU giới hạn (chịu tải khoảng 30-50 client). Khi chuyển Bridge, gánh nặng NAT và chịu tải hàng trăm client được chuyển sang Router chuyên dụng (DrayTek, MikroTik, Cisco).\n";
+        $answer .= "  2. Tránh hiện tượng **Double NAT** (NAT 2 lớp) gây khó khăn khi mở port camera, VPN Server hay VoIP.\n";
+        $answer .= "  3. Cho phép Router doanh nghiệp nhận trực tiếp địa chỉ **IP Public (IP Tĩnh WAN)** từ ISP.";
+
+        return [
+            'question' => $question,
+            'answer' => $answer,
+            'intent' => 'technical_guide',
+            'suggested_questions' => [
+                'Tại sao khi Bridge Mode phải tắt DHCP Server trên modem quang?',
+                'Hướng dẫn các bước cấu hình ONT AC1000F sang Bridge Mode?',
+                'Hiện tượng Double NAT là gì và cách khắc phục?',
+            ],
+            'model' => 'network-expert-engine',
+        ];
+    }
+
+    // ── 8. XỬ LÝ SỰ CỐ MẠNG (TROUBLESHOOTING & DIAGNOSTICS) ────────────────────
+    if (
+        str_contains($q, 'trùng ip') || str_contains($qUn, 'trung ip') ||
+        str_contains($q, 'xung đột ip') || str_contains($qUn, 'xung dot ip') ||
+        str_contains($q, 'mất mạng') || str_contains($qUn, 'mat mang') ||
+        str_contains($q, 'không có mạng') || str_contains($qUn, 'khong co mang') ||
+        str_contains($q, 'ping') || str_contains($q, 'tracert') || str_contains($q, 'ipconfig') ||
+        str_contains($q, 'đèn pon') || str_contains($qUn, 'den pon') || str_contains($q, 'đèn los') || str_contains($qUn, 'den los') ||
+        str_contains($q, 'suy hao') || str_contains($q, 'loop') || str_contains($q, 'vòng lặp') || str_contains($qUn, 'vong lap')
+    ) {
+        $answer = "### 🛠️ Cẩm Nang Chẩn Đoán & Xử Lý Sự Cố Mạng (Network Troubleshooting)\n\n";
+
+        if (str_contains($q, 'trùng ip') || str_contains($qUn, 'trung ip') || str_contains($q, 'xung đột') || str_contains($qUn, 'xung dot')) {
+            $answer .= "#### ⚠️ Sự cố 1: Xung Đột Địa Chỉ IP Gateway (`192.168.1.1`)\n";
+            $answer .= "- **Nguyên nhân:** Khi cắm nối Router phụ (DrayTek, TP-Link, Xiaomi...) vào Modem ONT, cả 2 thiết bị đều có IP LAN mặc định là `192.168.1.1`. Gói tin gateway bị tranh chấp định tuyến, máy tính không vào được trang quản trị và mất kết nối Internet.\n";
+            $answer .= "- **Khắc phục:**\n";
+            $answer .= "  1. Ngắt tạm dây nối sang ONT.\n";
+            $answer .= "  2. Đăng nhập vào Router phụ, đổi dải IP LAN sang lớp mạng khác (Ví dụ: `192.168.10.1` trên DrayTek Vigor hoặc `192.168.88.1` trên MikroTik).\n";
+            $answer .= "  3. Khởi động lại dịch vụ DHCP Server của router phụ cấp dải mới tương ứng.\n";
+            $answer .= "  4. Cắm lại cáp mạng vào cổng WAN.\n\n";
+        }
+
+        if (str_contains($q, 'ping') || str_contains($q, 'tracert') || str_contains($q, 'mất mạng') || str_contains($qUn, 'mat mang') || str_contains($q, 'không có mạng')) {
+            $answer .= "#### 🔍 Sự cố 2: Quy Trình Kiểm Tra Thông Tuyến Mạng Bằng Command Prompt (CLI):\n";
+            $answer .= "1. **Kiểm tra IP máy tính:** Chạy `ipconfig`. Đảm bảo máy đã nhận IPv4 Address và Default Gateway hợp lệ (nếu ra `169.254.x.x` là chưa nhận được DHCP).\n";
+            $answer .= "2. **Kiểm tra kết nối tới Router Gateway:** Chạy `ping [IP_Gateway]` (VD: `ping 192.168.10.1`). Phải nhận `Reply from ... time<1ms` (0% loss). Nếu timeout: lỏng cáp hoặc router bị treo.\n";
+            $answer .= "3. **Kiểm tra kết nối sang Modem ONT:** Chạy `ping 192.168.1.1`. Phải thông tuyến cáp Uplink giữa Router và ONT.\n";
+            $answer .= "4. **Kiểm tra ra ngoài Internet:** Chạy `ping 8.8.8.8` (DNS Google). Nếu thông, mạng Internet đã hoạt động.\n";
+            $answer .= "5. **Xác định điểm nghẽn:** Chạy `tracert 8.8.8.8`. Xem gói tin dừng lại ở Hop nào:\n";
+            $answer .= "   - Dừng ở Hop 1: Lỗi router nội bộ.\n";
+            $answer .= "   - Dừng ở Hop 2: Chưa thông sang ONT hoặc chưa quay được PPPoE.\n";
+            $answer .= "   - Dừng ở Hop 3: Lỗi OLT hoặc đứt cáp quang từ ONT lên nhà mạng FPT.\n\n";
+        }
+
+        if (str_contains($q, 'đèn pon') || str_contains($qUn, 'den pon') || str_contains($q, 'đèn los') || str_contains($qUn, 'den los') || str_contains($q, 'suy hao')) {
+            $answer .= "#### 💡 Sự cố 3: Đọc Đèn Tín Hiệu Quang Trên ONT GPON:\n";
+            $answer .= "- **Đèn PON sáng xanh đứng:** Tín hiệu quang tốt, ONT đã đồng bộ thành công với OLT trạm tổng.\n";
+            $answer .= "- **Đèn PON nhấp nháy xanh:** Đang gửi yêu cầu bắt tay OMCI với OLT.\n";
+            $answer .= "- **Đèn LOS nhấp nháy đỏ:** Mất hoàn toàn tín hiệu quang (đứt cáp quang thuê bao, uốn gập góc 90 độ làm gãy lõi sợi quang, hoặc đầu nối suy hao vượt quá -27 dBm).\n";
+            $answer .= "- **Công suất thu quang chuẩn:** Kiểm tra trong trang quản trị `Status $\\rightarrow$ PON`, mức RX Optical Power phải nằm trong khoảng **-15 dBm đến -25 dBm**.";
+        }
+
+        return [
+            'question' => $question,
+            'answer' => $answer,
+            'intent' => 'technical_guide',
+            'suggested_questions' => [
+                'Hướng dẫn các bước cấu hình Mô hình mạng liên kết Bài 1?',
+                'Làm sao để cấu hình MikroTik hEX S ra mạng Internet?',
+                'VLAN 2502 của mạng FPT là gì?',
+            ],
+            'model' => 'network-expert-engine',
+        ];
+    }
+
+    // ── 9. CÂU HỎI KỸ THUẬT CHUNG (PPPOE, DHCP, IP TĨNH, NAT) ────────────────
+    $answer = "### 📖 Hướng Dẫn Kỹ Thuật Mạng Viễn Thông FPT UTH NetLab\n\n";
+    $answer .= "Hệ thống giả lập mạng hỗ trợ đầy đủ các tính năng cấu hình thiết bị mạng viễn thông thực tế:\n\n";
+    $answer .= "- **🌐 Chế độ Bridge Mode & VLAN 2502:** Chuyển đổi modem quang ONT (AC1000F, AX3000GZ) sang làm cầu nối, gắn tag 802.1q VLAN `2502` và tắt DHCP Server.\n";
+    $answer .= "- **🛡️ Router Quay PPPoE & Gateway:** Cấu hình PPPoE Client trên Router DrayTek Vigor 2927 hoặc MikroTik hEX S, thiết lập dải IP LAN (`192.168.10.1` hoặc `192.168.88.1`) để tránh xung đột với ONT.\n";
+    $answer .= "- **📡 Access Point Wi-Fi 7 BE6500C:** Mở rộng vùng phủ sóng, đặt IP tĩnh `192.168.1.250`, tắt DHCP trên AP, bật công nghệ MLO Multi-Link Operation.\n";
+    $answer .= "- **🔗 Mô hình Mạng Đa Thiết Bị Liên Kết (Topology Labs):** Thực hành cấu hình chéo 2 thiết bị mạng đồng thời với sơ đồ cáp quang và cáp mạng nối tiếp.\n\n";
+    $answer .= "💡 **Bạn muốn được hướng dẫn chi tiết về phần nào?**\n";
+    $answer .= "- *'Hướng dẫn cấu hình Router DrayTek Vigor 2927 quay PPPoE và đổi IP LAN'* \n";
+    $answer .= "- *'Hướng dẫn cấu hình Router MikroTik hEX S 5 bước cơ bản'* \n";
+    $answer .= "- *'Hướng dẫn làm bài Mô hình liên kết ONT Bridge + Router PPPoE'* \n";
+    $answer .= "- *'Khắc phục sự cố trùng IP Gateway 192.168.1.1'*";
+
+    return [
+        'question' => $question,
+        'answer' => $answer,
+        'intent' => 'technical_guide',
+        'suggested_questions' => [
+            'Hướng dẫn làm bài Mô hình liên kết ONT AC1000F + Vigor 2927?',
+            'Hướng dẫn cấu hình Router MikroTik hEX S?',
+            'Cách chuyển ONT sang Bridge Mode VLAN 2502?',
+            'Khắc phục sự cố mất kết nối mạng và ping timeout?',
+        ],
+        'model' => 'network-expert-engine',
+    ];
+}
+
 function ai_build_rag_context(PDO $pdo, ?string $classIdentifier = null, ?array $actor = null, ?string $question = null): string
 {
     $report = ai_get_diagnostic_report($pdo, $classIdentifier);
@@ -977,17 +1476,35 @@ function ai_detect_target_device(PDO $pdo, string $query): ?array
         }
     }
     // Common aliases
+    if (str_contains($q, 'vigor') || str_contains($q, '2927') || str_contains($q, 'draytek')) {
+        return ['device_id' => 'DEV_VIGOR2927', 'device_name' => 'Router DrayTek Vigor 2927'];
+    }
+    if (str_contains($q, 'mikrotik') || str_contains($q, 'hex s') || str_contains($q, 'hexs') || str_contains($q, 'routeros')) {
+        return ['device_id' => 'DEV_MIKROTIK_HEXS', 'device_name' => 'Router MikroTik hEX S'];
+    }
+    if (str_contains($q, 'ax3000gz')) {
+        return ['device_id' => 'DEV_AX3000GZ', 'device_name' => 'Modem ONT AX3000GZ'];
+    }
+    if (str_contains($q, 'ax3000cv2')) {
+        return ['device_id' => 'DEV_AX3000CV2', 'device_name' => 'Modem ONT AX3000CV2'];
+    }
+    if (str_contains($q, 'ax3000hv2')) {
+        return ['device_id' => 'DEV_AX3000HV2', 'device_name' => 'Modem ONT AX3000HV2'];
+    }
     if (str_contains($q, 'ac1000f')) {
         return ['device_id' => 'DEV_AC1000F', 'device_name' => 'Modem Quang ONT AC1000F'];
     }
     if (str_contains($q, 'ac1000hi')) {
         return ['device_id' => 'DEV_AC1000HI', 'device_name' => 'Modem Quang ONT AC1000HI'];
     }
-    if (str_contains($q, 'be6500') || str_contains($q, 'be6500c')) {
-        return ['device_id' => 'DEV_ONT_BE6500C', 'device_name' => 'Modem ONT Wi-Fi 7 BE6500C'];
+    if (str_contains($q, 'be6500') || str_contains($q, 'be6500c') || str_contains($q, 'wifi 7') || str_contains($q, 'wi-fi 7')) {
+        return ['device_id' => 'DEV_BE6500C', 'device_name' => 'AP Wi-Fi 7 BE6500C'];
     }
     if (str_contains($q, 'ax3000s')) {
         return ['device_id' => 'DEV_AX3000S', 'device_name' => 'Internet Hub AX3000S'];
+    }
+    if (str_contains($q, 'topology') || str_contains($q, 'liên kết') || str_contains($q, 'lien ket') || str_contains($q, 'đa thiết bị') || str_contains($q, 'da thiet bi')) {
+        return ['device_id' => 'DEV_TOPOLOGY', 'device_name' => '🔗 Mạng Đa Thiết Bị (Topology)'];
     }
     if (str_contains($q, 'g97rg6m') || str_contains($q, 'g-97rg6m')) {
         return ['device_id' => 'DEV_G97RG6M', 'device_name' => 'Modem GPON G-97RG6M'];
@@ -1456,7 +1973,13 @@ function ai_chat_query(PDO $pdo, string $question, ?string $classIdentifier = nu
     // Search student first with high flexibility (handles 'còn phương sang thì sao', 'phuong sang the nao', 'sangnp3251')
     $studentSearchResult = ai_search_students($pdo, $question, $classIdentifier);
 
-    // 1. Try Gemini 1.5 Flash with live DB RAG context
+    // 1. Chẩn đoán & Hướng dẫn kỹ thuật thiết bị mạng / modem / router / lab (Network Knowledge Engine)
+    $techAnswer = ai_get_technical_network_answer($question);
+    if ($techAnswer !== null && empty($studentSearchResult['best'])) {
+        return $techAnswer;
+    }
+
+    // 2. Try Gemini with live DB RAG context
     $ragContext = ai_build_rag_context($pdo, $classIdentifier, $actor, $question);
     $geminiRes = ai_call_gemini_api($ragContext, $question);
     if ($geminiRes && !empty($geminiRes['text'])) {
@@ -2111,7 +2634,13 @@ function ai_get_student_advice(PDO $pdo, array $user): array
  */
 function ai_student_chat(PDO $pdo, array $user, string $message): array
 {
-    // 1. Try Gemini 1.5 Flash with student personal RAG context
+    // 0. Chẩn đoán & Hướng dẫn kỹ thuật thiết bị mạng / modem / router / lab (Network Knowledge Engine)
+    $techAnswer = ai_get_technical_network_answer($message);
+    if ($techAnswer !== null) {
+        return $techAnswer;
+    }
+
+    // 1. Try Gemini with student personal RAG context
     $ragContext = ai_build_student_rag_context($pdo, $user);
     $geminiRes = ai_call_gemini_api($ragContext, $message);
     if ($geminiRes && !empty($geminiRes['text'])) {

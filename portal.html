@@ -617,6 +617,68 @@ Gõ "ping 8.8.8.8", "ipconfig" hoặc chọn các lệnh nhanh ở trên để k
 
   </div><!-- /#app -->
 
+  <!-- ══════════════════════════════════════════════════════════════════
+     PORTAL AI COPILOT / FLOATING ASSISTANT FOR MODEM SIMULATOR
+  ══════════════════════════════════════════════════════════════════ -->
+  <button type="button" class="portal-ai-fab" id="portalAiFab" title="Hỏi Trợ lý Kỹ thuật AI UTH NetLab">
+    <span class="portal-ai-fab-icon">🤖</span>
+    <span class="portal-ai-fab-label">Trợ Lý AI</span>
+    <span class="portal-ai-fab-badge">Kỹ thuật</span>
+  </button>
+
+  <aside class="portal-ai-drawer" id="portalAiDrawer" style="display: none;" aria-label="Trợ lý AI Kỹ thuật">
+    <div class="portal-ai-header">
+      <div class="portal-ai-header-left">
+        <div class="portal-ai-avatar">🤖</div>
+        <div class="portal-ai-header-info">
+          <div class="portal-ai-title">Trợ Lý Kỹ Thuật UTH NetLab</div>
+          <div class="portal-ai-status"><span class="portal-ai-dot"></span> Sẵn sàng hướng dẫn cấu hình</div>
+        </div>
+      </div>
+      <div class="portal-ai-header-actions">
+        <button type="button" class="portal-ai-btn-clear" id="portalAiClearBtn" title="Làm mới đoạn chat">🗑️</button>
+        <button type="button" class="portal-ai-close-btn" id="portalAiCloseBtn" title="Thu nhỏ trợ lý">✕</button>
+      </div>
+    </div>
+
+    <!-- Active context info banner -->
+    <div class="portal-ai-context-banner" id="portalAiContextBanner">
+      <span class="portal-context-icon">📡</span>
+      <span class="portal-context-text" id="portalAiContextText">Đang thực hành: Modem ONT AC1000F</span>
+    </div>
+
+    <!-- Quick prompt chips bar -->
+    <div class="portal-ai-chips-container" id="portalAiChipsContainer">
+      <div class="portal-ai-chips-label">Gợi ý câu hỏi nhanh:</div>
+      <div class="portal-ai-chips" id="portalAiChips">
+        <!-- Dynamically populated by app.js -->
+      </div>
+    </div>
+
+    <!-- Messages container -->
+    <div class="portal-ai-messages" id="portalAiMessages">
+      <div class="portal-ai-msg ai">
+        <div class="portal-ai-msg-avatar">🤖</div>
+        <div class="portal-ai-msg-bubble">
+          <p><strong>Xin chào! Tôi là Trợ lý AI Kỹ Thuật UTH NetLab.</strong></p>
+          <p>Tôi đồng hành hỗ trợ bạn cấu hình các thiết bị mạng: <strong>Modem ONT FPT, Router DrayTek Vigor, MikroTik hEX S, AP Wi-Fi 7 và Mô hình mạng liên kết</strong>.</p>
+          <p>Bạn có thể chọn các câu hỏi gợi ý bên trên hoặc nhập trực tiếp câu hỏi để được hướng dẫn chi tiết từng bước!</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat input bar -->
+    <div class="portal-ai-input-bar">
+      <input type="text" class="portal-ai-input" id="portalAiInput" placeholder="Hỏi AI về cách cấu hình, sửa lỗi mạng..." autocomplete="off">
+      <button type="button" class="portal-ai-send-btn" id="portalAiSendBtn" title="Gửi tin nhắn" aria-label="Gửi tin nhắn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+      </button>
+    </div>
+  </aside>
+
   <!-- Device Modules & Modular Grading Scripts -->
   <!-- ONT AC1000F -->
   <script src="devices/ac1000f/tooltips/common_login.js?v=1788507000"></script>

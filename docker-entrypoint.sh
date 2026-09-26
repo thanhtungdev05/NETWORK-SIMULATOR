@@ -15,11 +15,13 @@ if [ -n "$DATABASE_URL" ] || [ -n "$PGHOST" ]; then
     attempt=1
     while [ "$attempt" -le 5 ]; do
         if php api/migrate.php; then
+            echo "PHP database migrations completed successfully."
             break
         fi
         if [ "$attempt" -eq 5 ]; then
-            echo "ERROR: PHP migrations failed after 5 attempts; refusing to start."
-            exit 1
+            echo "WARNING: PHP database migrations failed after 5 attempts (e.g. database quota exceeded or unreachable)."
+            echo "Continuing server startup so web portal and device simulators remain accessible..."
+            break
         fi
         echo "Migration attempt $attempt failed; retrying in 5s..."
         attempt=$((attempt + 1))
@@ -29,15 +31,13 @@ if [ -n "$DATABASE_URL" ] || [ -n "$PGHOST" ]; then
     echo "Running Django Admin migrations (auth, sessions, contenttypes only)..."
     if ! DJANGO_SETTINGS_MODULE=admin_site.settings \
         python admin_app/manage.py migrate --run-syncdb --noinput; then
-        echo "ERROR: Django migrations failed; refusing to start."
-        exit 1
+        echo "WARNING: Django migrations failed or database unreachable; continuing startup..."
     fi
 
     echo "Creating Django superuser (if DJANGO_SUPERUSER_PASSWORD is set)..."
     if ! DJANGO_SETTINGS_MODULE=admin_site.settings \
         python admin_app/create_superuser.py; then
-        echo "ERROR: Unable to create or verify Django superuser."
-        exit 1
+        echo "WARNING: Unable to create or verify Django superuser; continuing startup..."
     fi
 else
     echo "No database configured (DATABASE_URL/PG*); skipping migrations."

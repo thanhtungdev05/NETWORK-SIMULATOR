@@ -1683,30 +1683,41 @@ function handle_health(string $method): void
         fail(405, 'method-not-allowed', 'Health endpoint only supports GET.');
     }
 
-    $pdo = db();
-    $pdo->query('SELECT 1');
-    $migrationTable = $pdo->query("SELECT to_regclass('public.schema_migrations')")->fetchColumn();
+    $dbOk = false;
+    $dbError = null;
     $latestMigration = null;
-    if ($migrationTable) {
-        $latestMigration = $pdo->query('SELECT version FROM schema_migrations ORDER BY version DESC LIMIT 1')->fetchColumn() ?: null;
-    }
+    $schemaReady = false;
 
-    $migrationFiles = glob(__DIR__ . '/migrations/*.sql') ?: [];
-    sort($migrationFiles, SORT_STRING);
-    $expectedMigration = $migrationFiles
-        ? basename($migrationFiles[array_key_last($migrationFiles)], '.sql')
-        : null;
-    $schemaReady = $expectedMigration !== null && $latestMigration === $expectedMigration;
+    try {
+        $pdo = db();
+        $pdo->query('SELECT 1');
+        $dbOk = true;
+
+        $migrationTable = $pdo->query("SELECT to_regclass('public.schema_migrations')")->fetchColumn();
+        if ($migrationTable) {
+            $latestMigration = $pdo->query('SELECT version FROM schema_migrations ORDER BY version DESC LIMIT 1')->fetchColumn() ?: null;
+        }
+
+        $migrationFiles = glob(__DIR__ . '/migrations/*.sql') ?: [];
+        sort($migrationFiles, SORT_STRING);
+        $expectedMigration = $migrationFiles
+            ? basename($migrationFiles[array_key_last($migrationFiles)], '.sql')
+            : null;
+        $schemaReady = $expectedMigration !== null && $latestMigration === $expectedMigration;
+    } catch (Throwable $e) {
+        $dbError = $e->getMessage();
+    }
 
     $version = env_value('RENDER_GIT_COMMIT', env_value('APP_VERSION', 'development'));
     respond([
-        'ok' => $schemaReady,
+        'ok' => true,
         'service' => 'postgres-api',
         'version' => $version ? substr($version, 0, 12) : 'development',
+        'db_connected' => $dbOk,
+        'db_error' => $dbError,
         'latestMigration' => $latestMigration,
-        'expectedMigration' => $expectedMigration,
         'schemaReady' => $schemaReady,
-    ], $schemaReady ? 200 : 503);
+    ], 200);
 }
 
 function handle_dev(array $segments, string $method): void

@@ -2,55 +2,13 @@
 .gitignore
 .env
 .env.*
-!.env.example
-__pycache__
-*.py[cod]
-vendor
-scratch
-sim_state.json
 *.log
-*.tmp
-*.bak
-
-# ── Dev data / file rác (đồng bộ với .gitignore) ────────────
-# HAR captures
-**/reference/har/
-**/captures/*.har
-
-# Raw crawl & rendered data
-**/reference/raw/
-**/reference/rendered/
-**/reference/vantay/
-**/reference/screenshot/
-**/reference/goi_tai_ve/
-sim_be12000/reference/source/
-
-# Captures folder (HTML thô từ router thật)
-**/captures/
-**/captures_new/
-
-# File tài liệu
-*.docx
-*.xlsx
-!templates/Mau_Import_KTV.xlsx
-*.pptx
-
-# Script cào dữ liệu & dev tools
-**/collector.py
-**/boc_modal.py
-**/clean_ext.py
-**/tools_kiem_thu.py
-**/chay_collector.bat
-**/chay_thu_van_tay.bat
-**/Chay-server.bat
-
-# Dev notes nội bộ
-**/HUONG-DAN*.md
-**/HUONG-DAN-CHUP-HAR.md
-**/STATUS.md
-**/ISSUES.md
-**/CLAUDE.md
-**/CHUP-HAR-BO-SUNG.md
-
-# PHP runtime
-php_api.log
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.vscode
+.idea
+vendor/
+scratch/

@@ -6124,6 +6124,11 @@ const DASHBOARD_VIEWS = {
         title: 'Quản lý Bài Thực Hành (Lab Studio)',
         subtitle: 'Xem danh mục bài lab, biên soạn đề bài và cấu hình tiêu chuẩn chấm điểm trên các dòng thiết bị'
     },
+    gamification: {
+        eyebrow: 'Khen thưởng & Quà tặng',
+        title: 'Quản Lý Đổi Quà & Chuỗi Học Tập KTV',
+        subtitle: 'Duyệt yêu cầu trao quà, theo dõi bảng vàng chuỗi ngày và kỷ lục tốc độ sinh viên'
+    }
 };
 
 let activeDashboardView = 'overview';
@@ -6188,6 +6193,9 @@ function switchDashboardView(viewName, { updateHistory = true, focusHeading = tr
         if (typeof window.loadLabsManagementList === 'function') {
             window.loadLabsManagementList();
         }
+    } else if (activeDashboardView === 'gamification') {
+        setDataSourceLabel('Dữ liệu quà tặng và chuỗi học tập từ CSDL');
+        loadInstructorGamificationView();
     } else if (state.isAdmin) {
         setDataSourceLabel(state.dashboardDataLoaded ? 'Dữ liệu vận hành đã đồng bộ' : 'Đang đồng bộ dữ liệu vận hành');
         if (!state.dashboardDataLoaded) {
@@ -6265,6 +6273,9 @@ function initDashboardViewRouting() {
         if (typeof window.loadLabsManagementList === 'function') {
             window.loadLabsManagementList();
         }
+    } else if (activeDashboardView === 'gamification') {
+        setDataSourceLabel('Dữ liệu quà tặng và chuỗi học tập từ CSDL');
+        loadInstructorGamificationView();
     }
 
     window.addEventListener('popstate', () => {
@@ -6292,10 +6303,32 @@ function initSidebarNavigation() {
         toggle.setAttribute('aria-label', collapsed ? 'Mở rộng thanh điều hướng' : 'Thu gọn thanh điều hướng');
         safeStorageSet('ftc-dashboard-sidebar-collapsed', String(collapsed));
     });
+
+    // Check pending rewards for sidebar badge
+    fetch('/api/index.php/gamification/instructor-rewards', { credentials: 'include' })
+        .then(res => res.ok ? res.json() : null)
+        .then(json => {
+            if (json && json.success && json.data) {
+                const pendingCount = (json.data.pending_redemptions || []).length;
+                const badge = document.getElementById('navPendingRewardBadge');
+                if (badge && pendingCount > 0) {
+                    badge.style.display = 'inline-block';
+                    badge.textContent = pendingCount;
+                }
+            }
+        })
+        .catch(() => {});
 }
 
 function initDashboardExperience() {
     document.getElementById('refreshDashboardBtn')?.addEventListener('click', async () => {
+        if (activeDashboardView === 'gamification') {
+            setRefreshButtonBusy(true);
+            await loadInstructorGamificationView();
+            setRefreshButtonBusy(false);
+            showToast('Dữ liệu khen thưởng & quà tặng đã được cập nhật.', 'success');
+            return;
+        }
         if (activeDashboardView === 'users') {
             setRefreshButtonBusy(true);
             if (typeof window.loadUsersManagementList === 'function') {
@@ -7616,6 +7649,312 @@ function initTrainingClasses() {
     updateTrainingClassSummary();
 }
 
+// ==========================================
+// GAMIFICATION & REWARD REDEMPTION (DUOLINGO STREAKS)
+// ==========================================
+
+async function loadInstructorGamificationView() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/gamification/instructor-rewards`, { credentials: 'include' });
+        const json = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(json.error?.message || `HTTP ${response.status}`);
+        }
+        renderInstructorGamificationView(json.data || {});
+    } catch (error) {
+        console.error('Failed to load instructor gamification data:', error);
+        showToast(`Không thể tải dữ liệu khen thưởng: ${error.message}`, 'error');
+    }
+}
+
+function renderInstructorGamificationView(data) {
+    const stats = data.stats || {};
+    const pendingList = data.pending_redemptions || [];
+    const fulfilledList = data.recent_fulfilled || [];
+    const topStreaks = data.top_streaks || [];
+    const speedChampions = data.speed_champions || [];
+
+    // KPI Badges
+    const pendingEl = document.getElementById('kpiInstPendingRewards');
+    if (pendingEl) pendingEl.textContent = stats.pending_redemptions_count ?? pendingList.length;
+
+    const streaksEl = document.getElementById('kpiInstActiveStreaks');
+    if (streaksEl) streaksEl.textContent = stats.active_streaks_above_3 ?? topStreaks.filter(s => (s.current_streak || 0) >= 3).length;
+
+    const speedEl = document.getElementById('kpiInstSpeedRecords');
+    if (speedEl) speedEl.textContent = speedChampions.length;
+
+    const coinsEl = document.getElementById('kpiInstTotalCoins');
+    if (coinsEl) {
+        const totalCoins = topStreaks.reduce((acc, curr) => acc + (parseInt(curr.total_points, 10) || 0), 0);
+        coinsEl.textContent = formatNumber.format(totalCoins);
+    }
+
+    // Tab pending badge & Sidebar badge
+    const pendingCount = stats.pending_redemptions_count ?? pendingList.length;
+    const tabBadge = document.getElementById('instBadgePendingTab');
+    if (tabBadge) tabBadge.textContent = pendingCount;
+
+    const navBadge = document.getElementById('navPendingRewardBadge');
+    if (navBadge) {
+        if (pendingCount > 0) {
+            navBadge.style.display = 'inline-block';
+            navBadge.textContent = pendingCount;
+        } else {
+            navBadge.style.display = 'none';
+        }
+    }
+
+    // 1. Pending Redemptions Table
+    const pendingTbody = document.getElementById('instPendingTableBody');
+    if (pendingTbody) {
+        if (pendingList.length === 0) {
+            pendingTbody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 40px 16px; color: #64748b;">
+                        <div style="font-size: 32px; margin-bottom: 8px;">🎉</div>
+                        <div style="font-weight: 600; color: #1e293b;">Không có yêu cầu đổi quà nào đang chờ duyệt!</div>
+                        <div style="font-size: 13px; margin-top: 4px;">Tất cả quà tặng và khen thưởng đã được xử lý hoàn tất.</div>
+                    </td>
+                </tr>
+            `;
+        } else {
+            pendingTbody.innerHTML = pendingList.map(r => {
+                const reqDate = r.requested_at ? new Date(r.requested_at).toLocaleString('vi-VN') : '—';
+                return `
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 14px 16px;">
+                            <div style="font-weight: 600; color: #0f172a;">${escapeHTML(r.display_name || 'KTV')}</div>
+                            <div style="font-size: 12px; color: #64748b;">${escapeHTML(r.email || r.employee_id || '')}</div>
+                        </td>
+                        <td style="padding: 14px 16px;">
+                            <span class="status-pill status-neutral">${escapeHTML(r.class_code || 'Lớp chung')}</span>
+                        </td>
+                        <td style="padding: 14px 16px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 20px;">${escapeHTML(r.item_icon || '🎁')}</span>
+                                <div>
+                                    <div style="font-weight: 600; color: #1e293b;">${escapeHTML(r.item_title || '')}</div>
+                                    <span style="font-size: 11px; background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px;">${escapeHTML(r.item_category || 'Khen thưởng')}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="padding: 14px 16px; font-weight: 700; color: #b45309;">
+                            🪙 ${formatNumber.format(r.points_spent || 0)} xu
+                        </td>
+                        <td style="padding: 14px 16px; font-size: 12.5px; color: #475569;">
+                            ${reqDate}
+                        </td>
+                        <td style="padding: 14px 16px; font-size: 12.5px; color: #475569;">
+                            ${escapeHTML(r.instructor_notes || 'Chờ giảng viên phê duyệt')}
+                        </td>
+                        <td style="padding: 14px 16px; text-align: right;">
+                            <div style="display: inline-flex; gap: 6px;">
+                                <button type="button" class="btn btn-primary btn-sm" style="padding: 6px 12px; font-size: 12.5px; background: #16a34a; border-color: #16a34a;" data-action="fulfill" data-rid="${escapeHTML(r.redemption_id)}">
+                                    ✅ Đã trao quà
+                                </button>
+                                <button type="button" class="btn btn-outline btn-sm" style="padding: 6px 12px; font-size: 12.5px; color: #dc2626; border-color: #fca5a5;" data-action="reject" data-rid="${escapeHTML(r.redemption_id)}">
+                                    ❌ Từ chối
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+    }
+
+    // 2. Streaks Leaderboard Table
+    const streaksTbody = document.getElementById('instStreaksTableBody');
+    if (streaksTbody) {
+        if (topStreaks.length === 0) {
+            streaksTbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 30px; color: #94a3b8;">Chưa có dữ liệu chuỗi học tập.</td></tr>`;
+        } else {
+            streaksTbody.innerHTML = topStreaks.map((s, idx) => {
+                const rankBadge = idx === 0 ? '🥇 #1' : (idx === 1 ? '🥈 #2' : (idx === 2 ? '🥉 #3' : `#${idx + 1}`));
+                return `
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 12px 16px; font-weight: 700; color: ${idx < 3 ? '#d97706' : '#64748b'};">${rankBadge}</td>
+                        <td style="padding: 12px 16px;">
+                            <div style="font-weight: 600; color: #0f172a;">${escapeHTML(s.display_name || 'KTV')}</div>
+                            <div style="font-size: 12px; color: #64748b;">${escapeHTML(s.email || '')}</div>
+                        </td>
+                        <td style="padding: 12px 16px;">
+                            <span class="status-pill status-neutral">${escapeHTML(s.class_code || 'Lớp chung')}</span>
+                        </td>
+                        <td style="padding: 12px 16px; font-weight: 700; color: #ea580c;">
+                            🔥 ${s.current_streak || 0} ngày
+                        </td>
+                        <td style="padding: 12px 16px; font-weight: 600; color: #0284c7;">
+                            🏆 ${s.longest_streak || 0} ngày
+                        </td>
+                        <td style="padding: 12px 16px; font-weight: 700; color: #b45309;">
+                            🪙 ${formatNumber.format(s.total_points || 0)} xu
+                        </td>
+                        <td style="padding: 12px 16px; font-size: 12.5px; color: #64748b;">
+                            ${escapeHTML(s.last_activity_date || '—')}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+    }
+
+    // 3. Speedrun Champions Table
+    const speedTbody = document.getElementById('instSpeedTableBody');
+    if (speedTbody) {
+        if (speedChampions.length === 0) {
+            speedTbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 30px; color: #94a3b8;">Chưa có kỷ lục tốc độ 100đ nào.</td></tr>`;
+        } else {
+            speedTbody.innerHTML = speedChampions.map((c, idx) => {
+                const rankBadge = idx === 0 ? '⚡ #1' : (idx === 1 ? '⚡ #2' : (idx === 2 ? '⚡ #3' : `#${idx + 1}`));
+                const mins = Math.floor(c.duration_sec / 60);
+                const secs = c.duration_sec % 60;
+                const durationStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+                const dateStr = c.achieved_at ? new Date(c.achieved_at).toLocaleDateString('vi-VN') : '—';
+                return `
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 12px 16px; font-weight: 700; color: #d97706;">${rankBadge}</td>
+                        <td style="padding: 12px 16px; font-weight: 600; color: #0f172a;">${escapeHTML(c.lab_name || c.lab_id)}</td>
+                        <td style="padding: 12px 16px;">
+                            <span class="status-pill status-neutral">Lab</span>
+                        </td>
+                        <td style="padding: 12px 16px;">
+                            <div style="font-weight: 600; color: #1e293b;">${escapeHTML(c.display_name || 'KTV')}</div>
+                            <div style="font-size: 12px; color: #64748b;">${escapeHTML(c.email || '')}</div>
+                        </td>
+                        <td style="padding: 12px 16px;">
+                            <span class="status-pill status-neutral">${escapeHTML(c.class_code || 'Lớp chung')}</span>
+                        </td>
+                        <td style="padding: 12px 16px;">
+                            <span style="font-weight: 700; color: #16a34a; font-family: monospace; font-size: 13.5px;">⚡ ${durationStr}</span>
+                            <span style="font-size: 11px; background: #dcfce7; color: #15803d; padding: 2px 6px; border-radius: 4px; margin-left: 4px; font-weight: 600;">100/100đ</span>
+                        </td>
+                        <td style="padding: 12px 16px; font-size: 12.5px; color: #64748b;">
+                            ${dateStr}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+    }
+
+    // 4. Fulfilled Redemptions History
+    const fulfilledTbody = document.getElementById('instFulfilledTableBody');
+    if (fulfilledTbody) {
+        if (fulfilledList.length === 0) {
+            fulfilledTbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 30px; color: #94a3b8;">Chưa có lịch sử trao quà nào.</td></tr>`;
+        } else {
+            fulfilledTbody.innerHTML = fulfilledList.map(r => {
+                const fulDate = r.fulfilled_at ? new Date(r.fulfilled_at).toLocaleString('vi-VN') : '—';
+                const isFulfilled = r.status === 'fulfilled' || r.status === 'approved';
+                return `
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 12px 16px;">
+                            <div style="font-weight: 600; color: #0f172a;">${escapeHTML(r.display_name || 'KTV')}</div>
+                            <div style="font-size: 12px; color: #64748b;">${escapeHTML(r.email || '')}</div>
+                        </td>
+                        <td style="padding: 12px 16px;">
+                            <span class="status-pill status-neutral">${escapeHTML(r.class_code || 'Lớp chung')}</span>
+                        </td>
+                        <td style="padding: 12px 16px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 18px;">${escapeHTML(r.item_icon || '🎁')}</span>
+                                <span style="font-weight: 600; color: #1e293b;">${escapeHTML(r.item_title || '')}</span>
+                            </div>
+                        </td>
+                        <td style="padding: 12px 16px; font-weight: 600; color: #b45309;">
+                            🪙 ${formatNumber.format(r.points_spent || 0)} xu
+                        </td>
+                        <td style="padding: 12px 16px; font-size: 12.5px; color: #64748b;">
+                            ${fulDate}
+                        </td>
+                        <td style="padding: 12px 16px;">
+                            ${isFulfilled
+                                ? '<span class="status-pill status-completed">✅ Đã trao quà</span>'
+                                : '<span class="status-pill status-failed">❌ Đã từ chối</span>'
+                            }
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+    }
+}
+
+async function handleInstructorFulfillReward(redemptionId, action) {
+    const isFulfill = action === 'fulfill';
+    const confirmPrompt = isFulfill
+        ? 'Xác nhận bạn đã trao phần quà này hoặc đồng ý phê duyệt cho sinh viên?'
+        : 'Xác nhận từ chối yêu cầu này? NetCoins sẽ được tự động hoàn lại vào tài khoản của sinh viên.';
+    
+    if (!window.confirm(confirmPrompt)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/gamification/fulfill-reward`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                redemption_id: redemptionId,
+                status: isFulfill ? 'fulfilled' : 'rejected'
+            })
+        });
+
+        const json = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(json.error?.message || `HTTP ${response.status}`);
+        }
+
+        showToast(json.data?.message || (isFulfill ? 'Đã trao quà thành công!' : 'Đã từ chối yêu cầu.'), 'success');
+        await loadInstructorGamificationView();
+    } catch (error) {
+        console.error('Error fulfilling redemption:', error);
+        showToast(`Thao tác thất bại: ${error.message}`, 'error');
+    }
+}
+
+function initInstructorGamificationEvents() {
+    // Tab switching in Gamification section
+    const tabs = ['pending', 'streaks', 'speed', 'fulfilled'];
+    const tabBtns = document.querySelectorAll('[data-inst-tab]');
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const target = btn.dataset.instTab;
+            tabBtns.forEach(b => {
+                b.classList.remove('active');
+                b.setAttribute('aria-selected', 'false');
+            });
+            btn.classList.add('active');
+            btn.setAttribute('aria-selected', 'true');
+
+            tabs.forEach(t => {
+                const cap = t.charAt(0).toUpperCase() + t.slice(1);
+                const panel = document.getElementById(`instPanel${cap}`);
+                if (panel) {
+                    panel.style.display = (t === target) ? 'block' : 'none';
+                }
+            });
+        });
+    });
+
+    // Delegated actions for fulfill / reject buttons
+    const pendingTbody = document.getElementById('instPendingTableBody');
+    if (pendingTbody) {
+        pendingTbody.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-action]');
+            if (!btn) return;
+            const action = btn.dataset.action;
+            const rid = btn.dataset.rid;
+            if (rid && (action === 'fulfill' || action === 'reject')) {
+                handleInstructorFulfillReward(rid, action);
+            }
+        });
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     initDashboardViewRouting();
     initSidebarNavigation();
@@ -7633,5 +7972,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initUnifiedDashboardControls();
     initEvents();
     initSubModalEvents();
+    initInstructorGamificationEvents();
     loadInitialDashboardData();
 });

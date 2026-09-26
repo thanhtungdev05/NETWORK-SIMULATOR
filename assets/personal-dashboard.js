@@ -100,6 +100,44 @@
   const studentAiSendBtn = document.getElementById('student-ai-send-btn');
   const studentAiChipsBar = document.getElementById('student-ai-chips-bar');
 
+  // Duolingo Gamification & Reward Elements
+  let _gamificationData = null;
+  let _rewardsCatalog = [];
+  let _speedLeaderboard = [];
+
+  const elStreakFlameIcon = document.getElementById('streak-flame-icon');
+  const elStreakCountVal = document.getElementById('streak-count-val');
+  const elStreakLongestBadge = document.getElementById('streak-longest-badge');
+  const elStreakFreezeBadge = document.getElementById('streak-freeze-badge');
+  const elStreakWeekCalendar = document.getElementById('streak-week-calendar');
+  const elStreakMotivationalText = document.getElementById('streak-motivational-text');
+  const elNetcoinsBalanceVal = document.getElementById('netcoins-balance-val');
+  const elNetcoinsSpeedSub = document.getElementById('netcoins-speed-sub');
+  const btnDailyCheckin = document.getElementById('btn-daily-checkin');
+  const btnOpenRewards = document.getElementById('btn-open-rewards');
+
+  // Nav top pill
+  const elNavStreakPill = document.getElementById('nav-streak-pill');
+  const elNavStreakDays = document.getElementById('nav-streak-days');
+  const elNavStreakCoins = document.getElementById('nav-streak-coins');
+
+  // Modal elements
+  const elRewardModalBackdrop = document.getElementById('reward-modal-backdrop');
+  const elRewardModal = document.getElementById('reward-modal');
+  const btnCloseRewardModal = document.getElementById('btn-close-reward-modal');
+  const elModalUserCoins = document.getElementById('modal-user-coins');
+  const elHistoryCount = document.getElementById('history-count');
+  const elRewardItemsGrid = document.getElementById('reward-items-grid');
+  const elRewardHistoryList = document.getElementById('reward-history-list');
+  const elSpeedLeaderboardWrap = document.getElementById('speed-leaderboard-wrap');
+
+  const tabBtnCatalog = document.getElementById('tab-btn-catalog');
+  const tabBtnHistory = document.getElementById('tab-btn-history');
+  const tabBtnSpeed = document.getElementById('tab-btn-speed');
+  const tabContentCatalog = document.getElementById('tab-content-catalog');
+  const tabContentHistory = document.getElementById('tab-content-history');
+  const tabContentSpeed = document.getElementById('tab-content-speed');
+
   function init() {
     setupEventListeners();
     setupStudentAiEvents();
@@ -176,6 +214,31 @@
     if (btnLogout) {
       btnLogout.addEventListener('click', handleLogout);
     }
+
+    // Gamification listeners
+    if (btnOpenRewards) {
+      btnOpenRewards.addEventListener('click', openRewardModal);
+    }
+    if (elNavStreakPill) {
+      elNavStreakPill.addEventListener('click', openRewardModal);
+    }
+    if (btnCloseRewardModal) {
+      btnCloseRewardModal.addEventListener('click', closeRewardModal);
+    }
+    if (elRewardModalBackdrop) {
+      elRewardModalBackdrop.addEventListener('click', closeRewardModal);
+    }
+    if (btnDailyCheckin) {
+      btnDailyCheckin.addEventListener('click', handleDailyCheckin);
+    }
+
+    [tabBtnCatalog, tabBtnHistory, tabBtnSpeed].forEach(btn => {
+      if (btn) {
+        btn.addEventListener('click', () => {
+          switchRewardTab(btn.dataset.tab);
+        });
+      }
+    });
   }
 
   function fetchDashboardData() {
@@ -202,6 +265,7 @@
         _dashboardData = data.data;
         renderDashboard(_dashboardData);
         fetchStudentAiAdvice();
+        fetchGamificationStatus();
         showLoading(false);
       })
       .catch(err => {
@@ -1222,6 +1286,391 @@
       clearTimeout(timer);
       timer = setTimeout(() => fn.apply(this, args), delay);
     };
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // DUOLINGO GAMIFICATION, STREAKS & REWARDS MODULE
+  // ══════════════════════════════════════════════════════════════════════════
+
+  function fetchGamificationStatus() {
+    fetch('/api/index.php/gamification/status', {
+      method: 'GET',
+      credentials: 'include',
+      headers: { 'Accept': 'application/json' }
+    })
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then(json => {
+        if (json.success && json.data) {
+          _gamificationData = json.data;
+          renderGamification(_gamificationData);
+        }
+      })
+      .catch(err => {
+        console.warn('[PersonalDashboard] Error loading gamification status:', err);
+      });
+  }
+
+  function renderGamification(data) {
+    if (!data) return;
+
+    const streak = data.current_streak || 0;
+    const longest = data.longest_streak || 0;
+    const coins = data.total_points || 0;
+    const freeze = data.streak_freeze_count || 0;
+    const speedCount = data.speed_records_count || 0;
+
+    if (elStreakCountVal) elStreakCountVal.textContent = streak;
+    if (elStreakFlameIcon) {
+      elStreakFlameIcon.textContent = streak > 0 ? '🔥' : '❄️';
+      elStreakFlameIcon.className = streak > 0 ? 'streak-flame-icon animated-flame' : 'streak-flame-icon';
+    }
+    if (elStreakLongestBadge) {
+      elStreakLongestBadge.textContent = `🏆 Kỷ lục: ${longest} ngày`;
+    }
+    if (elStreakFreezeBadge) {
+      elStreakFreezeBadge.textContent = `🛡️ ${freeze} khiên`;
+    }
+
+    // Nav Top Streak Pill
+    if (elNavStreakPill) {
+      elNavStreakPill.style.display = 'inline-flex';
+      if (elNavStreakDays) elNavStreakDays.textContent = streak;
+      if (elNavStreakCoins) elNavStreakCoins.textContent = Number(coins).toLocaleString();
+    }
+
+    // Modal user coins
+    if (elModalUserCoins) {
+      elModalUserCoins.textContent = Number(coins).toLocaleString();
+    }
+
+    // Netcoins balance
+    if (elNetcoinsBalanceVal) {
+      elNetcoinsBalanceVal.textContent = Number(coins).toLocaleString();
+    }
+    if (elNetcoinsSpeedSub) {
+      elNetcoinsSpeedSub.textContent = `⚡ ${speedCount} bài đạt Top tốc độ`;
+    }
+
+    // Motivational message
+    if (elStreakMotivationalText) {
+      elStreakMotivationalText.innerHTML = formatMarkdown(data.duo_message || 'Hãy duy trì chuỗi học tập đều đặn mỗi ngày!');
+    }
+
+    // Daily check-in button state
+    if (btnDailyCheckin) {
+      if (data.today_completed) {
+        btnDailyCheckin.disabled = true;
+        btnDailyCheckin.innerHTML = '<span>✅ Đã Điểm Danh</span>';
+      } else {
+        btnDailyCheckin.disabled = false;
+        btnDailyCheckin.innerHTML = '<span>📅 Điểm Danh</span>';
+      }
+    }
+
+    // Week Calendar (Mon -> Sun)
+    if (elStreakWeekCalendar && Array.isArray(data.week_calendar)) {
+      elStreakWeekCalendar.innerHTML = '';
+      data.week_calendar.forEach(wd => {
+        const cell = document.createElement('div');
+        cell.className = 'cal-day-cell' + (wd.has_activity ? ' active' : '') + (wd.is_today ? ' today' : '');
+        cell.title = `${wd.date}: ${wd.has_activity ? 'Đã hoàn thành' : 'Chưa có hoạt động'}`;
+
+        const label = document.createElement('span');
+        label.className = 'cal-day-label';
+        label.textContent = wd.day_label || wd.day_name;
+
+        const circle = document.createElement('div');
+        circle.className = 'cal-day-circle';
+        circle.innerHTML = wd.has_activity ? '✓' : (wd.day_label ? wd.day_label.replace('T', '') : '•');
+
+        cell.appendChild(label);
+        cell.appendChild(circle);
+        elStreakWeekCalendar.appendChild(cell);
+      });
+    }
+
+    // History count & list
+    if (elHistoryCount) {
+      elHistoryCount.textContent = (data.recent_redemptions || []).length;
+    }
+    renderRedemptionsHistory(data.recent_redemptions || []);
+  }
+
+  function handleDailyCheckin() {
+    if (btnDailyCheckin) btnDailyCheckin.disabled = true;
+    fetch('/api/index.php/gamification/check-in', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    })
+      .then(res => res.json())
+      .then(json => {
+        if (json.success) {
+          const award = json.data?.activity?.points_earned || 15;
+          const streak = json.data?.streak?.current_streak || 1;
+          alert(`🎉 Điểm danh thành công! Bạn nhận được +${award} NetCoins.\n🔥 Chuỗi hiện tại: ${streak} ngày liên tiếp!`);
+          fetchGamificationStatus();
+        } else {
+          alert(json.message || 'Không thể điểm danh lúc này.');
+        }
+      })
+      .catch(err => {
+        console.error('[CheckIn] Error:', err);
+        alert('Lỗi kết nối khi điểm danh.');
+      })
+      .finally(() => {
+        if (btnDailyCheckin && !_gamificationData?.today_completed) {
+          btnDailyCheckin.disabled = false;
+        }
+      });
+  }
+
+  function openRewardModal() {
+    if (elRewardModal && elRewardModalBackdrop) {
+      elRewardModalBackdrop.style.display = 'block';
+      elRewardModal.style.display = 'flex';
+      fetchRewardsCatalog();
+      switchRewardTab('catalog');
+    }
+  }
+
+  function closeRewardModal() {
+    if (elRewardModal && elRewardModalBackdrop) {
+      elRewardModalBackdrop.style.display = 'none';
+      elRewardModal.style.display = 'none';
+    }
+  }
+
+  function switchRewardTab(tab) {
+    [tabBtnCatalog, tabBtnHistory, tabBtnSpeed].forEach(btn => {
+      if (btn) btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+    if (tabContentCatalog) tabContentCatalog.style.display = tab === 'catalog' ? 'block' : 'none';
+    if (tabContentHistory) tabContentHistory.style.display = tab === 'history' ? 'block' : 'none';
+    if (tabContentSpeed) {
+      tabContentSpeed.style.display = tab === 'speed' ? 'block' : 'none';
+      if (tab === 'speed') fetchSpeedLeaderboard();
+    }
+  }
+
+  function fetchRewardsCatalog() {
+    if (!elRewardItemsGrid) return;
+    elRewardItemsGrid.innerHTML = '<div style="padding:20px;text-align:center;color:#64748b;">Đang tải danh sách quà tặng...</div>';
+
+    fetch('/api/index.php/gamification/rewards', {
+      method: 'GET',
+      credentials: 'include',
+      headers: { 'Accept': 'application/json' }
+    })
+      .then(res => res.json())
+      .then(json => {
+        if (json.success && Array.isArray(json.data)) {
+          _rewardsCatalog = json.data;
+          renderRewardsCatalog();
+        }
+      })
+      .catch(err => {
+        console.error('[Rewards] Error loading catalog:', err);
+        elRewardItemsGrid.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444;">Không thể tải danh sách quà tặng.</div>';
+      });
+  }
+
+  function renderRewardsCatalog() {
+    if (!elRewardItemsGrid) return;
+    if (_rewardsCatalog.length === 0) {
+      elRewardItemsGrid.innerHTML = '<div style="padding:20px;text-align:center;color:#64748b;">Hiện chưa có phần thưởng nào.</div>';
+      return;
+    }
+
+    const userCoins = _gamificationData?.total_points || 0;
+    elRewardItemsGrid.innerHTML = '';
+
+    _rewardsCatalog.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'reward-card';
+
+      const canAfford = userCoins >= item.points_cost;
+
+      card.innerHTML = `
+        <div class="reward-card-top">
+          <div class="reward-item-icon">${escapeHTML(item.icon || '🎁')}</div>
+          <div class="reward-card-info">
+            <span class="reward-card-category ${escapeHTML(item.category)}">${item.category === 'academic' ? 'Học tập' : (item.category === 'voucher' ? 'Voucher' : 'Lưu niệm')}</span>
+            <div class="reward-item-title">${escapeHTML(item.title)}</div>
+            <div class="reward-item-desc">${escapeHTML(item.description)}</div>
+          </div>
+        </div>
+        <div class="reward-card-bottom">
+          <div class="reward-cost-tag">
+            <span>🪙</span>
+            <span>${Number(item.points_cost).toLocaleString()} xu</span>
+          </div>
+          <button type="button" class="btn-redeem-gift" ${canAfford ? '' : 'disabled'} data-item-id="${escapeHTML(item.item_id)}" data-title="${escapeHTML(item.title)}" data-cost="${item.points_cost}">
+            ${canAfford ? 'Đổi Quà' : 'Thiếu xu'}
+          </button>
+        </div>
+      `;
+
+      const btnRedeem = card.querySelector('.btn-redeem-gift');
+      if (btnRedeem && canAfford) {
+        btnRedeem.addEventListener('click', () => {
+          handleRedeemReward(item.item_id, item.title, item.points_cost);
+        });
+      }
+
+      elRewardItemsGrid.appendChild(card);
+    });
+  }
+
+  function handleRedeemReward(itemId, itemTitle, pointsCost) {
+    const note = prompt(`🎁 Bạn xác nhận đổi phần quà:\n"${itemTitle}" với chi phí ${pointsCost} NetCoins?\n\nNhập lời nhắn hoặc ghi chú gửi Giảng viên (ví dụ: Tên môn học cần cộng điểm, địa chỉ nhận quà lưu niệm...):`, '');
+    if (note === null) return; // User canceled
+
+    fetch('/api/index.php/gamification/redeem', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        item_id: itemId,
+        notes: note
+      })
+    })
+      .then(res => res.json())
+      .then(json => {
+        if (json.success) {
+          alert(`🎉 Đổi quà thành công!\nYêu cầu của bạn đã được chuyển tới Giảng viên để xét duyệt và trao quà. Số dư NetCoins mới: ${json.data?.new_balance} xu.`);
+          fetchGamificationStatus();
+          switchRewardTab('history');
+        } else {
+          alert(json.message || 'Không thể đổi quà lúc này.');
+        }
+      })
+      .catch(err => {
+        console.error('[Redeem] Error:', err);
+        alert('Lỗi kết nối khi gửi yêu cầu đổi quà.');
+      });
+  }
+
+  function renderRedemptionsHistory(history) {
+    if (!elRewardHistoryList) return;
+    if (!history || history.length === 0) {
+      elRewardHistoryList.innerHTML = '<div style="padding:20px;text-align:center;color:#64748b;">Bạn chưa đổi phần quà nào. Hãy tích lũy NetCoins và đổi quà nhé!</div>';
+      return;
+    }
+
+    elRewardHistoryList.innerHTML = '';
+    history.forEach(h => {
+      const item = document.createElement('div');
+      item.className = 'history-item';
+
+      const statusMap = {
+        'pending': { text: '⏳ Chờ Giảng viên duyệt', cls: 'pending' },
+        'fulfilled': { text: '✅ Đã trao quà', cls: 'fulfilled' },
+        'rejected': { text: '❌ Bị từ chối (Đã hoàn xu)', cls: 'rejected' }
+      };
+      const st = statusMap[h.status] || { text: h.status, cls: 'pending' };
+      const dateStr = h.requested_at ? new Date(h.requested_at).toLocaleDateString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
+
+      item.innerHTML = `
+        <div class="history-item-left">
+          <div style="font-size:24px;">${escapeHTML(h.item_icon || '🎁')}</div>
+          <div>
+            <strong style="color:var(--text-main);font-size:13.5px;">${escapeHTML(h.item_title || 'Phần quà')}</strong>
+            <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px;">
+              🪙 ${Number(h.points_spent).toLocaleString()} NetCoins • Yêu cầu lúc: ${dateStr}
+            </div>
+          </div>
+        </div>
+        <span class="history-status-badge ${st.cls}">${st.text}</span>
+      `;
+      elRewardHistoryList.appendChild(item);
+    });
+  }
+
+  function fetchSpeedLeaderboard() {
+    if (!elSpeedLeaderboardWrap) return;
+    elSpeedLeaderboardWrap.innerHTML = '<div style="padding:20px;text-align:center;color:#64748b;">Đang tải bảng vàng kỷ lục tốc độ...</div>';
+
+    fetch('/api/index.php/gamification/speed-leaderboard', {
+      method: 'GET',
+      credentials: 'include',
+      headers: { 'Accept': 'application/json' }
+    })
+      .then(res => res.json())
+      .then(json => {
+        if (json.success && Array.isArray(json.data)) {
+          renderSpeedLeaderboard(json.data);
+        }
+      })
+      .catch(err => {
+        console.error('[Speed] Error loading leaderboard:', err);
+        elSpeedLeaderboardWrap.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444;">Không thể tải bảng kỷ lục tốc độ.</div>';
+      });
+  }
+
+  function renderSpeedLeaderboard(records) {
+    if (!elSpeedLeaderboardWrap) return;
+    if (!records || records.length === 0) {
+      elSpeedLeaderboardWrap.innerHTML = '<div style="padding:20px;text-align:center;color:#64748b;">Chưa có bài thi nào đạt điểm tuyệt đối 100/100 để xác lập kỷ lục.</div>';
+      return;
+    }
+
+    let html = `
+      <div style="margin-bottom:12px;font-size:12.5px;color:#64748b;">
+        ⚡ Bảng vàng vinh danh những học viên đạt <strong>100/100 điểm</strong> với tốc độ hoàn thành nhanh nhất trên từng bài lab:
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="speedrun-table">
+          <thead>
+            <tr>
+              <th>Hạng</th>
+              <th>Bài Lab</th>
+              <th>Thiết Bị</th>
+              <th>Học Viên</th>
+              <th>Thời Gian</th>
+              <th>Ngày Xác Lập</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+
+    records.forEach(r => {
+      const rank = r.rank || 1;
+      const medal = rank === 1 ? '🥇 Top 1' : (rank === 2 ? '🥈 Top 2' : (rank === 3 ? '🥉 Top 3' : `#${rank}`));
+      const durSec = r.duration_sec || 0;
+      const m = Math.floor(durSec / 60);
+      const s = durSec % 60;
+      const durStr = m > 0 ? `${m}m ${s}s` : `${s}s`;
+      const dateStr = r.achieved_at ? new Date(r.achieved_at).toLocaleDateString('vi-VN') : '';
+
+      html += `
+        <tr>
+          <td><strong style="color:#ea580c;">${medal}</strong></td>
+          <td><strong>${escapeHTML(r.lab_name || r.lab_id)}</strong></td>
+          <td>${escapeHTML(r.device_name || 'Thiết bị')}</td>
+          <td>${escapeHTML(r.display_name || r.email)}</td>
+          <td><span style="font-weight:700;color:#0284c7;">⏱️ ${durStr}</span></td>
+          <td style="color:#64748b;">${dateStr}</td>
+        </tr>
+      `;
+    });
+
+    html += `
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    elSpeedLeaderboardWrap.innerHTML = html;
   }
 
   // Execute on DOM ready

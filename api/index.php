@@ -14,6 +14,7 @@ require_once __DIR__ . '/lib/report_xlsx.php';
 require_once __DIR__ . '/lib/dashboard_report.php';
 require_once __DIR__ . '/lib/mailer.php';
 require_once __DIR__ . '/lib/ai_assistant.php';
+require_once __DIR__ . '/lib/gamification.php';
 load_app_environment($root);
 
 $GLOBALS['request_id'] = bin2hex(random_bytes(8));
@@ -896,6 +897,14 @@ function handle_auth(array $segments, string $method): void
         $updateStmt->execute(['user_id' => $userRow['user_id']]);
 
         record_login_log($userRow, 'password_login_success');
+
+        if (function_exists('gamification_record_activity')) {
+            try {
+                gamification_record_activity(db(), (string)$userRow['user_id'], 'login');
+            } catch (Throwable $ge) {
+                error_log('[gamification] login activity error: ' . $ge->getMessage());
+            }
+        }
 
         $fullUser = find_user_by_id((string)$userRow['user_id']);
         respond([
@@ -3716,6 +3725,145 @@ function handle_labs(array $segments, string $method): void
     fail(405, 'method-not-allowed', 'Labs endpoint does not support this method.');
 }
 
+function handle_gamification(array $segments, string $method): void
+{
+    $action = $segments[1] ?? 'status';
+    $pdo = db();
+
+    // 1. Student Status (Streak, Today check, Calendar, NetCoins)
+    if ($action === 'status') {
+        if ($method !== 'GET') {
+            fail(405, 'method-not-allowed', 'Gamification status only supports GET.');
+        }
+        $userId = current_user_id();
+        $email = current_email();
+        $user = ($userId ? find_user_by_id($userId) : null) ?? ($email ? find_user((string)$email) : null);
+        if (!$user) {
+            // Guest or unauthenticated fallback
+            respond([
+                'ok' => true,
+                'data' => [
+                    'user_id' => '00000000-0000-0000-0000-000000000000',
+                    'current_streak' => 1,
+                    'longest_streak' => 3,
+                    'total_points' => 120,
+                    'streak_freeze_count' => 1,
+                    'today_completed' => true,
+                    'duo_message' => '🔥 Chào mừng bạn! Hãy đăng nhập để lưu trữ chuỗi ngày học tập và đổi quà thực tế từ Giảng viên!',
+                    'next_milestone' => 3,
+                    'days_to_milestone' => 2,
+                    'week_calendar' => [],
+                    'speed_records_count' => 0,
+                    'recent_redemptions' => [],
+                ]
+            ]);
+        }
+        $status = gamification_get_student_status($pdo, (string)$user['user_id']);
+        respond(['ok' => true, 'success' => true, 'data' => $status]);
+    }
+
+    // 2. Daily Check-in / Claim Points
+    if ($action === 'check-in') {
+        if ($method !== 'POST') {
+            fail(405, 'method-not-allowed', 'Check-in only supports POST.');
+        }
+        $user = require_user();
+        $res = gamification_record_activity($pdo, (string)$user['user_id'], 'daily_checkin');
+        respond(['ok' => true, 'success' => true, 'data' => $res]);
+    }
+
+    // 3. Rewards Catalog
+    if ($action === 'rewards') {
+        if ($method !== 'GET') {
+            fail(405, 'method-not-allowed', 'Rewards catalog only supports GET.');
+        }
+        $catalog = gamification_get_rewards_catalog($pdo);
+        respond(['ok' => true, 'success' => true, 'data' => $catalog]);
+    }
+
+    // 4. Redeem Reward
+    if ($action === 'redeem') {
+        if ($method !== 'POST') {
+            fail(405, 'method-not-allowed', 'Redeem only supports POST.');
+        }
+        $user = require_user();
+        $body = json_body();
+        $itemId = trim((string)($body['item_id'] ?? ''));
+        if ($itemId === '') {
+            fail(400, 'bad-request', 'Vui lòng chọn món quà muốn đổi.');
+        }
+        try {
+            $result = gamification_redeem_gift($pdo, (string)$user['user_id'], $itemId);
+            respond(['ok' => true, 'success' => true, 'data' => $result]);
+        } catch (Throwable $e) {
+            fail(400, 'redeem-error', $e->getMessage());
+        }
+    }
+
+    // 5. Speed Leaderboard
+    if ($action === 'speed-leaderboard') {
+        if ($method !== 'GET') {
+            fail(405, 'method-not-allowed', 'Speed leaderboard only supports GET.');
+        }
+        $labId = isset($_GET['lab_id']) ? trim((string)$_GET['lab_id']) : null;
+        $sql = '
+            SELECT r.record_id, r.lab_id, COALESCE(l.lab_name, r.lab_id) AS lab_name,
+                   r.user_id, u.display_name, u.email, COALESCE(u.class_code, \'Lớp chung\') AS class_code,
+                   r.duration_sec, r.score, r.achieved_at
+            FROM lab_speed_records r
+            JOIN users u ON u.user_id = r.user_id
+            LEFT JOIN lab_catalog l ON l.lab_id = r.lab_id
+        ';
+        $params = [];
+        if ($labId !== null && $labId !== '') {
+            $sql .= ' WHERE r.lab_id = :lid';
+            $params[':lid'] = $labId;
+        }
+        $sql .= ' ORDER BY r.duration_sec ASC LIMIT 20';
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        respond(['ok' => true, 'success' => true, 'data' => $records]);
+    }
+
+    // 6. Instructor Overview (Pending requests, Top streaks, Speed champions)
+    if ($action === 'instructor-rewards') {
+        if ($method !== 'GET') {
+            fail(405, 'method-not-allowed', 'Instructor rewards only supports GET.');
+        }
+        require_instructor_or_admin();
+        $classId = isset($_GET['class_id']) ? (string)$_GET['class_id'] : null;
+        $overview = gamification_get_instructor_overview($pdo, $classId);
+        respond(['ok' => true, 'success' => true, 'data' => $overview]);
+    }
+
+    // 7. Fulfill / Approve Redemption
+    if ($action === 'fulfill-reward') {
+        if ($method !== 'POST') {
+            fail(405, 'method-not-allowed', 'Fulfill reward only supports POST.');
+        }
+        $actor = require_instructor_or_admin();
+        $body = json_body();
+        $redemptionId = trim((string)($body['redemption_id'] ?? ''));
+        $status = trim((string)($body['status'] ?? 'fulfilled'));
+        $notes = isset($body['notes']) ? (string)$body['notes'] : null;
+
+        if ($redemptionId === '') {
+            fail(400, 'bad-request', 'Thiếu redemption_id.');
+        }
+
+        try {
+            $result = gamification_fulfill_redemption($pdo, $redemptionId, (string)$actor['user_id'], $status, $notes);
+            respond(['ok' => true, 'success' => true, 'data' => $result]);
+        } catch (Throwable $e) {
+            fail(400, 'fulfill-error', $e->getMessage());
+        }
+    }
+
+    fail(404, 'not-found', 'Gamification endpoint not found.');
+}
+
 try {
     if ($resource === 'auth') {
         handle_auth($segments, $method);
@@ -3745,6 +3893,8 @@ try {
         handle_ai($segments, $method);
     } elseif ($resource === 'labs') {
         handle_labs($segments, $method);
+    } elseif ($resource === 'gamification') {
+        handle_gamification($segments, $method);
     } elseif ($resource === 'health') {
         handle_health($method);
     } elseif (is_root_iam_callback($resource, $method)) {

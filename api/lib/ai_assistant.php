@@ -14,6 +14,8 @@ if (!function_exists('database_boolean')) {
     }
 }
 
+require_once __DIR__ . '/gamification.php';
+
 /**
  * AI Assistant Module for Network Lab Management Dashboard
  * Provides diagnostic analytics, failure pattern extraction, and intelligent Q&A.
@@ -711,6 +713,39 @@ function ai_build_student_response(PDO $pdo, array $user, array $others, string 
         $answer .= "- **Lịch sử làm bài:** *Chưa có phiên thực hành nào được ghi nhận.*\n\n";
     }
 
+    // Duolingo Gamification Stats
+    $streakInfo = null;
+    if (function_exists('gamification_get_student_status')) {
+        try {
+            $streakInfo = gamification_get_student_status($pdo, $uId);
+        } catch (\Throwable $e) {
+            $streakInfo = null;
+        }
+    }
+    if ($streakInfo) {
+        $currStreak = (int)($streakInfo['current_streak'] ?? 0);
+        $longestStreak = (int)($streakInfo['longest_streak'] ?? 0);
+        $coins = (int)($streakInfo['total_points'] ?? 0);
+        $freeze = (int)($streakInfo['streak_freeze_count'] ?? 0);
+        $speedCount = (int)($streakInfo['speed_records_count'] ?? 0);
+
+        $flame = $currStreak > 0 ? '🔥' : '❄️';
+        $answer .= "#### {$flame} Chuỗi Học Tập & Phần Thưởng (Duolingo Streak):\n";
+        $answer .= "- **Chuỗi liên tục:** {$flame} **{$currStreak} ngày** (Kỷ lục cao nhất: **{$longestStreak} ngày**" . ($freeze > 0 ? " | 🛡️ {$freeze} khiên bảo vệ" : "") . ")\n";
+        $answer .= "- **Kho xu NetCoins:** 🪙 **{$coins} xu**\n";
+        if ($speedCount > 0) {
+            $answer .= "- **Kỷ lục tốc độ (Speedrun 100đ):** ⚡ **{$speedCount} bài đạt Top tốc độ cao nhất**\n";
+        }
+        if (!empty($streakInfo['recent_redemptions'])) {
+            $pendingGifts = array_filter($streakInfo['recent_redemptions'], fn($r) => ($r['status'] ?? '') === 'pending');
+            if (!empty($pendingGifts)) {
+                $giftNames = array_map(fn($g) => $g['item_title'] ?? $g['item_name'] ?? 'Phần quà', $pendingGifts);
+                $answer .= "- 🎁 **Đang chờ Giảng viên duyệt trao quà:** *" . implode(', ', $giftNames) . "*\n";
+            }
+        }
+        $answer .= "\n";
+    }
+
     // Sessions breakdown
     if (!empty($recentSessions)) {
         $answer .= "#### 📋 Lịch sử các bài thực hành gần nhất:\n";
@@ -809,6 +844,19 @@ function ai_get_technical_network_answer(string $question, ?string $currentDevic
     if (
         (str_contains($q, 'học viên') || str_contains($qUn, 'hoc vien') || str_contains($q, 'sinh viên') || str_contains($qUn, 'sinh vien') || str_contains($q, 'hay làm sai') || str_contains($qUn, 'hay lam sai') || str_contains($q, 'hay mắc phải') || str_contains($qUn, 'hay mac phai') || str_contains($q, 'phổ biến') || str_contains($qUn, 'pho bien') || str_contains($q, 'lớp') || str_contains($qUn, 'lop')) &&
         (str_contains($q, 'lỗi') || str_contains($qUn, 'loi') || str_contains($q, 'sai') || str_contains($q, 'mắc phải') || str_contains($qUn, 'mac phai') || str_contains($q, 'tiến độ') || str_contains($qUn, 'tien do') || str_contains($q, 'báo cáo') || str_contains($qUn, 'bao cao'))
+    ) {
+        return null;
+    }
+
+    // Bỏ qua nếu là câu hỏi gamification / kỷ lục / chuỗi ngày / đổi quà / xếp hạng
+    if (
+        str_contains($q, 'kỷ lục') || str_contains($qUn, 'ky luc') ||
+        str_contains($q, 'nhanh nhất') || str_contains($qUn, 'nhanh nhat') ||
+        str_contains($q, 'chuỗi') || str_contains($qUn, 'chuoi') ||
+        str_contains($q, 'đổi quà') || str_contains($qUn, 'doi qua') ||
+        str_contains($q, 'khen thưởng') || str_contains($qUn, 'khen thuong') ||
+        str_contains($q, 'netcoin') || str_contains($q, 'bảng vàng') || str_contains($qUn, 'bang vang') ||
+        str_contains($q, 'speedrun')
     ) {
         return null;
     }
@@ -1349,6 +1397,22 @@ function ai_build_rag_context(PDO $pdo, ?string $classIdentifier = null, ?array 
     }
     $prompt .= "- Top đạt chuẩn xuất sắc: Tùng Đặng Thanh (100đ), Nguyễn Phương Sang (100đ), Lê Hoàng C (100đ), Nguyễn Văn A (91đ).\n\n";
 
+    // 7. Gamification & Streaks Overview
+    $topStreaks = $pdo->query("
+        SELECT u.display_name, s.current_streak, s.longest_streak, s.total_points
+        FROM user_streaks s
+        JOIN users u ON u.user_id = s.user_id
+        WHERE u.role = 'KTV'
+        ORDER BY s.current_streak DESC, s.total_points DESC
+        LIMIT 5
+    ")->fetchAll(PDO::FETCH_ASSOC);
+    $prompt .= "7. CHUỖI HỌC TẬP (DUOLINGO STREAK) & NETCOINS:\n";
+    foreach ($topStreaks as $idx => $ts) {
+        $num = $idx + 1;
+        $prompt .= "- Top {$num} streak: {$ts['display_name']} - Chuỗi {$ts['current_streak']} ngày liên tục (Kỷ lục: {$ts['longest_streak']} ngày), {$ts['total_points']} NetCoins.\n";
+    }
+    $pendingGiftCount = (int)$pdo->query("SELECT COUNT(*) FROM reward_redemptions WHERE status = 'pending'")->fetchColumn();
+    $prompt .= "- Hiện có {$pendingGiftCount} yêu cầu đổi quà đang chờ Giảng viên duyệt trao quà.\n\n";
 
     if ($question !== null && trim($question) !== '') {
         $studentMatch = ai_search_students($pdo, $question, $classIdentifier);
@@ -1392,6 +1456,13 @@ function ai_build_student_rag_context(PDO $pdo, array $user): string
     $prompt .= "- Lớp: {$st['class_code']} ({$st['class_name']})\n";
     $prompt .= "- Tiến độ hoàn thành: {$prog['passed_count']} / {$prog['total_assigned']} bài ({$prog['completion_pct']}%)\n";
     $prompt .= "- Điểm trung bình: " . ($prog['avg_score'] ?? 0) . "/100 qua {$prog['total_sessions']} phiên làm bài (Tổng: {$prog['total_duration_min']} phút)\n";
+    if (!empty($advice['gamification'])) {
+        $gm = $advice['gamification'];
+        $prompt .= "- Chuỗi học tập Duolingo: {$gm['current_streak']} ngày liên tiếp (Kỷ lục: {$gm['longest_streak']} ngày), Kho xu NetCoins: {$gm['netcoins_balance']} xu.\n";
+        if (!empty($gm['speed_records_count'])) {
+            $prompt .= "- Thành tích tốc độ: Đạt Top tốc độ hoàn thành tuyệt đối 100/100 tại {$gm['speed_records_count']} bài lab.\n";
+        }
+    }
     
     if ($nextLab) {
         $prompt .= "- Bài thực hành tiếp theo được đề xuất: {$nextLab['lab_name']} (Thiết bị: {$nextLab['device_name']})\n";
@@ -2226,6 +2297,179 @@ function ai_chat_query(PDO $pdo, string $question, ?string $classIdentifier = nu
         ];
     }
 
+    // Intent: Gamification - Duolingo Streak Leaderboard
+    if (
+        str_contains($q, 'chuỗi') ||
+        str_contains($q, 'streak') ||
+        str_contains($q, 'duolingo') ||
+        str_contains($q, 'ngọn lửa') ||
+        str_contains($q, 'bảng chuỗi') ||
+        str_contains($q, 'giữ chuỗi') ||
+        str_contains($q, 'học liên tục') ||
+        (str_contains($q, 'liên tục') && (str_contains($q, 'học') || str_contains($q, 'ngày') || str_contains($q, 'ai')))
+    ) {
+        $topStreaks = $pdo->query("
+            SELECT user_id, display_name, email, class_code,
+                   current_streak, longest_streak, total_points, last_activity_date
+            FROM v_streak_leaderboard
+            LIMIT 10
+        ")->fetchAll(PDO::FETCH_ASSOC);
+
+        $totalActiveStreak = (int)$pdo->query("SELECT COUNT(*) FROM user_streaks WHERE current_streak > 0")->fetchColumn();
+        $totalCoins = (int)$pdo->query("SELECT COALESCE(SUM(total_points), 0) FROM user_streaks")->fetchColumn();
+
+        $answer = "### 🔥 Bảng Xếp Hạng Chuỗi Học Tập Hàng Ngày (Duolingo Streaks)\n\n";
+        $answer .= "Hiện có **{$totalActiveStreak} học viên** đang duy trì ngọn lửa học tập hàng ngày với tổng quỹ **" . number_format($totalCoins) . " NetCoins** được tích lũy:\n\n";
+
+        foreach ($topStreaks as $idx => $st) {
+            $rank = $idx + 1;
+            $medal = $rank === 1 ? '🥇' : ($rank === 2 ? '🥈' : ($rank === 3 ? '🥉' : '🎖️'));
+            $flame = $st['current_streak'] >= 7 ? '🔥' : '⚡';
+            $answer .= "{$medal} **Top {$rank}: {$st['display_name']}** (`{$st['email']}`)\n";
+            $answer .= "   - Chuỗi học tập: {$flame} **{$st['current_streak']} ngày liên tiếp** (Kỷ lục: **{$st['longest_streak']} ngày**)\n";
+            $answer .= "   - Số dư: 🪙 **{$st['total_points']} NetCoins** | Lớp: **{$st['class_code']}**\n\n";
+        }
+
+        $topName = $topStreaks[0]['display_name'] ?? 'học viên';
+        $answer .= "💡 **Lời khuyên sư phạm:** Chuỗi học tập giúp sinh viên hình thành kỷ luật tự giác mỗi ngày. Giảng viên có thể biểu dương bạn **{$topName}** và nhắc nhở các bạn dùng NetCoins đổi điểm rèn luyện hoặc quà lưu niệm UTH!";
+
+        return [
+            'question' => $question,
+            'answer' => $answer,
+            'intent' => 'streak_leaderboard',
+            'suggested_questions' => [
+                'Có ai đang chờ duyệt đổi quà không?',
+                'Ai làm bài thực hành nhanh nhất đạt 100 điểm?',
+                'Top học viên chăm chỉ nhất lớp?',
+            ],
+            'model' => 'local-rag',
+        ];
+    }
+
+    // Intent: Gamification - Reward Redemptions & Gifts
+    if (
+        str_contains($q, 'đổi quà') ||
+        str_contains($q, 'doi qua') ||
+        str_contains($q, 'quà tặng') ||
+        str_contains($q, 'qua tang') ||
+        str_contains($q, 'chờ duyệt') ||
+        str_contains($q, 'cho duyet') ||
+        str_contains($q, 'phần thưởng') ||
+        str_contains($q, 'trao quà') ||
+        str_contains($q, 'voucher') ||
+        str_contains($q, 'netcoin') ||
+        str_contains($q, 'cửa hàng quà')
+    ) {
+        $pendingStmt = $pdo->query("
+            SELECT redemption_id, user_id, student_name, student_email, class_code,
+                   item_id, item_title, item_category, item_icon, points_spent, requested_at, instructor_notes
+            FROM v_pending_reward_redemptions
+            WHERE status = 'pending'
+            ORDER BY requested_at ASC
+        ");
+        $pendingList = $pendingStmt->fetchAll(PDO::FETCH_ASSOC);
+        $pendingCount = count($pendingList);
+
+        $fulfilledCount = (int)$pdo->query("SELECT COUNT(*) FROM reward_redemptions WHERE status = 'fulfilled'")->fetchColumn();
+
+        $answer = "### 🎁 Tình Hình Đổi Quà & Khen Thưởng Học Viên (Reward Store)\n\n";
+        $answer .= "Hệ thống ghi nhận tổng cộng **{$fulfilledCount} phần quà đã được trao thành công**.\n\n";
+
+        if ($pendingCount === 0) {
+            $answer .= "✅ **Hiện không có yêu cầu đổi quà nào đang chờ duyệt.** Tất cả phần thưởng NetCoins đã được xử lý hoàn tất!\n";
+        } else {
+            $answer .= "⏳ **Hiện có {$pendingCount} yêu cầu đang chờ Giảng viên xác nhận trao quà:**\n\n";
+            foreach ($pendingList as $idx => $req) {
+                $num = $idx + 1;
+                $dateStr = date('d/m/Y H:i', strtotime($req['requested_at']));
+                $catIcon = $req['item_icon'] ?? ($req['item_category'] === 'academic' ? '🎓' : ($req['item_category'] === 'voucher' ? '☕' : '🎁'));
+                $answer .= "{$num}. {$catIcon} **{$req['item_title']}** — Học viên **{$req['student_name']}** (`{$req['student_email']}`)\n";
+                $answer .= "   - Lớp: **{$req['class_code']}** | Chi phí: 🪙 **{$req['points_spent']} NetCoins**\n";
+                $answer .= "   - Thời gian đăng ký: {$dateStr}\n";
+                if (!empty($req['instructor_notes'])) {
+                    $answer .= "   - Lời nhắn: *\"{$req['instructor_notes']}\"*\n";
+                }
+                $answer .= "\n";
+            }
+            $answer .= "👉 **Thao tác nhanh cho Giảng viên:** Thầy/Cô có thể vào mục **'🎁 Khen Thưởng & Quà Tặng'** trên thanh điều hướng để bấm **'Xác nhận đã trao quà'** hoặc hoàn xu nếu từ chối!";
+        }
+
+        return [
+            'question' => $question,
+            'answer' => $answer,
+            'intent' => 'reward_redemptions',
+            'suggested_questions' => [
+                'Bảng xếp hạng chuỗi học tập dài nhất?',
+                'Ai làm bài thực hành nhanh nhất đạt 100 điểm?',
+                'Những học viên nào đang gặp khó khăn cần hỗ trợ?',
+            ],
+            'model' => 'local-rag',
+        ];
+    }
+
+    // Intent: Gamification - Speedrun Champions (100% Score Speed Records)
+    if (
+        str_contains($q, 'nhanh nhất') ||
+        str_contains($q, 'nhanh nhat') ||
+        str_contains($q, 'kỷ lục') ||
+        str_contains($q, 'ky luc') ||
+        str_contains($q, 'speedrun') ||
+        str_contains($q, 'tốc độ') ||
+        str_contains($q, 'toc do') ||
+        str_contains($q, 'vô địch tốc độ') ||
+        str_contains($q, 'thời gian ngắn nhất')
+    ) {
+        $champs = $pdo->query("
+            SELECT sr.lab_id, COALESCE(lc.lab_name, sr.lab_id) AS lab_name,
+                   COALESCE(dc.device_name, lc.device_id, 'Thiết bị') AS device_name,
+                   sr.duration_sec, sr.achieved_at,
+                   u.display_name, u.email, COALESCE(u.class_code, tc.class_code, 'CNTT-K22') AS class_code
+            FROM lab_speed_records sr
+            JOIN users u ON u.user_id = sr.user_id
+            LEFT JOIN lab_catalog lc ON lc.lab_id = sr.lab_id
+            LEFT JOIN device_catalog dc ON dc.device_id = lc.device_id
+            LEFT JOIN class_enrollments ce ON ce.user_id = u.user_id AND ce.status = 'active'
+            LEFT JOIN training_classes tc ON tc.class_id = ce.class_id
+            WHERE sr.duration_sec = (
+                SELECT MIN(inner_sr.duration_sec) 
+                FROM lab_speed_records inner_sr 
+                WHERE inner_sr.lab_id = sr.lab_id
+            )
+            ORDER BY dc.device_name, lc.lab_name
+        ")->fetchAll(PDO::FETCH_ASSOC);
+
+        $answer = "### ⚡ Bảng Vàng Kỷ Lục Tốc Độ (Speedrun Champions — Đạt 100/100 Tuyệt Đối)\n\n";
+        $answer .= "Dưới đây là các kỷ lục gia hoàn thành bài thi với điểm số tối đa trong thời gian nhanh nhất:\n\n";
+
+        if (empty($champs)) {
+            $answer .= "Hiện chưa có bài thi nào đạt điểm tuyệt đối 100/100 để xác lập kỷ lục tốc độ.\n";
+        } else {
+            foreach ($champs as $idx => $c) {
+                $num = $idx + 1;
+                $durMin = floor((int)$c['duration_sec'] / 60);
+                $durSec = (int)$c['duration_sec'] % 60;
+                $durStr = $durMin > 0 ? "{$durMin}m {$durSec}s" : "{$durSec}s";
+                $dateStr = date('d/m/Y', strtotime($c['achieved_at']));
+                $answer .= "{$num}. 🥇 **{$c['device_name']} — {$c['lab_name']}**\n";
+                $answer .= "   - Kỷ lục gia: ⚡ **{$c['display_name']}** (`{$c['email']}`) — Lớp: **{$c['class_code']}**\n";
+                $answer .= "   - Thời gian kỷ lục: ⏱️ **{$durStr}** ({$c['duration_sec']} giây) đạt **100/100đ** (Xác lập: {$dateStr})\n\n";
+            }
+            $answer .= "💡 **Lời khuyên sư phạm:** Các bạn giữ kỷ lục tốc độ có thao tác cấu hình rất điêu luyện và phản xạ nhạy bén. Giảng viên có thể mời các bạn làm Trợ giảng (TA) hỗ trợ hướng dẫn thực hành cho lớp!";
+        }
+
+        return [
+            'question' => $question,
+            'answer' => $answer,
+            'intent' => 'speed_champions',
+            'suggested_questions' => [
+                'Bảng xếp hạng chuỗi học tập dài nhất?',
+                'Có ai đang chờ duyệt đổi quà không?',
+                'Top học viên chăm chỉ nhất lớp?',
+            ],
+            'model' => 'local-rag',
+        ];
+    }
+
     // Intent 1: Most Failed Labs / Hardest Labs
     if (
         (str_contains($q, 'bài') && (str_contains($q, 'sai') || str_contains($q, 'trượt') || str_contains($q, 'khó') || str_contains($q, 'lỗi') || str_contains($q, 'kém') || str_contains($q, 'thấp'))) ||
@@ -2619,6 +2863,15 @@ function ai_get_student_advice(PDO $pdo, array $user): array
         $adviceMsg .= " 💡 **Lưu ý từ bài vừa làm:** Ở bài *{$latestMistake['lab_name']}*, {$latestMistake['tip']}";
     }
 
+    $gamification = null;
+    if (function_exists('gamification_get_student_status')) {
+        try {
+            $gamification = gamification_get_student_status($pdo, $userId);
+        } catch (\Throwable $e) {
+            $gamification = null;
+        }
+    }
+
     return [
         'student' => [
             'user_id' => $userId,
@@ -2627,6 +2880,7 @@ function ai_get_student_advice(PDO $pdo, array $user): array
             'class_code' => $user['class_code'] ?? ($assignments[0]['class_code'] ?? 'CNTT-K22'),
             'class_name' => $user['class_name'] ?? ($assignments[0]['class_name'] ?? 'Lớp Đồ Án'),
         ],
+        'gamification' => $gamification,
         'progress' => [
             'total_assigned' => $totalAssigned,
             'passed_count' => $passedCount,

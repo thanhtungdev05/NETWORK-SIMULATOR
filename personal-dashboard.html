@@ -72,6 +72,15 @@
     </a>
 
     <div class="dash-nav-actions">
+      <!-- Duolingo Streak & NetCoins Topbar Pill -->
+      <div class="nav-streak-pill" id="nav-streak-pill" style="display:none;" title="Chuỗi học tập và số dư NetCoins (Bấm để mở Cửa hàng đổi quà)">
+        <span>🔥</span>
+        <span id="nav-streak-days">0</span> ngày
+        <span style="opacity: 0.4;">|</span>
+        <span>🪙</span>
+        <span id="nav-streak-coins">0</span> xu
+      </div>
+
       <!-- Quick user profile widget -->
       <div class="user-pill-widget">
         <div class="user-avatar-sm" id="user-avatar">KT</div>
@@ -145,6 +154,61 @@
       </div>
       <div class="hero-right-art">
         <div class="hero-illustration"></div>
+      </div>
+    </section>
+
+    <!-- ── DUOLINGO STREAK & NETCOINS REWARDS WIDGET ── -->
+    <section class="streak-gamification-card" id="streak-gamification-card" aria-label="Chuỗi học tập và Phần thưởng">
+      <div class="streak-card-glow"></div>
+      
+      <div class="streak-card-main">
+        <!-- Left: Streak Flame & Days Count -->
+        <div class="streak-flame-col">
+          <div class="streak-flame-wrapper">
+            <span class="streak-flame-icon animated-flame" id="streak-flame-icon">🔥</span>
+            <div class="streak-number" id="streak-count-val">0</div>
+            <div class="streak-unit">NGÀY LIÊN TỤC</div>
+          </div>
+          <div class="streak-meta-pills">
+            <span class="streak-pill longest" id="streak-longest-badge" title="Kỷ lục chuỗi dài nhất">🏆 Kỷ lục: 0 ngày</span>
+            <span class="streak-pill freeze" id="streak-freeze-badge" title="Khiên bảo vệ chuỗi nếu quên học 1 ngày">🛡️ 1 khiên</span>
+          </div>
+        </div>
+
+        <!-- Center: 7-Day Weekly Calendar & Motivational Mascot -->
+        <div class="streak-center-col">
+          <div class="streak-calendar-row" id="streak-week-calendar">
+            <!-- Dynamically rendered Mon-Sun -->
+          </div>
+          <div class="streak-mascot-msg" id="streak-mascot-msg">
+            <div class="mascot-avatar">🦉</div>
+            <div class="mascot-bubble">
+              <p id="streak-motivational-text">Đang tải trạng thái chuỗi học tập hôm nay...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: NetCoins Balance & Quick Action Buttons -->
+        <div class="streak-actions-col">
+          <div class="netcoins-balance-box">
+            <div class="netcoins-label">SỐ DƯ NETCOINS</div>
+            <div class="netcoins-amount">
+              <span class="coin-spin">🪙</span>
+              <span id="netcoins-balance-val">0</span>
+              <span class="coin-unit">xu</span>
+            </div>
+            <div class="netcoins-sub" id="netcoins-speed-sub">⚡ 0 bài đạt Top tốc độ</div>
+          </div>
+
+          <div class="streak-buttons-wrap">
+            <button type="button" class="btn-daily-checkin" id="btn-daily-checkin" title="Điểm danh để nhận NetCoins và giữ chuỗi">
+              <span>📅 Điểm Danh</span>
+            </button>
+            <button type="button" class="btn-open-rewards" id="btn-open-rewards" title="Mở Cửa Hàng Đổi Quà & Khen Thưởng">
+              <span>🎁 Đổi Quà</span>
+            </button>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -479,7 +543,60 @@
     </div>
   </aside>
 
-  <script src="assets/personal-dashboard.js?v=20260911-dash-v2"></script>
+  <!-- ══════════════════════════════════════════════════════════════════════════
+       REWARD STORE & REDEMPTION MODAL
+       ══════════════════════════════════════════════════════════════════════════ -->
+  <div class="reward-modal-backdrop" id="reward-modal-backdrop" style="display: none;"></div>
+  <div class="reward-modal" id="reward-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="reward-modal-title">
+    <div class="reward-modal-header">
+      <div class="reward-modal-title-wrap">
+        <div class="reward-modal-icon">🎁</div>
+        <div>
+          <h3 id="reward-modal-title">Cửa Hàng Đổi Quà & Khen Thưởng UTH</h3>
+          <p>Tích lũy NetCoins từ việc giữ chuỗi học tập và đạt điểm tối đa để đổi quà từ Giảng viên</p>
+        </div>
+      </div>
+      <div class="reward-modal-header-right">
+        <div class="modal-coin-badge">
+          <span>🪙</span>
+          <strong id="modal-user-coins">0</strong>
+          <span>xu</span>
+        </div>
+        <button type="button" class="reward-modal-close" id="btn-close-reward-modal" title="Đóng">✕</button>
+      </div>
+    </div>
+
+    <div class="reward-modal-tabs">
+      <button type="button" class="reward-tab-btn active" data-tab="catalog" id="tab-btn-catalog">🛍️ Danh Sách Quà Tặng</button>
+      <button type="button" class="reward-tab-btn" data-tab="history" id="tab-btn-history">📋 Lịch Sử Đã Đổi (<span id="history-count">0</span>)</button>
+      <button type="button" class="reward-tab-btn" data-tab="speed" id="tab-btn-speed">⚡ Kỷ Lục Tốc Độ 100đ</button>
+    </div>
+
+    <div class="reward-modal-body">
+      <!-- Tab 1: Catalog -->
+      <div class="reward-tab-content active" id="tab-content-catalog">
+        <div class="reward-grid" id="reward-items-grid">
+          <!-- Dynamically populated by JS -->
+        </div>
+      </div>
+
+      <!-- Tab 2: History -->
+      <div class="reward-tab-content" id="tab-content-history" style="display: none;">
+        <div class="reward-history-list" id="reward-history-list">
+          <!-- Dynamically populated by JS -->
+        </div>
+      </div>
+
+      <!-- Tab 3: Speedrun Records -->
+      <div class="reward-tab-content" id="tab-content-speed" style="display: none;">
+        <div class="speed-leaderboard-wrap" id="speed-leaderboard-wrap">
+          <!-- Dynamically populated by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/personal-dashboard.js?v=20260926-gamification-v1"></script>
 </body>
 
 </html>

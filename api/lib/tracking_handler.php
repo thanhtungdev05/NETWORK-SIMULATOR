@@ -846,6 +846,29 @@ function handle_tracking(array $segments, string $method): void
             $timer['duplicate'] = !$savedRow;
             $timer['normalization_issue'] = $timer['normalized_saved'] ? null : 'No effective assignment matched the saved timer.';
             $pdo->commit();
+
+            // Gamification: streak update, points award, and speedrun check
+            if (!empty($resolvedUserId) && function_exists('gamification_record_activity')) {
+                try {
+                    $isPassed = !empty($timer['is_passed']);
+                    $actType = $isPassed ? 'practice_passed' : 'practice_attempt';
+                    $streakRes = gamification_record_activity($pdo, (string)$resolvedUserId, $actType, [
+                        'session_id' => $timer['session_id'],
+                        'lab_id' => $timer['lab_id'],
+                        'score' => $timer['score'],
+                    ]);
+                    $timer['gamification'] = $streakRes;
+
+                    if ($isPassed && (float)($timer['score'] ?? 0) >= 100.0 && function_exists('gamification_check_speed_record')) {
+                        $speedRec = gamification_check_speed_record($pdo, (int)$timer['session_id']);
+                        if ($speedRec) {
+                            $timer['speed_record'] = $speedRec;
+                        }
+                    }
+                } catch (Throwable $ge) {
+                    error_log('[gamification] Error recording activity: ' . $ge->getMessage());
+                }
+            }
         } catch (Throwable $exception) {
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();

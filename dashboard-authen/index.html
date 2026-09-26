@@ -87,6 +87,17 @@
                     </svg>
                     <span>Quản lý Bài thực hành</span>
                 </a>
+                <a class="sidebar-link" href="?view=gamification" data-dashboard-view="gamification" id="navGamificationLink" aria-label="Khen Thưởng & Quà Tặng">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 12 20 22 4 22 4 12"></polyline>
+                        <rect x="2" y="7" width="20" height="5"></rect>
+                        <line x1="12" y1="22" x2="12" y2="7"></line>
+                        <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
+                        <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
+                    </svg>
+                    <span>Khen Thưởng & Quà Tặng</span>
+                    <span class="sidebar-badge" id="navPendingRewardBadge" style="display:none;background:#f97316;color:#fff;font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:999px;margin-left:auto;">0</span>
+                </a>
 
                 <span class="sidebar-nav-label" id="navAdminLabel">Quản trị hệ thống</span>
                 <a class="sidebar-link" href="?view=roster" data-dashboard-view="roster" id="navRosterLink" aria-label="Quản lý KTV">
@@ -1226,6 +1237,171 @@
 
                         <div class="labs-grid" id="labsGrid">
                             <!-- Rendered dynamically by labs-management.js -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ══════════════════════════════════════════════════════════════════════════
+                     GAMIFICATION & REWARDS VIEW (INSTRUCTOR MANAGEMENT)
+                     ══════════════════════════════════════════════════════════════════════════ -->
+                <section class="section dashboard-page-view" id="gamification" data-page-view="gamification" hidden>
+                    <div class="roster-panel" style="padding: 24px;">
+                        <!-- Header Bar -->
+                        <div class="section-title" style="margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                            <div>
+                                <h2 style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin: 0;">🎁 Quản Lý Khen Thưởng, Quà Tặng & Chuỗi Học Tập</h2>
+                                <p style="font-size: 0.875rem; color: #64748b; margin-top: 4px;">Duyệt trao quà cho sinh viên dùng NetCoins và theo dõi bảng xếp hạng chuỗi ngày, kỷ lục tốc độ</p>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button type="button" class="btn-refresh-gamification" id="btnRefreshGamification" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; font-weight: 600; color: #475569; cursor: pointer;">
+                                    <span>🔄 Làm mới</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 4 Stat Summary Cards -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                            <div style="background: #fff; border: 1.5px solid #fed7aa; border-radius: 12px; padding: 16px 20px; box-shadow: 0 2px 6px rgba(15,23,42,0.03);">
+                                <div style="display: flex; align-items: center; justify-content: space-between;">
+                                    <span style="font-size: 12px; font-weight: 700; color: #ea580c; text-transform: uppercase;">Yêu cầu chờ duyệt</span>
+                                    <span style="font-size: 20px;">⏳</span>
+                                </div>
+                                <div style="font-size: 28px; font-weight: 800; color: #c2410c; margin-top: 6px;" id="instPendingCount">0</div>
+                                <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Quà đang đợi Giảng viên trao</div>
+                            </div>
+
+                            <div style="background: #fff; border: 1.5px solid #bbf7d0; border-radius: 12px; padding: 16px 20px; box-shadow: 0 2px 6px rgba(15,23,42,0.03);">
+                                <div style="display: flex; align-items: center; justify-content: space-between;">
+                                    <span style="font-size: 12px; font-weight: 700; color: #16a34a; text-transform: uppercase;">Đã trao thành công</span>
+                                    <span style="font-size: 20px;">✅</span>
+                                </div>
+                                <div style="font-size: 28px; font-weight: 800; color: #15803d; margin-top: 6px;" id="instFulfilledCount">0</div>
+                                <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Phần thưởng đã bàn giao</div>
+                            </div>
+
+                            <div style="background: #fff; border: 1.5px solid #fde68a; border-radius: 12px; padding: 16px 20px; box-shadow: 0 2px 6px rgba(15,23,42,0.03);">
+                                <div style="display: flex; align-items: center; justify-content: space-between;">
+                                    <span style="font-size: 12px; font-weight: 700; color: #d97706; text-transform: uppercase;">Tổng NetCoins KTV</span>
+                                    <span style="font-size: 20px;">🪙</span>
+                                </div>
+                                <div style="font-size: 28px; font-weight: 800; color: #b45309; margin-top: 6px;" id="instTotalCoins">0</div>
+                                <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Xu học viên tích lũy toàn hệ thống</div>
+                            </div>
+
+                            <div style="background: #fff; border: 1.5px solid #bae6fd; border-radius: 12px; padding: 16px 20px; box-shadow: 0 2px 6px rgba(15,23,42,0.03);">
+                                <div style="display: flex; align-items: center; justify-content: space-between;">
+                                    <span style="font-size: 12px; font-weight: 700; color: #0284c7; text-transform: uppercase;">Kỷ lục gia tốc độ</span>
+                                    <span style="font-size: 20px;">⚡</span>
+                                </div>
+                                <div style="font-size: 28px; font-weight: 800; color: #0369a1; margin-top: 6px;" id="instSpeedCount">0</div>
+                                <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Bài thi đạt 100đ nhanh nhất</div>
+                            </div>
+                        </div>
+
+                        <!-- Tab Navigation Bar -->
+                        <div class="roster-tab-bar" role="tablist" style="margin-bottom: 20px;">
+                            <button type="button" class="roster-tab-btn active" id="tabInstPending" role="tab" aria-selected="true" data-inst-tab="pending">
+                                ⏳ Chờ Phê Duyệt Trao Quà (<span id="instBadgePendingTab">0</span>)
+                            </button>
+                            <button type="button" class="roster-tab-btn" id="tabInstStreaks" role="tab" aria-selected="false" data-inst-tab="streaks">
+                                🔥 Bảng Xếp Hạng Chuỗi Ngày
+                            </button>
+                            <button type="button" class="roster-tab-btn" id="tabInstSpeed" role="tab" aria-selected="false" data-inst-tab="speed">
+                                ⚡ Bảng Vàng Tốc Độ 100đ
+                            </button>
+                            <button type="button" class="roster-tab-btn" id="tabInstFulfilled" role="tab" aria-selected="false" data-inst-tab="fulfilled">
+                                📜 Lịch Sử Đã Trao Quà
+                            </button>
+                        </div>
+
+                        <!-- Tab Content Panels -->
+                        <div id="instGamificationContent">
+                            <!-- Panel 1: Pending Redemptions -->
+                            <div id="instPanelPending" class="inst-gamification-panel" style="display: block;">
+                                <div style="overflow-x: auto; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;">
+                                    <table style="width: 100%; border-collapse: collapse; font-size: 13.5px;" id="instPendingTable">
+                                        <thead>
+                                            <tr style="background: #f8fafc; border-bottom: 1.5px solid #e2e8f0; text-align: left; color: #475569;">
+                                                <th style="padding: 12px 16px;">Học viên</th>
+                                                <th style="padding: 12px 16px;">Lớp</th>
+                                                <th style="padding: 12px 16px;">Phần quà yêu cầu</th>
+                                                <th style="padding: 12px 16px;">NetCoins</th>
+                                                <th style="padding: 12px 16px;">Thời gian đăng ký</th>
+                                                <th style="padding: 12px 16px;">Lời nhắn từ SV</th>
+                                                <th style="padding: 12px 16px; text-align: right;">Hành động duyệt</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="instPendingTableBody">
+                                            <!-- Dynamically populated -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Panel 2: Streaks Leaderboard -->
+                            <div id="instPanelStreaks" class="inst-gamification-panel" style="display: none;">
+                                <div style="overflow-x: auto; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;">
+                                    <table style="width: 100%; border-collapse: collapse; font-size: 13.5px;">
+                                        <thead>
+                                            <tr style="background: #f8fafc; border-bottom: 1.5px solid #e2e8f0; text-align: left; color: #475569;">
+                                                <th style="padding: 12px 16px;">Hạng</th>
+                                                <th style="padding: 12px 16px;">Học viên</th>
+                                                <th style="padding: 12px 16px;">Lớp</th>
+                                                <th style="padding: 12px 16px;">Chuỗi hiện tại</th>
+                                                <th style="padding: 12px 16px;">Kỷ lục dài nhất</th>
+                                                <th style="padding: 12px 16px;">Số dư NetCoins</th>
+                                                <th style="padding: 12px 16px;">Hoạt động gần nhất</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="instStreaksTableBody">
+                                            <!-- Dynamically populated -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Panel 3: Speedrun Champions -->
+                            <div id="instPanelSpeed" class="inst-gamification-panel" style="display: none;">
+                                <div style="overflow-x: auto; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;">
+                                    <table style="width: 100%; border-collapse: collapse; font-size: 13.5px;">
+                                        <thead>
+                                            <tr style="background: #f8fafc; border-bottom: 1.5px solid #e2e8f0; text-align: left; color: #475569;">
+                                                <th style="padding: 12px 16px;">Hạng</th>
+                                                <th style="padding: 12px 16px;">Bài thực hành</th>
+                                                <th style="padding: 12px 16px;">Thiết bị</th>
+                                                <th style="padding: 12px 16px;">Kỷ lục gia</th>
+                                                <th style="padding: 12px 16px;">Lớp</th>
+                                                <th style="padding: 12px 16px;">Thời gian (100đ)</th>
+                                                <th style="padding: 12px 16px;">Ngày xác lập</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="instSpeedTableBody">
+                                            <!-- Dynamically populated -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Panel 4: Fulfilled Redemptions History -->
+                            <div id="instPanelFulfilled" class="inst-gamification-panel" style="display: none;">
+                                <div style="overflow-x: auto; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;">
+                                    <table style="width: 100%; border-collapse: collapse; font-size: 13.5px;">
+                                        <thead>
+                                            <tr style="background: #f8fafc; border-bottom: 1.5px solid #e2e8f0; text-align: left; color: #475569;">
+                                                <th style="padding: 12px 16px;">Học viên</th>
+                                                <th style="padding: 12px 16px;">Lớp</th>
+                                                <th style="padding: 12px 16px;">Phần quà</th>
+                                                <th style="padding: 12px 16px;">NetCoins</th>
+                                                <th style="padding: 12px 16px;">Ngày trao quà</th>
+                                                <th style="padding: 12px 16px;">Trạng thái</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="instFulfilledTableBody">
+                                            <!-- Dynamically populated -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>

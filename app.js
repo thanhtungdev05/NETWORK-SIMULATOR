@@ -882,6 +882,24 @@
               btnDashboard.href = '/dashboard/';
             }
           }
+
+          // Fetch gamification status for topbar streak badge
+          fetch('/api/index.php/gamification/status', { credentials: 'include' })
+            .then(function (res) { return res.ok ? res.json() : null; })
+            .then(function (res) {
+              if (res && res.success && res.data) {
+                const btnStreak = document.getElementById('btn-topbar-streak');
+                const streakText = document.getElementById('topbar-streak-text');
+                const coinsText = document.getElementById('topbar-coins-text');
+                if (btnStreak && streakText && coinsText) {
+                  btnStreak.style.display = 'inline-flex';
+                  streakText.textContent = (res.data.current_streak || 0) + ' ngày';
+                  coinsText.textContent = Number(res.data.total_points || 0).toLocaleString();
+                }
+              }
+            })
+            .catch(function () {});
+
           loadLearningCatalog().catch(function (error) {
             console.warn('[Catalog] Không thể tải danh sách bài luyện tập, chuyển sang chế độ offline:', error);
             _catalogDeviceIds = null;

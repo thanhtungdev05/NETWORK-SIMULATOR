@@ -1107,14 +1107,14 @@ function build_duolingo_nudge_email_template(
 
               <!-- Primary CTA Button -->
               <div style="text-align: center; margin: 30px 0 24px 0;">
-                <a href="{$magicLinkUrl}" style="display: inline-block; background: linear-gradient(135deg, {$cfg['theme_color']} 0%, #15803d 100%); color: #ffffff; font-size: 15px; font-weight: 800; text-decoration: none; padding: 18px 36px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 4px solid rgba(0, 0, 0, 0.25);">
+                <a href="{$magicLinkUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background: linear-gradient(135deg, {$cfg['theme_color']} 0%, #15803d 100%); color: #ffffff; font-size: 15px; font-weight: 800; text-decoration: none; padding: 18px 36px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 4px solid rgba(0, 0, 0, 0.25);">
                   {$cfg['button_text']}
                 </a>
               </div>
 
               <div style="background-color: #f8fafc; border-radius: 10px; padding: 12px 16px; text-align: center; font-size: 12px; color: #64748b;">
                 🔗 Không bấm được nút trên? Sao chép liên kết này vào trình duyệt:<br>
-                <a href="{$magicLinkUrl}" style="color: {$cfg['theme_color']}; font-weight: 600; word-break: break-all;">{$magicLinkUrl}</a>
+                <a href="{$magicLinkUrl}" target="_blank" rel="noopener noreferrer" style="color: {$cfg['theme_color']}; font-weight: 600; word-break: break-all;">{$magicLinkUrl}</a>
               </div>
 
             </td>

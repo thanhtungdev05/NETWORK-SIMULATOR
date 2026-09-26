@@ -3877,7 +3877,8 @@ function handle_gamification(array $segments, string $method): void
             }
             $day = min(max((int)($_GET['day'] ?? 1), 1), 5);
             require_once __DIR__ . '/lib/mailer.php';
-            $previewBase = app_origin(env_value('APP_BASE_URL', '')) ?: 'http://127.0.0.1:8080';
+            require_once __DIR__ . '/lib/runtime.php';
+            $previewBase = resolve_app_base_url();
             $previewHtml = build_duolingo_nudge_email_template(
                 $day,
                 'Nguyễn Văn A',
@@ -3936,6 +3937,57 @@ function handle_gamification(array $segments, string $method): void
             $userId = current_user_id();
             $claimRes = gamification_claim_nudge_token($pdo, $token, $userId);
             respond(['ok' => $claimRes['success'] ?? false, 'success' => $claimRes['success'] ?? false, 'data' => $claimRes]);
+        }
+
+        // 8.5 Automated Campaigns: List & Run Check (GET) or Create (POST)
+        if ($sub === 'auto-schedule') {
+            if ($method === 'GET') {
+                require_instructor_or_admin();
+                $runRes = gamification_run_automated_nudge_campaigns($pdo);
+                $list = gamification_get_auto_campaigns($pdo);
+                respond(['ok' => true, 'success' => true, 'data' => $list, 'run_check' => $runRes]);
+            } elseif ($method === 'POST') {
+                $actor = require_instructor_or_admin();
+                $body = json_body();
+                try {
+                    $created = gamification_create_auto_campaign($pdo, $body, (string)($actor['user_id'] ?? ''));
+                    respond(['ok' => true, 'success' => true, 'data' => $created]);
+                } catch (Throwable $e) {
+                    fail(400, 'create-auto-failed', $e->getMessage());
+                }
+            } else {
+                fail(405, 'method-not-allowed', 'Auto schedule supports GET and POST only.');
+            }
+        }
+
+        // 8.6 Toggle Automated Campaign (Pause / Resume / Cancel)
+        if ($sub === 'auto-toggle') {
+            if ($method !== 'POST') {
+                fail(405, 'method-not-allowed', 'Auto toggle only supports POST.');
+            }
+            require_instructor_or_admin();
+            $body = json_body();
+            $id = trim((string)($body['campaign_id'] ?? ''));
+            $act = trim((string)($body['action'] ?? 'pause'));
+            if ($id === '') {
+                fail(400, 'bad-request', 'Thiếu campaign_id.');
+            }
+            try {
+                $res = gamification_toggle_auto_campaign($pdo, $id, $act);
+                respond(['ok' => true, 'success' => true, 'data' => $res]);
+            } catch (Throwable $e) {
+                fail(400, 'toggle-failed', $e->getMessage());
+            }
+        }
+
+        // 8.7 Background Cron / Worker Auto-Run Trigger
+        if ($sub === 'auto-run') {
+            try {
+                $res = gamification_run_automated_nudge_campaigns($pdo);
+                respond(['ok' => true, 'success' => true, 'data' => $res]);
+            } catch (Throwable $e) {
+                fail(500, 'auto-run-failed', $e->getMessage());
+            }
         }
 
         fail(404, 'not-found', 'Nudge sub-endpoint not found.');

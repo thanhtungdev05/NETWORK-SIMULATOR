@@ -8044,6 +8044,91 @@ function initInstructorGamificationEvents() {
 }
 
 function initInstructorNudgeCampaignControls() {
+    // Mode Switcher: Auto-Pilot vs Manual
+    const btnModeAuto = document.getElementById('btnNudgeModeAuto');
+    const btnModeManual = document.getElementById('btnNudgeModeManual');
+    const autoSection = document.getElementById('nudgeAutoSection');
+    const manualSection = document.getElementById('nudgeManualSection');
+
+    function switchNudgeMode(mode) {
+        if (mode === 'auto') {
+            if (autoSection) autoSection.style.display = 'block';
+            if (manualSection) manualSection.style.display = 'none';
+            if (btnModeAuto) {
+                btnModeAuto.style.background = '#2563eb';
+                btnModeAuto.style.borderColor = '#2563eb';
+                btnModeAuto.style.color = '#ffffff';
+                btnModeAuto.style.boxShadow = '0 2px 6px rgba(37,99,235,0.25)';
+            }
+            if (btnModeManual) {
+                btnModeManual.style.background = '#ffffff';
+                btnModeManual.style.borderColor = '#cbd5e1';
+                btnModeManual.style.color = '#475569';
+                btnModeManual.style.boxShadow = 'none';
+            }
+            loadInstructorAutoCampaigns();
+        } else {
+            if (autoSection) autoSection.style.display = 'none';
+            if (manualSection) manualSection.style.display = 'block';
+            if (btnModeManual) {
+                btnModeManual.style.background = '#2563eb';
+                btnModeManual.style.borderColor = '#2563eb';
+                btnModeManual.style.color = '#ffffff';
+                btnModeManual.style.boxShadow = '0 2px 6px rgba(37,99,235,0.25)';
+            }
+            if (btnModeAuto) {
+                btnModeAuto.style.background = '#ffffff';
+                btnModeAuto.style.borderColor = '#cbd5e1';
+                btnModeAuto.style.color = '#475569';
+                btnModeAuto.style.boxShadow = 'none';
+            }
+            selectNudgeCampaignDay(_currentSelectedNudgeDay || 1);
+        }
+    }
+
+    if (btnModeAuto) btnModeAuto.addEventListener('click', () => switchNudgeMode('auto'));
+    if (btnModeManual) btnModeManual.addEventListener('click', () => switchNudgeMode('manual'));
+
+    // Auto-pilot form events
+    const autoScopeSelect = document.getElementById('nudgeAutoScope');
+    const autoClassWrap = document.getElementById('nudgeAutoClassWrap');
+    const autoEmailWrap = document.getElementById('nudgeAutoEmailWrap');
+    if (autoScopeSelect) {
+        autoScopeSelect.addEventListener('change', () => {
+            const val = autoScopeSelect.value;
+            if (autoClassWrap) autoClassWrap.style.display = val === 'class' ? 'block' : 'none';
+            if (autoEmailWrap) autoEmailWrap.style.display = val === 'single' ? 'block' : 'none';
+        });
+    }
+
+    const btnStartAuto = document.getElementById('btnStartAutoCampaign');
+    if (btnStartAuto) {
+        btnStartAuto.addEventListener('click', handleStartAutoCampaign);
+    }
+
+    const btnRefreshAuto = document.getElementById('btnRefreshAutoCampaigns');
+    if (btnRefreshAuto) {
+        btnRefreshAuto.addEventListener('click', () => {
+            loadInstructorAutoCampaigns();
+            showToast('Đã làm mới danh sách chiến dịch tự động.', 'info');
+        });
+    }
+
+    // Auto campaigns table actions delegation
+    const autoTbody = document.getElementById('nudgeAutoCampaignsTableBody');
+    if (autoTbody) {
+        autoTbody.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-auto-action]');
+            if (!btn) return;
+            const action = btn.dataset.autoAction;
+            const cid = btn.dataset.campaignId;
+            if (cid && action) {
+                handleToggleAutoCampaign(cid, action);
+            }
+        });
+    }
+
+    // Manual Day selector & controls
     const dayButtons = document.querySelectorAll('#nudgeDaySelector .nudge-day-card');
     dayButtons.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -8109,6 +8194,202 @@ function selectNudgeCampaignDay(day) {
     }
 }
 
+async function loadInstructorAutoCampaigns() {
+    const tbody = document.getElementById('nudgeAutoCampaignsTableBody');
+    if (!tbody) return;
+    try {
+        const res = await fetch(`${API_BASE_URL}/gamification/nudge/auto-schedule`, { credentials: 'include' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        const list = json.data || [];
+        if (!Array.isArray(list) || list.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 24px; color: #94a3b8;">Chưa có chiến dịch tự động nào được thiết lập. Hãy tạo chiến dịch đầu tiên ở phía trên!</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = list.map(c => {
+            const currentDay = parseInt(c.current_day || 0, 10);
+            const pct = Math.min(Math.round((currentDay / 5) * 100), 100);
+            const statusMap = {
+                'active': { label: '🟢 Đang chạy', bg: '#dcfce7', color: '#166534', border: '#86efac' },
+                'paused': { label: '⏸️ Tạm dừng', bg: '#fef3c7', color: '#92400e', border: '#fcd34d' },
+                'completed': { label: '✅ Hoàn thành 5/5', bg: '#dbeafe', color: '#1e40af', border: '#93c5fd' },
+                'cancelled': { label: '🛑 Đã hủy', bg: '#f1f5f9', color: '#64748b', border: '#cbd5e1' }
+            };
+            const st = statusMap[c.status] || { label: c.status, bg: '#f1f5f9', color: '#64748b', border: '#cbd5e1' };
+
+            const targetDesc = c.target_email 
+                ? `KTV ${escapeHTML(c.target_email)}`
+                : (c.class_code ? `Lớp ${escapeHTML(c.class_code)}` : 'Toàn bộ KTV');
+
+            const sendHourStr = `${String(c.send_hour ?? 8).padStart(2, '0')}:00`;
+            const startDateStr = c.start_date ? new Date(c.start_date).toLocaleDateString('vi-VN') : '—';
+            const lastSentStr = c.last_sent_at ? new Date(c.last_sent_at).toLocaleString('vi-VN') : (currentDay === 0 ? 'Chờ đợt gửi đầu' : '—');
+
+            // Action buttons
+            let actionBtns = '—';
+            if (c.status === 'active') {
+                actionBtns = `
+                    <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                        <button type="button" class="btn-action-small" data-auto-action="pause" data-campaign-id="${escapeHTML(c.campaign_id)}" style="padding: 4px 10px; font-size: 11.5px; border-radius: 6px; border: 1px solid #f59e0b; background: #fffbeb; color: #b45309; cursor: pointer; font-weight: 600;">
+                            ⏸️ Dừng
+                        </button>
+                        <button type="button" class="btn-action-small" data-auto-action="cancel" data-campaign-id="${escapeHTML(c.campaign_id)}" style="padding: 4px 10px; font-size: 11.5px; border-radius: 6px; border: 1px solid #f87171; background: #fef2f2; color: #b91c1c; cursor: pointer; font-weight: 600;">
+                            🛑 Hủy
+                        </button>
+                    </div>
+                `;
+            } else if (c.status === 'paused') {
+                actionBtns = `
+                    <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                        <button type="button" class="btn-action-small" data-auto-action="resume" data-campaign-id="${escapeHTML(c.campaign_id)}" style="padding: 4px 10px; font-size: 11.5px; border-radius: 6px; border: 1px solid #22c55e; background: #f0fdf4; color: #15803d; cursor: pointer; font-weight: 600;">
+                            ▶️ Tiếp tục
+                        </button>
+                        <button type="button" class="btn-action-small" data-auto-action="cancel" data-campaign-id="${escapeHTML(c.campaign_id)}" style="padding: 4px 10px; font-size: 11.5px; border-radius: 6px; border: 1px solid #f87171; background: #fef2f2; color: #b91c1c; cursor: pointer; font-weight: 600;">
+                            🛑 Hủy
+                        </button>
+                    </div>
+                `;
+            }
+
+            return `
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                    <td style="padding: 12px; font-weight: 600; color: #0f172a;">
+                        <div>${escapeHTML(c.title || 'Chiến dịch Duolingo 5 Ngày')}</div>
+                        <div style="font-size: 11.5px; color: #64748b; font-weight: 500; margin-top: 2px;">Mục tiêu: <span style="color: #2563eb; font-weight: 600;">${targetDesc}</span></div>
+                    </td>
+                    <td style="padding: 12px; color: #475569; font-size: 12.5px;">
+                        <div>Bắt đầu: <b>${startDateStr}</b></div>
+                        <div style="font-size: 11.5px; color: #64748b; margin-top: 2px;">Giờ gửi: <b>${sendHourStr}</b> hàng ngày</div>
+                    </td>
+                    <td style="padding: 12px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">
+                            <span>Ngày ${currentDay}/5</span>
+                            <span style="color: ${pct === 100 ? '#15803d' : '#2563eb'};">${pct}%</span>
+                        </div>
+                        <div style="width: 100%; height: 7px; background: #e2e8f0; border-radius: 999px; overflow: hidden;">
+                            <div style="width: ${pct}%; height: 100%; background: ${pct === 100 ? '#16a34a' : 'linear-gradient(90deg, #3b82f6, #1d4ed8)'}; transition: width 0.3s;"></div>
+                        </div>
+                        <div style="font-size: 11px; color: #64748b; margin-top: 3px;">Đã gửi: <b>${c.total_sent_count || 0}</b> lượt email</div>
+                    </td>
+                    <td style="padding: 12px; color: #64748b; font-size: 12px;">${lastSentStr}</td>
+                    <td style="padding: 12px;">
+                        <span style="display: inline-block; padding: 3px 9px; font-size: 11.5px; font-weight: 700; border-radius: 999px; background: ${st.bg}; color: ${st.color}; border: 1px solid ${st.border};">
+                            ${st.label}
+                        </span>
+                    </td>
+                    <td style="padding: 12px; text-align: right;">${actionBtns}</td>
+                </tr>
+            `;
+        }).join('');
+    } catch (err) {
+        console.error('Error loading auto campaigns:', err);
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px; color: #ef4444;">Lỗi khi tải danh sách chiến dịch: ${escapeHTML(err.message)}</td></tr>`;
+    }
+}
+
+async function handleStartAutoCampaign() {
+    const scope = document.getElementById('nudgeAutoScope')?.value || 'all';
+    const classId = document.getElementById('nudgeAutoClassId')?.value || '';
+    const email = document.getElementById('nudgeAutoEmail')?.value?.trim() || '';
+    const startDate = document.getElementById('nudgeAutoStartDate')?.value || '';
+    const sendHour = parseInt(document.getElementById('nudgeAutoSendHour')?.value || '8', 10);
+    const triggerNow = !!document.getElementById('nudgeAutoTriggerNow')?.checked;
+
+    if (scope === 'class' && !classId) {
+        showToast('Vui lòng chọn lớp đào tạo KTV cần thiết lập tự động.', 'warning');
+        return;
+    }
+    if (scope === 'single' && !email) {
+        showToast('Vui lòng nhập địa chỉ email của học viên.', 'warning');
+        return;
+    }
+    if (!startDate) {
+        showToast('Vui lòng chọn ngày bắt đầu chiến dịch.', 'warning');
+        return;
+    }
+
+    const scopeDesc = scope === 'all'
+        ? 'toàn bộ Kỹ thuật viên (KTV)'
+        : (scope === 'class' ? 'các học viên trong lớp đã chọn' : `học viên ${email}`);
+
+    const confirmMsg = `Xác nhận kích hoạt Chiến Dịch Tự Động 5 Ngày tới ${scopeDesc}?\n- Bắt đầu từ: ${startDate}\n- Giờ gửi hàng ngày: ${String(sendHour).padStart(2, '0')}:00\n- ${triggerNow ? 'Gửi ngay Email Ngày 1 hôm nay' : 'Đợt gửi đầu tiên bắt đầu vào ngày ' + startDate}\n\nSau khi kích hoạt, hệ thống sẽ tự động gửi email nhắc nhở từng ngày kèm Rương Xu phong cách Duolingo!`;
+    
+    if (!window.confirm(confirmMsg)) return;
+
+    const btn = document.getElementById('btnStartAutoCampaign');
+    const origText = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳ Đang khởi tạo...</span>';
+    }
+
+    try {
+        const payload = {
+            send_hour: sendHour,
+            start_date: startDate,
+            trigger_now: triggerNow
+        };
+        if (scope === 'class' && classId) payload.class_id = classId;
+        if (scope === 'single' && email) payload.email = email;
+
+        const response = await fetch(`${API_BASE_URL}/gamification/nudge/auto-schedule`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const json = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(json.error?.message || `HTTP ${response.status}`);
+        }
+
+        showToast('🎉 Đã kích hoạt chiến dịch tự động 5 ngày thành công! Hệ thống sẽ tự động gửi theo lịch trình.', 'success');
+        await loadInstructorAutoCampaigns();
+        await loadInstructorNudgeData();
+    } catch (err) {
+        console.error('Error starting auto campaign:', err);
+        showToast(`Không thể khởi tạo chiến dịch: ${err.message}`, 'error');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = origText;
+        }
+    }
+}
+
+async function handleToggleAutoCampaign(campaignId, action) {
+    if (!campaignId || !action) return;
+    const actionNames = {
+        'pause': 'tạm dừng',
+        'resume': 'tiếp tục kích hoạt lại',
+        'cancel': 'hủy bỏ'
+    };
+    const name = actionNames[action] || action;
+    if (!window.confirm(`Bạn có chắc chắn muốn ${name} chiến dịch tự động này không?`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/gamification/nudge/auto-toggle`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ campaign_id: campaignId, action: action })
+        });
+        const json = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(json.error?.message || `HTTP ${response.status}`);
+        }
+        showToast(`Đã ${name} chiến dịch thành công.`, 'success');
+        await loadInstructorAutoCampaigns();
+    } catch (err) {
+        console.error('Error toggling auto campaign:', err);
+        showToast(`Thao tác thất bại: ${err.message}`, 'error');
+    }
+}
+
 async function loadInstructorNudgeData() {
     try {
         // Cập nhật iframe preview ban đầu nếu đang trống
@@ -8117,8 +8398,16 @@ async function loadInstructorNudgeData() {
             selectNudgeCampaignDay(_currentSelectedNudgeDay || 1);
         }
 
+        // Thiết lập ngày bắt đầu mặc định cho form tạo chiến dịch tự động nếu đang trống
+        const startDateInput = document.getElementById('nudgeAutoStartDate');
+        if (startDateInput && !startDateInput.value) {
+            const today = new Date().toISOString().split('T')[0];
+            startDateInput.value = today;
+        }
+
         // Tải danh sách lớp vào dropdown nếu chưa có
         const classSelect = document.getElementById('nudgeClassId');
+        const autoClassSelect = document.getElementById('nudgeAutoClassId');
         if (classSelect && classSelect.options.length <= 1) {
             try {
                 const clsRes = await fetch(`${API_BASE_URL}/classes`, { credentials: 'include' });
@@ -8126,15 +8415,20 @@ async function loadInstructorNudgeData() {
                     const clsJson = await clsRes.json();
                     const list = clsJson.data || clsJson.classes || (Array.isArray(clsJson) ? clsJson : []);
                     if (Array.isArray(list) && list.length > 0) {
-                        classSelect.innerHTML = '<option value="">-- Chọn lớp đào tạo KTV --</option>' +
+                        const opts = '<option value="">-- Chọn lớp đào tạo KTV --</option>' +
                             list.map(c => `<option value="${escapeHTML(c.class_id || c.class_code)}">${escapeHTML(c.class_name || c.class_code)} (${escapeHTML(c.class_code)})</option>`).join('');
+                        classSelect.innerHTML = opts;
+                        if (autoClassSelect) autoClassSelect.innerHTML = opts;
                     } else {
                         classSelect.innerHTML = '<option value="">Không có lớp nào</option>';
+                        if (autoClassSelect) autoClassSelect.innerHTML = '<option value="">Không có lớp nào</option>';
                     }
                 }
             } catch (err) {
                 console.warn('Cannot load classes for nudge:', err);
             }
+        } else if (autoClassSelect && classSelect && autoClassSelect.options.length <= 1) {
+            autoClassSelect.innerHTML = classSelect.innerHTML;
         }
 
         // Tải số liệu thống kê chiến dịch
@@ -8207,6 +8501,9 @@ async function loadInstructorNudgeData() {
                 }).join('');
             }
         }
+
+        // Tải danh sách chiến dịch tự động
+        await loadInstructorAutoCampaigns();
     } catch (err) {
         console.error('Error loading instructor nudge data:', err);
     }

@@ -767,12 +767,8 @@ function gamification_send_duo_nudge(
         ];
     }
 
-    $baseUrl = env_value('APP_BASE_URL', '');
-    if ($baseUrl === '') {
-        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-        $host = $_SERVER['HTTP_HOST'] ?? '127.0.0.1:8080';
-        $baseUrl = "{$scheme}://{$host}";
-    }
+    require_once __DIR__ . '/runtime.php';
+    $baseUrl = resolve_app_base_url();
 
     $sentCount = 0;
     $failedCount = 0;
@@ -882,6 +878,221 @@ function gamification_get_nudge_overview(PDO $pdo): array
         ],
         'by_day' => $byDay,
         'recent_logs' => $recentLogs,
+    ];
+}
+
+/**
+ * Tạo chiến dịch tự động gửi 5 ngày Duolingo
+ */
+function gamification_create_auto_campaign(PDO $pdo, array $params, ?string $actorUserId = null): array
+{
+    $classId = isset($params['class_id']) && trim((string)$params['class_id']) !== '' ? trim((string)$params['class_id']) : null;
+    $targetEmail = isset($params['email']) && trim((string)$params['email']) !== '' ? strtolower(trim((string)$params['email'])) : null;
+    $sendHour = min(max((int)($params['send_hour'] ?? 8), 0), 23);
+    $startDate = isset($params['start_date']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $params['start_date']) ? $params['start_date'] : (new DateTimeImmutable('now', new DateTimeZone('Asia/Ho_Chi_Minh')))->format('Y-m-d');
+    $triggerDay1Now = !empty($params['trigger_now']);
+
+    // Xác định class_code nếu có
+    $classCode = null;
+    $targetDesc = 'Toàn bộ Kỹ thuật viên (KTV)';
+    if ($targetEmail) {
+        $targetDesc = "KTV {$targetEmail}";
+    } elseif ($classId) {
+        $cStmt = $pdo->prepare('SELECT class_code, class_name FROM training_classes WHERE class_id = :cid OR class_code = :cid LIMIT 1');
+        $cStmt->execute([':cid' => $classId]);
+        $cRow = $cStmt->fetch(PDO::FETCH_ASSOC);
+        if ($cRow) {
+            $classCode = $cRow['class_code'];
+            $targetDesc = "Lớp {$cRow['class_name']} ({$classCode})";
+        }
+    }
+
+    $title = "Chiến dịch Duolingo 5 Ngày Tự Động • {$targetDesc}";
+
+    $stmt = $pdo->prepare('
+        INSERT INTO nudge_automated_campaigns (
+            title, class_id, class_code, target_email, start_date, send_hour,
+            current_day, status, last_sent_day, total_sent_count, created_by, created_at, updated_at
+        ) VALUES (
+            :title, :cid, :code, :email, :start, :hour,
+            0, \'active\', 0, 0, :actor, NOW(), NOW()
+        )
+        RETURNING campaign_id, title, start_date, send_hour, status, created_at
+    ');
+    $stmt->execute([
+        ':title' => $title,
+        ':cid' => $classId && preg_match('/^[0-9a-f-]{36}$/i', $classId) ? $classId : null,
+        ':code' => $classCode,
+        ':email' => $targetEmail,
+        ':start' => $startDate,
+        ':hour' => $sendHour,
+        ':actor' => $actorUserId && preg_match('/^[0-9a-f-]{36}$/i', $actorUserId) ? $actorUserId : null,
+    ]);
+    $campaign = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // Nếu người dùng chọn "Gửi ngay Ngày 1 khi kích hoạt":
+    $day1Dispatched = null;
+    if ($triggerDay1Now) {
+        $day1Dispatched = gamification_send_duo_nudge($pdo, 1, $classId, $targetEmail, $actorUserId);
+        $sentCount = (int)($day1Dispatched['sent_count'] ?? 0);
+        $upd = $pdo->prepare('
+            UPDATE nudge_automated_campaigns
+            SET current_day = 1, last_sent_day = 1, last_sent_at = NOW(), total_sent_count = :cnt, updated_at = NOW()
+            WHERE campaign_id = :id
+        ');
+        $upd->execute([':cnt' => $sentCount, ':id' => $campaign['campaign_id']]);
+    }
+
+    return [
+        'success' => true,
+        'campaign' => $campaign,
+        'day1_sent_now' => $triggerDay1Now,
+        'day1_details' => $day1Dispatched,
+        'message' => "Đã kích hoạt thành công chiến dịch tự động 5 ngày! " . ($triggerDay1Now ? "Hệ thống đã phát động Ngày 1/5 ngay lập tức. Các ngày tiếp theo sẽ tự động gửi vào lúc {$sendHour}:00 hàng ngày." : "Hệ thống sẽ tự động phát động gửi vào lúc {$sendHour}:00 từ ngày {$startDate}."),
+    ];
+}
+
+/**
+ * Lấy danh sách các chiến dịch tự động
+ */
+function gamification_get_auto_campaigns(PDO $pdo): array
+{
+    $stmt = $pdo->query('
+        SELECT c.*, u.display_name AS created_by_name,
+               COALESCE(tc.class_name, c.class_code, \'Lớp chung\') AS class_name
+        FROM nudge_automated_campaigns c
+        LEFT JOIN users u ON u.user_id = c.created_by
+        LEFT JOIN training_classes tc ON tc.class_id = c.class_id
+        ORDER BY c.created_at DESC
+        LIMIT 20
+    ');
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+/**
+ * Tạm dừng / Tiếp tục / Hủy chiến dịch tự động
+ */
+function gamification_toggle_auto_campaign(PDO $pdo, string $campaignId, string $action): array
+{
+    $validActions = ['pause' => 'paused', 'resume' => 'active', 'cancel' => 'cancelled'];
+    if (!isset($validActions[$action])) {
+        throw new InvalidArgumentException("Hành động {$action} không hợp lệ.");
+    }
+    $newStatus = $validActions[$action];
+
+    $stmt = $pdo->prepare('
+        UPDATE nudge_automated_campaigns
+        SET status = :st, updated_at = NOW()
+        WHERE campaign_id = :id
+        RETURNING campaign_id, title, status
+    ');
+    $stmt->execute([':st' => $newStatus, ':id' => $campaignId]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$row) {
+        throw new RuntimeException('Không tìm thấy chiến dịch tự động.');
+    }
+
+    $msgMap = [
+        'paused' => 'Đã tạm dừng chiến dịch tự động.',
+        'active' => 'Đã tiếp tục chiến dịch tự động.',
+        'cancelled' => 'Đã hủy chiến dịch tự động.'
+    ];
+
+    return [
+        'success' => true,
+        'status' => $newStatus,
+        'message' => $msgMap[$newStatus] ?? 'Thành công.',
+    ];
+}
+
+/**
+ * Worker quét và chạy các chiến dịch tự động đến hạn
+ */
+function gamification_run_automated_nudge_campaigns(PDO $pdo): array
+{
+    $tz = new DateTimeZone('Asia/Ho_Chi_Minh');
+    $now = new DateTimeImmutable('now', $tz);
+    $todayStr = $now->format('Y-m-d');
+    $currentHour = (int)$now->format('G');
+
+    // Lấy các chiến dịch active
+    $stmt = $pdo->query('
+        SELECT * FROM nudge_automated_campaigns
+        WHERE status = \'active\'
+    ');
+    $campaigns = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $dispatched = [];
+    foreach ($campaigns as $c) {
+        $startDate = new DateTimeImmutable($c['start_date'], $tz);
+        $diff = $startDate->diff(new DateTimeImmutable($todayStr, $tz));
+        $daysPassed = (int)$diff->format('%r%a');
+
+        // Chưa tới ngày bắt đầu
+        if ($daysPassed < 0) {
+            continue;
+        }
+
+        $targetDay = $daysPassed + 1; // Ngày 1, 2, 3, 4, 5
+
+        // Nếu đã quá 5 ngày -> đánh dấu hoàn tất
+        if ($targetDay > 5) {
+            $upd = $pdo->prepare('UPDATE nudge_automated_campaigns SET status = \'completed\', updated_at = NOW() WHERE campaign_id = :id');
+            $upd->execute([':id' => $c['campaign_id']]);
+            continue;
+        }
+
+        $lastSentDay = (int)($c['last_sent_day'] ?? 0);
+        $sendHour = (int)($c['send_hour'] ?? 8);
+
+        // Nếu ngày này chưa gửi VÀ (đã tới hoặc qua giờ gửi quy định)
+        if ($lastSentDay < $targetDay && $currentHour >= $sendHour) {
+            $sendRes = gamification_send_duo_nudge(
+                $pdo,
+                $targetDay,
+                $c['class_id'],
+                $c['target_email'],
+                $c['created_by']
+            );
+
+            $newStatus = ($targetDay >= 5) ? 'completed' : 'active';
+            $sentCnt = (int)($sendRes['sent_count'] ?? 0);
+
+            $upd = $pdo->prepare('
+                UPDATE nudge_automated_campaigns
+                SET current_day = :cday,
+                    last_sent_day = :sday,
+                    last_sent_at = NOW(),
+                    total_sent_count = total_sent_count + :cnt,
+                    status = :st,
+                    updated_at = NOW()
+                WHERE campaign_id = :id
+            ');
+            $upd->execute([
+                ':cday' => $targetDay,
+                ':sday' => $targetDay,
+                ':cnt' => $sentCnt,
+                ':st' => $newStatus,
+                ':id' => $c['campaign_id']
+            ]);
+
+            $dispatched[] = [
+                'campaign_id' => $c['campaign_id'],
+                'title' => $c['title'],
+                'day_sent' => $targetDay,
+                'sent_count' => $sentCnt,
+                'status' => $newStatus
+            ];
+        }
+    }
+
+    return [
+        'success' => true,
+        'checked_at' => $now->format('Y-m-d H:i:s'),
+        'total_active_campaigns' => count($campaigns),
+        'dispatched_count' => count($dispatched),
+        'dispatched' => $dispatched,
     ];
 }
 

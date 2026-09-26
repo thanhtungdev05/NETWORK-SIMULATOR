@@ -80,10 +80,32 @@ function get_network_lan_ip(): ?string
  */
 function resolve_app_base_url(): string
 {
-    // 1. Nếu request đến qua Host thực tế (khác localhost / 127.0.0.1)
     $httpHost = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'] ?? null;
     $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https' ? 'https' : 'http';
 
+    $lanIp = get_network_lan_ip();
+    $envBase = env_value('APP_BASE_URL', '');
+
+    // 1. Kiểm tra APP_BASE_URL trong môi trường
+    if ($envBase !== '') {
+        $parsed = parse_url($envBase);
+        $envHost = strtolower($parsed['host'] ?? '');
+        $envPort = !empty($parsed['port']) ? (int)$parsed['port'] : 8080;
+        $envScheme = !empty($parsed['scheme']) ? $parsed['scheme'] : 'http';
+
+        // Nếu envHost là IP LAN (192.168.x.x, 10.x.x.x) nhưng khác IP LAN thực tế hiện tại
+        if ($lanIp && (str_starts_with($envHost, '192.168.') || str_starts_with($envHost, '10.')) && $envHost !== $lanIp) {
+            // Tự động thích ứng IP LAN hiện tại để link không bị timeout khi router đổi DHCP
+            return "{$envScheme}://{$lanIp}:{$envPort}";
+        }
+
+        // Nếu là domain public hoặc IP hợp lệ
+        if ($envHost !== '' && $envHost !== 'localhost' && $envHost !== '127.0.0.1') {
+            return rtrim($envBase, '/');
+        }
+    }
+
+    // 2. Nếu request đến qua Host thực tế (domain hoặc LAN IP)
     if ($httpHost) {
         $hostOnly = strtolower(explode(':', $httpHost)[0]);
         if ($hostOnly !== 'localhost' && $hostOnly !== '127.0.0.1' && $hostOnly !== '::1') {
@@ -91,29 +113,16 @@ function resolve_app_base_url(): string
         }
     }
 
-    // 2. Kiểm tra APP_BASE_URL trong môi trường
-    $envBase = env_value('APP_BASE_URL', '');
-    if ($envBase !== '') {
-        $parsed = parse_url($envBase);
-        $envHost = strtolower($parsed['host'] ?? '');
-        if ($envHost !== '' && $envHost !== 'localhost' && $envHost !== '127.0.0.1') {
-            return rtrim($envBase, '/');
-        }
-    }
-
-    // 3. Nếu cấu hình là localhost, tự động thay thế bằng LAN IP thực tế để điện thoại truy cập được
-    $lanIp = get_network_lan_ip();
+    // 3. Ưu tiên LAN IP thực tế để các thiết bị trong mạng mở được link
     if ($lanIp) {
         $port = 8080;
-        if ($envBase !== '' && !empty(parse_url($envBase, PHP_URL_PORT))) {
-            $port = (int)parse_url($envBase, PHP_URL_PORT);
-        } elseif ($httpHost && str_contains($httpHost, ':')) {
+        if ($httpHost && str_contains($httpHost, ':')) {
             $port = (int)explode(':', $httpHost)[1];
         }
         return "http://{$lanIp}:{$port}";
     }
 
-    return $envBase !== '' ? rtrim($envBase, '/') : 'http://127.0.0.1:8080';
+    return $httpHost ? "{$scheme}://{$httpHost}" : 'http://127.0.0.1:8080';
 }
 
 function normalize_app_timezone(?string $timezone): string

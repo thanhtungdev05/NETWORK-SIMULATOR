@@ -834,9 +834,22 @@ def start_server():
     print(f"   API noi bo (/api/*) ->  PHP (127.0.0.1:{API_PORT})")
     print(f"   Admin (/admin/*)    ->  Django (127.0.0.1:{DJANGO_PORT})")
     print("=" * 65)
-    
 
-    
+    def auto_nudge_cron_worker():
+        import urllib.request
+        time.sleep(15)
+        while True:
+            try:
+                req_url = f"http://127.0.0.1:{PORT}/api/index.php/gamification/nudge/auto-run"
+                with urllib.request.urlopen(req_url, timeout=30) as r:
+                    pass
+            except Exception:
+                pass
+            time.sleep(300)
+
+    cron_thread = threading.Thread(target=auto_nudge_cron_worker, daemon=True)
+    cron_thread.start()
+
     try:
         srv.serve_forever()
     except KeyboardInterrupt:

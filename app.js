@@ -100,7 +100,51 @@
   const btnGuideJumpTerm = document.getElementById('btn-guide-jump-term');
 
   function showTopologyGuideModal() {
-    if (topologyGuideModal) topologyGuideModal.style.display = 'flex';
+    if (!topologyGuideModal) return;
+    const lesson = _currentLesson || getCurrentLesson();
+    if (lesson && Array.isArray(lesson.guideSteps) && lesson.guideSteps.length > 0) {
+      const modalBody = topologyGuideModal.querySelector('.topol-modal-body');
+      if (modalBody) {
+        modalBody.innerHTML = '';
+        lesson.guideSteps.forEach(stage => {
+          const card = document.createElement('div');
+          card.className = `topol-guide-card ${stage.badgeClass || ''}`;
+
+          let stepsHtml = '';
+          stage.steps.forEach((step, sIdx) => {
+            stepsHtml += `
+              <li class="topol-guide-step-item">
+                <span class="topol-step-circle">${sIdx + 1}</span>
+                <div>${step}</div>
+              </li>`;
+          });
+
+          card.innerHTML = `
+            <div class="topol-guide-card-header">
+              <div class="topol-guide-card-title">
+                <span>${stage.title}</span>
+              </div>
+              <button type="button" class="topol-card-jump-btn" data-jump-tab="${stage.targetTab}">
+                ${stage.btnText || 'Đến màn hình'}
+              </button>
+            </div>
+            <ul class="topol-guide-steps-list">
+              ${stepsHtml}
+            </ul>`;
+
+          const jumpBtn = card.querySelector('.topol-card-jump-btn');
+          if (jumpBtn) {
+            jumpBtn.addEventListener('click', () => {
+              hideTopologyGuideModal();
+              switchTopologyTab(stage.targetTab);
+            });
+          }
+
+          modalBody.appendChild(card);
+        });
+      }
+    }
+    topologyGuideModal.style.display = 'flex';
   }
 
   function hideTopologyGuideModal() {
@@ -1112,9 +1156,128 @@
   }
 
   function inspectTopologyState() {
+    const lesson = _currentLesson || getCurrentLesson();
+    const labId = lesson ? lesson.id : 'LAB_TOPOLOGY_01';
     const docs1 = deviceIframe ? getAllAccessibleDocuments(deviceIframe.contentWindow) : [];
     const docs2 = deviceIframe2 ? getAllAccessibleDocuments(deviceIframe2.contentWindow) : [];
 
+    if (labId === 'LAB_TOPOLOGY_02') {
+      // ══════════════════════════════════════════════════════════════════
+      // BÀI 2: ONT AX3000GZ + Router MikroTik hEX S
+      // ══════════════════════════════════════════════════════════════════
+      let ontWanMode = '';
+      let ontVlan = '';
+      let isOntDhcpDisabled = false;
+
+      for (const doc of docs1) {
+        try {
+          const selWan = doc.querySelector('select[name="wan_type"], select[name="mode"], select[id*="wan_mode"]');
+          if (selWan && selWan.value) ontWanMode = selWan.value;
+          const inpVlan = doc.querySelector('input[name="vlan_id"], input[id*="vlan"]');
+          if (inpVlan && inpVlan.value) ontVlan = inpVlan.value.trim();
+          const rdoDhcp = doc.querySelector('input[name="dhcp_enable"]:checked, input[id*="dhcp_disabled"]:checked');
+          if (rdoDhcp) {
+            isOntDhcpDisabled = (rdoDhcp.value === '0' || rdoDhcp.value === 'disable' || rdoDhcp.value === 'off');
+          }
+        } catch (e) {}
+      }
+
+      let mtPppoeUser = '';
+      let mtLanIp = '192.168.88.1';
+      let isMtLogged = false;
+
+      for (const doc of docs2) {
+        try {
+          const uInp = doc.querySelector('input#name');
+          if (uInp && uInp.value) isMtLogged = true;
+          if (doc.querySelector('#sidebar, .menu, #content')) isMtLogged = true;
+          const inpUser = doc.querySelector('input[name="user"], input[id*="pppoe_user"]');
+          if (inpUser && inpUser.value) mtPppoeUser = inpUser.value.trim();
+          const inpIp = doc.querySelector('input[name="address"], input[id*="address"]');
+          if (inpIp && inpIp.value) mtLanIp = inpIp.value.trim();
+        } catch (e) {}
+      }
+
+      const isOntBridge = (ontWanMode === 'bridge' || ontWanMode === '3');
+      const isVlanCorrect = (ontVlan === '2502' || !ontVlan);
+      const isRouterPppoe = (mtPppoeUser === 'sgfdl-123456-789' || isMtLogged);
+      const hasIpConflict = (mtLanIp === '192.168.1.1');
+      const isNetworkOnline = isOntBridge && isRouterPppoe && !hasIpConflict;
+
+      return {
+        labId: 'LAB_TOPOLOGY_02',
+        isOntBridge,
+        ontVlan: ontVlan || '2502',
+        isVlanTagged: true,
+        isOntDhcpDisabled,
+        isRouterPppoe,
+        routerPppoeUser: mtPppoeUser || 'sgfdl-123456-789',
+        routerLanIp: mtLanIp || '192.168.88.1',
+        clientIp: '192.168.88.150',
+        ontIp: '192.168.1.1',
+        hasIpConflict,
+        isNetworkOnline,
+        cableDesc: 'Đã cắm LAN 1 ➔ ether1 PoE In (Link Up 1Gbps)',
+        stage1Desc: 'ONT AX3000GZ Bridge Mode & VLAN 2502',
+        stage1Status: isOntBridge ? '✓ BRIDGE OK' : 'CHƯA CHUYỂN',
+        stage2Desc: 'MikroTik PPPoE Client ether1',
+        stage2Status: isRouterPppoe ? '✓ QUAY SỐ OK' : 'CHƯA KẾT NỐI',
+        stage3Desc: 'Subnet MikroTik: 192.168.88.1 ⟷ ONT: 192.168.1.1',
+        stage3Status: hasIpConflict ? '⚠ XUNG ĐỘT IP' : '✓ AN TOÀN'
+      };
+    } else if (labId === 'LAB_TOPOLOGY_03') {
+      // ══════════════════════════════════════════════════════════════════
+      // BÀI 3: Router DrayTek Vigor 2927 + AP Wi-Fi 7 BE6500C
+      // ══════════════════════════════════════════════════════════════════
+      let routerLanIp = '192.168.1.1';
+      for (const doc of docs1) {
+        try {
+          const inpIp = doc.querySelector('input[name="sLanIp"], input[name="sIp"], input[name="iLanIp"]');
+          if (inpIp && inpIp.value) routerLanIp = inpIp.value.trim();
+        } catch (e) {}
+      }
+
+      let apMode = 'ap';
+      let apSsid = 'FPT_CORP_WIFI7';
+
+      for (const doc of docs2) {
+        try {
+          const selMode = doc.querySelector('select[name="opmode"], input[name="opmode"]:checked');
+          if (selMode && selMode.value) apMode = selMode.value;
+          const inpSsid = doc.querySelector('input[name="ssid"], input[id*="ssid"]');
+          if (inpSsid && inpSsid.value) apSsid = inpSsid.value.trim();
+        } catch (e) {}
+      }
+
+      const isApMode = (apMode === 'ap' || apMode === 'bridge');
+      const isNetworkOnline = isApMode && (routerLanIp === '192.168.1.1');
+
+      return {
+        labId: 'LAB_TOPOLOGY_03',
+        isOntBridge: true, // DrayTek là Gateway chính
+        ontVlan: 'LAN Subnet',
+        isVlanTagged: false,
+        isOntDhcpDisabled: false,
+        isRouterPppoe: true,
+        routerPppoeUser: apSsid || 'FPT_CORP_WIFI7',
+        routerLanIp: routerLanIp || '192.168.1.1',
+        clientIp: '192.168.1.150',
+        ontIp: '192.168.1.250',
+        hasIpConflict: false,
+        isNetworkOnline,
+        cableDesc: 'Đã cắm DrayTek LAN 1 ➔ AP Cổng 2.5G (Link Up 2.5Gbps)',
+        stage1Desc: 'DrayTek Gateway & DHCP Server Master',
+        stage1Status: '✓ GATEWAY OK',
+        stage2Desc: 'AP Mode & Wi-Fi 7 MLO 5.8Gbps',
+        stage2Status: isApMode ? '✓ AP MODE OK' : 'CHƯA CHUYỂN',
+        stage3Desc: 'Chống cấp trùng DHCP & Đồng bộ IP',
+        stage3Status: '✓ AN TOÀN'
+      };
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // Mặc định: BÀI 1 (ONT AC1000F + Router DrayTek Vigor 2927)
+    // ══════════════════════════════════════════════════════════════════
     let ontWanMode = '';
     let ont8021q = '';
     let ontVlan = '';
@@ -1169,6 +1332,7 @@
     const isNetworkOnline = isOntBridge && isVlanTagged && isVlanCorrect && isRouterPppoe && !hasIpConflict;
 
     return {
+      labId: 'LAB_TOPOLOGY_01',
       isOntBridge,
       ontVlan: ontVlan || '2502',
       isVlanTagged,
@@ -1176,21 +1340,35 @@
       isRouterPppoe,
       routerPppoeUser: routerPppoeUser || 'sgfdl-210208-218',
       routerLanIp: routerLanIp || '192.168.10.1',
+      clientIp: '192.168.10.150',
+      ontIp: '192.168.1.1',
       hasIpConflict,
-      isNetworkOnline
+      isNetworkOnline,
+      cableDesc: 'Đã cắm LAN 1 ➔ WAN 1 (Link Up 1Gbps)',
+      stage1Desc: 'Kiểm tra chế độ cầu nối & VLAN 2502',
+      stage1Status: isOntBridge ? '✓ BRIDGE OK' : 'CHƯA CHUYỂN',
+      stage2Desc: 'Quay số WAN 1 Router tới ISP',
+      stage2Status: isRouterPppoe ? '✓ QUAY SỐ OK' : 'CHƯA KẾT NỐI',
+      stage3Desc: 'ONT: 192.168.1.1 ⟷ Router: 192.168.10.1',
+      stage3Status: hasIpConflict ? '⚠ XUNG ĐỘT IP' : '✓ AN TOÀN'
     };
   }
 
   function updateTopologyLiveState() {
     const state = inspectTopologyState();
+    const lesson = _currentLesson || getCurrentLesson();
+    const dev1 = (lesson && lesson.device1) ? lesson.device1 : { name: 'ONT AC1000F', shortName: 'ONT AC1000F' };
+    const dev2 = (lesson && lesson.device2) ? lesson.device2 : { name: 'Router DrayTek Vigor 2927', shortName: 'DrayTek Vigor 2927' };
 
-    // Node 1 badges
+    // Node 1 badges & title
+    const nodeDev1Title = document.getElementById('node-dev1-title');
+    if (nodeDev1Title) nodeDev1Title.textContent = dev1.name;
     const nodeDev1Pill = document.getElementById('node-dev1-state-pill');
     const nodeDev1Vlan = document.getElementById('node-dev1-vlan');
     const nodeDev1Dhcp = document.getElementById('node-dev1-dhcp');
     if (nodeDev1Pill) {
       if (state.isOntBridge) {
-        nodeDev1Pill.textContent = 'Bridge Mode (OK)';
+        nodeDev1Pill.textContent = (state.labId === 'LAB_TOPOLOGY_03') ? 'Core Gateway (OK)' : 'Bridge Mode (OK)';
         nodeDev1Pill.style.background = 'rgba(16, 185, 129, 0.2)';
         nodeDev1Pill.style.color = '#10b981';
       } else {
@@ -1199,23 +1377,25 @@
         nodeDev1Pill.style.color = '#ef4444';
       }
     }
-    if (nodeDev1Vlan) nodeDev1Vlan.textContent = state.ontVlan ? `${state.ontVlan} (Internet FPT)` : '2502';
+    if (nodeDev1Vlan) nodeDev1Vlan.textContent = state.ontVlan ? `${state.ontVlan}` : '2502';
     if (nodeDev1Dhcp) {
       nodeDev1Dhcp.textContent = state.isOntDhcpDisabled ? 'Disabled (Đã tắt)' : 'Enabled (Chưa tắt)';
       nodeDev1Dhcp.style.color = state.isOntDhcpDisabled ? '#10b981' : '#f59e0b';
     }
 
-    // Node 2 badges
+    // Node 2 badges & title
+    const nodeDev2Title = document.getElementById('node-dev2-title');
+    if (nodeDev2Title) nodeDev2Title.textContent = dev2.name;
     const nodeDev2Pill = document.getElementById('node-dev2-state-pill');
     const nodeDev2Ip = document.getElementById('node-dev2-ip');
     const nodeDev2Pppoe = document.getElementById('node-dev2-pppoe');
     if (nodeDev2Pill) {
       if (state.isRouterPppoe) {
-        nodeDev2Pill.textContent = 'PPPoE Dialed (Up)';
+        nodeDev2Pill.textContent = (state.labId === 'LAB_TOPOLOGY_03') ? 'Wi-Fi 7 AP Active' : 'PPPoE Dialed (Up)';
         nodeDev2Pill.style.background = 'rgba(16, 185, 129, 0.2)';
         nodeDev2Pill.style.color = '#10b981';
       } else {
-        nodeDev2Pill.textContent = 'PPPoE Chưa kết nối';
+        nodeDev2Pill.textContent = (state.labId === 'LAB_TOPOLOGY_03') ? 'AP Chưa cấu hình' : 'PPPoE Chưa kết nối';
         nodeDev2Pill.style.background = 'rgba(245, 158, 11, 0.2)';
         nodeDev2Pill.style.color = '#f59e0b';
       }
@@ -1224,7 +1404,7 @@
       nodeDev2Ip.textContent = state.routerLanIp;
       if (state.hasIpConflict) {
         nodeDev2Ip.style.color = '#ef4444';
-        nodeDev2Ip.title = 'XUNG ĐỘT: Trùng IP với ONT (192.168.1.1)!';
+        nodeDev2Ip.title = 'XUNG ĐỘT: Trùng IP với Thiết bị 1!';
       } else {
         nodeDev2Ip.style.color = '#38bdf8';
         nodeDev2Ip.title = 'IP Subnet sạch, không xung đột';
@@ -1236,29 +1416,37 @@
     const nodeClientIp = document.getElementById('node-client-ip');
     const nodeClientGw = document.getElementById('node-client-gw');
     if (nodeClientGw) nodeClientGw.textContent = state.routerLanIp;
-    if (nodeClientIp) {
-      const parts = state.routerLanIp.split('.');
-      if (parts.length === 4) {
-        nodeClientIp.textContent = `${parts[0]}.${parts[1]}.${parts[2]}.150`;
-      }
-    }
+    if (nodeClientIp) nodeClientIp.textContent = state.clientIp || '192.168.10.150';
 
     // Diagnostics Matrix
-    const diagBridgeStatus = document.getElementById('diag-bridge-status');
-    const diagPppoeStatus = document.getElementById('diag-pppoe-status');
-    const diagConflictStatus = document.getElementById('diag-conflict-status');
+    const diagCableDesc = document.getElementById('diag-cable-desc');
+    if (diagCableDesc && state.cableDesc) diagCableDesc.textContent = state.cableDesc;
 
+    const diagBridgeDesc = document.getElementById('diag-bridge-desc');
+    if (diagBridgeDesc && state.stage1Desc) diagBridgeDesc.textContent = state.stage1Desc;
+
+    const diagBridgeStatus = document.getElementById('diag-bridge-status');
     if (diagBridgeStatus) {
       diagBridgeStatus.className = state.isOntBridge ? 'diag-status success' : 'diag-status warning';
-      diagBridgeStatus.textContent = state.isOntBridge ? '✓ BRIDGE OK' : 'CHƯA CHUYỂN';
+      diagBridgeStatus.textContent = state.stage1Status || (state.isOntBridge ? '✓ OK' : 'CHƯA CHUYỂN');
     }
+
+    const diagPppoeDesc = document.getElementById('diag-pppoe-desc');
+    if (diagPppoeDesc && state.stage2Desc) diagPppoeDesc.textContent = state.stage2Desc;
+
+    const diagPppoeStatus = document.getElementById('diag-pppoe-status');
     if (diagPppoeStatus) {
       diagPppoeStatus.className = state.isRouterPppoe ? 'diag-status success' : 'diag-status warning';
-      diagPppoeStatus.textContent = state.isRouterPppoe ? '✓ QUAY SỐ OK' : 'CHƯA KẾT NỐI';
+      diagPppoeStatus.textContent = state.stage2Status || (state.isRouterPppoe ? '✓ OK' : 'CHƯA KẾT NỐI');
     }
+
+    const diagConflictDesc = document.getElementById('diag-conflict-desc');
+    if (diagConflictDesc && state.stage3Desc) diagConflictDesc.textContent = state.stage3Desc;
+
+    const diagConflictStatus = document.getElementById('diag-conflict-status');
     if (diagConflictStatus) {
       diagConflictStatus.className = state.hasIpConflict ? 'diag-status danger' : 'diag-status success';
-      diagConflictStatus.textContent = state.hasIpConflict ? '⚠ XUNG ĐỘT IP' : '✓ AN TOÀN';
+      diagConflictStatus.textContent = state.stage3Status || (state.hasIpConflict ? '⚠ XUNG ĐỘT IP' : '✓ AN TOÀN');
     }
 
     // Ping Badge on Tab
@@ -1304,6 +1492,9 @@
       appendOutput(`C:\\Users\\KTV_FPT> ${cmd}`, 'term-cmd-echo');
       const lower = cmd.toLowerCase();
       const state = inspectTopologyState();
+      const lesson = _currentLesson || getCurrentLesson();
+      const dev1 = (lesson && lesson.device1) ? lesson.device1 : { name: 'ONT AC1000F', shortName: 'ONT' };
+      const dev2 = (lesson && lesson.device2) ? lesson.device2 : { name: 'Router DrayTek Vigor 2927', shortName: 'Router' };
 
       if (lower === 'clear' || lower === 'cls') {
         termOutput.innerHTML = '';
@@ -1326,15 +1517,15 @@
         if (state.isNetworkOnline) {
           appendOutput(
             '\nPinging 8.8.8.8 with 32 bytes of data:\n' +
-            'Reply from 8.8.8.8: bytes=32 time=12ms TTL=118\n' +
-            'Reply from 8.8.8.8: bytes=32 time=14ms TTL=118\n' +
             'Reply from 8.8.8.8: bytes=32 time=11ms TTL=118\n' +
-            'Reply from 8.8.8.8: bytes=32 time=13ms TTL=118\n\n' +
+            'Reply from 8.8.8.8: bytes=32 time=12ms TTL=118\n' +
+            'Reply from 8.8.8.8: bytes=32 time=10ms TTL=118\n' +
+            'Reply from 8.8.8.8: bytes=32 time=11ms TTL=118\n\n' +
             'Ping statistics for 8.8.8.8:\n' +
             '    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\n' +
             'Approximate round trip times in milli-seconds:\n' +
-            '    Minimum = 11ms, Maximum = 14ms, Average = 12ms\n' +
-            '>>> THÀNH CÔNG: Mô hình liên kết ONT Bridge + Router PPPoE thông suốt!',
+            '    Minimum = 10ms, Maximum = 12ms, Average = 11ms\n' +
+            '>>> THÀNH CÔNG: Kênh truyền thông suốt từ Client qua ' + (dev2.shortName || dev2.name) + ' và ' + (dev1.shortName || dev1.name) + ' ra Internet!',
             'success'
           );
         } else if (state.hasIpConflict) {
@@ -1344,8 +1535,8 @@
             'Request timed out.\n' +
             'Request timed out.\n' +
             'Request timed out.\n\n' +
-            '[CẢNH BÁO XUNG ĐỘT IP] Phát hiện Gateway Router đang dùng 192.168.1.1 trùng với IP ONT!\n' +
-            'Gói tin bị định tuyến vòng lặp. Vui lòng đổi LAN IP Router sang 192.168.10.1.',
+            '[CẢNH BÁO XUNG ĐỘT IP] Phát hiện Gateway đang trùng dải IP với thiết bị đầu kênh (192.168.1.1)!\n' +
+            'Gói tin bị định tuyến vòng lặp (Routing Loop). Vui lòng đổi LAN IP sang ' + (state.routerLanIp || '192.168.10.1') + '.',
             'error'
           );
         } else if (!state.isOntBridge) {
@@ -1353,7 +1544,7 @@
             '\nPinging 8.8.8.8 with 32 bytes of data:\n' +
             'Destination host unreachable.\n' +
             'Destination host unreachable.\n\n' +
-            '[LỖI KẾT NỐI] ONT AC1000F chưa chuyển sang Bridge Mode (VLAN 2502). Router không thể quay số PPPoE qua kênh quang.',
+            '[LỖI KẾT NỐI] ' + (dev1.shortName || dev1.name) + ' chưa chuyển sang Bridge Mode (VLAN 2502). Thiết bị phụ không thể quay số hoặc bắt kênh quang.',
             'error'
           );
         } else {
@@ -1361,7 +1552,7 @@
             '\nPinging 8.8.8.8 with 32 bytes of data:\n' +
             'Destination host unreachable.\n' +
             'Request timed out.\n\n' +
-            '[LỖI KẾT NỐI] Router WAN 1 chưa thiết lập PPPoE hoặc thông tin tài khoản ISP chưa chính xác.',
+            '[LỖI KẾT NỐI] ' + (dev2.shortName || dev2.name) + ' chưa hoàn tất cấu hình kết nối Internet.',
             'warning'
           );
         }
@@ -1369,25 +1560,15 @@
         return;
       }
 
-      if (lower.startsWith('ping 192.168.10.1')) {
+      if (lower.startsWith('ping 192.168.')) {
+        const pingIp = lower.split(' ')[1] || '';
         appendOutput(
-          '\nPinging 192.168.10.1 with 32 bytes of data:\n' +
-          'Reply from 192.168.10.1: bytes=32 time<1ms TTL=64\n' +
-          'Reply from 192.168.10.1: bytes=32 time<1ms TTL=64\n' +
-          'Reply from 192.168.10.1: bytes=32 time<1ms TTL=64\n' +
-          'Reply from 192.168.10.1: bytes=32 time<1ms TTL=64\n' +
-          '>>> Gateway Router DrayTek Vigor 2927 phản hồi tức thì (LAN kết nối tốt).',
-          'success'
-        );
-        return;
-      }
-
-      if (lower.startsWith('ping 192.168.1.1')) {
-        appendOutput(
-          '\nPinging 192.168.1.1 with 32 bytes of data:\n' +
-          'Reply from 192.168.1.1: bytes=32 time=1ms TTL=64\n' +
-          'Reply from 192.168.1.1: bytes=32 time=1ms TTL=64\n' +
-          '>>> Cổng quản trị modem quang ONT AC1000F phản hồi bình thường.',
+          `\nPinging ${pingIp} with 32 bytes of data:\n` +
+          `Reply from ${pingIp}: bytes=32 time<1ms TTL=64\n` +
+          `Reply from ${pingIp}: bytes=32 time<1ms TTL=64\n` +
+          `Reply from ${pingIp}: bytes=32 time<1ms TTL=64\n` +
+          `Reply from ${pingIp}: bytes=32 time<1ms TTL=64\n\n` +
+          `>>> Phản hồi tức thì từ thiết bị mạng nội bộ (${pingIp}).`,
           'success'
         );
         return;
@@ -1395,8 +1576,7 @@
 
       if (lower.startsWith('ipconfig')) {
         const gw = state.routerLanIp || '192.168.10.1';
-        const parts = gw.split('.');
-        const clientIp = `${parts[0]}.${parts[1]}.${parts[2]}.150`;
+        const clientIp = state.clientIp || '192.168.10.150';
         appendOutput(
           '\nWindows IP Configuration\n\n' +
           'Ethernet adapter Local Area Connection:\n' +
@@ -1404,7 +1584,7 @@
           '   IPv4 Address. . . . . . . . . . . : ' + clientIp + '\n' +
           '   Subnet Mask . . . . . . . . . . . : 255.255.255.0\n' +
           '   Default Gateway . . . . . . . . . : ' + gw + '\n' +
-          '   DHCP Server . . . . . . . . . . . : ' + gw + ' (DrayTek Vigor 2927)\n' +
+          '   DHCP Server . . . . . . . . . . . : ' + gw + ' (' + (dev2.shortName || dev2.name) + ')\n' +
           '   DNS Servers . . . . . . . . . . . : 8.8.8.8, 8.8.4.4\n',
           'term-line'
         );
@@ -1415,17 +1595,17 @@
         if (state.isNetworkOnline) {
           appendOutput(
             '\nTracing route to dns.google [8.8.8.8] over a maximum of 30 hops:\n\n' +
-            '  1    <1 ms    <1 ms    <1 ms  192.168.10.1 (Router DrayTek Vigor 2927)\n' +
-            '  2     1 ms     1 ms     1 ms  192.168.1.1 (ONT AC1000F Bridge)\n' +
+            '  1    <1 ms    <1 ms    <1 ms  ' + state.routerLanIp + ' (' + (dev2.shortName || dev2.name) + ')\n' +
+            '  2     1 ms     1 ms     1 ms  ' + state.ontIp + ' (' + (dev1.shortName || dev1.name) + ')\n' +
             '  3     4 ms     3 ms     4 ms  118.69.182.1 (FPT Broadband BRAS Gateway)\n' +
-            '  4    12 ms    11 ms    12 ms  8.8.8.8 (dns.google)\n\n' +
+            '  4    11 ms    11 ms    12 ms  8.8.8.8 (dns.google)\n\n' +
             'Trace complete.',
             'success'
           );
         } else {
           appendOutput(
             '\nTracing route to 8.8.8.8 over a maximum of 30 hops:\n\n' +
-            '  1    <1 ms    <1 ms    <1 ms  192.168.10.1\n' +
+            '  1    <1 ms    <1 ms    <1 ms  ' + state.routerLanIp + '\n' +
             '  2     *        *        *     Request timed out.\n' +
             '  3     *        *        *     Request timed out.\n\n' +
             'Trace failed: Kênh truyền Internet chưa thông.',
@@ -1568,6 +1748,29 @@
       if (topolDev2Label) topolDev2Label.textContent = `Thiết bị 2: ${dev2.shortName || dev2.name}`;
       if (topolDev1Role) topolDev1Role.textContent = dev1.role || 'Bridge Mode';
       if (topolDev2Role) topolDev2Role.textContent = dev2.role || 'PPPoE Gateway';
+
+      const nodeDev1Title = document.getElementById('node-dev1-title');
+      if (nodeDev1Title) nodeDev1Title.textContent = dev1.name;
+      const nodeDev1Icon = document.querySelector('#node-device1 .node-icon');
+      if (nodeDev1Icon && dev1.icon) nodeDev1Icon.textContent = dev1.icon;
+
+      const nodeDev2Title = document.getElementById('node-dev2-title');
+      if (nodeDev2Title) nodeDev2Title.textContent = dev2.name;
+      const nodeDev2Icon = document.querySelector('#node-device2 .node-icon');
+      if (nodeDev2Icon && dev2.icon) nodeDev2Icon.textContent = dev2.icon;
+
+      const btnGotoDev1 = document.getElementById('btn-goto-dev1');
+      if (btnGotoDev1) btnGotoDev1.textContent = `🛠️ Cấu hình ${dev1.shortName || dev1.name}`;
+      const btnGotoDev2 = document.getElementById('btn-goto-dev2');
+      if (btnGotoDev2) btnGotoDev2.textContent = `🛠️ Cấu hình ${dev2.shortName || dev2.name}`;
+
+      const termTitle = document.querySelector('.terminal-title');
+      if (termTitle) termTitle.textContent = `Command Prompt — Client PC (${dev2.shortName || dev2.name})`;
+
+      const termBanner = document.querySelector('.term-banner');
+      if (termBanner) {
+        termBanner.textContent = `Microsoft Windows [Version 10.0.19045.3803]\n(c) Microsoft Corporation. All rights reserved.\n\nUTH NetLab Virtual PC Terminal — ${lesson.title}\nKết nối mạng qua ${dev2.name} và ${dev1.name}.\nGõ "ping 8.8.8.8", "ipconfig" hoặc chọn các lệnh nhanh ở trên để kiểm tra kết nối mạng.`;
+      }
 
       setTimeout(() => {
         const urlObj1 = new URL(dev1.practiceUrl || url, window.location.origin);

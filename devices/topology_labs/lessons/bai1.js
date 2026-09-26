@@ -44,6 +44,46 @@
       downlink: { from: 'Router Vigor 2927 [Cổng LAN 1-4]', to: 'Client PC (KTV Workstation)', type: 'Ethernet', status: 'Link Up 1Gbps' }
     },
 
+    // Các bước hướng dẫn hiển thị trên Popup Modal chi tiết
+    guideSteps: [
+      {
+        stage: 1,
+        title: 'GIAI ĐOẠN 1: CẤU HÌNH THIẾT BỊ 1 — ONT AC1000F (BRIDGE MODE)',
+        targetTab: 'device1',
+        btnText: '🛠️ Đến màn hình ONT AC1000F',
+        badgeClass: 'card-ont',
+        steps: [
+          'Đăng nhập vào ONT: Tên đăng nhập <span class="topol-guide-val">admin</span> / Mật khẩu <span class="topol-guide-val">admin</span>.',
+          'Vào menu <strong>Network &rarr; WAN</strong>: Connection Type chọn <span class="topol-guide-val">Bridge Mode</span> (giá trị 3), 802.1q chọn <span class="topol-guide-val">Tag (Yes)</span>, VLAN ID nhập <span class="topol-guide-val">2502</span> (VLAN Internet FPT), bấm <strong>Save & Apply</strong>.',
+          'Vào menu <strong>Network &rarr; LAN</strong>: Tại DHCP Server chọn <span class="topol-guide-val">Disable</span> (Tắt cấp DHCP trên modem quang) và bấm <strong>Save</strong>.'
+        ]
+      },
+      {
+        stage: 2,
+        title: 'GIAI ĐOẠN 2: CẤU HÌNH THIẾT BỊ 2 — ROUTER DRAYTEK VIGOR 2927 (PPPoE GATEWAY)',
+        targetTab: 'device2',
+        btnText: '🛠️ Đến màn hình Router Vigor',
+        badgeClass: 'card-router',
+        steps: [
+          'Chuyển sang Tab <strong>Thiết bị 2: Router Vigor 2927</strong>. Đăng nhập với tài khoản <span class="topol-guide-val">admin</span> / <span class="topol-guide-val">admin</span>.',
+          'Vào menu <strong>WAN &rarr; Internet Access</strong> (WAN 1): Access Mode chọn <span class="topol-guide-val">PPPoE</span>, Details Page nhập Username <span class="topol-guide-val">sgfdl-210208-218</span> / Password <span class="topol-guide-val">fpt12345</span>, bấm <strong>OK / Apply</strong>.',
+          'Vào menu <strong>LAN &rarr; General Setup</strong> (LAN 1): Đổi địa chỉ IP sang <span class="topol-guide-val">192.168.10.1</span> (tránh xung đột với ONT 192.168.1.1), kích hoạt DHCP Server cấp dải <span class="topol-guide-val">192.168.10.10 - 192.168.10.200</span>, bấm <strong>OK</strong>.'
+        ]
+      },
+      {
+        stage: 3,
+        title: 'GIAI ĐOẠN 3: KIỂM TRA THÔNG TUYẾN MẠNG & NỘP BÀI',
+        targetTab: 'terminal',
+        btnText: '💻 Đến Virtual Client CLI',
+        badgeClass: 'card-client',
+        steps: [
+          'Chuyển sang Tab <strong>Virtual Client (CLI)</strong>. Gõ lệnh <span class="topol-guide-val">ipconfig</span> để xem cấu hình mạng máy trạm.',
+          'Chạy lệnh <span class="topol-guide-val">ping 8.8.8.8</span> hoặc <span class="topol-guide-val">tracert 8.8.8.8</span> để kiểm tra gói tin đi qua Router và ONT ra ngoài Internet.',
+          'Khi thông mạng (0% loss), bấm nút <strong>📝 Nộp bài & Chấm điểm</strong> trên thanh công cụ.'
+        ]
+      }
+    ],
+
     instructions: [
       '<div class="topol-instruction-block">',
       '<b>Bối cảnh thực tế:</b>',

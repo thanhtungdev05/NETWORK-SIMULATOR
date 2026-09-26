@@ -1090,6 +1090,11 @@ function handle_auth(array $segments, string $method): void
             ]);
         }
 
+        try {
+            gamification_ensure_user_streak(db(), $newUser['user_id']);
+        } catch (\Throwable $ignored) {
+        }
+
         session_regenerate_id(true);
         $_SESSION['user_id'] = $newUser['user_id'];
         $_SESSION['user_email'] = $newUser['email'];

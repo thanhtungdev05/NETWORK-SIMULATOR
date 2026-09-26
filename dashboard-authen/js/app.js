@@ -659,7 +659,7 @@ function renderDashboardDataNotice(currentMetrics) {
     notice.append(icon, content);
 }
 
-function buildLearnerSummaries(rows) {
+function buildLearnerSummaries(rows, eligibleCatalogKtvs = []) {
     const map = new Map();
     rows.forEach(item => {
         if (!map.has(item.learner)) {
@@ -678,6 +678,24 @@ function buildLearnerSummaries(rows) {
         if (item.mode) summary.modes.add(item.mode);
     });
 
+    // Bổ sung các KTV đã đăng ký nhưng chưa có phiên thực hành nào (0 phiên)
+    if (Array.isArray(eligibleCatalogKtvs)) {
+        eligibleCatalogKtvs.forEach(tech => {
+            const email = (tech.email || '').trim().toLowerCase();
+            if (email && !map.has(email)) {
+                map.set(email, {
+                    learner: email,
+                    rows: [],
+                    devices: new Set(),
+                    labs: new Set(),
+                    modes: new Set(),
+                    isNewRegistered: true,
+                    customRegion: tech.dashboardRegion || tech.regionName || tech.classCode || 'CNTT-K22'
+                });
+            }
+        });
+    }
+
     return [...map.values()].map(item => {
         const latest = getLatestSession(item.rows);
         const completed = item.rows.filter(isSuccessfulSession).length;
@@ -685,20 +703,20 @@ function buildLearnerSummaries(rows) {
         const primaryMode = modesArray.length === 1 ? modesArray[0] : (latest?.mode || 'Thực hành');
         return {
             learner: item.learner,
-            region: item.rows[0]?.region || getLearnerRegion(item.learner),
+            region: item.rows[0]?.region || item.customRegion || getLearnerRegion(item.learner),
             total: item.rows.length,
             devicesCount: item.devices.size,
             labsCount: item.labs.size,
-            devicesLabel: formatCompactList(item.devices),
-            labsLabel: formatCompactList(item.labs),
+            devicesLabel: formatCompactList(item.devices) || '—',
+            labsLabel: formatCompactList(item.labs) || '—',
             mode: primaryMode,
             modesLabel: formatCompactList(item.modes.size ? item.modes : new Set(['Thực hành'])),
-            status: latest?.status || 'N/A',
+            status: latest?.status || (item.isNewRegistered ? 'Chưa thực hành' : 'N/A'),
             lastDate: latest?.date || '',
             lastTime: latest?.time || '',
             lastDateTimeMs: latest ? sessionTimestampMs(latest) : 0,
-            lastDateTimeFormatted: formatDateTime(latest?.date, latest?.time),
-            lastAction: latest?.lastAction || 'N/A',
+            lastDateTimeFormatted: latest ? formatDateTime(latest?.date, latest?.time) : 'Mới đăng ký',
+            lastAction: latest?.lastAction || (item.isNewRegistered ? 'Kích hoạt tài khoản thành công' : 'N/A'),
             latestDuration: latest?.duration ?? null,
             completion: item.rows.length ? Math.round((completed / item.rows.length) * 100) : 0
         };
@@ -721,7 +739,27 @@ function renderSessions(rows) {
         });
     }
 
-    const summaries = buildLearnerSummaries(filteredRows);
+    // Hiển thị cả các KTV trong danh mục chưa có phiên thực hành
+    let eligibleCatalogKtvs = [];
+    const devicesFiltered = state.learnerDevicesTouched && state.learnerSelectedDevices.size < getCanonicalDeviceList().length;
+    const labsFiltered = state.learnerLabsTouched && state.learnerSelectedLabs.size < getCanonicalLabList().length;
+    if (!devicesFiltered && !labsFiltered && Array.isArray(technicianCatalog)) {
+        eligibleCatalogKtvs = technicianCatalog.filter(tech => {
+            if (tech.isTerminated || !tech.email) return false;
+            const email = tech.email.toLowerCase();
+            if (state.learnerSelectedKtvs.size && !state.learnerSelectedKtvs.has(email)) return false;
+            if (state.learnerSelectedEmails.size && !state.learnerSelectedEmails.has(email)) return false;
+            const region = normalizeRegionName(tech.dashboardRegion || tech.regionName || tech.classCode || 'Chưa phân vùng', email);
+            if (state.learnerRegionsTouched && !state.learnerSelectedRegions.has(region)) return false;
+            if (learnerKeyword) {
+                const haystack = `${email} ${tech.displayName || ''} ${getLearnerName(email)}`.toLocaleLowerCase('vi');
+                if (!haystack.includes(learnerKeyword)) return false;
+            }
+            return true;
+        });
+    }
+
+    const summaries = buildLearnerSummaries(filteredRows, eligibleCatalogKtvs);
     const sorted = sortRows(summaries, state.sessionsSort);
 
     if (els.sessionCountBadge) els.sessionCountBadge.textContent = `${summaries.length} KTV / ${filteredRows.length} phiên`;
@@ -738,7 +776,7 @@ function renderSessions(rows) {
             <tr class="clickable-row ${state.selectedLearner === item.learner ? 'active' : ''}">
                 <td>
                     <button type="button" class="learner-link" data-open-learner data-learner="${escapeHTML(item.learner)}" title="Mở chi tiết ${escapeHTML(item.learner)}">${escapeHTML(getLearnerName(item.learner))}</button>
-                    <div class="item-sub">${item.completion}% hoàn thành</div>
+                    <div class="item-sub">${item.total ? item.completion + '% hoàn thành' : '0% · Mới đăng ký'}</div>
                 </td>
                 <td>${escapeHTML(item.learner)}</td>
                 <td>${escapeHTML(item.region)}</td>
@@ -747,7 +785,7 @@ function renderSessions(rows) {
                 <td>${escapeHTML(item.labsLabel)}</td>
                 <td>
                     <div><strong>${escapeHTML(item.lastDateTimeFormatted)}</strong></div>
-                    <div class="item-sub">Thời gian phiên gần nhất: ${formatDuration(item.latestDuration)}</div>
+                    <div class="item-sub">${item.total ? 'Thời gian phiên gần nhất: ' + formatDuration(item.latestDuration) : 'Chưa có phiên thực hành'}</div>
                 </td>
             </tr>
         `).join('');
@@ -954,6 +992,27 @@ function renderLearnerDetail(rows) {
     const allLearnerRows = rows.filter(item => item.learner === state.selectedLearner);
 
     if (!allLearnerRows.length) {
+        const tech = technicianByIdentity.get(state.selectedLearner.toLowerCase());
+        if (tech) {
+            els.learnerDetailCard?.classList.add('visible');
+            els.learnerDetailCard?.removeAttribute('aria-hidden');
+            document.body.classList.add('detail-open');
+            if (els.learnerDetailTitle) els.learnerDetailTitle.textContent = tech.displayName || getLearnerName(state.selectedLearner);
+            if (els.learnerDetailSubtitle) els.learnerDetailSubtitle.textContent = `${tech.className || tech.classCode || 'CNTT-K22'} • ${state.selectedLearner} • Học viên mới đăng ký tài khoản (Chưa có phiên thực hành nào).`;
+            if (els.detailTotalSessions) els.detailTotalSessions.textContent = '0';
+            if (els.detailTotalSessionsSub) els.detailTotalSessionsSub.innerHTML = '<div>0 Thực hành</div><div>0 Hướng dẫn</div>';
+            const totalCatalogDevices = deviceCatalog.length || 6;
+            const totalCatalogLabs = deviceCatalog.reduce((sum, d) => sum + (d.labs ? d.labs.length : 0), 0) || 6;
+            if (els.detailUniqueLabs) els.detailUniqueLabs.textContent = `0 / ${totalCatalogLabs}`;
+            if (els.detailUniqueDevices) els.detailUniqueDevices.textContent = `0 / ${totalCatalogDevices}`;
+            if (els.detailLastTime) els.detailLastTime.textContent = 'Chưa thực hành';
+            if (els.detailHistoryBody) {
+                els.detailHistoryBody.innerHTML = '<tr><td colspan="7" class="empty" style="padding: 32px; text-align: center; color: var(--text-muted);">🎓 Học viên này vừa kích hoạt tài khoản và chưa bắt đầu bài thực hành nào trên hệ thống.</td></tr>';
+            }
+            if (els.learnerHistoryMeta) els.learnerHistoryMeta.innerHTML = '';
+            return;
+        }
+
         els.learnerDetailCard?.classList.remove('visible');
         els.learnerDetailCard?.setAttribute('aria-hidden', 'true');
         document.body.classList.remove('detail-open');
@@ -2517,6 +2576,22 @@ function normalizeSessionDeviceNames() {
     });
 }
 
+function getAllLearnersList() {
+    const sessionKtvs = sessions.map(item => item.learner);
+    const catalogKtvs = (technicianCatalog || [])
+        .filter(item => !item.isTerminated && item.email)
+        .map(item => item.email);
+    return [...new Set([...sessionKtvs, ...catalogKtvs])].sort((a, b) => a.localeCompare(b, 'vi'));
+}
+
+function getAllRegionsList() {
+    const sessionRegions = sessions.map(item => item.region);
+    const catalogRegions = (technicianCatalog || [])
+        .map(item => normalizeRegionName(item.dashboardRegion || item.regionName || item.classCode, item.email))
+        .filter(Boolean);
+    return [...new Set([...sessionRegions, ...catalogRegions])].sort((a, b) => a.localeCompare(b, 'vi'));
+}
+
 function getCanonicalDeviceList() {
     if (deviceCatalog.length) {
         return deviceCatalog.map(d => d.device || d.device_name).filter(Boolean).sort();
@@ -2561,10 +2636,10 @@ function mergeDefaultClassLearners() {
 }
 
 function refreshFilterOptionLists() {
-    const allKtvs = [...new Set(sessions.map(item => item.learner))].sort();
+    const allKtvs = getAllLearnersList();
     const allDevices = getCanonicalDeviceList();
     const allLabs = getCanonicalLabList();
-    const allRegions = [...new Set(sessions.map(item => item.region))].sort((a, b) => a.localeCompare(b, 'vi'));
+    const allRegions = getAllRegionsList();
     const universes = state.popoverUniverses;
     if (universes) {
         universes.allKtvs.splice(0, universes.allKtvs.length, ...allKtvs);
@@ -2613,10 +2688,10 @@ async function refreshDashboardData({ force = false, announce = false } = {}) {
         lastDashboardSignature = signature;
         lastDashboardVersion = data.version || version;
         applyDashboardData(data);
-        const allKtvs = [...new Set(sessions.map(item => item.learner))].sort();
+        const allKtvs = getAllLearnersList();
         const allDevices = getCanonicalDeviceList();
         const allLabs = getCanonicalLabList();
-        const allRegions = [...new Set(sessions.map(item => item.region))].sort((a, b) => a.localeCompare(b, 'vi'));
+        const allRegions = getAllRegionsList();
         mergeUntouchedFilterSets(allKtvs, allDevices, allLabs, allRegions);
         refreshFilterOptionLists();
         mergeDefaultClassLearners();
@@ -2664,10 +2739,10 @@ async function loadDashboardFromApi() {
             setDataSourceLabel('Dữ liệu vận hành đã đồng bộ');
             setDashboardSyncState('ready');
             mergeUntouchedFilterSets(
-                [...new Set(sessions.map(item => item.learner))].sort(),
+                getAllLearnersList(),
                 getCanonicalDeviceList(),
                 getCanonicalLabList(),
-                [...new Set(sessions.map(item => item.region))].sort((a, b) => a.localeCompare(b, 'vi'))
+                getAllRegionsList()
             );
             initFilters();
             initPopovers();
@@ -3049,10 +3124,10 @@ function initPopovers() {
         return;
     }
     state.popoversInitialized = true;
-    const allKtvs = [...new Set(sessions.map(item => item.learner))].sort();
+    const allKtvs = getAllLearnersList();
     const allDevices = getCanonicalDeviceList();
     const allLabs = getCanonicalLabList();
-    const allRegions = [...new Set(sessions.map(item => item.region))].sort((a, b) => a.localeCompare(b, 'vi'));
+    const allRegions = getAllRegionsList();
     state.popoverUniverses = { allKtvs, allDevices, allLabs, allRegions };
     let learnerSearchTimer = null;
     let detailDeviceSearchTimer = null;
@@ -3483,21 +3558,22 @@ function getDatabaseInstructorClasses() {
             }
             classes.get(item.classCode).members.push(item.learner);
         });
-    } else {
-    technicianCatalog
-        .filter(item => !item.isTerminated && item.email)
-        .forEach(item => {
-            const classCode = item.classCode || '';
-            const key = classCode || '__unassigned__';
-            if (!classes.has(key)) {
-                classes.set(key, {
-                    code: classCode,
-                    name: item.className || classCode || 'Chưa xếp lớp',
-                    members: []
-                });
-            }
-            classes.get(key).members.push(item.email);
-        });
+    }
+    if (Array.isArray(technicianCatalog)) {
+        technicianCatalog
+            .filter(item => !item.isTerminated && item.email)
+            .forEach(item => {
+                const classCode = item.classCode || '';
+                const key = classCode || '__unassigned__';
+                if (!classes.has(key)) {
+                    classes.set(key, {
+                        code: classCode,
+                        name: item.className || classCode || 'Chưa xếp lớp',
+                        members: []
+                    });
+                }
+                classes.get(key).members.push(item.email);
+            });
     }
     return [...classes.entries()]
         .sort(([, left], [, right]) => left.name.localeCompare(right.name, 'vi'))
@@ -4764,10 +4840,10 @@ function renderAll() {
 }
 
 function updatePopoverTriggerLabels() {
-    const allKtvs = [...new Set(sessions.map(item => item.learner))].sort();
+    const allKtvs = getAllLearnersList();
     const allDevices = getCanonicalDeviceList();
     const allLabs = getCanonicalLabList();
-    const allRegions = [...new Set(sessions.map(item => item.region))].sort((a, b) => a.localeCompare(b, 'vi'));
+    const allRegions = getAllRegionsList();
     const learnerReset = document.getElementById('learnerFilterReset');
     const selectedLearners = state.learnerSelectedKtvs.size;
     const ktvFiltered = selectedLearners !== allKtvs.length;

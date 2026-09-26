@@ -127,12 +127,13 @@ WSGI_APPLICATION = 'admin_site.wsgi.application'
 # ===========================================================
 _db_url = os.environ.get('DATABASE_URL', '')
 if _db_url:
+    _is_local = '127.0.0.1' in _db_url or 'localhost' in _db_url or 'sslmode=disable' in _db_url
     DATABASES = {
         'default': dj_database_url.parse(
             _db_url,
             conn_max_age=60,
             conn_health_checks=True,
-            ssl_require=True,
+            ssl_require=not _is_local,
         )
     }
 else:

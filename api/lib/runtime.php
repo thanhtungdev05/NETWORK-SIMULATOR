@@ -204,12 +204,31 @@ function create_database_connection(): PDO
         $dsn .= ';options=' . $options;
     }
 
-    $pdo = new PDO($dsn, (string)$user, (string)$password, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_EMULATE_PREPARES => env_bool('DB_EMULATE_PREPARES', true),
-        PDO::ATTR_STRINGIFY_FETCHES => false,
-    ]);
+    try {
+        $pdo = new PDO($dsn, (string)$user, (string)$password, [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES => env_bool('DB_EMULATE_PREPARES', true),
+            PDO::ATTR_STRINGIFY_FETCHES => false,
+        ]);
+    } catch (PDOException $pdoException) {
+        // Fallback sang PostgreSQL Local nếu máy chủ từ xa lỗi hoặc hết quota
+        if ($host !== '127.0.0.1' && $host !== 'localhost') {
+            try {
+                $localDsn = 'pgsql:host=127.0.0.1;port=5432;dbname=ftc_local;sslmode=disable';
+                $pdo = new PDO($localDsn, 'postgres', '', [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    PDO::ATTR_EMULATE_PREPARES => true,
+                    PDO::ATTR_STRINGIFY_FETCHES => false,
+                ]);
+            } catch (Throwable) {
+                throw $pdoException;
+            }
+        } else {
+            throw $pdoException;
+        }
+    }
 
     $timezoneStatement = $pdo->prepare("SELECT set_config('TimeZone', :timezone, false)");
     $timezoneStatement->execute([

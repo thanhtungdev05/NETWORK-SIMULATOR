@@ -9,8 +9,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/personal-dashboard.css?v=20260926-streak-v4">
-  <link rel="stylesheet" href="assets/personal-ai-coach.css?v=20260926-streak-v4">
+  <link rel="stylesheet" href="assets/personal-dashboard.css?v=20260926-modal-fix-v5">
+  <link rel="stylesheet" href="assets/personal-ai-coach.css?v=20260926-modal-fix-v5">
   <style>
     /* Critical Drawer & FAB styles to guarantee zero layout glitches */
     .student-ai-drawer {
@@ -380,7 +380,13 @@
       background: rgba(15, 23, 42, 0.55) !important;
       backdrop-filter: blur(4px) !important;
       z-index: 10001 !important;
+      display: none !important;
     }
+    .reward-modal-backdrop.active,
+    .reward-modal-backdrop.show {
+      display: block !important;
+    }
+
     .reward-modal {
       position: fixed !important;
       top: 50% !important;
@@ -393,10 +399,18 @@
       border-radius: 20px !important;
       box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.3) !important;
       z-index: 10002 !important;
-      display: flex !important;
+      display: none !important;
       flex-direction: column !important;
       overflow: hidden !important;
+    }
+    .reward-modal.active,
+    .reward-modal.show {
+      display: flex !important;
       animation: modalPop 0.22s ease-out !important;
+    }
+    .reward-modal[hidden],
+    .reward-modal-backdrop[hidden] {
+      display: none !important;
     }
     @keyframes modalPop {
       from { opacity: 0; transform: translate(-50%, -46%) scale(0.96); }
@@ -1076,8 +1090,8 @@
   <!-- ══════════════════════════════════════════════════════════════════════════
        REWARD STORE & REDEMPTION MODAL
        ══════════════════════════════════════════════════════════════════════════ -->
-  <div class="reward-modal-backdrop" id="reward-modal-backdrop" style="display: none;"></div>
-  <div class="reward-modal" id="reward-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="reward-modal-title">
+  <div class="reward-modal-backdrop" id="reward-modal-backdrop" style="display: none !important;" hidden></div>
+  <div class="reward-modal" id="reward-modal" style="display: none !important;" role="dialog" aria-modal="true" aria-labelledby="reward-modal-title" hidden>
     <div class="reward-modal-header">
       <div class="reward-modal-title-wrap">
         <div class="reward-modal-icon">🎁</div>
@@ -1092,7 +1106,7 @@
           <strong id="modal-user-coins">0</strong>
           <span>xu</span>
         </div>
-        <button type="button" class="reward-modal-close" id="btn-close-reward-modal" title="Đóng">✕</button>
+        <button type="button" class="reward-modal-close" id="btn-close-reward-modal" onclick="window.closeRewardModalGlobal &amp;&amp; window.closeRewardModalGlobal()" title="Đóng">✕</button>
       </div>
     </div>
 
@@ -1126,7 +1140,7 @@
     </div>
   </div>
 
-  <script src="assets/personal-dashboard.js?v=20260926-streak-v4"></script>
+  <script src="assets/personal-dashboard.js?v=20260926-modal-fix-v5"></script>
 </body>
 
 </html>

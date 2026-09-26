@@ -223,11 +223,24 @@
       elNavStreakPill.addEventListener('click', openRewardModal);
     }
     if (btnCloseRewardModal) {
-      btnCloseRewardModal.addEventListener('click', closeRewardModal);
+      btnCloseRewardModal.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        closeRewardModal();
+      });
     }
     if (elRewardModalBackdrop) {
-      elRewardModalBackdrop.addEventListener('click', closeRewardModal);
+      elRewardModalBackdrop.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        closeRewardModal();
+      });
     }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeRewardModal();
+      }
+    });
     if (btnDailyCheckin) {
       btnDailyCheckin.addEventListener('click', handleDailyCheckin);
     }
@@ -1438,19 +1451,36 @@
 
   function openRewardModal() {
     if (elRewardModal && elRewardModalBackdrop) {
-      elRewardModalBackdrop.style.display = 'block';
-      elRewardModal.style.display = 'flex';
+      elRewardModalBackdrop.removeAttribute('hidden');
+      elRewardModal.removeAttribute('hidden');
+      elRewardModalBackdrop.classList.add('active');
+      elRewardModal.classList.add('active');
+      elRewardModalBackdrop.style.setProperty('display', 'block', 'important');
+      elRewardModal.style.setProperty('display', 'flex', 'important');
+      if (elModalUserCoins && _gamificationData) {
+        elModalUserCoins.textContent = Number(_gamificationData.total_points || 0).toLocaleString();
+      }
       fetchRewardsCatalog();
       switchRewardTab('catalog');
     }
   }
 
   function closeRewardModal() {
-    if (elRewardModal && elRewardModalBackdrop) {
-      elRewardModalBackdrop.style.display = 'none';
-      elRewardModal.style.display = 'none';
+    if (elRewardModal) {
+      elRewardModal.classList.remove('active');
+      elRewardModal.classList.remove('show');
+      elRewardModal.style.setProperty('display', 'none', 'important');
+      elRewardModal.setAttribute('hidden', '');
+    }
+    if (elRewardModalBackdrop) {
+      elRewardModalBackdrop.classList.remove('active');
+      elRewardModalBackdrop.classList.remove('show');
+      elRewardModalBackdrop.style.setProperty('display', 'none', 'important');
+      elRewardModalBackdrop.setAttribute('hidden', '');
     }
   }
+
+  window.closeRewardModalGlobal = closeRewardModal;
 
   function switchRewardTab(tab) {
     [tabBtnCatalog, tabBtnHistory, tabBtnSpeed].forEach(btn => {

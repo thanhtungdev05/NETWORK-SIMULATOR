@@ -595,3 +595,293 @@ function gamification_fulfill_redemption(
         throw $e;
     }
 }
+
+/**
+ * Tạo Token Magic Link Nhắc Nhở Học Tập & Tặng Xu May Mắn
+ */
+function gamification_create_nudge_token(PDO $pdo, string $userId, string $email, int $dayNumber): string
+{
+    $token = bin2hex(random_bytes(16));
+    $stmt = $pdo->prepare('
+        INSERT INTO nudge_campaign_tokens (user_id, email, day_number, token, expires_at, created_at)
+        VALUES (:uid, :email, :day, :token, NOW() + INTERVAL \'48 hours\', NOW())
+        RETURNING token
+    ');
+    $stmt->execute([
+        ':uid' => $userId,
+        ':email' => strtolower(trim($email)),
+        ':day' => min(max($dayNumber, 1), 5),
+        ':token' => $token,
+    ]);
+    return $token;
+}
+
+/**
+ * Học viên bấm từ email vào để mở Rương Xu May Mắn
+ */
+function gamification_claim_nudge_token(PDO $pdo, string $token, ?string $currentUserId = null): array
+{
+    $tokenClean = trim($token);
+    $stmt = $pdo->prepare('
+        SELECT t.*, u.display_name, s.total_points, s.current_streak
+        FROM nudge_campaign_tokens t
+        JOIN users u ON u.user_id = t.user_id
+        LEFT JOIN user_streaks s ON s.user_id = t.user_id
+        WHERE t.token = :token
+        LIMIT 1
+    ');
+    $stmt->execute([':token' => $tokenClean]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$row) {
+        return [
+            'success' => false,
+            'reason' => 'invalid_token',
+            'message' => 'Mã xác nhận không tồn tại hoặc liên kết không hợp lệ.',
+        ];
+    }
+
+    if ($row['claimed_at'] !== null) {
+        return [
+            'success' => false,
+            'already_claimed' => true,
+            'points_awarded' => (int)$row['points_awarded'],
+            'student_name' => $row['display_name'] ?? $row['email'],
+            'message' => "Bạn đã mở rương xu may mắn này trước đó rồi (+{$row['points_awarded']} NetCoins). Hãy hoàn thành bài thực hành để tiếp tục tích lũy thêm xu nhé!",
+        ];
+    }
+
+    if (strtotime((string)$row['expires_at']) < time()) {
+        return [
+            'success' => false,
+            'expired' => true,
+            'message' => 'Liên kết mở rương xu may mắn này đã hết hạn (quá 48 giờ). Hãy đón chờ email nhắc nhở tiếp theo từ Cú Duo nhé!',
+        ];
+    }
+
+    // Quay số xu may mắn ngẫu nhiên: 15 đến 50 NetCoins
+    $luckyCoins = random_int(15, 50);
+
+    $pdo->beginTransaction();
+    try {
+        // Đánh dấu token đã claim
+        $upd = $pdo->prepare('
+            UPDATE nudge_campaign_tokens 
+            SET claimed_at = NOW(), points_awarded = :pts 
+            WHERE token_id = :tid
+        ');
+        $upd->execute([':pts' => $luckyCoins, ':tid' => $row['token_id']]);
+
+        // Đảm bảo và cộng xu vào tài khoản học viên
+        gamification_ensure_user_streak($pdo, $row['user_id']);
+        $updStreak = $pdo->prepare('
+            UPDATE user_streaks 
+            SET total_points = total_points + :pts, updated_at = NOW() 
+            WHERE user_id = :uid
+            RETURNING total_points, current_streak
+        ');
+        $updStreak->execute([':pts' => $luckyCoins, ':uid' => $row['user_id']]);
+        $newStreak = $updStreak->fetch(PDO::FETCH_ASSOC);
+
+        // Ghi nhật ký hoạt động
+        $todayStr = (new DateTimeImmutable('now', new DateTimeZone('Asia/Ho_Chi_Minh')))->format('Y-m-d');
+        $actStmt = $pdo->prepare('
+            INSERT INTO user_daily_activity (user_id, activity_date, activity_type, points_earned, metadata, created_at)
+            VALUES (:uid, :dt, \'nudge_lucky_chest\', :pts, :meta, NOW())
+            ON CONFLICT (user_id, activity_date, activity_type) 
+            DO UPDATE SET points_earned = user_daily_activity.points_earned + EXCLUDED.points_earned, metadata = EXCLUDED.metadata
+        ');
+        $actStmt->execute([
+            ':uid' => $row['user_id'],
+            ':dt' => $todayStr,
+            ':pts' => $luckyCoins,
+            ':meta' => json_encode(['day_number' => (int)$row['day_number'], 'token' => substr($tokenClean, 0, 8)]),
+        ]);
+
+        $pdo->commit();
+
+        return [
+            'success' => true,
+            'points_awarded' => $luckyCoins,
+            'total_points' => (int)($newStreak['total_points'] ?? 0),
+            'current_streak' => (int)($newStreak['current_streak'] ?? 1),
+            'day_number' => (int)$row['day_number'],
+            'student_name' => $row['display_name'] ?? $row['email'],
+            'email' => $row['email'],
+            'message' => "🎉 BẠN ĐÃ MỞ RƯƠNG XU CÚ DUO THÀNH CÔNG! Chúc mừng bạn nhận được +{$luckyCoins} NetCoins may mắn!",
+        ];
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $e;
+    }
+}
+
+/**
+ * Giảng viên phát động gửi email nhắc nhở phong cách Duolingo (Ngày 1 - 5)
+ */
+function gamification_send_duo_nudge(
+    PDO $pdo,
+    int $dayNumber,
+    ?string $classId = null,
+    ?string $targetEmail = null,
+    ?string $actorUserId = null
+): array {
+    require_once __DIR__ . '/mailer.php';
+
+    $dayClamped = min(max($dayNumber, 1), 5);
+    $targetEmailClean = $targetEmail ? strtolower(trim($targetEmail)) : null;
+
+    $query = '
+        SELECT u.user_id, u.email, u.display_name, u.class_code,
+               COALESCE(tc.class_name, u.class_code, \'Lớp Chuyên ngành Mạng\') AS class_name,
+               tc.class_id
+        FROM users u
+        LEFT JOIN training_classes tc ON tc.class_code = u.class_code
+        WHERE u.is_terminated = FALSE
+    ';
+    $params = [];
+
+    if ($targetEmailClean) {
+        $query .= ' AND LOWER(u.email) = :email';
+        $params[':email'] = $targetEmailClean;
+    } elseif ($classId) {
+        $query .= ' AND (tc.class_id = :cid OR tc.class_code = :cid)';
+        $params[':cid'] = $classId;
+    } else {
+        $query .= ' AND u.role = \'KTV\'';
+    }
+
+    $query .= ' ORDER BY u.display_name, u.email LIMIT 50';
+
+    $stmt = $pdo->prepare($query);
+    $stmt->execute($params);
+    $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    if (empty($students)) {
+        return [
+            'success' => false,
+            'message' => 'Không tìm thấy học viên phù hợp để gửi email nhắc nhở.',
+            'sent_count' => 0,
+        ];
+    }
+
+    $baseUrl = env_value('APP_BASE_URL', '');
+    if ($baseUrl === '') {
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? '127.0.0.1:8080';
+        $baseUrl = "{$scheme}://{$host}";
+    }
+
+    $sentCount = 0;
+    $failedCount = 0;
+    $details = [];
+
+    $subjectTemplates = [
+        1 => '[🌱 Duolingo Streak - Ngày 1/5] Khởi đầu 5 phút rực lửa cùng UTH NetLab!',
+        2 => '[🔥 Duolingo Streak - Ngày 2/5] Đừng để ngọn lửa vụt tắt, tiếp tục chuỗi ngày nào!',
+        3 => '[⏳ Duolingo Streak - Ngày 3/5] Hơn nửa chặng đường rồi! Cú Duo đang lo lắng nè...',
+        4 => '[🥺 Duolingo Streak - Ngày 4/5] Cú Duo năn nỉ bạn luôn á! Dành 3 phút thôi mà 🥺',
+        5 => '[🚨 BÁO ĐỘNG ĐỎ - Ngày 5/5] HẠN CHÓT 23:59 ĐÊM NAY! Cứu lấy ngọn lửa Streak!',
+    ];
+    $subject = $subjectTemplates[$dayClamped];
+
+    foreach ($students as $st) {
+        $token = gamification_create_nudge_token($pdo, $st['user_id'], $st['email'], $dayClamped);
+        $streak = gamification_ensure_user_streak($pdo, $st['user_id']);
+        $magicUrl = rtrim($baseUrl, '/') . '/portal.html?claim_nudge_token=' . $token . '&email=' . urlencode($st['email']);
+
+        $htmlBody = build_duolingo_nudge_email_template(
+            $dayClamped,
+            (string)($st['display_name'] ?? ''),
+            (string)$st['email'],
+            $magicUrl,
+            (int)($streak['current_streak'] ?? 1),
+            (string)$st['class_name']
+        );
+        $altText = "Chào bạn " . ($st['display_name'] ?? $st['email']) . "! Cú Duo gửi bạn lời nhắn nhắc nhở Ngày {$dayClamped}/5. Bấm vào liên kết sau để nhận Rương Xu May Mắn và vào làm bài: {$magicUrl}";
+
+        $mailRes = send_smtp_mail($st['email'], $subject, $htmlBody, $altText);
+        if ($mailRes['ok']) {
+            $sentCount++;
+            $details[] = ['email' => $st['email'], 'status' => 'sent', 'token' => substr($token, 0, 8)];
+        } else {
+            $failedCount++;
+            $details[] = ['email' => $st['email'], 'status' => 'failed', 'reason' => $mailRes['message'] ?? 'smtp_error'];
+        }
+    }
+
+    // Ghi nhật ký đợt gửi
+    try {
+        $logStmt = $pdo->prepare('
+            INSERT INTO nudge_campaign_logs (class_id, class_code, day_number, target_email, sent_count, created_by, created_at)
+            VALUES (:cid, :code, :day, :email, :cnt, :actor, NOW())
+        ');
+        $logStmt->execute([
+            ':cid' => $classId && preg_match('/^[0-9a-f-]{36}$/i', $classId) ? $classId : null,
+            ':code' => $students[0]['class_code'] ?? null,
+            ':day' => $dayClamped,
+            ':email' => $targetEmailClean,
+            ':cnt' => $sentCount,
+            ':actor' => $actorUserId && preg_match('/^[0-9a-f-]{36}$/i', $actorUserId) ? $actorUserId : null,
+        ]);
+    } catch (\Throwable $ignored) {
+    }
+
+    return [
+        'success' => true,
+        'day_number' => $dayClamped,
+        'sent_count' => $sentCount,
+        'failed_count' => $failedCount,
+        'total_targets' => count($students),
+        'message' => "Đã phát động gửi thành công {$sentCount} email nhắc nhở phong cách Duolingo (Ngày {$dayClamped}/5).",
+        'details' => $details,
+    ];
+}
+
+/**
+ * Thống kê tổng quan chiến dịch nhắc nhở Duolingo dành cho Giảng viên
+ */
+function gamification_get_nudge_overview(PDO $pdo): array
+{
+    $tokenStats = $pdo->query('
+        SELECT 
+            COUNT(*) AS total_tokens_sent,
+            COUNT(claimed_at) AS total_chests_claimed,
+            COALESCE(SUM(points_awarded), 0) AS total_bonus_coins_given,
+            ROUND(100.0 * COUNT(claimed_at) / NULLIF(COUNT(*), 0), 1) AS claim_rate_pct
+        FROM nudge_campaign_tokens
+    ')->fetch(PDO::FETCH_ASSOC);
+
+    $byDay = $pdo->query('
+        SELECT 
+            day_number,
+            COUNT(*) AS sent,
+            COUNT(claimed_at) AS claimed,
+            COALESCE(SUM(points_awarded), 0) AS coins_awarded
+        FROM nudge_campaign_tokens
+        GROUP BY day_number
+        ORDER BY day_number
+    ')->fetchAll(PDO::FETCH_ASSOC);
+
+    $recentLogs = $pdo->query('
+        SELECT l.*, u.display_name AS created_by_name
+        FROM nudge_campaign_logs l
+        LEFT JOIN users u ON u.user_id = l.created_by
+        ORDER BY l.created_at DESC
+        LIMIT 10
+    ')->fetchAll(PDO::FETCH_ASSOC);
+
+    return [
+        'stats' => [
+            'total_sent' => (int)($tokenStats['total_tokens_sent'] ?? 0),
+            'total_claimed' => (int)($tokenStats['total_chests_claimed'] ?? 0),
+            'total_coins_given' => (int)($tokenStats['total_bonus_coins_given'] ?? 0),
+            'claim_rate_pct' => (float)($tokenStats['claim_rate_pct'] ?? 0),
+        ],
+        'by_day' => $byDay,
+        'recent_logs' => $recentLogs,
+    ];
+}
+

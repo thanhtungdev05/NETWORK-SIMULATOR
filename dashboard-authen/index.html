@@ -1312,6 +1312,9 @@
                             <button type="button" class="roster-tab-btn" id="tabInstFulfilled" role="tab" aria-selected="false" data-inst-tab="fulfilled">
                                 📜 Lịch Sử Đã Trao Quà
                             </button>
+                            <button type="button" class="roster-tab-btn" id="tabInstNudge" role="tab" aria-selected="false" data-inst-tab="nudge">
+                                🦉 Chiến Dịch Nhắc Nhở 5 Ngày (Duolingo Nudge)
+                            </button>
                         </div>
 
                         <!-- Tab Content Panels -->
@@ -1400,6 +1403,173 @@
                                             <!-- Dynamically populated -->
                                         </tbody>
                                     </table>
+                                </div>
+                            </div>
+
+                            <!-- Panel 5: Duolingo 5-Day Nudge Campaign -->
+                            <div id="instPanelNudge" class="inst-gamification-panel" style="display: none;">
+                                <!-- Nudge Stats Banner -->
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 20px;">
+                                    <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 12px; padding: 14px 18px;">
+                                        <div style="font-size: 11px; font-weight: 700; color: #166534; text-transform: uppercase;">Tổng Email Đã Gửi</div>
+                                        <div style="font-size: 24px; font-weight: 800; color: #15803d; margin-top: 4px;" id="nudgeStatSent">0</div>
+                                        <div style="font-size: 11px; color: #16a34a;">Email nhắc nhở phong cách Duolingo</div>
+                                    </div>
+                                    <div style="background: #eff6ff; border: 1.5px solid #93c5fd; border-radius: 12px; padding: 14px 18px;">
+                                        <div style="font-size: 11px; font-weight: 700; color: #1e40af; text-transform: uppercase;">Rương Xu Đã Mở</div>
+                                        <div style="font-size: 24px; font-weight: 800; color: #2563eb; margin-top: 4px;">
+                                            <span id="nudgeStatClaimed">0</span> <span style="font-size: 14px; font-weight: 600; color: #3b82f6;">(<span id="nudgeStatRate">0%</span>)</span>
+                                        </div>
+                                        <div style="font-size: 11px; color: #2563eb;">Học viên bấm link email vào phòng lab</div>
+                                    </div>
+                                    <div style="background: #fefce8; border: 1.5px solid #fde047; border-radius: 12px; padding: 14px 18px;">
+                                        <div style="font-size: 11px; font-weight: 700; color: #854d0e; text-transform: uppercase;">Tổng NetCoins Đã Tặng</div>
+                                        <div style="font-size: 24px; font-weight: 800; color: #ca8a04; margin-top: 4px;" id="nudgeStatCoins">0 xu</div>
+                                        <div style="font-size: 11px; color: #d97706;">Phần thưởng may mắn (15 - 50 xu/lần)</div>
+                                    </div>
+                                </div>
+
+                                <!-- Campaign Controller Box -->
+                                <div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 20px; margin-bottom: 24px;">
+                                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+                                        <div>
+                                            <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                                                <span>🦉 Lộ Trình 5 Ngày Nhắc Nhở Học Tập & Luyện Tập</span>
+                                                <span style="font-size: 11px; background: #dbeafe; color: #1d4ed8; padding: 2px 8px; border-radius: 12px; font-weight: 600;">Tâm lý học Duolingo</span>
+                                            </h3>
+                                            <p style="margin: 4px 0 0 0; font-size: 13px; color: #64748b;">
+                                                Mỗi ngày áp dụng một sắc thái biểu cảm tăng dần (khởi động &rarr; giữ lửa &rarr; sốt ruột &rarr; năn nỉ &rarr; báo động đỏ hạn chót 23:59) kèm Rương Xu ngẫu nhiên để kích thích KTV vào làm bài.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <!-- 5-Day Selector Buttons -->
+                                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 20px;" id="nudgeDaySelector">
+                                        <button type="button" class="nudge-day-card active" data-day="1" style="text-align: left; padding: 12px; border: 2px solid #22c55e; background: #f0fdf4; border-radius: 10px; cursor: pointer; transition: all 0.2s;">
+                                            <div style="font-size: 11px; font-weight: 700; color: #166534; text-transform: uppercase;">NGÀY 1 / 5</div>
+                                            <div style="font-size: 13.5px; font-weight: 700; color: #15803d; margin: 4px 0;">🌱 Khởi động vui tươi</div>
+                                            <div style="font-size: 11.5px; color: #4b5563;">5 phút nhẹ nhàng khởi đầu thói quen</div>
+                                        </button>
+                                        <button type="button" class="nudge-day-card" data-day="2" style="text-align: left; padding: 12px; border: 2px solid #e2e8f0; background: #ffffff; border-radius: 10px; cursor: pointer; transition: all 0.2s;">
+                                            <div style="font-size: 11px; font-weight: 700; color: #c2410c; text-transform: uppercase;">NGÀY 2 / 5</div>
+                                            <div style="font-size: 13.5px; font-weight: 700; color: #ea580c; margin: 4px 0;">🔥 Giữ vững ngọn lửa</div>
+                                            <div style="font-size: 11.5px; color: #4b5563;">Đừng để chuỗi ngày vụt tắt</div>
+                                        </button>
+                                        <button type="button" class="nudge-day-card" data-day="3" style="text-align: left; padding: 12px; border: 2px solid #e2e8f0; background: #ffffff; border-radius: 10px; cursor: pointer; transition: all 0.2s;">
+                                            <div style="font-size: 11px; font-weight: 700; color: #d97706; text-transform: uppercase;">NGÀY 3 / 5</div>
+                                            <div style="font-size: 13.5px; font-weight: 700; color: #d97706; margin: 4px 0;">⏳ Sốt ruột thúc giục</div>
+                                            <div style="font-size: 11.5px; color: #4b5563;">Đã quá nửa thời gian rồi đó!</div>
+                                        </button>
+                                        <button type="button" class="nudge-day-card" data-day="4" style="text-align: left; padding: 12px; border: 2px solid #e2e8f0; background: #ffffff; border-radius: 10px; cursor: pointer; transition: all 0.2s;">
+                                            <div style="font-size: 11px; font-weight: 700; color: #7c3aed; text-transform: uppercase;">NGÀY 4 / 5</div>
+                                            <div style="font-size: 13.5px; font-weight: 700; color: #7c3aed; margin: 4px 0;">🥺 Năn nỉ tha thiết</div>
+                                            <div style="font-size: 11.5px; color: #4b5563;">Chỉ 3 phút thôi mà, năn nỉ luôn á!</div>
+                                        </button>
+                                        <button type="button" class="nudge-day-card" data-day="5" style="text-align: left; padding: 12px; border: 2px solid #e2e8f0; background: #ffffff; border-radius: 10px; cursor: pointer; transition: all 0.2s;">
+                                            <div style="font-size: 11px; font-weight: 700; color: #dc2626; text-transform: uppercase;">NGÀY 5 / 5</div>
+                                            <div style="font-size: 13.5px; font-weight: 700; color: #dc2626; margin: 4px 0;">🚨 TỐI HẬU THƯ 23:59</div>
+                                            <div style="font-size: 11.5px; color: #4b5563;">Hôm nay là cơ hội cuối cùng!</div>
+                                        </button>
+                                    </div>
+
+                                    <!-- Target Selection & Dispatch Controls -->
+                                    <div style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px;">
+                                        <div style="flex: 1; min-width: 220px;">
+                                            <label for="nudgeTargetScope" style="display: block; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 6px;">
+                                                🎯 Đối tượng nhận thông báo email:
+                                            </label>
+                                            <select id="nudgeTargetScope" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; background: #fff;">
+                                                <option value="all">Tất cả Kỹ thuật viên (KTV)</option>
+                                                <option value="class">Theo lớp đào tạo...</option>
+                                                <option value="single">Gửi riêng cho 1 học viên (test / nhắc riêng)...</option>
+                                            </select>
+                                        </div>
+
+                                        <div id="nudgeClassSelectWrap" style="flex: 1; min-width: 220px; display: none;">
+                                            <label for="nudgeClassId" style="display: block; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 6px;">
+                                                🏫 Chọn lớp đào tạo:
+                                            </label>
+                                            <select id="nudgeClassId" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; background: #fff;">
+                                                <option value="">-- Đang tải danh sách lớp... --</option>
+                                            </select>
+                                        </div>
+
+                                        <div id="nudgeEmailInputWrap" style="flex: 1; min-width: 220px; display: none;">
+                                            <label for="nudgeTargetEmail" style="display: block; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 6px;">
+                                                ✉️ Nhập email học viên:
+                                            </label>
+                                            <input type="email" id="nudgeTargetEmail" placeholder="vd: tungdt5101@ut.edu.vn" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; background: #fff;" />
+                                        </div>
+
+                                        <div>
+                                            <button type="button" id="btnSendNudgeCampaign" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: linear-gradient(135deg, #16a34a, #15803d); color: #fff; border: none; border-radius: 8px; font-size: 13.5px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(22,163,74,0.3); transition: all 0.2s;">
+                                                <span>🚀 Phát Động Gửi Email (Ngày <span id="nudgeBtnDayLabel">1</span>)</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Dual View: Live Preview + Metrics & History -->
+                                <div style="display: grid; grid-template-columns: minmax(360px, 1.2fr) minmax(300px, 0.8fr); gap: 20px; align-items: start;">
+                                    <!-- Left: Email Live Preview Frame -->
+                                    <div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 8px rgba(15,23,42,0.04);">
+                                        <div style="padding: 12px 18px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between;">
+                                            <div style="font-weight: 700; font-size: 13px; color: #334155; display: flex; align-items: center; gap: 6px;">
+                                                <span>📧 Xem Trước Email Mẫu Gửi Tới KTV</span>
+                                            </div>
+                                            <div style="font-size: 12px; font-weight: 600; color: #059669;" id="nudgePreviewDayBadge">Ngày 1: Vui tươi khởi động</div>
+                                        </div>
+                                        <div style="padding: 0; background: #f1f5f9; min-height: 540px; position: relative;">
+                                            <iframe id="nudgeEmailPreviewIframe" title="Email Preview" style="width: 100%; height: 560px; border: none; background: #ffffff;" src="about:blank"></iframe>
+                                        </div>
+                                    </div>
+
+                                    <!-- Right: Breakdown by Day & Recent Dispatch Logs -->
+                                    <div style="display: flex; flex-direction: column; gap: 20px;">
+                                        <!-- Breakdown by Day Card -->
+                                        <div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 18px; box-shadow: 0 2px 8px rgba(15,23,42,0.04);">
+                                            <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 700; color: #1e293b;">
+                                                📊 Thống Kê Theo Từng Ngày (1 - 5)
+                                            </h4>
+                                            <div style="overflow-x: auto;">
+                                                <table style="width: 100%; border-collapse: collapse; font-size: 12.5px;">
+                                                    <thead>
+                                                        <tr style="border-bottom: 1.5px solid #e2e8f0; text-align: left; color: #64748b;">
+                                                            <th style="padding: 8px;">Đợt ngày</th>
+                                                            <th style="padding: 8px;">Đã gửi</th>
+                                                            <th style="padding: 8px;">Đã mở rương</th>
+                                                            <th style="padding: 8px;">Xu đã thưởng</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="nudgeByDayTableBody">
+                                                        <!-- Populated dynamically -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+
+                                        <!-- Recent Dispatch Logs Card -->
+                                        <div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 18px; box-shadow: 0 2px 8px rgba(15,23,42,0.04);">
+                                            <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 700; color: #1e293b;">
+                                                📜 Lịch Sử Các Đợt Phát Động
+                                            </h4>
+                                            <div style="overflow-x: auto;">
+                                                <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                                                    <thead>
+                                                        <tr style="border-bottom: 1.5px solid #e2e8f0; text-align: left; color: #64748b;">
+                                                            <th style="padding: 8px;">Thời gian</th>
+                                                            <th style="padding: 8px;">Đợt ngày</th>
+                                                            <th style="padding: 8px;">Đối tượng</th>
+                                                            <th style="padding: 8px;">Số lượng</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="nudgeRecentLogsBody">
+                                                        <!-- Populated dynamically -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -2040,7 +2210,7 @@
         </div>
     </aside>
 
-    <script src="js/app.js?v=20260926-ktv-lookup-v5"></script>
+    <script src="js/app.js?v=20260926-duo-nudge-v1"></script>
     <script src="js/labs-management.js?v=20260912-v4"></script>
     <script src="js/users-management.js?v=20260912-v4"></script>
     <script src="js/ai-assistant.js?v=20260912-v4"></script>

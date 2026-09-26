@@ -780,10 +780,181 @@
 
     // Tải thông tin người dùng hiện tại từ API để dùng cho Tracking
     fetchCurrentUser();
+
+    // Kiểm tra liên kết mở Rương Xu May Mắn từ email Cú Duo (Duolingo Nudge)
+    checkDuolingoNudgeReward();
   }
 
   function redirectToLogin() {
-    window.location.replace('/login/index.html');
+    const currentPath = window.location.pathname + window.location.search;
+    window.location.replace('/login/index.html?redirect=' + encodeURIComponent(currentPath));
+  }
+
+  // ── Duolingo Lucky Chest & Confetti Effects ──────────────────────────
+  function fireConfettiEffect() {
+    const canvas = document.getElementById('duo-confetti-canvas');
+    if (!canvas) return;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    canvas.style.display = 'block';
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const colors = ['#f59e0b', '#10b981', '#3b82f6', '#ec4899', '#8b5cf6', '#eab308'];
+    const particles = [];
+    for (let i = 0; i < 90; i++) {
+      particles.push({
+        x: canvas.width / 2 + (Math.random() - 0.5) * 200,
+        y: canvas.height * 0.45 + (Math.random() - 0.5) * 100,
+        vx: (Math.random() - 0.5) * 14,
+        vy: (Math.random() * -12) - 4,
+        size: Math.random() * 8 + 5,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        rotation: Math.random() * 360,
+        rSpeed: (Math.random() - 0.5) * 8,
+        shape: Math.random() > 0.4 ? 'circle' : 'rect',
+        opacity: 1
+      });
+    }
+
+    let animationFrame;
+    const startTime = Date.now();
+
+    function draw() {
+      const elapsed = Date.now() - startTime;
+      if (elapsed > 3500) {
+        if (typeof cancelAnimationFrame === 'function') cancelAnimationFrame(animationFrame);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        canvas.style.display = 'none';
+        return;
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      particles.forEach(function (p) {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.35;
+        p.vx *= 0.98;
+        p.rotation += p.rSpeed;
+        if (elapsed > 2000) {
+          p.opacity = Math.max(0, 1 - (elapsed - 2000) / 1500);
+        }
+
+        ctx.save();
+        ctx.globalAlpha = p.opacity;
+        ctx.translate(p.x, p.y);
+        ctx.rotate((p.rotation * Math.PI) / 180);
+        ctx.fillStyle = p.color;
+
+        if (p.shape === 'circle') {
+          ctx.beginPath();
+          ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+        }
+        ctx.restore();
+      });
+
+      animationFrame = requestAnimationFrame(draw);
+    }
+
+    draw();
+  }
+
+  function showLuckyChestModal(data, alreadyClaimed) {
+    const modal = document.getElementById('duo-lucky-chest-modal');
+    if (!modal) return;
+
+    const titleEl = document.getElementById('duo-chest-title');
+    const subEl = document.getElementById('duo-chest-subtitle');
+    const coinsEl = document.getElementById('duo-chest-coins');
+    const streakEl = document.getElementById('duo-chest-streak-info');
+    const quoteEl = document.getElementById('duo-chest-quote');
+    const iconEl = document.getElementById('duo-chest-icon');
+
+    if (alreadyClaimed) {
+      if (titleEl) titleEl.textContent = 'RƯƠNG XU ĐÃ NHẬN';
+      if (subEl) subEl.textContent = 'Chào bạn ' + (data.student_name || '') + '! Bạn đã mở rương xu may mắn này trước đó rồi.';
+      if (coinsEl) coinsEl.textContent = '+' + (data.points_awarded || 0) + ' NetCoins 🪙';
+      if (streakEl) streakEl.textContent = 'Trạng thái: Đã cộng xu vào tài khoản';
+      if (quoteEl) quoteEl.textContent = '"Tuyệt vời! Hãy hoàn thành thêm một bài thực hành hôm nay để tiếp tục nối dài chuỗi ngày và nhận thêm nhiều phần quà nhé!"';
+      if (iconEl) iconEl.textContent = '✨';
+    } else {
+      const pts = Number(data.points_awarded || 25);
+      const curStreak = Number(data.current_streak || 1);
+      if (titleEl) titleEl.textContent = '🎉 BẠN ĐÃ MỞ RƯƠNG XU CÚ DUO!';
+      if (subEl) subEl.textContent = 'Chúc mừng bạn ' + (data.student_name || '') + ' đã quay lại phòng thực hành!';
+      if (coinsEl) coinsEl.textContent = '+' + pts + ' NetCoins 🪙';
+      if (streakEl) streakEl.textContent = '🔥 Chuỗi học tập: ' + curStreak + ' ngày liên tiếp';
+      if (quoteEl) quoteEl.textContent = data.message || '"Cú Duo rất vui vì bạn đã quay lại làm bài. Hãy hoàn thành ngay 1 bài thực hành hôm nay để bảo vệ ngọn lửa nhé!"';
+      if (iconEl) iconEl.textContent = '🎁';
+
+      // Cập nhật số dư xu & streak trên topbar ngay lập tức
+      const streakText = document.getElementById('topbar-streak-text');
+      const coinsText = document.getElementById('topbar-coins-text');
+      const btnStreak = document.getElementById('btn-topbar-streak');
+      if (btnStreak) btnStreak.style.display = 'inline-flex';
+      if (streakText) streakText.textContent = curStreak + ' ngày';
+      if (coinsText && data.total_points) coinsText.textContent = Number(data.total_points).toLocaleString();
+
+      // Bắn pháo hoa Confetti chúc mừng!
+      fireConfettiEffect();
+    }
+
+    modal.style.display = 'flex';
+
+    const closeBtn = document.getElementById('btn-close-duo-chest');
+    const actionBtn = document.getElementById('btn-duo-chest-action');
+    const closeModal = function () {
+      modal.style.display = 'none';
+    };
+    if (closeBtn) closeBtn.onclick = closeModal;
+    if (actionBtn) actionBtn.onclick = closeModal;
+    modal.onclick = function (e) {
+      if (e.target === modal) closeModal();
+    };
+  }
+
+  function checkDuolingoNudgeReward() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('claim_nudge_token') || sessionStorage.getItem('pending_nudge_token');
+      if (!token) return;
+
+      sessionStorage.setItem('pending_nudge_token', token);
+
+      fetch('/api/index.php/gamification/nudge/claim', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: token })
+      })
+        .then(function (res) { return res.json(); })
+        .then(function (json) {
+          sessionStorage.removeItem('pending_nudge_token');
+
+          // Làm sạch URL mà không cần tải lại trang
+          try {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('claim_nudge_token');
+            url.searchParams.delete('email');
+            window.history.replaceState({}, document.title, url.pathname + (url.search ? url.search : ''));
+          } catch (e) {}
+
+          if (json && json.success && json.data) {
+            showLuckyChestModal(json.data, false);
+          } else if (json && json.data && json.data.already_claimed) {
+            showLuckyChestModal(json.data, true);
+          }
+        })
+        .catch(function (err) {
+          console.warn('[Nudge] Không thể claim token rương xu:', err);
+        });
+    } catch (e) {
+      console.warn('[Nudge] Lỗi kiểm tra token:', e);
+    }
   }
 
   function renderUserProfile() {

@@ -3866,6 +3866,81 @@ function handle_gamification(array $segments, string $method): void
         }
     }
 
+    // 8. Duolingo 5-Day Streak & Nudge Campaign
+    if ($action === 'nudge' || str_starts_with($action, 'nudge-')) {
+        $sub = $segments[2] ?? (str_starts_with($action, 'nudge-') ? substr($action, 6) : '');
+
+        // 8.1 Preview email template (GET /gamification/nudge/preview?day=1)
+        if ($sub === 'preview') {
+            if ($method !== 'GET') {
+                fail(405, 'method-not-allowed', 'Nudge preview only supports GET.');
+            }
+            $day = min(max((int)($_GET['day'] ?? 1), 1), 5);
+            require_once __DIR__ . '/lib/mailer.php';
+            $previewBase = app_origin(env_value('APP_BASE_URL', '')) ?: 'http://127.0.0.1:8080';
+            $previewHtml = build_duolingo_nudge_email_template(
+                $day,
+                'Nguyễn Văn A',
+                'sinhvien@ut.edu.vn',
+                rtrim($previewBase, '/') . '/portal.html?claim_nudge_token=DEMO_PREVIEW_TOKEN',
+                3,
+                'Lớp Mạng Máy Tính K21'
+            );
+            if (isset($_GET['raw']) && (string)$_GET['raw'] === '1') {
+                header('Content-Type: text/html; charset=utf-8');
+                echo $previewHtml;
+                exit;
+            }
+            respond(['ok' => true, 'success' => true, 'day_number' => $day, 'html' => $previewHtml]);
+        }
+
+        // 8.2 Overview / Stats (GET /gamification/nudge/overview)
+        if ($sub === 'overview') {
+            if ($method !== 'GET') {
+                fail(405, 'method-not-allowed', 'Nudge overview only supports GET.');
+            }
+            require_instructor_or_admin();
+            $overview = gamification_get_nudge_overview($pdo);
+            respond(['ok' => true, 'success' => true, 'data' => $overview]);
+        }
+
+        // 8.3 Dispatch Nudge Emails (POST /gamification/nudge/send)
+        if ($sub === 'send') {
+            if ($method !== 'POST') {
+                fail(405, 'method-not-allowed', 'Nudge send only supports POST.');
+            }
+            $actor = require_instructor_or_admin();
+            $body = json_body();
+            $day = (int)($body['day_number'] ?? 1);
+            $classId = isset($body['class_id']) && trim((string)$body['class_id']) !== '' ? trim((string)$body['class_id']) : null;
+            $email = isset($body['email']) && trim((string)$body['email']) !== '' ? trim((string)$body['email']) : null;
+
+            try {
+                $res = gamification_send_duo_nudge($pdo, $day, $classId, $email, (string)($actor['user_id'] ?? ''));
+                respond(['ok' => true, 'success' => true, 'data' => $res]);
+            } catch (Throwable $e) {
+                fail(500, 'nudge-send-failed', $e->getMessage());
+            }
+        }
+
+        // 8.4 Claim Magic Link Token (POST /gamification/nudge/claim)
+        if ($sub === 'claim') {
+            if ($method !== 'POST') {
+                fail(405, 'method-not-allowed', 'Nudge claim only supports POST.');
+            }
+            $body = json_body();
+            $token = trim((string)($body['token'] ?? ($_GET['token'] ?? '')));
+            if ($token === '') {
+                fail(400, 'bad-request', 'Thiếu token mở rương xu may mắn.');
+            }
+            $userId = current_user_id();
+            $claimRes = gamification_claim_nudge_token($pdo, $token, $userId);
+            respond(['ok' => $claimRes['success'] ?? false, 'success' => $claimRes['success'] ?? false, 'data' => $claimRes]);
+        }
+
+        fail(404, 'not-found', 'Nudge sub-endpoint not found.');
+    }
+
     fail(404, 'not-found', 'Gamification endpoint not found.');
 }
 

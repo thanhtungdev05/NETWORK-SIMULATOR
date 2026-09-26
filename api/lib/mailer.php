@@ -940,6 +940,205 @@ HTML;
 HTML;
 }
 
+/**
+ * Mẫu Email Nhắc Nhở & Hối Thúc Học Tập theo chuỗi 5 ngày phong cách Cú Duolingo
+ */
+function build_duolingo_nudge_email_template(
+    int $dayNumber,
+    string $studentName,
+    string $studentEmail,
+    string $magicLinkUrl,
+    int $currentStreak = 0,
+    string $className = 'CNTT-K22'
+): string {
+    $dayClamped = min(max($dayNumber, 1), 5);
+    $safeName = htmlspecialchars($studentName !== '' ? $studentName : 'Học viên', ENT_QUOTES, 'UTF-8');
+    $safeEmail = htmlspecialchars($studentEmail, ENT_QUOTES, 'UTF-8');
+    $safeClass = htmlspecialchars($className !== '' ? $className : 'CNTT-K22', ENT_QUOTES, 'UTF-8');
+    $streakDisplay = max($currentStreak, 1);
+
+    $tones = [
+        1 => [
+            'badge' => '🌱 NGÀY 1/5 • KHỞI ĐỘNG CHUỖI NGÀY',
+            'theme_color' => '#16a34a',
+            'accent_bg' => '#f0fdf4',
+            'border_color' => '#bbf7d0',
+            'mascot' => '🦉✨',
+            'title' => 'Khởi đầu 5 phút rực lửa hôm nay!',
+            'dialogue' => "Chào <strong>{$safeName}</strong>! Cú Duo và Giảng viên đã chuẩn bị sẵn bài lab thực hành mạng cho bạn rồi nè. Chỉ mất đúng 5 phút để thắp sáng ngọn lửa chuỗi ngày đầu tiên. Đừng chần chừ nhé, mở rương xu may mắn ngay!",
+            'urgency' => '🌱 Thư thả, tràn đầy năng lượng',
+            'button_text' => '🎁 MỞ RƯƠNG XU & VÀO LÀM LAB NGAY',
+            'flame_text' => 'Bắt đầu chuỗi ngọn lửa mới!'
+        ],
+        2 => [
+            'badge' => '🔥 NGÀY 2/5 • GIỮ VỮNG NGỌN LỬA',
+            'theme_color' => '#ea580c',
+            'accent_bg' => '#fff7ed',
+            'border_color' => '#fed7aa',
+            'mascot' => '🦉🔥',
+            'title' => 'Đừng để ngọn lửa vụt tắt bạn nhé!',
+            'dialogue' => "Bạn đã khởi động rất tuyệt vời! Ngọn lửa <strong>{$streakDisplay} ngày</strong> đang rực sáng. Đừng để công sức giữ chuỗi bị gián đoạn. Dành 5 phút ghé thăm phòng Lab hôm nay để giữ vững phong độ của một Kỹ sư Mạng UTH nào!",
+            'urgency' => '🔥 Ấm áp, động viên giữ lửa',
+            'button_text' => '🔥 THẮP SÁNG CHUỖI & NHẬN XU THƯỞNG',
+            'flame_text' => "Chuỗi {$streakDisplay} ngày đang bùng cháy!"
+        ],
+        3 => [
+            'badge' => '⏳ NGÀY 3/5 • HƠN NỬA CHẶNG ĐƯỜNG',
+            'theme_color' => '#e11d48',
+            'accent_bg' => '#fff1f2',
+            'border_color' => '#fecdd3',
+            'mascot' => '🦉⏳',
+            'title' => 'Cú Duo bắt đầu thấy sốt ruột rồi đó!',
+            'dialogue' => "Hơn 50% thời hạn đã trôi qua rồi mà bài thực hành vẫn chưa xong kìa <strong>{$safeName}</strong> ơi! Cú Duo đang bay vòng vòng lo lắng cho bạn đây. Đừng để dồn bài vào phút chót, vào giải quyết ngay bài lab hôm nay thôi!",
+            'urgency' => '⏳ Sốt ruột, thúc giục khẩn trương',
+            'button_text' => '⚡ VÀO LÀM LAB NGAY TRƯỚC KHI TRỄ',
+            'flame_text' => 'Nguy cơ lung lay chuỗi ngày!'
+        ],
+        4 => [
+            'badge' => '🥺 NGÀY 4/5 • CÚ DUO NĂN NỈ BẠN ĐÓ',
+            'theme_color' => '#7c3aed',
+            'accent_bg' => '#faf5ff',
+            'border_color' => '#e9d5ff',
+            'mascot' => '🦉🥺',
+            'title' => 'Cú Duo năn nỉ bạn luôn á, vào làm bài đi mà...',
+            'dialogue' => "Cú Duo đang khóc ròng ròng trên cành cây đây nè 🥺 Chỉ còn đúng 24h nữa thôi! Bao nhiêu công sức giữ chuỗi học tập và điểm chuyên cần sắp tan biến rồi. Làm ơn vào làm 1 bài thôi mà, Cú Duo năn nỉ bạn luôn á!",
+            'urgency' => '🥺 Năn nỉ tha thiết chuẩn Duolingo',
+            'button_text' => '🥺 CỨU CÚ DUO & NHẬN XU MAY MẮN',
+            'flame_text' => 'Cú Duo đang khóc vì sợ mất chuỗi 🥺'
+        ],
+        5 => [
+            'badge' => '🚨 HẠN CHÓT (NGÀY 5/5) • BÁO ĐỘNG ĐỎ',
+            'theme_color' => '#dc2626',
+            'accent_bg' => '#fef2f2',
+            'border_color' => '#fecaca',
+            'mascot' => '🦉🚨💥',
+            'title' => '🚨 TỐI HẬU THƯ: HẠN CHÓT 23:59 ĐÊM NAY!',
+            'dialogue' => "ĐÂY LÀ LỜI CẢNH BÁO CUỐI CÙNG! Đúng 23:59 đêm nay đợt thực hành sẽ kết thúc. Ngọn lửa Streak sẽ bị dập tắt vĩnh viễn và Giảng viên sẽ ghi nhận trừ điểm chuyên cần! Bấm vào link dưới đây để cứu vớt tình thế NGAY LẬP TỨC!",
+            'urgency' => '🚨 BÁO ĐỘNG ĐỎ • HẠN CHÓT ĐÊM NAY',
+            'button_text' => '🚨 CỨU CHUỖI KHẨN CẤP TRƯỚC 23:59',
+            'flame_text' => 'CẢNH BÁO: Sắp tắt lửa và mất điểm!'
+        ],
+    ];
+
+    $cfg = $tones[$dayClamped];
+
+    // Vẽ thanh tiến độ 5 ngày
+    $stepsHtml = '';
+    for ($i = 1; $i <= 5; $i++) {
+        $isCurrent = ($i === $dayClamped);
+        $isPassed = ($i < $dayClamped);
+        $bg = $isCurrent ? $cfg['theme_color'] : ($isPassed ? '#10b981' : '#e2e8f0');
+        $textColor = ($isCurrent || $isPassed) ? '#ffffff' : '#64748b';
+        $label = $isPassed ? '✓' : "N$i";
+        $border = $isCurrent ? '3px solid #facc15' : 'none';
+        $scale = $isCurrent ? 'transform: scale(1.15);' : '';
+        $stepsHtml .= "<div style=\"display: inline-block; width: 34px; height: 34px; line-height: 34px; text-align: center; border-radius: 50%; background-color: {$bg}; color: {$textColor}; font-weight: 800; font-size: 13px; margin: 0 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); border: {$border}; {$scale}\">{$label}</div>";
+    }
+
+    return <<<HTML
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{$cfg['badge']} - UTH NetLab Duolingo Streak</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #1e293b;">
+  <table width="100%" border="0" cellpadding="0" cellspacing="0" style="background-color: #f1f5f9; padding: 24px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" border="0" cellpadding="0" cellspacing="0" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); border: 2px solid {$cfg['theme_color']};">
+          
+          <!-- Top Duo Header Banner -->
+          <tr>
+            <td style="background: linear-gradient(135deg, {$cfg['theme_color']} 0%, #1e1b4b 100%); padding: 28px 24px; text-align: center; color: #ffffff;">
+              <div style="font-size: 42px; line-height: 1; margin-bottom: 8px;">{$cfg['mascot']}</div>
+              <span style="display: inline-block; background-color: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.4); border-radius: 20px; padding: 4px 14px; font-size: 12px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase;">
+                {$cfg['badge']}
+              </span>
+              <h1 style="margin: 12px 0 4px 0; font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">
+                {$cfg['title']}
+              </h1>
+              <p style="margin: 0; font-size: 13px; color: rgba(255, 255, 255, 0.9);">
+                Phòng Lab Mạng Ảo UTH • Lớp <strong>{$safeClass}</strong>
+              </p>
+            </td>
+          </tr>
+
+          <!-- 5-Day Visual Progress Bar -->
+          <tr>
+            <td style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 16px 20px; text-align: center;">
+              <div style="font-size: 12px; font-weight: 700; color: #64748b; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
+                Tiến độ đợt hối thúc học tập (5 Ngày)
+              </div>
+              <div style="display: inline-block;">
+                {$stepsHtml}
+              </div>
+              <div style="margin-top: 8px; font-size: 11px; color: {$cfg['theme_color']}; font-weight: 700;">
+                Mức độ khẩn trương: {$cfg['urgency']}
+              </div>
+            </td>
+          </tr>
+
+          <!-- Body Content -->
+          <tr>
+            <td style="padding: 28px 28px 20px 28px;">
+
+              <!-- Duo Speech Bubble -->
+              <div style="position: relative; background-color: {$cfg['accent_bg']}; border: 2px solid {$cfg['border_color']}; border-radius: 16px; padding: 20px; margin-bottom: 24px;">
+                <div style="font-size: 15px; line-height: 1.6; color: #1e293b;">
+                  {$cfg['dialogue']}
+                </div>
+                <div style="margin-top: 12px; padding-top: 10px; border-top: 1px dashed {$cfg['border_color']}; font-size: 12px; font-weight: 700; color: {$cfg['theme_color']};">
+                  🔥 Trạng thái chuỗi hiện tại: {$streakDisplay} ngày liên tục • {$cfg['flame_text']}
+                </div>
+              </div>
+
+              <!-- Lucky Coin Chest Gift Card -->
+              <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px dashed #f59e0b; border-radius: 14px; padding: 16px 20px; margin-bottom: 28px; text-align: center;">
+                <div style="font-size: 28px; margin-bottom: 4px;">🎁🪙✨</div>
+                <strong style="color: #92400e; font-size: 15px; display: block; margin-bottom: 4px;">
+                  RƯƠNG XU MAY MẮN DÀNH CHO BẠN!
+                </strong>
+                <p style="margin: 0; font-size: 13px; color: #b45309; line-height: 1.5;">
+                  Bấm vào nút bên dưới để nhảy thẳng vào phòng Lab thực hành, hệ thống sẽ <strong>tự động mở rương tặng ngẫu nhiên từ 15 đến 50 NetCoins</strong> để bạn đổi quà từ Giảng viên!
+                </p>
+              </div>
+
+              <!-- Primary CTA Button -->
+              <div style="text-align: center; margin: 30px 0 24px 0;">
+                <a href="{$magicLinkUrl}" style="display: inline-block; background: linear-gradient(135deg, {$cfg['theme_color']} 0%, #15803d 100%); color: #ffffff; font-size: 15px; font-weight: 800; text-decoration: none; padding: 18px 36px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 4px solid rgba(0, 0, 0, 0.25);">
+                  {$cfg['button_text']}
+                </a>
+              </div>
+
+              <div style="background-color: #f8fafc; border-radius: 10px; padding: 12px 16px; text-align: center; font-size: 12px; color: #64748b;">
+                🔗 Không bấm được nút trên? Sao chép liên kết này vào trình duyệt:<br>
+                <a href="{$magicLinkUrl}" style="color: {$cfg['theme_color']}; font-weight: 600; word-break: break-all;">{$magicLinkUrl}</a>
+              </div>
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 22px 28px; text-align: center; font-size: 12px; color: #94a3b8; line-height: 1.5;">
+              <strong>Trường Đại học Giao thông vận tải TP.HCM (UTH)</strong><br>
+              Khoa Điện - Điện tử Viễn thông • Hệ thống Giả lập Phòng Lab Mạng Ảo<br>
+              <em>Chiến dịch nhắc nhở Duolingo Gamification tự động • Email dành riêng cho {$safeEmail}</em>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+HTML;
+}
+
+
 
 
 

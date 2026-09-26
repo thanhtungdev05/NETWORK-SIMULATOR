@@ -7956,6 +7956,9 @@ function renderInstructorGamificationView(data) {
             }).join('');
         }
     }
+
+    // Refresh Duolingo Nudge stats as well
+    loadInstructorNudgeData();
 }
 
 async function handleInstructorFulfillReward(redemptionId, action) {
@@ -7992,9 +7995,11 @@ async function handleInstructorFulfillReward(redemptionId, action) {
     }
 }
 
+let _currentSelectedNudgeDay = 1;
+
 function initInstructorGamificationEvents() {
-    // Tab switching in Gamification section
-    const tabs = ['pending', 'streaks', 'speed', 'fulfilled'];
+    // Tab switching in Gamification section (including Duolingo Nudge)
+    const tabs = ['pending', 'streaks', 'speed', 'fulfilled', 'nudge'];
     const tabBtns = document.querySelectorAll('[data-inst-tab]');
     tabBtns.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -8013,6 +8018,10 @@ function initInstructorGamificationEvents() {
                     panel.style.display = (t === target) ? 'block' : 'none';
                 }
             });
+
+            if (target === 'nudge') {
+                loadInstructorNudgeData();
+            }
         });
     });
 
@@ -8028,6 +8037,239 @@ function initInstructorGamificationEvents() {
                 handleInstructorFulfillReward(rid, action);
             }
         });
+    }
+
+    // Initialize Duolingo Nudge Campaign controls
+    initInstructorNudgeCampaignControls();
+}
+
+function initInstructorNudgeCampaignControls() {
+    const dayButtons = document.querySelectorAll('#nudgeDaySelector .nudge-day-card');
+    dayButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const day = parseInt(btn.dataset.day, 10) || 1;
+            selectNudgeCampaignDay(day);
+        });
+    });
+
+    const targetScopeSelect = document.getElementById('nudgeTargetScope');
+    const classWrap = document.getElementById('nudgeClassSelectWrap');
+    const emailWrap = document.getElementById('nudgeEmailInputWrap');
+
+    if (targetScopeSelect) {
+        targetScopeSelect.addEventListener('change', () => {
+            const val = targetScopeSelect.value;
+            if (classWrap) classWrap.style.display = val === 'class' ? 'block' : 'none';
+            if (emailWrap) emailWrap.style.display = val === 'single' ? 'block' : 'none';
+        });
+    }
+
+    const btnSend = document.getElementById('btnSendNudgeCampaign');
+    if (btnSend) {
+        btnSend.addEventListener('click', handleDispatchNudgeCampaign);
+    }
+}
+
+function selectNudgeCampaignDay(day) {
+    _currentSelectedNudgeDay = Math.min(Math.max(day, 1), 5);
+
+    const dayButtons = document.querySelectorAll('#nudgeDaySelector .nudge-day-card');
+    const borderColors = { 1: '#22c55e', 2: '#f97316', 3: '#f59e0b', 4: '#a855f7', 5: '#ef4444' };
+    const bgColors = { 1: '#f0fdf4', 2: '#fff7ed', 3: '#fffbeb', 4: '#faf5ff', 5: '#fef2f2' };
+    const dayLabels = {
+        1: 'Ngày 1: Vui tươi khởi động',
+        2: 'Ngày 2: Giữ vững ngọn lửa',
+        3: 'Ngày 3: Sốt ruột thúc giục',
+        4: 'Ngày 4: Năn nỉ tha thiết',
+        5: 'Ngày 5: Tối hậu thư 23:59'
+    };
+
+    dayButtons.forEach(b => {
+        const bDay = parseInt(b.dataset.day, 10);
+        if (bDay === _currentSelectedNudgeDay) {
+            b.classList.add('active');
+            b.style.borderColor = borderColors[bDay] || '#22c55e';
+            b.style.backgroundColor = bgColors[bDay] || '#f0fdf4';
+        } else {
+            b.classList.remove('active');
+            b.style.borderColor = '#e2e8f0';
+            b.style.backgroundColor = '#ffffff';
+        }
+    });
+
+    const btnDayLabel = document.getElementById('nudgeBtnDayLabel');
+    if (btnDayLabel) btnDayLabel.textContent = String(_currentSelectedNudgeDay);
+
+    const badge = document.getElementById('nudgePreviewDayBadge');
+    if (badge) badge.textContent = dayLabels[_currentSelectedNudgeDay] || `Ngày ${_currentSelectedNudgeDay}`;
+
+    const iframe = document.getElementById('nudgeEmailPreviewIframe');
+    if (iframe) {
+        iframe.src = `${API_BASE_URL}/gamification/nudge/preview?day=${_currentSelectedNudgeDay}&raw=1`;
+    }
+}
+
+async function loadInstructorNudgeData() {
+    try {
+        // Cập nhật iframe preview ban đầu nếu đang trống
+        const iframe = document.getElementById('nudgeEmailPreviewIframe');
+        if (iframe && (!iframe.src || iframe.src === 'about:blank')) {
+            selectNudgeCampaignDay(_currentSelectedNudgeDay || 1);
+        }
+
+        // Tải danh sách lớp vào dropdown nếu chưa có
+        const classSelect = document.getElementById('nudgeClassId');
+        if (classSelect && classSelect.options.length <= 1) {
+            try {
+                const clsRes = await fetch(`${API_BASE_URL}/classes`, { credentials: 'include' });
+                if (clsRes.ok) {
+                    const clsJson = await clsRes.json();
+                    const list = clsJson.data || clsJson.classes || (Array.isArray(clsJson) ? clsJson : []);
+                    if (Array.isArray(list) && list.length > 0) {
+                        classSelect.innerHTML = '<option value="">-- Chọn lớp đào tạo KTV --</option>' +
+                            list.map(c => `<option value="${escapeHTML(c.class_id || c.class_code)}">${escapeHTML(c.class_name || c.class_code)} (${escapeHTML(c.class_code)})</option>`).join('');
+                    } else {
+                        classSelect.innerHTML = '<option value="">Không có lớp nào</option>';
+                    }
+                }
+            } catch (err) {
+                console.warn('Cannot load classes for nudge:', err);
+            }
+        }
+
+        // Tải số liệu thống kê chiến dịch
+        const res = await fetch(`${API_BASE_URL}/gamification/nudge/overview`, { credentials: 'include' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        const data = json.data || {};
+        const stats = data.stats || {};
+        const byDay = data.by_day || [];
+        const logs = data.recent_logs || [];
+
+        // Cập nhật các con số thẻ tổng quan
+        const statSent = document.getElementById('nudgeStatSent');
+        const statClaimed = document.getElementById('nudgeStatClaimed');
+        const statRate = document.getElementById('nudgeStatRate');
+        const statCoins = document.getElementById('nudgeStatCoins');
+
+        if (statSent) statSent.textContent = Number(stats.total_sent || 0).toLocaleString();
+        if (statClaimed) statClaimed.textContent = Number(stats.total_claimed || 0).toLocaleString();
+        if (statRate) statRate.textContent = `${stats.claim_rate_pct || 0}%`;
+        if (statCoins) statCoins.textContent = `${Number(stats.total_coins_given || 0).toLocaleString()} xu`;
+
+        // Render bảng thống kê theo từng ngày 1 - 5
+        const byDayMap = new Map();
+        byDay.forEach(item => byDayMap.set(parseInt(item.day_number, 10), item));
+
+        const dayNames = {
+            1: '🌱 Ngày 1 (Khởi động)',
+            2: '🔥 Ngày 2 (Giữ streak)',
+            3: '⏳ Ngày 3 (Sốt ruột)',
+            4: '🥺 Ngày 4 (Năn nỉ)',
+            5: '🚨 Ngày 5 (Tối hậu thư)'
+        };
+
+        const byDayTbody = document.getElementById('nudgeByDayTableBody');
+        if (byDayTbody) {
+            let html = '';
+            for (let d = 1; d <= 5; d++) {
+                const info = byDayMap.get(d) || { sent: 0, claimed: 0, coins_awarded: 0 };
+                const pct = info.sent > 0 ? Math.round((info.claimed / info.sent) * 100) : 0;
+                html += `
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 8px; font-weight: 600; color: #1e293b;">${dayNames[d]}</td>
+                        <td style="padding: 8px; color: #475569;">${info.sent} mail</td>
+                        <td style="padding: 8px; font-weight: 600; color: #15803d;">${info.claimed} rương (${pct}%)</td>
+                        <td style="padding: 8px; font-weight: 700; color: #d97706;">+${formatNumber.format(info.coins_awarded || 0)} xu</td>
+                    </tr>
+                `;
+            }
+            byDayTbody.innerHTML = html;
+        }
+
+        // Render bảng nhật ký đợt gửi gần nhất
+        const logsTbody = document.getElementById('nudgeRecentLogsBody');
+        if (logsTbody) {
+            if (logs.length === 0) {
+                logsTbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #94a3b8;">Chưa có đợt phát động nào.</td></tr>';
+            } else {
+                logsTbody.innerHTML = logs.map(l => {
+                    const timeStr = l.created_at ? new Date(l.created_at).toLocaleString('vi-VN') : '—';
+                    const targetStr = l.target_email || (l.class_code ? `Lớp ${l.class_code}` : 'Tất cả KTV');
+                    return `
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 8px; color: #64748b;">${timeStr}</td>
+                            <td style="padding: 8px; font-weight: 600; color: #1e293b;">Ngày ${l.day_number}/5</td>
+                            <td style="padding: 8px;"><span class="status-pill status-neutral">${escapeHTML(targetStr)}</span></td>
+                            <td style="padding: 8px; font-weight: 600; color: #16a34a;">${l.sent_count} đã gửi</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+    } catch (err) {
+        console.error('Error loading instructor nudge data:', err);
+    }
+}
+
+async function handleDispatchNudgeCampaign() {
+    const day = _currentSelectedNudgeDay || 1;
+    const scope = document.getElementById('nudgeTargetScope')?.value || 'all';
+    const classId = document.getElementById('nudgeClassId')?.value || '';
+    const email = document.getElementById('nudgeTargetEmail')?.value?.trim() || '';
+
+    if (scope === 'class' && !classId) {
+        showToast('Vui lòng chọn lớp đào tạo cần gửi nhắc nhở.', 'warning');
+        return;
+    }
+    if (scope === 'single' && !email) {
+        showToast('Vui lòng nhập địa chỉ email của học viên.', 'warning');
+        return;
+    }
+
+    const scopeDesc = scope === 'all'
+        ? 'toàn bộ Kỹ thuật viên (KTV)'
+        : (scope === 'class' ? 'các học viên trong lớp đã chọn' : `học viên ${email}`);
+
+    if (!window.confirm(`Xác nhận phát động gửi Email Nhắc Nhở [Ngày ${day}/5] tới ${scopeDesc}?\nHọc viên bấm link sẽ được nhận Rương Xu May Mắn ngẫu nhiên và vào làm bài.`)) {
+        return;
+    }
+
+    const btn = document.getElementById('btnSendNudgeCampaign');
+    const origText = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳ Đang gửi email...</span>';
+    }
+
+    try {
+        const payload = { day_number: day };
+        if (scope === 'class' && classId) payload.class_id = classId;
+        if (scope === 'single' && email) payload.email = email;
+
+        const response = await fetch(`${API_BASE_URL}/gamification/nudge/send`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const json = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(json.error?.message || `HTTP ${response.status}`);
+        }
+
+        const msg = json.data?.message || `Đã phát động gửi thành công chiến dịch Ngày ${day}/5!`;
+        showToast(msg, 'success');
+        await loadInstructorNudgeData();
+    } catch (err) {
+        console.error('Error dispatching nudge campaign:', err);
+        showToast(`Gửi email nhắc nhở thất bại: ${err.message}`, 'error');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = origText;
+        }
     }
 }
 

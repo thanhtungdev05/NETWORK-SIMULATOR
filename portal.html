@@ -8,7 +8,7 @@
   <meta name="description"
     content="Hệ thống giả lập mạng FPT — Thực hành cấu hình 6 thiết bị mạng AC1000F, AC1000HI, AX3000CV2, AX3000GZ, AX3000HV2 và AX3000S">
   <title>NETWORK SIMULATOR — Hệ Thống Giả Lập Mạng FPT</title>
-  <link rel="stylesheet" href="styles.css?v=20260926-streak-v4">
+  <link rel="stylesheet" href="styles.css?v=20260926-nudge-v1">
 </head>
 
 <body>
@@ -688,6 +688,41 @@ Gõ "ping 8.8.8.8", "ipconfig" hoặc chọn các lệnh nhanh ở trên để k
     </div>
   </aside>
 
+  <!-- ════════════════════════════════════════════
+     DUOLINGO LUCKY COIN CHEST MODAL (RƯƠNG XU CÚ DUO)
+  ════════════════════════════════════════════ -->
+  <div id="duo-lucky-chest-modal" class="topol-modal-backdrop" style="display: none; z-index: 99999;" role="dialog" aria-modal="true" aria-labelledby="duo-chest-title">
+    <div class="duo-chest-modal-dialog">
+      <div class="duo-chest-header">
+        <div class="duo-chest-badge">🎁 PHẦN THƯỞNG DUOLINGO STREAK</div>
+        <button type="button" class="duo-chest-close" id="btn-close-duo-chest" aria-label="Đóng">&times;</button>
+      </div>
+      <div class="duo-chest-body">
+        <div class="duo-chest-icon-wrapper">
+          <div class="duo-chest-glow"></div>
+          <div class="duo-chest-animated-icon" id="duo-chest-icon">🎁</div>
+        </div>
+        <h3 class="duo-chest-title" id="duo-chest-title">RƯƠNG XU MAY MẮN</h3>
+        <p class="duo-chest-subtitle" id="duo-chest-subtitle">Chào mừng bạn đã quay lại phòng thực hành!</p>
+        
+        <div class="duo-chest-reward-box">
+          <div class="duo-chest-reward-label">BẠN ĐÃ NHẬN ĐƯỢC</div>
+          <div class="duo-chest-reward-val" id="duo-chest-coins">+35 NetCoins 🪙</div>
+          <div class="duo-chest-reward-streak" id="duo-chest-streak-info">🔥 Chuỗi học tập: 1 ngày liên tiếp</div>
+        </div>
+
+        <p class="duo-chest-quote" id="duo-chest-quote">
+          "Cú Duo rất vui vì bạn đã quay lại làm bài. Hãy hoàn thành ngay 1 bài thực hành hôm nay để bảo vệ ngọn lửa nhé!"
+        </p>
+
+        <button type="button" class="duo-chest-btn" id="btn-duo-chest-action">
+          🚀 Vào Luyện Tập Ngay!
+        </button>
+      </div>
+    </div>
+  </div>
+  <canvas id="duo-confetti-canvas" style="display: none;"></canvas>
+
   <!-- Device Modules & Modular Grading Scripts -->
   <!-- ONT AC1000F -->
   <script src="devices/ac1000f/tooltips/common_login.js?v=1788507000"></script>
@@ -856,7 +891,7 @@ Gõ "ping 8.8.8.8", "ipconfig" hoặc chọn các lệnh nhanh ở trên để k
 
   <script src="devices/index.js?v=20260920_v1"></script>
   <script src="data.js?v=20260920_v1"></script>
-  <script src="app.js?v=20260926-streak-v4"></script>
+  <script src="app.js?v=20260926-nudge-v1"></script>
 
 </body>
 

@@ -101,6 +101,55 @@ function send_smtp_mail(
                     'message' => 'Email đã được gửi thành công qua Resend HTTPS API.'
                 ];
             }
+            if (!empty($respJson['message'])) {
+                error_log("Resend API error: " . $respJson['message']);
+            }
+        }
+    }
+
+    // 3. Hỗ trợ gửi qua Brevo API (port 443 HTTPS) nếu có thiết lập BREVO_API_KEY
+    $brevoKey = env_value('BREVO_API_KEY', '');
+    if ($brevoKey !== '') {
+        $brevoPayload = json_encode([
+            'sender' => [
+                'name' => $fromName,
+                'email' => $fromEmail !== '' ? $fromEmail : 'dtung2788@gmail.com'
+            ],
+            'to' => [
+                ['email' => $toEmail]
+            ],
+            'subject' => $subject,
+            'htmlContent' => $htmlBody,
+            'textContent' => $altText !== '' ? $altText : strip_tags($htmlBody)
+        ], JSON_UNESCAPED_UNICODE);
+
+        $contextBrevo = stream_context_create([
+            'http' => [
+                'method' => 'POST',
+                'header' => "api-key: $brevoKey\r\nContent-Type: application/json\r\n",
+                'content' => $brevoPayload,
+                'timeout' => 15,
+                'ignore_errors' => true
+            ],
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false
+            ]
+        ]);
+
+        $brevoResp = @file_get_contents('https://api.brevo.com/v3/smtp/email', false, $contextBrevo);
+        if ($brevoResp !== false) {
+            $respJson = json_decode($brevoResp, true);
+            if (!empty($respJson['messageId'])) {
+                return [
+                    'ok' => true,
+                    'port_used' => 443,
+                    'message' => 'Email đã được gửi thành công qua Brevo HTTPS API.'
+                ];
+            }
+            if (!empty($respJson['message'])) {
+                error_log("Brevo API error: " . $respJson['message']);
+            }
         }
     }
 

@@ -805,6 +805,13 @@ function ai_get_technical_network_answer(string $question, ?string $currentDevic
     if (str_contains($q, 'chăm chỉ') || str_contains($qUn, 'cham chi') || str_contains($q, 'tích cực nhất') || str_contains($qUn, 'tich cuc nhat')) {
         return null;
     }
+    // Bỏ qua nếu hỏi về lỗi hay gặp của học viên / bài làm sai / báo cáo tiến độ lớp
+    if (
+        (str_contains($q, 'học viên') || str_contains($qUn, 'hoc vien') || str_contains($q, 'sinh viên') || str_contains($qUn, 'sinh vien') || str_contains($q, 'hay làm sai') || str_contains($qUn, 'hay lam sai') || str_contains($q, 'hay mắc phải') || str_contains($qUn, 'hay mac phai') || str_contains($q, 'phổ biến') || str_contains($qUn, 'pho bien') || str_contains($q, 'lớp') || str_contains($qUn, 'lop')) &&
+        (str_contains($q, 'lỗi') || str_contains($qUn, 'loi') || str_contains($q, 'sai') || str_contains($q, 'mắc phải') || str_contains($qUn, 'mac phai') || str_contains($q, 'tiến độ') || str_contains($qUn, 'tien do') || str_contains($q, 'báo cáo') || str_contains($qUn, 'bao cao'))
+    ) {
+        return null;
+    }
 
     // ── 1. MÔ HÌNH MẠNG LIÊN KẾT (TOPOLOGY LABS) ─────────────────────────────
     if (str_contains($q, 'topology') || str_contains($q, 'liên kết') || str_contains($qUn, 'lien ket') || str_contains($q, 'đa thiết bị') || str_contains($qUn, 'da thiet bi')) {
@@ -2104,11 +2111,17 @@ function ai_chat_query(PDO $pdo, string $question, ?string $classIdentifier = nu
         $answer .= "- **Đã từng vào làm bài:** **{$attempted} học viên**\n";
         $answer .= "- **Đã hoàn thành đạt chuẩn ($\ge 80$ điểm):** **{$passed} học viên**\n\n";
 
-        $answer .= "#### 🏫 Riêng tại lớp trọng điểm CNTT-K22 (7 học viên):\n";
+        $totalK22Count = count($k22List);
+        $answer .= "#### 🏫 Riêng tại lớp trọng điểm CNTT-K22 ({$totalK22Count} học viên):\n";
         $answer .= "- Hiện có **" . count($k22NotDone) . " bạn chưa hoàn thành đạt chuẩn** trên thiết bị {$dname}:\n";
-        foreach ($k22NotDone as $st) {
+        $shownK22 = array_slice($k22NotDone, 0, 10);
+        foreach ($shownK22 as $st) {
             $scoreText = $st['max_score'] !== null ? "đạt {$st['max_score']}đ (chưa đủ 80đ)" : "chưa làm";
             $answer .= "  + **{$st['display_name']}** (`{$st['email']}`): {$scoreText}\n";
+        }
+        if (count($k22NotDone) > 10) {
+            $remainingCount = count($k22NotDone) - 10;
+            $answer .= "  + *... và {$remainingCount} học viên khác.*\n";
         }
         $answer .= "\n💡 **Gợi ý thao tác:** Giảng viên có thể gõ lệnh trực tiếp vào khung chat:\n";
         $answer .= "> *'Gửi email nhắc tất cả các bạn trong lớp CNTT-K22 chưa làm thiết bị {$dname}'*\n";
@@ -2249,6 +2262,7 @@ function ai_chat_query(PDO $pdo, string $question, ?string $classIdentifier = nu
                 'Những học viên nào đang gặp khó khăn cần hỗ trợ?',
                 'Tiến độ chung của lớp CNTT-K22 ra sao?',
             ],
+            'model' => 'local-rag',
         ];
     }
 
@@ -2289,6 +2303,7 @@ function ai_chat_query(PDO $pdo, string $question, ?string $classIdentifier = nu
                 'Có bao nhiêu học viên đang chậm tiến độ?',
                 'Đề xuất giải pháp giúp nâng cao điểm số?',
             ],
+            'model' => 'local-rag',
         ];
     }
 
@@ -2332,6 +2347,7 @@ function ai_chat_query(PDO $pdo, string $question, ?string $classIdentifier = nu
                 'Tình hình làm bài của sinh viên Tùng Đặng Thanh?',
                 'Bài nào học viên hay làm sai nhất?',
             ],
+            'model' => 'local-rag',
         ];
     }
 
@@ -2390,6 +2406,7 @@ function ai_chat_query(PDO $pdo, string $question, ?string $classIdentifier = nu
                 'Bài nào học viên hay làm sai nhất?',
                 'Lỗi cấu hình nào học viên hay mắc phải?',
             ],
+            'model' => 'local-rag',
         ];
     }
 
@@ -2433,6 +2450,7 @@ function ai_chat_query(PDO $pdo, string $question, ?string $classIdentifier = nu
                 'Những học viên nào đang gặp khó khăn?',
                 'Tiến độ lớp CNTT-K22 như thế nào?',
             ],
+            'model' => 'local-rag',
         ];
     }
 
@@ -2455,6 +2473,8 @@ function ai_chat_query(PDO $pdo, string $question, ?string $classIdentifier = nu
     $answer .= "- *'Lỗi cấu hình nào học viên hay mắc phải?'*\n";
     $answer .= "- *'Tiến độ của lớp CNTT-K22?'*\n";
     $answer .= "- *'Tra cứu bất kỳ học viên nào (VD: \"còn phương sang thì sao\", \"sinh viên Tùng\", \"điểm của Anbcd\", \"học viên 00384102\")'* \n";
+    $answer .= "- *'Có bao nhiêu bạn chưa làm thiết bị AC1000F?'*\n";
+    $answer .= "- *'Học viên nào chăm chỉ nhất?'*";
 
     return [
         'question' => $question,
@@ -2463,9 +2483,11 @@ function ai_chat_query(PDO $pdo, string $question, ?string $classIdentifier = nu
         'suggested_questions' => [
             'Bài nào học viên hay làm sai nhất?',
             'Lỗi cấu hình nào học viên hay mắc phải?',
-            'Những học viên nào đang gặp khó khăn?',
+            'Có bao nhiêu bạn chưa làm thiết bị AC1000F?',
+            'Học viên nào chăm chỉ nhất?',
             'Tiến độ lớp CNTT-K22 như thế nào?',
         ],
+        'model' => 'local-rag',
     ];
 }
 

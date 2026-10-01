@@ -3338,16 +3338,48 @@ function handle_ai(array $segments, string $method): void
         }
         $body = json_body();
         $message = trim((string)($body['message'] ?? $body['question'] ?? ''));
+        $mode = trim((string)($body['mode'] ?? 'socratic'));
         if ($message === '') {
             fail(400, 'bad-request', 'Tin nhắn không được để trống.');
         }
         try {
-            $result = ai_student_chat($pdo, $user, $message);
+            $result = ai_student_chat($pdo, $user, $message, $mode);
             $result['model'] = $result['model'] ?? 'local-rag';
             respond(['data' => $result]);
         } catch (Throwable $e) {
             report_exception($e, 'ai-student-chat');
             fail(500, 'ai-student-chat-error', 'Unable to process student chat.');
+        }
+    }
+
+    if ($action === 'adaptive-roadmap') {
+        if ($method !== 'GET' && $method !== 'POST') {
+            fail(405, 'method-not-allowed', 'Adaptive roadmap supports GET and POST.');
+        }
+        $userId = current_user_id();
+        $email = current_email();
+        $user = ($userId ? find_user_by_id($userId) : null) ?? ($email ? find_user((string)$email) : null);
+        if (!$user) {
+            $body = $method === 'POST' ? json_body() : [];
+            $targetEmail = trim((string)($body['email'] ?? ($_GET['email'] ?? '')));
+            if ($targetEmail !== '') {
+                $user = find_user($targetEmail);
+            }
+        }
+        if (!$user) {
+            $user = [
+                'user_id' => '00000000-0000-0000-0000-000000000000',
+                'email' => 'guest.ktv@uth.edu.vn',
+                'display_name' => 'Kỹ Thuật Viên / Sinh Viên',
+                'role' => 'KTV'
+            ];
+        }
+        try {
+            $roadmap = ai_generate_adaptive_roadmap($pdo, $user);
+            respond(['ok' => true, 'success' => true, 'data' => $roadmap]);
+        } catch (Throwable $e) {
+            report_exception($e, 'ai-adaptive-roadmap');
+            fail(500, 'ai-roadmap-error', 'Unable to generate adaptive roadmap: ' . $e->getMessage());
         }
     }
 

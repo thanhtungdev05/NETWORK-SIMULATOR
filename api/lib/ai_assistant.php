@@ -1483,7 +1483,10 @@ function ai_build_student_rag_context(PDO $pdo, array $user): string
     $prompt .= "- Điểm trung bình: " . ($prog['avg_score'] ?? 0) . "/100 qua {$prog['total_sessions']} phiên làm bài (Tổng: {$prog['total_duration_min']} phút)\n";
     if (!empty($advice['gamification'])) {
         $gm = $advice['gamification'];
-        $prompt .= "- Chuỗi học tập Duolingo: {$gm['current_streak']} ngày liên tiếp (Kỷ lục: {$gm['longest_streak']} ngày), Kho xu NetCoins: {$gm['netcoins_balance']} xu.\n";
+        $streak = (int)($gm['current_streak'] ?? 0);
+        $longest = (int)($gm['longest_streak'] ?? 0);
+        $coins = (int)($gm['netcoins_balance'] ?? $gm['coins_balance'] ?? $gm['balance'] ?? 0);
+        $prompt .= "- Chuỗi học tập Duolingo: {$streak} ngày liên tiếp (Kỷ lục: {$longest} ngày), Kho xu NetCoins: {$coins} xu.\n";
         if (!empty($gm['speed_records_count'])) {
             $prompt .= "- Thành tích tốc độ: Đạt Top tốc độ hoàn thành tuyệt đối 100/100 tại {$gm['speed_records_count']} bài lab.\n";
         }
@@ -3360,11 +3363,134 @@ function ai_get_student_advice(PDO $pdo, array $user): array
 }
 
 /**
- * AI Student Chatbot (personal-dashboard.html)
+ * Generates an Adaptive Personalized Learning Roadmap for a student
+ * based on their assignment progress, past mistakes, and test sessions.
  */
-function ai_student_chat(PDO $pdo, array $user, string $message): array
+function ai_generate_adaptive_roadmap(PDO $pdo, array $user): array
 {
-    // 0. Phát hiện yêu cầu chẩn đoán / mổ xẻ lỗi bài lab của chính sinh viên
+    $advice = ai_get_student_advice($pdo, $user);
+    $st = $advice['student'];
+    $prog = $advice['progress'];
+    $mistakes = $advice['personal_mistakes'] ?? [];
+    $strengths = $advice['strengths'] ?? [];
+    $nextLab = $advice['next_recommended_lab'] ?? null;
+
+    $sysPrompt = "Bạn là Trưởng Ban Cố Vấn Học Tập Viện CNTT & Mạng Máy Tính UTH (UTH NetLab Academic Advisor).\n";
+    $sysPrompt .= "Nhiệm vụ của bạn là lập BẢN ĐỒ LỘ TRÌNH ÔN LUYỆN THÍCH ỨNG CÁ NHÂN HÓA (Adaptive Personalized Learning Roadmap) cho sinh viên dựa trên lịch sử làm bài và các lỗi kỹ thuật thực tế của sinh viên đó.\n";
+    $sysPrompt .= "Lộ trình phải phân tầng 3 giai đoạn (Scaffolded Learning):\n";
+    $sysPrompt .= "- Giai đoạn 1: Khắc phục phản xạ cơ bản (Foundation Healing) - Tránh xung đột IP LAN, lưu NVRAM, cấu hình Bridge mode chuẩn.\n";
+    $sysPrompt .= "- Giai đoạn 2: Chinh phục giao thức lõi (Core Protocol Mastery) - PPPoE & NAT Masquerade, DHCP Server Pool.\n";
+    $sysPrompt .= "- Giai đoạn 3: Tối ưu hóa & Kịch bản thực chiến (Advanced & Topology Mastery) - Mô hình liên kết đa thiết bị, kiểm định 5 bước trước khi nộp bài.\n";
+    $sysPrompt .= "Mỗi giai đoạn phải chỉ rõ bài lab cần luyện, mục tiêu kỹ năng, thời gian dự kiến và 1 câu hỏi thử thách tư duy Socratic sâu sắc.\n";
+    $sysPrompt .= "Cuối lộ trình đưa ra lời khuyên ân cần, truyền cảm hứng từ Trưởng Ban Cố Vấn.";
+
+    $userPrompt = "HÃY THIẾT KẾ LỘ TRÌNH ÔN LUYỆN CÁ NHÂN HÓA CHO SINH VIÊN:\n";
+    $userPrompt .= "- Họ tên: {$st['display_name']} ({$st['email']})\n";
+    $userPrompt .= "- Lớp: {$st['class_code']} ({$st['class_name']})\n";
+    $userPrompt .= "- Tiến độ hiện tại: {$prog['passed_count']}/{$prog['total_assigned']} bài ({$prog['completion_pct']}%)\n";
+    $userPrompt .= "- Điểm trung bình: " . ($prog['avg_score'] ?? 0) . "/100 qua {$prog['total_sessions']} phiên làm bài\n";
+
+    if (!empty($mistakes)) {
+        $userPrompt .= "- Các lỗi sai thực tế đã gặp trong bài thi:\n";
+        foreach (array_slice($mistakes, 0, 6) as $m) {
+            $userPrompt .= "  + [{$m['lab_name']} - {$m['device_name']}]: Lỗi '{$m['rule_name']}' - Kỳ vọng '{$m['expected']}' nhưng làm '{$m['actual']}'. Gợi ý: {$m['tip']}\n";
+        }
+    }
+
+    if (!empty($strengths)) {
+        $userPrompt .= "- Các bài lab đã hoàn thành tốt: " . implode(', ', array_slice($strengths, 0, 4)) . "\n";
+    }
+
+    if ($nextLab) {
+        $userPrompt .= "- Bài tập tiếp theo trong chương trình: {$nextLab['lab_name']} ({$nextLab['device_name']})\n";
+    }
+
+    $geminiRes = ai_call_gemini_api($sysPrompt, $userPrompt);
+
+    $roadmapMarkdown = '';
+    $engine = 'Google Gemini LLM (Adaptive Learning Advisor)';
+    $modelName = 'gemini-3.5-flash';
+    $isGenerative = true;
+
+    if ($geminiRes && !empty($geminiRes['text'])) {
+        $roadmapMarkdown = $geminiRes['text'];
+        $modelName = $geminiRes['model'] ?? 'gemini-3.5-flash';
+    } else {
+        $engine = 'UTH NetLab Deterministic Advisor (Offline Fallback)';
+        $modelName = 'uth-netlab-local-fallback';
+        $isGenerative = false;
+
+        $roadmapMarkdown = "# 🗺️ BẢN ĐỒ LỘ TRÌNH ÔN LUYỆN THÍCH ỨNG CÁ NHÂN HÓA\n";
+        $roadmapMarkdown .= "**Học viên:** {$st['display_name']} | **Lớp:** {$st['class_code']}\n";
+        $roadmapMarkdown .= "**Tiến độ:** {$prog['passed_count']}/{$prog['total_assigned']} bài ({$prog['completion_pct']}%) | **Điểm TB:** " . ($prog['avg_score'] ?? 0) . "/100\n\n---\n\n";
+
+        $roadmapMarkdown .= "### 🛡️ GIAI ĐOẠN 1: Khắc phục phản xạ cơ bản (Foundation Healing)\n";
+        $roadmapMarkdown .= "- **Trọng tâm:** Rèn thói quen bấm **Save / Apply** lưu cấu hình vào bộ nhớ NVRAM trước khi nộp bài.\n";
+        $roadmapMarkdown .= "- **Kỹ năng:** Đổi IP LAN sang `192.168.10.1` hoặc `192.168.88.1` để tránh xung đột với ONT phía trước.\n";
+        $roadmapMarkdown .= "- **Bài thực hành:** Bài 2 - Cấu hình Wi-Fi & LAN\n";
+        $roadmapMarkdown .= "- 🧠 **Câu hỏi Socratic:** *'Nếu hai thiết bị trong mạng cùng sở hữu IP 192.168.1.1, gói tin ARP Request tìm địa chỉ MAC sẽ bị xung đột thế nào?'*\n\n";
+
+        $roadmapMarkdown .= "### ⚡ GIAI ĐOẠN 2: Chinh phục giao thức lõi (Core Protocol Mastery)\n";
+        $roadmapMarkdown .= "- **Trọng tâm:** Nắm vững cấu hình **PPPoE Client** và luật **NAT Masquerade** ra cổng WAN.\n";
+        $roadmapMarkdown .= "- **Kỹ năng:** Nhập chuẩn chuỗi xác thực nhà mạng và bật Masquerade để chuyển tiếp lưu lượng LAN ra Internet.\n";
+        $roadmapMarkdown .= "- **Bài thực hành:** " . ($nextLab ? $nextLab['lab_name'] : 'Bài 1: Cấu hình PPPoE & NAT') . "\n";
+        $roadmapMarkdown .= "- 🧠 **Câu hỏi Socratic:** *'Tại sao gói tin IP Private khi ra ngoài Internet công cộng bắt buộc phải được Router thay thế bằng IP Public qua cơ chế NAT?'*\n\n";
+
+        $roadmapMarkdown .= "### 🌐 GIAI ĐOẠN 3: Tối ưu hóa & Kịch bản thực chiến (Advanced & Topology Mastery)\n";
+        $roadmapMarkdown .= "- **Trọng tâm:** Kết nối mô hình đa thiết bị: ONT Bridge Mode + Router MikroTik/DrayTek.\n";
+        $roadmapMarkdown .= "- **Kỹ năng:** Vận hành sơ đồ tổng thể và thực hiện checklist 5 bước trước khi nộp bài.\n";
+        $roadmapMarkdown .= "- **Bài thực hành:** Mô hình liên kết Topology\n";
+        $roadmapMarkdown .= "- 🧠 **Câu hỏi Socratic:** *'Khi ONT chạy Bridge mode, tại sao ta bắt buộc phải tắt DHCP Server trên ONT?'*\n";
+    }
+
+    return [
+        'success' => true,
+        'student' => $st,
+        'progress' => $prog,
+        'roadmap_markdown' => $roadmapMarkdown,
+        'model' => $modelName,
+        'engine' => $engine,
+        'is_generative' => $isGenerative,
+        'personal_mistakes' => $mistakes,
+        'next_recommended_lab' => $nextLab,
+    ];
+}
+
+/**
+ * AI Student Chatbot (personal-dashboard.html)
+ * Supports both Socratic Tutoring mode ('socratic') and Direct Instructional mode ('direct')
+ */
+function ai_student_chat(PDO $pdo, array $user, string $message, string $mode = 'socratic'): array
+{
+    $qNorm = ai_remove_vietnamese_accents(mb_strtolower(trim($message)));
+
+    // 0. Phát hiện yêu cầu lập Lộ trình Ôn luyện Thích ứng (Adaptive Roadmap)
+    if (
+        str_contains($qNorm, 'lo trinh') || 
+        str_contains($qNorm, 'roadmap') || 
+        str_contains($qNorm, 'ke hoach on tap') || 
+        str_contains($qNorm, 'on thi') || 
+        str_contains($qNorm, 'can on nhung gi') ||
+        str_contains($qNorm, 'on luyen')
+    ) {
+        $roadmap = ai_generate_adaptive_roadmap($pdo, $user);
+        return [
+            'message' => $message,
+            'answer' => $roadmap['roadmap_markdown'],
+            'mode' => $mode,
+            'suggested_questions' => [
+                '💡 Gia sư ơi, hãy đố tôi một câu hỏi tư duy về Giai đoạn 1!',
+                'Tại sao quên tắt DHCP khi Bridge lại gây xung đột mạng?',
+                'Tôi cần làm bài nào tiếp theo?',
+            ],
+            'model' => $roadmap['model'] ?? 'gemini-3.5-flash',
+            'engine' => $roadmap['engine'] ?? 'UTH NetLab Adaptive Learning Advisor',
+            'is_generative' => $roadmap['is_generative'] ?? true,
+            'roadmap_data' => $roadmap,
+        ];
+    }
+
+    // 0.1 Phát hiện yêu cầu chẩn đoán / mổ xẻ lỗi bài lab của chính sinh viên
     $diagCmd = ai_detect_diagnostic_command($message);
     if ($diagCmd !== null) {
         try {
@@ -3377,6 +3503,7 @@ function ai_student_chat(PDO $pdo, array $user, string $message): array
             return [
                 'message' => $message,
                 'answer' => $diag['report'],
+                'mode' => $mode,
                 'suggested_questions' => [
                     'Hướng dẫn từng bước khắc phục lỗi này?',
                     'Tôi cần làm bài nào tiếp theo?',
@@ -3399,18 +3526,34 @@ function ai_student_chat(PDO $pdo, array $user, string $message): array
         $ragContext .= "\n\n=== TÀI LIỆU KỸ THUẬT & HƯỚNG DẪN CẤU HÌNH THIẾT BỊ MẠNG (GROUNDING) ===\n" . $techFact['answer'] . "\n\n";
     }
 
+    // Inject Socratic Tutoring Framework if mode is socratic
+    if ($mode === 'socratic') {
+        $ragContext .= "\n=== PHƯƠNG PHÁP SƯ PHẠM SOCRATIC (BẮT BUỘC ÁP DỤNG TRONG CHẾ ĐỘ NÀY) ===\n";
+        $ragContext .= "1. KHÔNG vội vàng đưa ngay đáp án câu lệnh trọn gói (spoon-feeding) nếu sinh viên chưa nỗ lực suy luận.\n";
+        $ragContext .= "2. Phân tích xem sinh viên đang bế tắc ở khái niệm nào trong mô hình OSI (L1-L4), bảng định tuyến, NAT hay DNS.\n";
+        $ragContext .= "3. Đặt 1-2 câu hỏi gợi mở sâu sắc về luồng di chuyển của gói tin (packet-flow) để sinh viên tự hình dung và tìm ra câu trả lời.\n";
+        $ragContext .= "4. Cung cấp 1 '💡 Gợi ý tư duy' (Mental Model Hint) và 1 '🎯 Thử thách hành động' (Action Challenge) để sinh viên mở thiết bị giả lập thao tác.\n";
+        $ragContext .= "5. Nếu sinh viên hỏi trực tiếp 'Cho tôi đáp án', 'Chỉ tôi lệnh đi', hoặc 'Giải thích chi tiết', thì mới cung cấp câu lệnh cụ thể kèm phân tích.\n";
+        $ragContext .= "6. Luôn xưng hô thân mật: 'Chào bạn', gọi tên sinh viên, xưng 'Gia sư AI' hoặc 'mình'. Khích lệ tinh thần học tập.\n";
+    }
+
     $geminiRes = ai_call_gemini_api($ragContext, $message);
     if ($geminiRes && !empty($geminiRes['text'])) {
         return [
             'message' => $message,
             'answer' => $geminiRes['text'],
-            'suggested_questions' => [
+            'mode' => $mode,
+            'suggested_questions' => $mode === 'socratic' ? [
+                '💡 Gia sư ơi, hãy đố tôi một câu hỏi tư duy về NAT!',
+                '🗺️ Lập lộ trình ôn thi cá nhân hóa cho tôi',
+                'Tôi cần làm bài nào tiếp theo?',
+            ] : [
                 'Tôi cần làm bài nào tiếp theo?',
                 'Tại sao bài trước của tôi bị trừ điểm?',
                 'Hướng dẫn các bước cấu hình chuẩn?',
             ],
-            'model' => $geminiRes['model'] ?? 'gemini-2.0-flash',
-            'engine' => 'Google Gemini LLM (Generative AI)',
+            'model' => $geminiRes['model'] ?? 'gemini-3.5-flash',
+            'engine' => $mode === 'socratic' ? 'Google Gemini Socratic Network Tutor' : 'Google Gemini Generative AI (Direct Mode)',
             'is_generative' => true,
         ];
     }

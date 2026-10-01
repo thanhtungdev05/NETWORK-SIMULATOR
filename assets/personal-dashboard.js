@@ -966,7 +966,49 @@
 
   // ── Student AI Learning Coach & Tutor (Part 2) ─────────────────────
 
+  let _studentAiMode = 'socratic'; // 'socratic' | 'direct'
+
   function setupStudentAiEvents() {
+    const btnOpenRoadmap = document.getElementById('btn-open-roadmap');
+    if (btnOpenRoadmap) {
+      btnOpenRoadmap.addEventListener('click', () => {
+        openAiTutorDrawer();
+        setStudentAiMode('socratic');
+        sendStudentChatMessage('Lập lộ trình ôn thi cá nhân hóa cho tôi');
+      });
+    }
+
+    const btnModeSocratic = document.getElementById('btn-mode-socratic');
+    const btnModeDirect = document.getElementById('btn-mode-direct');
+
+    function setStudentAiMode(mode) {
+      _studentAiMode = mode;
+      if (btnModeSocratic && btnModeDirect) {
+        if (mode === 'socratic') {
+          btnModeSocratic.classList.add('active');
+          btnModeSocratic.style.background = '#ffffff';
+          btnModeSocratic.style.color = '#4f46e5';
+          btnModeDirect.classList.remove('active');
+          btnModeDirect.style.background = 'transparent';
+          btnModeDirect.style.color = '#64748b';
+        } else {
+          btnModeDirect.classList.add('active');
+          btnModeDirect.style.background = '#ffffff';
+          btnModeDirect.style.color = '#4f46e5';
+          btnModeSocratic.classList.remove('active');
+          btnModeSocratic.style.background = 'transparent';
+          btnModeSocratic.style.color = '#64748b';
+        }
+      }
+    }
+
+    if (btnModeSocratic) {
+      btnModeSocratic.addEventListener('click', () => setStudentAiMode('socratic'));
+    }
+    if (btnModeDirect) {
+      btnModeDirect.addEventListener('click', () => setStudentAiMode('direct'));
+    }
+
     if (studentAiFab) {
       studentAiFab.addEventListener('click', openAiTutorDrawer);
     }
@@ -1125,7 +1167,7 @@
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
-      body: JSON.stringify({ message: text })
+      body: JSON.stringify({ message: text, mode: _studentAiMode })
     })
       .then(res => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -1159,9 +1201,10 @@
     avatar.textContent = role === 'ai' ? '🤖' : '👤';
 
     let badgeHtml = '';
-    if (role === 'ai' && (model === 'gemini-1.5-flash' || model === 'gemini-2.0-flash' || (model && model.startsWith('gemini')))) {
-      badgeHtml = `<div style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; background: #e0e7ff; color: #4338ca; font-size: 0.68rem; font-weight: 700; margin-bottom: 8px;">
-        <span>⚡ Powered by Google Gemini AI</span>
+    if (role === 'ai' && (model === 'gemini-3.5-flash' || model === 'gemini-3.5-flash-lite' || (model && model.includes('gemini')))) {
+      const modeLabel = _studentAiMode === 'socratic' ? 'Socratic Network Tutor' : 'Generative LLM';
+      badgeHtml = `<div style="display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 9999px; background: linear-gradient(135deg, #e0e7ff 0%, #ede9fe 100%); color: #4338ca; font-size: 0.7rem; font-weight: 700; margin-bottom: 8px; border: 1px solid #c7d2fe; box-shadow: 0 1px 2px rgba(99,102,241,0.1);">
+        <span>✨ Powered by Google Gemini (${modeLabel})</span>
       </div>`;
     } else if (role === 'ai' && model === 'network-expert-engine') {
       badgeHtml = `<div style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; background: #e0f2fe; color: #0369a1; font-size: 0.68rem; font-weight: 700; margin-bottom: 8px;">
@@ -1227,20 +1270,98 @@
 
   function formatMarkdown(text) {
     if (!text) return '';
-    let escaped = escapeHTML(text);
 
-    escaped = escaped.replace(/^### (.*$)/gim, '<h3>$1</h3>');
-    escaped = escaped.replace(/^#### (.*$)/gim, '<h4>$1</h4>');
+    // 1. Extract triple-backtick code blocks
+    const codeBlocks = [];
+    let processed = text.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (match, lang, code) => {
+      const placeholder = `__CODE_BLOCK_${codeBlocks.length}__`;
+      codeBlocks.push(`<pre style="background: #1e293b; color: #f8fafc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.82rem; margin: 8px 0; font-family: Consolas, Monaco, monospace;"><code class="language-${escapeHTML(lang)}">${escapeHTML(code.trim())}</code></pre>`);
+      return placeholder;
+    });
+
+    // 2. Extract markdown tables
+    const tableBlocks = [];
+    processed = processed.replace(/(?:^|\n)((?:\|[^\n]+\|\r?\n)+)/g, (match, tableText) => {
+      const lines = tableText.trim().split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      if (lines.length < 2) return match;
+
+      const headerLine = lines[0];
+      const separatorLine = lines[1];
+      if (!separatorLine.includes('-')) return match;
+
+      const headers = headerLine.split('|').slice(1, -1).map(h => h.trim());
+      const rows = lines.slice(2).map(r => r.split('|').slice(1, -1).map(c => c.trim()));
+
+      let tableHtml = '<div class="ai-table-responsive" style="overflow-x: auto; margin: 12px 0; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">';
+      tableHtml += '<table class="ai-diff-table" style="width: 100%; border-collapse: collapse; font-size: 0.8rem; background: #ffffff;">';
+      tableHtml += '<thead><tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; color: #334155; font-weight: 700;">';
+      headers.forEach(h => {
+        tableHtml += `<th style="padding: 8px 10px; text-align: left; border: 1px solid #e2e8f0;">${escapeHTML(h)}</th>`;
+      });
+      tableHtml += '</tr></thead><tbody>';
+
+      rows.forEach((row, idx) => {
+        const bg = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
+        tableHtml += `<tr style="background: ${bg}; border-bottom: 1px solid #e2e8f0;">`;
+        row.forEach(cell => {
+          let cellStyled = escapeHTML(cell);
+          if (cell.includes('✅') || cell.toLowerCase().includes('đạt')) {
+            cellStyled = `<span style="color: #16a34a; font-weight: 700;">${cellStyled}</span>`;
+          } else if (cell.includes('❌') || cell.toLowerCase().includes('sai')) {
+            cellStyled = `<span style="color: #dc2626; font-weight: 700;">${cellStyled}</span>`;
+          }
+          tableHtml += `<td style="padding: 8px 10px; border: 1px solid #e2e8f0; vertical-align: top;">${cellStyled}</td>`;
+        });
+        tableHtml += '</tr>';
+      });
+      tableHtml += '</tbody></table></div>';
+
+      const placeholder = `__TABLE_BLOCK_${tableBlocks.length}__`;
+      tableBlocks.push(tableHtml);
+      return '\n' + placeholder + '\n';
+    });
+
+    let escaped = escapeHTML(processed);
+
+    // Headers
+    escaped = escaped.replace(/^### (.*$)/gim, '<h3 style="font-size: 1.05rem; font-weight: 700; color: #1e293b; margin: 14px 0 6px 0;">$1</h3>');
+    escaped = escaped.replace(/^#### (.*$)/gim, '<h4 style="font-size: 0.95rem; font-weight: 700; color: #334155; margin: 10px 0 4px 0;">$1</h4>');
+    escaped = escaped.replace(/^## (.*$)/gim, '<h2 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 16px 0 8px 0;">$1</h2>');
+    escaped = escaped.replace(/^# (.*$)/gim, '<h1 style="font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 18px 0 10px 0;">$1</h1>');
+
+    // Bold & Italic
     escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     escaped = escaped.replace(/\*(.*?)\*/g, '<em>$1</em>');
-    escaped = escaped.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+    // Inline code
+    escaped = escaped.replace(/`([^`]+)`/g, '<code style="background: #f1f5f9; padding: 2px 5px; border-radius: 4px; font-family: Consolas, Monaco, monospace; font-size: 0.85em; color: #e11d48; font-weight: 600;">$1</code>');
+
+    // Horizontal rules
+    escaped = escaped.replace(/^---$/gim, '<hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 12px 0;">');
+
+    // Links [text](url)
+    escaped = escaped.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_self" style="color: #2563eb; text-decoration: underline; font-weight: 600;">$1</a>');
+
+    // Bullet lists
     escaped = escaped.replace(/^\s*-\s+(.*$)/gim, '<li>$1</li>');
     escaped = escaped.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+
+    // Numbered lists
     escaped = escaped.replace(/^\s*(\d+)\.\s+(.*$)/gim, '<li>$2</li>');
-    escaped = escaped.replace(/\n\n/g, '</p><p>');
+
+    // Newlines
+    escaped = escaped.replace(/\n\n/g, '</p><p style="margin: 8px 0;">');
     escaped = escaped.replace(/\n/g, '<br>');
 
-    return `<p>${escaped}</p>`;
+    // Restore code blocks and tables
+    codeBlocks.forEach((codeHtml, idx) => {
+      escaped = escaped.replace(`__CODE_BLOCK_${idx}__`, codeHtml);
+    });
+    tableBlocks.forEach((tblHtml, idx) => {
+      escaped = escaped.replace(`__TABLE_BLOCK_${idx}__`, tblHtml);
+    });
+
+    return `<div class="ai-rendered-content" style="line-height: 1.6;">${escaped}</div>`;
   }
 
   // ── Helper Utilities ───────────────────────────────────────────────

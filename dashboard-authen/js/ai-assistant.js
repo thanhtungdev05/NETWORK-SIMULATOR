@@ -196,6 +196,22 @@
 
         let html = `<div class="ai-diagnostic-view">`;
 
+        // 0. Official Faculty Academic Summary Export Banner
+        html += `
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; padding: 12px 16px; background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); border-radius: 8px; color: #ffffff; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.12); flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="font-size: 1.5rem; line-height: 1;">🏛️</div>
+                    <div>
+                        <div style="font-weight: 700; font-size: 0.88rem; color: #ffffff;">Hội Đồng Đào Tạo & Khảo Thí UTH</div>
+                        <div style="font-size: 0.73rem; color: #c7d2fe; margin-top: 1px;">Văn bản tổng kết sư phạm chuẩn A4 lưu hồ sơ tốt nghiệp & thanh tra</div>
+                    </div>
+                </div>
+                <a href="/api/index.php/ai/export-academic-report?class_id=${encodeURIComponent(state.activeClass || 'all')}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; background: #4f46e5; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 0.78rem; font-weight: 700; box-shadow: 0 2px 4px rgba(79,70,229,0.3); white-space: nowrap; transition: all 0.2s;" onmouseover="this.style.background='#4338ca'" onmouseout="this.style.background='#4f46e5'">
+                    <span>📄 Xuất Bản Báo Cáo Sư Phạm (Print / PDF)</span>
+                </a>
+            </div>
+        `;
+
         // 1. KPI Cards
         html += `
             <div class="ai-kpi-grid">

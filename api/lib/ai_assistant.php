@@ -1856,7 +1856,9 @@ function ai_detect_diagnostic_command(string $query): ?array
         'vi sao rot', 'vi sao rot lab', 'vi sao bi tru diem', 'vi sao khong dat',
         'loi cua hoc vien', 'loi cua sinh vien', 'phan tich loi phien',
         'so sanh cau hinh', 'diff cau hinh', 'cau hinh sai gi', 'sai o dau',
-        'kiem tra loi phien', 'xem lai loi', 'tai sao toi bi tru diem'
+        'kiem tra loi phien', 'xem lai loi', 'tai sao toi bi tru diem',
+        'in bien ban', 'xuat bien ban', 'in bao cao', 'xuat bao cao', 'in phieu',
+        'bien ban giam dinh', 'phieu giam dinh', 'in ket qua'
     ];
 
     $matched = false;
@@ -2458,11 +2460,16 @@ function ai_chat_query(PDO $pdo, string $question, ?string $classIdentifier = nu
         try {
             if ($diagCmd['type'] === 'session' && !empty($diagCmd['session_id'])) {
                 $diag = ai_diagnose_session($pdo, (int)$diagCmd['session_id']);
+                $targetSid = (int)($diag['session_id'] ?? $diagCmd['session_id']);
+                $ans = $diag['report'];
+                if ($targetSid > 0) {
+                    $ans .= "\n\n---\n📄 **Biên Bản Giám Định Khảo Thí (Chuẩn A4 UTH):** [Bấm vào đây để In hoặc Lưu file PDF](/api/index.php/ai/export-session-report?session_id={$targetSid})";
+                }
                 return [
                     'question' => $question,
-                    'answer' => $diag['report'],
+                    'answer' => $ans,
                     'intent' => 'session_diagnostic',
-                    'session_id' => $diagCmd['session_id'],
+                    'session_id' => $targetSid,
                     'suggested_questions' => [
                         "Phác đồ khắc phục từng bước như thế nào?",
                         "Tại sao thiếu NAT Masquerade lại không ra được mạng?",
@@ -2480,10 +2487,16 @@ function ai_chat_query(PDO $pdo, string $question, ?string $classIdentifier = nu
                     $studentTarget = $focusedStudent['display_name'];
                 }
                 $diag = ai_diagnose_student($pdo, $studentTarget, $classIdentifier);
+                $targetSid = (int)($diag['session_id'] ?? 0);
+                $ans = $diag['report'];
+                if ($targetSid > 0) {
+                    $ans .= "\n\n---\n📄 **Biên Bản Giám Định Khảo Thí (Chuẩn A4 UTH):** [Bấm vào đây để In hoặc Lưu file PDF](/api/index.php/ai/export-session-report?session_id={$targetSid})";
+                }
                 return [
                     'question' => $question,
-                    'answer' => $diag['report'],
+                    'answer' => $ans,
                     'intent' => 'student_diagnostic',
+                    'session_id' => $targetSid > 0 ? $targetSid : null,
                     'student' => $diag['student'] ?? null,
                     'suggested_questions' => [
                         "Còn học viên khác thì sao?",
@@ -2498,6 +2511,38 @@ function ai_chat_query(PDO $pdo, string $question, ?string $classIdentifier = nu
             }
         } catch (Throwable $diagErr) {
             error_log("AI Diagnostic dispatch error: " . $diagErr->getMessage());
+        }
+    }
+
+    // 0.2 Phát hiện yêu cầu lập Báo Cáo Sư Phạm Hội Đồng Đào Tạo (Academic Executive Summary)
+    $qNorm = ai_remove_vietnamese_accents(mb_strtolower(trim($question)));
+    if (
+        str_contains($qNorm, 'bao cao su pham') || 
+        str_contains($qNorm, 'tong ket su pham') || 
+        str_contains($qNorm, 'bao cao hoi dong') ||
+        str_contains($qNorm, 'danh gia su pham') ||
+        str_contains($qNorm, 'tong hop khao thi')
+    ) {
+        try {
+            $academicSummary = ai_generate_academic_summary($pdo, $classIdentifier);
+            $exportUrl = '/api/index.php/ai/export-academic-report' . ($classIdentifier ? '?class_id=' . urlencode($classIdentifier) : '');
+            $answer = $academicSummary['summary_markdown'] . "\n\n---\n🏛️ **Văn Bản Khảo Thí Chính Thức:** [Bấm vào đây để In hoặc Xuất file PDF Chuẩn A4]({$exportUrl})";
+            return [
+                'question' => $question,
+                'answer' => $answer,
+                'intent' => 'academic_summary',
+                'suggested_questions' => [
+                    'Chi tiết các học viên cần can thiệp gấp?',
+                    'Bài lab nào có tỷ lệ trượt cao nhất?',
+                    'Gửi email đôn đốc toàn bộ học viên trễ hạn?',
+                ],
+                'model' => $academicSummary['model'] ?? 'gemini-3.5-flash',
+                'engine' => $academicSummary['engine'] ?? 'UTH NetLab Academic Executive Advisor',
+                'is_generative' => $academicSummary['is_generative'] ?? true,
+                'academic_data' => $academicSummary,
+            ];
+        } catch (Throwable $e) {
+            error_log("Academic Summary dispatch error: " . $e->getMessage());
         }
     }
 
@@ -3500,10 +3545,16 @@ function ai_student_chat(PDO $pdo, array $user, string $message, string $mode = 
             } else {
                 $diag = ai_diagnose_student($pdo, $user['user_id'] ?? $user['email']);
             }
+            $targetSid = (int)($diag['session_id'] ?? 0);
+            $ans = $diag['report'];
+            if ($targetSid > 0) {
+                $ans .= "\n\n---\n📄 **Biên Bản Giám Định Khảo Thí (A4 Chuẩn Đào Tạo UTH):** [Bấm vào đây để In hoặc Lưu file PDF](/api/index.php/ai/export-session-report?session_id={$targetSid})";
+            }
             return [
                 'message' => $message,
-                'answer' => $diag['report'],
+                'answer' => $ans,
                 'mode' => $mode,
+                'session_id' => $targetSid > 0 ? $targetSid : null,
                 'suggested_questions' => [
                     'Hướng dẫn từng bước khắc phục lỗi này?',
                     'Tôi cần làm bài nào tiếp theo?',
@@ -3766,4 +3817,688 @@ function ai_send_reminders(PDO $pdo, array $actor, array $params): array
         'results' => $results,
     ];
 }
+
+/**
+ * Converts Markdown text into clean, official print-ready HTML
+ */
+function ai_markdown_to_clean_html(string $md): string
+{
+    if (trim($md) === '') return '';
+
+    // 1. Triple-backtick code blocks
+    $codeBlocks = [];
+    $processed = preg_replace_callback('/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/u', function($m) use (&$codeBlocks) {
+        $idx = count($codeBlocks);
+        $lang = htmlspecialchars($m[1], ENT_QUOTES, 'UTF-8');
+        $code = htmlspecialchars(trim($m[2]), ENT_QUOTES, 'UTF-8');
+        $codeBlocks[$idx] = "<pre><code class=\"language-{$lang}\">{$code}</code></pre>";
+        return "\n__CODE_BLOCK_{$idx}__\n";
+    }, $md);
+
+    // 2. Markdown tables
+    $tableBlocks = [];
+    $processed = preg_replace_callback('/(?:^|\n)((?:\|[^\n]+\|\r?\n)+)/u', function($m) use (&$tableBlocks) {
+        $lines = array_filter(array_map('trim', explode("\n", trim($m[1]))));
+        if (count($lines) < 2) return $m[0];
+        
+        $headerLine = $lines[0];
+        $sepLine = $lines[1] ?? '';
+        if (!str_contains($sepLine, '-')) return $m[0];
+
+        $headers = array_map('trim', array_slice(explode('|', $headerLine), 1, -1));
+        $rows = array_slice($lines, 2);
+
+        $idx = count($tableBlocks);
+        $html = '<table class="report-table"><thead><tr>';
+        foreach ($headers as $h) {
+            $html .= '<th>' . htmlspecialchars($h, ENT_QUOTES, 'UTF-8') . '</th>';
+        }
+        $html .= '</tr></thead><tbody>';
+
+        foreach ($rows as $r) {
+            $cols = array_map('trim', array_slice(explode('|', $r), 1, -1));
+            $html .= '<tr>';
+            foreach ($cols as $c) {
+                $styled = htmlspecialchars($c, ENT_QUOTES, 'UTF-8');
+                if (str_contains($c, '✅') || mb_stripos($c, 'đạt') !== false) {
+                    $styled = '<span style="color: #16a34a; font-weight: 700;">' . $styled . '</span>';
+                } elseif (str_contains($c, '❌') || mb_stripos($c, 'sai') !== false) {
+                    $styled = '<span style="color: #dc2626; font-weight: 700;">' . $styled . '</span>';
+                }
+                $html .= '<td>' . $styled . '</td>';
+            }
+            $html .= '</tr>';
+        }
+        $html .= '</tbody></table>';
+
+        $tableBlocks[$idx] = $html;
+        return "\n__TABLE_BLOCK_{$idx}__\n";
+    }, $processed);
+
+    // Headers
+    $processed = preg_replace('/^#### (.*$)/m', '<h4>$1</h4>', $processed);
+    $processed = preg_replace('/^### (.*$)/m', '<h3>$1</h3>', $processed);
+    $processed = preg_replace('/^## (.*$)/m', '<h2>$1</h2>', $processed);
+    $processed = preg_replace('/^# (.*$)/m', '<h1>$1</h1>', $processed);
+
+    // Bold / italic
+    $processed = preg_replace('/\*\*(.*?)\*\*/u', '<strong>$1</strong>', $processed);
+    $processed = preg_replace('/(?<!\*)\*(?!\*)(.*?)(?<!\*)\*(?!\*)/u', '<em>$1</em>', $processed);
+
+    // Inline code
+    $processed = preg_replace('/`([^`]+)`/u', '<code>$1</code>', $processed);
+
+    // HR
+    $processed = preg_replace('/^---$/m', '<hr style="border: 0; border-top: 1px solid #cbd5e1; margin: 20px 0;">', $processed);
+
+    // Bullet lists
+    $processed = preg_replace('/^\s*-\s+(.*$)/m', '<li>$1</li>', $processed);
+
+    // Paragraphs
+    $processed = preg_replace('/\n{2,}/u', '</p><p>', $processed);
+    $processed = '<p>' . $processed . '</p>';
+    $processed = str_replace(['<p><li>', '</li></p>'], ['<ul><li>', '</li></ul>'], $processed);
+    $processed = preg_replace('/(<li>.*<\/li>)/s', '<ul>$1</ul>', $processed);
+
+    // Restore code blocks and tables
+    foreach ($codeBlocks as $i => $code) {
+        $processed = str_replace("__CODE_BLOCK_{$i}__", $code, $processed);
+    }
+    foreach ($tableBlocks as $i => $tbl) {
+        $processed = str_replace("__TABLE_BLOCK_{$i}__", $tbl, $processed);
+    }
+
+    return $processed;
+}
+
+/**
+ * Generates an Executive Pedagogical Summary & Classroom Strategy Report for Faculty
+ */
+function ai_generate_academic_summary(PDO $pdo, ?string $classIdentifier = null): array
+{
+    $report = ai_get_diagnostic_report($pdo, $classIdentifier);
+    $summary = $report['summary'] ?? [];
+    $topLabs = $report['top_failed_labs'] ?? [];
+    $mistakes = $report['common_mistakes'] ?? [];
+    $students = $report['struggling_students'] ?? [];
+
+    $sysPrompt = "Bạn là Chủ Tịch Hội Đồng Sư Phạm & Giám Đốc Trung Tâm Khảo Thí Mạng Máy Tính UTH (UTH NetLab Academic Director).\n";
+    $sysPrompt .= "Nhiệm vụ của bạn là lập BÁO CÁO PHÂN TÍCH SƯ PHẠM VÀ CHIẾN LƯỢC CAN THIỆP GIẢNG DẠY (EXECUTIVE PEDAGOGICAL SUMMARY & CLASS STRATEGY REPORT) cho Giảng viên và Ban Chủ Nhiệm Khoa dựa trên số liệu thực hành thực tế của sinh viên.\n";
+    $sysPrompt .= "Báo cáo gồm 4 phần chiến lược chuẩn mực:\n";
+    $sysPrompt .= "1. 🎓 TỔNG QUAN NĂNG LỰC TOÀN KHÓA (Cohort Performance & Pass Rate Analysis)\n";
+    $sysPrompt .= "2. 📉 BẢN ĐỒ LỖ HỔNG KIẾN THỨC TẬP THỂ (Cohort Knowledge Gap & Root-Cause Packet-Flow Analysis)\n";
+    $sysPrompt .= "3. 🎯 CHIẾN LƯỢC CAN THIỆP SƯ PHẠM TRÊN LỚP (Actionable Classroom Interventions)\n";
+    $sysPrompt .= "4. 👥 KẾ HOẠCH PHÂN TẦNG HỌC VIÊN & ĐỀ XUẤT HÀNH ĐỘNG (Tiered Student Intervention Plan)\n";
+    $sysPrompt .= "Dùng văn phong chuẩn mực sư phạm, đĩnh đạc, tính hành động cao.";
+
+    $userPrompt = "HÃY LẬP BÁO CÁO PHÂN TÍCH SƯ PHẠM TỔNG HỢP CHO GIẢNG VIÊN VÀ BAN CHỦ NHIỆM KHOA:\n\n";
+    $userPrompt .= "=== THỐNG KÊ LỚP / KHÓA HỌC ===\n";
+    $userPrompt .= "- Lớp khảo sát: " . ($classIdentifier ?: 'Toàn bộ sinh viên thực hành mạng UTH NetLab') . "\n";
+    $userPrompt .= "- Tổng số sinh viên cần theo dõi: " . ($summary['struggling_students_count'] ?? 0) . " sinh viên\n";
+    $userPrompt .= "- Số sinh viên nguy cơ trượt cao cần can thiệp gấp: " . ($summary['urgent_students_count'] ?? 0) . " sinh viên\n";
+    $userPrompt .= "- Tổng số lượt mắc lỗi cấu hình: " . ($summary['total_common_mistakes_tracked'] ?? 0) . "\n\n";
+
+    $userPrompt .= "=== TOP CÁC BÀI THỰC HÀNH CÓ TỶ LỆ TRƯỢT CAO NHẤT ===\n";
+    foreach (array_slice($topLabs, 0, 5) as $l) {
+        $userPrompt .= "- Bài [{$l['lab_name']} - {$l['device_name']}]: {$l['failed_count']}/{$l['total_attempts']} lần trượt ({$l['fail_rate_percent']}%), Điểm TB: {$l['avg_score']}/100, Thời gian TB: {$l['avg_duration_min']} phút\n";
+    }
+    $userPrompt .= "\n";
+
+    $userPrompt .= "=== CÁC LỖI CẤU HÌNH PHỔ BIẾN NHẤT TRÍCH XUẤT TỪ GRADING_DETAILS ===\n";
+    foreach (array_slice($mistakes, 0, 6) as $m) {
+        $userPrompt .= "- Tiêu chí '{$m['rule_name']}' ({$m['lab_name']}): {$m['fail_count']} lần mắc lỗi. Nhóm lỗi: {$m['category']}\n";
+        if (!empty($m['reasons'])) {
+            $userPrompt .= "  + Minh chứng: " . implode('; ', array_slice($m['reasons'], 0, 2)) . "\n";
+        }
+    }
+    $userPrompt .= "\n";
+
+    $userPrompt .= "=== DANH SÁCH SINH VIÊN ĐANG GẶP KHÓ KHĂN CẦN CAN THIỆP ===\n";
+    foreach (array_slice($students, 0, 5) as $s) {
+        $userPrompt .= "- Sinh viên: {$s['student_name']} ({$s['email']}) - Lớp {$s['class_code']}: Hoàn thành {$s['passed_labs']}/{$s['total_assigned_labs']} bài ({$s['completion_percent']}%), còn " . ($s['remaining_labs'] ?? ($s['total_assigned_labs'] - $s['passed_labs'])) . " bài trượt/chưa làm.\n";
+    }
+
+    $geminiRes = ai_call_gemini_api($sysPrompt, $userPrompt);
+
+    $summaryMarkdown = '';
+    $engine = 'Google Gemini LLM (Academic Executive Advisor)';
+    $modelName = 'gemini-3.5-flash';
+    $isGenerative = true;
+
+    if ($geminiRes && !empty($geminiRes['text'])) {
+        $summaryMarkdown = $geminiRes['text'];
+        $modelName = $geminiRes['model'] ?? 'gemini-3.5-flash';
+    } else {
+        $engine = 'UTH NetLab Deterministic Advisor (Offline Fallback)';
+        $modelName = 'uth-netlab-local-fallback';
+        $isGenerative = false;
+
+        $summaryMarkdown = "# TRƯỜNG ĐẠI HỌC GIAO THÔNG VẬN TẢI TP.HCM (UTH)\n";
+        $summaryMarkdown .= "## HỘI ĐỒNG SƯ PHẠM & TRUNG TÂM KHẢO THÍ MẠNG (UTH NETLAB)\n---\n";
+        $summaryMarkdown .= "### BÁO CÁO PHÂN TÍCH SƯ PHẠM & CHIẾN LƯỢC CAN THIỆP GIẢNG DẠY\n\n";
+        $summaryMarkdown .= "### 1. 🎓 TỔNG QUAN NĂNG LỰC TOÀN KHÓA\n";
+        $summaryMarkdown .= "- Hệ thống ghi nhận " . ($summary['struggling_students_count'] ?? 0) . " sinh viên đang gặp trở ngại trong quá trình hoàn thành các bài lab theo chuẩn UTH.\n";
+        $summaryMarkdown .= "- Trong đó có **" . ($summary['urgent_students_count'] ?? 0) . " sinh viên** có tỷ lệ hoàn thành dưới 30% cần can thiệp sư phạm khẩn cấp.\n\n";
+
+        $summaryMarkdown .= "### 2. 📉 BẢN ĐỒ LỖ HỔNG KIẾN THỨC TẬP THỂ\n";
+        if (!empty($mistakes)) {
+            foreach (array_slice($mistakes, 0, 4) as $m) {
+                $summaryMarkdown .= "- **{$m['rule_name']}** ({$m['lab_name']}): {$m['fail_count']} lượt vi phạm. Phân loại lỗi: `{$m['category']}`.\n";
+            }
+        }
+        $summaryMarkdown .= "\n### 3. 🎯 CHIẾN LƯỢC CAN THIỆP SƯ PHẠM TRÊN LỚP\n";
+        $summaryMarkdown .= "- Dành 15 phút đầu giờ buổi học tới để giảng giải cơ chế phân tách IP LAN/WAN tránh xung đột IP 192.168.1.1.\n";
+        $summaryMarkdown .= "- Rèn luyện quy trình kiểm tra 5 bước và thói quen lưu cấu hình NVRAM trước khi nộp bài.\n\n";
+
+        $summaryMarkdown .= "### 4. 👥 KẾ HOẠCH PHÂN TẦNG HỌC VIÊN\n";
+        $summaryMarkdown .= "- Gửi thông báo đôn đốc tự động qua email đến nhóm sinh viên nguy cơ trượt cao.\n";
+        $summaryMarkdown .= "- Mở các bài thực hành phụ đạo thích ứng cho nhóm sinh viên cần hỗ trợ.\n";
+    }
+
+    return [
+        'success' => true,
+        'class_identifier' => $classIdentifier,
+        'summary_markdown' => $summaryMarkdown,
+        'kpis' => $summary,
+        'top_failed_labs' => $topLabs,
+        'common_mistakes' => $mistakes,
+        'struggling_students' => $students,
+        'model' => $modelName,
+        'engine' => $engine,
+        'is_generative' => $isGenerative,
+        'generated_at' => date('Y-m-d H:i:s'),
+    ];
+}
+
+/**
+ * Renders a complete standalone print-ready HTML page for a session diagnostic report
+ */
+function ai_render_printable_diagnostic_html(PDO $pdo, int $sessionId): string
+{
+    $diag = ai_diagnose_session($pdo, $sessionId);
+    $st = $diag['student'] ?? [];
+    $sess = $diag['session'] ?? [];
+    $bodyHtml = ai_markdown_to_clean_html($diag['report'] ?? '');
+    $dateStr = date('d/m/Y - H:i');
+    $isPassed = !empty($sess['is_passed']);
+    $badgeClass = $isPassed ? 'score-badge-passed' : 'score-badge-failed';
+    $statusText = $isPassed ? '✅ ĐẠT CHUẨN' : '❌ CHƯA ĐẠT (TRƯỢT)';
+    $modelLabel = htmlspecialchars($diag['model'] ?? 'gemini-3.5-flash', ENT_QUOTES, 'UTF-8');
+
+    return <<<HTML
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bản Giám Định Kỹ Thuật Mạng #{$sessionId} - UTH NetLab</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #0f172a;
+      background: #f1f5f9;
+      line-height: 1.6;
+      padding: 24px;
+    }
+    .toolbar {
+      max-width: 900px;
+      margin: 0 auto 20px auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #ffffff;
+      padding: 12px 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .toolbar button {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-print { background: #4f46e5; color: #ffffff; }
+    .btn-print:hover { background: #4338ca; }
+    .btn-close { background: #f1f5f9; color: #475569; }
+    
+    .document-page {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 48px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      position: relative;
+    }
+    
+    .watermark {
+      position: absolute;
+      top: 45%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-30deg);
+      font-size: 4.5rem;
+      font-weight: 900;
+      color: rgba(99, 102, 241, 0.035);
+      pointer-events: none;
+      white-space: nowrap;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+    }
+    
+    .academic-letterhead {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+    }
+    .school-info h4 { font-size: 0.82rem; font-weight: 600; color: #475569; text-transform: uppercase; }
+    .school-info h2 { font-size: 1.15rem; font-weight: 800; color: #1e1b4b; text-transform: uppercase; letter-spacing: 0.5px; }
+    .school-info h3 { font-size: 0.92rem; font-weight: 700; color: #4338ca; text-transform: uppercase; }
+    
+    .doc-meta { text-align: right; font-size: 0.82rem; color: #475569; }
+    .doc-meta strong { color: #0f172a; }
+    
+    .doc-title-box {
+      text-align: center;
+      margin: 20px 0 24px 0;
+    }
+    .doc-title-box h1 {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: #0f172a;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .doc-title-box .subtitle {
+      font-size: 0.88rem;
+      color: #64748b;
+      margin-top: 4px;
+    }
+    
+    .summary-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 24px;
+      font-size: 0.85rem;
+    }
+    .meta-item { display: flex; gap: 8px; }
+    .meta-label { font-weight: 600; color: #64748b; width: 140px; }
+    .meta-val { font-weight: 700; color: #0f172a; }
+    
+    .score-badge-passed {
+      color: #16a34a; font-weight: 800; background: #dcfce7; padding: 2px 10px; border-radius: 9999px;
+    }
+    .score-badge-failed {
+      color: #dc2626; font-weight: 800; background: #fee2e2; padding: 2px 10px; border-radius: 9999px;
+    }
+    
+    .report-body { font-size: 0.92rem; color: #1e293b; line-height: 1.7; }
+    .report-body h2 { font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 20px 0 10px 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; }
+    .report-body h3 { font-size: 1.05rem; font-weight: 700; color: #1e293b; margin: 16px 0 8px 0; }
+    .report-body h4 { font-size: 0.95rem; font-weight: 700; color: #334155; margin: 12px 0 6px 0; }
+    .report-body p { margin-bottom: 12px; }
+    .report-body ul, .report-body ol { margin: 8px 0 14px 20px; }
+    .report-body li { margin-bottom: 6px; }
+    .report-body code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #e11d48; font-weight: 600; }
+    .report-body pre { background: #1e293b; color: #f8fafc; padding: 14px; border-radius: 8px; overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; margin: 12px 0; }
+    .report-body pre code { background: transparent; padding: 0; color: inherit; }
+    
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 0.82rem;
+    }
+    .report-table th, .report-table td {
+      border: 1px solid #cbd5e1;
+      padding: 8px 12px;
+      text-align: left;
+    }
+    .report-table th { background: #f1f5f9; font-weight: 700; color: #334155; }
+    .report-table tr:nth-child(even) { background: #f8fafc; }
+    
+    .signature-section {
+      margin-top: 48px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 40px;
+      text-align: center;
+      page-break-inside: avoid;
+    }
+    .sig-box h4 { font-size: 0.9rem; font-weight: 700; text-transform: uppercase; color: #1e293b; }
+    .sig-box .role-sub { font-size: 0.8rem; color: #64748b; font-style: italic; margin-top: 2px; }
+    .sig-space { height: 75px; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-style: italic; font-size: 0.8rem; }
+    .sig-name { font-weight: 700; font-size: 0.95rem; color: #0f172a; border-top: 1px dashed #cbd5e1; display: inline-block; padding-top: 6px; width: 80%; }
+    
+    @media print {
+      body { background: #ffffff; padding: 0; }
+      .toolbar { display: none !important; }
+      .document-page { box-shadow: none; border-radius: 0; padding: 0; margin: 0; max-width: 100%; }
+      .watermark { opacity: 0.08; }
+      @page { size: A4; margin: 15mm 15mm 15mm 15mm; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div style="font-weight: 700; font-size: 0.9rem; color: #4338ca;">
+      🏛️ UTH NetLab — Bản Giám Định Kỹ Thuật Chính Thức
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <button type="button" class="btn-print" onclick="window.print()">
+        <span>🖨️ In Báo Cáo / Lưu PDF (A4)</span>
+      </button>
+      <button type="button" class="btn-close" onclick="window.close()">
+        <span>✕ Đóng</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="document-page">
+    <div class="watermark">UTH NETLAB VERIFIED</div>
+
+    <div class="academic-letterhead">
+      <div class="school-info">
+        <h4>BỘ GIAO THÔNG VẬN TẢI</h4>
+        <h2>TRƯỜNG ĐẠI HỌC GIAO THÔNG VẬN TẢI TP.HCM</h2>
+        <h3>TRUNG TÂM KHẢO THÍ & GIÁM ĐỊNH MẠNG MÁY TÍNH (UTH NETLAB)</h3>
+      </div>
+      <div class="doc-meta">
+        <p>Số: <strong>NETLAB-AI-2026/GĐ-#{$sessionId}</strong></p>
+        <p>Thời điểm giám định: <strong>{$dateStr}</strong></p>
+        <p>Động cơ AI: <strong>{$modelLabel}</strong></p>
+      </div>
+    </div>
+
+    <div class="doc-title-box">
+      <h1>BẢN GIÁM ĐỊNH KỸ THUẬT & PHÂN TÍCH LỖI CẤU HÌNH</h1>
+      <div class="subtitle">(Hệ thống Giám Định Mạng Tự Động Hóa AI Live Diagnostic Inspector)</div>
+    </div>
+
+    <div class="summary-meta-grid">
+      <div class="meta-item">
+        <span class="meta-label">Sinh viên thực hiện:</span>
+        <span class="meta-val">{$st['name']} ({$st['email']})</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Lớp đào tạo:</span>
+        <span class="meta-val">{$st['class_code']} - {$st['class_name']}</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Thiết bị thực hành:</span>
+        <span class="meta-val">{$sess['device']}</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Bài thực hành:</span>
+        <span class="meta-val">{$sess['lab_name']}</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Điểm số đạt được:</span>
+        <span class="meta-val"><span class="{$badgeClass}">{$sess['score']}/100 — {$statusText}</span></span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Thời gian làm bài:</span>
+        <span class="meta-val">{$sess['duration_min']} phút ({$sess['passed_count']}/{$sess['total_criteria']} tiêu chí đạt)</span>
+      </div>
+    </div>
+
+    <div class="report-body">
+      {$bodyHtml}
+    </div>
+
+    <div class="signature-section">
+      <div class="sig-box">
+        <h4>KỸ SƯ TRƯỞNG GIÁM ĐỊNH AI</h4>
+        <div class="role-sub">Hệ thống Trí tuệ Nhân tạo UTH NetLab</div>
+        <div class="sig-space">
+          <span style="color:#4f46e5; font-weight:700;">[ CERTIFIED & DIGITALLY VERIFIED ]</span>
+        </div>
+        <div class="sig-name">Google Gemini 3.5 Flash Engine</div>
+      </div>
+      <div class="sig-box">
+        <h4>GIẢNG VIÊN / TRƯỞNG BỘ MÔN</h4>
+        <div class="role-sub">Khoa Công nghệ Thông tin UTH</div>
+        <div class="sig-space">(Ký và ghi rõ họ tên)</div>
+        <div class="sig-name">Ban Chủ Nhiệm Học Phần Mạng Máy Tính</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+HTML;
+}
+
+/**
+ * Renders a complete standalone print-ready HTML page for class academic executive summary
+ */
+function ai_render_printable_academic_html(PDO $pdo, ?string $classIdentifier = null): string
+{
+    $acad = ai_generate_academic_summary($pdo, $classIdentifier);
+    $bodyHtml = ai_markdown_to_clean_html($acad['summary_markdown'] ?? '');
+    $dateStr = date('d/m/Y - H:i');
+    $className = htmlspecialchars($classIdentifier ?: 'Toàn bộ sinh viên thực hành mạng UTH', ENT_QUOTES, 'UTF-8');
+    $modelLabel = htmlspecialchars($acad['model'] ?? 'gemini-3.5-flash', ENT_QUOTES, 'UTF-8');
+
+    return <<<HTML
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Báo Cáo Phân Tích Sư Phạm & Chiến Lược Can Thiệp - UTH NetLab</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #0f172a;
+      background: #f1f5f9;
+      line-height: 1.6;
+      padding: 24px;
+    }
+    .toolbar {
+      max-width: 900px;
+      margin: 0 auto 20px auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #ffffff;
+      padding: 12px 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .toolbar button {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-print { background: #4f46e5; color: #ffffff; }
+    .btn-print:hover { background: #4338ca; }
+    .btn-close { background: #f1f5f9; color: #475569; }
+    
+    .document-page {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 48px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      position: relative;
+    }
+    
+    .watermark {
+      position: absolute;
+      top: 45%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-30deg);
+      font-size: 4rem;
+      font-weight: 900;
+      color: rgba(99, 102, 241, 0.035);
+      pointer-events: none;
+      white-space: nowrap;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+    }
+    
+    .academic-letterhead {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+    }
+    .school-info h4 { font-size: 0.82rem; font-weight: 600; color: #475569; text-transform: uppercase; }
+    .school-info h2 { font-size: 1.15rem; font-weight: 800; color: #1e1b4b; text-transform: uppercase; letter-spacing: 0.5px; }
+    .school-info h3 { font-size: 0.92rem; font-weight: 700; color: #4338ca; text-transform: uppercase; }
+    
+    .doc-meta { text-align: right; font-size: 0.82rem; color: #475569; }
+    .doc-meta strong { color: #0f172a; }
+    
+    .doc-title-box {
+      text-align: center;
+      margin: 20px 0 24px 0;
+    }
+    .doc-title-box h1 {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: #0f172a;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .doc-title-box .subtitle {
+      font-size: 0.88rem;
+      color: #64748b;
+      margin-top: 4px;
+    }
+    
+    .report-body { font-size: 0.92rem; color: #1e293b; line-height: 1.7; }
+    .report-body h2 { font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 20px 0 10px 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; }
+    .report-body h3 { font-size: 1.05rem; font-weight: 700; color: #1e293b; margin: 16px 0 8px 0; }
+    .report-body h4 { font-size: 0.95rem; font-weight: 700; color: #334155; margin: 12px 0 6px 0; }
+    .report-body p { margin-bottom: 12px; }
+    .report-body ul, .report-body ol { margin: 8px 0 14px 20px; }
+    .report-body li { margin-bottom: 6px; }
+    .report-body code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #e11d48; font-weight: 600; }
+    .report-body pre { background: #1e293b; color: #f8fafc; padding: 14px; border-radius: 8px; overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; margin: 12px 0; }
+    
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 0.82rem;
+    }
+    .report-table th, .report-table td {
+      border: 1px solid #cbd5e1;
+      padding: 8px 12px;
+      text-align: left;
+    }
+    .report-table th { background: #f1f5f9; font-weight: 700; color: #334155; }
+    .report-table tr:nth-child(even) { background: #f8fafc; }
+    
+    .signature-section {
+      margin-top: 48px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 40px;
+      text-align: center;
+      page-break-inside: avoid;
+    }
+    .sig-box h4 { font-size: 0.9rem; font-weight: 700; text-transform: uppercase; color: #1e293b; }
+    .sig-box .role-sub { font-size: 0.8rem; color: #64748b; font-style: italic; margin-top: 2px; }
+    .sig-space { height: 75px; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-style: italic; font-size: 0.8rem; }
+    .sig-name { font-weight: 700; font-size: 0.95rem; color: #0f172a; border-top: 1px dashed #cbd5e1; display: inline-block; padding-top: 6px; width: 80%; }
+    
+    @media print {
+      body { background: #ffffff; padding: 0; }
+      .toolbar { display: none !important; }
+      .document-page { box-shadow: none; border-radius: 0; padding: 0; margin: 0; max-width: 100%; }
+      .watermark { opacity: 0.08; }
+      @page { size: A4; margin: 15mm 15mm 15mm 15mm; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div style="font-weight: 700; font-size: 0.9rem; color: #4338ca;">
+      🏛️ UTH NetLab — Báo Cáo Phân Tích Sư Phạm & Chiến Lược Can Thiệp
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <button type="button" class="btn-print" onclick="window.print()">
+        <span>🖨️ In Báo Cáo / Lưu PDF (A4)</span>
+      </button>
+      <button type="button" class="btn-close" onclick="window.close()">
+        <span>✕ Đóng</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="document-page">
+    <div class="watermark">UTH ACADEMIC BOARD</div>
+
+    <div class="academic-letterhead">
+      <div class="school-info">
+        <h4>BỘ GIAO THÔNG VẬN TẢI</h4>
+        <h2>TRƯỜNG ĐẠI HỌC GIAO THÔNG VẬN TẢI TP.HCM</h2>
+        <h3>HỘI ĐỒNG SƯ PHẠM & TRUNG TÂM KHẢO THÍ MẠNG (UTH NETLAB)</h3>
+      </div>
+      <div class="doc-meta">
+        <p>Số: <strong>NETLAB-AI-2026/SP-BC</strong></p>
+        <p>Lớp khảo sát: <strong>{$className}</strong></p>
+        <p>Thời điểm lập: <strong>{$dateStr}</strong></p>
+        <p>Động cơ AI: <strong>{$modelLabel}</strong></p>
+      </div>
+    </div>
+
+    <div class="doc-title-box">
+      <h1>BÁO CÁO PHÂN TÍCH SƯ PHẠM & CHIẾN LƯỢC CAN THIỆP GIẢNG DẠY</h1>
+      <div class="subtitle">(Tự Động Hóa Tổng Hợp Từ Cơ Sở Dữ Liệu Chấm Điểm & Giám Định UTH NetLab)</div>
+    </div>
+
+    <div class="report-body">
+      {$bodyHtml}
+    </div>
+
+    <div class="signature-section">
+      <div class="sig-box">
+        <h4>CHỦ TỊCH HỘI ĐỒNG SƯ PHẠM AI</h4>
+        <div class="role-sub">Trung Tâm Khảo Thí Mạng UTH NetLab</div>
+        <div class="sig-space">
+          <span style="color:#4f46e5; font-weight:700;">[ ACADEMIC BOARD CERTIFIED ]</span>
+        </div>
+        <div class="sig-name">Google Gemini 3.5 Flash Engine</div>
+      </div>
+      <div class="sig-box">
+        <h4>TRƯỞNG BỘ MÔN MẠNG & TRUYỀN THÔNG</h4>
+        <div class="role-sub">Khoa Công nghệ Thông tin UTH</div>
+        <div class="sig-space">(Ký và duyệt chiến lược)</div>
+        <div class="sig-name">Ban Chủ Nhiệm Khoa CNTT</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+HTML;
+}
+
 

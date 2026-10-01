@@ -861,7 +861,7 @@
     if (_filteredSessions.length === 0) {
       elSessionsBody.innerHTML = `
         <tr>
-          <td colspan="8" style="text-align: center; padding: 36px 16px; color: var(--text-muted);">
+          <td colspan="9" style="text-align: center; padding: 36px 16px; color: var(--text-muted);">
             <div style="font-size: 24px; margin-bottom: 8px;">🔍</div>
             <div>Không tìm thấy phiên thực hành nào phù hợp với bộ lọc.</div>
           </td>
@@ -911,6 +911,12 @@
       // Attempt
       const attemptStr = s.practice_attempt_no ? `#${s.practice_attempt_no}` : (isGuide ? 'Hướng dẫn' : '-');
 
+      // Action / Inspection Report
+      const sid = s.session_id || s.id || '';
+      const actionHtml = sid
+        ? `<a href="/api/index.php/ai/export-session-report?session_id=${sid}" target="_blank" class="btn-export-session-link" style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 6px; font-size: 11.5px; font-weight: 700; text-decoration: none; background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; transition: all 0.2s;" title="Xuất biên bản giám định A4 chuẩn khảo thí"><span>📄 In Biên Bản</span></a>`
+        : `<span style="color: var(--text-muted); font-size: 11px;">—</span>`;
+
       tr.innerHTML = `
         <td style="color: var(--text-secondary); font-size: 12.5px; white-space: nowrap;">${dateStr}</td>
         <td><strong>${escapeHTML(s.device_name || s.device_id || '—')}</strong></td>
@@ -920,6 +926,7 @@
         <td>${scoreHtml}</td>
         <td style="font-family: monospace; font-size: 12.5px;">${durStr}</td>
         <td style="color: var(--text-muted); text-align: center;">${attemptStr}</td>
+        <td style="text-align: center;">${actionHtml}</td>
       `;
 
       elSessionsBody.appendChild(tr);

@@ -3426,6 +3426,64 @@ function handle_ai(array $segments, string $method): void
         }
     }
 
+    // Step 4: Printable Inspection Export & Academic Executive Summary Endpoints
+    if ($action === 'export-session-report') {
+        if ($method !== 'GET') {
+            fail(405, 'method-not-allowed', 'Export session report only supports GET.');
+        }
+        $sessionId = (int)($_GET['session_id'] ?? 0);
+        if ($sessionId <= 0) {
+            fail(400, 'bad-request', 'Thiếu hoặc sai session_id cần xuất bản.');
+        }
+        try {
+            $html = ai_render_printable_diagnostic_html($pdo, $sessionId);
+            header('Content-Type: text/html; charset=UTF-8');
+            header('Cache-Control: no-cache, no-store, must-revalidate');
+            echo $html;
+            exit;
+        } catch (Throwable $e) {
+            report_exception($e, 'ai-export-session-report');
+            fail(500, 'ai-export-error', $e->getMessage());
+        }
+    }
+
+    if ($action === 'export-academic-report') {
+        if ($method !== 'GET') {
+            fail(405, 'method-not-allowed', 'Export academic report only supports GET.');
+        }
+        $classId = isset($_GET['class_id']) && trim((string)$_GET['class_id']) !== '' ? trim((string)$_GET['class_id']) : null;
+        if ($classId === 'all') {
+            $classId = null;
+        }
+        try {
+            $html = ai_render_printable_academic_html($pdo, $classId);
+            header('Content-Type: text/html; charset=UTF-8');
+            header('Cache-Control: no-cache, no-store, must-revalidate');
+            echo $html;
+            exit;
+        } catch (Throwable $e) {
+            report_exception($e, 'ai-export-academic-report');
+            fail(500, 'ai-export-error', $e->getMessage());
+        }
+    }
+
+    if ($action === 'academic-summary') {
+        if ($method !== 'GET' && $method !== 'POST') {
+            fail(405, 'method-not-allowed', 'Academic summary supports GET and POST.');
+        }
+        $classId = isset($_GET['class_id']) && trim((string)$_GET['class_id']) !== '' ? trim((string)$_GET['class_id']) : null;
+        if ($classId === 'all') {
+            $classId = null;
+        }
+        try {
+            $summary = ai_generate_academic_summary($pdo, $classId);
+            respond(['ok' => true, 'success' => true, 'data' => $summary]);
+        } catch (Throwable $e) {
+            report_exception($e, 'ai-academic-summary');
+            fail(500, 'ai-summary-error', $e->getMessage());
+        }
+    }
+
     // Admin & Instructor endpoints
     $actor = require_instructor_or_admin();
 

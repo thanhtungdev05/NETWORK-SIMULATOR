@@ -361,8 +361,18 @@ function ai_call_gemini_api(string $systemPrompt, string $userPrompt): ?array
         return null;
     }
 
-    $preferredModel = env_value('GEMINI_MODEL') ?: 'gemini-2.0-flash';
-    $modelsToTry = array_unique([$preferredModel, 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.5-flash', 'gemini-1.5-pro']);
+    $preferredModel = env_value('GEMINI_MODEL') ?: 'gemini-3.5-flash-lite';
+    $modelsToTry = array_unique([
+        $preferredModel,
+        'gemini-3.5-flash-lite',
+        'gemini-3.1-flash-lite',
+        'gemini-3.5-flash',
+        'gemini-flash-latest',
+        'gemini-pro-latest',
+        'gemini-2.5-flash',
+        'gemini-2.0-flash',
+        'gemini-1.5-flash',
+    ]);
 
     foreach ($modelsToTry as $currentModel) {
         $url = 'https://generativelanguage.googleapis.com/v1beta/models/' . urlencode($currentModel) . ':generateContent?key=' . urlencode(trim($apiKey));

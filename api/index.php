@@ -3351,6 +3351,49 @@ function handle_ai(array $segments, string $method): void
         }
     }
 
+    // AI Live Diagnostic Inspector (Configuration Diff & Root-Cause Packet-Flow Analysis)
+    if ($action === 'diagnose-session') {
+        if ($method !== 'POST') {
+            fail(405, 'method-not-allowed', 'Diagnose session only supports POST.');
+        }
+        $body = json_body();
+        $sessionId = (int)($body['session_id'] ?? 0);
+        if ($sessionId <= 0) {
+            fail(400, 'bad-request', 'Thiếu hoặc sai session_id cần chẩn đoán.');
+        }
+        try {
+            $report = ai_diagnose_session($pdo, $sessionId);
+            respond(['ok' => true, 'success' => true, 'data' => $report]);
+        } catch (Throwable $e) {
+            report_exception($e, 'ai-diagnose-session');
+            fail(500, 'ai-diagnose-error', $e->getMessage());
+        }
+    }
+
+    if ($action === 'diagnose-student') {
+        if ($method !== 'POST') {
+            fail(405, 'method-not-allowed', 'Diagnose student only supports POST.');
+        }
+        $body = json_body();
+        $identifier = trim((string)($body['identifier'] ?? $body['email'] ?? $body['user_id'] ?? $body['name'] ?? ''));
+        if ($identifier === '') {
+            $user = current_user_id() ? find_user_by_id(current_user_id()) : null;
+            if ($user && !empty($user['user_id'])) {
+                $identifier = (string)$user['user_id'];
+            } else {
+                fail(400, 'bad-request', 'Thiếu thông tin học viên cần chẩn đoán.');
+            }
+        }
+        $classId = isset($body['class_id']) ? (string)$body['class_id'] : null;
+        try {
+            $report = ai_diagnose_student($pdo, $identifier, $classId);
+            respond(['ok' => true, 'success' => true, 'data' => $report]);
+        } catch (Throwable $e) {
+            report_exception($e, 'ai-diagnose-student');
+            fail(500, 'ai-diagnose-error', $e->getMessage());
+        }
+    }
+
     // Admin & Instructor endpoints
     $actor = require_instructor_or_admin();
 

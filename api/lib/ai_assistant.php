@@ -393,7 +393,7 @@ function ai_call_gemini_api(string $systemPrompt, string $userPrompt): ?array
             ],
             'generationConfig' => [
                 'temperature' => 0.4,
-                'maxOutputTokens' => 2048,
+                'maxOutputTokens' => 8192,
                 'topP' => 0.9,
             ]
         ];
@@ -404,8 +404,8 @@ function ai_call_gemini_api(string $systemPrompt, string $userPrompt): ?array
             CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_UNICODE),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-            CURLOPT_TIMEOUT => 25,
-            CURLOPT_CONNECTTIMEOUT => 8,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_CONNECTTIMEOUT => 10,
             CURLOPT_SSL_VERIFYPEER => false,
             CURLOPT_SSL_VERIFYHOST => 0,
         ]);
@@ -421,8 +421,14 @@ function ai_call_gemini_api(string $systemPrompt, string $userPrompt): ?array
         }
 
         $decoded = json_decode((string)$response, true);
-        $text = $decoded['candidates'][0]['content']['parts'][0]['text'] ?? null;
-        if (!$text || trim($text) === '') {
+        $parts = $decoded['candidates'][0]['content']['parts'] ?? [];
+        $text = '';
+        foreach ($parts as $part) {
+            if (empty($part['thought']) && isset($part['text'])) {
+                $text .= $part['text'];
+            }
+        }
+        if (trim($text) === '') {
             continue;
         }
 
@@ -1509,6 +1515,382 @@ function ai_build_student_rag_context(PDO $pdo, array $user): string
 }
 
 /**
+ * AI Live Diagnostic Inspector: Deep Packet-Flow & Root-Cause Diagnosis
+ * for a specific practice session based on grading_details JSON.
+ */
+function ai_diagnose_session(PDO $pdo, int $sessionId): array
+{
+    $stmt = $pdo->prepare('
+        SELECT 
+            ts.id, ts.technician_id, ts.name, ts.email, ts.started_at, ts.finished_at,
+            ts.duration_sec, ts.mode, ts.device, ts.device_id, ts.lab_id, ts.lab_name,
+            ts.status, ts.is_passed, ts.score, ts.grading_details, ts.practice_attempt_no,
+            u.user_id, u.display_name, u.class_code, tc.class_name
+        FROM timer_sessions ts
+        LEFT JOIN users u ON u.user_id = ts.user_id OR LOWER(u.email) = LOWER(ts.email)
+        LEFT JOIN training_classes tc ON tc.class_code = u.class_code
+        WHERE ts.id = :id
+        LIMIT 1
+    ');
+    $stmt->execute([':id' => $sessionId]);
+    $sess = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$sess) {
+        throw new InvalidArgumentException("Không tìm thấy phiên thực hành với ID #{$sessionId}.");
+    }
+
+    $gradingDetails = $sess['grading_details'];
+    if (is_string($gradingDetails)) {
+        $gradingDetails = json_decode($gradingDetails, true);
+    }
+    if (!is_array($gradingDetails)) {
+        $gradingDetails = [];
+    }
+
+    $failedCriteria = [];
+    $passedCriteria = [];
+    foreach ($gradingDetails as $item) {
+        if (!is_array($item)) continue;
+        if (!empty($item['passed'])) {
+            $passedCriteria[] = $item;
+        } else {
+            $failedCriteria[] = $item;
+        }
+    }
+
+    // Build configuration diff table
+    $diffTable = "| STT | Tiêu chí kỹ thuật | Cấu hình Chuẩn (Expected) | Thao tác Sinh viên (Actual) | Tình trạng | Lời khuyên Sư phạm |\n";
+    $diffTable .= "| :---: | :--- | :--- | :--- | :---: | :--- |\n";
+    $stt = 1;
+    foreach ($gradingDetails as $d) {
+        $p = !empty($d['passed']);
+        $statusIcon = $p ? "✅ ĐẠT" : "❌ SAI";
+        $exp = (string)($d['expected'] ?? 'Đạt chuẩn');
+        $act = (string)($d['actual'] ?? 'Chưa cấu hình');
+        $name = (string)($d['name'] ?? $d['id'] ?? 'Tiêu chí');
+        $tip = (string)($d['tip'] ?? $d['message'] ?? 'Tuân thủ đúng thông số yêu cầu.');
+        $diffTable .= "| {$stt} | **{$name}** | `{$exp}` | `{$act}` | {$statusIcon} | {$tip} |\n";
+        $stt++;
+    }
+
+    $studentName = $sess['display_name'] ?: ($sess['name'] ?: 'Học viên');
+    $studentEmail = $sess['email'] ?: 'Chưa cập nhật';
+    $className = $sess['class_name'] ?: ($sess['class_code'] ?: 'Lớp Thực Hành Mạng UTH');
+    $device = $sess['device'] ?: ($sess['device_id'] ?: 'Thiết bị Lab');
+    $labName = $sess['lab_name'] ?: ($sess['lab_id'] ?: 'Bài thực hành');
+    $score = (float)($sess['score'] ?? 0);
+    $isPassed = !empty($sess['is_passed']);
+    $durationMin = round(((int)($sess['duration_sec'] ?? 0)) / 60, 1);
+
+    // Call Gemini Generative LLM
+    $sysPrompt = "Bạn là Kỹ sư Trưởng Giám Định Hệ Thống Mạng & Chuyên Gia Sư Phạm UTH NetLab thuộc Trường Đại học Giao thông Vận tải TP.HCM (UTH).\n";
+    $sysPrompt .= "Nhiệm vụ của bạn là lập Báo cáo Chẩn đoán Kỹ thuật Chuyên sâu (AI Deep Diagnostic Report) cho phiên thực hành mạng của sinh viên, mổ xẻ nguyên nhân cốt lõi về mặt giao thức (protocol/packet flow) và đưa ra phác đồ khắc phục từng bước chuyên nghiệp.";
+
+    $userPrompt = "HÃY LẬP BÁO CÁO CHẨN ĐOÁN KỸ THUẬT CHUYÊN SÂU CHO PHIÊN THỰC HÀNH SAU:\n\n";
+    $userPrompt .= "=== THÔNG TIN PHIÊN THỰC HÀNH ===\n";
+    $userPrompt .= "- Mã phiên: #{$sessionId}\n";
+    $userPrompt .= "- Sinh viên: {$studentName} ({$studentEmail})\n";
+    $userPrompt .= "- Lớp: {$className}\n";
+    $userPrompt .= "- Thiết bị thực hành: {$device}\n";
+    $userPrompt .= "- Bài lab: {$labName}\n";
+    $userPrompt .= "- Điểm số: {$score}/100 - Thời gian làm bài: {$durationMin} phút\n";
+    $userPrompt .= "- Kết quả bộ chấm: " . ($isPassed ? 'HOÀN THÀNH (ĐẠT CHUẨN)' : 'CHƯA ĐẠT (TRƯỢT)') . "\n\n";
+
+    $userPrompt .= "=== BẢNG ĐỐI CHIẾU CẤU HÌNH THỰC TẾ (CONFIGURATION DIFF) ===\n";
+    $userPrompt .= $diffTable . "\n\n";
+
+    if (!empty($failedCriteria)) {
+        $userPrompt .= "=== CÁC LỖI SAI ĐƯỢC HỆ THỐNG GHI NHẬN ===\n";
+        foreach ($failedCriteria as $f) {
+            $userPrompt .= "- [{$f['category']}] {$f['name']}: Kỳ vọng '{$f['expected']}' nhưng sinh viên làm '{$f['actual']}'. Ghi chú: {$f['message']}. Gợi ý: {$f['tip']}\n";
+        }
+        $userPrompt .= "\n";
+    }
+
+    $userPrompt .= "=== YÊU CẦU ĐỊNH DẠNG BÁO CÁO (BẮT BUỘC ĐỦ 4 PHẦN CHUYÊN NGHIỆP DƯỚI ĐÂY) ===\n";
+    $userPrompt .= "Tiêu đề đầu: **TRƯỜNG ĐẠI HỌC GIAO THÔNG VẬN TẢI TP.HCM (UTH)** - **TRUNG TÂM KHẢO THÍ & GIÁM ĐỊNH MẠNG UTH NETLAB**\n\n";
+    $userPrompt .= "### 1. 🩺 Đánh Giá Lâm Sàng & Hiệu Suất (Clinical Assessment)\n";
+    $userPrompt .= "(Đánh giá khách quan: điểm mạnh L1/L2 cáp mạng, link up, thời gian làm bài; và triệu chứng lâm sàng tiêu cực dẫn đến sự cố).\n\n";
+    $userPrompt .= "### 2. 🔍 Bắt Bệnh Nguyên Nhân Cốt Lõi (Root-Cause Packet-Flow Analysis)\n";
+    $userPrompt .= "(Mổ xẻ sâu về mặt kiến trúc mạng và luồng gói tin: tại sao gói tin bị drop, xung đột IP thế nào, bảng định tuyến Routing/FIB bị ảnh hưởng ra sao, NAT Masquerade thiếu khiến RFC 1918 Private IP bị loại bỏ trên Internet thế nào, hoặc DHCP/DNS/VLAN bị nghẽn ở đâu).\n\n";
+    $userPrompt .= "### 3. ⚡ Bảng Đối Chiếu Cấu Hình Chi Tiết (Configuration Diff Table)\n";
+    $userPrompt .= "(Trình bày bảng Markdown chuẩn đối chiếu Expected vs Actual kèm phân tích).\n\n";
+    $userPrompt .= "### 4. 🛠️ Phác Đồ Khắc Phục Từng Bước (Step-by-Step Remediation Plan)\n";
+    $userPrompt .= "(Hướng dẫn sinh viên các bước hành động cụ thể trên giao diện thiết bị hoặc dòng lệnh CLI, các lệnh kiểm tra xác thực ping/traceroute/nslookup và lời khuyên sư phạm).\n\n";
+    $userPrompt .= "LƯU Ý: Giữ văn phong kỹ sư chuyên nghiệp, hàn lâm nhưng dễ hiểu, truyền cảm hứng sư phạm.";
+
+    $geminiRes = ai_call_gemini_api($sysPrompt, $userPrompt);
+
+    $reportMarkdown = '';
+    $engine = 'Google Gemini LLM (Live Diagnostic Inspector)';
+    $modelName = 'gemini-3.5-flash';
+    $isGenerative = true;
+
+    if ($geminiRes && !empty($geminiRes['text'])) {
+        $reportMarkdown = $geminiRes['text'];
+        $modelName = $geminiRes['model'] ?? 'gemini-3.5-flash';
+    } else {
+        // High quality deterministic fallback
+        $engine = 'UTH NetLab Deterministic Diagnostic Engine (Offline Fallback)';
+        $modelName = 'uth-netlab-local-fallback';
+        $isGenerative = false;
+
+        $reportMarkdown = "# TRƯỜNG ĐẠI HỌC GIAO THÔNG VẬN TẢI TP.HCM (UTH)\n";
+        $reportMarkdown .= "## TRUNG TÂM KHẢO THÍ & GIÁM ĐỊNH HỆ THỐNG MẠNG (UTH NetLab)\n---\n";
+        $reportMarkdown .= "### BÁO CÁO CHẨN ĐOÁN KỸ THUẬT PHIÊN THỰC HÀNH #{$sessionId}\n";
+        $reportMarkdown .= "**Học viên:** {$studentName} ({$studentEmail}) | **Lớp:** {$className}\n";
+        $reportMarkdown .= "**Thiết bị:** {$device} | **Bài thực hành:** {$labName}\n";
+        $reportMarkdown .= "**Kết quả:** {$score}/100 | **Trạng thái:** " . ($isPassed ? '✅ ĐẠT CHUẨN' : '❌ CHƯA ĐẠT (TRƯỢT)') . "\n\n---\n\n";
+
+        $reportMarkdown .= "### 1. 🩺 Đánh Giá Lâm Sàng & Hiệu Suất\n";
+        $reportMarkdown .= "- **Tổng điểm đạt được:** **{$score}/100** trong thời gian **{$durationMin} phút**.\n";
+        $reportMarkdown .= "- **Tiêu chí hoàn thành:** " . count($passedCriteria) . "/" . count($gradingDetails) . " tiêu chuẩn kỹ thuật.\n";
+        if (!empty($passedCriteria)) {
+            $reportMarkdown .= "- **Điểm sáng kỹ thuật:** Sinh viên đã hoàn thành tốt các hạng mục cơ sở: " . implode(', ', array_map(fn($c) => $c['name'] ?? $c['id'], $passedCriteria)) . ".\n";
+        }
+        if (!empty($failedCriteria)) {
+            $reportMarkdown .= "- **Triệu chứng sự cố:** Ghi nhận " . count($failedCriteria) . " lỗi sai cấu hình khiến hệ thống không thể thông tuyến dịch vụ bình thường.\n";
+        }
+
+        $reportMarkdown .= "\n### 2. 🔍 Bắt Bệnh Nguyên Nhân Cốt Lõi (Root-Cause Packet-Flow Analysis)\n";
+        if (empty($failedCriteria)) {
+            $reportMarkdown .= "Hệ thống hoạt động hoàn hảo. Toàn bộ chuỗi gói tin L1-L4 được chuyển tiếp thông suốt theo đúng tiêu chuẩn thiết kế mạng.\n";
+        } else {
+            foreach ($failedCriteria as $f) {
+                $cname = $f['name'] ?? 'Tiêu chuẩn';
+                $exp = $f['expected'] ?? '';
+                $act = $f['actual'] ?? '';
+                $msg = $f['message'] ?? '';
+                $tip = $f['tip'] ?? '';
+                $reportMarkdown .= "#### 🔴 Bệnh lý: {$cname}\n";
+                $reportMarkdown .= "- **Nguyên nhân cốt lõi:** Thao tác thực tế ghi nhận `{$act}` khác biệt so với tiêu chuẩn thiết kế `{$exp}`. {$msg}\n";
+                $reportMarkdown .= "- **Tác động luồng gói tin:** Lưu lượng qua cổng bị tắc nghẽn hoặc drop gói tại tầng tương ứng, làm đứt gãy luồng kết nối dịch vụ.\n";
+                if ($tip) {
+                    $reportMarkdown .= "- **Lưu ý chuyên môn:** {$tip}\n";
+                }
+                $reportMarkdown .= "\n";
+            }
+        }
+
+        $reportMarkdown .= "### 3. ⚡ Bảng Đối Chiếu Cấu Hình Chi Tiết (Configuration Diff Table)\n\n";
+        $reportMarkdown .= $diffTable . "\n\n";
+
+        $reportMarkdown .= "### 4. 🛠️ Phác Đồ Khắc Phục Từng Bước (Step-by-Step Remediation Plan)\n";
+        if (empty($failedCriteria)) {
+            $reportMarkdown .= "Sinh viên đã làm chủ toàn bộ bài thực hành. Đề xuất chuyển sang các kịch bản nâng cao: tối ưu hóa MTU/MSS, phân tách VLAN dịch vụ VoIP/IPTV, và thiết lập QoS ưu tiên băng thông.\n";
+        } else {
+            $step = 1;
+            foreach ($failedCriteria as $f) {
+                $cname = $f['name'] ?? 'Lỗi';
+                $tip = $f['tip'] ?? 'Điều chỉnh lại giá trị cho đúng chuẩn.';
+                $exp = $f['expected'] ?? '';
+                $reportMarkdown .= "**Bước {$step}:** Khắc phục mục **{$cname}**\n";
+                $reportMarkdown .= "- Vào menu tương ứng trên giao diện thiết bị, nhập chính xác giá trị chuẩn: `{$exp}`.\n";
+                $reportMarkdown .= "- {$tip}\n";
+                $step++;
+            }
+            $reportMarkdown .= "**Bước {$step}:** Bấm nút **Lưu (Save / Apply Changes)** để áp dụng thông số vào bộ nhớ Flash/NVRAM.\n";
+            $reportMarkdown .= "**Bước " . ($step + 1) . ":** Thực hiện kiểm định (Verify) bằng công cụ chẩn đoán ping/traceroute và nộp bài chấm lại.\n";
+        }
+    }
+
+    return [
+        'success' => true,
+        'session_id' => $sessionId,
+        'student' => [
+            'name' => $studentName,
+            'email' => $studentEmail,
+            'class_code' => $sess['class_code'] ?? 'CNTT-K22',
+            'class_name' => $className,
+        ],
+        'session' => [
+            'device' => $device,
+            'device_id' => $sess['device_id'],
+            'lab_name' => $labName,
+            'lab_id' => $sess['lab_id'],
+            'score' => $score,
+            'is_passed' => $isPassed,
+            'status' => $sess['status'],
+            'started_at' => $sess['started_at'],
+            'finished_at' => $sess['finished_at'],
+            'duration_sec' => (int)($sess['duration_sec'] ?? 0),
+            'duration_min' => $durationMin,
+            'total_criteria' => count($gradingDetails),
+            'failed_count' => count($failedCriteria),
+            'passed_count' => count($passedCriteria),
+        ],
+        'diff_table' => $diffTable,
+        'report' => $reportMarkdown,
+        'model' => $modelName,
+        'engine' => $engine,
+        'is_generative' => $isGenerative,
+        'grading_details' => $gradingDetails,
+    ];
+}
+
+/**
+ * AI Live Diagnostic Inspector: Diagnose student's latest or failed practice session
+ */
+function ai_diagnose_student(PDO $pdo, string|int $identifier, ?string $classIdentifier = null): array
+{
+    $identifierStr = trim((string)$identifier);
+    $user = null;
+
+    if (filter_var($identifierStr, FILTER_VALIDATE_EMAIL)) {
+        $stmt = $pdo->prepare('SELECT * FROM users WHERE LOWER(email) = LOWER(:email) LIMIT 1');
+        $stmt->execute([':email' => $identifierStr]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    } elseif (is_numeric($identifierStr)) {
+        $sessCheck = $pdo->prepare('SELECT id FROM timer_sessions WHERE id = :id LIMIT 1');
+        $sessCheck->execute([':id' => (int)$identifierStr]);
+        if ($sessCheck->fetch()) {
+            return ai_diagnose_session($pdo, (int)$identifierStr);
+        }
+        $stmt = $pdo->prepare('SELECT * FROM users WHERE user_id = :uid LIMIT 1');
+        $stmt->execute([':uid' => $identifierStr]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    if (!$user) {
+        $searchRes = ai_search_students($pdo, $identifierStr, $classIdentifier);
+        $user = $searchRes['best'] ?? null;
+    }
+
+    if (!$user) {
+        $sStmt = $pdo->prepare('
+            SELECT DISTINCT user_id, name, email 
+            FROM timer_sessions 
+            WHERE LOWER(name) LIKE :q OR LOWER(email) LIKE :q
+            ORDER BY id DESC LIMIT 1
+        ');
+        $sStmt->execute([':q' => '%' . mb_strtolower($identifierStr) . '%']);
+        $raw = $sStmt->fetch(PDO::FETCH_ASSOC);
+        if ($raw) {
+            $user = [
+                'user_id' => $raw['user_id'] ?? null,
+                'email' => $raw['email'] ?? '',
+                'display_name' => $raw['name'] ?? '',
+                'class_code' => 'CNTT-K22'
+            ];
+        }
+    }
+
+    if (!$user) {
+        throw new InvalidArgumentException("Không tìm thấy thông tin sinh viên '{$identifierStr}' trong hệ thống đào tạo.");
+    }
+
+    $email = strtolower(trim((string)($user['email'] ?? '')));
+    $uid = (string)($user['user_id'] ?? '');
+
+    $sql = '
+        SELECT id, score, is_passed, started_at
+        FROM timer_sessions
+        WHERE grading_details IS NOT NULL
+          AND (
+            (:email <> \'\' AND LOWER(email) = :email)
+            OR (:uid <> \'\' AND user_id = :uid)
+            OR LOWER(name) = :name
+          )
+        ORDER BY 
+          CASE WHEN is_passed = FALSE OR score < 100 THEN 0 ELSE 1 END,
+          id DESC
+        LIMIT 1
+    ';
+    $qStmt = $pdo->prepare($sql);
+    $qStmt->execute([
+        ':email' => $email,
+        ':uid' => $uid,
+        ':name' => mb_strtolower((string)($user['display_name'] ?? ''))
+    ]);
+    $targetSession = $qStmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$targetSession) {
+        $anyStmt = $pdo->prepare('
+            SELECT id, score, is_passed, lab_name, started_at 
+            FROM timer_sessions 
+            WHERE (:email <> \'\' AND LOWER(email) = :email) OR (:uid <> \'\' AND user_id = :uid)
+            ORDER BY id DESC LIMIT 1
+        ');
+        $anyStmt->execute([':email' => $email, ':uid' => $uid]);
+        $anySess = $anyStmt->fetch(PDO::FETCH_ASSOC);
+
+        $name = $user['display_name'] ?? $identifierStr;
+        if ($anySess) {
+            return [
+                'success' => true,
+                'student' => $user,
+                'report' => "### 🩺 Thông Báo Giám Định Kỹ Thuật UTH NetLab\n\nSinh viên **{$name}** đã thực hiện bài thi gần nhất (**{$anySess['lab_name']}**, Điểm: **{$anySess['score']}/100**), tuy nhiên phiên thi này không lưu trữ chi tiết bảng chấm cấu hình tự động (grading_details) nên AI không thể tái lập bảng Configuration Diff. Vui lòng hướng dẫn sinh viên làm lại bài thực hành trên hệ thống giả lập để kích hoạt bộ chẩn đoán chuyên sâu.",
+                'model' => 'system-notice',
+                'is_generative' => false
+            ];
+        }
+
+        return [
+            'success' => true,
+            'student' => $user,
+            'report' => "### 🩺 Thông Báo Giám Định Kỹ Thuật UTH NetLab\n\nSinh viên **{$name}** chưa có bất kỳ phiên thực hành nào được ghi nhận trên hệ thống. Hãy gửi thông báo nhắc nhở sinh viên đăng nhập và thực hành các bài lab được giao.",
+            'model' => 'system-notice',
+            'is_generative' => false
+        ];
+    }
+
+    $diag = ai_diagnose_session($pdo, (int)$targetSession['id']);
+    $diag['student_context'] = $user;
+    return $diag;
+}
+
+/**
+ * Detects if a chat query is an explicit diagnostic / troubleshooting request
+ */
+function ai_detect_diagnostic_command(string $query): ?array
+{
+    $q = mb_strtolower(trim($query));
+    $norm = ai_remove_vietnamese_accents($q);
+
+    $triggers = [
+        'chan doan', 'kham benh', 'bat benh', 'giam dinh', 'mo xe loi',
+        'tai sao bi tru diem', 'tai sao bi truot', 'tai sao khong dat',
+        'vi sao rot', 'vi sao rot lab', 'vi sao bi tru diem', 'vi sao khong dat',
+        'loi cua hoc vien', 'loi cua sinh vien', 'phan tich loi phien',
+        'so sanh cau hinh', 'diff cau hinh', 'cau hinh sai gi', 'sai o dau',
+        'kiem tra loi phien', 'xem lai loi', 'tai sao toi bi tru diem'
+    ];
+
+    $matched = false;
+    foreach ($triggers as $t) {
+        if (str_contains($norm, $t)) {
+            $matched = true;
+            break;
+        }
+    }
+
+    if (!$matched) {
+        if (preg_match('/(?:tai sao|vi sao).*(?:tru diem|truot|rot|khong dat|bi tru|mat diem|khong duoc)/i', $norm)) {
+            $matched = true;
+        }
+    }
+
+    if (!$matched) {
+        return null;
+    }
+
+    if (preg_match('/(?:phien|session|bai|ma|id)?\s*#?\s*([0-9]{1,6})/i', $norm, $m) && !empty($m[1])) {
+        $candidate = (int)$m[1];
+        if ($candidate > 0 && $candidate !== 22 && $candidate !== 23 && $candidate !== 24 && $candidate !== 2026) {
+            return [
+                'type' => 'session',
+                'session_id' => $candidate,
+            ];
+        }
+    }
+
+    return [
+        'type' => 'student',
+        'raw_query' => $query,
+    ];
+}
+
+/**
  * Phát hiện lệnh gửi email đôn đốc / nhắc nhở học viên qua khung chat AI
  */
 function ai_detect_reminder_command(string $query): bool
@@ -2065,6 +2447,55 @@ function ai_chat_query(PDO $pdo, string $question, ?string $classIdentifier = nu
     // 0. Phát hiện và thực thi ngay lệnh gửi email nhắc nhở từ chatbot
     if (ai_detect_reminder_command($question)) {
         return ai_handle_chat_reminder_command($pdo, $question, $classIdentifier, $actor, $focusedStudent);
+    }
+
+    // 0.1 Phát hiện và thực thi Lệnh Chẩn đoán Kỹ thuật Chuyên sâu (AI Live Diagnostic Inspector)
+    $diagCmd = ai_detect_diagnostic_command($question);
+    if ($diagCmd !== null) {
+        try {
+            if ($diagCmd['type'] === 'session' && !empty($diagCmd['session_id'])) {
+                $diag = ai_diagnose_session($pdo, (int)$diagCmd['session_id']);
+                return [
+                    'question' => $question,
+                    'answer' => $diag['report'],
+                    'intent' => 'session_diagnostic',
+                    'session_id' => $diagCmd['session_id'],
+                    'suggested_questions' => [
+                        "Phác đồ khắc phục từng bước như thế nào?",
+                        "Tại sao thiếu NAT Masquerade lại không ra được mạng?",
+                        "Lỗi cấu hình nào học viên hay mắc phải nhất?",
+                        "Tiến độ chung của lớp CNTT-K22?",
+                    ],
+                    'model' => $diag['model'] ?? 'gemini-3.5-flash',
+                    'engine' => $diag['engine'] ?? 'Google Gemini Live Diagnostic Inspector',
+                    'is_generative' => $diag['is_generative'] ?? true,
+                    'diagnostic_data' => $diag,
+                ];
+            } elseif ($diagCmd['type'] === 'student') {
+                $studentTarget = $question;
+                if (!empty($focusedStudent['display_name'])) {
+                    $studentTarget = $focusedStudent['display_name'];
+                }
+                $diag = ai_diagnose_student($pdo, $studentTarget, $classIdentifier);
+                return [
+                    'question' => $question,
+                    'answer' => $diag['report'],
+                    'intent' => 'student_diagnostic',
+                    'student' => $diag['student'] ?? null,
+                    'suggested_questions' => [
+                        "Còn học viên khác thì sao?",
+                        "Gửi email nhắc nhở cho học viên này?",
+                        "Lỗi cấu hình nào học viên hay mắc phải nhất?",
+                    ],
+                    'model' => $diag['model'] ?? 'gemini-3.5-flash',
+                    'engine' => $diag['engine'] ?? 'Google Gemini Live Diagnostic Inspector',
+                    'is_generative' => $diag['is_generative'] ?? true,
+                    'diagnostic_data' => $diag,
+                ];
+            }
+        } catch (Throwable $diagErr) {
+            error_log("AI Diagnostic dispatch error: " . $diagErr->getMessage());
+        }
     }
 
     // Search student first with high flexibility (handles 'còn phương sang thì sao', 'phuong sang the nao', 'sangnp3251')
@@ -2933,6 +3364,34 @@ function ai_get_student_advice(PDO $pdo, array $user): array
  */
 function ai_student_chat(PDO $pdo, array $user, string $message): array
 {
+    // 0. Phát hiện yêu cầu chẩn đoán / mổ xẻ lỗi bài lab của chính sinh viên
+    $diagCmd = ai_detect_diagnostic_command($message);
+    if ($diagCmd !== null) {
+        try {
+            $sessId = ($diagCmd['type'] === 'session' && !empty($diagCmd['session_id'])) ? (int)$diagCmd['session_id'] : 0;
+            if ($sessId > 0) {
+                $diag = ai_diagnose_session($pdo, $sessId);
+            } else {
+                $diag = ai_diagnose_student($pdo, $user['user_id'] ?? $user['email']);
+            }
+            return [
+                'message' => $message,
+                'answer' => $diag['report'],
+                'suggested_questions' => [
+                    'Hướng dẫn từng bước khắc phục lỗi này?',
+                    'Tôi cần làm bài nào tiếp theo?',
+                    'Các lưu ý quan trọng để đạt điểm 100?',
+                ],
+                'model' => $diag['model'] ?? 'gemini-3.5-flash',
+                'engine' => $diag['engine'] ?? 'Google Gemini Live Diagnostic Inspector',
+                'is_generative' => $diag['is_generative'] ?? true,
+                'diagnostic_data' => $diag,
+            ];
+        } catch (Throwable $e) {
+            error_log("Student AI Diagnostic error: " . $e->getMessage());
+        }
+    }
+
     // 1. Try Gemini with student personal RAG context & Domain Grounding Knowledge
     $ragContext = ai_build_student_rag_context($pdo, $user);
     $techFact = ai_get_technical_network_answer($message);

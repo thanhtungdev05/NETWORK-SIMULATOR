@@ -514,13 +514,14 @@
         bubble.className = 'ai-msg-bubble';
         
         let badgeHtml = '';
-        if (role === 'assistant' && model === 'gemini-1.5-flash') {
-            badgeHtml = `<div style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; background: #e0e7ff; color: #4338ca; font-size: 0.68rem; font-weight: 700; margin-bottom: 8px;">
-                <span>⚡ Powered by Google Gemini 1.5 Flash</span>
+        if (role === 'assistant' && model && model.includes('gemini')) {
+            const modelLabel = model === 'gemini-2.0-flash' ? 'Google Gemini 2.0 Flash (Generative LLM)' : (model === 'gemini-1.5-flash' ? 'Google Gemini 1.5 Flash' : `Google Gemini (${model})`);
+            badgeHtml = `<div style="display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 9999px; background: linear-gradient(135deg, #e0e7ff 0%, #ede9fe 100%); color: #4338ca; font-size: 0.72rem; font-weight: 700; margin-bottom: 8px; border: 1px solid #c7d2fe; box-shadow: 0 1px 3px rgba(99,102,241,0.1);">
+                <span>✨ Powered by ${modelLabel}</span>
             </div>`;
-        } else if (role === 'assistant' && model === 'local-rag') {
-            badgeHtml = `<div style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; background: #f1f5f9; color: #475569; font-size: 0.68rem; font-weight: 600; margin-bottom: 8px;">
-                <span>ℹ️ Local RAG Engine</span>
+        } else if (role === 'assistant' && (model === 'local-rag' || model === 'local-offline-engine' || model === 'network-expert-engine')) {
+            badgeHtml = `<div style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; background: #f1f5f9; color: #64748b; font-size: 0.68rem; font-weight: 600; margin-bottom: 8px;">
+                <span>⚡ Local Offline Engine (Chưa cấu hình GEMINI_API_KEY)</span>
             </div>`;
         }
 

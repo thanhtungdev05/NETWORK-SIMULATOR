@@ -361,8 +361,8 @@ function ai_call_gemini_api(string $systemPrompt, string $userPrompt): ?array
         return null;
     }
 
-    $preferredModel = env_value('GEMINI_MODEL') ?: 'gemini-1.5-flash';
-    $modelsToTry = array_unique([$preferredModel, 'gemini-2.0-flash', 'gemini-1.5-flash']);
+    $preferredModel = env_value('GEMINI_MODEL') ?: 'gemini-2.0-flash';
+    $modelsToTry = array_unique([$preferredModel, 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.5-flash', 'gemini-1.5-pro']);
 
     foreach ($modelsToTry as $currentModel) {
         $url = 'https://generativelanguage.googleapis.com/v1beta/models/' . urlencode($currentModel) . ':generateContent?key=' . urlencode(trim($apiKey));
@@ -382,9 +382,9 @@ function ai_call_gemini_api(string $systemPrompt, string $userPrompt): ?array
                 ]
             ],
             'generationConfig' => [
-                'temperature' => 0.3,
+                'temperature' => 0.4,
                 'maxOutputTokens' => 2048,
-                'topP' => 0.85,
+                'topP' => 0.9,
             ]
         ];
 
@@ -394,9 +394,10 @@ function ai_call_gemini_api(string $systemPrompt, string $userPrompt): ?array
             CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_UNICODE),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-            CURLOPT_TIMEOUT => 20,
-            CURLOPT_CONNECTTIMEOUT => 6,
-            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_TIMEOUT => 25,
+            CURLOPT_CONNECTTIMEOUT => 8,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => 0,
         ]);
 
         $response = curl_exec($ch);
@@ -1424,6 +1425,14 @@ function ai_build_rag_context(PDO $pdo, ?string $classIdentifier = null, ?array 
             $prompt .= $studentSummary . "\n\n";
             $prompt .= "HƯỚNG DẪN TRẢ LỜI: Giảng viên đang hỏi về học viên này ('{$matchedUser['display_name']}'). Hãy ưu tiên trả lời chi tiết về học viên này, phân tích điểm số, tiến độ thực hành và đề xuất giải pháp sư phạm cụ thể.\n\n";
         }
+
+        // Technical Network Knowledge Grounding
+        $techFact = ai_get_technical_network_answer($question);
+        if ($techFact !== null && !empty($techFact['answer'])) {
+            $prompt .= "=== TÀI LIỆU KỸ THUẬT & HƯỚNG DẪN THIẾT BỊ MẠNG (GROUNDING KNOWLEDGE BASE) ===\n";
+            $prompt .= $techFact['answer'] . "\n\n";
+            $prompt .= "HƯỚNG DẪN TRẢ LỜI: Câu hỏi có liên quan đến kiến thức/thiết bị mạng. Hãy sử dụng tài liệu kỹ thuật chuẩn trên làm cơ sở kiến thức (grounding), kết hợp với số liệu đào tạo thực tế để giải thích cặn kẽ, logic và đưa ra các lưu ý thực chiến cho sinh viên.\n\n";
+        }
     }
 
     $prompt .= "=== YÊU CẦU TRẢ LỜI ===\n";
@@ -2051,13 +2060,7 @@ function ai_chat_query(PDO $pdo, string $question, ?string $classIdentifier = nu
     // Search student first with high flexibility (handles 'còn phương sang thì sao', 'phuong sang the nao', 'sangnp3251')
     $studentSearchResult = ai_search_students($pdo, $question, $classIdentifier);
 
-    // 1. Chẩn đoán & Hướng dẫn kỹ thuật thiết bị mạng / modem / router / lab (Network Knowledge Engine)
-    $techAnswer = ai_get_technical_network_answer($question);
-    if ($techAnswer !== null && empty($studentSearchResult['best'])) {
-        return $techAnswer;
-    }
-
-    // 2. Try Gemini with live DB RAG context
+    // 1. Try Gemini Generative AI with Live DB RAG context & Domain Grounding Knowledge
     $ragContext = ai_build_rag_context($pdo, $classIdentifier, $actor, $question);
     $geminiRes = ai_call_gemini_api($ragContext, $question);
     if ($geminiRes && !empty($geminiRes['text'])) {
@@ -2084,12 +2087,22 @@ function ai_chat_query(PDO $pdo, string $question, ?string $classIdentifier = nu
             'answer' => $geminiRes['text'],
             'intent' => !empty($studentSearchResult['best']) ? 'student_lookup' : 'gemini_generative',
             'suggested_questions' => $suggested,
-            'model' => 'gemini-1.5-flash',
+            'model' => $geminiRes['model'] ?? 'gemini-2.0-flash',
+            'engine' => 'Google Gemini LLM (Generative AI)',
+            'is_generative' => true,
         ];
         if ($focusedData) {
             $resp['focused_student'] = $focusedData;
         }
         return $resp;
+    }
+
+    // 2. Fallback to Deterministic Network Knowledge Engine (When Gemini key not yet set or offline)
+    $techAnswer = ai_get_technical_network_answer($question);
+    if ($techAnswer !== null && empty($studentSearchResult['best'])) {
+        $techAnswer['model'] = 'local-offline-engine';
+        $techAnswer['engine'] = 'Local Knowledge Engine (Offline Fallback)';
+        return $techAnswer;
     }
 
     // 2. Deterministic Local RAG Fallback
@@ -2910,14 +2923,13 @@ function ai_get_student_advice(PDO $pdo, array $user): array
  */
 function ai_student_chat(PDO $pdo, array $user, string $message): array
 {
-    // 0. Chẩn đoán & Hướng dẫn kỹ thuật thiết bị mạng / modem / router / lab (Network Knowledge Engine)
-    $techAnswer = ai_get_technical_network_answer($message);
-    if ($techAnswer !== null) {
-        return $techAnswer;
+    // 1. Try Gemini with student personal RAG context & Domain Grounding Knowledge
+    $ragContext = ai_build_student_rag_context($pdo, $user);
+    $techFact = ai_get_technical_network_answer($message);
+    if ($techFact !== null && !empty($techFact['answer'])) {
+        $ragContext .= "\n\n=== TÀI LIỆU KỸ THUẬT & HƯỚNG DẪN CẤU HÌNH THIẾT BỊ MẠNG (GROUNDING) ===\n" . $techFact['answer'] . "\n\n";
     }
 
-    // 1. Try Gemini with student personal RAG context
-    $ragContext = ai_build_student_rag_context($pdo, $user);
     $geminiRes = ai_call_gemini_api($ragContext, $message);
     if ($geminiRes && !empty($geminiRes['text'])) {
         return [
@@ -2928,8 +2940,17 @@ function ai_student_chat(PDO $pdo, array $user, string $message): array
                 'Tại sao bài trước của tôi bị trừ điểm?',
                 'Hướng dẫn các bước cấu hình chuẩn?',
             ],
-            'model' => 'gemini-1.5-flash',
+            'model' => $geminiRes['model'] ?? 'gemini-2.0-flash',
+            'engine' => 'Google Gemini LLM (Generative AI)',
+            'is_generative' => true,
         ];
+    }
+
+    // 2. Deterministic Local Technical Answer Fallback (When Gemini key is not set or offline)
+    if ($techFact !== null) {
+        $techFact['model'] = 'local-offline-engine';
+        $techFact['engine'] = 'Local Knowledge Engine (Offline Fallback)';
+        return $techFact;
     }
 
     // 2. Deterministic Local Coaching Fallback
